@@ -21,7 +21,7 @@ const Header = () => {
           <Link to="/" className="ml-6 flex items-center space-x-2">
             <span className="font-bold">درب للدراسة</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
+          <nav className="flex items-center gap-x-6 text-sm font-medium">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
                 {link.label}
