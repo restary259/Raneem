@@ -19,7 +19,7 @@ const partners = [
 const PartnersCarousel = () => (
   <section className="py-12 md:py-24 bg-secondary">
     <div className="container mx-auto px-4 text-center">
-      <h2 className="font-cairo text-3xl md:text-4xl font-bold mb-12 text-primary">شركاؤنا المعتمدون</h2>
+      <h2 className="text-3xl md:text-4xl font-bold mb-12 text-primary">شركاؤنا المعتمدون</h2>
       <Carousel
         opts={{
           align: "start",
@@ -35,7 +35,7 @@ const PartnersCarousel = () => (
                 <Card className="bg-background/70">
                   <CardContent className="flex flex-col items-center justify-center p-6 gap-4 h-52">
                     <img src={partner.logoUrl} alt={partner.name} className="h-16 w-auto opacity-60 invert-0 dark:invert" loading="lazy"/>
-                    <span className="text-lg font-semibold font-cairo">{partner.countryFlag} {partner.name}</span>
+                    <span className="text-lg font-semibold">{partner.countryFlag} {partner.name}</span>
                     <p className="text-sm text-muted-foreground">شريك معتمد منذ 2020</p>
                   </CardContent>
                 </Card>

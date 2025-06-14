@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -48,7 +49,7 @@ const teamMembers = [
 const TeamSection = () => (
   <section className="py-12 md:py-24 bg-secondary">
     <div className="container mx-auto px-4 text-center">
-      <h2 className="font-cairo text-3xl md:text-4xl font-bold mb-12 text-primary">
+      <h2 className="text-3xl md:text-4xl font-bold mb-12 text-primary">
         تعرف على فريق الخبراء لدينا
       </h2>
       <TooltipProvider>
@@ -61,12 +62,12 @@ const TeamSection = () => (
                     <AvatarImage src={member.imageUrl} alt={member.name} loading="lazy" />
                     <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
                   </Avatar>
-                  <h3 className="font-bold text-lg font-cairo mt-2">{member.name}</h3>
+                  <h3 className="font-bold text-lg mt-2">{member.name}</h3>
                   <p className="text-sm text-muted-foreground">{member.role}</p>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="font-cairo">{member.bio}</p>
+                <p>{member.bio}</p>
               </TooltipContent>
             </Tooltip>
           ))}

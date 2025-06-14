@@ -11,7 +11,7 @@ const CeoMessage = () => (
             <AvatarFallback>CEO</AvatarFallback>
           </Avatar>
           <div className="text-right">
-            <h3 className="font-cairo text-2xl font-bold text-primary">رسالة من المدير التنفيذي</h3>
+            <h3 className="text-2xl font-bold text-primary">رسالة من المدير التنفيذي</h3>
             <blockquote className="mt-4 text-muted-foreground italic border-r-4 border-accent pr-4">
               "رؤيتنا في 'درب' هي تمهيد الطريق أمام كل طالب طموح لتحقيق حلمه بالدراسة في الخارج. نحن لا نقدم استشارات فحسب، بل نبني جسورًا من الثقة والدعم لضمان رحلة تعليمية ناجحة ومستقبل مشرق."
             </blockquote>

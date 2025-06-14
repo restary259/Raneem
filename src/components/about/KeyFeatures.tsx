@@ -16,7 +16,7 @@ const KeyFeatures = () => (
         {features.map((feature, index) => (
           <div key={index} className="flex flex-col items-center p-4">
             <feature.icon className="h-12 w-12 text-accent mb-4" strokeWidth={1.5} />
-            <p className="text-md font-semibold font-cairo text-primary">{feature.text}</p>
+            <p className="text-md font-semibold text-primary">{feature.text}</p>
           </div>
         ))}
       </div>
