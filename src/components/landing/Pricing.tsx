@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Check } from "lucide-react";
@@ -35,15 +36,29 @@ const packages = [
 
 const Pricing = () => {
   return (
-    <section id="pricing" className="py-12 md:py-24">
+    <section id="pricing" className="py-12 md:py-24 bg-secondary">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-2xl mx-auto">
+        <div
+          className="text-center max-w-2xl mx-auto opacity-0 animate-fade-in"
+          style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold">الباقات والأسعار</h2>
           <p className="mt-4 text-lg text-muted-foreground">أسعار معقولة وشفافة لتبدأ رحلتك.</p>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {packages.map((pkg) => (
-            <Card key={pkg.name} className={pkg.popular ? "border-primary ring-2 ring-primary text-right" : "text-right"}>
+          {packages.map((pkg, index) => (
+            <Card
+              key={pkg.name}
+              className={`text-right relative overflow-hidden transition-transform duration-300 hover:scale-105 opacity-0 animate-scale-in ${
+                pkg.popular ? "border-primary ring-2 ring-primary" : ""
+              }`}
+              style={{ animationDelay: `${400 + index * 150}ms`, animationFillMode: "forwards" }}
+            >
+              {pkg.popular && (
+                <div className="absolute top-4 -right-px bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-l-md">
+                  الأكثر شيوعًا
+                </div>
+              )}
               <CardHeader>
                 <CardTitle>{pkg.name}</CardTitle>
                 <CardDescription>{pkg.description}</CardDescription>
