@@ -1,7 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const packages = [
   {
@@ -61,7 +61,7 @@ const Pricing = () => {
               </CardContent>
               <CardFooter>
                 <Button className="w-full" variant={pkg.popular ? "accent" : "outline"} asChild>
-                  <a href="#contact">اختر الباقة</a>
+                  <Link to="/contact">اختر الباقة</Link>
                 </Button>
               </CardFooter>
             </Card>

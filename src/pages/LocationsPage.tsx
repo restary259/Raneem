@@ -1,22 +1,18 @@
 
 import Header from "@/components/landing/Header";
-import Hero from "@/components/landing/Hero";
-import About from "@/components/landing/About";
-import WhyChooseUs from "@/components/landing/WhyChooseUs";
 import Footer from "@/components/landing/Footer";
+import Locations from "@/components/landing/Locations";
 
-const Index = () => {
+const LocationsPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
       <Header />
       <main className="flex-grow">
-        <Hero />
-        <About />
-        <WhyChooseUs />
+        <Locations />
       </main>
       <Footer />
     </div>
   );
 };
 
-export default Index;
+export default LocationsPage;

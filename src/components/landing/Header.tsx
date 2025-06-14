@@ -5,12 +5,12 @@ import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
-  { href: "#about", label: "من نحن" },
-  { href: "#services", label: "خدماتنا" },
-  { href: "#locations", label: "أماكن عملنا" },
-  { href: "#testimonials", label: "قصص النجاح" },
-  { href: "#pricing", label: "الأسعار" },
-  { href: "#contact", label: "تواصل معنا" },
+  { href: "/about", label: "من نحن" },
+  { href: "/services", label: "خدماتنا" },
+  { href: "/locations", label: "أماكن عملنا" },
+  { href: "/testimonials", label: "قصص النجاح" },
+  { href: "/pricing", label: "الأسعار" },
+  { href: "/contact", label: "تواصل معنا" },
 ];
 
 const Header = () => {
@@ -23,9 +23,9 @@ const Header = () => {
           </Link>
           <nav className="flex items-center gap-x-6 text-sm font-medium">
             {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+              <Link key={link.href} to={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
@@ -42,9 +42,9 @@ const Header = () => {
                   <span className="font-bold">درب للدراسة</span>
                 </Link>
                 {navLinks.map((link) => (
-                  <a key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground">
+                  <Link key={link.href} to={link.href} className="text-muted-foreground hover:text-foreground">
                     {link.label}
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </SheetContent>
@@ -52,7 +52,7 @@ const Header = () => {
         </div>
         <div className="hidden md:flex items-center justify-end space-x-2">
              <Button asChild variant="accent">
-                <a href="#contact">قدم الآن</a>
+                <Link to="/contact">قدم الآن</Link>
              </Button>
         </div>
       </div>

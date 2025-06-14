@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import HeroScene from "./HeroScene";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -28,10 +29,10 @@ const Hero = () => {
         </p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
           <Button size="lg" asChild variant="accent">
-            <a href="#contact">احجز استشارة مجانية</a>
+            <Link to="/contact">احجز استشارة مجانية</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <a href="#contact">قدم الآن</a>
+            <Link to="/contact">قدم الآن</Link>
           </Button>
         </div>
       </div>
