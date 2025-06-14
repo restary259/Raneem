@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -16,7 +15,6 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يتكون الاسم من حرفين على الأقل." }),
   email: z.string().email({ message: "الرجاء إدخال بريد إلكتروني صالح." }),
   whatsapp: z.string().min(9, { message: "الرجاء إدخال رقم واتساب صالح." }),
-  currentCountry: z.string().min(2, { message: "الرجاء إدخال بلد الإقامة الحالي." }),
   studyDestination: z.string({ required_error: "الرجاء اختيار بلد الدراسة." }),
   service: z.string({ required_error: "الرجاء اختيار الخدمة المطلوبة." }),
   message: z.string().optional(),
@@ -36,7 +34,7 @@ const serviceOptions = [
 const Contact = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", whatsapp: "", currentCountry: "", message: "" },
+    defaultValues: { name: "", email: "", whatsapp: "", message: "" },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -73,9 +71,6 @@ const Contact = () => {
                   <FormField control={form.control} name="whatsapp" render={({ field }) => (
                     <FormItem><FormLabel>رقم الواتساب</FormLabel><FormControl><Input placeholder="مع رمز الدولة" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
-                   <FormField control={form.control} name="currentCountry" render={({ field }) => (
-                    <FormItem><FormLabel>بلد الإقامة الحالي</FormLabel><FormControl><Input placeholder="مثال: مصر" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
                 </div>
                  <div className="grid md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="studyDestination" render={({ field }) => (
@@ -96,7 +91,7 @@ const Contact = () => {
                 <FormField control={form.control} name="message" render={({ field }) => (
                   <FormItem><FormLabel>رسالة إضافية (اختياري)</FormLabel><FormControl><Textarea placeholder="اكتب رسالتك هنا..." {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button type="submit" className="w-full font-bold font-cairo" size="lg" variant="accent">أرسل الآن</Button>
+                <Button type="submit" className="w-full font-bold font-cairo" size="lg" variant="default">أرسل الآن</Button>
               </form>
             </Form>
           </div>
