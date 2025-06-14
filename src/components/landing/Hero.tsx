@@ -3,18 +3,24 @@ import { Button } from "@/components/ui/button";
 
 const Hero = () => {
   return (
-    <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-white">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1523240795610-57171367a0b8?q=80&w=2070&auto=format&fit=crop')",
-        }}
+    <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-white overflow-hidden">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover"
       >
-        <div className="absolute inset-0 bg-black/50" />
-      </div>
+        <source
+          src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4"
+          type="video/mp4"
+        />
+        Your browser does not support the video tag.
+      </video>
+      <div className="absolute inset-0 bg-black/50" />
       <div className="relative z-10 text-center px-4">
         <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-          بوابتك للدراسة في ألمانيا، رومانيا، والأردن
+          رفيقك الدراسي العالمي
         </h1>
         <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto">
           نوجه الطلاب خطوة بخطوة للدراسة في الخارج — من اختيار الجامعة المناسبة حتى الوصول إلى وطنك الجديد.
