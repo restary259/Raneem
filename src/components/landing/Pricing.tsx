@@ -60,7 +60,7 @@ const Pricing = () => {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" variant={pkg.popular ? "default" : "outline"} asChild>
+                <Button className="w-full" variant={pkg.popular ? "accent" : "outline"} asChild>
                   <a href="#contact">اختر الباقة</a>
                 </Button>
               </CardFooter>

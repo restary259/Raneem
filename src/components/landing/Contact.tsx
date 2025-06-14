@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -79,7 +78,7 @@ const Contact = () => {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full" size="lg">احجز استشارة مجانية</Button>
+                <Button type="submit" className="w-full" size="lg" variant="accent">احجز استشارة مجانية</Button>
               </form>
             </Form>
           </div>

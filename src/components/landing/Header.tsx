@@ -51,7 +51,7 @@ const Header = () => {
           </Sheet>
         </div>
         <div className="hidden md:flex items-center justify-end space-x-2">
-             <Button asChild>
+             <Button asChild variant="accent">
                 <a href="#contact">قدم الآن</a>
              </Button>
         </div>

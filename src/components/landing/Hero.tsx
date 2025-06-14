@@ -20,10 +20,10 @@ const Hero = () => {
           نوجه الطلاب خطوة بخطوة للدراسة في الخارج — من اختيار الجامعة المناسبة حتى الوصول إلى وطنك الجديد.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" asChild>
+          <Button size="lg" asChild variant="accent">
             <a href="#contact">احجز استشارة مجانية</a>
           </Button>
-          <Button size="lg" variant="secondary" asChild>
+          <Button size="lg" variant="outline" asChild>
             <a href="#contact">قدم الآن</a>
           </Button>
         </div>
