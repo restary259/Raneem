@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -53,7 +52,7 @@ const TeamSection = () => (
         تعرف على فريق الخبراء لدينا
       </h2>
       <TooltipProvider>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-x-6 gap-y-12 justify-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
           {teamMembers.map((member) => (
             <Tooltip key={member.name} delayDuration={100}>
               <TooltipTrigger asChild>
