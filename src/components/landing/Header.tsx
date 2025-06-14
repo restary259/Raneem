@@ -5,11 +5,9 @@ import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
+  { href: "/", label: "الرئيسية" },
   { href: "/about", label: "من نحن" },
   { href: "/services", label: "خدماتنا" },
-  { href: "/locations", label: "أماكن عملنا" },
-  { href: "/testimonials", label: "قصص النجاح" },
-  { href: "/pricing", label: "الأسعار" },
   { href: "/contact", label: "تواصل معنا" },
 ];
 
@@ -19,11 +17,11 @@ const Header = () => {
       <div className="container flex h-14 items-center">
         <div className="ml-4 hidden md:flex">
           <Link to="/" className="ml-6 flex items-center space-x-2">
-            <span className="font-bold">درب للدراسة</span>
+            <span className="font-bold font-cairo">درب للدراسة</span>
           </Link>
           <nav className="flex items-center gap-x-6 text-sm font-medium">
             {navLinks.map((link) => (
-              <Link key={link.href} to={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
+              <Link key={link.href} to={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60 font-cairo">
                 {link.label}
               </Link>
             ))}
@@ -39,16 +37,19 @@ const Header = () => {
             <SheetContent side="right">
               <nav className="grid gap-6 text-lg font-medium text-right">
                 <Link to="/" className="flex items-center justify-end gap-2 text-lg font-semibold">
-                  <span className="font-bold">درب للدراسة</span>
+                  <span className="font-bold font-cairo">درب للدراسة</span>
                 </Link>
                 {navLinks.map((link) => (
-                  <Link key={link.href} to={link.href} className="text-muted-foreground hover:text-foreground">
+                  <Link key={link.href} to={link.href} className="text-muted-foreground hover:text-foreground font-cairo">
                     {link.label}
                   </Link>
                 ))}
               </nav>
             </SheetContent>
           </Sheet>
+          <Link to="/" className="flex items-center space-x-2 md:hidden">
+            <span className="font-bold font-cairo">درب للدراسة</span>
+          </Link>
         </div>
         <div className="hidden md:flex items-center justify-end space-x-2">
              <Button asChild variant="accent">
