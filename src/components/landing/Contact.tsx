@@ -60,7 +60,7 @@ const Contact = () => {
           {/* Form Section */}
           <div className="lg:col-span-2 text-right p-8 bg-background/50 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
             <div className="text-center md:text-right max-w-2xl mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold font-cairo">املأ النموذج للتواصل</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">املأ النموذج للتواصل</h2>
               <p className="mt-4 text-lg text-muted-foreground">
                 فريقنا جاهز للإجابة على جميع استفساراتك ومساعدتك في تحقيق أهدافك الأكاديمية.
               </p>
@@ -97,7 +97,7 @@ const Contact = () => {
                 <FormField control={form.control} name="message" render={({ field }) => (
                   <FormItem><FormLabel>رسالة إضافية (اختياري)</FormLabel><FormControl><Textarea placeholder="اكتب رسالتك هنا..." {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button type="submit" className="w-full font-bold font-cairo" size="lg" variant="default">أرسل الآن</Button>
+                <Button type="submit" className="w-full font-bold" size="lg" variant="default">أرسل الآن</Button>
               </form>
             </Form>
           </div>
@@ -106,7 +106,7 @@ const Contact = () => {
           <div className="space-y-8">
             <OfficeLocations />
             <div className="bg-background/80 backdrop-blur-sm border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
-              <h3 className="text-xl font-semibold mb-4 text-center font-cairo">تابعنا</h3>
+              <h3 className="text-xl font-semibold mb-4 text-center">تابعنا</h3>
               <div className="flex justify-center items-center space-x-6">
                 <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
                 <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
@@ -116,7 +116,7 @@ const Contact = () => {
         </div>
 
         <div className="mt-16 md:mt-24 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold font-cairo">موقعنا على الخريطة</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">موقعنا على الخريطة</h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
                 استكشف مواقع مكاتبنا حول العالم.
             </p>

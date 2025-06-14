@@ -3,7 +3,7 @@ const AboutIntro = () => {
   return (
     <section className="py-12 md:py-24 text-center bg-secondary">
       <div className="container mx-auto px-4">
-        <h1 className="font-cairo text-4xl md:text-5xl font-bold text-primary">
+        <h1 className="text-4xl md:text-5xl font-bold text-primary">
           لماذا تختار Darb Study International؟
         </h1>
         <p className="mt-6 max-w-3xl mx-auto text-lg text-muted-foreground leading-relaxed">

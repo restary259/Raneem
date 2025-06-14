@@ -20,7 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				cairo: ["Cairo", "sans-serif"],
+				sans: ['"Noto Sans"', '"Noto Sans Arabic"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
