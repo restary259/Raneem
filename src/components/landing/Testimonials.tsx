@@ -1,4 +1,3 @@
-
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -8,6 +7,12 @@ const testimonials = [
     name: "أحمد",
     location: "ألمانيا",
     avatar: "https://i.pravatar.cc/150?img=1",
+  },
+  {
+    quote: "تجربة ممتازة! ساعدوني في كل خطوة على الطريق للوصول إلى جامعة أحلامي في رومانيا. شكرًا جزيلًا!",
+    name: "سارة",
+    location: "إسرائيل",
+    avatar: "https://i.pravatar.cc/150?img=4",
   },
   {
     quote: "كان الفريق داعمًا جدًا طوال العملية. أوصي بهم بشدة!",
