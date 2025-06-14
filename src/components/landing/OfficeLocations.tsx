@@ -2,14 +2,15 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Phone, Clock, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, Clock, MessageCircle, Mail } from 'lucide-react';
 
 const office = {
   city: 'طمرة, إسرائيل',
   address: 'شارع رئيسي، طمرة',
-  phone: '+972 50 1234567',
+  phone: '+972 52-940-2168',
+  email: 'darbsocial27@gmail.com',
   hours: 'الأحد - الخميس: 9 صباحًا - 5 مساءً',
-  whatsapp: '972501234567',
+  whatsapp: '972524061225',
 };
 
 const OfficeLocations = () => {
@@ -28,6 +29,10 @@ const OfficeLocations = () => {
             <div className="flex items-center justify-end gap-3">
               <span>{office.phone}</span>
               <Phone className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex items-center justify-end gap-3">
+               <a href={`mailto:${office.email}`} className="hover:underline">{office.email}</a>
+              <Mail className="h-5 w-5 text-accent" />
             </div>
             <div className="flex items-center justify-end gap-3">
               <span>{office.hours}</span>
