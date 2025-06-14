@@ -12,7 +12,7 @@ import Footer from "@/components/landing/Footer";
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
       <Header />
       <main className="flex-grow">
         <Hero />

@@ -10,10 +10,10 @@ import { toast } from "@/hooks/use-toast";
 import { MapPin, MessageCircle, Phone } from "lucide-react";
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email." }),
-  whatsapp: z.string().min(10, { message: "Please enter a valid WhatsApp number." }),
-  country: z.string({ required_error: "Please select a country." }),
+  name: z.string().min(2, { message: "يجب أن يتكون الاسم من حرفين على الأقل." }),
+  email: z.string().email({ message: "الرجاء إدخال بريد إلكتروني صالح." }),
+  whatsapp: z.string().min(10, { message: "الرجاء إدخال رقم واتساب صالح." }),
+  country: z.string({ required_error: "الرجاء اختيار بلد." }),
 });
 
 const Contact = () => {
@@ -25,8 +25,8 @@ const Contact = () => {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: "Form Submitted!",
-      description: "We have received your request and will get back to you shortly.",
+      title: "تم إرسال النموذج!",
+      description: "لقد تلقينا طلبك وسنعاود الاتصال بك قريبًا.",
     });
     form.reset();
   }
@@ -35,71 +35,71 @@ const Contact = () => {
     <section id="contact" className="py-12 md:py-24 bg-secondary">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold">Contact & Booking</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">التواصل والحجز</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Ready to start your journey? Book a free consultation or send us your questions.
+            هل أنت مستعد لبدء رحلتك؟ احجز استشارة مجانية أو أرسل لنا أسئلتك.
           </p>
         </div>
         <div className="mt-12 grid md:grid-cols-2 gap-12 items-start">
-          <div>
+          <div className="text-right">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
+                    <FormLabel>الاسم</FormLabel>
+                    <FormControl><Input placeholder="اسمك" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>البريد الإلكتروني</FormLabel>
                     <FormControl><Input placeholder="your.email@example.com" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="whatsapp" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>WhatsApp Number</FormLabel>
+                    <FormLabel>رقم الواتساب</FormLabel>
                     <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="country" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country of Interest</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select a country" /></SelectTrigger></FormControl>
+                    <FormLabel>بلد الاهتمام</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                      <FormControl><SelectTrigger><SelectValue placeholder="اختر بلدًا" /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="germany">Germany</SelectItem>
-                        <SelectItem value="romania">Romania</SelectItem>
-                        <SelectItem value="jordan">Jordan</SelectItem>
+                        <SelectItem value="germany">ألمانيا</SelectItem>
+                        <SelectItem value="romania">رومانيا</SelectItem>
+                        <SelectItem value="jordan">الأردن</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full" size="lg">Book a Free Consultation</Button>
+                <Button type="submit" className="w-full" size="lg">احجز استشارة مجانية</Button>
               </form>
             </Form>
           </div>
-          <div className="space-y-6">
+          <div className="space-y-6 text-right">
             <div className="bg-background p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold mb-4">Other Ways to Connect</h3>
+              <h3 className="text-xl font-semibold mb-4">طرق أخرى للتواصل</h3>
               <div className="space-y-4">
-                <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-primary transition-colors">
+                <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="flex items-center justify-end gap-3 hover:text-primary transition-colors">
+                  <span>تحدث عبر الواتساب</span>
                   <Phone className="h-6 w-6" />
-                  <span>Chat on WhatsApp</span>
                 </a>
-                <div className="flex items-center gap-3 text-muted-foreground">
+                <div className="flex items-center justify-end gap-3 text-muted-foreground">
+                  <span>دردشة مباشرة (قريباً)</span>
                   <MessageCircle className="h-6 w-6" />
-                  <span>Live Chat (Coming Soon)</span>
                 </div>
               </div>
             </div>
             <div className="bg-background p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold mb-4">Our Offices</h3>
-              <div className="mt-4 h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Map Placeholder</div>
+              <h3 className="text-xl font-semibold mb-4">مكاتبنا</h3>
+              <div className="mt-4 h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">مكان الخريطة</div>
             </div>
           </div>
         </div>

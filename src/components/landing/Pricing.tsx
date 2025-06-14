@@ -5,30 +5,30 @@ import { Check } from "lucide-react";
 
 const packages = [
   {
-    name: "Basic Package",
+    name: "الباقة الأساسية",
     price: "€199",
-    description: "Consultation + university application",
-    features: ["One-on-one consultation", "University application assistance"],
+    description: "استشارة + طلب جامعي",
+    features: ["استشارة فردية", "المساعدة في طلب الجامعة"],
   },
   {
-    name: "Full Package",
+    name: "الباقة الكاملة",
     price: "€499",
-    description: "Application + visa + housing",
+    description: "طلب + تأشيرة + سكن",
     features: [
-      "All Basic features",
-      "Visa application guidance",
-      "Accommodation search support",
+      "جميع مزايا الباقة الأساسية",
+      "إرشادات طلب التأشيرة",
+      "دعم البحث عن سكن",
     ],
     popular: true,
   },
   {
-    name: "Premium Package",
+    name: "الباقة المميزة",
     price: "€799",
-    description: "All of the above + in-country support",
+    description: "كل ما سبق + دعم داخل البلد",
     features: [
-      "All Full Package features",
-      "Pre-departure briefing",
-      "On-arrival support",
+      "جميع مزايا الباقة الكاملة",
+      "إحاطة قبل المغادرة",
+      "دعم عند الوصول",
     ],
   },
 ];
@@ -38,30 +38,30 @@ const Pricing = () => {
     <section id="pricing" className="py-12 md:py-24">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold">Packages & Pricing</h2>
-          <p className="mt-4 text-lg text-muted-foreground">Affordable & transparent pricing to get you started.</p>
+          <h2 className="text-3xl md:text-4xl font-bold">الباقات والأسعار</h2>
+          <p className="mt-4 text-lg text-muted-foreground">أسعار معقولة وشفافة لتبدأ رحلتك.</p>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {packages.map((pkg) => (
-            <Card key={pkg.name} className={pkg.popular ? "border-primary ring-2 ring-primary" : ""}>
+            <Card key={pkg.name} className={pkg.popular ? "border-primary ring-2 ring-primary text-right" : "text-right"}>
               <CardHeader>
                 <CardTitle>{pkg.name}</CardTitle>
                 <CardDescription>{pkg.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-4xl font-bold">{pkg.price}</div>
+                <div className="text-4xl font-bold text-left">{pkg.price}</div>
                 <ul className="space-y-2">
                   {pkg.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
+                    <li key={feature} className="flex items-start gap-2 flex-row-reverse">
                       <Check className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                      <span>{feature}</span>
+                      <span className="flex-1">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
               <CardFooter>
                 <Button className="w-full" variant={pkg.popular ? "default" : "outline"} asChild>
-                  <a href="#contact">Choose Plan</a>
+                  <a href="#contact">اختر الباقة</a>
                 </Button>
               </CardFooter>
             </Card>
