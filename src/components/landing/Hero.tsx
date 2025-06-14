@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import HeroScene from "./HeroScene";
 
 const Hero = () => {
   return (
@@ -18,10 +19,10 @@ const Hero = () => {
         Your browser does not support the video tag.
       </video>
       <div className="absolute inset-0 bg-black/50" />
-      <div className="relative z-10 text-center px-4">
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-          رفيقك الدراسي العالمي
-        </h1>
+      <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
+        <div className="w-full h-1/2 min-h-[200px]">
+          <HeroScene />
+        </div>
         <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto">
           نوجه الطلاب خطوة بخطوة للدراسة في الخارج — من اختيار الجامعة المناسبة حتى الوصول إلى وطنك الجديد.
         </p>

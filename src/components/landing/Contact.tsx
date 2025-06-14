@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { MapPin, MessageCircle, Phone } from "lucide-react";
+import Map from "./Map";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يتكون الاسم من حرفين على الأقل." }),
@@ -98,7 +100,7 @@ const Contact = () => {
             </div>
             <div className="bg-background p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-4">مكاتبنا</h3>
-              <div className="mt-4 h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">مكان الخريطة</div>
+              <Map />
             </div>
           </div>
         </div>

@@ -19,7 +19,10 @@ const WhyChooseUs = () => {
         <div className="mt-12 max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           {reasons.map((reason, index) => (
             <div key={index} className="flex items-center space-x-3 flex-row-reverse space-x-reverse">
-              <CheckCircle className="h-6 w-6 text-primary flex-shrink-0" />
+              <CheckCircle 
+                className="h-6 w-6 text-primary flex-shrink-0 opacity-0 animate-scale-in"
+                style={{ animationDelay: `${index * 150}ms` }}
+              />
               <p className="text-lg">{reason}</p>
             </div>
           ))}
