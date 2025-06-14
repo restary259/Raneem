@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GraduationCap, FileText, BookOpen, Passport, Home, Compass, Users } from 'lucide-react';
+import { GraduationCap, FileText, BookOpen, CreditCard, Home, Compass, Users } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
@@ -21,7 +21,7 @@ const services = [
     description: "نحجز لك مقعدًا في أفضل معاهد اللغة المعتمدة لمساعدتك على تلبية متطلبات القبول.",
   },
   {
-    icon: Passport,
+    icon: CreditCard,
     title: "التأشيرات والإقامة",
     description: "فريقنا خبير في تجهيز ملف السفارة، حجز المواعيد، ومتابعة طلبك للحصول على التأشيرة.",
   },
