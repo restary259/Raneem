@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -84,7 +85,7 @@ const RegistrationForm = () => {
                     </Select><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="aboutYou" render={({ field }) => (
-                  <FormItem><FormLabel>{formContent.aboutYou}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{formContent.aboutYou}</FormLabel><FormControl><Textarea className="rtl:text-right" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="previousExperience" render={({ field }) => (
                   <FormItem className="space-y-3"><FormLabel>{formContent.previousExperience}</FormLabel>
@@ -104,7 +105,7 @@ const RegistrationForm = () => {
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
-                  <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea className="rtl:text-right" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField
                   control={form.control}
