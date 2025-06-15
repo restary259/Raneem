@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +36,7 @@ interface CostBreakdown {
 }
 
 const CostCalculator = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const [results, setResults] = useState<CostBreakdown | null>(null);
 
   const form = useForm<FormValues>({
