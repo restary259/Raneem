@@ -38,11 +38,7 @@ const PartnersPage = () => {
                     </div>
                 </section>
                 
-                <div className="py-6 bg-background">
-                    <div className="container mx-auto px-4">
-                        
-                    </div>
-                </div>
+                
             </main>
             <Footer />
         </div>;
