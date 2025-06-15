@@ -87,16 +87,29 @@ const WhoWeArePage = () => {
 
     const storyPoints = [
         {
-            title: "البداية",
+            icon: Lightbulb,
+            title: "البداية: شرارة الفكرة",
             description: "رؤية ولدت من رحم الحاجة، لتوفير المعلومات الدقيقة والدعم الصادق للطلاب العرب الطموحين.",
         },
         {
-            title: "النمو والتطور",
+            icon: TrendingUp,
+            title: "النمو: بناء الجسور",
             description: "توسيع شبكة شركائنا من الجامعات المرموقة، وبناء فريق من الخبراء المتفانين في خدمة الطلاب.",
         },
         {
-            title: "المستقبل",
-            description: "نطمح لنكون الوجهة الأولى للطلاب العرب، مع الالتزام بقيمنا الأساسية: الشفافية، النزاهة، والخدمة المتميزة.",
+            icon: Star,
+            title: "رسالتنا: بوصلة عملنا",
+            description: "ربط الطلاب العرب بأفضل الفرص التعليمية الدولية، مع التزامنا المطلق بالشفافية والنزاهة والخدمة التي تضع الطالب أولاً.",
+        },
+        {
+            icon: HeartHandshake,
+            title: "رؤيتنا: تمكين المستقبل",
+            description: "تمكين كل طالب من تحقيق طموحاته الأكاديمية والشخصية بثقة واطمئنان، ليصبحوا قادة المستقبل في مجتمعاتهم.",
+        },
+        {
+            icon: Globe,
+            title: "المستقبل: آفاق عالمية",
+            description: "نطمح لنكون الوجهة الأولى للطلاب العرب، مع الالتزام بقيمنا الأساسية والابتكار المستمر في خدماتنا.",
         }
     ];
 
@@ -138,39 +151,23 @@ const WhoWeArePage = () => {
                                         <div className="md:w-1/2">
                                             <Card className="bg-card shadow-xl border-l-4 md:border-l-0 md:border-r-4 border-accent transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 animate-fade-in">
                                                 <CardHeader>
-                                                    <CardTitle>{point.title}</CardTitle>
+                                                    <CardTitle className="flex items-center gap-3">
+                                                        <point.icon className="h-6 w-6 text-accent md:hidden" />
+                                                        {point.title}
+                                                    </CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <p className="text-muted-foreground">{point.description}</p>
                                                 </CardContent>
                                             </Card>
                                         </div>
-                                        <div className="hidden md:flex w-16 h-16 rounded-full bg-primary items-center justify-center mx-auto my-4 md:my-0 flex-shrink-0 relative shadow-lg">
-                                            <div className="w-3 h-3 bg-accent rounded-full animate-pulse"></div>
+                                        <div className="hidden md:flex w-16 h-16 rounded-full bg-primary text-primary-foreground items-center justify-center mx-auto my-4 md:my-0 flex-shrink-0 relative shadow-lg">
+                                            <point.icon className="w-8 h-8" />
                                         </div>
                                         <div className="md:w-1/2"></div>
                                         <div className="h-12 w-0.5 bg-border mx-auto md:hidden"></div>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section className="py-16 md:py-24">
-                    <div className="container mx-auto px-4">
-                        <div className="grid md:grid-cols-2 gap-12 items-center">
-                            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                                <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6 flex items-center gap-3"><Star className="text-accent" /> رسالتنا</h2>
-                                <p className="text-muted-foreground leading-relaxed text-lg">
-                                    ربط الطلاب العرب بأفضل الفرص التعليمية الدولية، مع التزامنا المطلق بالشفافية والنزاهة والخدمة التي تضع الطالب أولاً.
-                                </p>
-                            </div>
-                            <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                                <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6 flex items-center gap-3"><HeartHandshake className="text-accent" /> رؤيتنا</h2>
-                                <p className="text-muted-foreground leading-relaxed text-lg">
-                                    تمكين كل طالب من تحقيق طموحاته الأكاديمية والشخصية بثقة واطمئنان، ليصبحوا قادة المستقبل في مجتمعاتهم.
-                                </p>
                             </div>
                         </div>
                     </div>
