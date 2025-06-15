@@ -10,11 +10,13 @@ import InfluencerMessage from "@/components/partnership/InfluencerMessage";
 import SuccessStories from "@/components/partnership/SuccessStories";
 import RegistrationForm from "@/components/partnership/RegistrationForm";
 import Faq from "@/components/partnership/Faq";
+import { useTranslation } from "react-i18next";
 
 const PartnershipPage = () => {
+    const { t } = useTranslation();
     useEffect(() => {
-        document.title = "Partnership Opportunities | Earn with Darb Study";
-    }, []);
+        document.title = t('partnershipPage.title');
+    }, [t]);
 
     return (
         <div className="flex flex-col min-h-screen bg-secondary text-foreground">

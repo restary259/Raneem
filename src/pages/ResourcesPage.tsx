@@ -1,4 +1,3 @@
-
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
@@ -11,34 +10,10 @@ import CostCalculator from '@/components/calculator/CostCalculator';
 import { useTranslation } from 'react-i18next';
 import CurrencyComparator from '@/components/calculator/CurrencyComparator';
 
-const resources = [
-  {
-    title: 'قائمة المستلزمات: ماذا تحزم؟',
-    description: 'قائمة تحقق شاملة لجميع الأغراض الأساسية التي ستحتاجها لرحلتك وبدايتك الجديدة في ألمانيا.',
-    fileUrl: '/downloads/what-to-pack.pdf',
-    fileSize: '1.2MB'
-  },
-  {
-    title: 'دليل الوثائق المطلوبة',
-    description: 'لا تنس أي مستند مهم! استخدم هذا الدليل للتأكد من أن جميع أوراقك جاهزة ومنظمة.',
-    fileUrl: '/downloads/required-documents.pdf',
-    fileSize: '850KB'
-  },
-  {
-    title: 'نصائح للأيام الأولى في الخارج',
-    description: 'دليل إرشادي لمساعدتك على التأقلم بسرعة خلال أيامك وأسابيعك الأولى في ألمانيا.',
-    fileUrl: '/downloads/first-days-tips.pdf',
-    fileSize: '2.1MB'
-  },
-  {
-    title: 'دليل الخدمات الطبية في هايدلبرغ',
-    description: 'دليلك الشامل للمستشفيات والأطباء والصيدليات في هايدلبرغ. هذا الملف من تقديمك!',
-    fileUrl: '/downloads/heidelberg-medical-guide.pdf',
-  }
-];
-
 const ResourcesPage = () => {
   const { t } = useTranslation();
+  const resources = t('resourcesPage.guides', { returnObjects: true }) as { title: string, description: string, fileUrl: string, fileSize?: string }[];
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />

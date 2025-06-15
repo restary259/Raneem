@@ -24,7 +24,7 @@ const Header = () => {
       <div className="container flex h-14 items-center">
         <div className="ml-4 hidden md:flex flex-1">
           <Link to="/" className="ml-6 flex items-center space-x-2">
-            <span className="font-extrabold text-xl">Darb</span>
+            <span className="font-extrabold text-xl">{t('nav.brand')}</span>
           </Link>
           <nav className="flex items-center gap-x-6 text-sm font-medium">
             {navLinks.map((link) => (
@@ -45,7 +45,7 @@ const Header = () => {
               <div className="flex flex-col h-full">
                 <nav className="grid gap-6 text-lg font-medium text-right">
                   <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-end">
-                    <span className="font-extrabold text-xl">Darb</span>
+                    <span className="font-extrabold text-xl">{t('nav.brand')}</span>
                   </Link>
                   {navLinks.map((link) => (
                     <Link key={link.href} to={link.href} className="block py-2 text-muted-foreground hover:text-foreground">
@@ -66,7 +66,7 @@ const Header = () => {
             </div>
              <div className="md:hidden">
                 <Link to="/" className="flex items-center space-x-2">
-                    <span className="font-extrabold text-xl">Darb</span>
+                    <span className="font-extrabold text-xl">{t('nav.brand')}</span>
                 </Link>
              </div>
         </div>
