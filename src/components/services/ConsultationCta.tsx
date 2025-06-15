@@ -104,7 +104,7 @@ const ConsultationCta = () => {
                                         <FormItem>
                                             <FormLabel>بلد الإقامة الحالي</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="مثال: الأردن" {...field} />
+                                                <Input placeholder="مثال: حيفا" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
