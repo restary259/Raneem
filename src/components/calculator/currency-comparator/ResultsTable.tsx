@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ interface ResultsTableProps {
 }
 
 export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => {
-  const { t } = useTranslation('resources');
+  const { t } = useTranslation();
 
   return (
     <Card>
@@ -42,7 +41,7 @@ export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => 
                     <div className="text-xs text-muted-foreground">{t('currencyComparator.transferFee')}: {result.serviceFee} + {t('currencyComparator.bankFee')}: {result.bankFee}</div>
                 </TableCell>
                 <TableCell>{result.time}</TableCell>
-                <TableCell className="font-bold text-lg text-primary">
+                <TableCell className="text-left font-bold text-lg text-primary">
                   {Math.round(result.received).toLocaleString()} {targetCurrency}
                 </TableCell>
                 <TableCell>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,7 @@ const initialSubjects: Subject[] = [
 ];
 
 const GpaCalculator = () => {
-  const { t } = useTranslation('resources');
+  const { t } = useTranslation();
   const [subjects, setSubjects] = useState<Subject[]>(() => JSON.parse(JSON.stringify(initialSubjects)));
   const [results, setResults] = useState<{ average: number | null; germanGrade: number | null }>({ average: null, germanGrade: null });
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +131,7 @@ const GpaCalculator = () => {
                         <p>
                           <Trans
                             i18nKey="gpaCalculator.yourAverage"
+                            ns="resources"
                             values={{ average: results.average.toLocaleString('ar') }}
                             components={{ 1: <span className="font-bold" /> }}
                           />
@@ -139,6 +139,7 @@ const GpaCalculator = () => {
                         <p>
                           <Trans
                             i18nKey="gpaCalculator.germanGrade"
+                            ns="resources"
                             values={{ germanGrade: results.germanGrade.toLocaleString('ar') }}
                             components={{ 1: <span className="font-bold" /> }}
                           />
