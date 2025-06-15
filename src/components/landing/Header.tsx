@@ -50,8 +50,8 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side={sheetSide}>
                 <div className="flex flex-col h-full">
-                  <nav className="grid gap-6 text-lg font-medium text-right mt-6">
-                    <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-end">
+                  <nav className="grid gap-6 text-lg font-medium text-left mt-6">
+                    <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-start">
                       <span className="font-extrabold text-xl">{t('nav.brand')}</span>
                     </Link>
                     {navLinks.map((link) => (
