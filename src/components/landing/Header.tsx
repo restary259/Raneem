@@ -14,27 +14,18 @@ const Header = () => {
     { href: "/locations", label: t('nav.locations') },
     { href: "/testimonials", label: t('nav.testimonials') },
     { href: "/services", label: t('nav.services') },
-    { href: "/broadcast", label: "بث دارب" },
+    { href: "/broadcast", label: t('nav.broadcast') },
     { href: "/partnership", label: t('nav.partnership') },
     { href: "/partners", label: t('nav.partners') },
     { href: "/resources", label: t('nav.resources') },
     { href: "/contact", label: t('nav.contact') },
   ];
   
-  const sheetSide = 'left';
+  const sheetSide = 'right';
 
   return (
-    <header dir="ltr" className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="font-extrabold text-xl">{t('nav.brand')}</span>
-          </Link>
-          <nav className="hidden md:flex">
-            <DesktopNav />
-          </nav>
-        </div>
-
         <div className="flex items-center gap-2">
           <div className="hidden md:flex">
             <Button asChild variant="accent">
@@ -50,8 +41,8 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side={sheetSide}>
                 <div className="flex flex-col h-full">
-                  <nav className="grid gap-6 text-lg font-medium text-left mt-6">
-                    <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-start">
+                  <nav className="grid gap-6 text-lg font-medium text-right mt-6">
+                    <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-end">
                       <span className="font-extrabold text-xl">{t('nav.brand')}</span>
                     </Link>
                     {navLinks.map((link) => (
@@ -70,6 +61,16 @@ const Header = () => {
             </Sheet>
           </div>
         </div>
+        
+        <div className="flex items-center gap-6">
+          <nav className="hidden md:flex">
+            <DesktopNav />
+          </nav>
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="font-extrabold text-xl">{t('nav.brand')}</span>
+          </Link>
+        </div>
+
       </div>
     </header>
   );

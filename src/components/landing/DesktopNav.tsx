@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -20,17 +19,17 @@ const DesktopNav = () => {
     {
       title: t('nav.about'),
       href: '/about',
-      description: 'تعرف على قصتنا ورؤيتنا وقيمنا.',
+      description: t('desktopNav.about.description'),
     },
     {
       title: t('nav.locations'),
       href: '/locations',
-      description: 'اكتشف مواقع مكاتبنا حول العالم.',
+      description: t('desktopNav.locations.description'),
     },
     {
       title: t('nav.testimonials'),
       href: '/testimonials',
-      description: 'اقرأ قصص نجاح طلابنا الملهمة.',
+      description: t('desktopNav.testimonials.description'),
     },
   ];
 
@@ -38,12 +37,12 @@ const DesktopNav = () => {
     {
         title: t('nav.partnership'),
         href: '/partnership',
-        description: 'انضم إلى شبكتنا كشريك أو مؤثر.',
+        description: t('desktopNav.partnership.description'),
     },
     {
         title: t('nav.partners'),
         href: '/partners',
-        description: 'تصفح قائمة شركائنا المعتمدين.',
+        description: t('desktopNav.partners.description'),
     }
   ];
 
@@ -86,7 +85,7 @@ const DesktopNav = () => {
         <NavigationMenuItem>
           <Link to="/broadcast">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {'بث دارب'}
+              {t('nav.broadcast')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

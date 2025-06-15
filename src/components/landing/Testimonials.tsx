@@ -1,39 +1,17 @@
+
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const testimonials = [
-  {
-    quote: "بفضل درب، تم قبولي في جامعة مرموقة في ألمانيا بدون أي ضغوط!",
-    name: "أحمد",
-    location: "ألمانيا",
-    avatar: "https://i.pravatar.cc/150?img=1",
-  },
-  {
-    quote: "تجربة ممتازة! ساعدوني في كل خطوة على الطريق للوصول إلى جامعة أحلامي في رومانيا. شكرًا جزيلًا!",
-    name: "سارة",
-    location: "إسرائيل",
-    avatar: "https://i.pravatar.cc/150?img=4",
-  },
-  {
-    quote: "كان الفريق داعمًا جدًا طوال العملية. أوصي بهم بشدة!",
-    name: "فاطمة",
-    location: "رومانيا",
-    avatar: "https://i.pravatar.cc/150?img=2",
-  },
-  {
-    quote: "كانت توجيهاتهم لطلب التأشيرة لا تقدر بثمن. لم أكن لأفعل ذلك بدونهم.",
-    name: "يوسف",
-    location: "الأردن",
-    avatar: "https://i.pravatar.cc/150?img=3",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const Testimonials = () => {
+  const { t } = useTranslation();
+  const testimonials = t('testimonials.items', { returnObjects: true }) as { quote: string; name: string; location: string; avatar: string; }[];
+  
   return (
     <section id="testimonials" className="py-12 md:py-24">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold">قصص النجاح</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">{t('testimonials.title')}</h2>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (

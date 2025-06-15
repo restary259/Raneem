@@ -6,8 +6,10 @@ import VideoCategories from '@/components/broadcast/VideoCategories';
 import VideoGallery from '@/components/broadcast/VideoGallery';
 import SubmitVideo from '@/components/broadcast/SubmitVideo';
 import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
+import { useTranslation } from 'react-i18next';
 
 const BroadcastPage = () => {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
 
   const featuredVideo = useMemo(() => broadcastData.find(p => p.featured), []);
@@ -23,10 +25,9 @@ const BroadcastPage = () => {
   }, [selectedCategory]);
 
   if (!featuredVideo) {
-    // A simple fallback if no featured video is found in data
     return (
         <div dir="rtl" className="flex items-center justify-center h-screen">
-            <p>جاري تحميل محتوى البث...</p>
+            <p>{t('broadcastPage.loading')}</p>
         </div>
     );
   }
@@ -40,7 +41,7 @@ const BroadcastPage = () => {
         <section className="py-8 md:py-16">
           <div className="container">
               <div className="text-right mb-8">
-                  <h2 className="text-3xl font-bold">📚 فئات الفيديو</h2>
+                  <h2 className="text-3xl font-bold">{t('broadcastPage.categoriesTitle')}</h2>
               </div>
               <VideoCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
           </div>
@@ -49,7 +50,7 @@ const BroadcastPage = () => {
         <section className="pb-12 md:pb-24">
             <div className="container">
                 <div className="text-right mb-8">
-                    <h2 className="text-3xl font-bold">🎬 معرض مقاطع الفيديو</h2>
+                    <h2 className="text-3xl font-bold">{t('broadcastPage.galleryTitle')}</h2>
                 </div>
                 <VideoGallery posts={galleryVideos} />
             </div>
@@ -60,7 +61,7 @@ const BroadcastPage = () => {
       </main>
       <footer className="py-8 text-center text-muted-foreground bg-muted/50 dark:bg-muted/20">
         <div className="container">
-          <p>“كل ما تريد معرفته عن الحياة والدراسة في الخارج… بالفيديو وعلى طول الخط مع دارب ستادي إنترناشونال.”</p>
+          <p>{t('broadcastPage.footer')}</p>
         </div>
       </footer>
     </div>
