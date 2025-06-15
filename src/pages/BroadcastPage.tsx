@@ -9,7 +9,7 @@ const BroadcastPage = () => {
       <div className="container mx-auto max-w-3xl py-8 px-4 font-sans">
         <header className="text-center mb-12 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">
-            غرفة أخبار دارب
+            بث دارب
           </h1>
           <p className="text-lg text-muted-foreground">
             آخر التحديثات والنصائح لرحلتك الدراسية، مباشرة من فريقنا.

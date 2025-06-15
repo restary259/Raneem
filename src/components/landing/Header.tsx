@@ -11,7 +11,7 @@ const Header = () => {
     { href: "/", label: t('nav.home') },
     { href: "/about", label: t('nav.about') },
     { href: "/services", label: t('nav.services') },
-    { href: "/broadcast", label: "غرفة الأخبار" },
+    { href: "/broadcast", label: "بث دارب" },
     { href: "/partners", label: t('nav.partners') },
     { href: "/partnership", label: t('nav.partnership') },
     { href: "/resources", label: t('nav.resources') },
