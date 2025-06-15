@@ -6,7 +6,7 @@ import WhyChooseUs from "@/components/landing/WhyChooseUs";
 import Footer from "@/components/landing/Footer";
 import PartnersMarquee from "@/components/landing/PartnersMarquee";
 import StudentJourney from "@/components/landing/StudentJourney";
-import Testimonials from "@/components/landing/Testimonials";
+import StudentGallery from "@/components/landing/StudentGallery";
 
 const Index = () => {
   return (
@@ -18,7 +18,7 @@ const Index = () => {
         <About />
         <StudentJourney />
         <WhyChooseUs />
-        <Testimonials />
+        <StudentGallery />
       </main>
       <Footer />
     </div>

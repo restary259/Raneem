@@ -42,5 +42,17 @@
       { "quote": "كان الفريق داعمًا جدًا طوال العملية. أوصي بهم بشدة!", "name": "فاطمة", "location": "رومانيا", "avatar": "https://i.pravatar.cc/150?img=2" },
       { "quote": "كانت توجيهاتهم لطلب التأشيرة لا تقدر بثمن. لم أكن لأفعل ذلك بدونهم.", "name": "يوسف", "location": "الأردن", "avatar": "https://i.pravatar.cc/150?img=3" }
     ]
+  },
+  "studentGallery": {
+    "title": "طلابنا حول العالم",
+    "subtitle": "شاهد قصص نجاح طلابنا الملهمة في أفضل الجامعات العالمية.",
+    "students": [
+      { "name": "نورة", "destination": "ألمانيا", "image": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop" },
+      { "name": "خالد", "destination": "رومانيا", "image": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop" },
+      { "name": "فاطمة", "destination": "المملكة المتحدة", "image": "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop" },
+      { "name": "علي", "destination": "كندا", "image": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop" },
+      { "name": "مريم", "destination": "أستراليا", "image": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop" },
+      { "name": "يوسف", "destination": "الولايات المتحدة", "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop" }
+    ]
   }
 }
