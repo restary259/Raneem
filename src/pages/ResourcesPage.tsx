@@ -12,7 +12,8 @@ import CurrencyComparator from '@/components/calculator/CurrencyComparator';
 
 const ResourcesPage = () => {
   const { t } = useTranslation();
-  const resources = t('resourcesPage.guides', { returnObjects: true }) as { title: string, description: string, fileUrl: string, fileSize?: string }[];
+  const guides = t('resourcesPage.guides', { returnObjects: true });
+  const resources: { title: string, description: string, fileUrl: string, fileSize?: string }[] = Array.isArray(guides) ? guides : [];
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
