@@ -1,11 +1,9 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ... keep existing code (root, dark) */
 @layer base {
   :root {
     --background: 210 20% 98.5%;
@@ -92,6 +90,10 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  html {
+    @apply scroll-smooth;
+  }
 }
 
 @layer base {
@@ -143,6 +145,10 @@
   .masonry-grid-item {
     break-inside: avoid;
     margin-bottom: 1.5rem;
+  }
+
+  .mask-gradient {
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
   }
 }
 
