@@ -75,18 +75,6 @@ export const broadcastData: BroadcastPost[] = [
   },
   {
     id: 6,
-    category: 'تجارب الطلبة',
-    title: 'جولة في جامعة بوخارست، رومانيا',
-    description: 'استكشف الحرم الجامعي، التصنيفات، الدورات، والرسوم في جامعة بوخارست.',
-    date: '2025-06-05T14:00:00Z',
-    duration: '02:07',
-    posterUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop',
-    youtubeId: 'Uq6ENQtNq7A',
-    country: 'رومانيا',
-    countryFlag: '🇷🇴',
-  },
-  {
-    id: 7,
     category: 'نصائح الدراسة',
     title: 'استراتيجيات المذاكرة الفعالة قبل الامتحانات',
     description: 'تعلم تقنيات مجربة لزيادة تركيزك وتحسين استيعابك للمواد الدراسية في فترة المراجعة النهائية.',
@@ -94,5 +82,17 @@ export const broadcastData: BroadcastPost[] = [
     duration: '11:55',
     posterUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1973&auto=format&fit=crop',
     youtubeId: 'Yb6825eG6e4',
+  },
+  {
+    id: 7,
+    category: 'تجارب الطلبة',
+    title: 'يوم في حياة طالب في عمان',
+    description: 'جولة من منظور شخصي تظهر الحياة في الحرم الجامعي، شوارع عمان، المواصلات، واللحظات الثقافية.',
+    date: '2025-06-15T12:00:00Z',
+    duration: '11:04',
+    posterUrl: 'https://images.unsplash.com/photo-1582845339999-a823c5820a1c?q=80&w=2070&auto=format&fit=crop',
+    youtubeId: 'GzHprfxx8sI',
+    country: 'الأردن',
+    countryFlag: '🇯🇴',
   },
 ];
