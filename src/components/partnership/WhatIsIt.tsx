@@ -7,7 +7,7 @@ const icons = { BadgePercent, Handshake, Mail };
 const iconKeys: (keyof typeof icons)[] = ['BadgePercent', 'Handshake', 'Mail'];
 
 const WhatIsIt = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('partnership');
   const features = t('whatIsIt.features', { returnObjects: true }) as { title: string; description: string }[];
   
     return (
@@ -18,7 +18,7 @@ const WhatIsIt = () => {
                     <p className="mt-4 text-muted-foreground">{t('whatIsIt.subtitle')}</p>
                 </div>
                 <div className="mt-12 grid gap-8 md:grid-cols-3">
-                    {features.map((feature, index) => {
+                    {Array.isArray(features) && features.map((feature, index) => {
                          const IconComponent = icons[iconKeys[index]];
                          return (
                              <Card key={index} className="text-center p-4">
