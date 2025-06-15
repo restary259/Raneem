@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, Send, MessageCircle, Info, Briefcase } from 'lucide-react';
+import { X, Send, MessageCircle, Info, Briefcase, Download } from 'lucide-react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -74,6 +74,12 @@ const ChatPopup = ({ onClose }: { onClose: () => void }) => {
                                 <Link to="/services">
                                     اكتشف خدماتنا
                                     <Briefcase className="mr-2 h-5 w-5" />
+                                </Link>
+                             </Button>
+                             <Button asChild variant="outline" className="justify-end">
+                                <Link to="/resources">
+                                    أدلة قابلة للتحميل
+                                    <Download className="mr-2 h-5 w-5" />
                                 </Link>
                              </Button>
                              <Button asChild variant="outline" className="justify-end">

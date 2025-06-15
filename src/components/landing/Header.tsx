@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/services", label: "خدماتنا" },
   { href: "/partners", label: "شركاؤنا" },
   { href: "/partnership", label: "فرص الشراكة" },
+  { href: "/resources", label: "الموارد والأدلة" },
   { href: "/contact", label: "تواصل معنا" },
 ];
 
