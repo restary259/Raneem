@@ -1,6 +1,7 @@
+
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Points, PointMaterial, Text, Sphere } from '@react-three/drei'
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import * as random from 'maath/random/dist/maath-random.esm'
 import * as THREE from 'three'
 
@@ -28,7 +29,7 @@ const GlobeWithPoints = () => {
             />
         </Points>
         <Sphere args={[2.5, 32, 32]}>
-            <meshStandardMaterial color="#050816" wireframe={false} polygonOffset polygonOffsetFactor={-5} flatShading />
+            <meshStandardMaterial color="#050816" wireframe={false} polygonOffset polygonOffsetFactor={-5} />
         </Sphere>
     </group>
   )
