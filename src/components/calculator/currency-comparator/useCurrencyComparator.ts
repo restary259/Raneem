@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,23 +26,34 @@ export const useCurrencyComparator = () => {
   const availableBanks = banksByCountry[targetCountry];
 
   useEffect(() => {
-    if (availableBanks.length > 0) {
+    const currentBank = form.getValues('receivingBank');
+    const isCurrentBankAvailable = availableBanks.some(b => b.id === currentBank);
+
+    if (availableBanks.length > 0 && !isCurrentBankAvailable) {
         form.setValue('receivingBank', availableBanks[0].id);
     }
   }, [targetCountry, availableBanks, form]);
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = useCallback((values: FormValues) => {
     const { amount, receivingBank, deliverySpeed } = values;
     const services = mockApiData[targetCurrency as keyof typeof mockApiData];
     const bankData = availableBanks.find(b => b.id === receivingBank);
-    const bankFee = bankData?.fee ?? 0;
+    
+    if (!bankData) {
+      console.error("Bank data not found for:", receivingBank);
+      setResults(null);
+      setBestResult(null);
+      return;
+    }
+
+    const bankFee = bankData.fee;
     
     const calculatedResults = Object.entries(services).map(([service, data]) => {
       const serviceFee = data.fee;
       const totalFee = serviceFee + bankFee;
       return {
         service: t(`currencyComparator.${service.toLowerCase()}` as any),
-        bank: t(bankData!.nameKey as any),
+        bank: t(bankData.nameKey as any),
         rate: data.rate,
         serviceFee: serviceFee,
         bankFee: bankFee,
@@ -65,8 +76,15 @@ export const useCurrencyComparator = () => {
     });
 
     setResults(calculatedResults);
-    setBestResult(calculatedResults[0]);
-  };
+    setBestResult(calculatedResults[0] || null);
+  }, [t, targetCurrency, availableBanks]);
+
+  useEffect(() => {
+    // Perform initial calculation on mount
+    onSubmit(form.getValues());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSubmit]);
+
 
   return {
     t,
