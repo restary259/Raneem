@@ -14,12 +14,13 @@ const WhyJoinUs = () => {
 
   const renderIcon = (iconName: keyof typeof icons) => {
     const IconComponent = icons[iconName];
-    // This check ensures IconComponent is a valid React component before rendering.
-    if (typeof IconComponent !== "object" || IconComponent === null || !('render' in IconComponent)) {
-        return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
+    // This guard ensures that we only try to render valid Lucide icon components,
+    // which are objects, filtering out other function exports.
+    if (IconComponent && typeof IconComponent !== 'function') {
+        const LucideIcon = IconComponent as React.ElementType;
+        return <LucideIcon className="h-10 w-10 text-accent" />;
     }
-    const LucideIcon = IconComponent as React.ElementType;
-    return <LucideIcon className="h-10 w-10 text-accent" />;
+    return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
   };
 
   return (
