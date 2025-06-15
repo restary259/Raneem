@@ -117,4 +117,14 @@ export const broadcastData: BroadcastPost[] = [
     country: 'ألمانيا',
     countryFlag: '🇩🇪',
   },
+  {
+    id: 10,
+    category: 'نصائح الدراسة',
+    title: 'كيف تذاكر بفعالية (TED-Ed)',
+    description: 'اكتشف أفضل الاستراتيجيات العلمية للمذاكرة والتعلم بكفاءة عالية، مقدمة من TED-Ed.',
+    date: '2025-06-16T10:00:00Z',
+    duration: '04:54',
+    posterUrl: 'https://img.youtube.com/vi/TjPFZaMe2yw/maxresdefault.jpg',
+    youtubeId: 'TjPFZaMe2yw',
+  },
 ];
