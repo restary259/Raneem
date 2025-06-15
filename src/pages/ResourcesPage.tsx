@@ -25,10 +25,9 @@ const resources = [
     fileSize: '2.1MB'
   },
   {
-    title: 'دليل المرافق الطبية في هايدلبرغ',
-    description: 'قائمة شاملة بالمستشفيات والأطباء والصيدليات في مدينة هايدلبرغ لراحتك وأمانك.',
-    fileUrl: '/downloads/heidelberg-medical.pdf',
-    fileSize: '3.5MB'
+    title: 'دليل الخدمات الطبية في هايدلبرغ',
+    description: 'دليلك الشامل للمستشفيات والأطباء والصيدليات في هايدلبرغ. هذا الملف من تقديمك!',
+    fileUrl: '/downloads/heidelberg-medical-guide.pdf',
   }
 ];
 
