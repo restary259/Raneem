@@ -17,7 +17,7 @@ const ChatWidget = () => {
         <Button 
           onClick={toggleChat} 
           size="icon" 
-          className="rounded-full h-16 w-16 bg-primary shadow-lg hover:bg-primary/90 transition-transform hover:scale-110"
+          className="rounded-full h-16 w-16 bg-accent shadow-lg hover:bg-accent/90 transition-transform hover:scale-110"
         >
           {isOpen ? <X className="h-8 w-8 text-primary-foreground" /> : <MessageSquare className="h-8 w-8 text-primary-foreground" />}
         </Button>
