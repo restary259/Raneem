@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -50,50 +51,25 @@ const DesktopNav = () => {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Link to="/">
+          <Link to="/contact">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.home')}
+              {t('nav.contact')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuTrigger>{t('nav.about')}</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-              {aboutComponents.map((component) => (
-                <ListItem
-                  key={component.title}
-                  to={component.href}
-                  title={component.title}
-                >
-                  {component.description}
-                </ListItem>
-              ))}
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-        
-        <NavigationMenuItem>
-          <Link to="/services">
+          <Link to="/resources">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.services')}
+              {t('nav.resources')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        
-        <NavigationMenuItem>
-          <Link to="/broadcast">
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.broadcast')}
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-        
+
         <NavigationMenuItem>
             <NavigationMenuTrigger>{t('nav.partnership')}</NavigationMenuTrigger>
             <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[400px]">
+                <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px]">
                     {partnershipComponents.map((component) => (
                         <ListItem
                         key={component.title}
@@ -108,17 +84,42 @@ const DesktopNav = () => {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link to="/resources">
+          <Link to="/broadcast">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.resources')}
+              {t('nav.broadcast')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link to="/contact">
+          <Link to="/services">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.contact')}
+              {t('nav.services')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>{t('nav.about')}</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+              {aboutComponents.map((component) => (
+                <ListItem
+                  key={component.title}
+                  to={component.href}
+                  title={component.title}
+                >
+                  {component.description}
+                </ListItem>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+          <Link to="/">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.home')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
