@@ -28,7 +28,7 @@ const initialSubjects: Subject[] = [
 ];
 
 const GpaCalculator = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const [subjects, setSubjects] = useState<Subject[]>(() => JSON.parse(JSON.stringify(initialSubjects)));
   const [results, setResults] = useState<{ average: number | null; germanGrade: number | null }>({ average: null, germanGrade: null });
   const [error, setError] = useState<string | null>(null);
