@@ -17,7 +17,6 @@ import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ChatWidget from "./components/chat/ChatWidget";
-import { useEffect } from "react";
 import BroadcastPage from "./pages/BroadcastPage";
 
 const queryClient = new QueryClient();
