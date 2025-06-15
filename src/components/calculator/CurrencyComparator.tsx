@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -145,7 +144,7 @@ const CurrencyComparator = () => {
                     {results.map((result, index) => (
                       <TableRow key={index} className={index === 0 ? "bg-green-100/50 dark:bg-green-900/20" : ""}>
                         <TableCell className="font-bold">{result.service}</TableCell>
-                        <TableCell>1 ILS = {result.rate.toLocaleString()} {form.getValues('targetCurrency')}</TableCell>
+                        <TableCell>{t('currencyComparator.exchangeRateDetail', { rate: result.rate.toLocaleString(), currency: form.getValues('targetCurrency') })}</TableCell>
                         <TableCell>{result.fee.toLocaleString()} ILS</TableCell>
                         <TableCell>{result.time}</TableCell>
                         <TableCell className="font-bold text-lg text-primary">

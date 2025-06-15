@@ -96,10 +96,34 @@
     "revolut": "Revolut",
     "xoom": "Xoom",
     "arrivesInHours": "يصل خلال ساعات",
-    "arrivesInDays": "1-2 أيام عمل"
+    "arrivesInDays": "1-2 أيام عمل",
+    "exchangeRateDetail": "1 شيكل = {{rate}} {{currency}}"
   },
   "gpaCalculator": {
-    "title": "حاسبة المعدل بالنظام الألماني"
+    "title": "حاسبة المعدل بالنظام الألماني",
+    "description": "أدخل علاماتك وعدد الوحدات لكل مادة لحساب معدلك والمكافئ له في النظام الألماني.",
+    "subject": "المادة",
+    "units": "الوحدات",
+    "grade": "العلامة (0-100)",
+    "calculate": "احسب المعدل",
+    "reset": "إعادة تعيين",
+    "results": "النتائج",
+    "yourAverage": "معدلك العام هو: <1>{{average}}</1>",
+    "germanGrade": "معدلك حسب النظام الألماني هو: <1>{{germanGrade}}</1>",
+    "errorMinSubjects": "الرجاء إدخال مادة واحدة على الأقل مع وحداتها وعلامتها.",
+    "errorZeroUnits": "مجموع الوحدات لا يمكن أن يكون صفرًا.",
+    "subjects": {
+      "arabic": "العربية",
+      "hebrew": "العبرية",
+      "english": "الإنجليزية",
+      "math": "الرياضيات",
+      "history": "التاريخ",
+      "deen": "التربية الدينية",
+      "mdniat": "التربية الوطنية",
+      "t5sos1": "تخصص 1",
+      "t5sos2": "تخصص 2",
+      "t5sos3": "تخصص 3"
+    }
   },
   "resourcesPage": {
     "title": "الموارد والأدوات",
@@ -112,3 +136,4 @@
     }
   }
 }
+
