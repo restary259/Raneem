@@ -1,5 +1,4 @@
-
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   HoverCard,
   HoverCardContent,
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ExternalLink, Instagram } from "lucide-react";
 import TikTokIcon from "../icons/TikTokIcon";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const partnerCategories = [
   {
@@ -53,15 +53,13 @@ const PartnersList = () => {
                 {category.partners.map((partner: any) => (
                   <HoverCard key={partner.name}>
                     <HoverCardTrigger asChild>
-                      <Card className="flex flex-col items-center justify-start text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer h-full overflow-hidden rounded-lg">
-                        <CardHeader className="p-0 w-full relative">
-                          <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-48 w-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <div className="absolute bottom-0 p-4 text-right w-full">
-                            <CardTitle className="text-lg font-bold text-white">{partner.name}</CardTitle>
-                            <CardDescription className="text-sm text-white/90 mt-1">{partner.location}</CardDescription>
-                          </div>
-                        </CardHeader>
+                      <Card className="flex flex-col items-center justify-center text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer h-full overflow-hidden rounded-lg p-6">
+                        <Avatar className="w-24 h-24 mb-4 border-2 border-primary/10">
+                          <AvatarImage src={partner.logoUrl} alt={`${partner.name} logo`} className="object-cover" />
+                          <AvatarFallback>{partner.name.substring(0,2)}</AvatarFallback>
+                        </Avatar>
+                        <CardTitle className="text-lg font-bold text-primary">{partner.name}</CardTitle>
+                        <CardDescription className="text-sm text-muted-foreground mt-1">{partner.location}</CardDescription>
                       </Card>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-80" dir="rtl">
