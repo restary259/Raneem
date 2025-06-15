@@ -66,12 +66,12 @@ export const broadcastData: BroadcastPost[] = [
     {
     id: 5,
     category: 'ورش عمل وتوجيه',
-    title: 'ورشة عمل: كيف تكتب سيرة ذاتية احترافية؟',
-    description: 'تسجيل كامل لورشة العمل التي أقيمت عبر الإنترنت حول كتابة السيرة الذاتية التي تجذب انتباه مسؤولي القبول.',
+    title: 'طلب التحاق بكالوريوس: انشاء حساب وتقديم طلب',
+    description: 'شرح تفصيلي خطوة بخطوة لكيفية إنشاء حساب على بوابة القبول وتقديم طلب التحاق لبرامج البكالوريوس بنجاح.',
     date: '2025-06-08T18:00:00Z',
-    duration: '45:12',
-    posterUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop',
-    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+    duration: '05:58',
+    posterUrl: 'https://img.youtube.com/vi/Yewg3n7MM9o/maxresdefault.jpg',
+    youtubeId: 'Yewg3n7MM9o',
   },
   {
     id: 6,
