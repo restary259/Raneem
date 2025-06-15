@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import { useEffect } from "react";
+import BroadcastPage from "./pages/BroadcastPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,7 @@ const App = () => {
           <Route path="/partnership" element={<PartnershipPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/broadcast" element={<BroadcastPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
