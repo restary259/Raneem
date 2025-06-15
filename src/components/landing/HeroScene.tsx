@@ -15,7 +15,7 @@ const GlobeWithPoints = () => {
     }
   });
 
-  const sphere = random.inSphere(new Float32Array(5000), { radius: 2.7 })
+  const sphere = random.inSphere(new Float32Array(5001), { radius: 2.7 })
 
   return (
     <group ref={ref} rotation={[0.1, 0, 0]}>
