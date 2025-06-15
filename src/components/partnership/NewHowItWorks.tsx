@@ -1,7 +1,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import * as icons from "lucide-react";
+import { icons } from "lucide-react";
 
 type Step = {
   icon: keyof typeof icons;
@@ -14,7 +14,7 @@ const NewHowItWorks = () => {
   const steps = t('howItWorks.steps', { returnObjects: true }) as Step[];
 
   const renderIcon = (iconName: keyof typeof icons) => {
-    const IconComponent = icons[iconName as keyof typeof icons];
+    const IconComponent = icons[iconName];
     if (!IconComponent) return null;
     return <IconComponent className="h-12 w-12 text-primary" />;
   };
