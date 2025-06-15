@@ -27,7 +27,7 @@ const Hero = () => {
           رفيقك الدراسي العالمي
         </h1>
         <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
-          {t('hero.subtitle')}
+          من أول قرار حتى أول إنجاز... دارب هي الجسر الآمن نحو دراستك في الخارج
         </p>
         <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
           <Button size="lg" asChild variant="accent" className="transition-transform duration-300 hover:scale-105">

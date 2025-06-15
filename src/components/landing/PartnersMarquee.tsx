@@ -2,7 +2,26 @@
 import React from 'react';
 
 const partners = [
-    'Technical University of Munich', 'RWTH Aachen University', 'Karlsruhe Institute of Technology', 'Humboldt University of Berlin', 'University of Hamburg', 'University of Cologne', 'Goethe University Frankfurt', 'TU Dresden', 'University of Bucharest', 'Carol Davila University of Medicine and Pharmacy', 'Ovidius University', 'Yarmouk University', 'UMF Jordan', 'FU Academy of Languages', 'Kapito Academy of Languages'
+    'Technical University of Munich', 
+    'RWTH Aachen University', 
+    'Karlsruhe Institute of Technology', 
+    'TU Berlin',
+    'TU Darmstadt',
+    'University of Stuttgart',
+    'Leibniz University Hannover',
+    'TU Braunschweig',
+    'Humboldt University of Berlin', 
+    'University of Hamburg', 
+    'University of Cologne', 
+    'Goethe University Frankfurt', 
+    'TU Dresden', 
+    'University of Bucharest', 
+    'Carol Davila University of Medicine and Pharmacy', 
+    'Ovidius University', 
+    'Yarmouk University', 
+    'UMF Jordan', 
+    'FU Academy of Languages', 
+    'Kapito Academy of Languages'
 ];
 
 const PartnersMarquee = () => {
@@ -17,7 +36,7 @@ const PartnersMarquee = () => {
                 <div className="relative w-full overflow-hidden mask-gradient">
                     <div 
                       className="flex animate-marquee whitespace-nowrap"
-                      style={{ animationDuration: '80s' }}
+                      style={{ animationDuration: '60s' }}
                     >
                         {extendedPartners.map((partner, index) => (
                             <span key={index} className="mx-8 text-xl font-semibold text-muted-foreground">
