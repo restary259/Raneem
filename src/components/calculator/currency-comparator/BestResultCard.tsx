@@ -12,7 +12,7 @@ interface BestResultCardProps {
 }
 
 export const BestResultCard = ({ bestResult, form, targetCountry }: BestResultCardProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const targetCurrency = countries[targetCountry].currency;
 
   return (
@@ -26,7 +26,6 @@ export const BestResultCard = ({ bestResult, form, targetCountry }: BestResultCa
       <CardContent className="text-sm sm:text-base text-green-900 dark:text-green-200" dir="rtl">
         <Trans
           i18nKey="currencyComparator.bestRecommendationText"
-          ns="resources"
           values={{
             amount: form.getValues('amount').toLocaleString('ar'),
             country: t(`currencyComparator.${countries[targetCountry].nameKey}`),

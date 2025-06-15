@@ -1,3 +1,4 @@
+
 import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ interface ResultsTableProps {
 }
 
 export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
 
   return (
     <Card>

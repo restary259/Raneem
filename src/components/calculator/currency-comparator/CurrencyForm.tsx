@@ -1,3 +1,4 @@
+
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ interface CurrencyFormProps {
 }
 
 export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const form = useFormContext<FormValues>();
   const targetCountry = useWatch({ control: form.control, name: 'targetCountry' });
   
