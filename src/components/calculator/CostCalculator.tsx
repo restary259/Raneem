@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { costData } from '@/lib/cost-data';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Link } from 'react-router-dom';
 
 const formSchema = z.object({
   country: z.enum(['germany', 'jordan', 'romania']),
@@ -326,8 +327,10 @@ const CostCalculator = () => {
                                 </TableBody>
                             </Table>
                             <p className="text-xs text-muted-foreground mt-4">{t('costCalculator.disclaimer')}</p>
-                            <Button className="w-full mt-6" size="lg">
+                            <Button asChild className="w-full mt-6" size="lg">
+                              <Link to="/contact">
                                 {t('costCalculator.contactUs')}
+                              </Link>
                             </Button>
                         </>
                     ) : null}
