@@ -1,7 +1,6 @@
 
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, TrendingUp, FileText, BrainCircuit, UserPlus, Icon as LucideIcon } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import * as icons from "lucide-react";
 
 type Benefit = {
@@ -15,8 +14,12 @@ const WhyJoinUs = () => {
 
   const renderIcon = (iconName: keyof typeof icons) => {
     const IconComponent = icons[iconName];
-    if (!IconComponent) return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
-    return <IconComponent className="h-10 w-10 text-accent" />;
+    // This check ensures IconComponent is a valid React component before rendering.
+    if (typeof IconComponent !== "object" || IconComponent === null || !('render' in IconComponent)) {
+        return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
+    }
+    const LucideIcon = IconComponent as React.ElementType;
+    return <LucideIcon className="h-10 w-10 text-accent" />;
   };
 
   return (
