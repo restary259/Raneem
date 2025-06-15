@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -23,7 +24,7 @@ const formSchema = z.object({
 });
 
 const Contact = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('contact');
   const serviceOptions = t('contact.form.serviceOptions', { returnObjects: true }) as string[];
 
   const form = useForm<z.infer<typeof formSchema>>({
