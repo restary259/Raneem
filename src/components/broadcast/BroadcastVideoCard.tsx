@@ -1,13 +1,14 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import type { BroadcastPost } from './data';
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface BroadcastVideoCardProps {
@@ -42,7 +43,7 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
 
   return (
     <Card 
-      className="w-full animate-scale-in transition-all hover:shadow-xl overflow-hidden group cursor-pointer bg-card flex flex-col"
+      className="w-full animate-scale-in transition-all hover:shadow-xl overflow-hidden group cursor-pointer bg-card flex flex-col border hover:border-accent"
       onClick={() => onPlay(post)}
     >
       <div className="relative">
@@ -57,17 +58,27 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
         </div>
         <Badge variant="secondary" className="absolute bottom-2 right-2">{post.duration}</Badge>
       </div>
-      <CardHeader className="flex-grow">
-        <CardTitle className="truncate text-base font-bold" title={post.title}>
+      <CardHeader className="flex-grow pb-4">
+        <CardTitle className="text-base font-bold line-clamp-2" title={post.title}>
           {post.title}
         </CardTitle>
-        <CardDescription className="text-xs text-muted-foreground">{timeAgo}</CardDescription>
+        <CardDescription className="text-sm text-muted-foreground mt-2 line-clamp-3">
+          {post.description}
+        </CardDescription>
       </CardHeader>
-      <CardFooter>
-        <Button variant="ghost" size="sm" onClick={handleShare} className="w-full justify-start">
-            <Share2 className="ml-2 h-4 w-4" />
-            مشاركة
-        </Button>
+      <CardFooter className="flex justify-between items-center pt-0">
+        <span className="text-xs text-muted-foreground">{timeAgo}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="sm" onClick={handleShare}>
+              <Share2 className="ml-2 h-4 w-4" />
+              مشاركة
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>📎 انسخ الرابط لمشاركته</p>
+          </TooltipContent>
+        </Tooltip>
       </CardFooter>
     </Card>
   );

@@ -1,3 +1,4 @@
+
 export type BroadcastCategory = 'نصائح الدراسة' | 'تجارب الطلبة' | 'إجراءات التأشيرة' | 'ورش عمل وتوجيه';
 
 export interface BroadcastPost {
@@ -24,7 +25,7 @@ export const broadcastData: BroadcastPost[] = [
     description: 'انغمس في عالم جامعة ميونخ التقنية، واحدة من أفضل الجامعات في أوروبا. اكتشف حرمها الجامعي الحديث، وبرامجها المبتكرة، والحياة الطلابية النابضة بالحياة.',
     date: '2025-06-15T10:00:00Z',
     duration: '03:19',
-    posterUrl: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop',
+    posterUrl: 'https://img.youtube.com/vi/ktWQU0mg0Xk/maxresdefault.jpg',
     youtubeId: 'ktWQU0mg0Xk',
     country: 'ألمانيا',
     countryFlag: '🇩🇪',
@@ -70,7 +71,7 @@ export const broadcastData: BroadcastPost[] = [
     description: 'جولة من منظور شخصي تظهر الحياة في الحرم الجامعي، شوارع عمان، المواصلات، واللحظات الثقافية.',
     date: '2025-06-15T12:00:00Z',
     duration: '11:04',
-    posterUrl: 'https://images.unsplash.com/photo-1582845339999-a823c5820a1c?q=80&w=2070&auto=format&fit=crop',
+    posterUrl: 'https://img.youtube.com/vi/GzHprfxx8sI/maxresdefault.jpg',
     youtubeId: 'GzHprfxx8sI',
     country: 'الأردن',
     countryFlag: '🇯🇴',
