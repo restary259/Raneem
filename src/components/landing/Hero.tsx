@@ -8,7 +8,7 @@ const Hero = () => {
   const { t } = useTranslation(['landing', 'common']);
 
   const stats = [
-    { value: 47, label: "طالب سعيد" },
+    { value: 47, label: "طالب راض" },
     { value: 16, label: "شريك تعليمي" },
     { value: 5, label: "دولة حول العالم" }
   ];
