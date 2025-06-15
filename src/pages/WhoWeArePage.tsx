@@ -1,7 +1,9 @@
+
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck } from "lucide-react";
+import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const WhoWeArePage = () => {
     const features = [
@@ -37,16 +39,94 @@ const WhoWeArePage = () => {
         }
     ];
 
+    const teamMembers = [
+        {
+            name: "أحمد العلي",
+            title: "المؤسس والرئيس التنفيذي",
+            image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80",
+            bio: "خبير في أنظمة التعليم الأوروبية، وشغوف بمساعدة الطلاب على تحقيق أحلامهم.",
+            linkedin: "#"
+        },
+        {
+            name: "فاطمة الزهراء",
+            title: "مديرة شؤون الطلاب",
+            image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80",
+            bio: "متخصصة في الإرشاد الأكاديمي وتقديم الدعم الشخصي للطلاب طوال رحلتهم.",
+            linkedin: "#"
+        },
+        {
+            name: "علي حسن",
+            title: "مستشار التعليم في ألمانيا",
+            image: "https://images.unsplash.com/photo-1590086782792-42dd2350150d?w=500&q=80",
+            bio: "مقيم في ألمانيا ويمتلك شبكة واسعة من العلاقات مع الجامعات والمؤسسات التعليمية.",
+            linkedin: "#"
+        }
+    ];
+
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
             <Header />
             <main className="flex-grow">
-                <section className="bg-background py-20 md:py-28">
-                    <div className="container mx-auto px-4 text-center animate-fade-in">
-                        <h1 className="text-4xl md:text-6xl font-bold text-primary mb-4">شريكك نحو مستقبل مشرق</h1>
-                        <p className="max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
+                <section className="relative bg-background py-24 md:py-36 text-center text-white">
+                    <div className="absolute inset-0 bg-black/60 z-0">
+                        <img 
+                            src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&q=80" 
+                            alt="طلاب يتخرجون" 
+                            className="w-full h-full object-cover" 
+                        />
+                    </div>
+                    <div className="container mx-auto px-4 relative z-10 animate-fade-in">
+                        <h1 className="text-4xl md:text-6xl font-bold drop-shadow-lg mb-4">شريكك نحو مستقبل مشرق</h1>
+                        <p className="max-w-3xl mx-auto text-lg md:text-xl text-white/90 drop-shadow-md">
                             في "درب للدراسة الدولية"، نحن أكثر من مجرد وكالة خدمات طلابية؛ نحن شريكك الموثوق في رحلتك الأكاديمية. إيماننا بأن التعليم هو المفتاح لإطلاق الطاقات الكامنة هو ما يدفعنا لتقديم دعم شامل وشخصي يرافقك من الخطوة الأولى وحتى تحقيق هدفك.
                         </p>
+                    </div>
+                </section>
+
+                <section className="py-16 md:py-24 bg-secondary/20">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
+                            <h2 className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3"><BookOpenCheck className="text-accent" /> قصتنا: من التجربة إلى الخبرة</h2>
+                            <p className="mt-4 text-lg text-muted-foreground">
+                                بدأت "درب" من تجاربنا الشخصية كطلاب دوليين. واجهنا التحديات، وشعرنا بالحيرة، وتمنينا وجود يد أمينة ترشدنا. من هذا المنطلق، قررنا أن نكون نحن هذا الدليل للطلاب الذين يأتون بعدنا.
+                            </p>
+                        </div>
+                        <div className="relative max-w-2xl mx-auto">
+                            <div className="absolute left-1/2 -translate-x-1/2 h-full w-0.5 bg-border"></div>
+                            <div className="relative pl-8 md:pl-0 md:ml-auto md:w-1/2 md:pr-8 animate-fade-in">
+                                <div className="absolute left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-1/2 top-1 w-4 h-4 rounded-full bg-primary border-4 border-secondary/20"></div>
+                                <Card className="mb-8 bg-card shadow-lg border-l-4 border-accent">
+                                    <CardHeader>
+                                        <CardTitle>البداية</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">رؤية ولدت من رحم الحاجة، لتوفير المعلومات الدقيقة والدعم الصادق للطلاب العرب الطموحين.</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            <div className="relative pl-8 md:pl-0 md:w-1/2 md:pl-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                                 <div className="absolute left-1/2 -translate-x-1/2 md:left-0 md:-translate-x-1/2 top-1 w-4 h-4 rounded-full bg-primary border-4 border-secondary/20"></div>
+                                <Card className="mb-8 bg-card shadow-lg border-r-4 border-accent md:border-r-0 md:border-l-4">
+                                     <CardHeader>
+                                        <CardTitle>النمو والتطور</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">توسيع شبكة شركائنا من الجامعات المرموقة، وبناء فريق من الخبراء المتفانين في خدمة الطلاب.</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                             <div className="relative pl-8 md:pl-0 md:ml-auto md:w-1/2 md:pr-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                                 <div className="absolute left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-1/2 top-1 w-4 h-4 rounded-full bg-primary border-4 border-secondary/20"></div>
+                                <Card className="mb-8 bg-card shadow-lg border-l-4 border-accent">
+                                     <CardHeader>
+                                        <CardTitle>المستقبل</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">نطمح لنكون الوجهة الأولى للطلاب العرب، مع الالتزام بقيمنا الأساسية: الشفافية، النزاهة، والخدمة المتميزة.</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -69,26 +149,38 @@ const WhoWeArePage = () => {
                     </div>
                 </section>
 
-                <section className="py-16 md:py-24 bg-secondary/20">
+                <section className="py-16 md:py-24 bg-background">
                     <div className="container mx-auto px-4">
                         <div className="text-center max-w-3xl mx-auto mb-12 animate-fade-in">
-                            <h2 className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3"><BookOpenCheck className="text-accent" /> قصتنا</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold text-primary">تعرّف على فريقنا</h2>
                             <p className="mt-4 text-lg text-muted-foreground">
-                                من رحم التجربة الشخصية، وُلدت "درب".
+                                نحن مجموعة من الخبراء والمستشارين الذين مروا بنفس تجربتك، ومستعدون لمساعدتك.
                             </p>
                         </div>
-                        <div className="max-w-4xl mx-auto text-center text-muted-foreground leading-relaxed text-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            <p className="mb-4">
-                                بدأت فكرة "درب" من خلال تجاربنا الخاصة كطلاب دوليين. لقد واجهنا التحديات، وشعرنا بالحيرة، وتمنينا وجود يد أمينة ترشدنا في كل خطوة. من هذا المنطلق، قررنا أن نكون نحن هذا الدليل للطلاب الذين يأتون بعدنا.
-                            </p>
-                            <p>
-                                نحن لا نقدم مجرد استشارات، بل نشارككم خبراتنا الحقيقية ودروسنا التي تعلمناها. هدفنا هو جعل رحلتكم أسهل وأكثر سلاسة، لتتمكنوا من التركيز على ما هو أهم: تحقيق أحلامكم الأكاديمية.
-                            </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {teamMembers.map((member, index) => (
+                                <Card key={member.name} className="text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-card animate-fade-in overflow-hidden" style={{ animationDelay: `${0.2 * (index + 1)}s` }}>
+                                    <div className="h-48 overflow-hidden">
+                                        <img src={member.image} alt={member.name} className="w-full h-full object-cover object-top" />
+                                    </div>
+                                    <CardContent className="p-6">
+                                        <h3 className="text-xl font-bold text-primary">{member.name}</h3>
+                                        <p className="text-accent font-semibold flex items-center justify-center gap-2 mt-1 mb-3"><Briefcase size={16} /> {member.title}</p>
+                                        <p className="text-muted-foreground text-sm mb-4">{member.bio}</p>
+                                        <Button variant="ghost" size="icon" asChild>
+                                            <a href={member.linkedin} target="_blank" rel="noopener noreferrer">
+                                                <Linkedin className="text-muted-foreground hover:text-primary" />
+                                            </a>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
                     </div>
                 </section>
 
-                <section className="py-16 md:py-24 bg-background">
+
+                <section className="py-16 md:py-24 bg-secondary/20">
                     <div className="container mx-auto px-4">
                         <div className="text-center max-w-3xl mx-auto mb-12 animate-fade-in">
                             <h2 className="text-3xl md:text-4xl font-bold text-primary">ما يميزنا عن غيرنا</h2>
