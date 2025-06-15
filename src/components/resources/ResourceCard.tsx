@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ResourceCardProps {
   title: string;
@@ -13,6 +14,7 @@ interface ResourceCardProps {
 }
 
 const ResourceCard: React.FC<ResourceCardProps> = ({ title, description, fileUrl, fileType = 'PDF', fileSize }) => {
+  const { t } = useTranslation('resources');
   return (
     <Card className="flex flex-col h-full shadow-md hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
@@ -31,14 +33,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ title, description, fileUrl
       </CardContent>
       <CardFooter className="flex justify-between items-center bg-muted/50 p-4">
         <div className="text-sm text-muted-foreground">
-          <span>{fileType}</span>
+          <span>{fileType === 'PDF' ? t('resourcesPage.fileTypePDF') : fileType}</span>
           {fileSize && <span className="mx-2">&middot;</span>}
           {fileSize && <span>{fileSize}</span>}
         </div>
         <Button asChild>
           <a href={fileUrl} target="_blank" rel="noopener noreferrer" download>
-            تحميل
-            <Download className="mr-2 h-4 w-4" />
+            {t('resourcesPage.download')}
+            <Download className="ml-2 h-4 w-4" />
           </a>
         </Button>
       </CardFooter>

@@ -1,3 +1,4 @@
+
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
@@ -11,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import CurrencyComparator from '@/components/calculator/CurrencyComparator';
 
 const ResourcesPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['resources', 'common']);
   const guides = t('resourcesPage.guides', { returnObjects: true });
   const resources: { title: string, description: string, fileUrl: string, fileSize?: string }[] = Array.isArray(guides) ? guides : [];
 
@@ -92,7 +93,7 @@ const ResourcesPage = () => {
               </p>
               <Button asChild size="lg">
                 <Link to="/contact">
-                    {t('nav.contact')}
+                    {t('common:nav.contact')}
                 </Link>
               </Button>
             </div>
