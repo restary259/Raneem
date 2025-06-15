@@ -1,8 +1,7 @@
-
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake } from "lucide-react";
+import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck } from "lucide-react";
 
 const WhoWeArePage = () => {
     const features = [
@@ -39,7 +38,7 @@ const WhoWeArePage = () => {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-secondary/20 text-foreground" dir="rtl" lang="ar">
+        <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
             <Header />
             <main className="flex-grow">
                 <section className="bg-background py-20 md:py-28">
@@ -66,6 +65,25 @@ const WhoWeArePage = () => {
                                     تمكين كل طالب من تحقيق طموحاته الأكاديمية والشخصية بثقة واطمئنان، ليصبحوا قادة المستقبل في مجتمعاتهم.
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="py-16 md:py-24 bg-secondary/20">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+                            <h2 className="text-3xl md:text-4xl font-bold text-primary flex items-center justify-center gap-3"><BookOpenCheck className="text-accent" /> قصتنا</h2>
+                            <p className="mt-4 text-lg text-muted-foreground">
+                                من رحم التجربة الشخصية، وُلدت "درب".
+                            </p>
+                        </div>
+                        <div className="max-w-4xl mx-auto text-center text-muted-foreground leading-relaxed text-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                            <p className="mb-4">
+                                بدأت فكرة "درب" من خلال تجاربنا الخاصة كطلاب دوليين. لقد واجهنا التحديات، وشعرنا بالحيرة، وتمنينا وجود يد أمينة ترشدنا في كل خطوة. من هذا المنطلق، قررنا أن نكون نحن هذا الدليل للطلاب الذين يأتون بعدنا.
+                            </p>
+                            <p>
+                                نحن لا نقدم مجرد استشارات، بل نشارككم خبراتنا الحقيقية ودروسنا التي تعلمناها. هدفنا هو جعل رحلتكم أسهل وأكثر سلاسة، لتتمكنوا من التركيز على ما هو أهم: تحقيق أحلامكم الأكاديمية.
+                            </p>
                         </div>
                     </div>
                 </section>
