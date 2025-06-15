@@ -30,16 +30,6 @@ export const broadcastData: BroadcastPost[] = [
     countryFlag: '🇩🇪',
   },
   {
-    id: 2,
-    category: 'نصائح الدراسة',
-    title: '5 نصائح لاختيار التخصص الجامعي المناسب',
-    description: 'مرشدنا الأكاديمي يشارككم أهم النصائح التي ستساعدكم في اتخاذ قرار التخصص بثقة ووضوح.',
-    date: '2025-06-14T15:30:00Z',
-    duration: '08:15',
-    posterUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop',
-    youtubeId: '6vYnas6q3Sg',
-  },
-  {
     id: 3,
     category: 'تجارب الطلبة',
     title: 'جولة في جامعة بوخارست، رومانيا',
@@ -72,16 +62,6 @@ export const broadcastData: BroadcastPost[] = [
     duration: '05:58',
     posterUrl: 'https://img.youtube.com/vi/Yewg3n7MM9o/maxresdefault.jpg',
     youtubeId: 'Yewg3n7MM9o',
-  },
-  {
-    id: 6,
-    category: 'نصائح الدراسة',
-    title: 'استراتيجيات المذاكرة الفعالة قبل الامتحانات',
-    description: 'تعلم تقنيات مجربة لزيادة تركيزك وتحسين استيعابك للمواد الدراسية في فترة المراجعة النهائية.',
-    date: '2025-06-05T14:00:00Z',
-    duration: '11:55',
-    posterUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1973&auto=format&fit=crop',
-    youtubeId: 'Yb6825eG6e4',
   },
   {
     id: 7,
