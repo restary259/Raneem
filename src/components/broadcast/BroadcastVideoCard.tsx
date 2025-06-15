@@ -26,18 +26,25 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = post.youtubeId ? `https://youtu.be/${post.youtubeId}` : post.videoUrl;
-    if (navigator.share && url) {
-      navigator.share({
-        title: post.title,
-        url: url,
-      }).catch(console.error);
-    } else if (url) {
+    
+    if (!url) return;
+
+    const copyLink = () => {
       navigator.clipboard.writeText(url).then(() => {
         toast({
             title: "تم نسخ الرابط!",
             description: "يمكنك الآن مشاركة الفيديو.",
         })
       });
+    }
+
+    if (navigator.share) {
+      navigator.share({
+        title: post.title,
+        url: url,
+      }).catch(copyLink); // Fallback to copying link if share fails
+    } else {
+      copyLink();
     }
   };
 
