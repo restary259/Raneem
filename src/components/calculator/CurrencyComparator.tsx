@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, TrendingUp } from 'lucide-react';
+
+// --- New Data Structures ---
+
+const countries = {
+  DE: { nameKey: 'germany', currency: 'EUR', flag: '🇩🇪' },
+  RO: { nameKey: 'romania', currency: 'RON', flag: '🇷🇴' },
+  JO: { nameKey: 'jordan', currency: 'JOD', flag: '🇯🇴' },
+};
 
 // Placeholder data - we'll replace this with a real API later
 const mockApiData = {
@@ -35,7 +44,9 @@ const formSchema = z.object({
     (a) => parseFloat(z.string().parse(a)),
     z.number().positive({ message: 'الرجاء إدخال مبلغ صحيح' })
   ),
-  targetCurrency: z.enum(['EUR', 'JOD', 'RON']),
+  targetCountry: z.enum(['DE', 'RO', 'JO']),
+  deliverySpeed: z.enum(['fastest', 'cheapest', 'balanced']),
+  paymentMethod: z.enum(['bank', 'card', 'pickup']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,12 +60,17 @@ const CurrencyComparator = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 1000,
-      targetCurrency: 'EUR',
+      targetCountry: 'DE',
+      deliverySpeed: 'balanced',
+      paymentMethod: 'bank',
     },
   });
 
+  const targetCountry = form.watch('targetCountry');
+  const targetCurrency = countries[targetCountry].currency;
+
   const onSubmit = (values: FormValues) => {
-    const { amount, targetCurrency } = values;
+    const { amount } = values;
     const services = mockApiData[targetCurrency as keyof typeof mockApiData];
     
     const calculatedResults = Object.entries(services).map(([service, data]) => ({
@@ -80,39 +96,92 @@ const CurrencyComparator = () => {
           <CardContent className="pt-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('currencyComparator.amountInILS')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="1000" {...field} onChange={e => field.onChange(e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="targetCurrency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('currencyComparator.targetCurrency')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('currencyComparator.amountInILS')}</FormLabel>
                         <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <Input type="number" placeholder="1000" {...field} onChange={e => field.onChange(e.target.value)} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="EUR">{t('currencyComparator.eur')}</SelectItem>
-                          <SelectItem value="JOD">{t('currencyComparator.jod')}</SelectItem>
-                          <SelectItem value="RON">{t('currencyComparator.ron')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="targetCountry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('currencyComparator.targetCountry')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(countries).map(([code, country]) => (
+                              <SelectItem key={code} value={code}>
+                                {country.flag} {t(`currencyComparator.${country.nameKey}`)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="deliverySpeed"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('currencyComparator.deliverySpeed')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="fastest">{t('currencyComparator.fastest')}</SelectItem>
+                            <SelectItem value="cheapest">{t('currencyComparator.cheapest')}</SelectItem>
+                            <SelectItem value="balanced">{t('currencyComparator.balanced')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('currencyComparator.paymentMethod')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="bank">{t('currencyComparator.bankTransfer')}</SelectItem>
+                            <SelectItem value="card">{t('currencyComparator.creditCard')}</SelectItem>
+                            <SelectItem value="pickup">{t('currencyComparator.cashPickup')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="p-3 bg-muted rounded-md text-center">
+                    <FormLabel>{t('currencyComparator.targetCurrency')}</FormLabel>
+                    <div className="font-bold text-lg">{t(`currencyComparator.${targetCurrency.toLowerCase()}` as any)}</div>
+                </div>
+
                 <Button type="submit" className="w-full" size="lg">
                   <TrendingUp className="ml-2 h-5 w-5" />
                   {t('currencyComparator.compare')}
@@ -144,11 +213,11 @@ const CurrencyComparator = () => {
                     {results.map((result, index) => (
                       <TableRow key={index} className={index === 0 ? "bg-green-100/50 dark:bg-green-900/20" : ""}>
                         <TableCell className="font-bold">{result.service}</TableCell>
-                        <TableCell>{t('currencyComparator.exchangeRateDetail', { rate: result.rate.toLocaleString(), currency: form.getValues('targetCurrency') })}</TableCell>
+                        <TableCell>{t('currencyComparator.exchangeRateDetail', { rate: result.rate.toLocaleString(), currency: targetCurrency })}</TableCell>
                         <TableCell>{result.fee.toLocaleString()} ILS</TableCell>
                         <TableCell>{result.time}</TableCell>
                         <TableCell className="font-bold text-lg text-primary">
-                          {Math.round(result.received).toLocaleString()} {form.getValues('targetCurrency')}
+                          {Math.round(result.received).toLocaleString()} {targetCurrency}
                         </TableCell>
                         <TableCell>
                           <Button asChild variant="ghost" size="sm">
