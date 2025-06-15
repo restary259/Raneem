@@ -47,7 +47,7 @@
     "title": "طلابنا حول العالم",
     "subtitle": "شاهد قصص نجاح طلابنا الملهمة في أفضل الجامعات العالمية.",
     "students": [
-      { "name": "محمد ابو الهيجاء", "destination": "ألمانيا", "image": "/lovable-uploads/b88ffbf0-d3ed-470e-8e9a-be40cb7e1f71.png" },
+      { "name": "علاء ابو الليل", "destination": "ألمانيا", "image": "/lovable-uploads/d26c4574-8b08-49a5-a988-07e37a7cbe9c.png" },
       { "name": "خالد", "destination": "رومانيا", "image": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop" },
       { "name": "فاطمة", "destination": "المملكة المتحدة", "image": "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop" },
       { "name": "علي", "destination": "كندا", "image": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop" },
