@@ -1,3 +1,4 @@
+
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
@@ -5,7 +6,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import GpaCalculator from "@/components/calculator/GpaCalculator";
-import { Calculator } from "lucide-react";
+import { Calculator, Wallet } from "lucide-react";
+import CostCalculator from '@/components/calculator/CostCalculator';
 
 const resources = [
   {
@@ -50,9 +52,20 @@ const ResourcesPage = () => {
         </section>
         
         <section className="container mx-auto px-4 py-16">
-            <div className="max-w-4xl mx-auto mb-16">
+            <div className="max-w-6xl mx-auto mb-16">
               <h2 className="text-3xl font-bold text-center mb-8">أدوات مفيدة</h2>
               <Accordion type="single" collapsible className="w-full bg-card p-4 sm:p-6 rounded-lg shadow-md border">
+                <AccordionItem value="cost-calculator">
+                  <AccordionTrigger className="text-xl font-bold hover:no-underline p-4">
+                    <div className="flex items-center gap-3">
+                      <Wallet className="h-6 w-6 text-primary" />
+                      <span>{t('costCalculator.title')}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-0 pt-2 sm:p-4 sm:pt-2">
+                    <CostCalculator />
+                  </AccordionContent>
+                </AccordionItem>
                 <AccordionItem value="gpa-calculator" className="border-b-0">
                   <AccordionTrigger className="text-xl font-bold hover:no-underline p-4">
                     <div className="flex items-center gap-3">
