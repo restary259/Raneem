@@ -82,7 +82,7 @@ const GpaCalculator = () => {
   };
 
   return (
-    <Card className="w-full border-none shadow-none" dir="rtl">
+    <Card className="w-full border-none shadow-none">
         <CardHeader className="text-center px-0">
             <CardTitle className="text-3xl font-bold text-primary">{t('gpaCalculator.title')}</CardTitle>
             <CardDescription>{t('gpaCalculator.description')}</CardDescription>

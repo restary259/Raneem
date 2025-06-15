@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GermanyTab from './GermanyTab';
@@ -30,7 +29,7 @@ const UniversityFinder = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
           <Tabs defaultValue="germany" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto sm:h-auto lg:h-12 flex-wrap rounded-lg">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 h-auto">
               <TabsTrigger value="germany" className="w-full text-base py-3">🇩🇪 {t('universityFinder.germany')}</TabsTrigger>
               <TabsTrigger value="romania" className="w-full text-base py-3">🇷🇴 {t('universityFinder.romania')}</TabsTrigger>
               <TabsTrigger value="jordan" className="w-full text-base py-3">🇯🇴 {t('universityFinder.jordan')}</TabsTrigger>

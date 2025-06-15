@@ -2,7 +2,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, University } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const GermanyTab = () => {
   const { t } = useTranslation();
@@ -24,15 +25,21 @@ const GermanyTab = () => {
             allowFullScreen
           ></iframe>
         </div>
-        <div className="mt-4 text-center border-t pt-4">
-            <p className="text-sm text-muted-foreground mb-2">{t('universityFinder.germanyTab.iframeError')}</p>
-             <Button asChild size="sm">
-                <a href={daadEmbedUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
-                    {t('universityFinder.germanyTab.openInNewTab')}
-                </a>
-            </Button>
-        </div>
+        <Alert className="mt-6">
+          <University className="h-4 w-4" />
+          <AlertTitle className="font-semibold">{t('universityFinder.germanyTab.iframeError')}</AlertTitle>
+          <AlertDescription>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
+              <span>{t('universityFinder.germanyTab.iframeErrorDetail')}</span>
+              <Button asChild size="sm" className="shrink-0">
+                  <a href={daadEmbedUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+                      {t('universityFinder.germanyTab.openInNewTab')}
+                  </a>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );
