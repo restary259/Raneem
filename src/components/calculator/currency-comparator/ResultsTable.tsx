@@ -12,7 +12,7 @@ interface ResultsTableProps {
 }
 
 export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
 
   return (
     <Card>

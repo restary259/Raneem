@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { formSchema, FormValues, Result, countries, banksByCountry, mockApiData, timeToSortValue } from './data';
 
 export const useCurrencyComparator = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const [results, setResults] = useState<Result[] | null>(null);
   const [bestResult, setBestResult] = useState<Result | null>(null);
 
@@ -115,4 +114,3 @@ export const useCurrencyComparator = () => {
     onSubmit,
   };
 };
-

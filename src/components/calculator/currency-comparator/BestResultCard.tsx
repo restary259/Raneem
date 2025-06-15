@@ -12,7 +12,7 @@ interface BestResultCardProps {
 }
 
 export const BestResultCard = ({ bestResult, form, targetCountry }: BestResultCardProps) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('resources');
   const targetCurrency = countries[targetCountry].currency;
 
   return (
