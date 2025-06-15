@@ -15,16 +15,16 @@ const partnersByCountry = [
     countryFlag: "🇩🇪",
     partners: [
       { name: "FU Academy of Languages – Heidelberg", location: "Heidelberg", logoUrl: "https://images.unsplash.com/photo-1562774053-701939374585?w=400", description: "مدرسة لغات عريقة في هايدلبرغ تقدم برامج ألمانية مكثفة ومعترف بها رسميًا.", partnershipSince: 2023, websiteUrl: "https://www.fuu-heidelberg-languages.com/" },
-      { name: "Alpha Aktiv – Heidelberg", location: "Heidelberg", logoUrl: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400", description: "أكاديمية لغات خاصة تقدم دورات مكثفة للغة الألمانية وتأهيلاً جامعياً.", partnershipSince: 2022, websiteUrl: "https://www.alpha-aktiv.de/" },
-      { name: "GoAcademy – Düsseldorf", location: "Düsseldorf", logoUrl: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400", description: "مدرسة لغات معتمدة في دوسلدورف، تقدم دورات لغة واختبارات دولية معتمدة.", partnershipSince: 2023, websiteUrl: "https://www.goacademy.de/" },
+      { name: "Alpha Aktiv – Heidelberg", location: "Heidelberg", logoUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400", description: "أكاديمية لغات خاصة تقدم دورات مكثفة للغة الألمانية وتأهيلاً جامعياً.", partnershipSince: 2022, websiteUrl: "https://www.alpha-aktiv.de/" },
+      { name: "GoAcademy – Düsseldorf", location: "Düsseldorf", logoUrl: "https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=400", description: "مدرسة لغات معتمدة في دوسلدورف، تقدم دورات لغة واختبارات دولية معتمدة.", partnershipSince: 2023, websiteUrl: "https://www.goacademy.de/" },
     ],
   },
   {
     country: "رومانيا",
     countryFlag: "🇷🇴",
     partners: [
-      { name: "University of Bucharest", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1590234594819-7d84a71359f6?w=400", description: "واحدة من أعرق الجامعات في رومانيا، وتقدم مجموعة واسعة من التخصصات الأكاديمية.", partnershipSince: 2022, websiteUrl: "https://unibuc.ro/" },
-      { name: "Carol Davila University of Medicine and Pharmacy", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1584515933487-779824d29409?w=400", description: "جامعة طبية رائدة في بوخارست، تشتهر ببرامج الطب البشري والصيدلة.", partnershipSince: 2021, websiteUrl: "https://www.umfcd.ro/" },
+      { name: "University of Bucharest", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=400", description: "واحدة من أعرق الجامعات في رومانيا، وتقدم مجموعة واسعة من التخصصات الأكاديمية.", partnershipSince: 2022, websiteUrl: "https://unibuc.ro/" },
+      { name: "Carol Davila University of Medicine and Pharmacy", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=400", description: "جامعة طبية رائدة في بوخارست، تشتهر ببرامج الطب البشري والصيدلة.", partnershipSince: 2021, websiteUrl: "https://www.umfcd.ro/" },
       { name: "Ovidius University", location: "Constanța", logoUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400", description: "جامعة حديثة في مدينة كونستانتسا الساحلية، تقدم برامج متنوعة باللغة الإنجليزية.", partnershipSince: 2023, websiteUrl: "https://www.univ-ovidius.ro/" },
     ],
   },
@@ -33,7 +33,7 @@ const partnersByCountry = [
     countryFlag: "🇯🇴",
     partners: [
       { name: "جامعة اليرموك", location: "Irbid", logoUrl: "https://images.unsplash.com/photo-1607237138185-e8945c94b9ac?w=400", description: "واحدة من أكبر الجامعات الحكومية في الأردن، وتقع في مدينة إربد.", partnershipSince: 2020, websiteUrl: "https://www.yu.edu.jo/" },
-      { name: "UMF Jordan", location: "Amman", logoUrl: "https://images.unsplash.com/photo-1576495199011-eb94736d05d3?w=400", description: "فرع لجامعة 'Iuliu Hațieganu' للطب والصيدلة، يوفر تعليماً طبياً أوروبياً في الأردن.", partnershipSince: 2022, websiteUrl: "https://umf-jordan.com/" },
+      { name: "UMF Jordan", location: "Amman", logoUrl: "https://images.unsplash.com/photo-1627916575236-3988588f172a?w=400", description: "فرع لجامعة 'Iuliu Hațieganu' للطب والصيدلة، يوفر تعليماً طبياً أوروبياً في الأردن.", partnershipSince: 2022, websiteUrl: "https://umf-jordan.com/" },
     ],
   },
 ];
