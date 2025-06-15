@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Instagram } from 'lucide-react';
 import TikTokIcon from '../icons/TikTokIcon';
+import { useTranslation } from 'react-i18next';
 
 interface InfluencerCardProps {
   partner: Influencer;
