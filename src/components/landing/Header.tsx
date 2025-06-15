@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -11,7 +10,6 @@ const navLinks = [
   { href: "/partners", label: "شركاؤنا" },
   { href: "/partnership", label: "فرص الشراكة" },
   { href: "/resources", label: "الموارد والأدلة" },
-  { href: "/tools", label: "الأدوات" },
   { href: "/contact", label: "تواصل معنا" },
 ];
 

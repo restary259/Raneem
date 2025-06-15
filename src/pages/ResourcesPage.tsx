@@ -4,6 +4,9 @@ import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import GpaCalculator from "@/components/calculator/GpaCalculator";
+import { Calculator } from "lucide-react";
 
 const resources = [
   {
@@ -39,15 +42,33 @@ const ResourcesPage = () => {
         <section className="bg-secondary/30 py-20">
             <div className="container mx-auto px-4 text-center">
                 <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">
-                    الموارد والأدلة
+                    الموارد والأدوات
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-                    لقد قمنا بتجميع أدلة وموارد مفيدة لجعل رحلتك الدراسية إلى ألمانيا أكثر سلاسة. قم بتحميل ما تحتاجه للتحضير بشكل كامل.
+                    لقد قمنا بتجميع أدوات وأدلة مفيدة لجعل رحلتك الدراسية إلى ألمانيا أكثر سلاسة. قم بتحميل ما تحتاجه واستخدم أدواتنا للتحضير بشكل كامل.
                 </p>
             </div>
         </section>
         
         <section className="container mx-auto px-4 py-16">
+            <div className="max-w-4xl mx-auto mb-16">
+              <h2 className="text-3xl font-bold text-center mb-8">أدوات مفيدة</h2>
+              <Accordion type="single" collapsible className="w-full bg-card p-4 sm:p-6 rounded-lg shadow-md border">
+                <AccordionItem value="gpa-calculator" className="border-b-0">
+                  <AccordionTrigger className="text-xl font-bold hover:no-underline p-4">
+                    <div className="flex items-center gap-3">
+                      <Calculator className="h-6 w-6 text-primary" />
+                      <span>حاسبة المعدل بالنظام الألماني</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-4 pt-2">
+                    <GpaCalculator />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            <h2 className="text-3xl font-bold text-center mb-8">أدلة للتحميل</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {resources.map((resource, index) => (
                 <ResourceCard 

@@ -15,7 +15,6 @@ import ContactPage from "./pages/ContactPage";
 import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
-import ToolsPage from "./pages/ToolsPage";
 import ChatWidget from "./components/chat/ChatWidget";
 
 const queryClient = new QueryClient();
@@ -36,7 +35,6 @@ const App = () => (
         <Route path="/partnership" element={<PartnershipPage />} />
         <Route path="/partners" element={<PartnersPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/tools" element={<ToolsPage />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
