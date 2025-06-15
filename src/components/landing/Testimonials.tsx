@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
 
 const Testimonials = () => {
-  const { t } = useTranslation();
-  const testimonials = t('testimonials.items', { returnObjects: true }) as { quote: string; name: string; location: string; avatar: string; }[];
+  const { t } = useTranslation('landing');
+  const testimonials = t('testimonials.items', { returnObjects: true });
   
   return (
     <section id="testimonials" className="py-12 md:py-24">
@@ -14,7 +14,7 @@ const Testimonials = () => {
           <h2 className="text-3xl md:text-4xl font-bold">{t('testimonials.title')}</h2>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
+          {Array.isArray(testimonials) && testimonials.map((testimonial: { quote: string; name: string; location: string; avatar: string; }, index: number) => (
             <Card key={index} className="text-right">
               <CardContent className="pt-6">
                 <div className="flex justify-end mb-4">
