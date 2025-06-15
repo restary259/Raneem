@@ -193,14 +193,14 @@ const WhoWeArePage = () => {
 
                 <ServiceProcess title="منهجية عملنا وضمان الجودة" description="نتبع عملية شفافة ومنظمة لضمان تجربة استثنائية وأفضل النتائج لكل طالب." className="bg-secondary/20" />
                 
-                <section className="bg-primary text-primary-foreground py-16 md:py-20">
+                <section className="bg-secondary text-secondary-foreground py-16 md:py-20">
                     <div className="container mx-auto px-4 text-center animate-fade-in" style={{
           animationDelay: '0.5s'
         }}>
                         <p className="text-2xl md:text-3xl font-semibold mb-4">
                             ندعوك للانطلاق في رحلتك معنا بثقة. نجاحك هو نجاحنا.
                         </p>
-                        <p className="text-xl font-serif text-primary-foreground/80">
+                        <p className="text-xl font-serif text-secondary-foreground/80">
                             شريكك الأمين لتحقيق حلم التعليم العالي.
                         </p>
                     </div>
