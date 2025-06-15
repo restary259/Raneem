@@ -107,8 +107,8 @@ const WhoWeArePage = () => {
                 <section className="relative bg-background py-24 md:py-36 text-center text-white">
                     <div className="absolute inset-0 bg-black/60 z-0">
                         <img 
-                            src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80" 
-                            alt="سماء ليلية مرصعة بالنجوم ترمز إلى الأحلام والطموح" 
+                            src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1200&q=80" 
+                            alt="خلفية مجردة بألوان متدرجة ترمز إلى الإبداع والحداثة" 
                             className="w-full h-full object-cover" 
                         />
                     </div>
