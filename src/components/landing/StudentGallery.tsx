@@ -29,7 +29,7 @@ const StudentGallery = () => {
                 <img 
                   src={student.image} 
                   alt={`Student ${student.name}`}
-                  className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-72 object-cover object-top group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                 <div className="absolute bottom-0 right-0 p-6 text-white text-right">
