@@ -125,21 +125,21 @@ const GpaCalculator = () => {
                 </Alert>
             )}
             {results.average !== null && results.germanGrade !== null && (
-                 <Alert variant="default" className="bg-primary/10 border-primary/50">
+                 <Alert variant="default" className="bg-primary/10 border-primary/50" dir="rtl">
                     <Calculator className="h-4 w-4 text-primary" />
                     <AlertTitle className="font-bold text-primary">{t('gpaCalculator.results')}</AlertTitle>
-                    <AlertDescription className="text-right space-y-1 text-foreground">
+                    <AlertDescription className="space-y-1 text-foreground">
                         <p>
                           <Trans
                             i18nKey="gpaCalculator.yourAverage"
-                            values={{ average: results.average }}
+                            values={{ average: results.average.toLocaleString('ar') }}
                             components={{ 1: <span className="font-bold" /> }}
                           />
                         </p>
                         <p>
                           <Trans
                             i18nKey="gpaCalculator.germanGrade"
-                            values={{ germanGrade: results.germanGrade }}
+                            values={{ germanGrade: results.germanGrade.toLocaleString('ar') }}
                             components={{ 1: <span className="font-bold" /> }}
                           />
                         </p>

@@ -23,18 +23,18 @@ export const BestResultCard = ({ bestResult, form, targetCountry }: BestResultCa
           {t('currencyComparator.bestRecommendation')}
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-sm sm:text-base text-green-900 dark:text-green-200">
+      <CardContent className="text-sm sm:text-base text-green-900 dark:text-green-200" dir="rtl">
         <Trans
           i18nKey="currencyComparator.bestRecommendationText"
           values={{
-            amount: form.getValues('amount').toLocaleString(),
+            amount: form.getValues('amount').toLocaleString('ar'),
             country: t(`currencyComparator.${countries[targetCountry].nameKey}`),
             service: bestResult.service,
             bank: bestResult.bank,
-            received: Math.round(bestResult.received).toLocaleString(),
+            received: Math.round(bestResult.received).toLocaleString('ar'),
             currency: targetCurrency,
             time: bestResult.time,
-            fee: bestResult.totalFee.toLocaleString()
+            fee: bestResult.totalFee.toLocaleString('ar')
           }}
           components={{
             1: <span className="font-bold" />,
