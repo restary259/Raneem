@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -10,6 +11,7 @@ const Header = () => {
     { href: "/", label: t('nav.home') },
     { href: "/about", label: t('nav.about') },
     { href: "/services", label: t('nav.services') },
+    { href: "/broadcast", label: "غرفة الأخبار" },
     { href: "/partners", label: t('nav.partners') },
     { href: "/partnership", label: t('nav.partnership') },
     { href: "/resources", label: t('nav.resources') },
