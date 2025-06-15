@@ -40,9 +40,9 @@ const Hero = () => {
 
         <div className="absolute bottom-10 left-0 right-0">
             <div className="container mx-auto grid grid-cols-3 gap-8 text-white animate-fade-in animation-delay-500">
-                <AnimatedCounter value={1200} label="طالب سعيد" />
-                <AnimatedCounter value={300} label="شريك تعليمي" />
-                <AnimatedCounter value={15} label="دولة حول العالم" />
+                <AnimatedCounter value={47} label="طالب سعيد" />
+                <AnimatedCounter value={30} label="شريك تعليمي" />
+                <AnimatedCounter value={5} label="دولة حول العالم" />
             </div>
         </div>
       </div>
