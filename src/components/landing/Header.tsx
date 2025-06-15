@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/partners", label: "شركاؤنا" },
   { href: "/partnership", label: "فرص الشراكة" },
   { href: "/resources", label: "الموارد والأدلة" },
+  { href: "/tools", label: "الأدوات" },
   { href: "/contact", label: "تواصل معنا" },
 ];
 
