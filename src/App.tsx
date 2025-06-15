@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,7 +10,6 @@ import WhoWeArePage from "./pages/WhoWeArePage";
 import ServicesPage from "./pages/ServicesPage";
 import LocationsPage from "./pages/LocationsPage";
 import TestimonialsPage from "./pages/TestimonialsPage";
-import PricingPage from "./pages/PricingPage";
 import ContactPage from "./pages/ContactPage";
 import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
@@ -38,7 +36,6 @@ const App = () => {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/locations" element={<LocationsPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/partnership" element={<PartnershipPage />} />
           <Route path="/partners" element={<PartnersPage />} />

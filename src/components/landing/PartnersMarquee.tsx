@@ -12,18 +12,14 @@ const PartnersMarquee = () => {
         <section className="py-12 bg-secondary">
             <div className="container mx-auto text-center">
                  <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-8">
-                    شركاؤنا من أفضل الجامعات العالمية
+                    أفضل الجامعات العالمية
                 </h2>
                 <div className="relative w-full overflow-hidden mask-gradient">
-                    <div className="flex animate-marquee whitespace-nowrap">
+                    <div 
+                      className="flex animate-marquee whitespace-nowrap"
+                      style={{ animationDuration: '80s' }}
+                    >
                         {extendedPartners.map((partner, index) => (
-                            <span key={index} className="mx-8 text-xl font-semibold text-muted-foreground">
-                                {partner}
-                            </span>
-                        ))}
-                    </div>
-                    <div className="absolute top-0 flex animate-marquee2 whitespace-nowrap">
-                         {extendedPartners.map((partner, index) => (
                             <span key={index} className="mx-8 text-xl font-semibold text-muted-foreground">
                                 {partner}
                             </span>
