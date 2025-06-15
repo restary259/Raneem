@@ -49,8 +49,8 @@
     "students": [
       { "name": "نسيم خطيب", "destination": "ألمانيا", "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.png" },
       { "name": "ادم ذياب", "destination": "ألمانيا", "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.png" },
-      { "name": "طالب جديد", "destination": "ألمانيا", "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.png" },
-      { "name": "فاطمة", "destination": "المملكة المتحدة", "image": "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop" },
+      { "name": "ادم ذياب", "destination": "ألمانيا", "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.png" },
+      { "name": "يزن دواهدة", "destination": "ألمانيا", "image": "/lovable-uploads/5ea3a257-c055-46c3-a5ce-85067e67b401.png" },
       { "name": "علي", "destination": "كندا", "image": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop" },
       { "name": "مريم", "destination": "أستراليا", "image": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop" },
       { "name": "يوسف", "destination": "الولايات المتحدة", "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop" }
