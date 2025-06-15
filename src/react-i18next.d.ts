@@ -13,5 +13,7 @@ declare module 'react-i18next' {
     resources: {
       translation: typeof translation;
     };
+    // Fix for type issue with react-i18next v14 and React 18
+    returnNull: false;
   }
 }
