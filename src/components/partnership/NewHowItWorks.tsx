@@ -1,7 +1,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import * as icons from "lucide-react";
+import { icons } from "lucide-react";
 
 type Step = {
   icon: keyof typeof icons;
@@ -14,12 +14,9 @@ const NewHowItWorks = () => {
   const steps = t('howItWorks.steps', { returnObjects: true }) as Step[];
 
   const renderIcon = (iconName: keyof typeof icons) => {
-    const IconComponent = icons[iconName];
-    // This guard ensures that we only try to render valid Lucide icon components,
-    // which are objects, filtering out other function exports.
-    if (IconComponent && typeof IconComponent !== 'function') {
-        const LucideIcon = IconComponent as React.ElementType;
-        return <LucideIcon className="h-12 w-12 text-primary" />;
+    const LucideIcon = icons[iconName];
+    if (LucideIcon) {
+      return <LucideIcon className="h-12 w-12 text-primary" />;
     }
     return null;
   };

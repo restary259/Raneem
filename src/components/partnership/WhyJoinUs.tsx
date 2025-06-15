@@ -1,7 +1,6 @@
 
 import { useTranslation } from "react-i18next";
-import { UserPlus } from "lucide-react";
-import * as icons from "lucide-react";
+import { icons } from "lucide-react";
 
 type Benefit = {
   icon: keyof typeof icons;
@@ -13,14 +12,14 @@ const WhyJoinUs = () => {
   const benefits = t('whyJoinUs.benefits', { returnObjects: true }) as Benefit[];
 
   const renderIcon = (iconName: keyof typeof icons) => {
-    const IconComponent = icons[iconName];
-    // This guard ensures that we only try to render valid Lucide icon components,
-    // which are objects, filtering out other function exports.
-    if (IconComponent && typeof IconComponent !== 'function') {
-        const LucideIcon = IconComponent as React.ElementType;
-        return <LucideIcon className="h-10 w-10 text-accent" />;
+    const LucideIcon = icons[iconName];
+
+    if (LucideIcon) {
+      return <LucideIcon className="h-10 w-10 text-accent" />;
     }
-    return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
+    
+    const FallbackIcon = icons.UserPlus;
+    return <FallbackIcon className="h-10 w-10 text-accent" />;
   };
 
   return (
