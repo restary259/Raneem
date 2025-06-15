@@ -4,7 +4,6 @@ import Hero from "@/components/landing/Hero";
 import About from "@/components/landing/About";
 import WhyChooseUs from "@/components/landing/WhyChooseUs";
 import Footer from "@/components/landing/Footer";
-import PartnersCarousel from "@/components/about/PartnersCarousel";
 
 const Index = () => {
   return (
@@ -14,7 +13,6 @@ const Index = () => {
         <Hero />
         <About />
         <WhyChooseUs />
-        <PartnersCarousel />
       </main>
       <Footer />
     </div>

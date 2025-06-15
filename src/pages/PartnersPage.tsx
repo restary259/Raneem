@@ -15,7 +15,7 @@ const PartnersPage = () => {
             <main className="flex-grow">
                 <section className="py-12 md:py-24 bg-secondary">
                     <div className="container mx-auto px-4 text-center">
-                        <h1 className="text-3xl md:text-4xl font-bold text-primary">شركاؤنا حول العالم – مؤسسات تعليمية نثق بها</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-primary">شركاؤنا حول العالم – مؤسسات تعليمية نثق بها ونعمل معها مباشرة</h1>
                         <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
                             نفخر بشراكاتنا مع مجموعة من المؤسسات التعليمية المرموقة في ألمانيا، رومانيا، والأردن. هذه الشراكات تتيح لنا تقديم أفضل الفرص الأكاديمية لطلابنا في مختلف الدول.
                         </p>
