@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -26,11 +25,6 @@ const DesktopNav = () => {
       title: t('nav.locations'),
       href: '/locations',
       description: t('desktopNav.locations.description'),
-    },
-    {
-      title: t('nav.testimonials'),
-      href: '/testimonials',
-      description: t('desktopNav.testimonials.description'),
     },
   ];
 

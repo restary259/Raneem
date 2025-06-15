@@ -1,4 +1,3 @@
-
 {
   "nav": {
     "home": "الرئيسية",
@@ -11,7 +10,6 @@
     "contact": "تواصل معنا",
     "brand": "Darb",
     "locations": "مواقعنا",
-    "testimonials": "آراء الطلاب",
     "broadcast": "بث درب"
   },
   "desktopNav": {
@@ -20,9 +18,6 @@
     },
     "locations": {
       "description": "اكتشف مواقع مكاتبنا حول العالم."
-    },
-    "testimonials": {
-      "description": "اقرأ قصص نجاح طلابنا الملهمة."
     },
     "partnership": {
       "description": "انضم إلى شبكتنا كشريك أو مؤثر."
