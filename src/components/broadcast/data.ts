@@ -127,4 +127,14 @@ export const broadcastData: BroadcastPost[] = [
     posterUrl: 'https://img.youtube.com/vi/TjPFZaMe2yw/maxresdefault.jpg',
     youtubeId: 'TjPFZaMe2yw',
   },
+  {
+    id: 11,
+    category: 'نصائح الدراسة',
+    title: 'استمع لخبير عصبية من ستانفورد: كيف تدرس بذكاء وليس بجهد فقط',
+    description: 'تعلم من خبير الأعصاب بجامعة ستانفورد أساليب الدراسة الذكية التي تعزز الفهم والاحتفاظ بالمعلومات بأقل جهد.',
+    date: '2025-06-17T10:00:00Z',
+    duration: '1:49:50',
+    posterUrl: 'https://img.youtube.com/vi/jMhhaAQK1NQ/maxresdefault.jpg',
+    youtubeId: 'jMhhaAQK1NQ',
+  },
 ];
