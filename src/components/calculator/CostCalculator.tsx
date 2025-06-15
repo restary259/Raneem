@@ -103,7 +103,7 @@ const CostCalculator = () => {
       breakdown.livingAndAccommodation = livingCost + accommodationCost;
 
       // Other costs
-      if (healthInsurance && country === 'germany') {
+      if (healthInsurance && countryData.healthInsurance) {
         breakdown.healthInsurance = countryData.healthInsurance * 12;
       }
       if (country === 'germany') {
@@ -273,7 +273,7 @@ const CostCalculator = () => {
                 <h4 className="font-medium">{t('costCalculator.options')}</h4>
                 <FormField control={form.control} name="healthInsurance" render={({ field }) => (
                     <FormItem className="flex flex-row-reverse items-center justify-end gap-4 space-y-0 rounded-md border p-3 shadow-sm">
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={watchedValues.country !== 'germany'} /></FormControl>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                         <FormLabel className="text-base m-0 !mt-0">{t('costCalculator.healthInsurance')}</FormLabel>
                     </FormItem>
                 )} />
