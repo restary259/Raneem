@@ -1,3 +1,4 @@
+
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,7 +93,7 @@ const WhoWeArePage = () => {
             <main className="flex-grow">
                 <section className="relative bg-background py-24 md:py-36 text-center text-white">
                     <div className="absolute inset-0 bg-black/60 z-0">
-                        <img src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1200&q=80" alt="خلفية مجردة بألوان متدرجة ترمز إلى الإبداع والحداثة" className="w-full h-full object-cover" />
+                        <img src="https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80" alt="خلفية مجردة بألوان متدرجة زرقاء" className="w-full h-full object-cover" />
                     </div>
                     <div className="container mx-auto px-4 relative z-10 animate-fade-in">
                         <h1 className="text-4xl md:text-6xl font-bold drop-shadow-lg mb-4">شريكك نحو مستقبل مشرق</h1>
