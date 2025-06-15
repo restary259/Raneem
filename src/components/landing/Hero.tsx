@@ -2,11 +2,8 @@
 import { Button } from "@/components/ui/button";
 import HeroScene from "./HeroScene";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 const Hero = () => {
-  const { t } = useTranslation();
-
   return (
     <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-white overflow-hidden">
       <video
@@ -28,14 +25,14 @@ const Hero = () => {
           <HeroScene />
         </div>
         <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto">
-          {t('hero.subtitle')}
+          We guide students step-by-step to study abroad — from choosing the right university to arriving in your new home.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
           <Button size="lg" asChild variant="accent">
-            <Link to="/contact">{t('hero.free_consultation')}</Link>
+            <Link to="/contact">Book a Free Consultation</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link to="/contact">{t('hero.apply_now')}</Link>
+            <Link to="/contact">Apply Now</Link>
           </Button>
         </div>
       </div>

@@ -16,19 +16,10 @@ import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ChatWidget from "./components/chat/ChatWidget";
-import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { i18n } = useTranslation();
-
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-    document.documentElement.dir = i18n.dir(i18n.language);
-  }, [i18n, i18n.language]);
-  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

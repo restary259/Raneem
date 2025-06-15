@@ -13,7 +13,7 @@ import Faq from "@/components/partnership/Faq";
 
 const PartnershipPage = () => {
     useEffect(() => {
-        document.title = "فرص الشراكة | أربح مع Darb Study";
+        document.title = "Partnership Opportunities | Earn with Darb Study";
     }, []);
 
     return (

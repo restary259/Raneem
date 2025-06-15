@@ -16,16 +16,13 @@ const Footer = () => {
           <p className="text-lg italic">
             "May all our students find success, safety, and purpose in every step of their journey abroad."
           </p>
-          <p className="text-lg mt-2 font-serif">
-            "نسأل الله أن يوفق جميع طلابنا وأن يكتب لهم النجاح والتوفيق في دراستهم وحياتهم الجديدة."
-          </p>
         </div>
-        <div className="flex justify-center items-center space-x-6 rtl:space-x-reverse mb-8">
-          <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><Instagram /> انستغرام</a>
-          <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><TikTokIcon /> تيك توك</a>
+        <div className="flex justify-center items-center space-x-6 mb-8">
+          <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><Instagram /> Instagram</a>
+          <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><TikTokIcon /> TikTok</a>
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
-          © {new Date().getFullYear()} درب للدراسة الدولية. جميع الحقوق محفوظة.
+          © {new Date().getFullYear()} Darb Study International. All rights reserved.
         </div>
       </div>
     </footer>
