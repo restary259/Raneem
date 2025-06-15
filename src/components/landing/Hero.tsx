@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import AnimatedCounter from "./AnimatedCounter";
 
 const Hero = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['landing', 'common']);
   return (
     <section className="relative h-screen min-h-[700px] flex items-center justify-center text-white overflow-hidden">
       <video
@@ -33,7 +33,7 @@ const Hero = () => {
           <Button size="lg" asChild variant="accent" className="transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
-          <Button size="lg" variant="outline" asChild className="border-white/50 text-white hover:bg-white/10 transition-colors hover:text-white transition-transform duration-300 hover:scale-105">
+          <Button size="lg" variant="outline" asChild className="bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('applyNow')}</Link>
           </Button>
         </div>

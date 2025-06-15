@@ -13,7 +13,7 @@ import Faq from "@/components/partnership/Faq";
 import { useTranslation } from "react-i18next";
 
 const PartnershipPage = () => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('partnership');
     useEffect(() => {
         document.title = t('partnershipPage.title');
     }, [t]);

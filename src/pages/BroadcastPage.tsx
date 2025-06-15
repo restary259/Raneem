@@ -9,7 +9,7 @@ import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
 import { useTranslation } from 'react-i18next';
 
 const BroadcastPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('broadcast');
   const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
 
   const featuredVideo = useMemo(() => broadcastData.find(p => p.featured), []);

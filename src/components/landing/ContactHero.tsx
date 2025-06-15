@@ -3,7 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ContactHero = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('contact');
   return (
     <section className="py-20 md:py-32 bg-gradient-to-b from-primary/90 to-background text-center animate-fade-in" dir="rtl">
       <div className="container mx-auto px-4">

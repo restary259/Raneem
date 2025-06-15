@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const PartnershipHero = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('partnership');
   return <section className="py-20 md:py-32 text-center bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 animate-fade-in">
         <h1 className="text-4xl md:text-5xl font-bold">{t('partnershipHero.title')}</h1>

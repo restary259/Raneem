@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 const PartnersPage = () => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('partners');
     useEffect(() => {
         document.title = "شركاؤنا | درب للدراسة الدولية";
     }, []);
