@@ -2,7 +2,7 @@
 import React from 'react';
 
 const partners = [
-    'Technical University of Munich', 'RWTH Aachen University', 'Karlsruhe Institute of Technology', 'Humboldt University of Berlin', 'University of Hamburg', 'University of Cologne', 'Goethe University Frankfurt', 'TU Dresden'
+    'Technical University of Munich', 'RWTH Aachen University', 'Karlsruhe Institute of Technology', 'Humboldt University of Berlin', 'University of Hamburg', 'University of Cologne', 'Goethe University Frankfurt', 'TU Dresden', 'University of Bucharest', 'Carol Davila University of Medicine and Pharmacy', 'Ovidius University', 'Yarmouk University', 'UMF Jordan', 'FU Academy of Languages', 'Kapito Academy of Languages'
 ];
 
 const PartnersMarquee = () => {
