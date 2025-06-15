@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,68 +80,64 @@ const GpaCalculator = () => {
   };
 
   return (
-    <section className="py-12 md:py-24 bg-background" id="gpa-calculator">
-        <div className="container mx-auto px-4">
-            <Card className="max-w-4xl mx-auto" dir="rtl">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-3xl font-bold text-primary">حاسبة المعدل بالنظام الألماني</CardTitle>
-                    <CardDescription>أدخل علاماتك وعدد الوحدات لكل مادة لحساب معدلك والمكافئ له في النظام الألماني.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-                        {subjects.map((subject, index) => (
-                            <div key={subject.id} className="space-y-2">
-                                <Label htmlFor={subject.id}>{subject.name}</Label>
-                                <div className="flex gap-2">
-                                    <Select
-                                        value={subject.units}
-                                        onValueChange={(value) => handleSubjectChange(index, 'units', value)}
-                                    >
-                                        <SelectTrigger aria-label={`${subject.name} units`}>
-                                            <SelectValue placeholder="الوحدات" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {[...Array(6).keys()].map(i => (
-                                                <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Input
-                                        id={subject.id}
-                                        type="number"
-                                        placeholder="العلامة (0-100)"
-                                        min="0"
-                                        max="100"
-                                        value={subject.grade}
-                                        onChange={(e) => handleSubjectChange(index, 'grade', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+    <Card className="w-full border-none shadow-none" dir="rtl">
+        <CardHeader className="text-center px-0">
+            <CardTitle className="text-3xl font-bold text-primary">حاسبة المعدل بالنظام الألماني</CardTitle>
+            <CardDescription>أدخل علاماتك وعدد الوحدات لكل مادة لحساب معدلك والمكافئ له في النظام الألماني.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 px-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                {subjects.map((subject, index) => (
+                    <div key={subject.id} className="space-y-2">
+                        <Label htmlFor={subject.id}>{subject.name}</Label>
+                        <div className="flex gap-2">
+                            <Select
+                                value={subject.units}
+                                onValueChange={(value) => handleSubjectChange(index, 'units', value)}
+                            >
+                                <SelectTrigger aria-label={`${subject.name} units`}>
+                                    <SelectValue placeholder="الوحدات" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[...Array(6).keys()].map(i => (
+                                        <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Input
+                                id={subject.id}
+                                type="number"
+                                placeholder="العلامة (0-100)"
+                                min="0"
+                                max="100"
+                                value={subject.grade}
+                                onChange={(e) => handleSubjectChange(index, 'grade', e.target.value)}
+                            />
+                        </div>
                     </div>
-                    {error && (
-                        <Alert variant="destructive">
-                           <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                    {results.average !== null && results.germanGrade !== null && (
-                         <Alert variant="default" className="bg-primary/10 border-primary/50">
-                            <Calculator className="h-4 w-4 text-primary" />
-                            <AlertTitle className="font-bold text-primary">النتائج</AlertTitle>
-                            <AlertDescription className="text-right space-y-1 text-foreground">
-                                <p>معدلك العام هو: <span className="font-bold">{results.average}</span></p>
-                                <p>معدلك حسب النظام الألماني هو: <span className="font-bold">{results.germanGrade}</span></p>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </CardContent>
-                <CardFooter className="flex justify-center gap-4 pt-6">
-                    <Button onClick={handleCalculate} className="w-full sm:w-auto flex-grow sm:flex-grow-0">احسب المعدل</Button>
-                    <Button onClick={handleReset} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">إعادة تعيين</Button>
-                </CardFooter>
-            </Card>
-        </div>
-    </section>
+                ))}
+            </div>
+            {error && (
+                <Alert variant="destructive">
+                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+            {results.average !== null && results.germanGrade !== null && (
+                 <Alert variant="default" className="bg-primary/10 border-primary/50">
+                    <Calculator className="h-4 w-4 text-primary" />
+                    <AlertTitle className="font-bold text-primary">النتائج</AlertTitle>
+                    <AlertDescription className="text-right space-y-1 text-foreground">
+                        <p>معدلك العام هو: <span className="font-bold">{results.average}</span></p>
+                        <p>معدلك حسب النظام الألماني هو: <span className="font-bold">{results.germanGrade}</span></p>
+                    </AlertDescription>
+                </Alert>
+            )}
+        </CardContent>
+        <CardFooter className="flex justify-center gap-4 pt-6 px-0">
+            <Button onClick={handleCalculate} className="w-full sm:w-auto flex-grow sm:flex-grow-0">احسب المعدل</Button>
+            <Button onClick={handleReset} variant="outline" className="w-full sm:w-auto flex-grow sm:flex-grow-0">إعادة تعيين</Button>
+        </CardFooter>
+    </Card>
   );
 };
 
