@@ -2,7 +2,7 @@
 import { useTranslation } from "react-i18next";
 
 const InfluencerMessage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('partnership');
   return (
     <section className="py-12 md:py-24 bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 text-center">

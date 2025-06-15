@@ -6,7 +6,7 @@ const icons = { FileSignature, Share2, UserCheck, BadgePercent };
 const iconKeys: (keyof typeof icons)[] = ['FileSignature', 'Share2', 'UserCheck', 'BadgePercent'];
 
 const HowItWorks = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('partnership');
   const steps = t('howItWorks.steps', { returnObjects: true }) as { title: string; description: string }[];
   
   return (
@@ -16,7 +16,7 @@ const HowItWorks = () => {
         <div className="relative">
           <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2"></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {steps.map((step, index) => {
+            {Array.isArray(steps) && steps.map((step, index) => {
               const IconComponent = icons[iconKeys[index]];
               return (
                 <div key={index} className="flex flex-col items-center text-center p-4 z-10">
