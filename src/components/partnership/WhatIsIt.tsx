@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BadgePercent, Handshake, Mail } from "lucide-react";
 
 const features = [
-    { icon: BadgePercent, title: "نموذج التسويق بالعمولة", description: "احصل على عمولة مجزية عن كل طالب يسجل عبر رابطك." },
-    { icon: Handshake, title: "50% من قيمة الخدمة", description: "نقدم لك نصف قيمة باقتنا المدفوعة عن كل عملية تسجيل مكتملة." },
-    { icon: Mail, title: "دعم تسويقي كامل", description: "نوفر لك روابط مخصصة، محتوى جاهز، وفريق متابعة لمساعدتك على النجاح." },
+    { icon: BadgePercent, title: "مكافأة مزدوجة", description: "أنت تربح عمولة 50%، وطالبك يحصل على خصم 500 شيكل. فائدة للجميع!" },
+    { icon: Handshake, title: "شراكة موثوقة", description: "انضم إلى علامة تجارية ذات مصداقية عالية وساعد الطلاب على تحقيق أحلامهم." },
+    { icon: Mail, title: "دعم تسويقي كامل", description: "نوفر لك محتوى جاهز وفريق متابعة لمساعدتك على النجاح بسهولة." },
 ]
 
 const WhatIsIt = () => {

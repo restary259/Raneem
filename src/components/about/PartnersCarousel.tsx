@@ -9,11 +9,14 @@ import {
 } from "@/components/ui/carousel";
 
 const partners = [
-  { name: "جامعة هايدلبرغ", logoUrl: "/placeholder.svg", countryFlag: "🇩🇪" },
-  { name: "جامعة بوخارست", logoUrl: "/placeholder.svg", countryFlag: "🇷🇴" },
-  { name: "الجامعة الأردنية", logoUrl: "/placeholder.svg", countryFlag: "🇯🇴" },
-  { name: "جامعة ميونخ التقنية", logoUrl: "/placeholder.svg", countryFlag: "🇩🇪" },
-  { name: "جامعة كلوج نابوكا", logoUrl: "/placeholder.svg", countryFlag: "🇷🇴" },
+  { name: "FU Academy of Languages", logoUrl: "/placeholder.svg", countryFlag: "🇩🇪" },
+  { name: "Alpha Aktiv", logoUrl: "/placeholder.svg", countryFlag: "🇩🇪" },
+  { name: "GoAcademy", logoUrl: "/placeholder.svg", countryFlag: "🇩🇪" },
+  { name: "Bucharest University", logoUrl: "/placeholder.svg", countryFlag: "🇷🇴" },
+  { name: "Carol Davila University", logoUrl: "/placeholder.svg", countryFlag: "🇷🇴" },
+  { name: "Ovidius University", logoUrl: "/placeholder.svg", countryFlag: "🇷🇴" },
+  { name: "جامعة اليرموك", logoUrl: "/placeholder.svg", countryFlag: "🇯🇴" },
+  { name: "UMF Jordan", logoUrl: "/placeholder.svg", countryFlag: "🇯🇴" },
 ];
 
 const PartnersCarousel = () => (
@@ -36,7 +39,7 @@ const PartnersCarousel = () => (
                   <CardContent className="flex flex-col items-center justify-center p-6 gap-4 h-52">
                     <img src={partner.logoUrl} alt={partner.name} className="h-16 w-auto opacity-60 invert-0 dark:invert" loading="lazy"/>
                     <span className="text-lg font-semibold">{partner.countryFlag} {partner.name}</span>
-                    <p className="text-sm text-muted-foreground">شريك معتمد منذ 2020</p>
+                    <p className="text-sm text-muted-foreground">شريك معتمد</p>
                   </CardContent>
                 </Card>
               </div>

@@ -20,8 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 const formSchema = z.object({
   name: z.string().min(2, { message: "الاسم يجب أن يحتوي على حرفين على الأقل." }),
   email: z.string().email({ message: "البريد الإلكتروني غير صالح." }),
-  profileLink: z.string().url({ message: "الرجاء إدخال رابط صالح." }),
-  country: z.string().min(2, { message: "البلد مطلوب." }),
+  profileLink: z.string().url({ message: "الرجاء إدخال رابط صالح." }).optional().or(z.literal('')),
   message: z.string().optional(),
 });
 
@@ -32,7 +31,6 @@ const RegistrationForm = () => {
       name: "",
       email: "",
       profileLink: "",
-      country: "",
       message: "",
     },
   });
@@ -85,22 +83,9 @@ const RegistrationForm = () => {
                   name="profileLink"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>رابط حسابك (إنستغرام، تيك توك، إلخ)</FormLabel>
+                      <FormLabel>رابط حسابك الاجتماعي (اختياري)</FormLabel>
                       <FormControl>
                         <Input placeholder="https://instagram.com/yourprofile" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>البلد</FormLabel>
-                      <FormControl>
-                        <Input placeholder="مثال: الأردن" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

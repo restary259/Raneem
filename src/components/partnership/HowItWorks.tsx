@@ -3,9 +3,9 @@ import { FileSignature, Share2, UserCheck, BadgePercent } from 'lucide-react';
 
 const steps = [
   { icon: FileSignature, title: "سجل معنا", description: "املأ النموذج في الأسفل لتنضم إلى شبكة شركائنا." },
-  { icon: Share2, title: "شارك الرابط المخصص", description: "ستحصل على رابط فريد لتشاركه مع جمهورك ومتابعيك." },
-  { icon: UserCheck, title: "يسجل الطالب عبرك", description: "عندما يستخدم الطالب رابطك للتسجيل في خدماتنا المدفوعة." },
-  { icon: BadgePercent, title: "تحصل على 50% عمولة", description: "نرسل لك 50% من قيمة الباقة مباشرة بعد إتمام عملية الدفع." },
+  { icon: Share2, title: "شارك اسمك أو رابطك", description: "شارك اسمك أو الرابط الخاص بك مع الطلاب المهتمين بالدراسة في الخارج." },
+  { icon: UserCheck, title: "يحصل الطالب على خصم", description: "عندما يذكر الطالب اسمك عند التسجيل، يحصل على خصم فوري بقيمة 500 شيكل." },
+  { icon: BadgePercent, title: "تحصل على 50% عمولة", description: "نرسل لك 50% من قيمة الباقة مباشرة بعد إتمام الطالب لعملية الدفع." },
 ];
 
 const HowItWorks = () => {
