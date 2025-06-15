@@ -1,0 +1,52 @@
+
+{
+  "nav": {
+    "home": "الرئيسية",
+    "about": "من نحن",
+    "services": "خدماتنا",
+    "partners": "شركاؤنا",
+    "partnership": "برنامج الشراكة",
+    "resources": "موارد",
+    "universityFinder": "ابحث عن جامعة",
+    "contact": "تواصل معنا",
+    "brand": "Darb",
+    "locations": "مواقعنا",
+    "testimonials": "آراء الطلاب",
+    "broadcast": "بث درب"
+  },
+  "desktopNav": {
+    "about": {
+      "description": "تعرف على قصتنا ورؤيتنا وقيمنا."
+    },
+    "locations": {
+      "description": "اكتشف مواقع مكاتبنا حول العالم."
+    },
+    "testimonials": {
+      "description": "اقرأ قصص نجاح طلابنا الملهمة."
+    },
+    "partnership": {
+      "description": "انضم إلى شبكتنا كشريك أو مؤثر."
+    },
+    "partners": {
+      "description": "تصفح قائمة شركائنا المعتمدين."
+    }
+  },
+  "applyNow": "قدم الآن",
+  "footer": {
+    "quote": "أتمنى لجميع طلابنا النجاح والأمان والغاية في كل خطوة من رحلتهم في الخارج.",
+    "instagram": "انستغرام",
+    "tiktok": "تيك توك",
+    "facebook": "فيسبوك",
+    "copyright": "© {{year}} درب للدراسة الدولية. جميع الحقوق محفوظة."
+  },
+  "notFound": {
+    "title": "404",
+    "subtitle": "عفواً! الصفحة غير موجودة",
+    "button": "العودة إلى الرئيسية"
+  },
+  "callToAction": {
+    "title": "هل أنت مستعد لبدء رحلتك؟",
+    "subtitle": "فريقنا جاهز للإجابة على جميع استفساراتك ومساعدتك في كل خطوة.",
+    "button": "احجز استشارة مجانية"
+  }
+}

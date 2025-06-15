@@ -9,8 +9,18 @@ i18n
   .init({
     lng: 'ar',
     fallbackLng: 'ar',
-    ns: ['translation'],
-    defaultNS: 'translation',
+    ns: [
+      'common',
+      'landing',
+      'about',
+      'services',
+      'partnership',
+      'contact',
+      'partners',
+      'resources',
+      'broadcast',
+    ],
+    defaultNS: 'common',
     debug: false,
     interpolation: {
       escapeValue: false, // react already safes from xss
