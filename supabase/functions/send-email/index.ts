@@ -3,12 +3,6 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Resend } from 'npm:resend@2.0.0';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-if (!RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY is not set in environment variables.");
-}
-const resend = new Resend(RESEND_API_KEY);
-
 const TO_EMAIL = 'darbsocial27@gmail.com';
 const FROM_EMAIL = 'Darb Study <onboarding@resend.dev>';
 
@@ -23,6 +17,16 @@ serve(async (req) => {
   }
 
   try {
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set in environment variables.");
+      return new Response(JSON.stringify({ error: "Server configuration error: Missing email API key." }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    const resend = new Resend(RESEND_API_KEY);
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -70,7 +74,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
-    console.error('Function error:', error.message);
+    console.error('Function error:', error.stack || error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
