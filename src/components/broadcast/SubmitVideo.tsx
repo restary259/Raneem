@@ -17,7 +17,7 @@ const SubmitVideo: React.FC = () => {
                     <CardContent>
                         <div className="flex flex-col gap-4">
                             <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white w-full" asChild>
-                                <a href="https://wa.me/962791901234" target="_blank" rel="noopener noreferrer">
+                                <a href="https://wa.me/972524061225" target="_blank" rel="noopener noreferrer">
                                     أرسل لنا عبر واتساب
                                 </a>
                             </Button>
