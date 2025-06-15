@@ -1,37 +1,68 @@
 
-import React from 'react';
-import BroadcastFeed from '@/components/broadcast/BroadcastFeed';
-import { MessageSquare } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import Header from '@/components/landing/Header';
+import HeroVideo from '@/components/broadcast/HeroVideo';
+import VideoCategories from '@/components/broadcast/VideoCategories';
+import VideoGallery from '@/components/broadcast/VideoGallery';
+import SubmitVideo from '@/components/broadcast/SubmitVideo';
+import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
 
 const BroadcastPage = () => {
+  const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
+
+  const featuredVideo = useMemo(() => broadcastData.find(p => p.featured), []);
+  
+  const galleryVideos = useMemo(() => {
+    const nonFeatured = broadcastData.filter(p => !p.featured)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (selectedCategory === 'all') {
+      return nonFeatured;
+    }
+    return nonFeatured.filter(p => p.category === selectedCategory);
+  }, [selectedCategory]);
+
+  if (!featuredVideo) {
+    // A simple fallback if no featured video is found in data
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <p>جاري تحميل محتوى البث...</p>
+        </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <div className="container mx-auto max-w-3xl py-8 px-4 font-sans">
-        <header className="text-center mb-12 animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">
-            بث دارب
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            آخر التحديثات والنصائح لرحلتك الدراسية، مباشرة من فريقنا.
-          </p>
-        </header>
+    <div className="bg-background dark:bg-gray-950">
+      <Header />
+      <main>
+        <HeroVideo post={featuredVideo} />
         
-        <main>
-          <section id="feed">
-            <h2 className="text-3xl font-bold text-right mb-6 text-primary flex items-center gap-3">
-              🔴 خلاصة البث المباشر
-            </h2>
-            <BroadcastFeed />
-          </section>
+        <section className="py-8 md:py-16">
+          <div className="container">
+              <div className="text-right mb-8">
+                  <h2 className="text-3xl font-bold">📚 فئات الفيديو</h2>
+              </div>
+              <VideoCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+          </div>
+        </section>
 
-          {/* سيتم إضافة الأقسام الأخرى هنا في الخطوات القادمة */}
-        </main>
+        <section className="pb-12 md:pb-24">
+            <div className="container">
+                <div className="text-right mb-8">
+                    <h2 className="text-3xl font-bold">🎬 معرض مقاطع الفيديو</h2>
+                </div>
+                <VideoGallery posts={galleryVideos} />
+            </div>
+        </section>
+        
+        <SubmitVideo />
 
-        <footer className="text-center text-muted-foreground text-sm pt-12 mt-8 border-t">
-          <p>مدعوم من دارب ستادي إنترناشونال – شريكك الموثوق في رحلتك الدراسية.</p>
-          <p>تواصل معنا على <a href="https://wa.me/962791901234" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline font-semibold">واتساب</a> 24/7.</p>
-        </footer>
-      </div>
+      </main>
+      <footer className="py-8 text-center text-muted-foreground bg-muted/50 dark:bg-muted/20">
+        <div className="container">
+          <p>“كل ما تريد معرفته عن الحياة والدراسة في الخارج… بالفيديو وعلى طول الخط مع دارب ستادي إنترناشونال.”</p>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -1,108 +1,88 @@
 
-export type BroadcastCategory = 'أخبار القبول' | 'تحديثات التأشيرات' | 'إنجازات الطلاب' | 'تنبيهات عاجلة';
+export type BroadcastCategory = 'نصائح الدراسة' | 'تجارب الطلبة' | 'إجراءات التأشيرة' | 'ورش عمل وتوجيه';
 
 export interface BroadcastPost {
   id: number;
-  type: 'post' | 'video';
-  pinned?: boolean;
+  featured?: boolean;
   category: BroadcastCategory;
-  emoji: string;
   title: string;
+  description: string;
   date: string;
-  country: string;
-  countryFlag: string;
-  content: string;
-  pdfUrl?: string;
+  duration: string;
+  posterUrl: string;
   videoUrl?: string;
-  posterUrl?: string;
+  youtubeId?: string;
+  country?: string;
+  countryFlag?: string;
 }
 
 export const broadcastData: BroadcastPost[] = [
   {
     id: 1,
-    type: 'post',
-    pinned: true,
-    category: 'تنبيهات عاجلة',
-    emoji: '🚨',
-    title: 'تنبيه هام بخصوص مواعيد السفارة الألمانية',
+    featured: true,
+    category: 'تجارب الطلبة',
+    title: 'رحلة رنا إلى ألمانيا: يوم الوصول الأول',
+    description: 'انضموا إلى رنا في يومها الأول المثير في ألمانيا، من الوصول إلى المطار وحتى استكشاف سكنها الجامعي الجديد.',
     date: '2025-06-15T10:00:00Z',
+    duration: '12:34',
+    posterUrl: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop',
+    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_30MB.mp4',
+    youtubeId: 'dQw4w9WgXcQ',
     country: 'ألمانيا',
     countryFlag: '🇩🇪',
-    content: 'تم تحديث مواعيد التقديم للتأشيرة الدراسية. يرجى مراجعة المواعيد الجديدة والتأكد من حجز الموعد المناسب.',
-    pdfUrl: '#',
-  },
-  {
-    id: 6,
-    type: 'video',
-    pinned: true,
-    category: 'تحديثات التأشيرات',
-    emoji: '🎥',
-    title: 'شرح متطلبات الفيزا الجديدة',
-    date: '2025-06-15T18:00:00Z',
-    country: 'رومانيا',
-    countryFlag: '🇷🇴',
-    content: 'فيديو توضيحي من فريقنا حول آخر تحديثات متطلبات التأشيرة الرومانية.',
-    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
   {
     id: 2,
-    type: 'post',
-    category: 'إنجازات الطلاب',
-    emoji: '🎉',
-    title: 'قبول جديد في جامعة ميونخ التقنية!',
+    category: 'نصائح الدراسة',
+    title: '5 نصائح لاختيار التخصص الجامعي المناسب',
+    description: 'مرشدنا الأكاديمي يشارككم أهم النصائح التي ستساعدكم في اتخاذ قرار التخصص بثقة ووضوح.',
     date: '2025-06-14T15:30:00Z',
-    country: 'ألمانيا',
-    countryFlag: '🇩🇪',
-    content: 'نهنئ الطالب أحمد لحصوله على قبول لدراسة الهندسة الميكانيكية. نتمنى له كل التوفيق في رحلته الدراسية!',
-  },
-  {
-    id: 5,
-    type: 'video',
-    category: 'إنجازات الطلاب',
-    emoji: '🎬',
-    title: 'طالبنا وصل ألمانيا!',
-    date: '2025-06-16T12:00:00Z',
-    country: 'ألمانيا',
-    countryFlag: '🇩🇪',
-    content: 'شاهدوا فرحة وصول أحد طلابنا إلى ألمانيا لبدء رحلته الدراسية.',
-    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbb563?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    duration: '08:15',
+    posterUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop',
+    youtubeId: '6vYnas6q3Sg',
   },
   {
     id: 3,
-    type: 'post',
-    category: 'تحديثات التأشيرات',
-    emoji: '🔵',
-    title: 'تحديثات متطلبات فيزا رومانيا',
+    category: 'إجراءات التأشيرة',
+    title: 'خطوات تعبئة طلب فيزا الدراسة لبريطانيا',
+    description: 'شرح تفصيلي خطوة بخطوة لكيفية تعبئة نموذج طلب التأشيرة الدراسية للمملكة المتحدة بدون أخطاء.',
     date: '2025-06-12T09:00:00Z',
-    country: 'رومانيا',
-    countryFlag: '🇷🇴',
-    content: 'تم إضافة متطلب جديد للحصول على التأشيرة الرومانية يتعلق بإثبات المقدرة المالية. التفاصيل في الملف المرفق.',
-    pdfUrl: '#',
+    duration: '22:40',
+    posterUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+    videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+    country: 'المملكة المتحدة',
+    countryFlag: '🇬🇧',
   },
   {
     id: 4,
-    type: 'post',
-    category: 'أخبار القبول',
-    emoji: '🟠',
-    title: 'فتح باب القبول في الجامعات الأردنية',
+    category: 'تجارب الطلبة',
+    title: 'جولة في الحرم الجامعي لجامعة تورنتو',
+    description: 'طالبنا عمر يأخذنا في جولة شيقة داخل واحدة من أفضل الجامعات الكندية. تعرفوا على المرافق والحياة الطلابية.',
     date: '2025-06-10T11:00:00Z',
-    country: 'الأردن',
-    countryFlag: '🇯🇴',
-    content: 'أعلنت الجامعات الأردنية عن فتح باب القبول للطلاب الدوليين للفصل الدراسي القادم. الفرصة متاحة الآن للتقديم.',
+    duration: '15:05',
+    posterUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop',
+    youtubeId: 'L_LUpnjgPso',
+    country: 'كندا',
+    countryFlag: '🇨🇦',
   },
     {
-    id: 7,
-    type: 'video',
-    category: 'إنجازات الطلاب',
-    emoji: '🥳',
-    title: 'مقابلة مع طالب في الأردن',
-    date: '2025-06-09T14:00:00Z',
-    country: 'الأردن',
-    countryFlag: '🇯🇴',
-    content: 'أجرينا مقابلة سريعة مع أحد طلابنا الذي يدرس حالياً في الأردن. تعرف على تجربته!',
+    id: 5,
+    category: 'ورش عمل وتوجيه',
+    title: 'ورشة عمل: كيف تكتب سيرة ذاتية احترافية؟',
+    description: 'تسجيل كامل لورشة العمل التي أقيمت عبر الإنترنت حول كتابة السيرة الذاتية التي تجذب انتباه مسؤولي القبول.',
+    date: '2025-06-08T18:00:00Z',
+    duration: '45:12',
+    posterUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop',
     videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-    posterUrl: 'https://images.unsplash.com/photo-1576487248805-cf4d8e404398?q=80&w=1953&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-  }
+  },
+  {
+    id: 6,
+    category: 'نصائح الدراسة',
+    title: 'استراتيجيات المذاكرة الفعالة قبل الامتحانات',
+    description: 'تعلم تقنيات مجربة لزيادة تركيزك وتحسين استيعابك للمواد الدراسية في فترة المراجعة النهائية.',
+    date: '2025-06-05T14:00:00Z',
+    duration: '11:55',
+    posterUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1973&auto=format&fit=crop',
+    youtubeId: 'Yb6825eG6e4',
+  },
 ];

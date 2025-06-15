@@ -1,11 +1,11 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
-
+/* ... keep existing code (root, dark) */
 @layer base {
   :root {
     --background: 210 20% 98.5%;
@@ -122,8 +122,41 @@
     }
   }
 
+  .masonry-grid-videos {
+    column-count: 2;
+    column-gap: 1.5rem; /* 24px */
+  }
+
+  @media (min-width: 768px) {
+    .masonry-grid-videos {
+      column-count: 3;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .masonry-grid-videos {
+      column-count: 4;
+    }
+  }
+
+
   .masonry-grid-item {
     break-inside: avoid;
     margin-bottom: 1.5rem;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
   }
 }
