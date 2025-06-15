@@ -1,0 +1,21 @@
+
+{
+  "brand": "Darb",
+  "nav": {
+    "home": "Startseite",
+    "about": "Über Uns",
+    "services": "Dienstleistungen",
+    "partners": "Partner",
+    "partnership": "Partnerschaft",
+    "resources": "Ressourcen",
+    "contact": "Kontakt"
+  },
+  "header": {
+    "apply_now": "Jetzt bewerben"
+  },
+  "hero": {
+    "subtitle": "Wir begleiten Studierende Schritt für Schritt beim Studium im Ausland — von der Wahl der richtigen Universität bis zur Ankunft in deiner neuen Heimat.",
+    "free_consultation": "Kostenlose Beratung buchen",
+    "apply_now": "Jetzt bewerben"
+  }
+}

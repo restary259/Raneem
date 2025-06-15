@@ -1,4 +1,3 @@
-
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
@@ -36,7 +35,7 @@ const resources = [
 
 const ResourcesPage = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <main className="flex-grow">
         <section className="bg-secondary/30 py-20">

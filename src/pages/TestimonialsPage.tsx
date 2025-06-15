@@ -5,7 +5,7 @@ import Testimonials from "@/components/landing/Testimonials";
 
 const TestimonialsPage = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <main className="flex-grow">
         <Testimonials />

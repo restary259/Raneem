@@ -10,7 +10,7 @@ const PartnersPage = () => {
     }, []);
 
     return (
-        <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
+        <div className="flex flex-col min-h-screen bg-background text-foreground">
             <Header />
             <main className="flex-grow">
                 <section className="relative py-20 md:py-32 bg-secondary text-white">

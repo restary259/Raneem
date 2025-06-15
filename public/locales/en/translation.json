@@ -1,0 +1,21 @@
+
+{
+  "brand": "Darb",
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "services": "Services",
+    "partners": "Partners",
+    "partnership": "Partnership",
+    "resources": "Resources",
+    "contact": "Contact Us"
+  },
+  "header": {
+    "apply_now": "Apply Now"
+  },
+  "hero": {
+    "subtitle": "We guide students step-by-step to study abroad — from choosing the right university to arriving in your new home.",
+    "free_consultation": "Book a Free Consultation",
+    "apply_now": "Apply Now"
+  }
+}
