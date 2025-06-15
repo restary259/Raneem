@@ -1,8 +1,8 @@
 
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, TrendingUp, FileText, BrainCircuit, UserPlus, Icon as LucideIcon } from "lucide-react";
-import * as icons from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { icons } from "lucide-react";
 
 type Benefit = {
   icon: keyof typeof icons;
