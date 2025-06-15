@@ -49,7 +49,7 @@ const DesktopNav = () => {
 
   return (
     <NavigationMenu>
-      <NavigationMenuList className="flex-row-reverse">
+      <NavigationMenuList>
         <NavigationMenuItem>
           <Link to="/">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
