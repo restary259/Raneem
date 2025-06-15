@@ -1,7 +1,7 @@
 
 import Header from "@/components/landing/Header";
 import Hero from "@/components/landing/Hero";
-import About from "@/components/landing/About";
+import AboutCustom from "@/components/landing/AboutCustom";
 import WhyChooseUs from "@/components/landing/WhyChooseUs";
 import Footer from "@/components/landing/Footer";
 import PartnersMarquee from "@/components/landing/PartnersMarquee";
@@ -15,7 +15,7 @@ const Index = () => {
       <main className="flex-grow">
         <Hero />
         <PartnersMarquee />
-        <About />
+        <AboutCustom />
         <StudentJourney />
         <WhyChooseUs />
         <StudentGallery />
