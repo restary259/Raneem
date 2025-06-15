@@ -21,21 +21,30 @@ export const useCurrencyComparator = () => {
     },
   });
 
-  const targetCountry = form.watch('targetCountry');
+  const { watch, getValues, setValue } = form;
+  
+  const targetCountry = watch('targetCountry');
   const targetCurrency = countries[targetCountry].currency;
   const availableBanks = banksByCountry[targetCountry];
 
   useEffect(() => {
-    const currentBank = form.getValues('receivingBank');
+    const currentBank = getValues('receivingBank');
     const isCurrentBankAvailable = availableBanks.some(b => b.id === currentBank);
 
     if (availableBanks.length > 0 && !isCurrentBankAvailable) {
-        form.setValue('receivingBank', availableBanks[0].id);
+        setValue('receivingBank', availableBanks[0].id);
     }
-  }, [targetCountry, availableBanks, form]);
+  }, [targetCountry, availableBanks, getValues, setValue]);
 
-  const onSubmit = useCallback((values: FormValues) => {
+  const calculateResults = useCallback((values: FormValues) => {
     const { amount, receivingBank, deliverySpeed } = values;
+
+    if (!amount || amount <= 0) {
+      setResults(null);
+      setBestResult(null);
+      return;
+    }
+    
     const services = mockApiData[targetCurrency as keyof typeof mockApiData];
     const bankData = availableBanks.find(b => b.id === receivingBank);
     
@@ -78,13 +87,16 @@ export const useCurrencyComparator = () => {
     setResults(calculatedResults);
     setBestResult(calculatedResults[0] || null);
   }, [t, targetCurrency, availableBanks]);
+  
+  const watchedValues = watch();
 
   useEffect(() => {
-    // Perform initial calculation on mount
-    onSubmit(form.getValues());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSubmit]);
+    calculateResults(watchedValues);
+  }, [watchedValues, calculateResults]);
 
+  const onSubmit = (values: FormValues) => {
+    calculateResults(values);
+  };
 
   return {
     t,

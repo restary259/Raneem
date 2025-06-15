@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 const WhyChooseUs = () => {
   const { t } = useTranslation();
-  const reasons: string[] = t('whyChooseUs.reasons', { returnObjects: true });
+  const reasons = t('whyChooseUs.reasons', { returnObjects: true }) as string[];
 
   return (
     <section id="why-us" className="py-12 md:py-24 bg-secondary">
