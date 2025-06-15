@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 const locations = [
   {
     country: "ألمانيا",
-    cities: "هايدلبرغ، نورمبرغ، برلين",
+    cities: "هايدلبرغ، مونستر، دوسلدورف",
     services: "القبول الجامعي، التأشيرة، مدارس اللغة، تصاريح الإقامة.",
   },
   {
