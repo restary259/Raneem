@@ -11,15 +11,23 @@ interface HeroVideoProps {
 const HeroVideo: React.FC<HeroVideoProps> = ({ post }) => {
   return (
     <div className="relative w-full h-[60vh] md:h-[70vh] text-white overflow-hidden">
-      <video
-        poster={post.posterUrl}
-        src={post.videoUrl}
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        autoPlay
-        loop
-        muted
-        playsInline
-      />
+      {post.videoUrl ? (
+        <video
+          poster={post.posterUrl}
+          src={post.videoUrl}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : (
+        <img
+          src={post.posterUrl}
+          alt={post.title}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
       <div className="relative z-10 flex flex-col justify-end h-full p-6 md:p-12 text-right">
         <h1 className="text-3xl md:text-5xl font-extrabold mb-2 text-shadow-lg animate-fade-in">
@@ -36,7 +44,7 @@ const HeroVideo: React.FC<HeroVideoProps> = ({ post }) => {
               rel="noopener noreferrer"
             >
               <Play className="ml-2 h-5 w-5" />
-              مشاهدة على يوتيوب
+              {post.youtubeId ? 'مشاهدة على يوتيوب' : 'مشاهدة الفيديو'}
             </a>
           </Button>
         </div>
