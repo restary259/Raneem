@@ -1,14 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
 const PartnershipHero = () => {
-  return (
-    <section className="py-20 md:py-32 text-center bg-primary text-primary-foreground">
+  return <section className="py-20 md:py-32 text-center bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 animate-fade-in">
-        <h1 className="text-4xl md:text-5xl font-bold">
-          اربح وامنح طلابك خصم 500 شيكل – انضم إلى برنامج الشراكة الآن!
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-bold">اربح وامنح متابعينك خصم 500 شيكل – انضم إلى برنامج الشراكة الآن!</h1>
         <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-primary-foreground/80">
           عندما يذكر الطالب اسمك عند التسجيل، يحصل على خصم فوري بقيمة 500 شيكل، وأنت تحصل على 50% من قيمة خدماتنا كعمولة. نحن نوفر لك كل الدعم الذي تحتاجه للنجاح.
         </p>
@@ -18,8 +13,6 @@ const PartnershipHero = () => {
           </Button>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default PartnershipHero;
