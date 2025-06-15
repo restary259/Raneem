@@ -1,4 +1,3 @@
-
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Points, PointMaterial, Text, Sphere } from '@react-three/drei'
 import { useRef } from 'react'
@@ -46,7 +45,6 @@ const FloatingText = () => {
       anchorX="center"
       anchorY="middle"
       position={[0, 0, 4]}
-      className="text-shadow-lg"
     >
       رفيقك الدراسي العالمي
     </Text>
