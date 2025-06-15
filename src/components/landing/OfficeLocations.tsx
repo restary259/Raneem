@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { MapPin, Phone, Clock, MessageCircle, Mail } from 'lucide-react';
 
 const office = {
   city: 'طمرة, إسرائيل',
-  address: 'شارع رئيسي، طمرة',
+  address: 'طمرة مول، طمرة 3081100',
   phone: '+972 52-940-2168',
   email: 'darbsocial27@gmail.com',
   hours: 'الأحد - الخميس: 9 صباحًا - 5 مساءً',
