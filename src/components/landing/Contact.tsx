@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import Map from "./Map";
 import OfficeLocations from "./OfficeLocations";
-import { Instagram, Linkedin, Youtube } from "lucide-react";
+import { Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
@@ -101,6 +101,7 @@ const Contact = () => {
               <div className="flex justify-center items-center space-x-6">
                 <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
                 <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
+                <a href="https://www.facebook.com/DARB_STUDYINGERMANY" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
               </div>
             </div>
           </div>

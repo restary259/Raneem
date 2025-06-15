@@ -1,5 +1,5 @@
 
-import { Instagram } from "lucide-react";
+import { Instagram, Facebook } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -23,6 +23,7 @@ const Footer = () => {
         <div className="flex justify-center items-center space-x-6 space-x-reverse mb-8">
           <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <Instagram /></a>
           <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon /></a>
+          <a href="https://www.facebook.com/DARB_STUDYINGERMANY" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <Facebook /></a>
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
           {t('footer.copyright', { year })}
