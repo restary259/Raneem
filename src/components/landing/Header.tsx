@@ -19,7 +19,7 @@ const Header = () => {
       <div className="container flex h-14 items-center">
         <div className="ml-4 hidden md:flex">
           <Link to="/" className="ml-6 flex items-center space-x-2">
-            <span className="font-bold">درب</span>
+            <span className="font-extrabold text-xl">درب</span>
           </Link>
           <nav className="flex items-center gap-x-6 text-sm font-medium">
             {navLinks.map((link) => (
@@ -39,7 +39,7 @@ const Header = () => {
             <SheetContent side="right">
               <nav className="grid gap-6 text-lg font-medium text-right">
                 <Link to="/" className="flex items-center justify-end gap-2 text-lg font-semibold">
-                  <span className="font-bold">درب</span>
+                  <span className="font-extrabold text-xl">درب</span>
                 </Link>
                 {navLinks.map((link) => (
                   <Link key={link.href} to={link.href} className="text-muted-foreground hover:text-foreground">
@@ -50,7 +50,7 @@ const Header = () => {
             </SheetContent>
           </Sheet>
           <Link to="/" className="flex items-center space-x-2 md:hidden">
-            <span className="font-bold">درب</span>
+            <span className="font-extrabold text-xl">درب</span>
           </Link>
         </div>
         <div className="hidden md:flex items-center justify-end space-x-2">
