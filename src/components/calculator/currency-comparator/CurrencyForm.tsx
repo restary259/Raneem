@@ -17,8 +17,11 @@ export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
   const { t } = useTranslation();
   const form = useFormContext<FormValues>();
   const targetCountry = useWatch({ control: form.control, name: 'targetCountry' });
-  const targetCurrency = countries[targetCountry].currency;
-  const availableBanks = banksByCountry[targetCountry];
+  
+  // Guard to ensure targetCountry is valid before it's used.
+  const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
+  const targetCurrency = countries[safeTargetCountry].currency;
+  const availableBanks = banksByCountry[safeTargetCountry];
 
   return (
     <Card>

@@ -23,8 +23,12 @@ export const useCurrencyComparator = () => {
   const { watch, getValues, setValue } = form;
   
   const targetCountry = watch('targetCountry');
-  const targetCurrency = countries[targetCountry].currency;
-  const availableBanks = banksByCountry[targetCountry];
+
+  // Guard to ensure targetCountry is valid before it's used, preventing crashes.
+  const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
+  
+  const targetCurrency = countries[safeTargetCountry].currency;
+  const availableBanks = banksByCountry[safeTargetCountry];
 
   useEffect(() => {
     const currentBank = getValues('receivingBank');
@@ -33,7 +37,7 @@ export const useCurrencyComparator = () => {
     if (availableBanks.length > 0 && !isCurrentBankAvailable) {
         setValue('receivingBank', availableBanks[0].id);
     }
-  }, [targetCountry, availableBanks, getValues, setValue]);
+  }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
   const calculateResults = useCallback((values: FormValues) => {
     const { amount, receivingBank, deliverySpeed } = values;
@@ -96,7 +100,7 @@ export const useCurrencyComparator = () => {
     form,
     results,
     bestResult,
-    targetCountry,
+    targetCountry: safeTargetCountry,
     targetCurrency,
     onSubmit,
   };
