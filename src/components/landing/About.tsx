@@ -3,7 +3,6 @@ import AboutIntro from '../about/AboutIntro';
 import KeyFeatures from '../about/KeyFeatures';
 import TeamSection from '../about/TeamSection';
 import CeoMessage from '../about/CeoMessage';
-import PartnersCarousel from '../about/PartnersCarousel';
 import CallToAction from '../about/CallToAction';
 
 const About = () => {
@@ -13,7 +12,6 @@ const About = () => {
       <KeyFeatures />
       <TeamSection />
       <CeoMessage />
-      <PartnersCarousel />
       <CallToAction />
     </div>
   );
