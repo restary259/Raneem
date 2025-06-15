@@ -13,6 +13,8 @@ import OfficeLocations from "./OfficeLocations";
 import { Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TikTokIcon from "../icons/TikTokIcon";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يتكون الاسم من حرفين على الأقل." }),
@@ -32,13 +34,34 @@ const Contact = () => {
     defaultValues: { name: "", email: "", whatsapp: "", message: "" },
   });
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: (values: z.infer<typeof formSchema>) => {
+      return supabase.functions.invoke('send-email', {
+        body: {
+          form_source: 'Contact Page Form',
+          ...values,
+        },
+      });
+    },
+    onSuccess: (result) => {
+      if (result.error) throw new Error(result.error.message);
+      toast({
+        title: t('contact.toast.successTitle'),
+        description: t('contact.toast.successDescription'),
+      });
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "حدث خطأ",
+        description: "فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.",
+      });
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: t('contact.toast.successTitle'),
-      description: t('contact.toast.successDescription'),
-    });
-    form.reset();
+    mutate(values);
   }
 
   return (
@@ -85,7 +108,9 @@ const Contact = () => {
                 <FormField control={form.control} name="message" render={({ field }) => (
                   <FormItem><FormLabel>{t('contact.form.message')}</FormLabel><FormControl><Textarea placeholder={t('contact.form.messagePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button type="submit" className="w-full font-bold" size="lg" variant="default">{t('contact.form.submit')}</Button>
+                <Button type="submit" className="w-full font-bold" size="lg" variant="default" disabled={isPending}>
+                  {isPending ? "جار الإرسال..." : t('contact.form.submit')}
+                </Button>
               </form>
             </Form>
           </div>

@@ -5,6 +5,8 @@ import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -49,13 +51,34 @@ const ConsultationCta = () => {
         },
     });
 
+    const { mutate, isPending } = useMutation({
+        mutationFn: (values: z.infer<typeof formSchema>) => {
+          return supabase.functions.invoke('send-email', {
+            body: {
+              form_source: 'Consultation CTA Form',
+              ...values,
+            },
+          });
+        },
+        onSuccess: (result) => {
+          if (result.error) throw new Error(result.error.message);
+          toast({
+            title: "تم إرسال طلبك بنجاح!",
+            description: "سنتواصل معك في أقرب وقت ممكن.",
+          });
+          form.reset();
+        },
+        onError: (error) => {
+          toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: "فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.",
+          });
+        },
+    });
+
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
-        toast({
-          title: "تم إرسال طلبك بنجاح!",
-          description: "سنتواصل معك في أقرب وقت ممكن.",
-        })
-        form.reset();
+        mutate(values);
     }
 
     return (
@@ -132,7 +155,9 @@ const ConsultationCta = () => {
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" variant="accent" size="lg" className="w-full font-cairo font-bold">ابدأ الآن</Button>
+                                <Button type="submit" variant="accent" size="lg" className="w-full font-cairo font-bold" disabled={isPending}>
+                                    {isPending ? "جار الإرسال..." : "ابدأ الآن"}
+                                </Button>
                             </form>
                         </Form>
                     </div>

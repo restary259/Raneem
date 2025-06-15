@@ -1,11 +1,14 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,10 +44,28 @@ const RegistrationForm = () => {
     },
   });
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: (values: Omit<z.infer<typeof formSchema>, 'attachment'>) => {
+        return supabase.functions.invoke('send-email', {
+            body: {
+                form_source: 'Partnership Registration Form',
+                ...values,
+            },
+        });
+    },
+    onSuccess: (result) => {
+        if (result.error) throw new Error(result.error.message);
+        toast.success(formContent.success);
+        form.reset();
+    },
+    onError: (error) => {
+        toast.error("فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.");
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast.success(formContent.success);
-    form.reset();
+    const { attachment, ...otherValues } = values;
+    mutate(otherValues);
   }
 
   return (
@@ -113,13 +134,16 @@ const RegistrationForm = () => {
                     <FormItem>
                       <FormLabel>{formContent.attachment}</FormLabel>
                       <FormControl>
-                        <Input type="file" onChange={e => onChange(e.target.files)} {...rest} />
+                        <Input type="file" onChange={e => onChange(e.target.files)} {...rest} disabled />
                       </FormControl>
+                      <FormDescription>خاصية رفع الملفات غير متاحة حالياً.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="lg" variant="accent" className="w-full">{formContent.submit}</Button>
+                <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
+                  {isPending ? "جار الإرسال..." : formContent.submit}
+                </Button>
               </form>
             </Form>
           </CardContent>

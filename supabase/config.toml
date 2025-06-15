@@ -1,1 +1,4 @@
+
 project_id = "izjrprphchilkrgbjmbm"
+
+[functions.send-email]
