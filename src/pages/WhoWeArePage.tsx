@@ -3,6 +3,7 @@ import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ServiceProcess from "@/components/services/ServiceProcess";
 
 const WhoWeArePage = () => {
     const features = [
@@ -251,6 +252,12 @@ const WhoWeArePage = () => {
                         </div>
                     </div>
                 </section>
+
+                <ServiceProcess
+                    title="منهجية عملنا وضمان الجودة"
+                    description="نتبع عملية شفافة ومنظمة لضمان تجربة استثنائية وأفضل النتائج لكل طالب."
+                    className="bg-secondary/20"
+                />
                 
                 <section className="bg-primary text-primary-foreground py-16 md:py-20">
                     <div className="container mx-auto px-4 text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
