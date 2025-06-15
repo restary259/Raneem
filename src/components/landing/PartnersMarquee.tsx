@@ -36,7 +36,7 @@ const PartnersMarquee = () => {
                 <div className="relative w-full overflow-hidden mask-gradient">
                     <div 
                       className="flex animate-marquee whitespace-nowrap"
-                      style={{ animationDuration: '60s' }}
+                      style={{ animationDuration: '20s' }}
                     >
                         {extendedPartners.map((partner, index) => (
                             <span key={index} className="mx-8 text-xl font-semibold text-muted-foreground">

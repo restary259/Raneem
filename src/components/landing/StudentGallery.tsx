@@ -1,4 +1,3 @@
-
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 
@@ -28,12 +27,11 @@ const StudentGallery = () => {
               <div className="relative bg-secondary">
                 <img 
                   src={student.image} 
-                  alt={`Student ${student.name}`}
+                  alt={`Student ${student.name || 'story'}`}
                   className="w-full h-80 object-contain object-center group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                 <div className="absolute bottom-0 right-0 p-6 text-white text-right">
-                  {student.name && <h3 className="text-xl font-bold">{student.name}</h3>}
                   <p className="text-base font-light">{student.destination}</p>
                 </div>
               </div>
