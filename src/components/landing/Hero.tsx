@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import HeroScene from "./HeroScene";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AnimatedCounter from "./AnimatedCounter";
@@ -24,10 +23,10 @@ const Hero = () => {
       </video>
       <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm" />
       <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
-        <div className="w-full h-1/2 min-h-[300px] -mt-16">
-          <HeroScene />
-        </div>
-        <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
+        <h1 className="text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
+          رفيقك الدراسي العالمي
+        </h1>
+        <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
           {t('hero.subtitle')}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
