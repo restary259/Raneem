@@ -10,7 +10,7 @@ const Hero = () => {
   const stats = [
     { value: 47, label: "طالب سعيد" },
     { value: 16, label: "شريك تعليمي" },
-    { value: 8, label: "دولة حول العالم" }
+    { value: 5, label: "دولة حول العالم" }
   ];
 
   return (
