@@ -105,4 +105,16 @@ export const broadcastData: BroadcastPost[] = [
     posterUrl: 'https://img.youtube.com/vi/O1Pk5VU5j34/maxresdefault.jpg',
     youtubeId: 'O1Pk5VU5j34',
   },
+  {
+    id: 9,
+    category: 'تجارب الطلبة',
+    title: 'جولة في حرم جامعة هايدلبرغ',
+    description: 'جولة في حرم جامعة هايدلبرغ، إحدى أعرق الجامعات في ألمانيا. استكشفوا المباني التاريخية والمرافق الحديثة والحياة الطلابية النابضة بالحياة.',
+    date: '2025-06-13T10:00:00Z',
+    duration: '02:45',
+    posterUrl: 'https://img.youtube.com/vi/wJ3eqaoz7k4/maxresdefault.jpg',
+    youtubeId: 'wJ3eqaoz7k4',
+    country: 'ألمانيا',
+    countryFlag: '🇩🇪',
+  },
 ];
