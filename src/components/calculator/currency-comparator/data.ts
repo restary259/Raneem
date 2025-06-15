@@ -32,19 +32,19 @@ export const banksByCountry = {
 
 export const mockApiData = {
   EUR: {
-    wise: { rate: 0.26, fee: 15, time: 'arrivesInHours' },
-    revolut: { rate: 0.258, fee: 20, time: 'arrivesInHours' },
-    xoom: { rate: 0.255, fee: 25, time: 'arrivesInDays' },
+    leumi: { name: 'بنك لئومي', rate: 0.25, fee: 25, time: 'arrivesInDays' },
+    hapoalim: { name: 'بنك هبوعليم', rate: 0.252, fee: 22, time: 'arrivesInHours' },
+    mizrahitefahot: { name: 'بنك مزراحي تفحوت', rate: 0.248, fee: 30, time: 'arrivesInDays' },
   },
   JOD: {
-    wise: { rate: 0.19, fee: 18, time: 'arrivesInHours' },
-    revolut: { rate: 0.188, fee: 22, time: 'arrivesInDays' },
-    xoom: { rate: 0.185, fee: 30, time: 'arrivesInDays' },
+    leumi: { name: 'بنك لئومي', rate: 0.18, fee: 30, time: 'arrivesInDays' },
+    hapoalim: { name: 'بنك هبوعليم', rate: 0.182, fee: 28, time: 'arrivesInHours' },
+    mizrahitefahot: { name: 'بنك مزراحي تفحوت', rate: 0.178, fee: 35, time: 'arrivesInDays' },
   },
   RON: {
-    wise: { rate: 1.29, fee: 12, time: 'arrivesInHours' },
-    revolut: { rate: 1.28, fee: 18, time: 'arrivesInHours' },
-    xoom: { rate: 1.27, fee: 28, time: 'arrivesInDays' },
+    leumi: { name: 'بنك لئومي', rate: 1.25, fee: 20, time: 'arrivesInDays' },
+    hapoalim: { name: 'بنك هبوعليم', rate: 1.26, fee: 18, time: 'arrivesInHours' },
+    mizrahitefahot: { name: 'بنك مزراحي تفحوت', rate: 1.24, fee: 25, time: 'arrivesInDays' },
   },
 };
 

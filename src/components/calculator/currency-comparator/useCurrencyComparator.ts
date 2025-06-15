@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -61,7 +60,7 @@ export const useCurrencyComparator = () => {
       const serviceFee = data.fee;
       const totalFee = serviceFee + bankFee;
       return {
-        service: t(`currencyComparator.${service.toLowerCase()}` as any),
+        service: data.name,
         bank: t(bankData.nameKey as any),
         rate: data.rate,
         serviceFee: serviceFee,
@@ -88,12 +87,6 @@ export const useCurrencyComparator = () => {
     setBestResult(calculatedResults[0] || null);
   }, [t, targetCurrency, availableBanks]);
   
-  const watchedValues = watch();
-
-  useEffect(() => {
-    calculateResults(watchedValues);
-  }, [watchedValues, calculateResults]);
-
   const onSubmit = (values: FormValues) => {
     calculateResults(values);
   };
