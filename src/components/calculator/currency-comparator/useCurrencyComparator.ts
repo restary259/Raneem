@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +24,9 @@ export const useCurrencyComparator = () => {
   const { watch, getValues, setValue } = form;
   
   const targetCountry = watch('targetCountry');
+  const receivingBank = watch('receivingBank');
+  const deliverySpeed = watch('deliverySpeed');
+  const watchedAmount = watch('amount');
 
   // Guard to ensure targetCountry is valid before it's used, preventing crashes.
   const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
@@ -40,9 +44,10 @@ export const useCurrencyComparator = () => {
   }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
   const calculateResults = useCallback((values: FormValues) => {
-    const { amount, receivingBank, deliverySpeed } = values;
+    const { amount: rawAmount, receivingBank, deliverySpeed } = values;
+    const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
 
-    if (!amount || amount <= 0) {
+    if (!amount || isNaN(amount) || amount <= 0) {
       setResults(null);
       setBestResult(null);
       return;
@@ -91,6 +96,11 @@ export const useCurrencyComparator = () => {
     setBestResult(calculatedResults[0] || null);
   }, [t, targetCurrency, availableBanks]);
   
+  useEffect(() => {
+    // Calculate results on initial load and on form changes
+    calculateResults(getValues());
+  }, [watchedAmount, deliverySpeed, receivingBank, targetCountry, calculateResults, getValues]);
+
   const onSubmit = (values: FormValues) => {
     calculateResults(values);
   };
@@ -105,3 +115,4 @@ export const useCurrencyComparator = () => {
     onSubmit,
   };
 };
+
