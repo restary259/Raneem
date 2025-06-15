@@ -8,7 +8,6 @@ import { ResultsTable } from './currency-comparator/ResultsTable';
 
 const CurrencyComparator = () => {
   const { 
-    t, 
     form, 
     results, 
     bestResult, 
@@ -16,6 +15,7 @@ const CurrencyComparator = () => {
     targetCurrency, 
     onSubmit 
   } = useCurrencyComparator();
+  const { t } = useTranslation('resources');
 
   return (
     <div className="p-4 bg-background rounded-lg">
