@@ -1,4 +1,3 @@
-
 export type BroadcastCategory = 'نصائح الدراسة' | 'تجارب الطلبة' | 'إجراءات التأشيرة' | 'ورش عمل وتوجيه';
 
 export interface BroadcastPost {
@@ -84,5 +83,15 @@ export const broadcastData: BroadcastPost[] = [
     duration: '11:55',
     posterUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1973&auto=format&fit=crop',
     youtubeId: 'Yb6825eG6e4',
+  },
+  {
+    id: 7,
+    category: 'تجارب الطلبة',
+    title: 'نصائح قيمة لتجربتك الدراسية في الخارج',
+    description: 'طالب يشارك نصائح سريعة ومهمة من واقع تجربته، لمساعدتك على التأقلم والنجاح في رحلتك التعليمية.',
+    date: '2025-06-15T14:00:00Z',
+    duration: '00:58',
+    posterUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=2070&auto=format&fit=crop',
+    youtubeId: 'hKdprpf1K3Q',
   },
 ];
