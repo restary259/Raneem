@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Search, FileSignature, Plane, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const steps = [
   {
@@ -25,13 +26,23 @@ const steps = [
   },
 ];
 
-const ServiceProcess = () => (
-  <section className="py-12 md:py-24">
+interface ServiceProcessProps {
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+const ServiceProcess: React.FC<ServiceProcessProps> = ({
+  title = "رحلتك معنا في 4 خطوات",
+  description = "نظام عملنا شفاف ومباشر لضمان أفضل النتائج.",
+  className
+}) => (
+  <section className={cn("py-12 md:py-24", className)}>
     <div className="container mx-auto px-4">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold font-cairo text-primary">رحلتك معنا في 4 خطوات</h2>
+        <h2 className="text-3xl md:text-4xl font-bold font-cairo text-primary">{title}</h2>
         <p className="mt-4 text-lg text-muted-foreground">
-          نظام عملنا شفاف ومباشر لضمان أفضل النتائج.
+          {description}
         </p>
       </div>
       <div className="relative max-w-5xl mx-auto">
