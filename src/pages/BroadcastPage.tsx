@@ -25,14 +25,14 @@ const BroadcastPage = () => {
   if (!featuredVideo) {
     // A simple fallback if no featured video is found in data
     return (
-        <div className="flex items-center justify-center h-screen">
+        <div dir="rtl" className="flex items-center justify-center h-screen">
             <p>جاري تحميل محتوى البث...</p>
         </div>
     );
   }
 
   return (
-    <div className="bg-background dark:bg-gray-950">
+    <div dir="rtl" className="bg-background dark:bg-gray-950">
       <Header />
       <main>
         <HeroVideo post={featuredVideo} />

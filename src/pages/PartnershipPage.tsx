@@ -19,7 +19,7 @@ const PartnershipPage = () => {
     }, [t]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-secondary text-foreground">
+        <div dir="rtl" className="flex flex-col min-h-screen bg-secondary text-foreground">
             <Header />
             <main className="flex-grow">
                 <PartnershipHero />
