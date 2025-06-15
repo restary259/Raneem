@@ -1,6 +1,8 @@
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { ExternalLink } from 'lucide-react';
 
 const GermanyTab = () => {
   const { t } = useTranslation();
@@ -21,6 +23,15 @@ const GermanyTab = () => {
             style={{ border: 0 }}
             allowFullScreen
           ></iframe>
+        </div>
+        <div className="mt-4 text-center border-t pt-4">
+            <p className="text-sm text-muted-foreground mb-2">{t('universityFinder.germanyTab.iframeError')}</p>
+             <Button asChild size="sm">
+                <a href={daadEmbedUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+                    {t('universityFinder.germanyTab.openInNewTab')}
+                </a>
+            </Button>
         </div>
       </CardContent>
     </Card>

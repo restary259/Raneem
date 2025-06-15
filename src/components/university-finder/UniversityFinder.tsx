@@ -6,6 +6,10 @@ import RomaniaTab from './RomaniaTab';
 import JordanTab from './JordanTab';
 import { Button } from '@/components/ui/button';
 import { Link as RouterLink } from 'react-router-dom';
+import GpaCalculator from '../calculator/GpaCalculator';
+import CurrencyComparator from '../calculator/CurrencyComparator';
+import CostCalculator from '../calculator/CostCalculator';
+import { Calculator, Euro, GraduationCap } from 'lucide-react';
 
 const UniversityFinder = () => {
   const { t } = useTranslation();
@@ -26,10 +30,13 @@ const UniversityFinder = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
           <Tabs defaultValue="germany" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="germany">🇩🇪 {t('universityFinder.germany')}</TabsTrigger>
-              <TabsTrigger value="romania">🇷🇴 {t('universityFinder.romania')}</TabsTrigger>
-              <TabsTrigger value="jordan">🇯🇴 {t('universityFinder.jordan')}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto sm:h-auto lg:h-12 flex-wrap rounded-lg">
+              <TabsTrigger value="germany" className="w-full text-base py-3">🇩🇪 {t('universityFinder.germany')}</TabsTrigger>
+              <TabsTrigger value="romania" className="w-full text-base py-3">🇷🇴 {t('universityFinder.romania')}</TabsTrigger>
+              <TabsTrigger value="jordan" className="w-full text-base py-3">🇯🇴 {t('universityFinder.jordan')}</TabsTrigger>
+              <TabsTrigger value="gpa" className="w-full text-base py-3"><GraduationCap className="ltr:mr-2 rtl:ml-2 h-5 w-5" />{t('universityFinder.gpaCalculator')}</TabsTrigger>
+              <TabsTrigger value="currency" className="w-full text-base py-3"><Euro className="ltr:mr-2 rtl:ml-2 h-5 w-5" />{t('universityFinder.currencyComparator')}</TabsTrigger>
+              <TabsTrigger value="cost" className="w-full text-base py-3"><Calculator className="ltr:mr-2 rtl:ml-2 h-5 w-5" />{t('universityFinder.costCalculator')}</TabsTrigger>
             </TabsList>
             <TabsContent value="germany" className="mt-6">
               <GermanyTab />
@@ -39,6 +46,15 @@ const UniversityFinder = () => {
             </TabsContent>
             <TabsContent value="jordan" className="mt-6">
               <JordanTab />
+            </TabsContent>
+            <TabsContent value="gpa" className="mt-6">
+              <GpaCalculator />
+            </TabsContent>
+            <TabsContent value="currency" className="mt-6">
+              <CurrencyComparator />
+            </TabsContent>
+            <TabsContent value="cost" className="mt-6">
+              <CostCalculator />
             </TabsContent>
           </Tabs>
         </div>

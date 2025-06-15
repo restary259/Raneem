@@ -47,7 +47,7 @@ const JordanTab = () => {
                   <TableCell>{uni.tuition}</TableCell>
                   <TableCell>
                     <Button variant="link" asChild className="p-0 h-auto">
-                      <a href={uni.website} target="_blank" rel="noopener noreferrer">Visit Website</a>
+                      <a href={uni.website} target="_blank" rel="noopener noreferrer">{t('universityFinder.jordanTab.visitWebsite')}</a>
                     </Button>
                   </TableCell>
                 </TableRow>
