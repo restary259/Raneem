@@ -14,7 +14,6 @@ import ContactPage from "./pages/ContactPage";
 import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
-import UniversityFinderPage from "./pages/UniversityFinderPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import { useEffect } from "react";
 
@@ -42,7 +41,6 @@ const App = () => {
           <Route path="/partnership" element={<PartnershipPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
-          <Route path="/university-finder" element={<UniversityFinderPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

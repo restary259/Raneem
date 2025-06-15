@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -14,7 +13,6 @@ const Header = () => {
     { href: "/partners", label: t('nav.partners') },
     { href: "/partnership", label: t('nav.partnership') },
     { href: "/resources", label: t('nav.resources') },
-    { href: "/university-finder", label: t('nav.universityFinder') },
     { href: "/contact", label: t('nav.contact') },
   ];
   
