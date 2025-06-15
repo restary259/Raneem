@@ -1,3 +1,4 @@
+
 # Welcome to your Lovable project
 
 ## Project info
@@ -60,9 +61,17 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Deployment to GitHub Pages
+
+This project is configured for automated deployment to GitHub Pages.
+
+- **Trigger**: A `push` to the `main` branch will trigger the deployment workflow.
+- **Workflow**: The `.github/workflows/deploy.yml` file defines the build and deployment steps.
+- **URL**: Once deployed, the site will be available at a URL like `https://<YOUR_GITHUB_USERNAME>.github.io/darb-study-pathways/`. You will need to enable GitHub Pages in your repository settings and select "GitHub Actions" as the source.
+
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933) and click on Share -> Publish.
+Besides GitHub Pages, you can also deploy by opening [Lovable](https://lovable.dev/projects/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933) and clicking on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 

@@ -1,9 +1,10 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WhoWeArePage from "./pages/WhoWeArePage";
@@ -19,10 +20,23 @@ import BroadcastPage from "./pages/BroadcastPage";
 const queryClient = new QueryClient();
 
 const App = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.documentElement.lang = 'ar';
     document.documentElement.dir = 'rtl';
-  }, []);
+    
+    // SPA Redirect for GitHub Pages
+    const redirectPath = sessionStorage.getItem('redirectPath');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectPath');
+      const basename = import.meta.env.BASE_URL;
+      if (redirectPath.startsWith(basename)) {
+        const path = redirectPath.substring(basename.length - 1);
+        navigate(path, { replace: true });
+      }
+    }
+  }, [navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>
