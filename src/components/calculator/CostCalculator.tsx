@@ -79,13 +79,16 @@ const CostCalculator = () => {
 
       // Tuition
       if (country === 'romania') {
-        let tuition = countryData.tuition[fieldOfStudy as keyof typeof countryData.tuition];
-        if (universityType === 'private') {
-          tuition *= (countryData.tuition.private_multiplier || 1);
+        const romaniaData = costData.romania;
+        let tuition = romaniaData.tuition[fieldOfStudy as keyof Omit<typeof romaniaData.tuition, 'private_multiplier'>];
+        if (universityType === 'private' && romaniaData.tuition.private_multiplier) {
+          tuition *= romaniaData.tuition.private_multiplier;
         }
         breakdown.tuition = tuition;
       } else {
-        breakdown.tuition = countryData.tuition[universityType as keyof typeof countryData.tuition];
+        // Germany and Jordan have the same structure for tuition
+        const tuitionData = countryData.tuition as typeof costData.germany.tuition;
+        breakdown.tuition = tuitionData[universityType as 'public' | 'private'];
       }
 
       // Living & Accommodation

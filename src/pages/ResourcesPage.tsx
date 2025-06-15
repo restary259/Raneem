@@ -1,4 +1,3 @@
-
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import ResourceCard from '@/components/resources/ResourceCard';
@@ -8,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import GpaCalculator from "@/components/calculator/GpaCalculator";
 import { Calculator, Wallet } from "lucide-react";
 import CostCalculator from '@/components/calculator/CostCalculator';
+import { useTranslation } from 'react-i18next';
 
 const resources = [
   {
@@ -36,6 +36,7 @@ const resources = [
 ];
 
 const ResourcesPage = () => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
