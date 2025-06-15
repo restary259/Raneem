@@ -1,6 +1,8 @@
 
 import { useTranslation } from "react-i18next";
-import { icons } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldCheck, TrendingUp, FileText, BrainCircuit, UserPlus, Icon as LucideIcon } from "lucide-react";
+import * as icons from "lucide-react";
 
 type Benefit = {
   icon: keyof typeof icons;
@@ -12,14 +14,9 @@ const WhyJoinUs = () => {
   const benefits = t('whyJoinUs.benefits', { returnObjects: true }) as Benefit[];
 
   const renderIcon = (iconName: keyof typeof icons) => {
-    const LucideIcon = icons[iconName];
-
-    if (LucideIcon) {
-      return <LucideIcon className="h-10 w-10 text-accent" />;
-    }
-    
-    const FallbackIcon = icons.UserPlus;
-    return <FallbackIcon className="h-10 w-10 text-accent" />;
+    const IconComponent = icons[iconName];
+    if (!IconComponent) return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
+    return <IconComponent className="h-10 w-10 text-accent" />;
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -106,20 +107,11 @@ const RegistrationForm = () => {
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                 <FormField
-                  control={form.control}
-                  name="attachment"
-                  render={({ field: { onChange, onBlur, name, ref } }) => (
+                 <FormField control={form.control} name="attachment" render={({ field: { onChange, ...fieldProps } }) => (
                     <FormItem>
                       <FormLabel>{formContent.attachment}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="file"
-                          onChange={(e) => onChange(e.target.files)}
-                          onBlur={onBlur}
-                          name={name}
-                          ref={ref}
-                        />
+                        <Input type="file" onChange={e => onChange(e.target.files)} {...fieldProps} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

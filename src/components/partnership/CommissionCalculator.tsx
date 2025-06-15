@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 
 const commissionRates: Record<string, number> = {
-  germany: 2000,
-  romania: 1000,
-  jordan: 1000,
+  germany: 800,
+  romania: 600,
+  jordan: 400,
 };
 
 const CommissionCalculator = () => {

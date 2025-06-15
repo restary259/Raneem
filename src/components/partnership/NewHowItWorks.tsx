@@ -1,7 +1,8 @@
 
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import { icons } from "lucide-react";
+import { UserCheck, Share2, Star, Wallet } from "lucide-react";
+import * as icons from "lucide-react";
 
 type Step = {
   icon: keyof typeof icons;
@@ -14,11 +15,9 @@ const NewHowItWorks = () => {
   const steps = t('howItWorks.steps', { returnObjects: true }) as Step[];
 
   const renderIcon = (iconName: keyof typeof icons) => {
-    const LucideIcon = icons[iconName];
-    if (LucideIcon) {
-      return <LucideIcon className="h-12 w-12 text-primary" />;
-    }
-    return null;
+    const IconComponent = icons[iconName];
+    if (!IconComponent) return null;
+    return <IconComponent className="h-12 w-12 text-primary" />;
   };
 
   return (
