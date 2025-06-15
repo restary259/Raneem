@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,10 +15,16 @@ import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ChatWidget from "./components/chat/ChatWidget";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  useEffect(() => {
+    document.documentElement.lang = 'ar';
+    document.documentElement.dir = 'rtl';
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

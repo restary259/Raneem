@@ -1,5 +1,6 @@
 
 import { Instagram } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6" {...props}>
@@ -9,20 +10,22 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 const Footer = () => {
+  const { t } = useTranslation();
+  const year = new Date().getFullYear();
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <p className="text-lg italic">
-            "May all our students find success, safety, and purpose in every step of their journey abroad."
+            "{t('footer.quote')}"
           </p>
         </div>
-        <div className="flex justify-center items-center space-x-6 mb-8">
-          <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><Instagram /> Instagram</a>
-          <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2"><TikTokIcon /> TikTok</a>
+        <div className="flex justify-center items-center space-x-6 space-x-reverse mb-8">
+          <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <Instagram /></a>
+          <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon /></a>
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
-          © {new Date().getFullYear()} Darb Study International. All rights reserved.
+          {t('footer.copyright', { year })}
         </div>
       </div>
     </footer>
