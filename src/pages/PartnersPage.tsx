@@ -13,19 +13,23 @@ const PartnersPage = () => {
         <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl" lang="ar">
             <Header />
             <main className="flex-grow">
-                <section className="py-12 md:py-24 bg-secondary">
-                    <div className="container mx-auto px-4 text-center">
-                        <h1 className="text-3xl md:text-4xl font-bold text-primary">شركاؤنا حول العالم – مؤسسات تعليمية نثق بها ونعمل معها مباشرة</h1>
-                        <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                            نفخر بشراكاتنا مع مجموعة من المؤسسات التعليمية المرموقة في ألمانيا، رومانيا، والأردن. هذه الشراكات تتيح لنا تقديم أفضل الفرص الأكاديمية لطلابنا في مختلف الدول.
-                        </p>
+                <section className="relative py-20 md:py-32 bg-secondary text-white">
+                    <div className="absolute inset-0 bg-black/60 z-0">
+                        <img 
+                            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&q=80" 
+                            alt="طلاب دوليون" 
+                            className="w-full h-full object-cover opacity-50" 
+                        />
+                    </div>
+                     <div className="container mx-auto px-4 text-center relative z-10">
+                        <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">نثق بشركائنا – وطلابنا يثقون بنا</h1>
                     </div>
                 </section>
                 <PartnersList />
                 <section className="py-12 md:py-24 bg-secondary">
                      <div className="container mx-auto px-4 text-center">
-                        <p className="text-lg text-primary max-w-3xl mx-auto">
-                            نواصل توسيع شبكة شراكاتنا من أجل دعم طلابنا وتمكينهم من الوصول إلى أفضل الفرص التعليمية حول العالم.
+                        <p className="text-lg text-primary max-w-3xl mx-auto font-semibold">
+                            "نحن نؤمن أن جودة الشراكة تنعكس مباشرة على جودة مستقبل الطالب. لهذا نختار شركاءنا بدقة."
                         </p>
                     </div>
                 </section>

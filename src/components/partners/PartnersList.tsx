@@ -1,36 +1,39 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 
 const partnersByCountry = [
   {
     country: "ألمانيا",
     countryFlag: "🇩🇪",
     partners: [
-      { name: "FU Academy of Languages – Heidelberg", logoUrl: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=300", description: "معهد متخصص في تعليم اللغة الألمانية للطلاب الأجانب في مدينة هايدلبرغ العريقة." },
-      { name: "Alpha Aktiv – Heidelberg", logoUrl: "https://images.unsplash.com/photo-1486718448742-163732cd1544?w=300", description: "أكاديمية لغات خاصة تقدم دورات مكثفة للغة الألمانية وتأهيلاً جامعياً." },
-      { name: "GoAcademy – Düsseldorf", logoUrl: "https://images.unsplash.com/photo-1551038247-3d9af20df552?w=300", description: "مدرسة لغات معتمدة في دوسلدورف، تقدم دورات لغة واختبارات دولية معتمدة." },
+      { name: "FU Academy of Languages – Heidelberg", location: "Heidelberg", logoUrl: "https://images.unsplash.com/photo-1562774053-701939374585?w=400", description: "مدرسة لغات عريقة في هايدلبرغ تقدم برامج ألمانية مكثفة ومعترف بها رسميًا.", partnershipSince: 2023, websiteUrl: "https://www.fuu-heidelberg-languages.com/" },
+      { name: "Alpha Aktiv – Heidelberg", location: "Heidelberg", logoUrl: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400", description: "أكاديمية لغات خاصة تقدم دورات مكثفة للغة الألمانية وتأهيلاً جامعياً.", partnershipSince: 2022, websiteUrl: "https://www.alpha-aktiv.de/" },
+      { name: "GoAcademy – Düsseldorf", location: "Düsseldorf", logoUrl: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400", description: "مدرسة لغات معتمدة في دوسلدورف، تقدم دورات لغة واختبارات دولية معتمدة.", partnershipSince: 2023, websiteUrl: "https://www.goacademy.de/" },
     ],
   },
   {
     country: "رومانيا",
     countryFlag: "🇷🇴",
     partners: [
-      { name: "Bucharest University", logoUrl: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=300", description: "واحدة من أعرق الجامعات في رومانيا، وتقدم مجموعة واسعة من التخصصات الأكاديمية." },
-      { name: "Carol Davila University of Medicine and Pharmacy", logoUrl: "https://images.unsplash.com/photo-1486718448742-163732cd1544?w=300", description: "جامعة طبية رائدة في بوخارست، تشتهر ببرامج الطب البشري والصيدلة." },
-      { name: "Ovidius University", logoUrl: "https://images.unsplash.com/photo-1551038247-3d9af20df552?w=300", description: "جامعة حديثة في مدينة كونستانتسا الساحلية، تقدم برامج متنوعة باللغة الإنجليزية." },
+      { name: "University of Bucharest", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1590234594819-7d84a71359f6?w=400", description: "واحدة من أعرق الجامعات في رومانيا، وتقدم مجموعة واسعة من التخصصات الأكاديمية.", partnershipSince: 2022, websiteUrl: "https://unibuc.ro/" },
+      { name: "Carol Davila University of Medicine and Pharmacy", location: "Bucharest", logoUrl: "https://images.unsplash.com/photo-1584515933487-779824d29409?w=400", description: "جامعة طبية رائدة في بوخارست، تشتهر ببرامج الطب البشري والصيدلة.", partnershipSince: 2021, websiteUrl: "https://www.umfcd.ro/" },
+      { name: "Ovidius University", location: "Constanța", logoUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400", description: "جامعة حديثة في مدينة كونستانتسا الساحلية، تقدم برامج متنوعة باللغة الإنجليزية.", partnershipSince: 2023, websiteUrl: "https://www.univ-ovidius.ro/" },
     ],
   },
   {
     country: "الأردن",
     countryFlag: "🇯🇴",
     partners: [
-      { name: "جامعة اليرموك", logoUrl: "https://images.unsplash.com/photo-1466442929976-97f336a657be?w=300", description: "واحدة من أكبر الجامعات الحكومية في الأردن، وتقع في مدينة إربد." },
-      { name: "UMF Jordan", logoUrl: "https://images.unsplash.com/photo-1466442929976-97f336a657be?w=300", description: "فرع لجامعة 'Iuliu Hațieganu' للطب والصيدلة، يوفر تعليماً طبياً أوروبياً في الأردن." },
+      { name: "جامعة اليرموك", location: "Irbid", logoUrl: "https://images.unsplash.com/photo-1607237138185-e8945c94b9ac?w=400", description: "واحدة من أكبر الجامعات الحكومية في الأردن، وتقع في مدينة إربد.", partnershipSince: 2020, websiteUrl: "https://www.yu.edu.jo/" },
+      { name: "UMF Jordan", location: "Amman", logoUrl: "https://images.unsplash.com/photo-1576495199011-eb94736d05d3?w=400", description: "فرع لجامعة 'Iuliu Hațieganu' للطب والصيدلة، يوفر تعليماً طبياً أوروبياً في الأردن.", partnershipSince: 2022, websiteUrl: "https://umf-jordan.com/" },
     ],
   },
 ];
@@ -49,23 +52,34 @@ const PartnersList = () => {
                 {group.partners.map((partner) => (
                   <HoverCard key={partner.name}>
                     <HoverCardTrigger asChild>
-                      <Card className="flex flex-col items-center justify-start text-center bg-background/70 hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <Card className="flex flex-col items-center justify-start text-center bg-card hover:shadow-lg transition-shadow cursor-pointer h-full overflow-hidden">
                         <CardHeader className="p-0 w-full">
-                          <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-40 w-full object-cover rounded-t-md" loading="lazy" />
+                          <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-40 w-full object-cover" loading="lazy" />
                         </CardHeader>
-                        <CardContent className="p-4 flex-grow flex items-center">
+                        <CardContent className="p-4 flex-grow flex flex-col items-center justify-center w-full">
                           <CardTitle className="text-lg font-semibold text-primary">{partner.name}</CardTitle>
+                          <CardDescription className="text-sm text-muted-foreground mt-1">{partner.location}</CardDescription>
                         </CardContent>
                       </Card>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-80" dir="rtl">
-                      <div className="flex justify-between space-x-4">
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-semibold">{partner.name}</h4>
-                          <p className="text-sm">
+                      <div className="flex flex-col gap-4">
+                        <div className="space-y-1 text-right">
+                          <h4 className="text-base font-bold text-primary">{partner.name}</h4>
+                          <p className="text-sm text-muted-foreground">
                             {partner.description}
                           </p>
                         </div>
+                        <div className="space-y-2 text-sm text-right">
+                          <p><span className="font-semibold">شريكنا منذ:</span> {partner.partnershipSince}</p>
+                          <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline hover:text-accent transition-colors">
+                            الموقع الرسمي 
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
+                        <Button asChild className="w-full" variant="accent">
+                          <Link to="/contact">استفسر الآن</Link>
+                        </Button>
                       </div>
                     </HoverCardContent>
                   </HoverCard>
