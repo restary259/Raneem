@@ -13,6 +13,5 @@ declare module 'react-i18next' {
     resources: {
       translation: typeof translation;
     };
-    returnNull: false;
   }
 }
