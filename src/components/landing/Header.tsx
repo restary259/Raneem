@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DesktopNav from "./DesktopNav";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Header = () => {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between flex-row-reverse md:flex-row">
+      <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center space-x-2">
             <span className="font-extrabold text-xl">{t('nav.brand')}</span>
@@ -49,16 +50,18 @@ const Header = () => {
               </SheetTrigger>
               <SheetContent side={sheetSide}>
                 <div className="flex flex-col h-full">
-                  <nav className="grid gap-6 text-lg font-medium text-right mt-6">
-                    <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-end">
-                      <span className="font-extrabold text-xl">{t('nav.brand')}</span>
-                    </Link>
-                    {navLinks.map((link) => (
-                      <Link key={link.href} to={link.href} className="block py-2 text-muted-foreground hover:text-foreground">
-                        {link.label}
+                  <ScrollArea className="flex-grow">
+                    <nav className="grid gap-6 text-lg font-medium text-right mt-6">
+                      <Link to="/" className="flex items-center gap-2 text-lg font-semibold mb-6 justify-end">
+                        <span className="font-extrabold text-xl">{t('nav.brand')}</span>
                       </Link>
-                    ))}
-                  </nav>
+                      {navLinks.map((link) => (
+                        <Link key={link.href} to={link.href} className="block py-2 text-muted-foreground hover:text-foreground">
+                          {link.label}
+                        </Link>
+                      ))}
+                    </nav>
+                  </ScrollArea>
                   <div className="mt-auto">
                     <Button asChild variant="accent" className="w-full">
                         <Link to="/contact">{t('applyNow')}</Link>
