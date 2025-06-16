@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Save, X } from 'lucide-react';
 
+type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'received';
+
 interface Profile {
   id: string;
   email: string;
@@ -18,7 +20,7 @@ interface Profile {
   country?: string;
   intake_month?: string;
   university_name?: string;
-  visa_status?: string;
+  visa_status?: VisaStatus;
   notes?: string;
 }
 
@@ -45,7 +47,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
           country: editedProfile.country,
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
-          visa_status: editedProfile.visa_status,
+          visa_status: editedProfile.visa_status as VisaStatus,
           notes: editedProfile.notes,
         })
         .eq('id', userId);
@@ -75,7 +77,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
     setIsEditing(false);
   };
 
-  const visaStatuses = [
+  const visaStatuses: { value: VisaStatus; label: string }[] = [
     { value: 'not_applied', label: 'لم يتم التقديم' },
     { value: 'applied', label: 'تم التقديم' },
     { value: 'approved', label: 'تمت الموافقة' },
@@ -202,7 +204,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
               {isEditing ? (
                 <Select
                   value={editedProfile.visa_status || 'not_applied'}
-                  onValueChange={(value) => setEditedProfile({ ...editedProfile, visa_status: value })}
+                  onValueChange={(value: VisaStatus) => setEditedProfile({ ...editedProfile, visa_status: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />

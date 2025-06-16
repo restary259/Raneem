@@ -8,19 +8,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+type ServiceType = 'university_application' | 'visa_assistance' | 'accommodation' | 'scholarship' | 'language_support' | 'travel_booking';
+
 interface AddServiceModalProps {
   userId: string;
   onSuccess: () => void;
 }
 
 const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) => {
-  const [serviceType, setServiceType] = useState('');
+  const [serviceType, setServiceType] = useState<ServiceType | ''>('');
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const serviceTypes = [
+  const serviceTypes: { value: ServiceType; label: string }[] = [
     { value: 'university_application', label: 'تقديم الجامعة' },
     { value: 'visa_assistance', label: 'مساعدة الفيزا' },
     { value: 'accommodation', label: 'السكن' },
@@ -46,7 +48,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
         .from('services')
         .insert({
           student_id: userId,
-          service_type: serviceType,
+          service_type: serviceType as ServiceType,
           description: description || null,
           notes: notes || null,
         });
@@ -74,7 +76,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="serviceType">نوع الخدمة</Label>
-        <Select value={serviceType} onValueChange={setServiceType} required>
+        <Select value={serviceType} onValueChange={(value: ServiceType) => setServiceType(value)} required>
           <SelectTrigger>
             <SelectValue placeholder="اختر نوع الخدمة" />
           </SelectTrigger>

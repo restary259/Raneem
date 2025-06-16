@@ -159,10 +159,12 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
       if (error) throw error;
 
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = document.file_name;
-      a.click();
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = document.file_name;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error: any) {
       toast({
@@ -205,7 +207,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     }
   };
 
-  const serviceNames = {
+  const serviceNames: Record<string, string> = {
     university_application: 'تقديم الجامعة',
     visa_assistance: 'مساعدة الفيزا',
     accommodation: 'السكن',
@@ -264,7 +266,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                     <SelectContent>
                       {services.map((service) => (
                         <SelectItem key={service.id} value={service.id}>
-                          {serviceNames[service.service_type as keyof typeof serviceNames]}
+                          {serviceNames[service.service_type] || service.service_type}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -313,7 +315,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                             <div>تاريخ الرفع: {new Date(document.upload_date).toLocaleDateString('ar-SA')}</div>
                             {document.services && (
                               <div>
-                                الخدمة: {serviceNames[document.services.service_type as keyof typeof serviceNames]}
+                                الخدمة: {serviceNames[document.services.service_type] || document.services.service_type}
                               </div>
                             )}
                             {document.notes && (

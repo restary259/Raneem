@@ -31,7 +31,7 @@ const Header = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-orange-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">د</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">درب الدراسة</span>
+            <span className="text-xl font-bold text-gray-900">درب</span>
           </Link>
 
           {/* Desktop Navigation */}
