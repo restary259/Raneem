@@ -54,103 +54,107 @@ export const useCurrencyComparator = () => {
     }
   }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
-  const calculateResults = useCallback(async (values: FormValues) => {
-    setLoading(true);
-    try {
-      const { amount: rawAmount, receivingBank, deliverySpeed } = values;
-      const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
-
-      if (!amount || isNaN(amount) || amount <= 0) {
-        setResults(null);
-        setBestResult(null);
-        setLoading(false);
-        return;
-      }
-
-      const bankData = availableBanks.find(b => b.id === receivingBank);
-      if (!bankData) {
-        setResults(null);
-        setBestResult(null);
-        setLoading(false);
-        return;
-      }
-      const bankFee = bankData.fee;
-
-      const services = [
-        {
-          key: "wise",
-          name: t("currencyComparator.wise"),
-          fee: 20,
-          time: t("currencyComparator.arrivesInHours"),
-          timeValue: timeToSortValue["arrivesInHours"],
-        },
-        {
-          key: "westernunion",
-          name: t("currencyComparator.westernunion"),
-          fee: 30,
-          time: t("currencyComparator.arrivesInDays"),
-          timeValue: timeToSortValue["arrivesInDays"],
-        },
-        {
-          key: "xoom",
-          name: t("currencyComparator.xoom"),
-          fee: 25,
-          time: t("currencyComparator.arrivesInHours"),
-          timeValue: timeToSortValue["arrivesInHours"],
-        },
-      ] as const;
-
-      // Use ILS as source
-      const liveRate = await fetchExchangeRate("ILS", targetCurrency);
-      if (!liveRate) {
-        setResults(null);
-        setBestResult(null);
-        setLoading(false);
-        return;
-      }
-
-      const calculatedResults = services.map((service) => {
-        const serviceFee = service.fee;
-        const totalFee = serviceFee + bankFee;
-        return {
-          service: service.name,
-          bank: t(bankData.nameKey as any),
-          rate: liveRate,
-          serviceFee: serviceFee,
-          bankFee: bankFee,
-          totalFee: totalFee,
-          time: service.time,
-          timeValue: service.timeValue,
-          received: (amount * liveRate) - totalFee,
-        };
-      });
-
-      calculatedResults.sort((a, b) => {
-        if (deliverySpeed === "cheapest") {
-          return a.totalFee - b.totalFee;
-        }
-        if (deliverySpeed === "fastest") {
-          if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
-          return b.received - a.received;
-        }
-        return b.received - a.received;
-      });
-
-      setResults(calculatedResults);
-      setBestResult(calculatedResults[0] || null);
-    } finally {
-      setLoading(false);
-    }
-  }, [t, targetCurrency, availableBanks]);
-
+  // This function is triggered on any form change automatically
   useEffect(() => {
-    calculateResults(form.getValues());
-    // eslint-disable-next-line
-  }, [watchedAmount, targetCountry, receivingBank, deliverySpeed]);
+    let cancelled = false;
+    const calculateResults = async () => {
+      setLoading(true);
+      try {
+        const values = form.getValues();
+        const { amount: rawAmount, receivingBank, deliverySpeed } = values;
+        const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
 
-  const onSubmit = (values: FormValues) => {
-    calculateResults(values);
-  };
+        if (!amount || isNaN(amount) || amount <= 0) {
+          setResults(null);
+          setBestResult(null);
+          setLoading(false);
+          return;
+        }
+
+        const bankData = availableBanks.find(b => b.id === receivingBank);
+        if (!bankData) {
+          setResults(null);
+          setBestResult(null);
+          setLoading(false);
+          return;
+        }
+        const bankFee = bankData.fee;
+
+        const services = [
+          {
+            key: "wise",
+            name: t("currencyComparator.wise"),
+            fee: 20,
+            time: t("currencyComparator.arrivesInHours"),
+            timeValue: timeToSortValue["arrivesInHours"],
+          },
+          {
+            key: "westernunion",
+            name: t("currencyComparator.westernunion"),
+            fee: 30,
+            time: t("currencyComparator.arrivesInDays"),
+            timeValue: timeToSortValue["arrivesInDays"],
+          },
+          {
+            key: "xoom",
+            name: t("currencyComparator.xoom"),
+            fee: 25,
+            time: t("currencyComparator.arrivesInHours"),
+            timeValue: timeToSortValue["arrivesInHours"],
+          },
+        ] as const;
+
+        const liveRate = await fetchExchangeRate("ILS", targetCurrency);
+        if (!liveRate) {
+          setResults(null);
+          setBestResult(null);
+          setLoading(false);
+          return;
+        }
+
+        const calculatedResults = services.map((service) => {
+          const serviceFee = service.fee;
+          const totalFee = serviceFee + bankFee;
+          return {
+            service: service.name,
+            bank: t(bankData.nameKey as any),
+            rate: liveRate,
+            serviceFee: serviceFee,
+            bankFee: bankFee,
+            totalFee: totalFee,
+            time: service.time,
+            timeValue: service.timeValue,
+            received: (amount * liveRate) - totalFee,
+          };
+        });
+
+        calculatedResults.sort((a, b) => {
+          if (deliverySpeed === "cheapest") {
+            return a.totalFee - b.totalFee;
+          }
+          if (deliverySpeed === "fastest") {
+            if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
+            return b.received - a.received;
+          }
+          return b.received - a.received;
+        });
+
+        if (!cancelled) {
+          setResults(calculatedResults);
+          setBestResult(calculatedResults[0] || null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    calculateResults();
+    return () => { cancelled = true; };
+    // Watch all relevant dependencies (form values)
+  }, [watchedAmount, targetCountry, receivingBank, deliverySpeed, t, targetCurrency, availableBanks, form]);
+
+  // The onSubmit is no longer needed, but kept for compatibility
+  const onSubmit = () => {};
 
   return {
     form,
