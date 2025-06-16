@@ -1,4 +1,4 @@
-import AdminDashboardPage from "./pages/AdminDashboardPage";
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
