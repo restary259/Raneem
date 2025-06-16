@@ -35,32 +35,56 @@ const Contact = () => {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (values: z.infer<typeof formSchema>) => {
-      return supabase.functions.invoke('send-email', {
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      console.log('🚀 Submitting contact form:', values);
+      
+      const result = await supabase.functions.invoke('send-email', {
         body: {
           form_source: 'Contact Page Form',
           ...values,
         },
       });
+
+      console.log('📧 Email function result:', result);
+
+      if (result.error) {
+        console.error('❌ Supabase function error:', result.error);
+        throw new Error(`Function error: ${result.error.message}`);
+      }
+
+      if (result.data?.error) {
+        console.error('❌ Email function returned error:', result.data.error);
+        throw new Error(result.data.error);
+      }
+
+      if (!result.data?.success) {
+        console.error('❌ Email function failed without specific error');
+        throw new Error('Email sending failed');
+      }
+
+      console.log('✅ Email sent successfully:', result.data);
+      return result.data;
     },
-    onSuccess: (result) => {
-      if (result.error) throw new Error(result.error.message);
+    onSuccess: (data) => {
+      console.log('✅ Contact form submitted successfully:', data);
       toast({
-        title: t('contact.toast.successTitle'),
-        description: t('contact.toast.successDescription'),
+        title: "تم إرسال رسالتك بنجاح! ✅",
+        description: "شكرًا لتواصلك معنا. سيقوم أحد مستشارينا بالرد عليك قريبًا.",
       });
       form.reset();
     },
     onError: (error) => {
+      console.error('❌ Contact form submission failed:', error);
       toast({
         variant: "destructive",
-        title: "حدث خطأ",
-        description: "فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.",
+        title: "حدث خطأ في إرسال الرسالة ❌",
+        description: `فشل إرسال النموذج: ${error.message}. الرجاء المحاولة مرة أخرى أو التواصل معنا مباشرة.`,
       });
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log('📝 Form submitted with values:', values);
     mutate(values);
   }
 
@@ -109,7 +133,7 @@ const Contact = () => {
                   <FormItem><FormLabel>{t('contact.form.message')}</FormLabel><FormControl><Textarea placeholder={t('contact.form.messagePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <Button type="submit" className="w-full font-bold" size="lg" variant="default" disabled={isPending}>
-                  {isPending ? "جار الإرسال..." : t('contact.form.submit')}
+                  {isPending ? "جار الإرسال... ⏳" : t('contact.form.submit')}
                 </Button>
               </form>
             </Form>

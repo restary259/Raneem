@@ -52,32 +52,56 @@ const ConsultationCta = () => {
     });
 
     const { mutate, isPending } = useMutation({
-        mutationFn: (values: z.infer<typeof formSchema>) => {
-          return supabase.functions.invoke('send-email', {
+        mutationFn: async (values: z.infer<typeof formSchema>) => {
+          console.log('🚀 Submitting consultation form:', values);
+          
+          const result = await supabase.functions.invoke('send-email', {
             body: {
               form_source: 'Consultation CTA Form',
               ...values,
             },
           });
+
+          console.log('📧 Email function result:', result);
+
+          if (result.error) {
+            console.error('❌ Supabase function error:', result.error);
+            throw new Error(`Function error: ${result.error.message}`);
+          }
+
+          if (result.data?.error) {
+            console.error('❌ Email function returned error:', result.data.error);
+            throw new Error(result.data.error);
+          }
+
+          if (!result.data?.success) {
+            console.error('❌ Email function failed without specific error');
+            throw new Error('Email sending failed');
+          }
+
+          console.log('✅ Email sent successfully:', result.data);
+          return result.data;
         },
-        onSuccess: (result) => {
-          if (result.error) throw new Error(result.error.message);
+        onSuccess: (data) => {
+          console.log('✅ Consultation form submitted successfully:', data);
           toast({
-            title: "تم إرسال طلبك بنجاح!",
+            title: "تم إرسال طلبك بنجاح! ✅",
             description: "سنتواصل معك في أقرب وقت ممكن.",
           });
           form.reset();
         },
         onError: (error) => {
+          console.error('❌ Consultation form submission failed:', error);
           toast({
             variant: "destructive",
-            title: "حدث خطأ",
-            description: "فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.",
+            title: "حدث خطأ ❌",
+            description: `فشل إرسال النموذج: ${error.message}. الرجاء المحاولة مرة أخرى.`,
           });
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
+        console.log('📝 Consultation form submitted with values:', values);
         mutate(values);
     }
 
@@ -156,7 +180,7 @@ const ConsultationCta = () => {
                                     )}
                                 />
                                 <Button type="submit" variant="accent" size="lg" className="w-full font-cairo font-bold" disabled={isPending}>
-                                    {isPending ? "جار الإرسال..." : "ابدأ الآن"}
+                                    {isPending ? "جار الإرسال... ⏳" : "ابدأ الآن"}
                                 </Button>
                             </form>
                         </Form>

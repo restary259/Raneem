@@ -45,25 +45,49 @@ const RegistrationForm = () => {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (values: Omit<z.infer<typeof formSchema>, 'attachment'>) => {
-        return supabase.functions.invoke('send-email', {
+    mutationFn: async (values: Omit<z.infer<typeof formSchema>, 'attachment'>) => {
+        console.log('🚀 Submitting partnership form:', values);
+        
+        const result = await supabase.functions.invoke('send-email', {
             body: {
                 form_source: 'Partnership Registration Form',
                 ...values,
             },
         });
+
+        console.log('📧 Email function result:', result);
+
+        if (result.error) {
+            console.error('❌ Supabase function error:', result.error);
+            throw new Error(`Function error: ${result.error.message}`);
+        }
+
+        if (result.data?.error) {
+            console.error('❌ Email function returned error:', result.data.error);
+            throw new Error(result.data.error);
+        }
+
+        if (!result.data?.success) {
+            console.error('❌ Email function failed without specific error');
+            throw new Error('Email sending failed');
+        }
+
+        console.log('✅ Email sent successfully:', result.data);
+        return result.data;
     },
-    onSuccess: (result) => {
-        if (result.error) throw new Error(result.error.message);
-        toast.success(formContent.success);
+    onSuccess: (data) => {
+        console.log('✅ Partnership form submitted successfully:', data);
+        toast.success("تم إرسال طلب الشراكة بنجاح! ✅ سنتواصل معك قريباً.");
         form.reset();
     },
     onError: (error) => {
-        toast.error("فشل إرسال النموذج. الرجاء المحاولة مرة أخرى.");
+        console.error('❌ Partnership form submission failed:', error);
+        toast.error(`حدث خطأ: ${error.message}. الرجاء المحاولة مرة أخرى.`);
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log('📝 Partnership form submitted with values:', values);
     const { attachment, ...otherValues } = values;
     mutate(otherValues);
   }
@@ -142,7 +166,7 @@ const RegistrationForm = () => {
                   )}
                 />
                 <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
-                  {isPending ? "جار الإرسال..." : formContent.submit}
+                  {isPending ? "جار الإرسال... ⏳" : formContent.submit}
                 </Button>
               </form>
             </Form>

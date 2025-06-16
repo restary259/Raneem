@@ -15,18 +15,40 @@ const SubmitVideo: React.FC = () => {
     const [videoLink, setVideoLink] = useState('');
 
     const { mutate, isPending } = useMutation({
-        mutationFn: (values: { name: string, university: string, videoLink: string }) => {
-            return supabase.functions.invoke('send-email', {
+        mutationFn: async (values: { name: string, university: string, videoLink: string }) => {
+            console.log('🚀 Submitting video form:', values);
+            
+            const result = await supabase.functions.invoke('send-email', {
                 body: {
                     form_source: 'Broadcast Video Submission Form',
                     ...values,
                 },
             });
+
+            console.log('📧 Email function result:', result);
+
+            if (result.error) {
+                console.error('❌ Supabase function error:', result.error);
+                throw new Error(`Function error: ${result.error.message}`);
+            }
+
+            if (result.data?.error) {
+                console.error('❌ Email function returned error:', result.data.error);
+                throw new Error(result.data.error);
+            }
+
+            if (!result.data?.success) {
+                console.error('❌ Email function failed without specific error');
+                throw new Error('Email sending failed');
+            }
+
+            console.log('✅ Email sent successfully:', result.data);
+            return result.data;
         },
-        onSuccess: (result) => {
-            if (result.error) throw new Error(result.error.message);
+        onSuccess: (data) => {
+            console.log('✅ Video form submitted successfully:', data);
             toast({
-                title: "تم إرسال الفيديو بنجاح!",
+                title: "تم إرسال الفيديو بنجاح! ✅",
                 description: "شكراً لمشاركتك. سنراجعه قريباً.",
             });
             setName('');
@@ -34,10 +56,11 @@ const SubmitVideo: React.FC = () => {
             setVideoLink('');
         },
         onError: (error) => {
+            console.error('❌ Video form submission failed:', error);
             toast({
                 variant: "destructive",
-                title: "حدث خطأ",
-                description: "فشل إرسال الفيديو. الرجاء المحاولة مرة أخرى.",
+                title: "حدث خطأ ❌",
+                description: `فشل إرسال الفيديو: ${error.message}. الرجاء المحاولة مرة أخرى.`,
             });
         },
     });
@@ -52,6 +75,7 @@ const SubmitVideo: React.FC = () => {
             });
             return;
         }
+        console.log('📝 Video form submitted with values:', { name, university, videoLink });
         mutate({ name, university, videoLink });
     };
 
@@ -97,7 +121,7 @@ const SubmitVideo: React.FC = () => {
                                     <p className="text-xs text-muted-foreground">الحد الأقصى: 50 ميجابايت (غير متاح حاليًا)</p>
                                 </div>
                                 <Button type="submit" className="w-full" disabled={isPending}>
-                                  {isPending ? "جار الإرسال..." : "إرسال الفيديو"}
+                                  {isPending ? "جار الإرسال... ⏳" : "إرسال الفيديو"}
                                 </Button>
                             </form>
                         </div>
