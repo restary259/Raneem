@@ -19,6 +19,7 @@ export const useCurrencyComparator = () => {
   const { t } = useTranslation('resources');
   const [results, setResults] = useState<Result[] | null>(null);
   const [bestResult, setBestResult] = useState<Result | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -52,93 +53,101 @@ export const useCurrencyComparator = () => {
     }
   }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
-  // --- UPDATED: Fetch live exchange rates and use them in calculation ---
+  // --- UPDATED: Handle async correctly with loading/error states ---
   const calculateResults = useCallback(async (values: FormValues) => {
-    const { amount: rawAmount, receivingBank, deliverySpeed } = values;
-    const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
+    setLoading(true);
+    try {
+      const { amount: rawAmount, receivingBank, deliverySpeed } = values;
+      const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
 
-    if (!amount || isNaN(amount) || amount <= 0) {
-      setResults(null);
-      setBestResult(null);
-      return;
-    }
-    
-    const bankData = availableBanks.find(b => b.id === receivingBank);
-    if (!bankData) {
-      setResults(null);
-      setBestResult(null);
-      return;
-    }
-    const bankFee = bankData.fee;
-
-    // Use a list of known services with hardcoded fees & times, but get rate live
-    const services = [
-      {
-        key: "wise",
-        name: t("currencyComparator.wise"),
-        fee: 20,
-        time: t("currencyComparator.arrivesInHours"),
-        timeValue: timeToSortValue["arrivesInHours"],
-      },
-      {
-        key: "westernunion",
-        name: t("currencyComparator.westernunion"),
-        fee: 30,
-        time: t("currencyComparator.arrivesInDays"),
-        timeValue: timeToSortValue["arrivesInDays"],
-      },
-      {
-        key: "xoom",
-        name: t("currencyComparator.xoom"),
-        fee: 25,
-        time: t("currencyComparator.arrivesInHours"),
-        timeValue: timeToSortValue["arrivesInHours"],
-      },
-    ] as const;
-
-    // Fetch live rate from ILS (shekel) to target currency
-    const liveRate = await fetchExchangeRate("ILS", targetCurrency);
-    if (!liveRate) {
-      setResults(null);
-      setBestResult(null);
-      return;
-    }
-
-    const calculatedResults = services.map((service) => {
-      const serviceFee = service.fee;
-      const totalFee = serviceFee + bankFee;
-      return {
-        service: service.name,
-        bank: t(bankData.nameKey as any),
-        rate: liveRate,
-        serviceFee: serviceFee,
-        bankFee: bankFee,
-        totalFee: totalFee,
-        time: service.time,
-        timeValue: service.timeValue,
-        received: (amount * liveRate) - totalFee,
-      };
-    });
-
-    calculatedResults.sort((a, b) => {
-      if (deliverySpeed === "cheapest") {
-        return a.totalFee - b.totalFee;
+      if (!amount || isNaN(amount) || amount <= 0) {
+        setResults(null);
+        setBestResult(null);
+        setLoading(false);
+        return;
       }
-      if (deliverySpeed === "fastest") {
-        if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
+      
+      const bankData = availableBanks.find(b => b.id === receivingBank);
+      if (!bankData) {
+        setResults(null);
+        setBestResult(null);
+        setLoading(false);
+        return;
+      }
+      const bankFee = bankData.fee;
+
+      // Use a list of known services with hardcoded fees & times, but get rate live
+      const services = [
+        {
+          key: "wise",
+          name: t("currencyComparator.wise"),
+          fee: 20,
+          time: t("currencyComparator.arrivesInHours"),
+          timeValue: timeToSortValue["arrivesInHours"],
+        },
+        {
+          key: "westernunion",
+          name: t("currencyComparator.westernunion"),
+          fee: 30,
+          time: t("currencyComparator.arrivesInDays"),
+          timeValue: timeToSortValue["arrivesInDays"],
+        },
+        {
+          key: "xoom",
+          name: t("currencyComparator.xoom"),
+          fee: 25,
+          time: t("currencyComparator.arrivesInHours"),
+          timeValue: timeToSortValue["arrivesInHours"],
+        },
+      ] as const;
+
+      // Fetch live rate from ILS (shekel) to target currency
+      const liveRate = await fetchExchangeRate("ILS", targetCurrency);
+      if (!liveRate) {
+        setResults(null);
+        setBestResult(null);
+        setLoading(false);
+        return;
+      }
+
+      const calculatedResults = services.map((service) => {
+        const serviceFee = service.fee;
+        const totalFee = serviceFee + bankFee;
+        return {
+          service: service.name,
+          bank: t(bankData.nameKey as any),
+          rate: liveRate,
+          serviceFee: serviceFee,
+          bankFee: bankFee,
+          totalFee: totalFee,
+          time: service.time,
+          timeValue: service.timeValue,
+          received: (amount * liveRate) - totalFee,
+        };
+      });
+
+      calculatedResults.sort((a, b) => {
+        if (deliverySpeed === "cheapest") {
+          return a.totalFee - b.totalFee;
+        }
+        if (deliverySpeed === "fastest") {
+          if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
+          return b.received - a.received;
+        }
         return b.received - a.received;
-      }
-      return b.received - a.received;
-    });
+      });
 
-    setResults(calculatedResults);
-    setBestResult(calculatedResults[0] || null);
+      setResults(calculatedResults);
+      setBestResult(calculatedResults[0] || null);
+    } finally {
+      setLoading(false);
+    }
   }, [t, targetCurrency, availableBanks]);
 
   // Call recalc when form values change
   useEffect(() => {
     calculateResults(form.getValues());
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [watchedAmount, targetCountry, receivingBank, deliverySpeed]);
 
   const onSubmit = (values: FormValues) => {
@@ -152,5 +161,6 @@ export const useCurrencyComparator = () => {
     targetCountry: safeTargetCountry,
     targetCurrency,
     onSubmit,
+    loading,
   };
 };
