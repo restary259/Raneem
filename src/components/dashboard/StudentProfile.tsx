@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,20 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Save, X } from 'lucide-react';
-
-type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'received';
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string;
-  phone_number?: string;
-  country?: string;
-  intake_month?: string;
-  university_name?: string;
-  visa_status?: VisaStatus;
-  notes?: string;
-}
+import { Profile, VisaStatus } from '@/types/profile';
 
 interface StudentProfileProps {
   profile: Profile;
@@ -58,7 +44,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
         title: "تم التحديث بنجاح",
         description: "تم حفظ بياناتك بنجاح",
       });
-      
+
       setIsEditing(false);
       onProfileUpdate(userId);
     } catch (error: any) {
@@ -87,172 +73,172 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
 
   const countries = [
     'السعودية', 'الإمارات', 'قطر', 'الكويت', 'البحرين', 'عمان',
-    'الأردن', 'لبنان', 'سوريا', 'العراق', 'مصر', 'المغرب',
-    'الجزائر', 'تونس', 'ليبيا', 'السودان', 'اليمن'
   ];
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">البيانات الشخصية</CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>الملف الشخصي</CardTitle>
+        {!isEditing && (
           <Button
-            variant={isEditing ? "destructive" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-            className="flex items-center gap-2"
+            onClick={() => setIsEditing(true)}
+            className="ml-2"
           >
-            {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-            {isEditing ? "إلغاء" : "تعديل"}
+            <Edit className="h-4 w-4" />
+            تعديل
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        )}
+      </CardHeader>
+      <CardContent>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            handleSave();
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">الاسم الكامل</Label>
-              {isEditing ? (
-                <Input
-                  id="fullName"
-                  value={editedProfile.full_name}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, full_name: e.target.value })}
-                />
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">{profile.full_name}</div>
-              )}
+            {/* Full Name */}
+            <div>
+              <Label htmlFor="full_name">الاسم الكامل</Label>
+              <Input
+                id="full_name"
+                value={editedProfile.full_name}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, full_name: e.target.value })
+                }
+                disabled={!isEditing}
+                required
+              />
             </div>
-
-            <div className="space-y-2">
+            {/* Email */}
+            <div>
               <Label htmlFor="email">البريد الإلكتروني</Label>
-              <div className="text-sm p-2 bg-gray-50 rounded">{profile.email}</div>
+              <Input
+                id="email"
+                value={editedProfile.email}
+                disabled
+                readOnly
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف</Label>
-              {isEditing ? (
-                <Input
-                  id="phone"
-                  value={editedProfile.phone_number || ''}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, phone_number: e.target.value })}
-                  placeholder="أدخل رقم هاتفك"
-                />
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">
-                  {profile.phone_number || 'غير محدد'}
-                </div>
-              )}
+            {/* Phone Number */}
+            <div>
+              <Label htmlFor="phone_number">رقم الجوال</Label>
+              <Input
+                id="phone_number"
+                value={editedProfile.phone_number || ''}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, phone_number: e.target.value })
+                }
+                disabled={!isEditing}
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">البلد</Label>
-              {isEditing ? (
-                <Select
-                  value={editedProfile.country || ''}
-                  onValueChange={(value) => setEditedProfile({ ...editedProfile, country: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر البلد" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">
-                  {profile.country || 'غير محدد'}
-                </div>
-              )}
+            {/* Country */}
+            <div>
+              <Label htmlFor="country">الدولة</Label>
+              <Select
+                value={editedProfile.country || ''}
+                onValueChange={val =>
+                  setEditedProfile({ ...editedProfile, country: val })
+                }
+                disabled={!isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الدولة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map(country => (
+                    <SelectItem value={country} key={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="intake">شهر الالتحاق</Label>
-              {isEditing ? (
-                <Input
-                  id="intake"
-                  value={editedProfile.intake_month || ''}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, intake_month: e.target.value })}
-                  placeholder="مثال: سبتمبر 2024"
-                />
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">
-                  {profile.intake_month || 'غير محدد'}
-                </div>
-              )}
+            {/* Intake Month */}
+            <div>
+              <Label htmlFor="intake_month">شهر القبول</Label>
+              <Input
+                id="intake_month"
+                value={editedProfile.intake_month || ''}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, intake_month: e.target.value })
+                }
+                disabled={!isEditing}
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="university">الجامعة</Label>
-              {isEditing ? (
-                <Input
-                  id="university"
-                  value={editedProfile.university_name || ''}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, university_name: e.target.value })}
-                  placeholder="أدخل اسم الجامعة"
-                />
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">
-                  {profile.university_name || 'غير محدد'}
-                </div>
-              )}
+            {/* University Name */}
+            <div>
+              <Label htmlFor="university_name">اسم الجامعة</Label>
+              <Input
+                id="university_name"
+                value={editedProfile.university_name || ''}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, university_name: e.target.value })
+                }
+                disabled={!isEditing}
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="visaStatus">حالة الفيزا</Label>
-              {isEditing ? (
-                <Select
-                  value={editedProfile.visa_status || 'not_applied'}
-                  onValueChange={(value: VisaStatus) => setEditedProfile({ ...editedProfile, visa_status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {visaStatuses.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm p-2 bg-gray-50 rounded">
-                  {visaStatuses.find(s => s.value === profile.visa_status)?.label || 'لم يتم التقديم'}
-                </div>
-              )}
+            {/* Visa Status */}
+            <div>
+              <Label htmlFor="visa_status">حالة التأشيرة</Label>
+              <Select
+                value={editedProfile.visa_status || ''}
+                onValueChange={val =>
+                  setEditedProfile({ ...editedProfile, visa_status: val as VisaStatus })
+                }
+                disabled={!isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {visaStatuses.map(status => (
+                    <SelectItem value={status.value} key={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">ملاحظات</Label>
-            {isEditing ? (
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <Label htmlFor="notes">ملاحظات</Label>
               <Textarea
                 id="notes"
                 value={editedProfile.notes || ''}
-                onChange={(e) => setEditedProfile({ ...editedProfile, notes: e.target.value })}
-                placeholder="أضف أي ملاحظات إضافية..."
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, notes: e.target.value })
+                }
+                disabled={!isEditing}
                 rows={3}
               />
-            ) : (
-              <div className="text-sm p-2 bg-gray-50 rounded min-h-[60px]">
-                {profile.notes || 'لا توجد ملاحظات'}
-              </div>
-            )}
+            </div>
           </div>
-
           {isEditing && (
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={isLoading} className="flex items-center gap-2">
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
+                <X className="h-4 w-4" />
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+              >
                 <Save className="h-4 w-4" />
-                {isLoading ? "جار الحفظ..." : "حفظ التغييرات"}
+                حفظ
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
