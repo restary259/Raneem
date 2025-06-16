@@ -9,7 +9,7 @@ import StudentProfile from '@/components/dashboard/StudentProfile';
 import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
-import { LogOut, User as UserIcon, CreditCard, FileText, Settings } from 'lucide-react';
+import { LogOut, User as UserIcon, CreditCard, FileText, Settings, ArrowLeftCircle } from 'lucide-react';
 import { Profile, VisaStatus } from '@/types/profile'; // <-- shared types
 
 const StudentDashboardPage = () => {
@@ -94,6 +94,11 @@ const StudentDashboardPage = () => {
     }
   };
 
+  // --- Return to main website handler
+  const handleReturnToWebsite = () => {
+    window.location.href = '/'; // Or set to your main site URL if external
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -121,6 +126,17 @@ const StudentDashboardPage = () => {
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-gray-900">لوحة التحكم الطلابية</h1>
             <div className="flex items-center gap-4">
+              {/* Return to Website Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReturnToWebsite}
+                className="flex items-center gap-2"
+                title="العودة إلى الموقع الرئيسي"
+              >
+                <ArrowLeftCircle className="h-4 w-4" />
+                العودة إلى الموقع
+              </Button>
               <span className="text-sm text-gray-600">مرحباً، {profile.full_name}</span>
               <Button
                 variant="outline"
