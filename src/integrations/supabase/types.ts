@@ -45,6 +45,203 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          service_id: string | null
+          student_id: string
+          upload_date: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          service_id?: string | null
+          student_id: string
+          upload_date?: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          service_id?: string | null
+          student_id?: string
+          upload_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_paid: number
+          amount_remaining: number | null
+          amount_total: number
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+          service_id: string | null
+          student_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          amount_remaining?: number | null
+          amount_total?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          service_id?: string | null
+          student_id: string
+        }
+        Update: {
+          amount_paid?: number
+          amount_remaining?: number | null
+          amount_total?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          service_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          country: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          intake_month: string | null
+          notes: string | null
+          phone_number: string | null
+          university_name: string | null
+          updated_at: string
+          visa_status: Database["public"]["Enums"]["visa_status"] | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          intake_month?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          university_name?: string | null
+          updated_at?: string
+          visa_status?: Database["public"]["Enums"]["visa_status"] | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          intake_month?: string | null
+          notes?: string | null
+          phone_number?: string | null
+          university_name?: string | null
+          updated_at?: string
+          visa_status?: Database["public"]["Enums"]["visa_status"] | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          assigned_date: string | null
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          id: string
+          notes: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          assigned_date?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          assigned_date?: string | null
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"]
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -53,7 +250,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      payment_status: "pending" | "partial" | "completed" | "overdue"
+      service_type:
+        | "university_application"
+        | "visa_assistance"
+        | "accommodation"
+        | "scholarship"
+        | "language_support"
+        | "travel_booking"
+      visa_status:
+        | "not_applied"
+        | "applied"
+        | "approved"
+        | "rejected"
+        | "received"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -168,6 +378,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      payment_status: ["pending", "partial", "completed", "overdue"],
+      service_type: [
+        "university_application",
+        "visa_assistance",
+        "accommodation",
+        "scholarship",
+        "language_support",
+        "travel_booking",
+      ],
+      visa_status: [
+        "not_applied",
+        "applied",
+        "approved",
+        "rejected",
+        "received",
+      ],
+    },
   },
 } as const
