@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +15,11 @@ interface StudentProfileProps {
   userId: string;
 }
 
-const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
+const StudentProfile: React.FC<StudentProfileProps> = ({
+  profile,
+  onProfileUpdate,
+  userId
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +33,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
         .update({
           full_name: editedProfile.full_name,
           phone_number: editedProfile.phone_number,
-          country: editedProfile.country,
+          city: editedProfile.city, // Changed from country to city
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
           visa_status: editedProfile.visa_status as VisaStatus,
@@ -69,10 +72,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
     { value: 'approved', label: 'تمت الموافقة' },
     { value: 'rejected', label: 'تم الرفض' },
     { value: 'received', label: 'تم الاستلام' },
-  ];
-
-  const countries = [
-    'السعودية', 'الإمارات', 'قطر', 'الكويت', 'البحرين', 'عمان',
   ];
 
   return (
@@ -134,27 +133,19 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                 disabled={!isEditing}
               />
             </div>
-            {/* Country */}
+            {/* City (editable text) */}
             <div>
-              <Label htmlFor="country">الدولة</Label>
-              <Select
-                value={editedProfile.country || ''}
-                onValueChange={val =>
-                  setEditedProfile({ ...editedProfile, country: val })
+              <Label htmlFor="city">المدينة</Label>
+              <Input
+                id="city"
+                value={editedProfile.city || ''}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, city: e.target.value })
                 }
                 disabled={!isEditing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الدولة" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map(country => (
-                    <SelectItem value={country} key={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="اكتب اسم مدينتك"
+                required
+              />
             </div>
             {/* Intake Month */}
             <div>
@@ -183,24 +174,22 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
             {/* Visa Status */}
             <div>
               <Label htmlFor="visa_status">حالة التأشيرة</Label>
-              <Select
+              <select
+                id="visa_status"
                 value={editedProfile.visa_status || ''}
-                onValueChange={val =>
-                  setEditedProfile({ ...editedProfile, visa_status: val as VisaStatus })
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, visa_status: e.target.value as VisaStatus })
                 }
                 disabled={!isEditing}
+                className="border rounded px-3 py-2 w-full"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الحالة" />
-                </SelectTrigger>
-                <SelectContent>
-                  {visaStatuses.map(status => (
-                    <SelectItem value={status.value} key={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">اختر الحالة</option>
+                {visaStatuses.map(status => (
+                  <option value={status.value} key={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
             </div>
             {/* Notes */}
             <div className="md:col-span-2">
