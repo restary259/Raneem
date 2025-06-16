@@ -1,4 +1,3 @@
-
 import { FormProvider } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useCurrencyComparator } from './currency-comparator/useCurrencyComparator';
@@ -12,8 +11,8 @@ const CurrencyComparator = () => {
     results, 
     bestResult, 
     targetCountry, 
-    targetCurrency, 
-    onSubmit 
+    targetCurrency
+    // onSubmit // No longer needed
   } = useCurrencyComparator();
   const { t } = useTranslation('resources');
 
@@ -26,7 +25,7 @@ const CurrencyComparator = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <FormProvider {...form}>
-          <CurrencyForm onSubmit={onSubmit} />
+          <CurrencyForm />
         </FormProvider>
 
         <div className="space-y-4">
