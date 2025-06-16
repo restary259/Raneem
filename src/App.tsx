@@ -17,7 +17,7 @@ import ChatWidget from "./components/chat/ChatWidget";
 import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage"; // Only import ONCE here
+import AdminDashboardPage from "./pages/AdminDashboardPage"; // Only one import!
 
 const queryClient = new QueryClient();
 
@@ -63,7 +63,8 @@ const App = () => {
           <Route path="/broadcast" element={<BroadcastPage />} />
           <Route path="/student-auth" element={<StudentAuthPage />} />
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} /> {/* Admin Dashboard Route */}
+          {/* Admin Dashboard Route */}
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
@@ -71,5 +72,7 @@ const App = () => {
     </QueryClientProvider>
   );
 }
+
+export default App;
 
 export default App;
