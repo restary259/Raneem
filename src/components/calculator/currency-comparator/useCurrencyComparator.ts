@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { formSchema, Result, FormValues, countries, banksByCountry, timeToSortValue } from "./data";
 
-// Helper to fetch real-time exchange rates
+// Uses your exchangerate.host API key
 async function fetchExchangeRate(from: string, to: string): Promise<number | null> {
+  const apiKey = "98faa4668bf440cf9c2c113446cd11c2";
+  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&api_key=${apiKey}`;
   try {
-    const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
+    const res = await fetch(url);
     const data = await res.json();
     return data.result ?? null;
   } catch {
@@ -33,13 +35,12 @@ export const useCurrencyComparator = () => {
   });
 
   const { watch, getValues, setValue } = form;
-  
+
   const targetCountry = watch('targetCountry');
   const receivingBank = watch('receivingBank');
   const deliverySpeed = watch('deliverySpeed');
   const watchedAmount = watch('amount');
 
-  // Guard to ensure targetCountry is valid before it's used, preventing crashes.
   const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
   const targetCurrency = countries[safeTargetCountry].currency;
   const availableBanks = banksByCountry[safeTargetCountry];
@@ -49,11 +50,10 @@ export const useCurrencyComparator = () => {
     const isCurrentBankAvailable = availableBanks.some(b => b.id === currentBank);
 
     if (availableBanks.length > 0 && !isCurrentBankAvailable) {
-        setValue('receivingBank', availableBanks[0].id);
+      setValue('receivingBank', availableBanks[0].id);
     }
   }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
-  // --- UPDATED: Handle async correctly with loading/error states ---
   const calculateResults = useCallback(async (values: FormValues) => {
     setLoading(true);
     try {
@@ -66,7 +66,7 @@ export const useCurrencyComparator = () => {
         setLoading(false);
         return;
       }
-      
+
       const bankData = availableBanks.find(b => b.id === receivingBank);
       if (!bankData) {
         setResults(null);
@@ -76,7 +76,6 @@ export const useCurrencyComparator = () => {
       }
       const bankFee = bankData.fee;
 
-      // Use a list of known services with hardcoded fees & times, but get rate live
       const services = [
         {
           key: "wise",
@@ -101,7 +100,7 @@ export const useCurrencyComparator = () => {
         },
       ] as const;
 
-      // Fetch live rate from ILS (shekel) to target currency
+      // Use ILS as source
       const liveRate = await fetchExchangeRate("ILS", targetCurrency);
       if (!liveRate) {
         setResults(null);
@@ -144,7 +143,6 @@ export const useCurrencyComparator = () => {
     }
   }, [t, targetCurrency, availableBanks]);
 
-  // Call recalc when form values change
   useEffect(() => {
     calculateResults(form.getValues());
     // eslint-disable-next-line
