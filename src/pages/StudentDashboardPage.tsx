@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
@@ -11,18 +10,7 @@ import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
 import { LogOut, User as UserIcon, CreditCard, FileText, Settings } from 'lucide-react';
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string;
-  phone_number?: string;
-  country?: string;
-  intake_month?: string;
-  university_name?: string;
-  visa_status?: string;
-  notes?: string;
-}
+import { Profile, VisaStatus } from '@/types/profile'; // <-- shared types
 
 const StudentDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -39,7 +27,6 @@ const StudentDashboardPage = () => {
         navigate('/student-auth');
         return;
       }
-      
       setUser(session.user);
       await fetchProfile(session.user.id);
     };
@@ -67,7 +54,17 @@ const StudentDashboardPage = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+
+      // Safely cast visa_status:
+      const allowedStatuses: VisaStatus[] = [
+        'not_applied', 'applied', 'approved', 'rejected', 'received'
+      ];
+      const safeProfile: Profile = {
+        ...data,
+        visa_status: allowedStatuses.includes(data.visa_status) ? data.visa_status : undefined,
+      };
+
+      setProfile(safeProfile);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast({
