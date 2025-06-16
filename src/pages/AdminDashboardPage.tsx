@@ -1,88 +1,121 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Pie, Bar } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
 import { useNavigate } from "react-router-dom";
-import { Pie, Bar } from "react-chartjs-2"; // Assume chart.js integration
-import { Mail, User, FileText, CreditCard, PieChart, Settings as Cog } from "lucide-react";
 
-// ...Types for Profile, Application, Payment, Document (reuse from previous example)...
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+
+type Profile = {
+  id: string;
+  full_name: string;
+  email: string;
+  country: string;
+  created_at?: string;
+};
+
+type Application = {
+  id: string;
+  submitted_at: string;
+};
+
+type Payment = {
+  amount_paid: number;
+};
 
 const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [students, setStudents] = useState<Profile[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const navigate = useNavigate();
-  // ...All existing states for students/applications/payments/documents...
-  // Add states for analytics, email modal, settings, etc.
 
-  // Admin check
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return navigate('/student-auth');
-      const { data } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', session.user.id)
-        .single();
-      if (!data?.is_admin) return navigate('/');
-      setIsAdmin(true);
-    };
-    checkAdmin();
-  }, [navigate]);
+    // Auth check (optional, add your admin check here)
+    // Fetch all dashboard data
+    fetchStudents();
+    fetchApplications();
+    fetchPayments();
+  }, []);
 
-  // ...Fetching students, applications, payments, documents, analytics...
+  const fetchStudents = async () => {
+    const { data } = await supabase.from("profiles").select("*");
+    if (data) setStudents(data);
+  };
+  const fetchApplications = async () => {
+    const { data } = await supabase.from("applications").select("*");
+    if (data) setApplications(data);
+  };
+  const fetchPayments = async () => {
+    const { data } = await supabase.from("payments").select("amount_paid");
+    if (data) setPayments(data);
+  };
 
-  if (!isAdmin) return null;
-
-  // ---- DASHBOARD QUICK STATS ----
+  // --- Analytics logic ---
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
   const totalStudents = students.length;
-  const newStudentsThisMonth = students.filter(s => s.created_at?.startsWith(new Date().toISOString().slice(0,7))).length;
+  const newStudentsThisMonth = students.filter(s => s.created_at?.startsWith(currentMonth)).length;
   const totalApplications = applications.length;
   const totalPayments = payments.reduce((sum, p) => sum + (p.amount_paid || 0), 0);
 
-  // Example analytics data for charts:
-  const studentsByCountry = students.reduce((acc, s) => {
+  // Pie: Students by country
+  const studentsByCountry = students.reduce((acc: Record<string, number>, s) => {
     acc[s.country] = (acc[s.country] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
-  const chartData = {
+  }, {});
+  const pieData = {
     labels: Object.keys(studentsByCountry),
-    datasets: [{ data: Object.values(studentsByCountry), backgroundColor: ["#3b82f6","#f59e42","#22c55e","#ef4444","#6366f1","#eab308"] }]
+    datasets: [{
+      data: Object.values(studentsByCountry),
+      backgroundColor: ["#3b82f6","#f59e42","#22c55e","#ef4444","#6366f1","#eab308","#14b8a6","#a21caf"],
+    }]
+  };
+
+  // Bar: New students per month (last 6 months)
+  const months = Array.from({length: 6}).map((_,i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  });
+  const monthlyCounts = months.map(m =>
+    students.filter(s => s.created_at?.startsWith(m)).length
+  );
+  const barData = {
+    labels: months.map(m => {
+      const [y,mo] = m.split("-");
+      return `${y}/${mo}`;
+    }),
+    datasets: [{
+      label: "الطلاب الجدد",
+      data: monthlyCounts,
+      backgroundColor: "#0ea5e9",
+    }]
   };
 
   return (
-    <div className="p-4 md:p-8" dir="rtl">
+    <div className="p-8" dir="rtl">
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6 flex flex-wrap gap-2">
-          <TabsTrigger value="overview"><PieChart className="ml-1" />لوحة البيانات</TabsTrigger>
-          <TabsTrigger value="students"><User className="ml-1" />الطلاب</TabsTrigger>
-          <TabsTrigger value="applications"><FileText className="ml-1" />الطلبات</TabsTrigger>
-          <TabsTrigger value="payments"><CreditCard className="ml-1" />الدفعات</TabsTrigger>
-          <TabsTrigger value="documents"><FileText className="ml-1" />المستندات</TabsTrigger>
-          <TabsTrigger value="email"><Mail className="ml-1" />إرسال بريد</TabsTrigger>
-          <TabsTrigger value="settings"><Cog className="ml-1" />الإعدادات</TabsTrigger>
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">لوحة البيانات</TabsTrigger>
         </TabsList>
-
-        {/* ----------------- Overview/Analytics ----------------- */}
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card>
-              <CardHeader>إجمالي الطلاب</CardHeader>
+              <CardHeader><CardTitle>إجمالي الطلاب</CardTitle></CardHeader>
               <CardContent className="text-3xl font-bold">{totalStudents}</CardContent>
             </Card>
             <Card>
-              <CardHeader>طلاب جدد هذا الشهر</CardHeader>
+              <CardHeader><CardTitle>طلاب جدد هذا الشهر</CardTitle></CardHeader>
               <CardContent className="text-3xl font-bold">{newStudentsThisMonth}</CardContent>
             </Card>
             <Card>
-              <CardHeader>إجمالي الطلبات</CardHeader>
+              <CardHeader><CardTitle>إجمالي الطلبات</CardTitle></CardHeader>
               <CardContent className="text-3xl font-bold">{totalApplications}</CardContent>
             </Card>
             <Card>
-              <CardHeader>إجمالي الدفعات</CardHeader>
+              <CardHeader><CardTitle>إجمالي الدفعات</CardTitle></CardHeader>
               <CardContent className="text-3xl font-bold">{totalPayments} ريال</CardContent>
             </Card>
           </div>
@@ -90,47 +123,22 @@ const AdminDashboardPage = () => {
             <Card>
               <CardHeader>التوزيع الجغرافي للطلاب</CardHeader>
               <CardContent>
-                <Pie data={chartData} />
+                <Pie data={pieData} />
               </CardContent>
             </Card>
-            {/* Add more charts as needed */}
+            <Card>
+              <CardHeader>الطلاب الجدد (آخر 6 أشهر)</CardHeader>
+              <CardContent>
+                <Bar data={barData} />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
-
-        {/* ----------------- Students Tab ----------------- */}
-        <TabsContent value="students">
-          {/* ...Student management table as before, with advanced search, impersonation button, etc... */}
-        </TabsContent>
-
-        {/* ----------------- Applications Tab ----------------- */}
-        <TabsContent value="applications">
-          {/* ...Applications management table, timeline, bulk actions... */}
-        </TabsContent>
-
-        {/* ----------------- Payments Tab ----------------- */}
-        <TabsContent value="payments">
-          {/* ...Payments management, filtering, stats... */}
-        </TabsContent>
-
-        {/* ----------------- Documents Tab ----------------- */}
-        <TabsContent value="documents">
-          {/* ...Documents search, preview, download... */}
-        </TabsContent>
-
-        {/* ----------------- Email/Group Messaging Tab ----------------- */}
-        <TabsContent value="email">
-          {/* ...Send to group, single student, batch, save templates... */}
-        </TabsContent>
-
-        {/* ----------------- Settings Tab ----------------- */}
-        <TabsContent value="settings">
-          {/* ...Admins management, branding, export data, dark mode toggle... */}
-        </TabsContent>
       </Tabs>
-
-      {/* --- Modals for editing, deleting, viewing, sending email, etc. as needed --- */}
     </div>
   );
 };
+
+export default AdminDashboardPage;
 
 export default AdminDashboardPage;
