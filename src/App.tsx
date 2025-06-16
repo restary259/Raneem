@@ -1,4 +1,4 @@
-
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +18,9 @@ import ChatWidget from "./components/chat/ChatWidget";
 import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
+
+// ADD THIS IMPORT BELOW:
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +66,10 @@ const App = () => {
           <Route path="/broadcast" element={<BroadcastPage />} />
           <Route path="/student-auth" element={<StudentAuthPage />} />
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
+
+          {/* ADD THIS LINE FOR THE ADMIN DASHBOARD ROUTE */}
+          <Route path="/admin" element={<AdminDashboardPage />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
