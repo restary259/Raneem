@@ -1,4 +1,3 @@
-
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -9,15 +8,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
 import { FormValues, countries, banksByCountry } from './data';
 
-interface CurrencyFormProps {
-  onSubmit: (values: FormValues) => void;
-}
-
-export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
+// No onSubmit prop needed now!
+export const CurrencyForm = () => {
   const { t } = useTranslation('resources');
   const form = useFormContext<FormValues>();
   const targetCountry = useWatch({ control: form.control, name: 'targetCountry' });
-  
+
   // Guard to ensure targetCountry is valid before it's used.
   const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
   const targetCurrency = countries[safeTargetCountry].currency;
@@ -26,7 +22,8 @@ export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Replaced <form> with <div> so the button does nothing */}
+        <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -88,7 +85,7 @@ export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
                 </FormItem>
               )}
             />
-             <FormField
+            <FormField
               control={form.control}
               name="deliverySpeed"
               render={({ field }) => (
@@ -110,37 +107,38 @@ export const CurrencyForm = ({ onSubmit }: CurrencyFormProps) => {
             />
           </div>
           
-           <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('currencyComparator.paymentMethod')}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
-                    <FormControl>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="bank">{t('currencyComparator.bankTransfer')}</SelectItem>
-                      <SelectItem value="card">{t('currencyComparator.creditCard')}</SelectItem>
-                      <SelectItem value="pickup">{t('currencyComparator.cashPickup')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="paymentMethod"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('currencyComparator.paymentMethod')}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                  <FormControl>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="bank">{t('currencyComparator.bankTransfer')}</SelectItem>
+                    <SelectItem value="card">{t('currencyComparator.creditCard')}</SelectItem>
+                    <SelectItem value="pickup">{t('currencyComparator.cashPickup')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
           <div className="p-3 bg-muted rounded-md text-center">
-              <FormLabel>{t('currencyComparator.targetCurrency')}</FormLabel>
-              <div className="font-bold text-lg">{t(`currencyComparator.${targetCurrency.toLowerCase()}` as any)}</div>
+            <FormLabel>{t('currencyComparator.targetCurrency')}</FormLabel>
+            <div className="font-bold text-lg">{t(`currencyComparator.${targetCurrency.toLowerCase()}` as any)}</div>
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
+          {/* The button is now type=button and doesn't submit anything */}
+          <Button type="button" className="w-full" size="lg">
             <TrendingUp className="ml-2 h-5 w-5" />
             {t('currencyComparator.compare')}
           </Button>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );
