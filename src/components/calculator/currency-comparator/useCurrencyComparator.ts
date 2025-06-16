@@ -1,8 +1,19 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { formSchema, FormValues, Result, countries, banksByCountry, mockApiData, timeToSortValue } from './data';
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
+import { formSchema, Result, FormValues, countries, banksByCountry, timeToSortValue } from "./data";
+
+// Helper to fetch real-time exchange rates
+async function fetchExchangeRate(from: string, to: string): Promise<number | null> {
+  try {
+    const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
+    const data = await res.json();
+    return data.result ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export const useCurrencyComparator = () => {
   const { t } = useTranslation('resources');
@@ -29,7 +40,6 @@ export const useCurrencyComparator = () => {
 
   // Guard to ensure targetCountry is valid before it's used, preventing crashes.
   const safeTargetCountry = targetCountry && countries[targetCountry] ? targetCountry : 'DE';
-  
   const targetCurrency = countries[safeTargetCountry].currency;
   const availableBanks = banksByCountry[safeTargetCountry];
 
@@ -42,7 +52,8 @@ export const useCurrencyComparator = () => {
     }
   }, [safeTargetCountry, availableBanks, getValues, setValue]);
 
-  const calculateResults = useCallback((values: FormValues) => {
+  // --- UPDATED: Fetch live exchange rates and use them in calculation ---
+  const calculateResults = useCallback(async (values: FormValues) => {
     const { amount: rawAmount, receivingBank, deliverySpeed } = values;
     const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount) : rawAmount;
 
@@ -52,60 +63,89 @@ export const useCurrencyComparator = () => {
       return;
     }
     
-    const services = mockApiData[targetCurrency as keyof typeof mockApiData];
     const bankData = availableBanks.find(b => b.id === receivingBank);
-    
     if (!bankData) {
-      console.error("Bank data not found for:", receivingBank);
+      setResults(null);
+      setBestResult(null);
+      return;
+    }
+    const bankFee = bankData.fee;
+
+    // Use a list of known services with hardcoded fees & times, but get rate live
+    const services = [
+      {
+        key: "wise",
+        name: t("currencyComparator.wise"),
+        fee: 20,
+        time: t("currencyComparator.arrivesInHours"),
+        timeValue: timeToSortValue["arrivesInHours"],
+      },
+      {
+        key: "westernunion",
+        name: t("currencyComparator.westernunion"),
+        fee: 30,
+        time: t("currencyComparator.arrivesInDays"),
+        timeValue: timeToSortValue["arrivesInDays"],
+      },
+      {
+        key: "xoom",
+        name: t("currencyComparator.xoom"),
+        fee: 25,
+        time: t("currencyComparator.arrivesInHours"),
+        timeValue: timeToSortValue["arrivesInHours"],
+      },
+    ] as const;
+
+    // Fetch live rate from ILS (shekel) to target currency
+    const liveRate = await fetchExchangeRate("ILS", targetCurrency);
+    if (!liveRate) {
       setResults(null);
       setBestResult(null);
       return;
     }
 
-    const bankFee = bankData.fee;
-    
-    const calculatedResults = Object.entries(services).map(([service, data]) => {
-      const serviceFee = data.fee;
+    const calculatedResults = services.map((service) => {
+      const serviceFee = service.fee;
       const totalFee = serviceFee + bankFee;
       return {
-        service: data.name,
+        service: service.name,
         bank: t(bankData.nameKey as any),
-        rate: data.rate,
+        rate: liveRate,
         serviceFee: serviceFee,
         bankFee: bankFee,
         totalFee: totalFee,
-        time: t(`currencyComparator.${data.time}` as any),
-        timeValue: timeToSortValue[data.time as keyof typeof timeToSortValue],
-        received: (amount * data.rate) - totalFee,
-      }
+        time: service.time,
+        timeValue: service.timeValue,
+        received: (amount * liveRate) - totalFee,
+      };
     });
 
     calculatedResults.sort((a, b) => {
-        if (deliverySpeed === 'cheapest') {
-            return a.totalFee - b.totalFee;
-        }
-        if (deliverySpeed === 'fastest') {
-            if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
-            return b.received - a.received;
-        }
+      if (deliverySpeed === "cheapest") {
+        return a.totalFee - b.totalFee;
+      }
+      if (deliverySpeed === "fastest") {
+        if (a.timeValue !== b.timeValue) return a.timeValue - b.timeValue;
         return b.received - a.received;
+      }
+      return b.received - a.received;
     });
 
     setResults(calculatedResults);
     setBestResult(calculatedResults[0] || null);
   }, [t, targetCurrency, availableBanks]);
-  
+
+  // Call recalc when form values change
   useEffect(() => {
-    // Calculate results on initial load and on form changes
-    calculateResults(getValues());
-  }, [watchedAmount, deliverySpeed, receivingBank, targetCountry, calculateResults, getValues]);
+    calculateResults(form.getValues());
+  // eslint-disable-next-line
+  }, [watchedAmount, targetCountry, receivingBank, deliverySpeed]);
 
   const onSubmit = (values: FormValues) => {
     calculateResults(values);
   };
 
   return {
-    t,
     form,
     results,
     bestResult,
