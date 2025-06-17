@@ -107,7 +107,7 @@ const CostCalculator = () => {
       if (healthInsurance && countryData.healthInsurance) {
         breakdown.healthInsurance = countryData.healthInsurance * 12;
       }
-      if (country === 'germany') {
+      if (country === 'germany' && 'semesterFee' in countryData) {
         breakdown.semesterFee = countryData.semesterFee * 2;
       }
       if (visaAdmin) {
