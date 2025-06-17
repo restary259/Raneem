@@ -5,7 +5,9 @@
     <meta charset="utf-8">
     <title>Darb - Redirecting...</title>
     <script>
-      sessionStorage.setItem('redirectPath', location.pathname);
+      // Preserve the full URL including query parameters
+      const fullPath = location.pathname + location.search + location.hash;
+      sessionStorage.setItem('redirectPath', fullPath);
       location.replace(
         location.protocol + '//' + location.host + '/Raneem/'
       );

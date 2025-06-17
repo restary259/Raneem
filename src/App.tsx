@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,7 +18,7 @@ import ChatWidget from "./components/chat/ChatWidget";
 import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage"; // Only one import!
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -29,17 +30,21 @@ const App = () => {
     document.documentElement.lang = 'ar';
     document.documentElement.dir = 'rtl';
     
-    // SPA Redirect for GitHub Pages
+    // SPA Redirect for GitHub Pages - preserve query parameters
     const redirectPath = sessionStorage.getItem('redirectPath');
     if (redirectPath) {
       sessionStorage.removeItem('redirectPath');
       const basename = import.meta.env.BASE_URL;
       if (redirectPath.startsWith(basename)) {
         const path = redirectPath.substring(basename.length - 1);
-        navigate(path, { replace: true });
+        // Preserve any existing query parameters from the current location
+        const searchParams = new URLSearchParams(location.search);
+        const queryString = searchParams.toString();
+        const fullPath = queryString ? `${path}?${queryString}` : path;
+        navigate(fullPath, { replace: true });
       }
     }
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   // Scroll to top when route changes
   useEffect(() => {
@@ -63,7 +68,6 @@ const App = () => {
           <Route path="/broadcast" element={<BroadcastPage />} />
           <Route path="/student-auth" element={<StudentAuthPage />} />
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-          {/* Admin Dashboard Route */}
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
