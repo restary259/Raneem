@@ -30,19 +30,15 @@ const App = () => {
     document.documentElement.lang = 'ar';
     document.documentElement.dir = 'rtl';
     
-    // SPA Redirect for GitHub Pages - preserve query parameters
+    // SPA Redirect for original Lovable URL - preserve query parameters
     const redirectPath = sessionStorage.getItem('redirectPath');
     if (redirectPath) {
       sessionStorage.removeItem('redirectPath');
-      const basename = import.meta.env.BASE_URL;
-      if (redirectPath.startsWith(basename)) {
-        const path = redirectPath.substring(basename.length - 1);
-        // Preserve any existing query parameters from the current location
-        const searchParams = new URLSearchParams(location.search);
-        const queryString = searchParams.toString();
-        const fullPath = queryString ? `${path}?${queryString}` : path;
-        navigate(fullPath, { replace: true });
-      }
+      // For original Lovable URLs, redirect directly to the path
+      const searchParams = new URLSearchParams(location.search);
+      const queryString = searchParams.toString();
+      const fullPath = queryString ? `${redirectPath}?${queryString}` : redirectPath;
+      navigate(fullPath, { replace: true });
     }
   }, [navigate, location.search]);
 
