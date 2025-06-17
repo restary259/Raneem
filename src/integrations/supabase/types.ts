@@ -164,6 +164,7 @@ export type Database = {
           full_name: string
           id: string
           intake_month: string | null
+          is_admin: boolean | null
           notes: string | null
           phone_number: string | null
           university_name: string | null
@@ -177,6 +178,7 @@ export type Database = {
           full_name: string
           id: string
           intake_month?: string | null
+          is_admin?: boolean | null
           notes?: string | null
           phone_number?: string | null
           university_name?: string | null
@@ -190,6 +192,7 @@ export type Database = {
           full_name?: string
           id?: string
           intake_month?: string | null
+          is_admin?: boolean | null
           notes?: string | null
           phone_number?: string | null
           university_name?: string | null
