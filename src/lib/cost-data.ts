@@ -1,59 +1,64 @@
-export const JOD_TO_EUR = 1.28; // Updated exchange rate for 2025
 
 export const costData = {
   germany: {
-    tuition: { public: 0, private: 1500 }, // Annual in EUR
-    livingCost: { basic: 300, moderate: 600, comfortable: 1200 }, // Monthly in EUR, including rent
-    accommodation: { dormitory: 250, shared: 475, private: 850 }, // Monthly in EUR
-    food: { basic: 150, moderate: 225, comfortable: 300 }, // Monthly in EUR
-    transportation: 50, // Monthly in EUR, often included in semester fee
-    healthInsurance: 35, // Monthly in EUR
-    miscellaneous: { basic: 50, moderate: 100, comfortable: 400 }, // Monthly in EUR
-    semesterFee: 100, // Per semester in EUR
-    visaFee: 125, // One-time in EUR
-    languagePrep: 5800, // One-time in EUR
+    tuition: {
+      public: 0,
+      private: 20000,
+    },
+    livingCost: {
+      basic: 800,
+      moderate: 1000,
+      comfortable: 1200,
+    },
+    accommodation: {
+      dormitory: 300,
+      shared: 400,
+      private: 600,
+    },
+    healthInsurance: 110,
+    semesterFee: 300,
+    visaFee: 75,
+    languagePrep: 800,
   },
   jordan: {
-    tuition: { public: 350, private: 2560 }, // Annual in EUR
-    livingCost: { basic: 400, moderate: 600, comfortable: 1000 }, // Monthly in EUR, including rent
-    accommodation: { dormitory: 172, shared: 230, private: 345 }, // Monthly in EUR
-    food: { basic: 107, moderate: 142, comfortable: 178 }, // Monthly in EUR
-    transportation: 35, // Monthly in EUR
-    healthInsurance: 10, // Monthly in EUR
-    miscellaneous: { basic: 50, moderate: 100, comfortable: 200 }, // Monthly in EUR
-    semesterFee: 1000,
-    visaFee: 64, // One-time in EUR
-    languagePrep: 1280, // One-time in EUR
+    tuition: {
+      public: 3000,
+      private: 8000,
+    },
+    livingCost: {
+      basic: 400,
+      moderate: 600,
+      comfortable: 800,
+    },
+    accommodation: {
+      dormitory: 150,
+      shared: 200,
+      private: 300,
+    },
+    healthInsurance: 50,
+    visaFee: 50,
+    languagePrep: 500,
   },
   romania: {
-    tuition: { public: 2200, private: 3300 }, // Annual in EUR
-    livingCost: { basic: 500, moderate: 650, comfortable: 800 }, // Monthly in EUR, including rent
-    accommodation: { dormitory: 75, shared: 200, private: 400 }, // Monthly in EUR
-    food: { basic: 100, moderate: 150, comfortable: 200 }, // Monthly in EUR
-    transportation: 35, // Monthly in EUR
-    healthInsurance: 15, // Monthly in EUR
-    miscellaneous: { basic: 120, moderate: 180, comfortable: 240 }, // Monthly in EUR
-    semesterFee: 0,
-    visaFee: 50, // One-time in EUR
-    languagePrep: 1000, // One-time in EUR
-    tuitionDetails: {
-      engineering: 2200,
-      medicine: 5000,
-      business: 2200,
-      humanities: 2000,
+    tuition: {
+      engineering: 4000,
+      medicine: 6000,
+      business: 3500,
+      humanities: 3000,
       private_multiplier: 1.5,
     },
+    livingCost: {
+      basic: 500,
+      moderate: 700,
+      comfortable: 900,
+    },
+    accommodation: {
+      dormitory: 200,
+      shared: 250,
+      private: 400,
+    },
+    healthInsurance: 60,
+    visaFee: 120,
+    languagePrep: 600,
   },
-  italy: {
-    tuition: { public: 0, private: 0 }, // Annual in EUR
-    livingCost: { basic: 750, moderate: 1050, comfortable: 1550 }, // Monthly in EUR, including rent
-    accommodation: { dormitory: 200, shared: 500, private: 1200 }, // Monthly in EUR
-    food: { basic: 150, moderate: 250, comfortable: 350 }, // Monthly in EUR
-    transportation: 45, // Monthly in EUR
-    healthInsurance: 30, // Monthly in EUR
-    miscellaneous: { basic: 200, moderate: 325, comfortable: 450 }, // Monthly in EUR
-    semesterFee: 0,
-    visaFee: 50, // One-time in EUR
-    languagePrep: 1500, // One-time in EUR
-  },
-};
+} as const;

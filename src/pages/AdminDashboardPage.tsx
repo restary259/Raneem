@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -33,9 +34,10 @@ type Profile = {
   created_at?: string;
 };
 
-type Application = {
+type Service = {
   id: string;
-  submitted_at: string;
+  created_at: string;
+  service_type: string;
 };
 
 type Payment = {
@@ -45,7 +47,7 @@ type Payment = {
 const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [students, setStudents] = useState<Profile[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   // Students tab state
   const [search, setSearch] = useState("");
@@ -63,7 +65,7 @@ const AdminDashboardPage = () => {
   const fetchAllData = async () => {
     await Promise.all([
       fetchStudents(),
-      fetchApplications(),
+      fetchServices(),
       fetchPayments()
     ]);
   };
@@ -72,10 +74,12 @@ const AdminDashboardPage = () => {
     const { data } = await supabase.from("profiles").select("*");
     if (data) setStudents(data);
   };
-  const fetchApplications = async () => {
-    const { data } = await supabase.from("applications").select("*");
-    if (data) setApplications(data);
+  
+  const fetchServices = async () => {
+    const { data } = await supabase.from("services").select("*");
+    if (data) setServices(data);
   };
+  
   const fetchPayments = async () => {
     const { data } = await supabase.from("payments").select("amount_paid");
     if (data) setPayments(data);
@@ -86,7 +90,7 @@ const AdminDashboardPage = () => {
   const currentMonth = now.toISOString().slice(0, 7);
   const totalStudents = students.length;
   const newStudentsThisMonth = students.filter(s => s.created_at?.startsWith(currentMonth)).length;
-  const totalApplications = applications.length;
+  const totalServices = services.length;
   const totalPayments = payments.reduce((sum, p) => sum + (p.amount_paid || 0), 0);
 
   // --- Students tab logic ---
@@ -151,15 +155,14 @@ const AdminDashboardPage = () => {
               <CardContent className="text-3xl font-bold">{newStudentsThisMonth}</CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>إجمالي الطلبات</CardTitle></CardHeader>
-              <CardContent className="text-3xl font-bold">{totalApplications}</CardContent>
+              <CardHeader><CardTitle>إجمالي الخدمات</CardTitle></CardHeader>
+              <CardContent className="text-3xl font-bold">{totalServices}</CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle>إجمالي الدفعات</CardTitle></CardHeader>
               <CardContent className="text-3xl font-bold">{totalPayments} ريال</CardContent>
             </Card>
           </div>
-          {/* Charts removed */}
         </TabsContent>
         {/* Students Tab */}
         <TabsContent value="students">

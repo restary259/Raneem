@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({
         .update({
           full_name: editedProfile.full_name,
           phone_number: editedProfile.phone_number,
-          city: editedProfile.city, // Changed from country to city
+          city: editedProfile.city,
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
           visa_status: editedProfile.visa_status as VisaStatus,
@@ -133,7 +134,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({
                 disabled={!isEditing}
               />
             </div>
-            {/* City (editable text) */}
+            {/* City */}
             <div>
               <Label htmlFor="city">المدينة</Label>
               <Input
@@ -144,7 +145,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({
                 }
                 disabled={!isEditing}
                 placeholder="اكتب اسم مدينتك"
-                required
               />
             </div>
             {/* Intake Month */}

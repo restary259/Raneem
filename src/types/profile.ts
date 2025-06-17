@@ -1,3 +1,4 @@
+
 export type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'received';
 
 export interface Profile {
@@ -6,6 +7,7 @@ export interface Profile {
   full_name: string;
   phone_number?: string;
   country?: string;
+  city?: string;
   intake_month?: string;
   university_name?: string;
   visa_status?: VisaStatus;
