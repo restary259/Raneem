@@ -14,19 +14,19 @@ const PartnersPage = () => {
   const stats = [
     {
       icon: Users,
-      number: '100+',
+      number: '16+',
       label: 'شريك موثوق',
       description: 'جامعات ومؤسسات تعليمية'
     },
     {
       icon: MapPin,
-      number: '15+',
+      number: '5+',
       label: 'دولة',
       description: 'في جميع أنحاء العالم'
     },
     {
       icon: GraduationCap,
-      number: '5000+',
+      number: '47+',
       label: 'طالب',
       description: 'تم قبولهم بنجاح'
     },
