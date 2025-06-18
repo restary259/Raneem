@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,8 +31,8 @@ const ResourcesPage = () => {
     },
     {
       id: 'gpa-calculator',
-      title: 'حاسبة بجروت',
-      description: 'احسب معدل البجروت الخاص بك',
+      title: 'حاسبة المعدل التراكمي',
+      description: 'احسب معدلك التراكمي',
       icon: GraduationCap,
       component: <GpaCalculator />
     }
@@ -70,10 +71,10 @@ const ResourcesPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              {t('resourcesPage.title')}
+              {t('hero.title')}
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              {t('resourcesPage.subtitle')}
+              {t('hero.subtitle')}
             </p>
           </div>
         </div>

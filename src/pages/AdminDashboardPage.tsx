@@ -160,7 +160,7 @@ const AdminDashboardPage = () => {
             </Card>
             <Card>
               <CardHeader><CardTitle>إجمالي الدفعات</CardTitle></CardHeader>
-              <CardContent className="text-3xl font-bold">{totalPayments} شيكل</CardContent>
+              <CardContent className="text-3xl font-bold">{totalPayments} ريال</CardContent>
             </Card>
           </div>
         </TabsContent>
