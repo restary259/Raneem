@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,8 +84,8 @@ const GpaCalculator = () => {
   return (
     <Card className="w-full border-none shadow-none">
         <CardHeader className="text-center px-0">
-            <CardTitle className="text-3xl font-bold text-primary">{t('gpaCalculator.title')}</CardTitle>
-            <CardDescription>{t('gpaCalculator.description')}</CardDescription>
+            <CardTitle className="text-3xl font-bold text-primary">حاسبة البجروت</CardTitle>
+            <CardDescription>احسب معدلك في البجروت وما يعادله في النظام الألماني</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 px-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">

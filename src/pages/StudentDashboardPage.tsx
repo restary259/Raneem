@@ -81,7 +81,7 @@ const StudentDashboardPage = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/student-auth');
+      navigate('/');
       toast({
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك بنجاح",
@@ -96,7 +96,7 @@ const StudentDashboardPage = () => {
   };
 
   const handleReturnToWebsite = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   if (isLoading) {

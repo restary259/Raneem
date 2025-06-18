@@ -1,49 +1,51 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, LucideIcon } from 'lucide-react';
 
 interface ResourceCardProps {
   title: string;
   description: string;
-  fileUrl: string;
-  fileType?: string;
-  fileSize?: string;
+  icon: LucideIcon;
+  link: string;
+  category: string;
 }
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ title, description, fileUrl, fileType = 'PDF', fileSize }) => {
-  const { t } = useTranslation('resources');
+const ResourceCard: React.FC<ResourceCardProps> = ({
+  title,
+  description,
+  icon: Icon,
+  link,
+  category
+}) => {
   return (
-    <Card className="flex flex-col h-full shadow-md hover:shadow-lg transition-shadow duration-300">
-      <CardHeader>
-        <div className="flex items-start gap-4">
-          <div className="bg-primary/10 p-3 rounded-lg">
-            <FileText className="h-6 w-6 text-primary" />
+    <Card className="group hover:shadow-lg transition-all duration-300 h-full">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Icon className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription className="mt-1">{description}</CardDescription>
-          </div>
+          <Badge variant="secondary" className="text-xs">
+            {category}
+          </Badge>
         </div>
+        <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow">
-        {/* Intentionally empty to push footer to bottom */}
+      <CardContent>
+        <CardDescription className="text-sm text-muted-foreground mb-4 line-clamp-3">
+          {description}
+        </CardDescription>
+        <a 
+          href={link} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium group-hover:underline"
+        >
+          <span>زيارة الموقع</span>
+          <ExternalLink className="h-4 w-4" />
+        </a>
       </CardContent>
-      <CardFooter className="flex justify-between items-center bg-muted/50 p-4">
-        <div className="text-sm text-muted-foreground">
-          <span>{fileType === 'PDF' ? t('resourcesPage.fileTypePDF') : fileType}</span>
-          {fileSize && <span className="mx-2">&middot;</span>}
-          {fileSize && <span>{fileSize}</span>}
-        </div>
-        <Button asChild>
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer" download>
-            {t('resourcesPage.download')}
-            <Download className="ml-2 h-4 w-4" />
-          </a>
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

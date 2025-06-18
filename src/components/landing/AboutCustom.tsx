@@ -7,7 +7,7 @@ const AboutCustom = () => {
   
   const stats = [
     { value: "47", label: "طالب راض", suffix: "+" },
-    { value: "16", label: "شريك تعليمي", suffix: "+" },
+    { value: "16", label: "شريك", suffix: "+" },
     { value: "5", label: "دول حول العالم", suffix: "+" },
     { value: "98", label: "نسبة النجاح", suffix: "%" }
   ];

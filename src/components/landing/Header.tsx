@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, User, LogOut } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,32 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    
+    getSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const navigation = [
     { name: t('nav.home'), href: '/' },
@@ -34,7 +54,20 @@ const Header = () => {
   ];
 
   const handleStudentPortal = () => {
-    navigate('/student-auth');
+    if (user) {
+      navigate('/student-dashboard');
+    } else {
+      navigate('/student-auth');
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const isActive = (path: string) => {
@@ -98,16 +131,37 @@ const Header = () => {
             </DropdownMenu>
           </nav>
 
-          {/* CTA Button */}
+          {/* User Actions */}
           <div className="hidden md:flex items-center space-x-4 space-x-reverse">
-            <Button
-              onClick={handleStudentPortal}
-              variant="default"
-              size="sm"
-              className="bg-primary hover:bg-primary/90"
-            >
-              {t('nav.studentPortal')}
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    مرحباً
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/student-dashboard')}>
+                    <User className="h-4 w-4 ml-2" />
+                    لوحة التحكم
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 ml-2" />
+                    تسجيل الخروج
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                onClick={handleStudentPortal}
+                variant="default"
+                size="sm"
+                className="bg-primary hover:bg-primary/90"
+              >
+                {t('nav.studentPortal')}
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -141,17 +195,44 @@ const Header = () => {
                   </div>
                 </div>
 
-                {/* Mobile CTA */}
-                <div className="pt-4 border-t">
-                  <Button
-                    onClick={() => {
-                      handleStudentPortal();
-                      setIsOpen(false);
-                    }}
-                    className="w-full"
-                  >
-                    {t('nav.studentPortal')}
-                  </Button>
+                {/* Mobile User Actions */}
+                <div className="pt-4 border-t space-y-2">
+                  {user ? (
+                    <>
+                      <Button
+                        onClick={() => {
+                          navigate('/student-dashboard');
+                          setIsOpen(false);
+                        }}
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <User className="h-4 w-4 ml-2" />
+                        لوحة التحكم
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          handleSignOut();
+                          setIsOpen(false);
+                        }}
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <LogOut className="h-4 w-4 ml-2" />
+                        تسجيل الخروج
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        handleStudentPortal();
+                        setIsOpen(false);
+                      }}
+                      className="w-full"
+                    >
+                      {t('nav.studentPortal')}
+                    </Button>
+                  )}
                 </div>
               </div>
             </SheetContent>
