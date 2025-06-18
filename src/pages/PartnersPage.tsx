@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Header from '@/components/landing/Header';
@@ -50,11 +49,12 @@ const PartnersPage = () => {
               شركاؤنا حول العالم
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              {t('hero.title')}
+              {t('heroTitle')}
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              {t('hero.subtitle')}
-            </p>
+            {/* If you want a subtitle, add a "heroSubtitle" key to your translation JSON and uncomment below */}
+            {/* <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t('heroSubtitle')}
+            </p> */}
           </div>
         </div>
       </section>
