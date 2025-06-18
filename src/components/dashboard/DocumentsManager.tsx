@@ -20,9 +20,7 @@ interface Document {
   upload_date: string;
   notes?: string;
   service_id?: string;
-  services?: {
-    service_type: string;
-  };
+  service_type?: string;
 }
 
 interface Service {
@@ -52,19 +50,33 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
 
   const fetchDocuments = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch documents
+      const { data: documentsData, error: documentsError } = await supabase
         .from('documents')
-        .select(`
-          *,
-          services (
-            service_type
-          )
-        `)
+        .select('*')
         .eq('student_id', userId)
         .order('upload_date', { ascending: false });
 
-      if (error) throw error;
-      setDocuments(data || []);
+      if (documentsError) throw documentsError;
+
+      // Then fetch services separately and merge
+      const { data: servicesData, error: servicesError } = await supabase
+        .from('services')
+        .select('id, service_type')
+        .eq('student_id', userId);
+
+      if (servicesError) throw servicesError;
+
+      // Create a map of service_id to service_type
+      const serviceMap = new Map(servicesData?.map(s => [s.id, s.service_type]) || []);
+
+      // Merge the data
+      const enrichedDocuments = documentsData?.map(doc => ({
+        ...doc,
+        service_type: doc.service_id ? serviceMap.get(doc.service_id) : undefined
+      })) || [];
+
+      setDocuments(enrichedDocuments);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -313,9 +325,9 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                           <div className="text-sm text-gray-600 space-y-1">
                             <div>الحجم: {formatFileSize(document.file_size)}</div>
                             <div>تاريخ الرفع: {new Date(document.upload_date).toLocaleDateString('ar-SA')}</div>
-                            {document.services && (
+                            {document.service_type && (
                               <div>
-                                الخدمة: {serviceNames[document.services.service_type] || document.services.service_type}
+                                الخدمة: {serviceNames[document.service_type] || document.service_type}
                               </div>
                             )}
                             {document.notes && (

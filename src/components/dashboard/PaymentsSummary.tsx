@@ -20,9 +20,7 @@ interface Payment {
   payment_method?: string;
   notes?: string;
   service_id?: string;
-  services?: {
-    service_type: string;
-  };
+  service_type?: string;
 }
 
 interface PaymentsSummaryProps {
@@ -41,19 +39,33 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
 
   const fetchPayments = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch payments
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
-        .select(`
-          *,
-          services (
-            service_type
-          )
-        `)
+        .select('*')
         .eq('student_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPayments(data || []);
+      if (paymentsError) throw paymentsError;
+
+      // Then fetch services separately and merge
+      const { data: servicesData, error: servicesError } = await supabase
+        .from('services')
+        .select('id, service_type')
+        .eq('student_id', userId);
+
+      if (servicesError) throw servicesError;
+
+      // Create a map of service_id to service_type
+      const serviceMap = new Map(servicesData?.map(s => [s.id, s.service_type]) || []);
+
+      // Merge the data
+      const enrichedPayments = paymentsData?.map(payment => ({
+        ...payment,
+        service_type: payment.service_id ? serviceMap.get(payment.service_id) : undefined
+      })) || [];
+
+      setPayments(enrichedPayments);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -184,9 +196,9 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
                             <Badge variant={statusInfo.variant}>
                               {statusInfo.label}
                             </Badge>
-                            {payment.services && (
+                            {payment.service_type && (
                               <span className="text-sm text-gray-600">
-                                {serviceNames[payment.services.service_type as keyof typeof serviceNames]}
+                                {serviceNames[payment.service_type as keyof typeof serviceNames]}
                               </span>
                             )}
                           </div>

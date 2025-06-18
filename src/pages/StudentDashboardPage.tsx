@@ -10,7 +10,6 @@ import StudentProfile from '@/components/dashboard/StudentProfile';
 import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { LogOut, User as UserIcon, CreditCard, FileText, Settings, ArrowLeftCircle } from 'lucide-react';
 import { Profile, VisaStatus } from '@/types/profile';
 
@@ -127,9 +126,6 @@ const StudentDashboardPage = () => {
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-gray-900">لوحة التحكم الطلابية</h1>
             <div className="flex items-center gap-4">
-              {/* Notification Center */}
-              <NotificationCenter userId={user.id} />
-              
               {/* Return to Website Button */}
               <Button
                 variant="outline"
