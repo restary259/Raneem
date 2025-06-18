@@ -51,7 +51,7 @@ const PartnersPage = () => {
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               {t('partnersPage.heroTitle', 'شركاؤنا في النجاح')}
             </h1>
-            {/* If you want a subtitle, add a "heroSubtitle" key to your translation JSON and uncomment below */}
+            {/* Uncomment the following if you add a heroSubtitle key to your translation JSON */}
             {/* <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               {t('partnersPage.heroSubtitle')}
             </p> */}
