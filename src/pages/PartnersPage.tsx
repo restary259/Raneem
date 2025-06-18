@@ -1,60 +1,124 @@
 
-import Header from "@/components/landing/Header";
-import Footer from "@/components/landing/Footer";
-import PartnersList from "@/components/partners/PartnersList";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
+import PartnersList from '@/components/partners/PartnersList';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Users, GraduationCap, Award } from 'lucide-react';
 
 const PartnersPage = () => {
-    const { t } = useTranslation('partners');
-    useEffect(() => {
-        document.title = "شركاؤنا | درب للدراسة الدولية";
-    }, []);
+  const { t } = useTranslation('partners');
 
-    return (
-        <div dir="rtl" className="flex flex-col min-h-screen bg-background text-foreground">
-            <Header />
-            <main className="flex-grow">
-                <section className="relative py-20 md:py-32 bg-secondary text-white">
-                    <div className="absolute inset-0 bg-black/60 z-0">
-                        <img 
-                            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&q=80" 
-                            alt="International Students" 
-                            className="w-full h-full object-cover opacity-50" 
-                        />
-                    </div>
-                     <div className="container mx-auto px-4 text-center relative z-10">
-                        <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">{t('partnersPage.heroTitle')}</h1>
-                    </div>
-                </section>
-                
-                <PartnersList />
+  const stats = [
+    {
+      icon: Users,
+      number: '100+',
+      label: 'شريك موثوق',
+      description: 'جامعات ومؤسسات تعليمية'
+    },
+    {
+      icon: MapPin,
+      number: '15+',
+      label: 'دولة',
+      description: 'في جميع أنحاء العالم'
+    },
+    {
+      icon: GraduationCap,
+      number: '5000+',
+      label: 'طالب',
+      description: 'تم قبولهم بنجاح'
+    },
+    {
+      icon: Award,
+      number: '10+',
+      label: 'سنوات خبرة',
+      description: 'في التعليم الدولي'
+    }
+  ];
 
-                <section className="py-16 md:py-24 bg-gray-900 text-center">
-                     <div className="container mx-auto px-4 text-center text-white">
-                        <h2 className="text-3xl md:text-4xl font-bold text-accent mb-4">{t('partnersPage.cta.title')}</h2>
-                        <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8 font-light">
-                           {t('partnersPage.cta.subtitle')}
-                        </p>
-                        <Button asChild size="lg" variant="accent">
-                            <Link to="/partnership">{t('partnersPage.cta.button')}</Link>
-                        </Button>
-                    </div>
-                </section>
-                
-                <div className="py-6 bg-background">
-                    <div className="container mx-auto px-4">
-                        <p className="text-xs text-muted-foreground text-center">
-                            {t('partnersPage.disclaimer')}
-                        </p>
-                    </div>
-                </div>
-            </main>
-            <Footer />
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <Badge variant="secondary" className="mb-4">
+              شركاؤنا حول العالم
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              {t('hero.title')}
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t('hero.subtitle')}
+            </p>
+          </div>
         </div>
-    );
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((stat, index) => (
+              <Card key={index} className="text-center">
+                <CardContent className="p-6">
+                  <stat.icon className="h-10 w-10 text-primary mx-auto mb-4" />
+                  <div className="text-3xl font-bold text-primary mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="font-semibold text-gray-900 mb-1">
+                    {stat.label}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {stat.description}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Partners List */}
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4">
+          <PartnersList />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 md:py-20 bg-primary text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            هل تريد أن تصبح شريكاً معنا؟
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            انضم إلى شبكة شركائنا المتنامية وساعد في تحقيق أحلام الطلاب التعليمية
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/partnership"
+              className="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              سجل كشريك
+            </a>
+            <a
+              href="/contact"
+              className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors"
+            >
+              اتصل بنا
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
 };
 
 export default PartnersPage;

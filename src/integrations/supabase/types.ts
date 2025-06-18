@@ -30,21 +30,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "darb emails": {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       documents: {
         Row: {
           file_name: string
@@ -94,7 +79,44 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_documents_service"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      email_logs: {
+        Row: {
+          email_type: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          email_type: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -140,6 +162,13 @@ export type Database = {
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_payments_service"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_service_id_fkey"
             columns: ["service_id"]
@@ -245,12 +274,45 @@ export type Database = {
           },
         ]
       }
+      students: {
+        Row: {
+          enrollment_date: string | null
+          id: number
+          profile_id: string
+        }
+        Insert: {
+          enrollment_date?: string | null
+          id?: never
+          profile_id: string
+        }
+        Update: {
+          enrollment_date?: string | null
+          id?: never
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_profile"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      send_signup_email: {
+        Args: Record<PropertyKey, never> | { user_email: string }
+        Returns: undefined
+      }
+      trigger_password_reset: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       payment_status: "pending" | "partial" | "completed" | "overdue"

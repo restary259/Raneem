@@ -1,99 +1,162 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path;
-
-  const navItems = [
-    { href: "/", label: "الرئيسية" },
-    { href: "/about", label: "من نحن" },
-    { href: "/services", label: "خدماتنا" },
-    { href: "/locations", label: "مواقعنا" },
-    { href: "/resources", label: "الموارد" },
-    { href: "/broadcast", label: "البث المباشر" },
-    { href: "/partners", label: "شركاؤنا" },
-    { href: "/partnership", label: "كن شريكاً" },
-    { href: "/contact", label: "تواصل معنا" },
+  const navigation = [
+    { name: t('nav.home'), href: '/' },
+    { name: t('nav.about'), href: '/about' },
+    { name: t('nav.services'), href: '/services' },
+    { name: t('nav.partners'), href: '/partners' },
+    { name: t('nav.resources'), href: '/resources' },
+    { name: t('nav.locations'), href: '/locations' },
+    { name: t('nav.contact'), href: '/contact' },
   ];
 
+  const secondaryNavigation = [
+    { name: t('nav.partnership'), href: '/partnership' },
+    { name: t('nav.broadcast'), href: '/broadcast' },
+  ];
+
+  const handleStudentPortal = () => {
+    navigate('/student-auth');
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const MobileNavLink = ({ item }: { item: { name: string; href: string } }) => (
+    <Link
+      to={item.href}
+      className={`block px-3 py-2 text-base font-medium transition-colors rounded-md ${
+        isActive(item.href)
+          ? 'text-primary bg-primary/10'
+          : 'text-gray-700 hover:text-primary hover:bg-gray-50'
+      }`}
+      onClick={() => setIsOpen(false)}
+    >
+      {item.name}
+    </Link>
+  );
+
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm z-50 border-b border-gray-100">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 space-x-reverse">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-orange-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">د</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">درب</span>
+            <div className="text-2xl font-bold text-primary">درب</div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8 space-x-reverse">
-            {navItems.map((item) => (
+          <nav className="hidden lg:flex items-center space-x-6 space-x-reverse">
+            {navigation.map((item) => (
               <Link
-                key={item.href}
+                key={item.name}
                 to={item.href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.href) ? "text-primary" : "text-gray-600"
+                  isActive(item.href) ? 'text-primary' : 'text-gray-700'
                 }`}
               >
-                {item.label}
+                {item.name}
               </Link>
             ))}
+            
+            {/* More dropdown for secondary items */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                  المزيد
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {secondaryNavigation.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link to={item.href} className="w-full">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
-          {/* Student Dashboard Link */}
+          {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4 space-x-reverse">
-            <Link to="/student-auth">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                لوحة الطالب
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-4 space-x-reverse">
-            <Link to="/student-auth">
-              <Button variant="outline" size="sm">
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-600 hover:text-gray-900"
+            <Button
+              onClick={handleStudentPortal}
+              variant="default"
+              size="sm"
+              className="bg-primary hover:bg-primary/90"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+              {t('nav.studentPortal')}
+            </Button>
           </div>
-        </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
-            <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    isActive(item.href) ? "text-primary" : "text-gray-600"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        )}
+          {/* Mobile menu button */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                aria-label="فتح القائمة"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="flex flex-col space-y-4 mt-8">
+                {/* Mobile Navigation Links */}
+                <div className="space-y-2">
+                  {navigation.map((item) => (
+                    <MobileNavLink key={item.name} item={item} />
+                  ))}
+                  
+                  {/* Secondary navigation in mobile */}
+                  <div className="pt-4 border-t">
+                    <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      خدمات إضافية
+                    </h3>
+                    {secondaryNavigation.map((item) => (
+                      <MobileNavLink key={item.name} item={item} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile CTA */}
+                <div className="pt-4 border-t">
+                  <Button
+                    onClick={() => {
+                      handleStudentPortal();
+                      setIsOpen(false);
+                    }}
+                    className="w-full"
+                  >
+                    {t('nav.studentPortal')}
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

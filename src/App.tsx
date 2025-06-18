@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,6 +18,7 @@ import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +65,7 @@ const App = () => {
           <Route path="/student-auth" element={<StudentAuthPage />} />
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
