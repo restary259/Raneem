@@ -49,7 +49,7 @@ const PartnersPage = () => {
               شركاؤنا حول العالم
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              {t('heroTitle')}
+              {t('heroTitle', 'شركاؤنا في النجاح')}
             </h1>
             {/* If you want a subtitle, add a "heroSubtitle" key to your translation JSON and uncomment below */}
             {/* <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -96,29 +96,5 @@ const PartnersPage = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             هل تريد أن تصبح شريكاً معنا؟
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            انضم إلى شبكة شركائنا المتنامية وساعد في تحقيق أحلام الطلاب التعليمية
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/partnership"
-              className="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-            >
-              سجل كشريك
-            </a>
-            <a
-              href="/contact"
-              className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors"
-            >
-              اتصل بنا
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
-    </div>
-  );
-};
-
-export default PartnersPage;
+          <p className="text-xl mb-8 max-w-*](#)
+
