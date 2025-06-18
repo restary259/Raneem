@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -6,6 +7,7 @@ import WhyJoinUs from "@/components/partnership/WhyJoinUs";
 import CommissionCalculator from "@/components/partnership/CommissionCalculator";
 import NewHowItWorks from "@/components/partnership/NewHowItWorks";
 import AgentToolkit from "@/components/partnership/AgentToolkit";
+import SuccessStories from "@/components/partnership/SuccessStories";
 import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
 import ClosingCta from "@/components/partnership/ClosingCta";
@@ -26,6 +28,7 @@ const PartnershipPage = () => {
                 <CommissionCalculator />
                 <NewHowItWorks />
                 <AgentToolkit />
+                <SuccessStories />
                 <RegistrationForm />
                 <NewFaq />
                 <ClosingCta />
