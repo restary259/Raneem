@@ -19,6 +19,7 @@ import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import MajorMatchingQuiz from "./components/quiz/MajorMatchingQuiz";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => {
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/quiz" element={<MajorMatchingQuiz />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />

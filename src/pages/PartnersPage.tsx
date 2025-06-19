@@ -3,7 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
-import PartnersList from '@/components/partners/PartnersList';
+import EnhancedPartnersPage from '@/components/partners/EnhancedPartnersPage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Users, GraduationCap, Award } from 'lucide-react';
@@ -80,10 +80,10 @@ const PartnersPage = () => {
         </div>
       </section>
 
-      {/* Partners List */}
+      {/* Enhanced Partners List */}
       <section className="py-8 sm:py-12 md:py-20">
         <div className="container mx-auto px-4">
-          <PartnersList />
+          <EnhancedPartnersPage />
         </div>
       </section>
 
