@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { ExternalLink, MapPin, GraduationCap, Building2, Heart } from 'lucide-react';
 
 interface University {
@@ -33,7 +33,8 @@ interface LocalService {
   highlights: string[];
 }
 
-const tu9Universities: University[] = [
+// Complete TU9 Universities + Additional Partners
+const allUniversities: University[] = [
   {
     name: "RWTH Aachen",
     logoUrl: "/lovable-uploads/rwth-aachen.png",
@@ -57,6 +58,79 @@ const tu9Universities: University[] = [
     description: "جامعة تقنية عالمية المستوى مع تركيز قوي على البحث والابتكار.",
     websiteUrl: "https://www.tum.de/",
     keyFacts: ["تأسست عام 1868", "50,000+ طالب", "متقدمة في الذكاء الاصطناعي"]
+  },
+  {
+    name: "TU Dresden",
+    logoUrl: "/lovable-uploads/tu-dresden.png",
+    location: "درسدن، ألمانيا",
+    description: "جامعة تقنية مرموقة مع تركيز على الهندسة والعلوم التطبيقية.",
+    websiteUrl: "https://tu-dresden.de/",
+    keyFacts: ["تأسست عام 1828", "32,000+ طالب", "قوية في الهندسة الكهربائية"]
+  },
+  {
+    name: "TU Dortmund",
+    logoUrl: "/lovable-uploads/tu-dortmund.png",
+    location: "دورتموند، ألمانيا",
+    description: "جامعة حديثة متخصصة في التكنولوجيا وعلوم الحاسوب.",
+    websiteUrl: "https://www.tu-dortmund.de/",
+    keyFacts: ["تأسست عام 1968", "34,000+ طالب", "رائدة في علوم الحاسوب"]
+  },
+  {
+    name: "TU Darmstadt",
+    logoUrl: "/lovable-uploads/tu-darmstadt.png", 
+    location: "دارمشتات، ألمانيا",
+    description: "جامعة تقنية متميزة في الهندسة والعلوم الطبيعية.",
+    websiteUrl: "https://www.tu-darmstadt.de/",
+    keyFacts: ["تأسست عام 1877", "25,000+ طالب", "متقدمة في الهندسة المدنية"]
+  },
+  {
+    name: "TU Braunschweig",
+    logoUrl: "/lovable-uploads/tu-braunschweig.png",
+    location: "براونشفايغ، ألمانيا", 
+    description: "أقدم جامعة تقنية في ألمانيا، متخصصة في الطيران والهندسة.",
+    websiteUrl: "https://www.tu-braunschweig.de/",
+    keyFacts: ["تأسست عام 1745", "20,000+ طالب", "رائدة في هندسة الطيران"]
+  },
+  {
+    name: "Karlsruhe Institute of Technology",
+    logoUrl: "/lovable-uploads/kit-karlsruhe.png",
+    location: "كارلسروه، ألمانيا",
+    description: "معهد تقني عالمي المستوى يجمع بين التعليم والبحث العلمي.",
+    websiteUrl: "https://www.kit.edu/",
+    keyFacts: ["تأسست عام 2009", "25,000+ طالب", "قوية في الفيزياء والهندسة"]
+  },
+  {
+    name: "University of Stuttgart", 
+    logoUrl: "/lovable-uploads/uni-stuttgart.png",
+    location: "شتوتغارت، ألمانيا",
+    description: "جامعة تقنية مرموقة متخصصة في الهندسة والعلوم التطبيقية.",
+    websiteUrl: "https://www.uni-stuttgart.de/",
+    keyFacts: ["تأسست عام 1829", "27,000+ طالب", "متميزة في هندسة السيارات"]
+  },
+  // International Universities
+  {
+    name: "Carol Davila University of Medicine and Pharmacy",
+    logoUrl: "/lovable-uploads/dfca3402-c6b9-4560-88d7-6e8c19f26ab4.png",
+    location: "بوخارست، رومانيا",
+    description: "جامعة طبية عريقة ومرموقة في أوروبا الشرقية.",
+    websiteUrl: "https://www.umfcd.ro/",
+    keyFacts: ["تأسست عام 1857", "8,000+ طالب", "معترف بها دولياً"]
+  },
+  {
+    name: "Ovidius University",
+    logoUrl: "/lovable-uploads/03767a14-eafc-4beb-8e8f-12a2491e4ee5.png",
+    location: "كونستانتا، رومانيا", 
+    description: "جامعة شاملة تقدم برامج متنوعة في الهندسة والاقتصاد.",
+    websiteUrl: "https://www.univ-ovidius.ro/",
+    keyFacts: ["تأسست عام 1961", "15,000+ طالب", "قوية في الهندسة البحرية"]
+  },
+  {
+    name: "جامعة اليرموك",
+    logoUrl: "/lovable-uploads/125fa6e2-60ae-4bd0-91bb-a2b2dc342ebd.png",
+    location: "إربد، الأردن",
+    description: "جامعة أردنية رائدة في التعليم العالي والبحث العلمي.",
+    websiteUrl: "https://www.yu.edu.jo/",
+    keyFacts: ["تأسست عام 1976", "40,000+ طالب", "متميزة في الهندسة وتكنولوجيا المعلومات"]
   }
 ];
 
@@ -133,7 +207,7 @@ const EnhancedPartnersPage = () => {
     return (
       <Card 
         className={`
-          transition-all duration-300 cursor-pointer
+          transition-all duration-300 cursor-pointer h-full
           ${isExpanded 
             ? 'scale-107 shadow-2xl border-2 border-orange-400' 
             : 'hover:scale-103 hover:shadow-xl hover:border-orange-200'
@@ -147,59 +221,67 @@ const EnhancedPartnersPage = () => {
     );
   };
 
-  const renderUniversities = () => (
+  const renderUniversitiesCarousel = () => (
     <div className="space-y-6">
       <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
         <GraduationCap className="h-6 w-6" />
         الجامعات
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tu9Universities.map((university, index) => (
-          <InteractiveCard key={index} id={`uni-${index}`}>
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center">
-                  <img 
-                    src={university.logoUrl} 
-                    alt={`${university.name} logo`}
-                    className="h-16 w-auto object-contain"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="text-lg font-bold text-primary">{university.name}</h4>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {university.location}
-                  </p>
-                </div>
+      <div className="relative px-12">
+        <Carousel className="w-full">
+          <CarouselContent className="-ml-4">
+            {allUniversities.map((university, index) => (
+              <CarouselItem key={index} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                <InteractiveCard id={`uni-${index}`}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                      <div className="bg-white p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center">
+                        <img 
+                          src={university.logoUrl} 
+                          alt={`${university.name} logo`}
+                          className="h-16 w-auto object-contain"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="text-lg font-bold text-primary">{university.name}</h4>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {university.location}
+                        </p>
+                      </div>
 
-                {expandedCard === `uni-${index}` && (
-                  <div className="space-y-4 animate-fade-in">
-                    <p className="text-sm text-gray-600">{university.description}</p>
-                    
-                    <div className="space-y-2">
-                      <h5 className="font-semibold text-primary">حقائق رئيسية:</h5>
-                      <ul className="space-y-1">
-                        {university.keyFacts.map((fact, factIndex) => (
-                          <li key={factIndex} className="text-xs text-gray-600 flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">{fact}</Badge>
-                          </li>
-                        ))}
-                      </ul>
+                      {expandedCard === `uni-${index}` && (
+                        <div className="space-y-4 animate-fade-in">
+                          <p className="text-sm text-gray-600">{university.description}</p>
+                          
+                          <div className="space-y-2">
+                            <h5 className="font-semibold text-primary">حقائق رئيسية:</h5>
+                            <ul className="space-y-1">
+                              {university.keyFacts.map((fact, factIndex) => (
+                                <li key={factIndex} className="text-xs text-gray-600 flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">{fact}</Badge>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <Button asChild className="w-full" size="sm">
+                            <a href={university.websiteUrl} target="_blank" rel="noopener noreferrer">
+                              زيارة الموقع <ExternalLink className="h-4 w-4 mr-2" />
+                            </a>
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    
-                    <Button asChild className="w-full" size="sm">
-                      <a href={university.websiteUrl} target="_blank" rel="noopener noreferrer">
-                        زيارة الموقع <ExternalLink className="h-4 w-4 mr-2" />
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </InteractiveCard>
-        ))}
+                  </CardContent>
+                </InteractiveCard>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       </div>
     </div>
   );
@@ -349,7 +431,7 @@ const EnhancedPartnersPage = () => {
       <div className="space-y-12">
         {activeCountry === 'germany' && (
           <>
-            {renderUniversities()}
+            {renderUniversitiesCarousel()}
             {renderLanguageSchools()}
             {renderLocalServices()}
           </>
