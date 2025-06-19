@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +35,7 @@ interface LocalService {
 }
 
 // Complete TU9 Universities + Additional Partners
-const allUniversities: University[] = [
+const germanyUniversities: University[] = [
   {
     name: "RWTH Aachen",
     logoUrl: "/lovable-uploads/rwth-aachen.png",
@@ -106,8 +107,10 @@ const allUniversities: University[] = [
     description: "جامعة تقنية مرموقة متخصصة في الهندسة والعلوم التطبيقية.",
     websiteUrl: "https://www.uni-stuttgart.de/",
     keyFacts: ["تأسست عام 1829", "27,000+ طالب", "متميزة في هندسة السيارات"]
-  },
-  // International Universities
+  }
+];
+
+const romaniaUniversities: University[] = [
   {
     name: "Carol Davila University of Medicine and Pharmacy",
     logoUrl: "/lovable-uploads/dfca3402-c6b9-4560-88d7-6e8c19f26ab4.png",
@@ -123,7 +126,10 @@ const allUniversities: University[] = [
     description: "جامعة شاملة تقدم برامج متنوعة في الهندسة والاقتصاد.",
     websiteUrl: "https://www.univ-ovidius.ro/",
     keyFacts: ["تأسست عام 1961", "15,000+ طالب", "قوية في الهندسة البحرية"]
-  },
+  }
+];
+
+const jordanUniversities: University[] = [
   {
     name: "جامعة اليرموك",
     logoUrl: "/lovable-uploads/125fa6e2-60ae-4bd0-91bb-a2b2dc342ebd.png",
@@ -193,6 +199,15 @@ const EnhancedPartnersPage = () => {
     }
   };
 
+  const getUniversitiesForCountry = (country: string): University[] => {
+    switch (country) {
+      case 'germany': return germanyUniversities;
+      case 'romania': return romaniaUniversities;
+      case 'jordan': return jordanUniversities;
+      default: return [];
+    }
+  };
+
   const InteractiveCard = ({ 
     children, 
     id, 
@@ -209,8 +224,8 @@ const EnhancedPartnersPage = () => {
         className={`
           transition-all duration-300 cursor-pointer h-full
           ${isExpanded 
-            ? 'scale-107 shadow-2xl border-2 border-orange-400' 
-            : 'hover:scale-103 hover:shadow-xl hover:border-orange-200'
+            ? 'scale-105 shadow-2xl border-2 border-orange-400 z-10' 
+            : 'hover:scale-102 hover:shadow-xl hover:border-orange-200'
           }
           ${className}
         `}
@@ -221,188 +236,235 @@ const EnhancedPartnersPage = () => {
     );
   };
 
-  const renderUniversitiesCarousel = () => (
-    <div className="space-y-6">
-      <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
-        <GraduationCap className="h-6 w-6" />
-        الجامعات
-      </h3>
-      <div className="relative px-12">
-        <Carousel className="w-full">
-          <CarouselContent className="-ml-4">
-            {allUniversities.map((university, index) => (
-              <CarouselItem key={index} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                <InteractiveCard id={`uni-${index}`}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col items-center text-center space-y-4">
-                      <div className="bg-white p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center">
-                        <img 
-                          src={university.logoUrl} 
-                          alt={`${university.name} logo`}
-                          className="h-16 w-auto object-contain"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <h4 className="text-lg font-bold text-primary">{university.name}</h4>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {university.location}
-                        </p>
-                      </div>
+  const renderUniversitiesCarousel = () => {
+    const universities = getUniversitiesForCountry(activeCountry);
+    
+    if (universities.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500">قريباً: جامعات هذا البلد</p>
+        </div>
+      );
+    }
 
-                      {expandedCard === `uni-${index}` && (
-                        <div className="space-y-4 animate-fade-in">
-                          <p className="text-sm text-gray-600">{university.description}</p>
-                          
-                          <div className="space-y-2">
-                            <h5 className="font-semibold text-primary">حقائق رئيسية:</h5>
-                            <ul className="space-y-1">
-                              {university.keyFacts.map((fact, factIndex) => (
-                                <li key={factIndex} className="text-xs text-gray-600 flex items-center gap-2">
-                                  <Badge variant="outline" className="text-xs">{fact}</Badge>
-                                </li>
-                              ))}
-                            </ul>
+    return (
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
+          <GraduationCap className="h-6 w-6" />
+          الجامعات
+        </h3>
+        <div className="relative">
+          <Carousel 
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {universities.map((university, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <div className="h-full">
+                    <InteractiveCard id={`uni-${activeCountry}-${index}`}>
+                      <CardContent className="p-4 md:p-6 h-full flex flex-col">
+                        <div className="flex flex-col items-center text-center space-y-4 flex-grow">
+                          <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center border">
+                            <img 
+                              src={university.logoUrl} 
+                              alt={`${university.name} logo`}
+                              className="h-12 md:h-16 w-auto object-contain"
+                            />
                           </div>
                           
-                          <Button asChild className="w-full" size="sm">
-                            <a href={university.websiteUrl} target="_blank" rel="noopener noreferrer">
-                              زيارة الموقع <ExternalLink className="h-4 w-4 mr-2" />
-                            </a>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </InteractiveCard>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </div>
-    </div>
-  );
+                          <div className="space-y-2 flex-grow">
+                            <h4 className="text-base md:text-lg font-bold text-primary line-clamp-2">{university.name}</h4>
+                            <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1 justify-center">
+                              <MapPin className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                              <span className="line-clamp-1">{university.location}</span>
+                            </p>
+                          </div>
 
-  const renderLanguageSchools = () => (
-    <div className="space-y-6">
-      <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
-        <Building2 className="h-6 w-6" />
-        معاهد اللغة
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {germanyLanguageSchools.map((school, index) => (
-          <InteractiveCard key={index} id={`school-${index}`}>
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center">
-                  <img 
-                    src={school.logoUrl} 
-                    alt={`${school.name} logo`}
-                    className="h-12 w-auto object-contain"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="text-lg font-bold text-primary">{school.name}</h4>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {school.location}
-                  </p>
-                </div>
-
-                {expandedCard === `school-${index}` && (
-                  <div className="space-y-4 animate-fade-in">
-                    <p className="text-sm text-gray-600">{school.description}</p>
-                    
-                    <div className="space-y-2">
-                      <h5 className="font-semibold text-primary">البرامج المتاحة:</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {school.programs.map((program, programIndex) => (
-                          <Badge key={programIndex} variant="secondary" className="text-xs">
-                            {program}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <Button asChild className="w-full" size="sm">
-                      <a href={school.websiteUrl} target="_blank" rel="noopener noreferrer">
-                        زيارة الموقع <ExternalLink className="h-4 w-4 mr-2" />
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </InteractiveCard>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderLocalServices = () => (
-    <div className="space-y-6">
-      <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
-        <Heart className="h-6 w-6" />
-        الخدمات المحلية
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {germanyLocalServices.map((service, index) => {
-          const IconComponent = getIconForServiceType(service.type);
-          return (
-            <InteractiveCard key={index} id={`service-${index}`}>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="bg-white p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center">
-                    <img 
-                      src={service.logoUrl} 
-                      alt={`${service.name} logo`}
-                      className="h-12 w-auto object-contain"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-bold text-primary">{service.name}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      <IconComponent className="h-3 w-3 mr-1" />
-                      {service.type === 'insurance' ? 'تأمين' : 
-                       service.type === 'transport' ? 'مواصلات' : 'خدمات'}
-                    </Badge>
-                  </div>
-
-                  {expandedCard === `service-${index}` && (
-                    <div className="space-y-4 animate-fade-in">
-                      <p className="text-sm text-gray-600">{service.description}</p>
-                      
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-primary">المميزات:</h5>
-                        <div className="space-y-1">
-                          {service.highlights.map((highlight, highlightIndex) => (
-                            <div key={highlightIndex} className="text-xs text-gray-600 flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">{highlight}</Badge>
+                          {expandedCard === `uni-${activeCountry}-${index}` && (
+                            <div className="space-y-4 animate-fade-in w-full">
+                              <p className="text-xs md:text-sm text-gray-600">{university.description}</p>
+                              
+                              <div className="space-y-2">
+                                <h5 className="font-semibold text-primary text-sm">حقائق رئيسية:</h5>
+                                <div className="flex flex-wrap gap-1 justify-center">
+                                  {university.keyFacts.map((fact, factIndex) => (
+                                    <Badge key={factIndex} variant="outline" className="text-xs">
+                                      {fact}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <Button asChild className="w-full" size="sm">
+                                <a href={university.websiteUrl} target="_blank" rel="noopener noreferrer">
+                                  زيارة الموقع <ExternalLink className="h-3 w-3 mr-2" />
+                                </a>
+                              </Button>
                             </div>
-                          ))}
+                          )}
                         </div>
-                      </div>
-                      
-                      <Button asChild className="w-full" size="sm">
-                        <a href={service.websiteUrl} target="_blank" rel="noopener noreferrer">
-                          زيارة الموقع <ExternalLink className="h-4 w-4 mr-2" />
-                        </a>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </InteractiveCard>
-          );
-        })}
+                      </CardContent>
+                    </InteractiveCard>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-12" />
+            <CarouselNext className="hidden md:flex -right-12" />
+          </Carousel>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderLanguageSchools = () => {
+    if (activeCountry !== 'germany') return null;
+    
+    return (
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
+          <Building2 className="h-6 w-6" />
+          معاهد اللغة
+        </h3>
+        <div className="relative">
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {germanyLanguageSchools.map((school, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <div className="h-full">
+                    <InteractiveCard id={`school-${index}`}>
+                      <CardContent className="p-4 md:p-6 h-full flex flex-col">
+                        <div className="flex flex-col items-center text-center space-y-4 flex-grow">
+                          <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center border">
+                            <img 
+                              src={school.logoUrl} 
+                              alt={`${school.name} logo`}
+                              className="h-10 md:h-12 w-auto object-contain"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2 flex-grow">
+                            <h4 className="text-base md:text-lg font-bold text-primary line-clamp-2">{school.name}</h4>
+                            <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1 justify-center">
+                              <MapPin className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                              <span className="line-clamp-1">{school.location}</span>
+                            </p>
+                          </div>
+
+                          {expandedCard === `school-${index}` && (
+                            <div className="space-y-4 animate-fade-in w-full">
+                              <p className="text-xs md:text-sm text-gray-600">{school.description}</p>
+                              
+                              <div className="space-y-2">
+                                <h5 className="font-semibold text-primary text-sm">البرامج المتاحة:</h5>
+                                <div className="flex flex-wrap gap-1 justify-center">
+                                  {school.programs.map((program, programIndex) => (
+                                    <Badge key={programIndex} variant="secondary" className="text-xs">
+                                      {program}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <Button asChild className="w-full" size="sm">
+                                <a href={school.websiteUrl} target="_blank" rel="noopener noreferrer">
+                                  زيارة الموقع <ExternalLink className="h-3 w-3 mr-2" />
+                                </a>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </InteractiveCard>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-12" />
+            <CarouselNext className="hidden md:flex -right-12" />
+          </Carousel>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLocalServices = () => {
+    if (activeCountry !== 'germany') return null;
+    
+    return (
+      <div className="space-y-6">
+        <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
+          <Heart className="h-6 w-6" />
+          الخدمات المحلية
+        </h3>
+        <div className="relative">
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {germanyLocalServices.map((service, index) => {
+                const IconComponent = getIconForServiceType(service.type);
+                return (
+                  <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <div className="h-full">
+                      <InteractiveCard id={`service-${index}`}>
+                        <CardContent className="p-4 md:p-6 h-full flex flex-col">
+                          <div className="flex flex-col items-center text-center space-y-4 flex-grow">
+                            <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center border">
+                              <img 
+                                src={service.logoUrl} 
+                                alt={`${service.name} logo`}
+                                className="h-10 md:h-12 w-auto object-contain"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2 flex-grow">
+                              <h4 className="text-base md:text-lg font-bold text-primary line-clamp-2">{service.name}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                <IconComponent className="h-3 w-3 mr-1" />
+                                {service.type === 'insurance' ? 'تأمين' : 
+                                 service.type === 'transport' ? 'مواصلات' : 'خدمات'}
+                              </Badge>
+                            </div>
+
+                            {expandedCard === `service-${index}` && (
+                              <div className="space-y-4 animate-fade-in w-full">
+                                <p className="text-xs md:text-sm text-gray-600">{service.description}</p>
+                                
+                                <div className="space-y-2">
+                                  <h5 className="font-semibold text-primary text-sm">المميزات:</h5>
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {service.highlights.map((highlight, highlightIndex) => (
+                                      <Badge key={highlightIndex} variant="outline" className="text-xs">
+                                        {highlight}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <Button asChild className="w-full" size="sm">
+                                  <a href={service.websiteUrl} target="_blank" rel="noopener noreferrer">
+                                    زيارة الموقع <ExternalLink className="h-3 w-3 mr-2" />
+                                  </a>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </InteractiveCard>
+                    </div>
+                  </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-12" />
+            <CarouselNext className="hidden md:flex -right-12" />
+          </Carousel>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -413,7 +475,7 @@ const EnhancedPartnersPage = () => {
             key={country.code}
             variant={activeCountry === country.code ? "default" : "outline"}
             className={`
-              px-6 py-3 rounded-full transition-all duration-200
+              px-4 md:px-6 py-2 md:py-3 rounded-full transition-all duration-200 text-sm md:text-base
               ${activeCountry === country.code 
                 ? 'bg-primary text-white shadow-lg border-b-4 border-orange-400' 
                 : 'hover:bg-primary/10'
@@ -428,26 +490,10 @@ const EnhancedPartnersPage = () => {
       </div>
 
       {/* Content Area */}
-      <div className="space-y-12">
-        {activeCountry === 'germany' && (
-          <>
-            {renderUniversitiesCarousel()}
-            {renderLanguageSchools()}
-            {renderLocalServices()}
-          </>
-        )}
-        
-        {activeCountry === 'romania' && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">قريباً: محتوى شركاء رومانيا</p>
-          </div>
-        )}
-        
-        {activeCountry === 'jordan' && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">قريباً: محتوى شركاء الأردن</p>
-          </div>
-        )}
+      <div className="space-y-8 md:space-y-12">
+        {renderUniversitiesCarousel()}
+        {renderLanguageSchools()}
+        {renderLocalServices()}
       </div>
     </div>
   );

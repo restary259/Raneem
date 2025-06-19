@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -56,6 +57,14 @@ const DesktopNav = () => {
           <Link to="/resources">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               {t('nav.resources')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/quiz">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              اختبار التخصص
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
