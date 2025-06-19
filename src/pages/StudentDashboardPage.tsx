@@ -198,8 +198,6 @@ const StudentDashboardPage = () => {
         intake_month: null,
         visa_status: 'not_applied',
         notes: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
       setProfile(fallbackProfile);
     }

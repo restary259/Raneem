@@ -12,4 +12,6 @@ export interface Profile {
   university_name?: string;
   visa_status?: VisaStatus;
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
