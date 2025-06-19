@@ -139,6 +139,7 @@ const Carousel = React.forwardRef<
           className={cn("relative", className)}
           role="region"
           aria-roledescription="carousel"
+          aria-label="Interactive content carousel"
           {...props}
         >
           {children}
@@ -205,18 +206,19 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full z-10 bg-white shadow-md hover:bg-gray-50",
+        "absolute h-10 w-10 rounded-full z-20 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border-2 border-primary/20 hover:border-primary/40 transition-all duration-200",
         orientation === "horizontal"
-          ? "left-4 top-1/2 -translate-y-1/2"
-          : "top-4 left-1/2 -translate-x-1/2 rotate-90",
+          ? "left-2 md:left-4 top-1/2 -translate-y-1/2"
+          : "top-2 md:top-4 left-1/2 -translate-x-1/2 rotate-90",
+        !canScrollPrev && "opacity-50 cursor-not-allowed",
         className
       )}
       disabled={!canScrollPrev}
       onClick={scrollPrev}
+      aria-label="Previous slide"
       {...props}
     >
-      <ArrowLeft className="h-4 w-4" />
-      <span className="sr-only">Previous slide</span>
+      <ArrowLeft className="h-5 w-5 text-primary" />
     </Button>
   )
 })
@@ -234,18 +236,19 @@ const CarouselNext = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full z-10 bg-white shadow-md hover:bg-gray-50",
+        "absolute h-10 w-10 rounded-full z-20 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border-2 border-primary/20 hover:border-primary/40 transition-all duration-200",
         orientation === "horizontal"
-          ? "right-4 top-1/2 -translate-y-1/2"
-          : "bottom-4 left-1/2 -translate-x-1/2 rotate-90",
+          ? "right-2 md:right-4 top-1/2 -translate-y-1/2"
+          : "bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 rotate-90",
+        !canScrollNext && "opacity-50 cursor-not-allowed",
         className
       )}
       disabled={!canScrollNext}
       onClick={scrollNext}
+      aria-label="Next slide"
       {...props}
     >
-      <ArrowRight className="h-4 w-4" />
-      <span className="sr-only">Next slide</span>
+      <ArrowRight className="h-5 w-5 text-primary" />
     </Button>
   )
 })
