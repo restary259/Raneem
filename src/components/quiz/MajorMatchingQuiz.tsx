@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, RotateCcw, Trophy, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle, RotateCcw, Trophy, ArrowRight, Home, GraduationCap, Users, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Question {
