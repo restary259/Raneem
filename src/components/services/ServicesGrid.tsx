@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,6 @@ const ServicesGrid = () => {
       icon: GraduationCap,
       title: "استشارة أكاديمية",
       description: "استشارة شخصية لاختيار التخصص والجامعة المناسبة",
-      price: "مجاناً",
       features: ["تقييم شخصي للطالب", "اختيار التخصص المناسب", "ترشيح أفضل الجامعات"],
       action: () => navigate('/contact')
     },
@@ -33,7 +31,6 @@ const ServicesGrid = () => {
       icon: FileText,
       title: "إعداد الوثائق",
       description: "تجهيز وترجمة جميع الوثائق المطلوبة للتقديم",
-      price: "من 200₪",
       features: ["ترجمة معتمدة", "تدقيق الوثائق", "تنسيق حسب متطلبات الجامعة"],
       action: () => navigate('/contact')
     },
@@ -41,7 +38,6 @@ const ServicesGrid = () => {
       icon: Plane,
       title: "استخراج التأشيرة",
       description: "مساعدة كاملة في إجراءات التأشيرة الدراسية",
-      price: "من 500₪",
       features: ["تحضير الملف", "حجز موعد السفارة", "مراجعة الطلب"],
       action: () => navigate('/contact')
     },
@@ -49,7 +45,6 @@ const ServicesGrid = () => {
       icon: Home,
       title: "البحث عن سكن",
       description: "مساعدة في العثور على سكن مناسب قريب من الجامعة",
-      price: "من 300₪",
       features: ["بحث حسب الميزانية", "التواصل مع الملاك", "مراجعة العقد"],
       action: () => navigate('/contact')
     },
@@ -57,7 +52,6 @@ const ServicesGrid = () => {
       icon: CreditCard,
       title: "الخدمات المصرفية",
       description: "مساعدة في فتح حساب بنكي وإجراءات مالية",
-      price: "من 150₪",
       features: ["فتح حساب بنكي", "بطاقة ائتمان", "تحويلات مالية"],
       action: () => navigate('/contact')
     },
@@ -65,7 +59,6 @@ const ServicesGrid = () => {
       icon: Users,
       title: "الدعم بعد الوصول",
       description: "مساعدة مستمرة بعد الوصول للبلد الجديد",
-      price: "من 200₪/شهر",
       features: ["دعم هاتفي", "حل المشاكل", "نصائح للتأقلم"],
       action: () => navigate('/contact')
     },
@@ -73,7 +66,6 @@ const ServicesGrid = () => {
       icon: Calculator,
       title: "حاسبة التكاليف",
       description: "احسب تكلفة الدراسة والمعيشة بدقة",
-      price: "مجاناً",
       features: ["تكلفة الدراسة", "تكلفة المعيشة", "مقارنة بين الدول"],
       action: () => navigate('/resources')
     },
@@ -81,7 +73,6 @@ const ServicesGrid = () => {
       icon: Brain,
       title: "اختبار مطابقة التخصص",
       description: "اكتشف التخصص الجامعي الأنسب لك",
-      price: "مجاناً",
       features: ["اختبار شخصية", "تحليل الاهتمامات", "ترشيحات مخصصة"],
       action: () => navigate('/quiz')
     },
@@ -89,7 +80,6 @@ const ServicesGrid = () => {
       icon: HelpCircle,
       title: "استشارة مجانية",
       description: "احجز استشارة مجانية مع خبرائنا",
-      price: "مجاناً",
       features: ["30 دقيقة مجاناً", "خبراء متخصصون", "إجابات فورية"],
       action: () => navigate('/contact')
     }
@@ -115,7 +105,6 @@ const ServicesGrid = () => {
                   <service.icon className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-xl mb-2">{service.title}</CardTitle>
-                <div className="text-2xl font-bold text-primary mb-2">{service.price}</div>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4 text-sm">
@@ -133,7 +122,7 @@ const ServicesGrid = () => {
                   onClick={service.action}
                   className="w-full bg-primary hover:bg-primary/90"
                 >
-                  {service.price === 'مجاناً' ? 'ابدأ الآن' : 'احجز الخدمة'}
+                  ابدأ الآن
                 </Button>
               </CardContent>
             </Card>
