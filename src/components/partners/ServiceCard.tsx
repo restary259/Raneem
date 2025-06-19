@@ -10,17 +10,17 @@ interface ServiceCardProps {
 
 const ServiceCard = ({ partner }: ServiceCardProps) => {
   return (
-    <Card className="flex flex-col text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden rounded-lg p-6 group">
+    <Card className="flex flex-col text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden rounded-lg p-4 sm:p-6 group w-full">
        <div className="flex-shrink-0 mb-4">
          <img 
           src={partner.logoUrl} 
           alt={`${partner.name} logo`}
-          className="h-16 w-auto mx-auto object-contain filter grayscale group-hover:filter-none transition-all duration-300"
+          className="h-12 sm:h-16 w-auto mx-auto object-contain filter grayscale group-hover:filter-none transition-all duration-300"
         />
        </div>
        <div className="flex-grow flex flex-col">
-         <h3 className="text-lg font-bold text-primary">{partner.name}</h3>
-         <p className="text-sm text-muted-foreground mt-2 flex-grow">{partner.description}</p>
+         <h3 className="text-base sm:text-lg font-bold text-primary mb-2">{partner.name}</h3>
+         <p className="text-xs sm:text-sm text-muted-foreground mt-2 flex-grow leading-relaxed">{partner.description}</p>
          {partner.darb_benefit && (
             <div className="mt-4">
                 <Badge className="bg-accent/10 text-accent-foreground hover:bg-accent/20 border-accent/20 text-xs">

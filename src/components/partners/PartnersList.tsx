@@ -1,16 +1,19 @@
 
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { universityPartners, servicePartners, influencerPartners } from "./partnersData";
+import { universityPartners, servicePartners } from "./partnersData";
 import UniversityCard from "./UniversityCard";
 import ServiceCard from "./ServiceCard";
-import InfluencerCard from "./InfluencerCard";
 
 const PartnersList = () => {
   const { t } = useTranslation('partners');
   const countries = ['Germany', 'Romania', 'Jordan'] as const;
+
+  // Group services by country
+  const servicesByCountry = countries.reduce((acc, country) => {
+    acc[country] = servicePartners.filter(service => service.country === country);
+    return acc;
+  }, {} as Record<string, typeof servicePartners>);
 
   return (
     <section className="py-12 md:py-24 bg-background">
@@ -43,19 +46,38 @@ const PartnersList = () => {
             </Tabs>
           </div>
 
-          {/* Services Section */}
+          {/* Services Section - Now grouped by country */}
           <div>
             <h2 className="text-3xl font-bold mb-8 text-center text-primary">
               {t('partnersPage.sections.services')}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {servicePartners.map((partner) => (
-                <ServiceCard key={partner.name} partner={partner} />
+            <Tabs defaultValue="Germany" className="w-full">
+              <div className="flex justify-center mb-8">
+                <TabsList className="grid w-full max-w-md grid-cols-3">
+                  <TabsTrigger value="Germany">{t('partnersPage.tabs.germany')}</TabsTrigger>
+                  <TabsTrigger value="Romania">{t('partnersPage.tabs.romania')}</TabsTrigger>
+                  <TabsTrigger value="Jordan">{t('partnersPage.tabs.jordan')}</TabsTrigger>
+                </TabsList>
+              </div>
+
+              {countries.map(country => (
+                <TabsContent key={country} value={country}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in">
+                    {servicesByCountry[country]?.map((partner) => (
+                      <ServiceCard key={partner.name} partner={partner} />
+                    ))}
+                    {servicesByCountry[country]?.length === 0 && (
+                      <div className="col-span-full text-center text-muted-foreground py-8">
+                        لا توجد خدمات متاحة في هذا البلد حالياً
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
               ))}
-            </div>
+            </Tabs>
           </div>
           
-          {/* Influencers Section */}
+          {/* Influencers Section - Temporarily hidden
           <div>
             <h2 className="text-3xl font-bold mb-8 text-center text-primary">
               {t('partnersPage.sections.influencers')}
@@ -78,6 +100,7 @@ const PartnersList = () => {
               <CarouselNext className="hidden md:flex" />
             </Carousel>
           </div>
+          */}
 
         </div>
       </div>
