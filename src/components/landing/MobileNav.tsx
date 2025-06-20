@@ -3,7 +3,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
 interface MobileNavProps {
   onClose: () => void;
@@ -40,7 +39,7 @@ const MobileNav = ({ onClose }: MobileNavProps) => {
           onClick={onClose}
           className="mt-4"
         >
-          <Button className="w-full">
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
             تسجيل الدخول للطلاب
           </Button>
         </Link>
