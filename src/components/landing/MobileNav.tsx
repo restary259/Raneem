@@ -25,14 +25,14 @@ const MobileNav = ({ onClose }: MobileNavProps) => {
   ];
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="border-t bg-white p-4">
       <div className="flex flex-col space-y-3">
         {navItems.map((item) => (
           <Link
             key={item.href}
             to={item.href}
             onClick={onClose}
-            className="text-foreground hover:text-primary transition-colors py-2 px-4 rounded-md hover:bg-muted font-medium"
+            className="text-gray-700 hover:text-orange-600 transition-colors py-2 px-4 rounded-md hover:bg-orange-50 font-medium"
           >
             {item.label}
           </Link>
@@ -42,7 +42,7 @@ const MobileNav = ({ onClose }: MobileNavProps) => {
           onClick={onClose}
           className="mt-4"
         >
-          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
             تسجيل الدخول للطلاب
           </Button>
         </Link>

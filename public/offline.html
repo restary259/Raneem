@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غير متصل - درب</title>
+    <style>
+        body {
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            direction: rtl;
+            text-align: center;
+        }
+        .offline-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ea580c;
+            margin-bottom: 1rem;
+        }
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        p {
+            color: #718096;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        .retry-btn {
+            background: #ea580c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+        .retry-btn:hover {
+            background: #dc2626;
+        }
+        .features {
+            margin-top: 2rem;
+            text-align: right;
+        }
+        .feature {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="logo">درب</div>
+        <div class="offline-icon">📡</div>
+        <h1>أنت غير متصل بالإنترنت</h1>
+        <p>يبدو أنك فقدت الاتصال بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.</p>
+        
+        <button class="retry-btn" onclick="window.location.reload()">
+            إعادة المحاولة
+        </button>
+        
+        <div class="features">
+            <div class="feature">✓ بعض المحتوى متاح بدون إنترنت</div>
+            <div class="feature">✓ سيتم مزامنة بياناتك عند العودة</div>
+            <div class="feature">✓ تطبيق درب يعمل في وضع عدم الاتصال</div>
+        </div>
+    </div>
+    
+    <script>
+        // Check for network connection
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }
+        
+        // Listen for online event
+        window.addEventListener('online', checkConnection);
+        
+        // Check connection every 5 seconds
+        setInterval(checkConnection, 5000);
+    </script>
+</body>
+</html>
