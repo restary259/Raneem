@@ -54,6 +54,14 @@ const DesktopNav = () => {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
+          <Link to="/blog">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              مدونة
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
           <Link to="/resources">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               {t('nav.resources')}

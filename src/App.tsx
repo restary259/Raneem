@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,13 +14,14 @@ import ContactPage from "./pages/ContactPage";
 import PartnershipPage from "./pages/PartnershipPage";
 import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
+import BlogPage from "./pages/BlogPage";
 import ChatWidget from "./components/chat/ChatWidget";
+import EntryPopup from "./components/common/EntryPopup";
 import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import MajorMatchingQuiz from "./components/quiz/MajorMatchingQuiz";
 import QuizPage from "./pages/QuizPage";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,7 @@ const App = () => {
           <Route path="/partnership" element={<PartnershipPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/blog" element={<BlogPage />} />
           <Route path="/broadcast" element={<BroadcastPage />} />
           <Route path="/student-auth" element={<StudentAuthPage />} />
           <Route path="/student-dashboard" element={<StudentDashboardPage />} />
@@ -72,6 +75,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
+        <EntryPopup />
       </TooltipProvider>
     </QueryClientProvider>
   );

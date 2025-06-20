@@ -59,20 +59,20 @@ export const germanyUniversities: University[] = [
     keyFacts: ["تأسست عام 1745", "20,000+ طالب", "رائدة في هندسة الطيران"]
   },
   {
-    name: "Karlsruhe Institute of Technology",
-    logoUrl: "/lovable-uploads/kit-karlsruhe.png",
-    location: "كارلسروه، ألمانيا",
-    description: "معهد تقني عالمي المستوى يجمع بين التعليم والبحث العلمي.",
-    websiteUrl: "https://www.kit.edu/",
-    keyFacts: ["تأسست عام 2009", "25,000+ طالب", "قوية في الفيزياء والهندسة"]
+    name: "TU Clausthal",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    location: "كلاوستال، ألمانيا",
+    description: "جامعة تقنية متخصصة في الهندسة والعلوم الطبيعية.",
+    websiteUrl: "https://www.tu-clausthal.de/",
+    keyFacts: ["تأسست عام 1775", "5,000+ طالب", "متميزة في هندسة التعدين"]
   },
   {
-    name: "University of Stuttgart", 
-    logoUrl: "/lovable-uploads/uni-stuttgart.png",
-    location: "شتوتغارت، ألمانيا",
-    description: "جامعة تقنية مرموقة متخصصة في الهندسة والعلوم التطبيقية.",
-    websiteUrl: "https://www.uni-stuttgart.de/",
-    keyFacts: ["تأسست عام 1829", "27,000+ طالب", "متميزة في هندسة السيارات"]
+    name: "TU Hamburg",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    location: "هامبورغ، ألمانيا",
+    description: "جامعة تقنية حديثة متخصصة في التكنولوجيا والهندسة.",
+    websiteUrl: "https://www.tuhh.de/",
+    keyFacts: ["تأسست عام 1978", "7,000+ طالب", "قوية في الهندسة البحرية"]
   }
 ];
 

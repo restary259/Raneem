@@ -17,5 +17,37 @@ export const germanyLocalServices: LocalService[] = [
     description: "شبكة السكك الحديدية الوطنية في ألمانيا.",
     websiteUrl: "https://www.bahn.de/",
     highlights: ["خصومات للطلاب", "شبكة واسعة", "مواصلات موثوقة"]
+  },
+  {
+    name: "Student Housing Platform",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    type: "housing",
+    description: "منصة رائدة للبحث عن السكن الطلابي في ألمانيا.",
+    websiteUrl: "https://www.studentenwerk.de/",
+    highlights: ["أسعار مناسبة للطلاب", "مواقع قريبة من الجامعات", "عقود مرنة"]
+  },
+  {
+    name: "O2 Mobile",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    type: "telecom",
+    description: "شركة اتصالات رائدة تقدم باقات خاصة للطلاب.",
+    websiteUrl: "https://www.o2online.de/",
+    highlights: ["باقات طلابية", "إنترنت عالي السرعة", "تغطية ممتازة"]
+  },
+  {
+    name: "ADAC",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    type: "transport",
+    description: "نادي السيارات الألماني يقدم خدمات الطوارئ والمساعدة على الطريق.",
+    websiteUrl: "https://www.adac.de/",
+    highlights: ["خدمة طوارئ 24/7", "تأمين السيارات", "خصومات للأعضاء"]
+  },
+  {
+    name: "N26 Bank",
+    logoUrl: "/placeholder.svg?height=60&width=120",
+    type: "telecom",
+    description: "بنك رقمي حديث يوفر حسابات مصرفية سهلة للطلاب.",
+    websiteUrl: "https://n26.com/",
+    highlights: ["فتح حساب سهل", "بدون رسوم شهرية", "تطبيق متطور"]
   }
 ];

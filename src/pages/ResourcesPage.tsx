@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import Footer from '@/components/landing/Footer';
 import CostCalculator from '@/components/calculator/CostCalculator';
 import CurrencyConverter from '@/components/calculator/CurrencyConverter';
 import GpaCalculator from '@/components/calculator/GpaCalculator';
+import AdditionalServices from '@/components/resources/AdditionalServices';
 import ResourceCard from '@/components/resources/ResourceCard';
 import { Calculator, DollarSign, GraduationCap, FileText, Globe, Users } from 'lucide-react';
 
@@ -42,21 +44,21 @@ const ResourcesPage = () => {
       title: 'دليل القبول الجامعي',
       description: 'كل ما تحتاج معرفته عن عملية القبول',
       icon: FileText,
-      link: '#',
+      link: '/blog',
       category: 'القبول'
     },
     {
       title: 'دليل التأشيرات الدراسية',
       description: 'خطوات الحصول على التأشيرة الدراسية',
       icon: Globe,
-      link: '#',
+      link: '/blog',
       category: 'التأشيرات'
     },
     {
       title: 'دليل السكن الطلابي',
       description: 'أفضل خيارات السكن للطلاب الدوليين',
       icon: Users,
-      link: '#',
+      link: '/blog',
       category: 'السكن'
     }
   ];
@@ -83,15 +85,16 @@ const ResourcesPage = () => {
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="tools" className="w-full max-w-6xl mx-auto">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="tools">الأدوات التفاعلية</TabsTrigger>
+              <TabsTrigger value="services">خدمات إضافية</TabsTrigger>
               <TabsTrigger value="guides">الأدلة والمراجع</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tools" className="space-y-8">
               <div className="grid gap-8">
                 {tools.map((tool) => (
-                  <Card key={tool.id} className="w-full">
+                  <Card key={tool.id} className="w-full" id={tool.id}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3">
                         <tool.icon className="h-6 w-6 text-primary" />
@@ -105,6 +108,10 @@ const ResourcesPage = () => {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="services" className="space-y-8">
+              <AdditionalServices />
             </TabsContent>
             
             <TabsContent value="guides" className="space-y-8">
