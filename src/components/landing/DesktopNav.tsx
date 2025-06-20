@@ -2,60 +2,133 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle
+} from '@/components/ui/navigation-menu';
+import ListItem from './ListItem';
 
 const DesktopNav = () => {
   const { t } = useTranslation();
 
-  const navItems = [
-    { href: '/about', label: 'من نحن' },
-    { href: '/services', label: 'خدماتنا' },
-    { href: '/partners', label: 'شركاؤنا' },
-    { href: '/locations', label: 'مواقعنا' },
-    { href: '/resources', label: 'الموارد' },
-    { href: '/blog', label: 'المدونة' },
-    { href: '/contact', label: 'اتصل بنا' },
-    { href: '/quiz', label: 'اختبار التخصص' },
-    { href: '/partnership', label: 'شراكة' },
-    { href: '/broadcast', label: 'البث المباشر' },
+  const aboutComponents: { title: string; href: string; description: string }[] = [
+    {
+      title: t('nav.about'),
+      href: '/about',
+      description: t('desktopNav.about.description'),
+    },
+    {
+      title: t('nav.locations'),
+      href: '/locations',
+      description: t('desktopNav.locations.description'),
+    },
+  ];
+
+  const partnershipComponents: { title: string; href: string; description: string }[] = [
+    {
+        title: t('nav.partnership'),
+        href: '/partnership',
+        description: t('desktopNav.partnership.description'),
+    },
+    {
+        title: t('nav.partners'),
+        href: '/partners',
+        description: t('desktopNav.partners.description'),
+    }
   ];
 
   return (
-    <nav className="flex items-center space-x-8">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="text-foreground hover:text-primary transition-colors font-medium">
-            القائمة
-            <ChevronDown className="ml-1 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-48 bg-background border shadow-lg">
-          {navItems.map((item) => (
-            <DropdownMenuItem key={item.href} asChild>
-              <Link
-                to={item.href}
-                className="text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
-              >
-                {item.label}
-              </Link>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
-      <Link to="/student-auth">
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          تسجيل الدخول للطلاب
-        </Button>
-      </Link>
-    </nav>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link to="/contact">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.contact')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/resources">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.resources')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/quiz">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              اختبار التخصص
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+            <NavigationMenuTrigger>{t('nav.partnership')}</NavigationMenuTrigger>
+            <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px]">
+                    {partnershipComponents.map((component) => (
+                        <ListItem
+                        key={component.title}
+                        to={component.href}
+                        title={component.title}
+                        >
+                        {component.description}
+                        </ListItem>
+                    ))}
+                </ul>
+            </NavigationMenuContent>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/broadcast">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.broadcast')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/services">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.services')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>{t('nav.about')}</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+              {aboutComponents.map((component) => (
+                <ListItem
+                  key={component.title}
+                  to={component.href}
+                  title={component.title}
+                >
+                  {component.description}
+                </ListItem>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+          <Link to="/">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {t('nav.home')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };
 
