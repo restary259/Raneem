@@ -19,6 +19,9 @@ const MobileNav = ({ onClose }: MobileNavProps) => {
     { href: '/resources', label: 'الموارد' },
     { href: '/blog', label: 'المدونة' },
     { href: '/contact', label: 'اتصل بنا' },
+    { href: '/quiz', label: 'اختبار التخصص' },
+    { href: '/partnership', label: 'شراكة' },
+    { href: '/broadcast', label: 'البث المباشر' },
   ];
 
   return (
@@ -29,7 +32,7 @@ const MobileNav = ({ onClose }: MobileNavProps) => {
             key={item.href}
             to={item.href}
             onClick={onClose}
-            className="text-foreground hover:text-primary transition-colors py-2 px-4 rounded-md hover:bg-muted"
+            className="text-foreground hover:text-primary transition-colors py-2 px-4 rounded-md hover:bg-muted font-medium"
           >
             {item.label}
           </Link>
