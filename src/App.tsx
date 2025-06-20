@@ -1,10 +1,13 @@
 
 import React, { useEffect } from "react";
+import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import ThemeProvider from "./components/common/ThemeProvider";
+import CookieConsent from "./components/common/CookieConsent";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WhoWeArePage from "./pages/WhoWeArePage";
@@ -16,7 +19,6 @@ import PartnersPage from "./pages/PartnersPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import BlogPage from "./pages/BlogPage";
 import ChatWidget from "./components/chat/ChatWidget";
-import EntryPopup from "./components/common/EntryPopup";
 import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
@@ -52,32 +54,36 @@ const App = () => {
   }, [location.pathname]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<WhoWeArePage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/locations" element={<LocationsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/partnership" element={<PartnershipPage />} />
-          <Route path="/partners" element={<PartnersPage />} />
-          <Route path="/resources" element={<ResourcesPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/broadcast" element={<BroadcastPage />} />
-          <Route path="/student-auth" element={<StudentAuthPage />} />
-          <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/quiz" element={<QuizPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <ChatWidget />
-        <EntryPopup />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<WhoWeArePage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/locations" element={<LocationsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/partnership" element={<PartnershipPage />} />
+              <Route path="/partners" element={<PartnersPage />} />
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/broadcast" element={<BroadcastPage />} />
+              <Route path="/student-auth" element={<StudentAuthPage />} />
+              <Route path="/student-dashboard" element={<StudentDashboardPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/quiz" element={<QuizPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <ChatWidget />
+            <CookieConsent />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
