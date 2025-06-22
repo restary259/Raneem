@@ -36,9 +36,9 @@ const DesktopNav = () => {
         description: t('desktopNav.partnership.description'),
     },
     {
-        title: t('nav.partners'),
+        title: 'وجهاتنا التعليمية',
         href: '/partners',
-        description: t('desktopNav.partners.description'),
+        description: 'اكتشف الجامعات ومعاهد اللغة والبرامج التعليمية',
     }
   ];
 

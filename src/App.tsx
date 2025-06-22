@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,7 +12,7 @@ import ServicesPage from "./pages/ServicesPage";
 import LocationsPage from "./pages/LocationsPage";
 import ContactPage from "./pages/ContactPage";
 import PartnershipPage from "./pages/PartnershipPage";
-import PartnersPage from "./pages/PartnersPage";
+import EducationalDestinationsPage from "./pages/EducationalDestinationsPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import BroadcastPage from "./pages/BroadcastPage";
@@ -61,7 +62,8 @@ const App = () => {
           <Route path="/locations" element={<LocationsPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/partnership" element={<PartnershipPage />} />
-          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/partners" element={<EducationalDestinationsPage />} />
+          <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/broadcast" element={<BroadcastPage />} />
           <Route path="/student-auth" element={<StudentAuthPage />} />
