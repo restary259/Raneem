@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { Profile } from '@/types/profile';
-import StudentProfile from '@/components/dashboard/StudentProfile';
+import EnhancedStudentProfile from '@/components/dashboard/EnhancedStudentProfile';
 import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
@@ -24,11 +24,7 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
     switch (activeTab) {
       case 'overview':
         return (
-          <StudentProfile 
-            profile={profile} 
-            onProfileUpdate={onProfileUpdate}
-            userId={user.id}
-          />
+          <EnhancedStudentProfile userId={user.id} />
         );
       case 'services':
         return <ServicesOverview userId={user.id} />;

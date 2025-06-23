@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      academic_backgrounds: {
+        Row: {
+          created_at: string | null
+          degree: string | null
+          field_of_study: string | null
+          gpa: number | null
+          graduation_year: number | null
+          id: string
+          institution: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          degree?: string | null
+          field_of_study?: string | null
+          gpa?: number | null
+          graduation_year?: number | null
+          id?: string
+          institution: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          degree?: string | null
+          field_of_study?: string | null
+          gpa?: number | null
+          graduation_year?: number | null
+          id?: string
+          institution?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_backgrounds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -187,43 +231,67 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
           country: string | null
           created_at: string
           email: string
+          first_name: string | null
           full_name: string
           id: string
           intake_month: string | null
           is_admin: boolean | null
+          last_name: string | null
           notes: string | null
+          phone: string | null
           phone_number: string | null
+          preferred_name: string | null
+          pronouns: string | null
           university_name: string | null
           updated_at: string
           visa_status: Database["public"]["Enums"]["visa_status"] | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           email: string
+          first_name?: string | null
           full_name: string
           id: string
           intake_month?: string | null
           is_admin?: boolean | null
+          last_name?: string | null
           notes?: string | null
+          phone?: string | null
           phone_number?: string | null
+          preferred_name?: string | null
+          pronouns?: string | null
           university_name?: string | null
           updated_at?: string
           visa_status?: Database["public"]["Enums"]["visa_status"] | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           email?: string
+          first_name?: string | null
           full_name?: string
           id?: string
           intake_month?: string | null
           is_admin?: boolean | null
+          last_name?: string | null
           notes?: string | null
+          phone?: string | null
           phone_number?: string | null
+          preferred_name?: string | null
+          pronouns?: string | null
           university_name?: string | null
           updated_at?: string
           visa_status?: Database["public"]["Enums"]["visa_status"] | null
@@ -274,6 +342,91 @@ export type Database = {
           },
         ]
       }
+      student_documents: {
+        Row: {
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          name: string
+          status: string | null
+          type: string
+          updated_at: string | null
+          uploaded_at: string | null
+          user_id: string
+        }
+        Insert: {
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          status?: string | null
+          type: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          user_id: string
+        }
+        Update: {
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_preferences: {
+        Row: {
+          created_at: string | null
+          destinations: string[] | null
+          interests: string[] | null
+          languages: string[] | null
+          notifications: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          destinations?: string[] | null
+          interests?: string[] | null
+          languages?: string[] | null
+          notifications?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          destinations?: string[] | null
+          interests?: string[] | null
+          languages?: string[] | null
+          notifications?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           enrollment_date: string | null
@@ -294,6 +447,47 @@ export type Database = {
           {
             foreignKeyName: "fk_profile"
             columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_scores: {
+        Row: {
+          created_at: string | null
+          date_taken: string | null
+          document_url: string | null
+          id: string
+          score: string
+          test_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_taken?: string | null
+          document_url?: string | null
+          id?: string
+          score: string
+          test_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date_taken?: string | null
+          document_url?: string | null
+          id?: string
+          score?: string
+          test_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_scores_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
