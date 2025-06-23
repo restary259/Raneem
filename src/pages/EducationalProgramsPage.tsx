@@ -1,5 +1,5 @@
 
-import React, { useState, useM } from 'react';
+import React, { useState, useMemo } from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import { majorsData, SubMajor } from '@/data/majorsData';
