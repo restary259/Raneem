@@ -30,7 +30,7 @@ const AcademicTab: React.FC<AcademicTabProps> = ({
   const [editingTest, setEditingTest] = useState<TestScore | null>(null);
   const { toast } = useToast();
 
-  const handleSaveAcademic = async (data: Partial<AcademicBackground>) => {
+  const handleSaveAcademic = async (data: Omit<AcademicBackground, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
       if (editingAcademic) {
         const { error } = await supabase
@@ -62,7 +62,7 @@ const AcademicTab: React.FC<AcademicTabProps> = ({
     }
   };
 
-  const handleSaveTest = async (data: Partial<TestScore>) => {
+  const handleSaveTest = async (data: Omit<TestScore, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
       if (editingTest) {
         const { error } = await supabase
@@ -99,7 +99,7 @@ const AcademicTab: React.FC<AcademicTabProps> = ({
       const { error } = await supabase
         .from('academic_backgrounds')
         .delete()
-        .eq('id',);
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -324,23 +324,25 @@ const AcademicTab: React.FC<AcademicTabProps> = ({
 // Academic Form Component
 const AcademicForm: React.FC<{
   academic: AcademicBackground | null;
-  onSave: (data: Partial<AcademicBackground>) => void;
+  onSave: (data: Omit<AcademicBackground, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }> = ({ academic, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     institution: academic?.institution || '',
     degree: academic?.degree || '',
     field_of_study: academic?.field_of_study || '',
-    gpa: academic?.gpa || '',
-    graduation_year: academic?.graduation_year || '',
+    gpa: academic?.gpa ? academic.gpa.toString() : '',
+    graduation_year: academic?.graduation_year ? academic.graduation_year.toString() : '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      ...formData,
-      gpa: formData.gpa ? parseFloat(formData.gpa.toString()) : undefined,
-      graduation_year: formData.graduation_year ? parseInt(formData.graduation_year.toString()) : undefined,
+      institution: formData.institution,
+      degree: formData.degree || undefined,
+      field_of_study: formData.field_of_study || undefined,
+      gpa: formData.gpa ? parseFloat(formData.gpa) : undefined,
+      graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : undefined,
     });
   };
 
@@ -411,18 +413,24 @@ const AcademicForm: React.FC<{
 // Test Form Component
 const TestForm: React.FC<{
   test: TestScore | null;
-  onSave: (data: Partial<TestScore>) => void;
+  onSave: (data: Omit<TestScore, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
 }> = ({ test, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     test_name: test?.test_name || '',
     score: test?.score || '',
     date_taken: test?.date_taken || '',
+    document_url: test?.document_url || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      test_name: formData.test_name,
+      score: formData.score,
+      date_taken: formData.date_taken || undefined,
+      document_url: formData.document_url || undefined,
+    });
   };
 
   return (

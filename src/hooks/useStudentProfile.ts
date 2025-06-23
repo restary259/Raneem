@@ -8,7 +8,8 @@ import {
   TestScore, 
   StudentDocument, 
   StudentPreferences,
-  ProfileCompletion 
+  ProfileCompletion,
+  DocumentStatus
 } from '@/types/profile';
 
 export const useStudentProfile = (userId: string) => {
@@ -71,7 +72,12 @@ export const useStudentProfile = (userId: string) => {
         .order('uploaded_at', { ascending: false });
 
       if (documentsError && documentsError.code !== 'PGRST116') throw documentsError;
-      setDocuments(documentsData || []);
+      // Type cast the status to DocumentStatus
+      const typedDocuments = (documentsData || []).map(doc => ({
+        ...doc,
+        status: doc.status as DocumentStatus
+      }));
+      setDocuments(typedDocuments);
 
       // Fetch preferences
       const { data: preferencesData, error: preferencesError } = await supabase
@@ -81,7 +87,14 @@ export const useStudentProfile = (userId: string) => {
         .maybeSingle();
 
       if (preferencesError && preferencesError.code !== 'PGRST116') throw preferencesError;
-      setPreferences(preferencesData);
+      // Type cast the notifications properly
+      if (preferencesData) {
+        const typedPreferences: StudentPreferences = {
+          ...preferencesData,
+          notifications: preferencesData.notifications as { email: boolean; push: boolean; in_app: boolean; }
+        };
+        setPreferences(typedPreferences);
+      }
 
     } catch (error: any) {
       console.error('Error fetching profile data:', error);

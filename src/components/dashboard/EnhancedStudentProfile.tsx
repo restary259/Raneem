@@ -91,7 +91,7 @@ const EnhancedStudentProfile: React.FC<EnhancedStudentProfileProps> = ({ userId 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">اكتمال الملف الشخصي</span>
-                <Badge variant={completion.overall >= 80 ? "success" : completion.overall >= 50 ? "warning" : "destructive"}>
+                <Badge variant={completion.overall >= 80 ? "default" : completion.overall >= 50 ? "secondary" : "destructive"}>
                   {completion.overall}%
                 </Badge>
               </div>
