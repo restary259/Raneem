@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Index from '@/pages/Index';
 import StudentDashboardPage from '@/pages/StudentDashboardPage';
 import StudentAuthPage from '@/pages/StudentAuthPage';
@@ -18,28 +18,26 @@ import CustomErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <CustomErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<StudentDashboardPage />} />
-            <Route path="/auth" element={<StudentAuthPage />} />
-            <Route path="/student-auth" element={<StudentAuthPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/partners" element={<PartnersPage />} />
-            <Route path="/partnership" element={<PartnershipPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/dashboard/profile" element={<ProfileManagementPage />} />
-            <Route path="/dashboard/notifications" element={<NotificationsPage />} />
-            <Route path="/community" element={<CommunityHubPage />} />
-            <Route path="/community/forum/topic/:topicId" element={<ForumTopicPage />} />
-          </Routes>
-        </CustomErrorBoundary>
-      </div>
-    </Router>
+    <div className="App">
+      <CustomErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<StudentDashboardPage />} />
+          <Route path="/auth" element={<StudentAuthPage />} />
+          <Route path="/student-auth" element={<StudentAuthPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/partnership" element={<PartnershipPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/dashboard/profile" element={<ProfileManagementPage />} />
+          <Route path="/dashboard/notifications" element={<NotificationsPage />} />
+          <Route path="/community" element={<CommunityHubPage />} />
+          <Route path="/community/forum/topic/:topicId" element={<ForumTopicPage />} />
+        </Routes>
+      </CustomErrorBoundary>
+    </div>
   );
 }
 
