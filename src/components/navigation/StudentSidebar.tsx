@@ -41,19 +41,19 @@ const StudentSidebar = () => {
       icon: FileText,
       label: 'My Applications',
       href: '/applications',
-      count: 3
+      count: null
     },
     {
       icon: Heart,
       label: 'Saved Programs',
       href: '/dashboard/favorites',
-      count: 12
+      count: null
     },
     {
       icon: MessageSquare,
       label: 'Messages',
       href: '/dashboard/messages',
-      count: 8
+      count: null
     },
     {
       icon: File,

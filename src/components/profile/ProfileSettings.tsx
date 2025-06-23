@@ -9,6 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Profile } from '@/types/profile';
 import { User, Shield, Key, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import ProfilePhoto from './ProfilePhoto';
 
 interface ProfileSettingsProps {
   profile: Profile;
@@ -17,6 +20,40 @@ interface ProfileSettingsProps {
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [editedProfile, setEditedProfile] = useState(profile);
+  const { toast } = useToast();
+
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editedProfile.full_name,
+          phone_number: editedProfile.phone_number,
+          city: editedProfile.city,
+          bio: editedProfile.bio,
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "تم التحديث بنجاح",
+        description: "تم حفظ بياناتك بنجاح",
+      });
+
+      onProfileUpdate();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في التحديث",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Tabs defaultValue="profile" className="w-full">
@@ -44,13 +81,25 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpd
           <CardHeader>
             <CardTitle>المعلومات الشخصية</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Profile Photo Section */}
+            <ProfilePhoto
+              userId={profile.id}
+              avatarUrl={profile.avatar_url}
+              fullName={profile.full_name}
+              isEditing={true}
+              onPhotoUpdate={onProfileUpdate}
+            />
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="full_name">الاسم الكامل</Label>
                 <Input
                   id="full_name"
-                  defaultValue={profile.full_name}
+                  value={editedProfile.full_name}
+                  onChange={e =>
+                    setEditedProfile({ ...editedProfile, full_name: e.target.value })
+                  }
                   disabled={isLoading}
                 />
               </div>
@@ -58,7 +107,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpd
                 <Label htmlFor="email">البريد الإلكتروني</Label>
                 <Input
                   id="email"
-                  defaultValue={profile.email}
+                  value={editedProfile.email}
                   disabled
                   readOnly
                 />
@@ -67,7 +116,10 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpd
                 <Label htmlFor="phone">رقم الهاتف</Label>
                 <Input
                   id="phone"
-                  defaultValue={profile.phone_number || ''}
+                  value={editedProfile.phone_number || ''}
+                  onChange={e =>
+                    setEditedProfile({ ...editedProfile, phone_number: e.target.value })
+                  }
                   disabled={isLoading}
                 />
               </div>
@@ -75,7 +127,10 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpd
                 <Label htmlFor="city">المدينة</Label>
                 <Input
                   id="city"
-                  defaultValue={profile.city || ''}
+                  value={editedProfile.city || ''}
+                  onChange={e =>
+                    setEditedProfile({ ...editedProfile, city: e.target.value })
+                  }
                   disabled={isLoading}
                 />
               </div>
@@ -85,13 +140,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ profile, onProfileUpd
               <Label htmlFor="bio">النبذة الشخصية</Label>
               <Textarea
                 id="bio"
-                defaultValue={profile.bio || ''}
+                value={editedProfile.bio || ''}
+                onChange={e =>
+                  setEditedProfile({ ...editedProfile, bio: e.target.value })
+                }
                 disabled={isLoading}
                 rows={3}
               />
             </div>
             
-            <Button disabled={isLoading}>
+            <Button onClick={handleSaveProfile} disabled={isLoading}>
               {isLoading ? 'جار الحفظ...' : 'حفظ التغييرات'}
             </Button>
           </CardContent>

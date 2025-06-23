@@ -40,6 +40,24 @@ const ProfileManagementPage: React.FC = () => {
     fetchProfile();
   }, [user, toast]);
 
+  const handleProfileUpdate = () => {
+    // Refetch profile data
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Error refetching profile:', error);
+          } else {
+            setProfile(data);
+          }
+        });
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,10 +90,7 @@ const ProfileManagementPage: React.FC = () => {
         
         <ProfileSettings 
           profile={profile} 
-          onProfileUpdate={() => {
-            // Refetch profile data
-            window.location.reload();
-          }} 
+          onProfileUpdate={handleProfileUpdate} 
         />
       </div>
     </div>
