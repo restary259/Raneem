@@ -49,7 +49,7 @@ const MobileNav = () => {
             {t('nav.partnership')}
           </Link>
           <Link 
-            to="/partners" 
+            to="/educational-destinations" 
             className="text-lg font-medium hover:text-orange-500 transition-colors"
           >
             وجهاتنا التعليمية

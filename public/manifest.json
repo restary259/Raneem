@@ -14,49 +14,49 @@
   "categories": ["education", "travel", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
@@ -68,21 +68,21 @@
       "short_name": "الخدمات",
       "description": "تصفح خدماتنا التعليمية",
       "url": "/services",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
     },
     {
       "name": "وجهاتنا التعليمية",
       "short_name": "الوجهات",
       "description": "اكتشف الجامعات والبرامج التعليمية",
       "url": "/educational-destinations",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
     },
     {
       "name": "اتصل بنا",
       "short_name": "اتصل",
       "description": "تواصل معنا للاستشارة",
       "url": "/contact",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
     }
   ]
 }

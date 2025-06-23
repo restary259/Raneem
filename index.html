@@ -21,10 +21,10 @@
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Icons -->
-    <link rel="icon" href="/icons/icon-192x192.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+    <link rel="icon" href="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,14 +35,14 @@
     <meta property="og:title" content="درب | رفيقك الدراسي العالمي" />
     <meta property="og:description" content="درب هي الجسر الآمن نحو دراستك في الخارج. استشارات، قبولات، تأشيرات، والمزيد." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <meta property="og:url" content="https://darb-education.com" />
+    <meta property="og:image" content="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
+    <meta property="og:url" content="https://darb.agency" />
     <meta property="og:site_name" content="درب التعليمية" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@darb_education" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
     <meta name="twitter:title" content="درب | رفيقك الدراسي العالمي" />
     <meta name="twitter:description" content="من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج" />
 
@@ -54,6 +54,7 @@
     <style>
       body {
         font-family: 'Tajawal', sans-serif;
+        padding-bottom: env(safe-area-inset-bottom, 0);
       }
       
       /* PWA Loading Screen */
@@ -85,9 +86,16 @@
       }
       
       .loading-logo {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
         animation: pulse 2s infinite;
+      }
+      
+      .loading-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
       }
       
       @keyframes pulse {
@@ -113,7 +121,9 @@
     <!-- PWA Loading Screen -->
     <div id="pwa-loading" class="pwa-loading">
       <div class="loading-content">
-        <div class="loading-logo">🎓</div>
+        <div class="loading-logo">
+          <img src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" alt="درب" />
+        </div>
         <div class="loading-text">درب</div>
         <div class="loading-subtitle">رفيقك الدراسي العالمي</div>
       </div>

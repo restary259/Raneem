@@ -24,35 +24,48 @@
             justify-content: center;
             direction: rtl;
             color: white;
+            padding: 1rem;
         }
         
         .offline-container {
             text-align: center;
             padding: 2rem;
             max-width: 500px;
-            width: 90%;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .offline-icon {
-            width: 120px;
-            height: 120px;
+        .offline-logo {
+            width: 80px;
+            height: 80px;
             margin: 0 auto 2rem;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
             backdrop-filter: blur(10px);
+            animation: pulse 2s infinite;
+        }
+
+        .offline-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
         }
         
         h1 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
-        p {
+        .subtitle {
             font-size: 1.2rem;
             margin-bottom: 2rem;
             opacity: 0.9;
@@ -70,19 +83,24 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 2rem;
         }
         
         .retry-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
-            margin-top: 3rem;
+            margin-top: 2rem;
         }
         
         .feature-card {
@@ -91,37 +109,80 @@
             border-radius: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
         
         .feature-card h3 {
             font-size: 1.1rem;
             margin-bottom: 0.5rem;
+            font-weight: 600;
         }
         
         .feature-card p {
             font-size: 0.9rem;
             margin: 0;
             opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
         }
         
         @media (max-width: 768px) {
             h1 { font-size: 2rem; }
-            p { font-size: 1rem; }
-            .offline-icon { width: 100px; height: 100px; font-size: 2.5rem; }
+            .subtitle { font-size: 1rem; }
+            .offline-logo { width: 60px; height: 60px; }
+            .offline-logo img { width: 40px; height: 40px; }
+            .offline-container { padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
     <div class="offline-container">
-        <div class="offline-icon">
-            📱
+        <div class="offline-logo">
+            <img src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" alt="درب" />
         </div>
         <h1>غير متصل بالإنترنت</h1>
-        <p>يبدو أنك غير متصل بالإنترنت حالياً. لا تقلق، يمكنك الاستمرار في تصفح المحتوى المحفوظ محلياً.</p>
+        <p class="subtitle">يبدو أنك غير متصل بالإنترنت حالياً. لا تقلق، يمكنك الاستمرار في تصفح المحتوى المحفوظ محلياً.</p>
         
         <button class="retry-btn" onclick="window.location.reload()">
             إعادة المحاولة
         </button>
+
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span>يتم البحث عن الاتصال...</span>
+        </div>
         
         <div class="features-grid">
             <div class="feature-card">
@@ -135,6 +196,10 @@
             <div class="feature-card">
                 <h3>📞 معلومات التواصل</h3>
                 <p>بيانات الاتصال متاحة دائماً</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 تطبيق محمول</h3>
+                <p>استمتع بالتجربة الكاملة</p>
             </div>
         </div>
     </div>
@@ -152,8 +217,22 @@
             }
         }
         
-        // Check connection every 5 seconds
-        setInterval(updateConnectionStatus, 5000);
+        // Check connection every 3 seconds
+        setInterval(updateConnectionStatus, 3000);
+
+        // Update status indicator based on connection
+        function updateStatusIndicator() {
+            const indicator = document.querySelector('.status-indicator span:last-child');
+            if (navigator.onLine) {
+                indicator.textContent = 'متصل - جاري إعادة التحميل...';
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                indicator.textContent = 'يتم البحث عن الاتصال...';
+            }
+        }
+
+        // Check status every 2 seconds
+        setInterval(updateStatusIndicator, 2000);
     </script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
 
 @tailwind base;
@@ -37,19 +38,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -93,6 +87,28 @@
 
   html {
     @apply scroll-smooth;
+  }
+
+  /* PWA Safe Area Support */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Prevent content from hiding behind bottom nav */
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
 
@@ -141,7 +157,6 @@
     }
   }
 
-
   .masonry-grid-item {
     break-inside: avoid;
     margin-bottom: 1.5rem;
@@ -149,6 +164,32 @@
 
   .mask-gradient {
     mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  }
+
+  /* Enhanced Bottom Navigation Styles */
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center min-w-[48px] min-h-[48px] px-2 py-1 rounded-lg transition-all duration-200;
+    touch-action: manipulation;
+  }
+
+  .bottom-nav-item:hover {
+    @apply bg-orange-50;
+  }
+
+  .bottom-nav-item:focus {
+    @apply outline-none ring-2 ring-orange-500 ring-offset-2;
+  }
+
+  .bottom-nav-item.active {
+    @apply text-orange-500 bg-orange-50;
+  }
+
+  .bottom-nav-item:not(.active) {
+    @apply text-gray-600;
+  }
+
+  .bottom-nav-item:not(.active):hover {
+    @apply text-orange-500;
   }
 }
 
@@ -164,5 +205,32 @@
   }
   .animation-delay-500 {
     animation-delay: 500ms;
+  }
+
+  /* PWA Responsive Utilities */
+  .pwa-container {
+    @apply max-w-md mx-auto bg-white min-h-screen;
+  }
+
+  .pwa-content {
+    @apply px-4 py-6 pb-20;
+  }
+
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    .bottom-nav-item {
+      @apply border border-gray-300;
+    }
+
+    .bottom-nav-item.active {
+      @apply border-orange-500 bg-orange-100;
+    }
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .bottom-nav-item {
+      @apply transition-none;
+    }
   }
 }

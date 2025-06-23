@@ -103,17 +103,21 @@ const PWAInstaller = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
-      <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
+    <div className="fixed bottom-20 left-4 right-4 z-40 md:left-auto md:right-4 md:max-w-sm">
+      <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-xl">
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Download className="h-5 w-5" />
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-lg backdrop-filter backdrop-blur-sm">
+                <img 
+                  src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" 
+                  alt="درب" 
+                  className="h-6 w-6 filter brightness-0 invert"
+                />
               </div>
               <div>
-                <h3 className="font-bold text-lg">تثبيت التطبيق</h3>
-                <p className="text-sm opacity-90">للوصول السريع والاستخدام بدون اتصال</p>
+                <h3 className="font-bold text-lg text-white">تثبيت تطبيق درب</h3>
+                <p className="text-sm text-white/90">للوصول السريع والاستخدام بدون اتصال</p>
               </div>
             </div>
             <Button
@@ -126,12 +130,12 @@ const PWAInstaller = () => {
             </Button>
           </div>
           
-          <div className="flex gap-3 mb-4">
-            <div className="flex items-center gap-2 text-sm">
+          <div className="flex gap-4 mb-4 text-sm">
+            <div className="flex items-center gap-2 text-white/90">
               <Smartphone className="h-4 w-4" />
               <span>استخدام محمول</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-white/90">
               <Monitor className="h-4 w-4" />
               <span>بدون اتصال</span>
             </div>
@@ -140,7 +144,7 @@ const PWAInstaller = () => {
           <div className="flex gap-2">
             <Button
               onClick={handleInstallClick}
-              className="flex-1 bg-white text-orange-600 hover:bg-gray-100 font-semibold"
+              className="flex-1 bg-white text-orange-600 hover:bg-gray-100 font-semibold shadow-md"
             >
               <Download className="h-4 w-4 mr-2" />
               تثبيت الآن
@@ -148,7 +152,7 @@ const PWAInstaller = () => {
             <Button
               variant="ghost"
               onClick={dismissPrompt}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 px-3"
             >
               لاحقاً
             </Button>

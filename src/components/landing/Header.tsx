@@ -42,7 +42,7 @@ const Header = () => {
     { name: t('nav.home'), href: '/' },
     { name: t('nav.about'), href: '/about' },
     { name: t('nav.services'), href: '/services' },
-    { name: t('nav.partners'), href: '/partners' },
+    { name: 'وجهاتنا التعليمية', href: '/educational-destinations' },
     { name: t('nav.resources'), href: '/resources' },
     { name: t('nav.locations'), href: '/locations' },
     { name: t('nav.contact'), href: '/contact' },
@@ -94,6 +94,11 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 space-x-reverse">
+            <img 
+              src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" 
+              alt="درب" 
+              className="h-8 w-8"
+            />
             <div className="text-2xl font-bold text-primary">درب</div>
           </Link>
 

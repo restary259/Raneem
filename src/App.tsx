@@ -23,6 +23,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import QuizPage from "./pages/QuizPage";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
+import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 
 const queryClient = new QueryClient();
@@ -58,29 +59,32 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <OfflineIndicator />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<WhoWeArePage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/locations" element={<LocationsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/partnership" element={<PartnershipPage />} />
-          <Route path="/partners" element={<EducationalDestinationsPage />} />
-          <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
-          <Route path="/resources" element={<ResourcesPage />} />
-          <Route path="/broadcast" element={<BroadcastPage />} />
-          <Route path="/student-auth" element={<StudentAuthPage />} />
-          <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/quiz" element={<QuizPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <ChatWidget />
-        <PWAInstaller />
+        <div className="min-h-screen pb-20 relative">
+          <Toaster />
+          <Sonner />
+          <OfflineIndicator />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<WhoWeArePage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/locations" element={<LocationsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/partnership" element={<PartnershipPage />} />
+            <Route path="/partners" element={<EducationalDestinationsPage />} />
+            <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/broadcast" element={<BroadcastPage />} />
+            <Route path="/student-auth" element={<StudentAuthPage />} />
+            <Route path="/student-dashboard" element={<StudentDashboardPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/quiz" element={<QuizPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <ChatWidget />
+          <PWAInstaller />
+          <BottomNav />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );
