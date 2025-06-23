@@ -2,7 +2,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -54,9 +53,8 @@ const DesktopNav = () => {
         <NavigationMenuList className="flex items-center gap-1">
           {/* المزيد (dropdown) - First item */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
               المزيد
-              <ChevronLeft className="h-3 w-3 navigation-chevron" />
             </NavigationMenuTrigger>
             <NavigationMenuContent>
               <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px] bg-white shadow-lg border rounded-md">
@@ -120,9 +118,8 @@ const DesktopNav = () => {
 
           {/* من نحن (dropdown) */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
               {t('nav.about')}
-              <ChevronLeft className="h-3 w-3 navigation-chevron" />
             </NavigationMenuTrigger>
             <NavigationMenuContent>
               <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md">

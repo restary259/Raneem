@@ -1,4 +1,5 @@
-const CACHE_NAME = 'darb-education-v1.0.1'; // Increment version for updates
+
+const CACHE_NAME = 'darb-education-v1.0.2'; // Increment version for updates
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
@@ -26,7 +27,7 @@ const RUNTIME_CACHE_PATTERNS = [
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
-  console.log('[SW] Install event');
+  console.log('[SW] Install event - Version 1.0.2');
   
   event.waitUntil(
     Promise.all([
@@ -41,7 +42,7 @@ self.addEventListener('install', event => {
 
 // Activate event - cleanup old caches and take control immediately
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate event');
+  console.log('[SW] Activate event - New version ready');
   
   event.waitUntil(
     Promise.all([
@@ -59,12 +60,13 @@ self.addEventListener('activate', event => {
     ])
   );
   
-  // Notify all clients about the update
+  // Notify all clients about the update with enhanced messaging
   self.clients.matchAll().then(clients => {
     clients.forEach(client => {
       client.postMessage({
         type: 'SW_UPDATED',
-        message: 'تم تحديث التطبيق بنجاح!'
+        message: 'تم تحديث التطبيق بنجاح! إصدار جديد متاح.',
+        version: '1.0.2'
       });
     });
   });
@@ -77,10 +79,10 @@ self.addEventListener('message', event => {
   }
 });
 
-// Check for updates every 30 minutes
+// Check for updates every 15 minutes (reduced from 30)
 setInterval(() => {
   self.registration.update();
-}, 30 * 60 * 1000);
+}, 15 * 60 * 1000);
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
@@ -209,46 +211,59 @@ async function syncContactForms() {
   }
 }
 
-// Push notification handler
+// Enhanced push notification handler
 self.addEventListener('push', event => {
   if (!event.data) return;
 
   const data = event.data.json();
   const options = {
-    body: data.body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
+    body: data.body || 'تحديث جديد متاح في تطبيق درب',
+    icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+    badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
     vibrate: [100, 50, 100],
+    tag: 'app-update',
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: data.primaryKey || 1
+      primaryKey: data.primaryKey || 1,
+      url: data.url || '/'
     },
     actions: [
       {
-        action: 'explore',
-        title: 'استكشف الآن',
-        icon: '/icons/icon-96x96.png'
+        action: 'update',
+        title: 'تحديث الآن',
+        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
       },
       {
-        action: 'close',
-        title: 'إغلاق',
-        icon: '/icons/icon-96x96.png'
+        action: 'later',
+        title: 'لاحقاً',
+        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
       }
     ]
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'درب التعليمية', options)
+    self.registration.showNotification(data.title || 'درب - تحديث التطبيق', options)
   );
 });
 
-// Notification click handler
+// Enhanced notification click handler
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
-  if (event.action === 'explore') {
+  if (event.action === 'update') {
     event.waitUntil(
-      clients.openWindow('/')
+      clients.openWindow('/').then(client => {
+        if (client) {
+          client.postMessage({ type: 'FORCE_RELOAD' });
+        }
+      })
+    );
+  } else if (event.action === 'later') {
+    // Do nothing, just close
+  } else {
+    // Default click action
+    event.waitUntil(
+      clients.openWindow(event.notification.data?.url || '/')
     );
   }
 });

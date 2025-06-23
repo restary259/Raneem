@@ -37,10 +37,10 @@ const BottomNav = () => {
       ariaLabel: 'تواصل معنا'
     },
     {
-      name: 'الملف الشخصي',
+      name: 'الحساب',
       href: '/student-auth',
       icon: User,
-      ariaLabel: 'الملف الشخصي للطالب'
+      ariaLabel: 'حساب الطالب'
     }
   ];
 
