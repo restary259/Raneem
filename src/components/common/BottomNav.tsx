@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,7 +9,6 @@ import {
   GraduationCap,
   Users,
 } from 'lucide-react';
-import '../styles/navigation.css';
 
 interface NavItem {
   name: string;
@@ -68,10 +68,12 @@ const BottomNav = () => {
           <NavLink
             key={item.name}
             to={item.href}
-            className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[52px] px-1.5 py-2 rounded-lg transition-all duration-200 ${
+              isActive ? 'text-orange-500 bg-orange-50' : 'text-gray-600 hover:text-orange-500 hover:bg-orange-50'
+            }`}
           >
-            <Icon className="h-5 w-5" />
-            <span>{item.name}</span>
+            <Icon className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium leading-tight truncate max-w-[50px]">{item.name}</span>
           </NavLink>
         );
       })}

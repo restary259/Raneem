@@ -41,7 +41,7 @@ export const useFeed = (filters?: { post_type?: string; tags?: string[] }) => {
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (filters?.post_type) {
+      if (filters?.post_type && ['announcement', 'scholarship', 'program', 'success_story', 'event', 'deadline'].includes(filters.post_type)) {
         query = query.eq('post_type', filters.post_type);
       }
 
@@ -79,5 +79,29 @@ export const useFeed = (filters?: { post_type?: string; tags?: string[] }) => {
   return {
     posts,
     isLoading,
+  };
+};
+
+// Mock data and functions for HomeFeed compatibility
+export const useFeedData = (userId: string) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  return {
+    recommendations: [],
+    offers: [],
+    recentViews: [],
+    deadlines: [],
+    communityHighlights: [],
+    isLoading
+  };
+};
+
+export const useRecommendationActions = () => {
+  const handleSave = (itemId: string) => {
+    console.log('Save item:', itemId);
+  };
+
+  return {
+    handleSave
   };
 };
