@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useStudentProfile } from '@/hooks/useStudentProfile';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
@@ -33,7 +34,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const MobileDrawer = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useStudentProfile(user?.id || '');
   const { i18n } = useTranslation();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -114,11 +116,6 @@ const MobileDrawer = () => {
             <div className="flex-1">
               <h3 className="font-semibold">{profile?.full_name || 'مستخدم'}</h3>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
-              {profile?.is_admin && (
-                <Badge variant="secondary" className="mt-1">
-                  مدير
-                </Badge>
-              )}
             </div>
           </DrawerTitle>
         </DrawerHeader>
