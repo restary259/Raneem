@@ -41,8 +41,10 @@ export const useFeed = (filters?: { post_type?: string; tags?: string[] }) => {
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (filters?.post_type && ['announcement', 'scholarship', 'program', 'success_story', 'event', 'deadline'].includes(filters.post_type)) {
-        query = query.eq('post_type', filters.post_type);
+      // Type-safe post_type filtering
+      const validPostTypes = ['announcement', 'scholarship', 'program', 'success_story', 'event', 'deadline'] as const;
+      if (filters?.post_type && validPostTypes.includes(filters.post_type as any)) {
+        query = query.eq('post_type', filters.post_type as typeof validPostTypes[number]);
       }
 
       const { data, error } = await query;
