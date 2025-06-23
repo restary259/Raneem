@@ -36,18 +36,18 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
   ];
 
   return (
-    <div className="flex items-center justify-between w-full">
-      {/* Navigation Menu */}
-      <nav className="flex items-center space-x-6 flex-1 justify-center">
-        {navigationItems.map((item) => (
-          <Link key={item.name} to={item.href} className="text-sm font-medium text-gray-800 hover:text-orange-500 transition-colors px-2 py-1 rounded nav-item">
-            {item.name}
-          </Link>
-        ))}
-      </nav>
-
-      {/* Right Side Actions */}
-      <div className="flex items-center space-x-3">
+    <nav className="flex items-center space-x-6 space-x-reverse">
+      {navigationItems.map((item) => (
+        <Link 
+          key={item.name} 
+          to={item.href} 
+          className="text-sm font-medium text-gray-800 hover:text-orange-500 transition-colors px-3 py-2 rounded-md whitespace-nowrap"
+        >
+          {item.name}
+        </Link>
+      ))}
+      
+      <div className="flex items-center space-x-3 space-x-reverse mr-6">
         {isAuthenticated ? (
           <Link to="/dashboard">
             <Button variant="default" size="sm">
@@ -89,7 +89,7 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
               <Languages />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
+          <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {
@@ -113,7 +113,7 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    </nav>
   );
 };
 
