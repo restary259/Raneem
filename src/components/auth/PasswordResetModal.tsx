@@ -39,7 +39,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
       toast({
         variant: "destructive",
         title: "خطأ",
-        description: error.message,
+        description: error.message || "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور",
       });
     } finally {
       setIsLoading(false);
@@ -55,7 +55,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-right">إعادة تعيين كلمة المرور</DialogTitle>
         </DialogHeader>
@@ -72,6 +72,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                className="text-right"
               />
             </div>
             

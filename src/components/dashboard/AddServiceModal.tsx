@@ -23,7 +23,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
   const { toast } = useToast();
 
   const serviceTypes: { value: ServiceType; label: string }[] = [
-    { value: 'university_application', label: 'تقديم الجامعة' },
+    { value: 'university_application', label: 'التقديم الجامعي' },
     { value: 'visa_assistance', label: 'مساعدة الفيزا' },
     { value: 'accommodation', label: 'السكن' },
     { value: 'scholarship', label: 'المنح الدراسية' },
@@ -65,7 +65,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
       toast({
         variant: "destructive",
         title: "خطأ في الإضافة",
-        description: error.message,
+        description: error.message || "حدث خطأ أثناء إضافة الخدمة",
       });
     } finally {
       setIsLoading(false);
@@ -73,7 +73,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
       <div className="space-y-2">
         <Label htmlFor="serviceType">نوع الخدمة</Label>
         <Select value={serviceType} onValueChange={(value: ServiceType) => setServiceType(value)} required>
@@ -97,6 +97,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="وصف الخدمة (اختياري)"
+          className="text-right"
         />
       </div>
 
@@ -108,6 +109,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({ userId, onSuccess }) 
           onChange={(e) => setNotes(e.target.value)}
           placeholder="أي ملاحظات إضافية (اختياري)"
           rows={3}
+          className="text-right"
         />
       </div>
 
