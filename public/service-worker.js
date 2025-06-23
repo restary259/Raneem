@@ -1,18 +1,8 @@
 
-const CACHE_NAME = 'darb-education-v1.0.3'; // Increment version for security update
+const CACHE_NAME = 'darb-education-v1.0.2'; // Increment version for updates
 const OFFLINE_URL = '/offline.html';
 
-// Enhanced security headers
-const SECURITY_HEADERS = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'SAMEORIGIN',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
-};
-
-// Secure cache patterns - exclude sensitive routes
+// Assets to cache immediately
 const STATIC_CACHE_URLS = [
   '/',
   '/offline.html',
@@ -24,46 +14,35 @@ const STATIC_CACHE_URLS = [
   '/contact',
   '/partnership',
   '/quiz',
-  '/resources'
-  // Explicitly exclude /student-auth and /student-dashboard for security
+  '/resources',
+  '/student-auth'
 ];
 
-// Sensitive routes that should never be cached
-const NEVER_CACHE_PATTERNS = [
-  /\/student-auth/,
-  /\/student-dashboard/,
-  /\/api\//,
-  /\/auth\//,
-  /\/admin/,
-  /\.env/,
-  /\/config/
-];
-
-// Runtime cache patterns with security considerations
+// Runtime cache patterns
 const RUNTIME_CACHE_PATTERNS = [
   /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
   /\.(?:js|css)$/,
   /\.(?:woff|woff2|eot|ttf|otf)$/
 ];
 
-// Install event - cache static assets securely
+// Install event - cache static assets
 self.addEventListener('install', event => {
-  console.log('[SW] Secure install event - Version 1.0.3');
+  console.log('[SW] Install event - Version 1.0.2');
   
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAME).then(cache => {
-        console.log('[SW] Caching static assets securely');
+        console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_CACHE_URLS);
       }),
-      self.skipWaiting()
+      self.skipWaiting() // Force activation of new service worker
     ])
   );
 });
 
-// Activate event - cleanup old caches
+// Activate event - cleanup old caches and take control immediately
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate event - Secure version ready');
+  console.log('[SW] Activate event - New version ready');
   
   event.waitUntil(
     Promise.all([
@@ -77,85 +56,88 @@ self.addEventListener('activate', event => {
           })
         );
       }),
-      self.clients.claim()
+      self.clients.claim() // Take control of all clients immediately
     ])
   );
   
-  // Notify clients about security update
+  // Notify all clients about the update with enhanced messaging
   self.clients.matchAll().then(clients => {
     clients.forEach(client => {
       client.postMessage({
         type: 'SW_UPDATED',
-        message: 'تم تحديث الأمان! إصدار محسن مع حماية إضافية.',
-        version: '1.0.3'
+        message: 'تم تحديث التطبيق بنجاح! إصدار جديد متاح.',
+        version: '1.0.2'
       });
     });
   });
 });
 
-// Enhanced fetch handler with security
+// Listen for messages from the main thread
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Check for updates every 15 minutes (reduced from 30)
+setInterval(() => {
+  self.registration.update();
+}, 15 * 60 * 1000);
+
+// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests for security
+  // Skip non-GET requests
   if (request.method !== 'GET') return;
 
   // Skip external requests
   if (!url.origin.includes(self.location.origin)) return;
 
-  // Never cache sensitive routes
-  if (NEVER_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-    return;
-  }
-
-  // Handle navigation requests with security headers
+  // Handle navigation requests
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.match(request)
         .then(cachedResponse => {
           if (cachedResponse) {
-            return addSecurityHeaders(cachedResponse);
+            return cachedResponse;
           }
           
           return fetch(request)
             .then(response => {
-              // Don't cache responses with sensitive headers
-              if (response.headers.get('Set-Cookie') || 
-                  response.headers.get('Authorization')) {
-                return addSecurityHeaders(response);
-              }
-              
+              // Clone the response before caching
               const responseClone = response.clone();
+              
               caches.open(CACHE_NAME).then(cache => {
                 cache.put(request, responseClone);
               });
               
-              return addSecurityHeaders(response);
+              return response;
             })
             .catch(() => {
-              return caches.match(OFFLINE_URL).then(offline => 
-                offline ? addSecurityHeaders(offline) : offline
-              );
+              // Return offline page for navigation requests
+              return caches.match(OFFLINE_URL);
             });
         })
     );
     return;
   }
 
-  // Handle static assets with enhanced security
+  // Handle static assets with cache-first strategy
   if (RUNTIME_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
     event.respondWith(
       caches.match(request)
         .then(cachedResponse => {
           if (cachedResponse) {
-            return addSecurityHeaders(cachedResponse);
+            return cachedResponse;
           }
           
           return fetch(request)
             .then(response => {
+              // Don't cache if not a valid response
               if (!response || response.status !== 200 || response.type !== 'basic') {
-                return addSecurityHeaders(response);
+                return response;
               }
               
               const responseClone = response.clone();
@@ -163,26 +145,19 @@ self.addEventListener('fetch', event => {
                 cache.put(request, responseClone);
               });
               
-              return addSecurityHeaders(response);
+              return response;
             })
             .catch(() => {
+              // Return a placeholder for failed image requests
               if (url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp)$/)) {
                 return new Response(
                   '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">صورة غير متاحة</text></svg>',
-                  { 
-                    headers: { 
-                      'Content-Type': 'image/svg+xml',
-                      ...SECURITY_HEADERS
-                    } 
-                  }
+                  { headers: { 'Content-Type': 'image/svg+xml' } }
                 );
               }
               return new Response('المحتوى غير متاح حالياً', { 
                 status: 503,
-                headers: { 
-                  'Content-Type': 'text/plain; charset=utf-8',
-                  ...SECURITY_HEADERS
-                }
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' }
               });
             });
         })
@@ -190,63 +165,37 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Default: network first with security headers
+  // Default: network first for other requests
   event.respondWith(
     fetch(request)
       .then(response => {
-        // Don't cache authenticated responses
-        if (!response.headers.get('Set-Cookie') && 
-            !response.headers.get('Authorization')) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
-        }
-        return addSecurityHeaders(response);
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, responseClone);
+        });
+        return response;
       })
       .catch(() => {
-        return caches.match(request).then(cached => 
-          cached ? addSecurityHeaders(cached) : cached
-        );
+        return caches.match(request);
       })
   );
 });
 
-// Add security headers to responses
-function addSecurityHeaders(response) {
-  if (!response || response.type === 'opaque') {
-    return response;
-  }
-  
-  const newResponse = new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: {
-      ...Object.fromEntries(response.headers.entries()),
-      ...SECURITY_HEADERS
-    }
-  });
-  
-  return newResponse;
-}
-
-// Enhanced background sync with security
+// Handle background sync for offline form submissions
 self.addEventListener('sync', event => {
   if (event.tag === 'contact-form-sync') {
     event.waitUntil(syncContactForms());
   }
 });
 
-// Secure form sync function
+// Function to sync contact forms when back online
 async function syncContactForms() {
   try {
     const cache = await caches.open(CACHE_NAME);
     const requests = await cache.keys();
     
     const formRequests = requests.filter(req => 
-      req.url.includes('/api/contact') && 
-      req.method === 'POST' &&
-      !req.url.includes('sensitive') // Additional security check
+      req.url.includes('/api/contact') && req.method === 'POST'
     );
     
     for (const request of formRequests) {
@@ -254,63 +203,50 @@ async function syncContactForms() {
         await fetch(request);
         await cache.delete(request);
       } catch (error) {
-        console.log('[SW] Failed to sync form securely:', error);
+        console.log('[SW] Failed to sync form:', error);
       }
     }
   } catch (error) {
-    console.log('[SW] Secure background sync failed:', error);
+    console.log('[SW] Background sync failed:', error);
   }
 }
 
-// Enhanced push notification handler with validation
+// Enhanced push notification handler
 self.addEventListener('push', event => {
   if (!event.data) return;
 
-  try {
-    const data = event.data.json();
-    
-    // Validate notification data for security
-    if (!data.title || typeof data.title !== 'string' || data.title.length > 100) {
-      console.warn('[SW] Invalid notification title');
-      return;
-    }
-    
-    const options = {
-      body: (data.body && typeof data.body === 'string' && data.body.length <= 200) 
-        ? data.body 
-        : 'تحديث جديد متاح في تطبيق درب',
-      icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
-      badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
-      vibrate: [100, 50, 100],
-      tag: 'app-update',
-      data: {
-        dateOfArrival: Date.now(),
-        primaryKey: (data.primaryKey && typeof data.primaryKey === 'number') ? data.primaryKey : 1,
-        url: (data.url && typeof data.url === 'string' && data.url.startsWith('/')) ? data.url : '/'
+  const data = event.data.json();
+  const options = {
+    body: data.body || 'تحديث جديد متاح في تطبيق درب',
+    icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+    badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+    vibrate: [100, 50, 100],
+    tag: 'app-update',
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: data.primaryKey || 1,
+      url: data.url || '/'
+    },
+    actions: [
+      {
+        action: 'update',
+        title: 'تحديث الآن',
+        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
       },
-      actions: [
-        {
-          action: 'update',
-          title: 'تحديث الآن',
-          icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
-        },
-        {
-          action: 'later',
-          title: 'لاحقاً',
-          icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
-        }
-      ]
-    };
+      {
+        action: 'later',
+        title: 'لاحقاً',
+        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
+      }
+    ]
+  };
 
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
-  } catch (error) {
-    console.error('[SW] Secure notification error:', error);
-  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'درب - تحديث التطبيق', options)
+  );
 });
 
-// Secure notification click handler
+// Enhanced notification click handler
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
@@ -325,15 +261,9 @@ self.addEventListener('notificationclick', event => {
   } else if (event.action === 'later') {
     // Do nothing, just close
   } else {
-    // Validate URL before opening
-    const url = event.notification.data?.url || '/';
-    if (typeof url === 'string' && (url.startsWith('/') || url.startsWith(self.location.origin))) {
-      event.waitUntil(clients.openWindow(url));
-    }
+    // Default click action
+    event.waitUntil(
+      clients.openWindow(event.notification.data?.url || '/')
+    );
   }
-});
-
-// Security check on service worker installation
-self.addEventListener('securitypolicyviolation', event => {
-  console.warn('[SW] Security policy violation:', event.violatedDirective);
 });

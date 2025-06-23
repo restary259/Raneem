@@ -8,10 +8,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Shield } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
-import { validateInput, rateLimiter } from '@/utils/security';
 
 const StudentAuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,19 +23,16 @@ const StudentAuthPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const [isRateLimited, setIsRateLimited] = useState(false);
-  const [rateLimitTime, setRateLimitTime] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('🔐 Secure auth page mounted');
+    console.log('🔐 Auth page mounted');
     
     // Check if user is already logged in
     const getSession = async () => {
       try {
-        console.log('🔐 Checking existing session securely...');
+        console.log('🔐 Checking existing session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -73,92 +69,18 @@ const StudentAuthPage = () => {
     };
   }, [navigate]);
 
-  // Check rate limiting
-  useEffect(() => {
-    if (isRateLimited) {
-      const interval = setInterval(() => {
-        const remaining = rateLimiter.getRemainingTime('auth-attempt');
-        setRateLimitTime(Math.ceil(remaining / 1000));
-        
-        if (remaining <= 0) {
-          setIsRateLimited(false);
-          setRateLimitTime(0);
-          clearInterval(interval);
-        }
-      }, 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [isRateLimited]);
-
-  const validateForm = () => {
-    // Validate email
-    if (!validateInput.email(email)) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في البيانات",
-        description: "البريد الإلكتروني غير صالح",
-      });
-      return false;
-    }
-
-    // Validate password for signup
-    if (!isLogin) {
-      const passwordValidation = validateInput.password(password);
-      if (!passwordValidation.isValid) {
-        setPasswordErrors(passwordValidation.errors);
-        toast({
-          variant: "destructive",
-          title: "خطأ في كلمة المرور",
-          description: passwordValidation.errors[0],
-        });
-        return false;
-      }
-      
-      // Validate full name
-      if (!fullName.trim() || fullName.length < 2) {
-        toast({
-          variant: "destructive",
-          title: "خطأ في البيانات",
-          description: "الاسم الكامل مطلوب ويجب أن يكون حرفين على الأقل",
-        });
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check rate limiting
-    if (!rateLimiter.checkLimit('auth-attempt', 5, 15 * 60 * 1000)) {
-      setIsRateLimited(true);
-      setRateLimitTime(Math.ceil(rateLimiter.getRemainingTime('auth-attempt') / 1000));
-      toast({
-        variant: "destructive",
-        title: "تم تجاوز الحد المسموح",
-        description: "عدد كبير من المحاولات. يرجى الانتظار قبل المحاولة مرة أخرى.",
-      });
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
-    setPasswordErrors([]);
 
     try {
-      console.log('🔐 Starting secure auth process:', { isLogin, email: email.substring(0, 3) + '***' });
+      console.log('🔐 Starting auth process:', { isLogin, email });
 
       if (isLogin) {
-        console.log('🔐 Attempting secure login...');
+        console.log('🔐 Attempting login...');
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: validateInput.sanitizeString(email),
-          password: password, // Don't sanitize password as it might affect authentication
+          email,
+          password,
         });
         
         if (error) {
@@ -172,15 +94,15 @@ const StudentAuthPage = () => {
           description: "مرحباً بك في لوحة التحكم الخاصة بك",
         });
       } else {
-        console.log('🔐 Attempting secure signup...');
+        console.log('🔐 Attempting signup...');
         const { data, error } = await supabase.auth.signUp({
-          email: validateInput.sanitizeString(email),
-          password: password,
+          email,
+          password,
           options: {
             data: {
-              full_name: validateInput.sanitizeString(fullName),
-              phone_number: phoneNumber ? validateInput.sanitizeString(phoneNumber) : null,
-              country: country ? validateInput.sanitizeString(country) : null,
+              full_name: fullName,
+              phone_number: phoneNumber,
+              country: country,
             },
             emailRedirectTo: `${window.location.origin}/student-dashboard`
           }
@@ -210,8 +132,6 @@ const StudentAuthPage = () => {
         errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
       } else if (error.message.includes('Invalid email')) {
         errorMessage = 'البريد الإلكتروني غير صالح';
-      } else if (error.message.includes('Email rate limit exceeded')) {
-        errorMessage = 'تم تجاوز حد إرسال الرسائل. يرجى الانتظار قبل المحاولة مرة أخرى.';
       }
 
       toast({
@@ -224,33 +144,16 @@ const StudentAuthPage = () => {
     }
   };
 
-  // Clear password errors when switching between login/signup
-  useEffect(() => {
-    setPasswordErrors([]);
-  }, [isLogin]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Shield className="h-5 w-5 text-orange-500" />
-              <span className="text-sm text-gray-600">محمي بأحدث تقنيات الأمان</span>
-            </div>
             <CardTitle className="text-2xl font-bold">
               {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isRateLimited && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-700 text-sm text-center">
-                  يرجى الانتظار {rateLimitTime} ثانية قبل المحاولة مرة أخرى
-                </p>
-              </div>
-            )}
-            
             <form onSubmit={handleAuth} className="space-y-4">
               {!isLogin && (
                 <>
@@ -262,7 +165,6 @@ const StudentAuthPage = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required={!isLogin}
-                      maxLength={100}
                     />
                   </div>
                   
@@ -274,7 +176,6 @@ const StudentAuthPage = () => {
                       placeholder="أدخل رقم جوالك"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      maxLength={20}
                     />
                   </div>
                   
@@ -285,7 +186,6 @@ const StudentAuthPage = () => {
                       placeholder="أدخل دولتك"
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
-                      maxLength={50}
                     />
                   </div>
                 </>
@@ -300,8 +200,6 @@ const StudentAuthPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  maxLength={254}
-                  autoComplete="email"
                 />
               </div>
               
@@ -315,9 +213,7 @@ const StudentAuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
-                    maxLength={128}
-                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    minLength={6}
                   />
                   <Button
                     type="button"
@@ -325,22 +221,10 @@ const StudentAuthPage = () => {
                     size="sm"
                     className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                
-                {!isLogin && passwordErrors.length > 0 && (
-                  <div className="text-sm text-red-600">
-                    <ul className="list-disc list-inside space-y-1">
-                      {passwordErrors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
                 {isLogin && (
                   <div className="text-left">
                     <Button
@@ -356,11 +240,7 @@ const StudentAuthPage = () => {
                 )}
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading || isRateLimited}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="ml-2 h-4 w-4 animate-spin" />
@@ -377,7 +257,6 @@ const StudentAuthPage = () => {
                 variant="link"
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm"
-                disabled={isLoading}
               >
                 {isLogin ? "ليس لديك حساب؟ سجل الآن" : "لديك حساب؟ سجل الدخول"}
               </Button>
