@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -19,14 +18,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    // Properly define console methods for production
-    ...(mode === 'production' && {
-      'console.log': '(() => {})',
-      'console.warn': '(() => {})',
-      'console.error': '(() => {})',
-    }),
-  },
+  // No define block needed for console methods if you want to keep them!
   build: {
     rollupOptions: {
       output: {
