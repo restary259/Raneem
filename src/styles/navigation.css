@@ -1,7 +1,7 @@
 
 @layer components {
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center min-w-[56px] min-h-[56px] px-1 py-1 rounded-lg transition-all duration-200;
+    @apply flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-1 py-1 rounded-lg transition-all duration-200;
     touch-action: manipulation;
     font-size: var(--small-text);
   }
@@ -50,13 +50,8 @@
     @apply block text-center;
     word-break: break-word;
     hyphens: auto;
-    font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+    font-size: clamp(0.6rem, 1.2vw, 0.75rem);
     line-height: 1.2;
-  }
-
-  /* RTL Chevron adjustments */
-  [dir="rtl"] .navigation-chevron {
-    transform: rotate(180deg);
   }
 
   /* Desktop navigation styling */
@@ -69,55 +64,95 @@
   /* Responsive navigation adjustments */
   @media (max-width: 768px) {
     .bottom-nav-item {
-      min-width: 44px;
-      min-height: 44px;
-      padding: 0.2rem;
-    }
-    
-    .bottom-nav-item span {
-      font-size: clamp(0.6rem, 1.2vw, 0.7rem);
-    }
-    
-    .nav-item {
-      font-size: clamp(0.7rem, 1.5vw, 0.85rem);
-      padding-inline: clamp(0.25rem, 0.8vw, 0.6rem);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .bottom-nav-item {
       min-width: 40px;
       min-height: 40px;
       padding: 0.15rem;
     }
     
     .bottom-nav-item span {
-      font-size: 0.6rem;
+      font-size: clamp(0.55rem, 1vw, 0.65rem);
       max-width: 40px;
       text-overflow: ellipsis;
       overflow: hidden;
     }
     
     .nav-item {
-      font-size: 0.7rem;
-      padding-inline: 0.4rem;
+      font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+      padding-inline: clamp(0.25rem, 0.8vw, 0.6rem);
+    }
+    
+    /* Mobile header adjustments */
+    header {
+      height: 56px !important;
+    }
+    
+    header .container {
+      padding-inline: clamp(0.75rem, 3vw, 1rem);
     }
   }
 
-  /* Chat button responsive sizing */
-  .chat-btn {
-    width: var(--btn-size);
-    height: var(--btn-size);
-    font-size: calc(var(--btn-size) * 0.4);
-    bottom: clamp(80px, 12vw, 120px);
-    right: clamp(16px, 4vw, 24px);
-    z-index: 999;
+  @media (max-width: 480px) {
+    .bottom-nav-item {
+      min-width: 36px;
+      min-height: 36px;
+      padding: 0.1rem;
+    }
+    
+    .bottom-nav-item span {
+      font-size: 0.55rem;
+      max-width: 36px;
+      line-height: 1.1;
+    }
+    
+    .nav-item {
+      font-size: 0.65rem;
+      padding-inline: 0.3rem;
+    }
+    
+    header {
+      height: 52px !important;
+    }
+    
+    header .container {
+      padding-inline: 0.75rem;
+    }
+  }
+
+  /* Educational Programs Page Sticky Adjustments */
+  .educational-sticky-section {
+    top: 56px; /* Desktop header height */
   }
 
   @media (max-width: 768px) {
-    .chat-btn {
-      bottom: clamp(90px, 15vw, 130px);
-      right: clamp(12px, 3vw, 20px);
+    .educational-sticky-section {
+      top: 56px; /* Mobile header height */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .educational-sticky-section {
+      top: 52px; /* Small mobile header height */
+    }
+  }
+
+  /* Ensure proper content spacing below sticky elements */
+  .educational-content-spacing {
+    margin-top: clamp(1rem, 3vw, 2rem);
+  }
+
+  /* Filter dropdown enhancements */
+  .filter-dropdown {
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    .filter-dropdown {
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      max-height: 60vh;
     }
   }
 }
