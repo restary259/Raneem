@@ -40,11 +40,11 @@ export default defineConfig(({ command }) => ({
     }
   },
   define: {
-    // Remove console logs in production for security - using proper JSON syntax
+    // Remove console logs in production for security - using proper string syntax
     ...(command === 'build' && {
-      'console.log': '(() => {})',
-      'console.warn': '(() => {})',
-      'console.error': '(() => {})'
+      'console.log': '"function(){}"',
+      'console.warn': '"function(){}"',
+      'console.error': '"function(){}"'
     })
   }
 }));
