@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,7 +34,7 @@ const NetflixLoader = () => {
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center">
       <div className="animate-[logoScale_2s_ease-out_forwards]">
         <img 
-          src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" 
+          src="/lovable-uploads/efe8829d-07b5-4776-a49f-c111a5219b76.png" 
           alt="درب" 
           className="w-16 h-16 object-contain"
         />

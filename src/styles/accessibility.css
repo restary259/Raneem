@@ -1,0 +1,25 @@
+
+@layer utilities {
+  @media (prefers-contrast: high) {
+    .bottom-nav-item {
+      @apply border border-gray-300;
+    }
+
+    .bottom-nav-item.active {
+      @apply border-orange-500 bg-orange-100;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bottom-nav-item {
+      @apply transition-none;
+    }
+
+    @keyframes logoScale {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  }
+}

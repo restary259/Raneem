@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -38,12 +37,17 @@ const DesktopNav = () => {
     {
         title: 'وجهاتنا التعليمية',
         href: '/educational-destinations',
-        description: 'اكتشف الجامعات ومعاهد اللغة والبرامج التعليمية',
+        description: 'اكتشف الجامعات ومعاهد اللغة والخدمات التعليمية',
     },
     {
         title: 'البرامج التعليمية',
         href: '/educational-programs',
         description: 'استكشف التخصصات الأكاديمية المختلفة واختر مسارك المهني',
+    },
+    {
+        title: t('nav.broadcast'),
+        href: '/broadcast',
+        description: 'شاهد فيديوهات تعليمية ومباشرة من خبرائنا',
     }
   ];
 
@@ -89,14 +93,6 @@ const DesktopNav = () => {
                     ))}
                 </ul>
             </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        <NavigationMenuItem>
-          <Link to="/broadcast">
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {t('nav.broadcast')}
-            </NavigationMenuLink>
-          </Link>
         </NavigationMenuItem>
 
         <NavigationMenuItem>

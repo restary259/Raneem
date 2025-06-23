@@ -1,0 +1,27 @@
+
+@layer components {
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center min-w-[48px] min-h-[48px] px-2 py-1 rounded-lg transition-all duration-200;
+    touch-action: manipulation;
+  }
+
+  .bottom-nav-item:hover {
+    @apply bg-orange-50;
+  }
+
+  .bottom-nav-item:focus {
+    @apply outline-none ring-2 ring-orange-500 ring-offset-2;
+  }
+
+  .bottom-nav-item.active {
+    @apply text-orange-500 bg-orange-50;
+  }
+
+  .bottom-nav-item:not(.active) {
+    @apply text-gray-600;
+  }
+
+  .bottom-nav-item:not(.active):hover {
+    @apply text-orange-500;
+  }
+}

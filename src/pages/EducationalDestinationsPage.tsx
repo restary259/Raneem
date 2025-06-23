@@ -2,125 +2,17 @@
 import React, { useState } from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, GraduationCap, Building2, Heart, Award, Users } from 'lucide-react';
+import { GraduationCap, Building2, Heart } from 'lucide-react';
+import CountrySelector from '@/components/educational/CountrySelector';
+import UniversityCard from '@/components/educational/UniversityCard';
+import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
+import ServiceCard from '@/components/educational/ServiceCard';
+import { countries, universities, languageSchools, services } from '@/data/educationalDestinations';
 
 const EducationalDestinationsPage = () => {
   const [selectedCountry, setSelectedCountry] = useState('germany');
-
-  const countries = [
-    { code: 'germany', name: 'ألمانيا', flag: '🇩🇪', color: 'bg-red-600' },
-    { code: 'romania', name: 'رومانيا', flag: '🇷🇴', color: 'bg-blue-600' },
-    { code: 'jordan', name: 'الأردن', flag: '🇯🇴', color: 'bg-green-600' }
-  ];
-
-  const universities = {
-    germany: [
-      {
-        name: "RWTH Aachen University",
-        location: "آخن، ألمانيا",
-        logoUrl: "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.png",
-        description: "جامعة تقنية رائدة في ألمانيا متخصصة في الهندسة والتكنولوجيا",
-        majors: ["هندسة ميكانيكية", "هندسة كهربائية", "علوم حاسوب", "هندسة كيميائية"],
-        ranking: "#1 في ألمانيا للتكنولوجيا",
-        students: "45,000 طالب"
-      },
-      {
-        name: "Technical University of Munich",
-        location: "ميونخ، ألمانيا",
-        logoUrl: "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.png",
-        description: "جامعة بحثية متميزة في التكنولوجيا والعلوم الطبيعية",
-        majors: ["هندسة", "علوم طبيعية", "طب", "إدارة أعمال"],
-        ranking: "Top 50 عالمياً",
-        students: "42,000 طالب"
-      },
-      {
-        name: "University of Heidelberg",
-        location: "هايدلبرغ، ألمانيا",
-        logoUrl: "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.png",
-        description: "أقدم جامعة في ألمانيا، متميزة في البحث العلمي",
-        majors: ["طب", "قانون", "فلسفة", "علوم طبيعية"],
-        ranking: "Top 100 عالمياً",
-        students: "30,000 طالب"
-      }
-    ],
-    romania: [
-      {
-        name: "Carol Davila University",
-        location: "بوخارست، رومانيا",
-        logoUrl: "/lovable-uploads/dfca3402-c6b9-4560-88d7-6e8c19f26ab4.png",
-        description: "جامعة طبية رائدة في رومانيا",
-        majors: ["طب بشري", "طب أسنان", "صيدلة", "تمريض"],
-        ranking: "#1 في رومانيا للطب",
-        students: "15,000 طالب"
-      },
-      {
-        name: "Ovidius University",
-        location: "كونستانتا، رومانيا",
-        logoUrl: "/lovable-uploads/03767a14-eafc-4beb-8e8f-12a2491e4ee5.png",
-        description: "جامعة شاملة مع برامج متنوعة",
-        majors: ["هندسة", "اقتصاد", "قانون", "علوم إنسانية"],
-        ranking: "Top 10 في رومانيا",
-        students: "18,000 طالب"
-      }
-    ],
-    jordan: [
-      {
-        name: "جامعة اليرموك",
-        location: "إربد، الأردن",
-        logoUrl: "/lovable-uploads/125fa6e2-60ae-4bd0-91bb-a2b2dc342ebd.png",
-        description: "جامعة حكومية رائدة في الأردن",
-        majors: ["هندسة", "تكنولوجيا معلومات", "فنون جميلة", "تربية"],
-        ranking: "#2 في الأردن",
-        students: "40,000 طالب"
-      }
-    ]
-  };
-
-  const languageSchools = {
-    germany: [
-      {
-        name: "F+U Academy of Languages",
-        location: "هايدلبرغ، ألمانيا",
-        logoUrl: "/lovable-uploads/e7298181-bfde-4ee6-b5cb-a310ab735b61.png",
-        description: "أكاديمية لغات متخصصة في تعليم الألمانية للطلاب الدوليين",
-        programs: ["دورات مكثفة", "إعداد للجامعة", "دورات مسائية"]
-      },
-      {
-        name: "Alpha Aktiv",
-        location: "هايدلبرغ، ألمانيا",
-        logoUrl: "/lovable-uploads/171c7fae-8d36-4d06-a429-e3726c4417b8.png",
-        description: "معهد متخصص في تعليم اللغة الألمانية والتأهيل الجامعي",
-        programs: ["دورات عامة", "تحضير للامتحانات", "برامج مهنية"]
-      },
-      {
-        name: "GoAcademy",
-        location: "دوسلدورف، ألمانيا",
-        logoUrl: "/lovable-uploads/f66f6ad1-4686-44a0-8341-178c0bacebaf.png",
-        description: "معهد لغات حديث يقدم برامج متنوعة",
-        programs: ["لغة ألمانية", "لغة إنجليزية", "برامج مهنية"]
-      }
-    ]
-  };
-
-  const services = {
-    germany: [
-      {
-        name: "Techniker Krankenkasse",
-        logoUrl: "/lovable-uploads/fc80f423-4215-4afe-ab5f-60a784436ae5.png",
-        type: "تأمين صحي",
-        description: "شركة التأمين الصحي الرائدة في ألمانيا للطلاب"
-      },
-      {
-        name: "Deutsche Bahn",
-        logoUrl: "/lovable-uploads/c4ad72df-424f-4051-b509-d3e1253f49f2.png",
-        type: "مواصلات",
-        description: "شبكة السكك الحديدية الوطنية مع خصومات للطلاب"
-      }
-    ]
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,150 +35,56 @@ const EducationalDestinationsPage = () => {
         </div>
       </section>
 
-      {/* Country Selection */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center mb-12">
-            <div className="flex gap-4 p-2 bg-gray-100 rounded-full">
-              {countries.map((country) => (
-                <button
-                  key={country.code}
-                  onClick={() => setSelectedCountry(country.code)}
-                  className={`px-6 py-3 rounded-full transition-all duration-200 flex items-center gap-2 ${
-                    selectedCountry === country.code
-                      ? 'bg-orange-500 text-white shadow-lg'
-                      : 'hover:bg-gray-200'
-                  }`}
-                >
-                  <span className="text-2xl">{country.flag}</span>
-                  <span className="font-medium">{country.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      <CountrySelector
+        countries={countries}
+        selectedCountry={selectedCountry}
+        onCountrySelect={setSelectedCountry}
+      />
 
-          {/* Universities */}
+      <div className="container mx-auto px-4">
+        {/* Universities */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
+            <GraduationCap className="h-8 w-8 text-orange-500" />
+            الجامعات الرائدة
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {universities[selectedCountry as keyof typeof universities]?.map((uni, index) => (
+              <UniversityCard key={index} university={uni} />
+            ))}
+          </div>
+        </div>
+
+        {/* Language Schools */}
+        {languageSchools[selectedCountry as keyof typeof languageSchools] && (
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-              <GraduationCap className="h-8 w-8 text-orange-500" />
-              الجامعات الرائدة
+              <Building2 className="h-8 w-8 text-orange-500" />
+              معاهد اللغة
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {universities[selectedCountry as keyof typeof universities]?.map((uni, index) => (
-                <Card key={index} className="hover:shadow-xl transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border">
-                      <img 
-                        src={uni.logoUrl} 
-                        alt={uni.name}
-                        className="h-16 w-auto object-contain"
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">{uni.name}</h3>
-                    <p className="text-gray-600 flex items-center gap-2 mb-3">
-                      <MapPin className="h-4 w-4" />
-                      {uni.location}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-4">{uni.description}</p>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Award className="h-4 w-4 text-orange-500" />
-                        <span>{uni.ranking}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>{uni.students}</span>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2">التخصصات المتاحة:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {uni.majors.map((major, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {major}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              {languageSchools[selectedCountry as keyof typeof languageSchools].map((school, index) => (
+                <LanguageSchoolCard key={index} school={school} />
               ))}
             </div>
           </div>
+        )}
 
-          {/* Language Schools */}
-          {languageSchools[selectedCountry as keyof typeof languageSchools] && (
-            <div className="mb-16">
-              <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-                <Building2 className="h-8 w-8 text-orange-500" />
-                معاهد اللغة
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {languageSchools[selectedCountry as keyof typeof languageSchools].map((school, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border">
-                        <img 
-                          src={school.logoUrl} 
-                          alt={school.name}
-                          className="h-12 w-auto object-contain"
-                        />
-                      </div>
-                      <h3 className="text-lg font-bold mb-2">{school.name}</h3>
-                      <p className="text-gray-600 flex items-center gap-2 mb-3">
-                        <MapPin className="h-4 w-4" />
-                        {school.location}
-                      </p>
-                      <p className="text-sm text-gray-600 mb-4">{school.description}</p>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2">البرامج:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {school.programs.map((program, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {program}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+        {/* Services */}
+        {services[selectedCountry as keyof typeof services] && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
+              <Heart className="h-8 w-8 text-orange-500" />
+              الخدمات الطلابية
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {services[selectedCountry as keyof typeof services].map((service, index) => (
+                <ServiceCard key={index} service={service} />
+              ))}
             </div>
-          )}
-
-          {/* Services */}
-          {services[selectedCountry as keyof typeof services] && (
-            <div className="mb-16">
-              <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-                <Heart className="h-8 w-8 text-orange-500" />
-                الخدمات الطلابية
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {services[selectedCountry as keyof typeof services].map((service, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6 text-center">
-                      <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border">
-                        <img 
-                          src={service.logoUrl} 
-                          alt={service.name}
-                          className="h-12 w-auto object-contain"
-                        />
-                      </div>
-                      <h3 className="text-lg font-bold mb-2">{service.name}</h3>
-                      <Badge variant="outline" className="mb-3">{service.type}</Badge>
-                      <p className="text-sm text-gray-600">{service.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+          </div>
+        )}
+      </div>
 
       {/* CTA Section */}
       <section className="py-20 bg-orange-500 text-white">

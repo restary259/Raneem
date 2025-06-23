@@ -1,0 +1,26 @@
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .pwa-container {
+    @apply max-w-md mx-auto bg-white min-h-screen;
+  }
+
+  .pwa-content {
+    @apply px-4 py-6 pb-20;
+  }
+}
