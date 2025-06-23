@@ -6,7 +6,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import MobileTabBar from './MobileTabBar';
 import FloatingActionButton from './FloatingActionButton';
 import MobileDrawer from './MobileDrawer';
-import BottomNav from '@/components/common/BottomNav';
 import Header from '@/components/landing/Header';
 
 interface MobileLayoutProps {
@@ -63,12 +62,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      {/* Mobile Navigation */}
-      {isMobile && !shouldHideNav ? (
-        <MobileTabBar />
-      ) : (
-        !isMobile && <BottomNav />
-      )}
+      {/* Single Navigation - Only show MobileTabBar on mobile when navigation should be visible */}
+      {isMobile && !shouldHideNav && <MobileTabBar />}
 
       {/* Floating Action Button */}
       {isMobile && <FloatingActionButton />}
