@@ -25,14 +25,14 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
   const { isAuthenticated } = useAuth();
 
   const navigationItems = [
-    { name: t('nav.home'), href: '/' },
-    { name: t('nav.services'), href: '/services' },
-    { name: t('nav.partners'), href: '/partners' },
-    { name: t('nav.partnership'), href: '/partnership' },
-    { name: t('nav.resources'), href: '/resources' },
-    { name: t('nav.about'), href: '/about' },
+    { name: 'الرئيسية', href: '/' },
+    { name: 'الخدمات', href: '/services' },
+    { name: 'الشركاء', href: '/partners' },
+    { name: 'الشراكة', href: '/partnership' },
+    { name: 'الموارد', href: '/resources' },
+    { name: 'من نحن', href: '/about' },
     { name: 'المجتمع', href: '/community' },
-    { name: t('nav.contact'), href: '/contact' },
+    { name: 'تواصل معنا', href: '/contact' },
   ];
 
   return (
@@ -48,48 +48,13 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
       ))}
       
       <div className="flex items-center space-x-3 space-x-reverse mr-6">
-        {isAuthenticated ? (
-          <Link to="/dashboard">
-            <Button variant="default" size="sm">
-              لوحة التحكم
-            </Button>
-          </Link>
-        ) : (
-          <>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  تسجيل الدخول
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>تسجيل الدخول</DialogTitle>
-                  <DialogDescription>
-                    اختر طريقة تسجيل الدخول
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بالإيميل</Button>
-                  <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بجوجل</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Link to="/student-auth">
-              <Button variant="default" size="sm">
-                إنشاء حساب
-              </Button>
-            </Link>
-          </>
-        )}
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm">
               <Languages />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
+          <DropdownMenuContent className="w-56 bg-white shadow-lg border" align="end">
             <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {

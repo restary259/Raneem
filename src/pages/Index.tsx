@@ -18,7 +18,12 @@ const Index = () => {
 
   // Show authenticated home feed for logged-in users
   if (user) {
-    return isMobile ? <MobileHomeFeed /> : <HomeFeed />;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        {isMobile ? <MobileHomeFeed /> : <HomeFeed />}
+      </div>
+    );
   }
 
   // Show mobile optimized landing for non-authenticated mobile users
@@ -29,6 +34,7 @@ const Index = () => {
   // Desktop landing page
   return (
     <div dir="rtl" className="flex flex-col min-h-screen bg-background text-foreground">
+      <Header />
       <main className="flex-grow">
         <Hero />
         <PartnersMarquee />

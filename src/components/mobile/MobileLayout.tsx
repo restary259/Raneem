@@ -32,7 +32,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
 
   const shouldShowHeader = showHeaderPaths.some(path => 
     location.pathname.startsWith(path)
-  ) || location.pathname === '/';
+  ) || (location.pathname === '/' && user);
 
   // Pages that shouldn't show mobile navigation
   const hideNavPaths = [

@@ -12,7 +12,7 @@ const Header = () => {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" dir="rtl">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Right Side: Enhanced Logo */}
+          {/* Logo - Right Side */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3">
               <img 
@@ -20,16 +20,18 @@ const Header = () => {
                 alt="درب" 
                 className="h-10 w-auto object-contain"
               />
-              <span className="font-bold text-xl text-gray-900 whitespace-nowrap">درب</span>
+              <span className="font-bold text-xl text-gray-900 whitespace-nowrap">
+                درب
+              </span>
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation - Only show on large screens */}
+          {/* Desktop Navigation - Center */}
           <div className="hidden lg:flex flex-1 justify-center mx-8">
             <DesktopNav t={t} />
           </div>
 
-          {/* Left Side: Enhanced Student Login Button - Desktop only */}
+          {/* Student Portal Button - Left Side (Desktop only) */}
           <div className="hidden lg:block">
             <Link 
               to="/student-auth" 
@@ -39,7 +41,7 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu Button */}
           <div className="lg:hidden">
             <MobileNav />
           </div>
