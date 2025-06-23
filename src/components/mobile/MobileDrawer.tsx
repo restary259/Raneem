@@ -108,9 +108,9 @@ const MobileDrawer = () => {
         <DrawerHeader className="text-right">
           <DrawerTitle className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={profile?.avatar_url} />
+              <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback>
-                {profile?.full_name?.charAt(0) || user?.email?.charAt(0)}
+                {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
