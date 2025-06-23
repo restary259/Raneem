@@ -12,10 +12,10 @@ import AboutPage from '@/pages/AboutPage';
 import ContactPage from '@/pages/ContactPage';
 import ProfileManagementPage from '@/pages/ProfileManagementPage';
 import NotificationsPage from '@/pages/NotificationsPage';
-import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundary as CustomErrorBoundary from '@/components/ErrorBoundary';
 import CommunityHubPage from '@/pages/CommunityHubPage';
 import ForumTopicPage from '@/pages/ForumTopicPage';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorBoundary as CustomErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
   return (
