@@ -36,77 +36,84 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
   ];
 
   return (
-    <nav className="hidden lg:flex items-center space-x-6">
-      {navigationItems.map((item) => (
-        <Link key={item.name} to={item.href} className="text-sm font-medium text-gray-800 hover:text-gray-900">
-          {item.name}
-        </Link>
-      ))}
-      {isAuthenticated ? (
-        <Link to="/dashboard">
-          <Button variant="default" size="sm">
-            لوحة التحكم
-          </Button>
-        </Link>
-      ) : (
-        <>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                تسجيل الدخول
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>تسجيل الدخول</DialogTitle>
-                <DialogDescription>
-                  اختر طريقة تسجيل الدخول
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بالإيميل</Button>
-                <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بجوجل</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Link to="/student-auth">
+    <div className="flex items-center justify-between w-full">
+      {/* Navigation Menu */}
+      <nav className="flex items-center space-x-6 flex-1 justify-center">
+        {navigationItems.map((item) => (
+          <Link key={item.name} to={item.href} className="text-sm font-medium text-gray-800 hover:text-orange-500 transition-colors px-2 py-1 rounded nav-item">
+            {item.name}
+          </Link>
+        ))}
+      </nav>
+
+      {/* Right Side Actions */}
+      <div className="flex items-center space-x-3">
+        {isAuthenticated ? (
+          <Link to="/dashboard">
             <Button variant="default" size="sm">
-              إنشاء حساب
+              لوحة التحكم
             </Button>
           </Link>
-        </>
-      )}
+        ) : (
+          <>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  تسجيل الدخول
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>تسجيل الدخول</DialogTitle>
+                  <DialogDescription>
+                    اختر طريقة تسجيل الدخول
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بالإيميل</Button>
+                  <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بجوجل</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Link to="/student-auth">
+              <Button variant="default" size="sm">
+                إنشاء حساب
+              </Button>
+            </Link>
+          </>
+        )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <Languages />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => {
-            localStorage.setItem('i18nextLng', 'ar');
-            window.location.reload();
-          }}>
-            العربية
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => {
-            localStorage.setItem('i18nextLng', 'en');
-            window.location.reload();
-          }}>
-            English
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => {
-            localStorage.setItem('i18nextLng', 'he');
-            window.location.reload();
-          }}>
-            עברית
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </nav>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Languages />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              localStorage.setItem('i18nextLng', 'ar');
+              window.location.reload();
+            }}>
+              العربية
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              localStorage.setItem('i18nextLng', 'en');
+              window.location.reload();
+            }}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              localStorage.setItem('i18nextLng', 'he');
+              window.location.reload();
+            }}>
+              עברית
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 };
 
