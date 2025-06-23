@@ -3,7 +3,6 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProfile } from '@/hooks/useStudentProfile';
-import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +23,12 @@ import {
 const StudentSidebar = () => {
   const { user } = useAuth();
   const { profile, isLoading: profileLoading } = useStudentProfile(user?.id || '');
-  const { unreadCount } = useNotifications(user?.id || '', { limit: 1 });
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Simplified notification count - will be 0 for now to avoid subscription issues
+  const unreadCount = 0;
 
   // Return loading state if auth is not ready
   if (!user) {
