@@ -17,68 +17,68 @@ const MobileNav = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-72" dir="rtl">
-        <nav className="flex flex-col gap-4 mt-8">
+        <nav className="flex flex-col gap-3 mt-6">
           <Link 
             to="/" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             {t('nav.home')}
           </Link>
           <Link 
             to="/about" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             {t('nav.about')}
           </Link>
           <Link 
             to="/services" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             {t('nav.services')}
           </Link>
           <Link 
             to="/educational-programs" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             التخصصات
           </Link>
           <Link 
             to="/quiz" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             اختيار التخصص
           </Link>
           <Link 
             to="/resources" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             {t('nav.resources')}
           </Link>
           <Link 
             to="/contact" 
-            className="text-base font-medium hover:text-orange-500 transition-colors text-right py-2"
+            className="text-sm font-medium hover:text-orange-500 transition-colors text-right py-2"
           >
             {t('nav.contact')}
           </Link>
           
-          {/* المزيد section - at bottom */}
-          <div className="border-t pt-4 mt-4">
-            <p className="text-sm font-semibold text-gray-500 mb-3 text-right">المزيد</p>
+          {/* المزيد section */}
+          <div className="border-t pt-3 mt-3">
+            <p className="text-xs font-semibold text-gray-500 mb-2 text-right">المزيد</p>
             <Link 
               to="/educational-destinations" 
-              className="text-base font-medium hover:text-orange-500 transition-colors text-right block mb-3 py-2"
+              className="text-sm font-medium hover:text-orange-500 transition-colors text-right block mb-2 py-2"
             >
               وجهاتنا التعليمية
             </Link>
             <Link 
               to="/partnership" 
-              className="text-base font-medium hover:text-orange-500 transition-colors text-right block mb-3 py-2"
+              className="text-sm font-medium hover:text-orange-500 transition-colors text-right block mb-2 py-2"
             >
               {t('nav.partnership')}
             </Link>
             <Link 
               to="/broadcast" 
-              className="text-base font-medium hover:text-orange-500 transition-colors text-right block mb-4 py-2"
+              className="text-sm font-medium hover:text-orange-500 transition-colors text-right block mb-3 py-2"
             >
               {t('nav.broadcast')}
             </Link>
@@ -86,9 +86,9 @@ const MobileNav = () => {
           
           <Link 
             to="/student-auth" 
-            className="bg-orange-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors text-center mt-4"
+            className="bg-orange-500 text-white px-3 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors text-center mt-3 text-sm"
           >
-            {t('auth.studentLogin')}
+            تسجيل الدخول للطلاب
           </Link>
         </nav>
       </SheetContent>

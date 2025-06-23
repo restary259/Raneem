@@ -50,7 +50,7 @@
     @apply block text-center;
     word-break: break-word;
     hyphens: auto;
-    font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+    font-size: clamp(0.65rem, 1.5vw, 0.8rem);
     line-height: 1.2;
   }
 
@@ -61,35 +61,46 @@
 
   /* Desktop navigation styling */
   .nav-item {
-    font-size: var(--nav-font);
-    padding-inline: clamp(0.5rem, 1.5vw, 1rem);
+    font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+    padding-inline: clamp(0.3rem, 1vw, 0.8rem);
     white-space: nowrap;
   }
 
   /* Responsive navigation adjustments */
   @media (max-width: 768px) {
     .bottom-nav-item {
-      min-width: 48px;
-      min-height: 48px;
-      padding: 0.25rem;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.2rem;
     }
     
     .bottom-nav-item span {
-      font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+      font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+    }
+    
+    .nav-item {
+      font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+      padding-inline: clamp(0.25rem, 0.8vw, 0.6rem);
     }
   }
 
   @media (max-width: 480px) {
     .bottom-nav-item {
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0.15rem;
     }
     
     .bottom-nav-item span {
-      font-size: 0.65rem;
-      max-width: 44px;
+      font-size: 0.6rem;
+      max-width: 40px;
       text-overflow: ellipsis;
       overflow: hidden;
+    }
+    
+    .nav-item {
+      font-size: 0.7rem;
+      padding-inline: 0.4rem;
     }
   }
 
