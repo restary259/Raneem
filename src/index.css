@@ -110,6 +110,22 @@
   body {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
+
+  /* Netflix-style Logo Animation */
+  @keyframes logoScale {
+    0% {
+      transform: scale(0.5);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
 @layer base {
@@ -231,6 +247,13 @@
   @media (prefers-reduced-motion: reduce) {
     .bottom-nav-item {
       @apply transition-none;
+    }
+
+    @keyframes logoScale {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
   }
 }

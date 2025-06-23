@@ -5,12 +5,10 @@ import Footer from '@/components/landing/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { MapPin, GraduationCap, Building2, Heart, ExternalLink, Users, Award } from 'lucide-react';
+import { MapPin, GraduationCap, Building2, Heart, Award, Users } from 'lucide-react';
 
 const EducationalDestinationsPage = () => {
   const [selectedCountry, setSelectedCountry] = useState('germany');
-  const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
 
   const countries = [
     { code: 'germany', name: 'ألمانيا', flag: '🇩🇪', color: 'bg-red-600' },
@@ -124,99 +122,6 @@ const EducationalDestinationsPage = () => {
     ]
   };
 
-  const educationalPrograms = {
-    "إدارة أعمال": {
-      description: "برنامج شامل يغطي جميع جوانب إدارة الأعمال الحديثة",
-      majors: [
-        {
-          name: "إدارة أعمال دولية",
-          description: "يركز على إدارة الشركات متعددة الجنسيات والتجارة الدولية، مع التركيز على الثقافات المختلفة والأسواق العالمية.",
-          duration: "3-4 سنوات",
-          career: "مدير شركة، مستشار أعمال، محلل مالي"
-        },
-        {
-          name: "التمويل والمحاسبة",
-          description: "يركز على الإدارة المالية، التحليل المالي، والمحاسبة الإدارية للشركات والمؤسسات المختلفة.",
-          duration: "3-4 سنوات",
-          career: "محاسب، مدير مالي، محلل استثمار"
-        },
-        {
-          name: "التسويق الرقمي",
-          description: "يجمع بين التسويق التقليدي والرقمي، مع التركيز على وسائل التواصل الاجتماعي والتجارة الإلكترونية.",
-          duration: "3-4 سنوات",
-          career: "أخصائي تسويق، مدير علامة تجارية، مدير وسائل التواصل"
-        }
-      ]
-    },
-    "هندسة": {
-      description: "برامج هندسية متنوعة تغطي التطبيقات النظرية والعملية",
-      majors: [
-        {
-          name: "هندسة ميكانيكية",
-          description: "تصميم وتطوير الآلات والأنظمة الميكانيكية، بما في ذلك السيارات والطائرات والروبوتات.",
-          duration: "4-5 سنوات",
-          career: "مهندس تصميم، مهندس إنتاج، مهندس جودة"
-        },
-        {
-          name: "هندسة كهربائية",
-          description: "تصميم وتطوير الأنظمة الكهربائية والإلكترونية، من الدوائر البسيطة إلى شبكات الطاقة المعقدة.",
-          duration: "4-5 سنوات",
-          career: "مهندس كهرباء، مهندس إلكترونيات، مهندس طاقة"
-        },
-        {
-          name: "هندسة مدنية",
-          description: "تصميم وبناء البنية التحتية مثل الجسور، المباني، والطرق مع التركيز على الاستدامة.",
-          duration: "4-5 سنوات",
-          career: "مهندس إنشائي، مهندس مواصلات، مهندس بيئي"
-        }
-      ]
-    },
-    "طب": {
-      description: "برامج طبية شاملة لإعداد الأطباء المتخصصين",
-      majors: [
-        {
-          name: "طب بشري",
-          description: "برنامج شامل لتعليم التشخيص والعلاج الطبي، مع التدريب العملي في المستشفيات.",
-          duration: "6 سنوات",
-          career: "طبيب عام، طبيب متخصص، طبيب طوارئ"
-        },
-        {
-          name: "طب أسنان",
-          description: "متخصص في صحة الفم والأسنان، مع التدريب على العلاجات والجراحات السنية المختلفة.",
-          duration: "5-6 سنوات",
-          career: "طبيب أسنان، جراح فم، أخصائي تقويم"
-        },
-        {
-          name: "صيدلة",
-          description: "دراسة الأدوية وتأثيراتها، مع التركيز على تطوير وتحضير الأدوية الجديدة.",
-          duration: "5 سنوات",
-          career: "صيدلي، باحث أدوية، مدير صيدلية"
-        }
-      ]
-    }
-  };
-
-  const MajorPopup = ({ major }: { major: any }) => (
-    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold text-right">{major.name}</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4 text-right">
-        <p className="text-gray-600 text-lg leading-relaxed">{major.description}</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-orange-800 mb-2">مدة الدراسة</h4>
-            <p className="text-orange-600">{major.duration}</p>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">الفرص المهنية</h4>
-            <p className="text-blue-600">{major.career}</p>
-          </div>
-        </div>
-      </div>
-    </DialogContent>
-  );
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -256,39 +161,6 @@ const EducationalDestinationsPage = () => {
                   <span className="text-2xl">{country.flag}</span>
                   <span className="font-medium">{country.name}</span>
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Educational Programs */}
-          <div className="mb-16">
-            <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-              <GraduationCap className="h-8 w-8 text-orange-500" />
-              البرامج التعليمية
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {Object.entries(educationalPrograms).map(([program, data]) => (
-                <Card key={program} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="text-xl font-bold mb-4">{program}</h3>
-                    <p className="text-gray-600 mb-4">{data.description}</p>
-                    <div className="space-y-2">
-                      {data.majors.map((major, index) => (
-                        <Dialog key={index}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              className="w-full hover:bg-orange-50 hover:border-orange-300"
-                            >
-                              {major.name}
-                            </Button>
-                          </DialogTrigger>
-                          <MajorPopup major={major} />
-                        </Dialog>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
               ))}
             </div>
           </div>

@@ -1,10 +1,17 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Book, MessageCircle, User } from 'lucide-react';
+import { Home, Book, MessageCircle, User, GraduationCap } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const BottomNav = () => {
   const location = useLocation();
+  const isMobile = useIsMobile();
+
+  // Only show on mobile devices
+  if (!isMobile) {
+    return null;
+  }
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -18,7 +25,13 @@ const BottomNav = () => {
       ariaLabel: 'الصفحة الرئيسية'
     },
     {
-      name: 'الدورات',
+      name: 'التخصصات',
+      href: '/educational-programs',
+      icon: GraduationCap,
+      ariaLabel: 'البرامج التعليمية'
+    },
+    {
+      name: 'الوجهات',
       href: '/educational-destinations',
       icon: Book,
       ariaLabel: 'وجهاتنا التعليمية'
@@ -30,10 +43,10 @@ const BottomNav = () => {
       ariaLabel: 'تواصل معنا'
     },
     {
-      name: 'الملف الشخصي',
-      href: '/student-auth',
+      name: 'من نحن',
+      href: '/about',
       icon: User,
-      ariaLabel: 'الملف الشخصي'
+      ariaLabel: 'من نحن'
     }
   ];
 
@@ -41,7 +54,7 @@ const BottomNav = () => {
     <nav 
       role="navigation" 
       aria-label="التنقل الرئيسي"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 py-2 pb-safe"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 py-2 pb-safe md:hidden"
       style={{
         paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
       }}

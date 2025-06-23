@@ -29,7 +29,7 @@ const DesktopNav = () => {
     },
   ];
 
-  const partnershipComponents: { title: string; href: string; description: string }[] = [
+  const moreComponents: { title: string; href: string; description: string }[] = [
     {
         title: t('nav.partnership'),
         href: '/partnership',
@@ -37,8 +37,13 @@ const DesktopNav = () => {
     },
     {
         title: 'وجهاتنا التعليمية',
-        href: '/partners',
+        href: '/educational-destinations',
         description: 'اكتشف الجامعات ومعاهد اللغة والبرامج التعليمية',
+    },
+    {
+        title: 'البرامج التعليمية',
+        href: '/educational-programs',
+        description: 'استكشف التخصصات الأكاديمية المختلفة واختر مسارك المهني',
     }
   ];
 
@@ -70,10 +75,10 @@ const DesktopNav = () => {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-            <NavigationMenuTrigger>{t('nav.partnership')}</NavigationMenuTrigger>
+            <NavigationMenuTrigger>المزيد+</NavigationMenuTrigger>
             <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px]">
-                    {partnershipComponents.map((component) => (
+                    {moreComponents.map((component) => (
                         <ListItem
                         key={component.title}
                         to={component.href}
