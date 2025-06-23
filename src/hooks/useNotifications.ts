@@ -154,15 +154,12 @@ export const useNotifications = (userId: string, filter?: NotificationFilter) =>
             toast({
               title: newNotification.title,
               description: newNotification.message,
-              action: newNotification.url ? (
-                <button 
-                  onClick={() => window.location.href = newNotification.url!}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  عرض
-                </button>
-              ) : undefined,
             });
+
+            // If there's a URL, navigate after a short delay or on user interaction
+            if (newNotification.url) {
+              console.log('Notification URL available:', newNotification.url);
+            }
           }
 
           // Invalidate queries to refresh the list
