@@ -14,14 +14,13 @@ import ProfileManagementPage from '@/pages/ProfileManagementPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import CommunityHubPage from '@/pages/CommunityHubPage';
 import ForumTopicPage from '@/pages/ForumTopicPage';
-import { ErrorBoundary } from 'react-error-boundary';
 import CustomErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <ErrorBoundary FallbackComponent={CustomErrorBoundary}>
+        <CustomErrorBoundary>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<StudentDashboardPage />} />
@@ -38,7 +37,7 @@ function App() {
             <Route path="/community" element={<CommunityHubPage />} />
             <Route path="/community/forum/topic/:topicId" element={<ForumTopicPage />} />
           </Routes>
-        </ErrorBoundary>
+        </CustomErrorBoundary>
       </div>
     </Router>
   );
