@@ -1,17 +1,16 @@
 
 import React, { useState, useMemo } from 'react';
+import Header from '@/components/landing/Header';
 import HeroVideo from '@/components/broadcast/HeroVideo';
 import VideoCategories from '@/components/broadcast/VideoCategories';
 import VideoGallery from '@/components/broadcast/VideoGallery';
 import SubmitVideo from '@/components/broadcast/SubmitVideo';
 import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
 import { useTranslation } from 'react-i18next';
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const BroadcastPage = () => {
   const { t } = useTranslation('broadcast');
   const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
-  const isMobile = useIsMobile();
 
   const featuredVideo = useMemo(() => broadcastData.find(p => p.featured), []);
   
@@ -35,7 +34,7 @@ const BroadcastPage = () => {
 
   return (
     <div dir="rtl" className="bg-background dark:bg-gray-950">
-      {/* Header is handled by MobileLayout */}
+      <Header />
       <main>
         <HeroVideo post={featuredVideo} />
         
@@ -60,13 +59,11 @@ const BroadcastPage = () => {
         <SubmitVideo />
 
       </main>
-      {!isMobile && (
-        <footer className="py-8 text-center text-muted-foreground bg-muted/50 dark:bg-muted/20">
-          <div className="container">
-            <p>{t('broadcastPage.footer')}</p>
-          </div>
-        </footer>
-      )}
+      <footer className="py-8 text-center text-muted-foreground bg-muted/50 dark:bg-muted/20">
+        <div className="container">
+          <p>{t('broadcastPage.footer')}</p>
+        </div>
+      </footer>
     </div>
   );
 };

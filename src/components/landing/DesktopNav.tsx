@@ -1,76 +1,152 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Languages } from '@/components/Languages';
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle
+} from '@/components/ui/navigation-menu';
+import ListItem from './ListItem';
 
 const DesktopNav = () => {
   const { t } = useTranslation();
 
-  const navigationItems = [
-    { name: 'الرئيسية', href: '/' },
-    { name: 'الخدمات', href: '/services' },
-    { name: 'الشركاء', href: '/partners' },
-    { name: 'الشراكة', href: '/partnership' },
-    { name: 'الموارد', href: '/resources' },
-    { name: 'من نحن', href: '/about' },
-    { name: 'المجتمع', href: '/community' },
-    { name: 'تواصل معنا', href: '/contact' },
+  const aboutComponents: { title: string; href: string; description: string }[] = [
+    {
+      title: t('nav.about'),
+      href: '/about',
+      description: t('desktopNav.about.description'),
+    },
+    {
+      title: t('nav.locations'),
+      href: '/locations',
+      description: t('desktopNav.locations.description'),
+    },
+  ];
+
+  const moreComponents: { title: string; href: string; description: string }[] = [
+    {
+      title: 'وجهاتنا التعليمية',
+      href: '/educational-destinations',
+      description: 'اكتشف الجامعات ومعاهد اللغة والخدمات التعليمية',
+    },
+    {
+      title: t('nav.partnership'),
+      href: '/partnership',
+      description: t('desktopNav.partnership.description'),
+    },
+    {
+      title: t('nav.broadcast'),
+      href: '/broadcast',
+      description: 'شاهد فيديوهات تعليمية ومباشرة من خبرائنا',
+    }
   ];
 
   return (
-    <nav className="flex items-center space-x-6 space-x-reverse">
-      {navigationItems.map((item) => (
-        <Link 
-          key={item.name} 
-          to={item.href} 
-          className="text-sm font-medium text-gray-800 hover:text-orange-500 transition-colors px-3 py-2 rounded-md whitespace-nowrap"
-        >
-          {item.name}
-        </Link>
-      ))}
-      
-      <div className="flex items-center space-x-3 space-x-reverse mr-6">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <Languages />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-white shadow-lg border" align="end">
-            <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {
-              localStorage.setItem('i18nextLng', 'ar');
-              window.location.reload();
-            }}>
-              العربية
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              localStorage.setItem('i18nextLng', 'en');
-              window.location.reload();
-            }}>
-              English
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              localStorage.setItem('i18nextLng', 'he');
-              window.location.reload();
-            }}>
-              עברית
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </nav>
+    <div className="flex justify-center w-full" dir="rtl">
+      <NavigationMenu>
+        <NavigationMenuList className="flex items-center gap-1">
+          {/* المزيد (dropdown) - First item */}
+          <NavigationMenuItem>
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
+              المزيد
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px] bg-white shadow-lg border rounded-md">
+                {moreComponents.map((component) => (
+                  <ListItem
+                    key={component.title}
+                    to={component.href}
+                    title={component.title}
+                  >
+                    {component.description}
+                  </ListItem>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          {/* تواصل معنا */}
+          <NavigationMenuItem>
+            <Link to="/contact">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                {t('nav.contact')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          {/* موارد */}
+          <NavigationMenuItem>
+            <Link to="/resources">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                {t('nav.resources')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          {/* اختيار التخصص */}
+          <NavigationMenuItem>
+            <Link to="/quiz">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                اختيار التخصص
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          {/* التخصصات */}
+          <NavigationMenuItem>
+            <Link to="/educational-programs">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                التخصصات
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          {/* خدماتنا */}
+          <NavigationMenuItem>
+            <Link to="/services">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                {t('nav.services')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          {/* من نحن (dropdown) */}
+          <NavigationMenuItem>
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
+              {t('nav.about')}
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md">
+                {aboutComponents.map((component) => (
+                  <ListItem
+                    key={component.title}
+                    to={component.href}
+                    title={component.title}
+                  >
+                    {component.description}
+                  </ListItem>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          {/* الرئيسية - Last item */}
+          <NavigationMenuItem>
+            <Link to="/">
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+                {t('nav.home')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    </div>
   );
 };
 

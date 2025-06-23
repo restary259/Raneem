@@ -1,20 +1,16 @@
 
+import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
-import AboutCustom from "@/components/landing/AboutCustom";
-import StoryDiagram from "@/components/about/StoryDiagram";
-import { useIsMobile } from "@/hooks/use-mobile";
+import About from "@/components/landing/About";
 
 const AboutPage = () => {
-  const isMobile = useIsMobile();
-  
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground" dir="rtl">
-      {/* Header is handled by MobileLayout */}
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <Header />
       <main className="flex-grow">
-        <AboutCustom />
-        <StoryDiagram />
+        <About />
       </main>
-      {!isMobile && <Footer />}
+      <Footer />
     </div>
   );
 };

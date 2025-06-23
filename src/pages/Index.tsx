@@ -1,6 +1,4 @@
 
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/hooks/useAuth';
 import Header from "@/components/landing/Header";
 import Hero from "@/components/landing/Hero";
 import AboutCustom from "@/components/landing/AboutCustom";
@@ -9,31 +7,8 @@ import Footer from "@/components/landing/Footer";
 import PartnersMarquee from "@/components/landing/PartnersMarquee";
 import StudentJourney from "@/components/landing/StudentJourney";
 import StudentGallery from "@/components/landing/StudentGallery";
-import MobileHomeFeed from "@/components/mobile/MobileHomeFeed";
-import UnifiedFeed from "@/components/feed/UnifiedFeed";
 
 const Index = () => {
-  const isMobile = useIsMobile();
-  const { user } = useAuth();
-
-  // Show authenticated unified feed for logged-in users
-  if (user) {
-    return (
-      <div className="min-h-screen bg-background">
-        {!isMobile && <Header />}
-        <div className="container mx-auto px-4 py-6">
-          {isMobile ? <MobileHomeFeed /> : <UnifiedFeed />}
-        </div>
-      </div>
-    );
-  }
-
-  // Show mobile optimized landing for non-authenticated mobile users
-  if (isMobile) {
-    return <MobileHomeFeed />;
-  }
-
-  // Desktop landing page
   return (
     <div dir="rtl" className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />

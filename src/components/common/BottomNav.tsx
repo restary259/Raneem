@@ -1,82 +1,84 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import {
-  Home,
-  User,
-  FileText,
-  GraduationCap,
-  Users,
-} from 'lucide-react';
-
-interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<any>;
-  activeIcon: React.ComponentType<any>;
-}
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Search, MessageCircle, User } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const BottomNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const isMobile = useIsMobile();
 
-  const navigationItems = [
+  // Only show on mobile devices
+  if (!isMobile) {
+    return null;
+  }
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const navItems = [
     {
       name: 'الرئيسية',
       href: '/',
       icon: Home,
-      activeIcon: Home,
+      ariaLabel: 'الصفحة الرئيسية'
     },
     {
-      name: 'الطلبات',
-      href: '/applications',
-      icon: FileText,
-      activeIcon: FileText,
-    },
-    {
-      name: 'البرامج',
+      name: 'التخصصات',
       href: '/educational-programs',
-      icon: GraduationCap,
-      activeIcon: GraduationCap,
+      icon: Search,
+      ariaLabel: 'البحث في التخصصات'
     },
     {
-      name: 'المجتمع',
-      href: '/community',
-      icon: Users,
-      activeIcon: Users,
+      name: 'اتصل بنا',
+      href: '/contact',
+      icon: MessageCircle,
+      ariaLabel: 'تواصل معنا'
     },
     {
       name: 'الحساب',
-      href: user ? '/dashboard/profile' : '/student-auth',
+      href: '/student-auth',
       icon: User,
-      activeIcon: User,
-    },
+      ariaLabel: 'حساب الطالب'
+    }
   ];
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 py-2 px-4 flex justify-around items-center 
-      lg:hidden z-50 shadow-md"
+    <nav 
+      role="navigation" 
+      aria-label="التنقل الرئيسي"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 pb-safe md:hidden"
+      style={{
+        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
+      }}
       dir="rtl"
     >
-      {navigationItems.map((item) => {
-        const isActive = location.pathname === item.href;
-        const Icon = isActive ? item.activeIcon : item.icon;
-
-        return (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[52px] px-1.5 py-2 rounded-lg transition-all duration-200 ${
-              isActive ? 'text-orange-500 bg-orange-50' : 'text-gray-600 hover:text-orange-500 hover:bg-orange-50'
-            }`}
-          >
-            <Icon className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium leading-tight truncate max-w-[50px]">{item.name}</span>
-          </NavLink>
-        );
-      })}
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+          
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              aria-label={item.ariaLabel}
+              className={`bottom-nav-item ${active ? 'active' : ''}`}
+            >
+              <Icon 
+                className={`h-5 w-5 mb-1.5 ${active ? 'stroke-2' : 'stroke-1.5'}`}
+                aria-hidden="true"
+              />
+              <span className={`text-xs font-medium leading-tight truncate max-w-[60px] ${
+                active ? 'text-orange-500' : 'text-gray-600'
+              }`}>
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 };

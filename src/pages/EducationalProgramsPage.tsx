@@ -17,9 +17,6 @@ const EducationalProgramsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  console.log('Educational Programs Page rendered');
-  console.log('Majors data:', majorsData);
-
   // Flatten all submajors for search and display
   const allSubMajors = useMemo(() => {
     const flattened: (SubMajor & { categoryTitle: string; categoryId: string })[] = [];
@@ -32,7 +29,6 @@ const EducationalProgramsPage = () => {
         });
       });
     });
-    console.log('Flattened submajors:', flattened);
     return flattened;
   }, []);
 
@@ -55,7 +51,6 @@ const EducationalProgramsPage = () => {
       );
     }
 
-    console.log('Filtered majors:', filtered);
     return filtered;
   }, [allSubMajors, searchQuery, selectedCategory]);
 
@@ -100,11 +95,6 @@ const EducationalProgramsPage = () => {
       <section className="educational-content-spacing py-6 md:py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            {/* Debug info */}
-            <div className="mb-4 text-sm text-gray-500">
-              عرض {filteredMajors.length} من أصل {allSubMajors.length} تخصص
-            </div>
-            
             {filteredMajors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredMajors.map((major) => (

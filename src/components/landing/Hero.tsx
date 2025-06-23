@@ -39,7 +39,7 @@ const Hero = () => {
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-4xl md:text-5xl font-bold text-accent drop-shadow-lg">
-                  <AnimatedCounter value={stat.value} />+
+                  <AnimatedCounter end={stat.value} />+
                 </p>
                 <p className="text-sm text-white/80">{stat.label}</p>
               </div>
