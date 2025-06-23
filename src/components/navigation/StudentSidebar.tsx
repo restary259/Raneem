@@ -17,16 +17,26 @@ import {
   File,
   Bell,
   Settings,
-  LogOut
+  LogOut,
+  Edit
 } from 'lucide-react';
 
 const StudentSidebar = () => {
   const { user } = useAuth();
-  const { profile } = useStudentProfile(user?.id || '');
+  const { profile, isLoading: profileLoading } = useStudentProfile(user?.id || '');
   const { unreadCount } = useNotifications(user?.id || '', { limit: 1 });
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Return loading state if auth is not ready
+  if (!user) {
+    return (
+      <div className="w-80 bg-white border-r border-gray-200 flex items-center justify-center h-full">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   const navigationItems = [
     {
@@ -90,7 +100,27 @@ const StudentSidebar = () => {
     }
   };
 
+  const handleEditProfile = () => {
+    navigate('/dashboard/profile');
+  };
+
   const isActive = (href: string) => location.pathname === href;
+
+  // Get display name safely
+  const getDisplayName = () => {
+    if (profile?.full_name) return profile.full_name;
+    if (profile?.first_name || profile?.last_name) {
+      return `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    }
+    return user.email?.split('@')[0] || 'User';
+  };
+
+  // Get avatar initial safely
+  const getAvatarInitial = () => {
+    if (profile?.full_name) return profile.full_name.charAt(0);
+    if (profile?.first_name) return profile.first_name.charAt(0);
+    return user.email?.charAt(0)?.toUpperCase() || 'U';
+  };
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
@@ -100,21 +130,30 @@ const StudentSidebar = () => {
           <Avatar className="h-12 w-12">
             <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-              {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+              {getAvatarInitial()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-gray-900 truncate">
-                {profile?.full_name || 'User'}
+                {getDisplayName()}
               </h3>
               <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
                 Verified
               </span>
             </div>
             <p className="text-sm text-gray-500 truncate">
-              {user?.email}
+              {user.email}
             </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEditProfile}
+              className="mt-1 h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            >
+              <Edit className="w-3 h-3 mr-1" />
+              Edit Profile
+            </Button>
           </div>
         </div>
       </div>
