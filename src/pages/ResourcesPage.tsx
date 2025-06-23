@@ -4,16 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import CostCalculator from '@/components/calculator/CostCalculator';
 import CurrencyConverter from '@/components/calculator/CurrencyConverter';
 import GpaCalculator from '@/components/calculator/GpaCalculator';
 import ResourceCard from '@/components/resources/ResourceCard';
 import { Calculator, DollarSign, GraduationCap, FileText, Globe, Users } from 'lucide-react';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ResourcesPage = () => {
   const { t } = useTranslation('resources');
+  const isMobile = useIsMobile();
 
   const tools = [
     {
@@ -65,8 +66,8 @@ const ResourcesPage = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        <Header />
+      <div className="min-h-screen bg-background" dir="rtl">
+        {/* Header is handled by MobileLayout */}
         
         {/* Hero Section */}
         <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 to-background">
@@ -173,7 +174,7 @@ const ResourcesPage = () => {
           </div>
         </section>
 
-        <Footer />
+        {!isMobile && <Footer />}
       </div>
     </TooltipProvider>
   );

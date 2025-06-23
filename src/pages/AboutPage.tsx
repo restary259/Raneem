@@ -1,6 +1,7 @@
 
 import Footer from "@/components/landing/Footer";
 import AboutCustom from "@/components/landing/AboutCustom";
+import StoryDiagram from "@/components/about/StoryDiagram";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const AboutPage = () => {
@@ -11,6 +12,7 @@ const AboutPage = () => {
       {/* Header is handled by MobileLayout */}
       <main className="flex-grow">
         <AboutCustom />
+        <StoryDiagram />
       </main>
       {!isMobile && <Footer />}
     </div>

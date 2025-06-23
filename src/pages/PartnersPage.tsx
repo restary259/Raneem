@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import EnhancedPartnersPage from '@/components/partners/EnhancedPartnersPage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Users, GraduationCap, Award } from 'lucide-react';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PartnersPage = () => {
   const { t } = useTranslation('partners');
+  const isMobile = useIsMobile();
 
   const stats = [
     {
@@ -39,8 +40,8 @@ const PartnersPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Header is handled by MobileLayout */}
 
       {/* Hero Section */}
       <section className="py-8 sm:py-12 md:py-20 bg-gradient-to-b from-primary/5 to-background">
@@ -113,7 +114,7 @@ const PartnersPage = () => {
         </div>
       </section>
 
-      <Footer />
+      {!isMobile && <Footer />}
     </div>
   );
 };
