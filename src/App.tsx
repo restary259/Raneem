@@ -19,9 +19,9 @@ import ForumTopicPage from '@/pages/ForumTopicPage';
 import ApplicationsPage from '@/pages/ApplicationsPage';
 import EducationalProgramsPage from '@/pages/EducationalProgramsPage';
 import CustomErrorBoundary from '@/components/ErrorBoundary';
-import MobileLayout from '@/components/mobile/MobileLayout';
+import MainLayout from '@/components/layout/MainLayout';
+import MessagesHub from '@/components/messages/MessagesHub';
 
-// Create a client
 const queryClient = new QueryClient();
 
 function App() {
@@ -29,10 +29,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="App">
         <CustomErrorBoundary>
-          <MobileLayout>
+          <MainLayout>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<StudentDashboardPage />} />
+              <Route path="/dashboard/messages" element={<MessagesHub />} />
               <Route path="/auth" element={<StudentAuthPage />} />
               <Route path="/student-auth" element={<StudentAuthPage />} />
               <Route path="/services" element={<ServicesPage />} />
@@ -48,7 +49,7 @@ function App() {
               <Route path="/community" element={<CommunityHubPage />} />
               <Route path="/community/forum/topic/:topicId" element={<ForumTopicPage />} />
             </Routes>
-          </MobileLayout>
+          </MainLayout>
         </CustomErrorBoundary>
         <Toaster />
       </div>

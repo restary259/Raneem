@@ -4,25 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { Profile, VisaStatus } from '@/types/profile';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
-import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
-import DashboardWelcome from '@/components/dashboard/DashboardWelcome';
+import { Profile } from '@/types/profile';
 import LoadingState from '@/components/dashboard/LoadingState';
-import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
 import { useAuthDebug } from '@/hooks/useAuthDebug';
+import ProgramsGrid from '@/components/programs/ProgramsGrid';
+import MessagesHub from '@/components/messages/MessagesHub';
 
 const StudentDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Debug auth state
   const authDebug = useAuthDebug();
 
   useEffect(() => {
@@ -53,7 +48,6 @@ const StudentDashboardPage = () => {
         console.log('🏠 Authenticated user found:', session.user.id);
         setUser(session.user);
         
-        // Fetch profile with better error handling
         await fetchProfileSafely(session.user.id);
         
       } catch (error: any) {
@@ -71,7 +65,6 @@ const StudentDashboardPage = () => {
 
     initializeDashboard();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🏠 Auth state changed:', event, session?.user?.id);
       
@@ -84,7 +77,6 @@ const StudentDashboardPage = () => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         console.log('🏠 User signed in/token refreshed');
         setUser(session.user);
-        // Defer profile fetching to prevent deadlocks
         setTimeout(() => {
           fetchProfileSafely(session.user.id);
         }, 100);
@@ -101,7 +93,6 @@ const StudentDashboardPage = () => {
     try {
       console.log('🏠 Fetching profile for user:', userId);
       
-      // Use a more direct query to avoid RLS issues
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -111,14 +102,12 @@ const StudentDashboardPage = () => {
       if (error) {
         console.error('🏠 Profile fetch error:', error);
         
-        // If profile doesn't exist, create a basic one
         if (error.code === 'PGRST116' || error.message.includes('No rows found')) {
           console.log('🏠 No profile found, creating one...');
           await createUserProfile(userId);
           return;
         }
         
-        // For RLS issues, try to create profile anyway
         if (error.message.includes('infinite recursion')) {
           console.log('🏠 RLS recursion detected, attempting profile creation...');
           await createUserProfile(userId);
@@ -130,17 +119,7 @@ const StudentDashboardPage = () => {
 
       if (data) {
         console.log('🏠 Profile loaded successfully:', data.id);
-        
-        // Safely cast visa_status
-        const allowedStatuses: VisaStatus[] = [
-          'not_applied', 'applied', 'approved', 'rejected', 'received'
-        ];
-        const safeProfile: Profile = {
-          ...data,
-          visa_status: allowedStatuses.includes(data.visa_status) ? data.visa_status : 'not_applied',
-        };
-
-        setProfile(safeProfile);
+        setProfile(data);
       } else {
         console.log('🏠 No profile data, creating one...');
         await createUserProfile(userId);
@@ -188,7 +167,6 @@ const StudentDashboardPage = () => {
       
     } catch (error: any) {
       console.error('🏠 Profile creation failed:', error);
-      // Create a minimal profile for display
       const fallbackProfile: Profile = {
         id: userId,
         email: user?.email || '',
@@ -204,31 +182,6 @@ const StudentDashboardPage = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'complete-profile':
-        setActiveTab('overview');
-        break;
-      case 'browse-programs':
-        navigate('/educational-programs');
-        break;
-      case 'schedule-consultation':
-        navigate('/contact');
-        break;
-      case 'join-community':
-        navigate('/community');
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Show error state
   if (error && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -246,7 +199,6 @@ const StudentDashboardPage = () => {
     );
   }
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -257,7 +209,6 @@ const StudentDashboardPage = () => {
     );
   }
 
-  // Show simple test component first
   if (!user || !profile) {
     console.log('🏠 Missing user or profile data:', { user: !!user, profile: !!profile });
     return (
@@ -272,42 +223,8 @@ const StudentDashboardPage = () => {
     );
   }
 
-  return (
-    <DashboardErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <DashboardHeader fullName={profile.full_name} userId={user.id} />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <DashboardSidebar 
-              userId={user.id}
-              onLogout={handleLogout}
-              activeTab={activeTab} 
-              onTabChange={setActiveTab} 
-            />
-            
-            <div className="flex-1">
-              {activeTab === 'overview' && (
-                <DashboardWelcome 
-                  profile={profile} 
-                  onQuickAction={handleQuickAction}
-                />
-              )}
-              
-              {activeTab !== 'overview' && (
-                <DashboardMainContent
-                  activeTab={activeTab}
-                  profile={profile}
-                  user={user}
-                  onProfileUpdate={fetchProfileSafely}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </DashboardErrorBoundary>
-  );
+  // Default to Programs view - this will be the main dashboard
+  return <ProgramsGrid />;
 };
 
 export default StudentDashboardPage;
