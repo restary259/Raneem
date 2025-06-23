@@ -162,6 +162,100 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_settings: {
+        Row: {
+          channels: Json | null
+          created_at: string | null
+          custom_rules: Json | null
+          frequency: Json | null
+          push_token: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          channels?: Json | null
+          created_at?: string | null
+          custom_rules?: Json | null
+          frequency?: Json | null
+          push_token?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          channels?: Json | null
+          created_at?: string | null
+          custom_rules?: Json | null
+          frequency?: Json | null
+          push_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          category: string
+          channel: Json
+          created_at: string | null
+          data: Json | null
+          delivered_at: Json | null
+          id: string
+          is_read: boolean | null
+          message: string
+          reference_id: string | null
+          title: string
+          type: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          channel?: Json
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          reference_id?: string | null
+          title: string
+          type: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          channel?: Json
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          reference_id?: string | null
+          title?: string
+          type?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_paid: number

@@ -1,66 +1,58 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { LogOut, ArrowLeftCircle } from 'lucide-react';
+import { Profile } from '@/types/profile';
+import { User, Settings } from 'lucide-react';
 
 interface DashboardHeaderProps {
-  fullName: string;
+  profile: Profile | null;
+  userId: string;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ fullName }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ profile, userId }) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-      toast({
-        title: "تم تسجيل الخروج",
-        description: "تم تسجيل خروجك بنجاح",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الخروج",
-      });
-    }
-  };
-
-  const handleReturnToWebsite = () => {
-    navigate('/');
-  };
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <h1 className="text-2xl font-bold text-gray-900">لوحة التحكم الطلابية</h1>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReturnToWebsite}
-              className="flex items-center gap-2"
-              title="العودة إلى الموقع الرئيسي"
-            >
-              <ArrowLeftCircle className="h-4 w-4" />
-              العودة إلى الموقع
-            </Button>
-            <span className="text-sm text-gray-600">مرحباً، {fullName}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              تسجيل الخروج
-            </Button>
+    <header className="bg-white shadow-sm border-b px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            مرحباً، {profile?.preferred_name || profile?.full_name || 'المستخدم'}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {profile?.bio || 'أهلاً بك في لوحة التحكم الخاصة بك'}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <NotificationBell 
+            userId={userId}
+            onOpenNotificationCenter={() => navigate('/dashboard/notifications')}
+          />
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard/settings')}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+              {profile?.full_name?.charAt(0) || 'م'}
+            </div>
+            <div className="text-right">
+              <div className="font-medium text-gray-900">
+                {profile?.full_name}
+              </div>
+              <div className="text-sm text-gray-500">
+                {profile?.email}
+              </div>
+            </div>
           </div>
         </div>
       </div>
