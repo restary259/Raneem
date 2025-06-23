@@ -1,6 +1,5 @@
 
 import { useEffect } from "react";
-import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import PartnershipHero from "@/components/partnership/PartnershipHero";
 import WhyJoinUs from "@/components/partnership/WhyJoinUs";
@@ -11,28 +10,30 @@ import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
 import ClosingCta from "@/components/partnership/ClosingCta";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PartnershipPage = () => {
     const { t } = useTranslation('partnership');
+    const isMobile = useIsMobile();
+    
     useEffect(() => {
         document.title = t('partnershipPage.title');
     }, [t]);
 
     return (
         <div dir="rtl" className="flex flex-col min-h-screen bg-secondary text-foreground">
-            <Header />
+            {/* Header is handled by MobileLayout */}
             <main className="flex-grow">
                 <PartnershipHero />
                 <WhyJoinUs />
                 <CommissionCalculator />
                 <NewHowItWorks />
                 <AgentToolkit />
-                {/* Success Stories section removed */}
                 <RegistrationForm />
                 <NewFaq />
                 <ClosingCta />
             </main>
-            <Footer />
+            {!isMobile && <Footer />}
         </div>
     );
 };
