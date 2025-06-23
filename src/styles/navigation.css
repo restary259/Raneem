@@ -1,7 +1,7 @@
 
 @layer components {
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center min-w-[48px] min-h-[48px] px-2 py-1 rounded-lg transition-all duration-200;
+    @apply flex flex-col items-center justify-center min-w-[56px] min-h-[56px] px-1 py-1 rounded-lg transition-all duration-200;
     touch-action: manipulation;
   }
 
@@ -23,5 +23,17 @@
 
   .bottom-nav-item:not(.active):hover {
     @apply text-orange-500;
+  }
+
+  /* RTL-specific adjustments */
+  [dir="rtl"] .bottom-nav-item {
+    @apply text-right;
+  }
+
+  /* Improved text truncation */
+  .bottom-nav-item span {
+    @apply block text-center;
+    word-break: break-word;
+    hyphens: auto;
   }
 }

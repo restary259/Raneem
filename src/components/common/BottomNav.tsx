@@ -54,10 +54,11 @@ const BottomNav = () => {
     <nav 
       role="navigation" 
       aria-label="التنقل الرئيسي"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 py-2 pb-safe md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-1 pb-safe md:hidden"
       style={{
-        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
+        paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))'
       }}
+      dir="rtl"
     >
       <div className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
@@ -72,10 +73,10 @@ const BottomNav = () => {
               className={`bottom-nav-item ${active ? 'active' : ''}`}
             >
               <Icon 
-                className={`h-5 w-5 mb-1 ${active ? 'stroke-2' : 'stroke-1.5'}`}
+                className={`h-4 w-4 mb-1 ${active ? 'stroke-2' : 'stroke-1.5'}`}
                 aria-hidden="true"
               />
-              <span className={`text-xs font-medium leading-tight ${
+              <span className={`text-xs font-medium leading-tight truncate max-w-[60px] ${
                 active ? 'text-orange-500' : 'text-gray-600'
               }`}>
                 {item.name}

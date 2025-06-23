@@ -20,15 +20,15 @@ const Header = () => {
           {/* Logo - Center */}
           <Link to="/" className="flex items-center gap-2 mx-4">
             <img 
-              src="/lovable-uploads/efe8829d-07b5-4776-a49f-c111a5219b76.png" 
+              src="/lovable-uploads/ee2b2c88-802e-46b6-b05d-d5ca8c1fd509.png" 
               alt="درب" 
               className="h-10 w-auto object-contain"
             />
-            <span className="font-bold text-2xl text-gray-900 hidden sm:block">درب</span>
+            <span className="font-bold text-xl text-gray-900 hidden sm:block">درب</span>
           </Link>
 
-          {/* Mobile Menu - Left Side */}
-          <div className="md:hidden">
+          {/* Mobile Menu - Left Side with proper spacing */}
+          <div className="md:hidden flex items-center gap-4">
             <MobileNav />
           </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,7 +36,7 @@ const NetflixLoader = () => {
       <div className="flex flex-col items-center">
         <div className="animate-[logoScale_2s_ease-out_forwards] mb-4">
           <img 
-            src="/lovable-uploads/efe8829d-07b5-4776-a49f-c111a5219b76.png" 
+            src="/lovable-uploads/ee2b2c88-802e-46b6-b05d-d5ca8c1fd509.png" 
             alt="درب" 
             className="w-20 h-20 object-contain"
           />
@@ -94,7 +95,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen pb-20 md:pb-0 relative">
+        <div className="min-h-screen pb-24 md:pb-0 relative" dir="rtl">
           <Toaster />
           <Sonner />
           <OfflineIndicator />
