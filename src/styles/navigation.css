@@ -3,6 +3,7 @@
   .bottom-nav-item {
     @apply flex flex-col items-center justify-center min-w-[56px] min-h-[56px] px-1 py-1 rounded-lg transition-all duration-200;
     touch-action: manipulation;
+    font-size: var(--small-text);
   }
 
   .bottom-nav-item:hover {
@@ -49,10 +50,63 @@
     @apply block text-center;
     word-break: break-word;
     hyphens: auto;
+    font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+    line-height: 1.2;
   }
 
   /* RTL Chevron adjustments */
   [dir="rtl"] .navigation-chevron {
     transform: rotate(180deg);
+  }
+
+  /* Desktop navigation styling */
+  .nav-item {
+    font-size: var(--nav-font);
+    padding-inline: clamp(0.5rem, 1.5vw, 1rem);
+    white-space: nowrap;
+  }
+
+  /* Responsive navigation adjustments */
+  @media (max-width: 768px) {
+    .bottom-nav-item {
+      min-w-[48px];
+      min-h-[48px];
+      padding: 0.25rem;
+    }
+    
+    .bottom-nav-item span {
+      font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .bottom-nav-item {
+      min-w-[44px];
+      min-h-[44px];
+    }
+    
+    .bottom-nav-item span {
+      font-size: 0.65rem;
+      max-width: 44px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+
+  /* Chat button responsive sizing */
+  .chat-btn {
+    width: var(--btn-size);
+    height: var(--btn-size);
+    font-size: calc(var(--btn-size) * 0.4);
+    bottom: clamp(80px, 12vw, 120px);
+    right: clamp(16px, 4vw, 24px);
+    z-index: 999;
+  }
+
+  @media (max-width: 768px) {
+    .chat-btn {
+      bottom: clamp(90px, 15vw, 130px);
+      right: clamp(12px, 3vw, 20px);
+    }
   }
 }

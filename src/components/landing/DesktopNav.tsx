@@ -55,7 +55,7 @@ const DesktopNav = () => {
           {/* الرئيسية */}
           <NavigationMenuItem>
             <Link to="/">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 {t('nav.home')}
               </NavigationMenuLink>
             </Link>
@@ -63,12 +63,12 @@ const DesktopNav = () => {
 
           {/* من نحن (dropdown) */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
               {t('nav.about')}
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 navigation-chevron" />
             </NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md">
                 {aboutComponents.map((component) => (
                   <ListItem
                     key={component.title}
@@ -85,7 +85,7 @@ const DesktopNav = () => {
           {/* خدماتنا */}
           <NavigationMenuItem>
             <Link to="/services">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 {t('nav.services')}
               </NavigationMenuLink>
             </Link>
@@ -94,7 +94,7 @@ const DesktopNav = () => {
           {/* التخصصات */}
           <NavigationMenuItem>
             <Link to="/educational-programs">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 التخصصات
               </NavigationMenuLink>
             </Link>
@@ -103,7 +103,7 @@ const DesktopNav = () => {
           {/* اختيار التخصص */}
           <NavigationMenuItem>
             <Link to="/quiz">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 اختيار التخصص
               </NavigationMenuLink>
             </Link>
@@ -112,7 +112,7 @@ const DesktopNav = () => {
           {/* موارد */}
           <NavigationMenuItem>
             <Link to="/resources">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 {t('nav.resources')}
               </NavigationMenuLink>
             </Link>
@@ -121,7 +121,7 @@ const DesktopNav = () => {
           {/* تواصل معنا */}
           <NavigationMenuItem>
             <Link to="/contact">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} text-gray-700 hover:text-orange-500 font-medium`}>
+              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
                 {t('nav.contact')}
               </NavigationMenuLink>
             </Link>
@@ -129,12 +129,12 @@ const DesktopNav = () => {
 
           {/* +المزيد (dropdown) - Always last */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
+            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium flex items-center gap-1">
               المزيد+
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 navigation-chevron" />
             </NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px]">
+              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px] bg-white shadow-lg border rounded-md">
                 {moreComponents.map((component) => (
                   <ListItem
                     key={component.title}
