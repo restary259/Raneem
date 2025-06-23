@@ -203,6 +203,11 @@ const StudentDashboardPage = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   // Show error state
   if (error && !isLoading) {
     return (
@@ -244,11 +249,13 @@ const StudentDashboardPage = () => {
   return (
     <DashboardErrorBoundary>
       <div className="min-h-screen bg-gray-50">
-        <DashboardHeader fullName={profile.full_name} />
+        <DashboardHeader fullName={profile.full_name} userId={user.id} />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             <DashboardSidebar 
+              userId={user.id}
+              onLogout={handleLogout}
               activeTab={activeTab} 
               onTabChange={setActiveTab} 
             />

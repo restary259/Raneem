@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { NotificationSettings } from '@/types/notifications';
+import { NotificationSettings, DeliveryChannel, FrequencySettings } from '@/types/notifications';
 
 export const useNotificationSettings = (userId: string) => {
   const { toast } = useToast();
@@ -36,10 +36,21 @@ export const useNotificationSettings = (userId: string) => {
           .single();
 
         if (insertError) throw insertError;
-        return newSettings as NotificationSettings;
+        
+        return {
+          ...newSettings,
+          channels: newSettings.channels as DeliveryChannel,
+          frequency: newSettings.frequency as FrequencySettings,
+          custom_rules: newSettings.custom_rules as any[]
+        } as NotificationSettings;
       }
 
-      return data as NotificationSettings;
+      return {
+        ...data,
+        channels: data.channels as DeliveryChannel,
+        frequency: data.frequency as FrequencySettings,
+        custom_rules: data.custom_rules as any[]
+      } as NotificationSettings;
     },
     enabled: !!userId,
   });
@@ -49,7 +60,12 @@ export const useNotificationSettings = (userId: string) => {
     mutationFn: async (updates: Partial<NotificationSettings>) => {
       const { error } = await supabase
         .from('notification_settings')
-        .update(updates)
+        .update({
+          channels: updates.channels as any,
+          frequency: updates.frequency as any,
+          custom_rules: updates.custom_rules as any,
+          push_token: updates.push_token
+        })
         .eq('user_id', userId);
       
       if (error) throw error;

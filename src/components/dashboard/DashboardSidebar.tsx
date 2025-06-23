@@ -20,23 +20,36 @@ import {
 interface DashboardSidebarProps {
   userId: string;
   onLogout: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userId, onLogout }) => {
+const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
+  userId, 
+  onLogout, 
+  activeTab, 
+  onTabChange 
+}) => {
   const location = useLocation();
   const { unreadCount } = useNotifications(userId, { limit: 1 });
 
   const navigation = [
-    { name: 'لوحة التحكم', href: '/dashboard', icon: Home },
-    { name: 'الملف الشخصي', href: '/dashboard/profile', icon: User },
-    { name: 'الإشعارات', href: '/dashboard/notifications', icon: Bell, badge: unreadCount },
-    { name: 'الخدمات', href: '/dashboard/services', icon: BookOpen },
-    { name: 'المستندات', href: '/dashboard/documents', icon: FileText },
-    { name: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard },
-    { name: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare },
-    { name: 'المواعيد', href: '/dashboard/appointments', icon: Calendar },
-    { name: 'الإعدادات', href: '/dashboard/settings', icon: Settings },
+    { name: 'لوحة التحكم', href: '/dashboard', icon: Home, tab: 'overview' },
+    { name: 'الملف الشخصي', href: '/dashboard/profile', icon: User, tab: 'profile' },
+    { name: 'الإشعارات', href: '/dashboard/notifications', icon: Bell, badge: unreadCount, tab: 'notifications' },
+    { name: 'الخدمات', href: '/dashboard/services', icon: BookOpen, tab: 'services' },
+    { name: 'المستندات', href: '/dashboard/documents', icon: FileText, tab: 'documents' },
+    { name: 'المدفوعات', href: '/dashboard/payments', icon: CreditCard, tab: 'payments' },
+    { name: 'الرسائل', href: '/dashboard/messages', icon: MessageSquare, tab: 'messages' },
+    { name: 'المواعيد', href: '/dashboard/appointments', icon: Calendar, tab: 'appointments' },
+    { name: 'الإعدادات', href: '/dashboard/settings', icon: Settings, tab: 'settings' },
   ];
+
+  const handleNavClick = (item: any) => {
+    if (onTabChange && item.tab) {
+      onTabChange(item.tab);
+    }
+  };
 
   return (
     <div className="w-64 bg-white shadow-lg h-full flex flex-col">
@@ -46,11 +59,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userId, onLogout })
       
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
+          const isActive = activeTab ? activeTab === item.tab : location.pathname === item.href;
           const Icon = item.icon;
           
           return (
-            <Link key={item.name} to={item.href}>
+            <Link key={item.name} to={item.href} onClick={() => handleNavClick(item)}>
               <Button
                 variant={isActive ? "default" : "ghost"}
                 className="w-full justify-start gap-3 h-12"

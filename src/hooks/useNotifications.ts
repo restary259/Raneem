@@ -3,50 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  category: string;
-  reference_id?: string;
-  title: string;
-  message: string;
-  url?: string;
-  data?: any;
-  is_read: boolean;
-  channel: {
-    inApp: boolean;
-    push: boolean;
-    email: boolean;
-  };
-  created_at: string;
-  delivered_at?: any;
-}
-
-export interface NotificationFilter {
-  type?: string;
-  category?: string;
-  is_read?: boolean;
-  limit?: number;
-  offset?: number;
-}
-
-export interface NotificationSettings {
-  user_id: string;
-  channels: {
-    inApp: boolean;
-    push: boolean;
-    email: boolean;
-  };
-  frequency: {
-    offer: string;
-    deadline: string;
-    digest: string;
-  };
-  custom_rules: any[];
-  push_token?: string;
-}
+import { Notification, NotificationFilter, NotificationType } from '@/types/notifications';
 
 export const useNotifications = (userId: string, filter?: NotificationFilter) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -71,7 +28,14 @@ export const useNotifications = (userId: string, filter?: NotificationFilter) =>
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Notification[];
+      
+      // Transform data to match our types
+      return (data || []).map(item => ({
+        ...item,
+        type: ['offer', 'deadline', 'message', 'system', 'custom'].includes(item.type) 
+          ? item.type as NotificationType 
+          : 'system' as NotificationType
+      })) as Notification[];
     },
     enabled: !!userId,
   });
@@ -147,7 +111,7 @@ export const useNotifications = (userId: string, filter?: NotificationFilter) =>
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
-          const newNotification = payload.new as Notification;
+          const newNotification = payload.new as any;
           
           // Show toast for new notifications
           if (newNotification.channel?.inApp) {
@@ -156,7 +120,7 @@ export const useNotifications = (userId: string, filter?: NotificationFilter) =>
               description: newNotification.message,
             });
 
-            // If there's a URL, navigate after a short delay or on user interaction
+            // If there's a URL, log it for future navigation
             if (newNotification.url) {
               console.log('Notification URL available:', newNotification.url);
             }

@@ -66,7 +66,14 @@ export const useFeedData = (userId: string) => {
         .limit(8);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform data to match our types
+      return (data || []).map(item => ({
+        ...item,
+        item_type: ['university', 'program', 'partner', 'offer'].includes(item.item_type) 
+          ? item.item_type as 'university' | 'program' | 'partner' | 'offer'
+          : 'university' as const
+      }));
     },
     enabled: !!userId,
   });
