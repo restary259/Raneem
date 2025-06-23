@@ -30,10 +30,29 @@
     @apply text-right;
   }
 
+  /* RTL Navigation Menu Adjustments */
+  [dir="rtl"] [data-radix-navigation-menu-content] {
+    @apply text-right;
+  }
+
+  [dir="rtl"] [data-radix-navigation-menu-trigger] {
+    @apply flex-row-reverse;
+  }
+
+  /* Dropdown alignment for RTL */
+  [dir="rtl"] [data-radix-popper-content] {
+    --radix-popper-transform-origin: var(--radix-popper-anchor-width) 0;
+  }
+
   /* Improved text truncation */
   .bottom-nav-item span {
     @apply block text-center;
     word-break: break-word;
     hyphens: auto;
+  }
+
+  /* RTL Chevron adjustments */
+  [dir="rtl"] .navigation-chevron {
+    transform: rotate(180deg);
   }
 }
