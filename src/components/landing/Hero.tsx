@@ -1,86 +1,50 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import AnimatedCounter from "./AnimatedCounter";
 
 const Hero = () => {
-  const { t } = useTranslation('landing');
+  const { t } = useTranslation(['landing', 'common']);
+
+  const stats = [
+    { value: 47, label: "طالب راض" },
+    { value: 16, label: "شريك تعليمي" },
+    { value: 5, label: "دولة حول العالم" }
+  ];
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center items-center text-white" dir="rtl">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80" 
-          alt="Students studying" 
-          className="w-full h-full object-cover" 
-        />
-        <div className="absolute inset-0 bg-black/60"></div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 relative z-10 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Main Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-            رفيقك الدراسي العالمي
-          </h1>
-          
-          {/* Subtitle */}
-          <p className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto">
-            من أول قرار حتى أول إنجاز.. درب هي الجسر الآمن نحو دراستك في الخارج
-          </p>
-          
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/contact">
-              <Button 
-                size="lg" 
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
-              >
-                {t('hero.consultation')}
-              </Button>
-            </Link>
-            <Link to="/educational-programs">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg rounded-lg transition-all duration-300 w-full sm:w-auto"
-              >
-                {t('applyNow')}
-              </Button>
-            </Link>
-          </div>
+    <section className="relative h-screen min-h-[700px] flex items-center justify-center text-white overflow-hidden">
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover">
+        <source src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm" />
+      <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
+        <h1 className="text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
+          رفيقك الدراسي العالمي
+        </h1>
+        <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج</p>
+        <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
+          <Button size="lg" asChild variant="accent" className="transition-transform duration-300 hover:scale-105">
+            <Link to="/contact">{t('hero.consultation')}</Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild className="bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
+            <Link to="/contact">{t('applyNow')}</Link>
+          </Button>
         </div>
-      </div>
 
-      {/* Statistics Section */}
-      <div className="absolute bottom-20 left-0 right-0 z-10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-orange-400">+47</div>
-              <div className="text-sm md:text-base text-white/80 mt-2">طالب راض</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-orange-400">+16</div>
-              <div className="text-sm md:text-base text-white/80 mt-2">شريك تعليمي</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-orange-400">+5</div>
-              <div className="text-sm md:text-base text-white/80 mt-2">دولة حول العالم</div>
-            </div>
+        <div className="absolute bottom-10 left-0 right-0">
+          <div className="container mx-auto grid grid-cols-3 gap-8 text-white animate-fade-in animation-delay-500">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-4xl md:text-5xl font-bold text-accent drop-shadow-lg">
+                  <AnimatedCounter end={stat.value} />+
+                </p>
+                <p className="text-sm text-white/80">{stat.label}</p>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
-
-      {/* Bottom Section Title */}
-      <div className="absolute bottom-8 left-0 right-0 z-10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-xl md:text-2xl font-semibold text-white/90">
-            أفضل الجامعات العالمية
-          </h2>
         </div>
       </div>
     </section>
