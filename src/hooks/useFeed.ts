@@ -67,12 +67,26 @@ export const useFeedData = (userId: string) => {
 
       if (error) throw error;
       
-      // Transform data to match our types
+      // Transform data to match RecentView type
       return (data || []).map(item => ({
-        ...item,
+        id: item.id,
+        user_id: item.user_id || '',
         item_type: ['university', 'program', 'partner', 'offer'].includes(item.item_type) 
           ? item.item_type as 'university' | 'program' | 'partner' | 'offer'
-          : 'university' as const
+          : 'university' as const,
+        item_id: item.item_id,
+        viewed_at: item.viewed_at || new Date().toISOString(),
+        item_data: item.item_data && typeof item.item_data === 'object' && item.item_data !== null
+          ? {
+              title: (item.item_data as any)?.title || 'عنصر محفوظ',
+              image_url: (item.item_data as any)?.image_url || undefined,
+              description: (item.item_data as any)?.description || undefined,
+            }
+          : {
+              title: 'عنصر محفوظ',
+              image_url: undefined,
+              description: undefined,
+            }
       }));
     },
     enabled: !!userId,
