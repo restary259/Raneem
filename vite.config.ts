@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // No define block needed for console methods if you want to keep them!
+  // No define block needed for console methods!
   build: {
     rollupOptions: {
       output: {
