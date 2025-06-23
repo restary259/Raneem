@@ -1,9 +1,0 @@
-
-# Netlify redirects
-/*    /index.html   200
-
-# Handle SPA routing
-/student-auth  /index.html  200
-/student-dashboard  /index.html  200
-/reset-password  /index.html  200
-/admin  /index.html  200

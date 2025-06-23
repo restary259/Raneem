@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, getRedirectUrl } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail } from 'lucide-react';
 
 interface PasswordResetModalProps {
@@ -25,7 +25,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getRedirectUrl('/reset-password'),
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) throw error;
