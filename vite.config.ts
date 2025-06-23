@@ -20,10 +20,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    // Ensure console logs are properly handled in production
-    'console.log': mode === 'production' ? 'function(){}' : 'console.log',
-    'console.warn': mode === 'production' ? 'function(){}' : 'console.warn',
-    'console.error': mode === 'production' ? 'function(){}' : 'console.error',
+    // Properly define console methods for production
+    ...(mode === 'production' && {
+      'console.log': '(() => {})',
+      'console.warn': '(() => {})',
+      'console.error': '(() => {})',
+    }),
   },
   build: {
     rollupOptions: {
