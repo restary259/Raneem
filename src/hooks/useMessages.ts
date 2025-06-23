@@ -14,35 +14,41 @@ export const useMessages = (conversationId: string | null) => {
 
     setLoading(true);
     try {
+      // Use type assertion for the messages table
       const { data, error } = await supabase
-        .from('messages')
+        .from('messages' as any)
         .select(`
           *,
-          profiles!inner(id, full_name, avatar_url)
+          sender:profiles!sender_id(id, full_name, avatar_url)
         `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching messages:', error);
+        setMessages([]);
+        return;
+      }
 
-      const formattedMessages: Message[] = data?.map(msg => ({
+      const formattedMessages: Message[] = data?.map((msg: any) => ({
         id: msg.id,
         conversation_id: msg.conversation_id,
         sender_id: msg.sender_id,
         content: msg.content,
         message_type: msg.message_type as 'text' | 'image' | 'file',
-        attachments: msg.attachments,
+        attachments: msg.attachments || [],
         created_at: msg.created_at,
         sender: {
-          id: msg.profiles.id,
-          full_name: msg.profiles.full_name,
-          avatar_url: msg.profiles.avatar_url
+          id: msg.sender?.id || msg.sender_id,
+          full_name: msg.sender?.full_name || 'Unknown User',
+          avatar_url: msg.sender?.avatar_url
         }
       })) || [];
 
       setMessages(formattedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -53,7 +59,7 @@ export const useMessages = (conversationId: string | null) => {
 
     try {
       const { error } = await supabase
-        .from('messages')
+        .from('messages' as any)
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
@@ -62,7 +68,10 @@ export const useMessages = (conversationId: string | null) => {
           attachments: []
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        return;
+      }
 
       await fetchMessages();
     } catch (error) {

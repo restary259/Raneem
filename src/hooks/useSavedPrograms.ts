@@ -19,15 +19,21 @@ export const useSavedPrograms = () => {
 
     try {
       const { data, error } = await supabase
-        .from('saved_programs')
+        .from('saved_programs' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('saved_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching saved programs:', error);
+        setSavedPrograms([]);
+        return;
+      }
+      
       setSavedPrograms(data || []);
     } catch (error) {
       console.error('Error fetching saved programs:', error);
+      setSavedPrograms([]);
     } finally {
       setLoading(false);
     }
@@ -38,13 +44,17 @@ export const useSavedPrograms = () => {
 
     try {
       const { error } = await supabase
-        .from('saved_programs')
+        .from('saved_programs' as any)
         .insert({
           user_id: user.id,
           program_data: programData
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving program:', error);
+        return false;
+      }
+      
       await fetchSavedPrograms();
       return true;
     } catch (error) {
@@ -58,12 +68,16 @@ export const useSavedPrograms = () => {
 
     try {
       const { error } = await supabase
-        .from('saved_programs')
+        .from('saved_programs' as any)
         .delete()
         .eq('id', programId)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing program:', error);
+        return false;
+      }
+      
       await fetchSavedPrograms();
       return true;
     } catch (error) {

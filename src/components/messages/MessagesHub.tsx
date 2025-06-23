@@ -10,7 +10,7 @@ import { useConversations, Conversation } from '@/hooks/useConversations';
 import { useMessages } from '@/hooks/useMessages';
 import ConversationList from './ConversationList';
 import MessageThread from './MessageThread';
-import { Search, Plus, MessageCircle, Users } from 'lucide-react';
+import { Search, Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -70,7 +70,7 @@ const MessagesHub = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create conversation",
+        description: "Failed to create conversation. Make sure the database tables are set up correctly.",
       });
     } finally {
       setIsCreating(false);
@@ -166,11 +166,19 @@ const MessagesHub = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 overflow-y-auto">
-                <ConversationList
-                  conversations={filteredConversations}
-                  selectedId={selectedConversation?.id}
-                  onSelect={setSelectedConversation}
-                />
+                {filteredConversations.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No conversations yet</p>
+                    <p className="text-sm">Start a new conversation to begin messaging</p>
+                  </div>
+                ) : (
+                  <ConversationList
+                    conversations={filteredConversations}
+                    selectedId={selectedConversation?.id}
+                    onSelect={setSelectedConversation}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -191,6 +199,9 @@ const MessagesHub = () => {
                   <div className="text-center text-muted-foreground">
                     <MessageCircle className="h-12 w-12 mx-auto mb-4" />
                     <p>Select a conversation to start messaging</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Or create a new conversation using the "New Chat" button
+                    </p>
                   </div>
                 </CardContent>
               </Card>
