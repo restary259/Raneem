@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, GraduationCap, Plane, Home, Award, Languages, MapPin } from 'lucide-react';
 import AddServiceModal from './AddServiceModal';
+import EmptyState from './EmptyState';
+import LoadingState from './LoadingState';
 
 interface Service {
   id: string;
@@ -57,6 +59,7 @@ const ServicesOverview: React.FC<ServicesOverviewProps> = ({ userId }) => {
       if (error) throw error;
       setServices(data || []);
     } catch (error: any) {
+      console.error('Error fetching services:', error);
       toast({
         variant: "destructive",
         title: "خطأ في تحميل الخدمات",
@@ -101,7 +104,7 @@ const ServicesOverview: React.FC<ServicesOverviewProps> = ({ userId }) => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">جار تحميل الخدمات...</div>;
+    return <LoadingState type="list" count={3} />;
   }
 
   return (
@@ -132,9 +135,13 @@ const ServicesOverview: React.FC<ServicesOverviewProps> = ({ userId }) => {
         </CardHeader>
         <CardContent>
           {services.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              لم يتم إضافة أي خدمات بعد
-            </div>
+            <EmptyState
+              icon={GraduationCap}
+              title="لا توجد خدمات"
+              description="لم يتم إضافة أي خدمات بعد. ابدأ بإضافة خدمة جديدة لتتبع تقدمك التعليمي."
+              actionLabel="إضافة خدمة"
+              onAction={() => setShowAddModal(true)}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {services.map((service) => {

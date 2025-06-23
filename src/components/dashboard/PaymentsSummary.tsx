@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, CreditCard } from 'lucide-react';
 import AddPaymentModal from './AddPaymentModal';
+import EmptyState from './EmptyState';
+import LoadingState from './LoadingState';
 
 interface Payment {
   id: string;
@@ -67,6 +69,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
 
       setPayments(enrichedPayments);
     } catch (error: any) {
+      console.error('Error fetching payments:', error);
       toast({
         variant: "destructive",
         title: "خطأ في تحميل المدفوعات",
@@ -102,7 +105,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
   const totalRemaining = payments.reduce((sum, payment) => sum + payment.amount_remaining, 0);
 
   if (isLoading) {
-    return <div className="text-center py-8">جار تحميل المدفوعات...</div>;
+    return <LoadingState type="list" count={3} />;
   }
 
   return (
@@ -179,9 +182,13 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              لا توجد مدفوعات مسجلة
-            </div>
+            <EmptyState
+              icon={CreditCard}
+              title="لا توجد مدفوعات"
+              description="لا توجد مدفوعات مسجلة في حسابك حالياً. ابدأ بإضافة دفعة لتتبع مدفوعاتك."
+              actionLabel="إضافة دفعة"
+              onAction={() => setShowAddModal(true)}
+            />
           ) : (
             <div className="space-y-4">
               {payments.map((payment) => {

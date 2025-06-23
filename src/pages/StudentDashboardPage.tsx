@@ -8,7 +8,8 @@ import { Profile, VisaStatus } from '@/types/profile';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
-import DashboardLoading from '@/components/dashboard/DashboardLoading';
+import DashboardWelcome from '@/components/dashboard/DashboardWelcome';
+import LoadingState from '@/components/dashboard/LoadingState';
 import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
 import { useAuthDebug } from '@/hooks/useAuthDebug';
 
@@ -208,6 +209,25 @@ const StudentDashboardPage = () => {
     navigate('/');
   };
 
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'complete-profile':
+        setActiveTab('overview');
+        break;
+      case 'browse-programs':
+        navigate('/educational-programs');
+        break;
+      case 'schedule-consultation':
+        navigate('/contact');
+        break;
+      case 'join-community':
+        navigate('/community');
+        break;
+      default:
+        break;
+    }
+  };
+
   // Show error state
   if (error && !isLoading) {
     return (
@@ -228,7 +248,13 @@ const StudentDashboardPage = () => {
 
   // Show loading state
   if (isLoading) {
-    return <DashboardLoading />;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <LoadingState type="dashboard" />
+        </div>
+      </div>
+    );
   }
 
   // Show simple test component first
@@ -260,12 +286,23 @@ const StudentDashboardPage = () => {
               onTabChange={setActiveTab} 
             />
             
-            <DashboardMainContent
-              activeTab={activeTab}
-              profile={profile}
-              user={user}
-              onProfileUpdate={fetchProfileSafely}
-            />
+            <div className="flex-1">
+              {activeTab === 'overview' && (
+                <DashboardWelcome 
+                  profile={profile} 
+                  onQuickAction={handleQuickAction}
+                />
+              )}
+              
+              {activeTab !== 'overview' && (
+                <DashboardMainContent
+                  activeTab={activeTab}
+                  profile={profile}
+                  user={user}
+                  onProfileUpdate={fetchProfileSafely}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
