@@ -8,71 +8,79 @@ const Hero = () => {
   const { t } = useTranslation('landing');
 
   return (
-    <section className="relative min-h-screen flex items-center bg-gradient-to-br from-orange-50 to-yellow-50 overflow-hidden" dir="rtl">
-      <div className="container mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div className="space-y-8 text-right">
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                درب للدراسة الدولية
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
-                {t('hero.subtitle')}
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/contact">
-                <Button 
-                  size="lg" 
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
-                >
-                  {t('hero.consultation')}
-                </Button>
-              </Link>
-              <Link to="/educational-programs">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300 w-full sm:w-auto"
-                >
-                  تصفح البرامج
-                </Button>
-              </Link>
-            </div>
+    <section className="relative min-h-screen flex flex-col justify-center items-center text-white" dir="rtl">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80" 
+          alt="Students studying" 
+          className="w-full h-full object-cover" 
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
 
-            {/* Trust indicators */}
-            <div className="flex flex-wrap items-center gap-6 pt-8 border-t border-gray-200">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">47+</div>
-                <div className="text-sm text-gray-600">طالب تم قبولهم</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">16+</div>
-                <div className="text-sm text-gray-600">شريك جامعي</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">95%</div>
-                <div className="text-sm text-gray-600">نسبة نجاح</div>
-              </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 relative z-10 text-center">
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Main Title */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+            رفيقك الدراسي العالمي
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto">
+            من أول قرار حتى أول إنجاز.. درب هي الجسر الآمن نحو دراستك في الخارج
+          </p>
+          
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/contact">
+              <Button 
+                size="lg" 
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+              >
+                {t('hero.consultation')}
+              </Button>
+            </Link>
+            <Link to="/educational-programs">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg rounded-lg transition-all duration-300 w-full sm:w-auto"
+              >
+                {t('applyNow')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics Section */}
+      <div className="absolute bottom-20 left-0 right-0 z-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-orange-400">+47</div>
+              <div className="text-sm md:text-base text-white/80 mt-2">طالب راض</div>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-orange-400">+16</div>
+              <div className="text-sm md:text-base text-white/80 mt-2">شريك تعليمي</div>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-orange-400">+5</div>
+              <div className="text-sm md:text-base text-white/80 mt-2">دولة حول العالم</div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Hero Image */}
-          <div className="relative">
-            <div className="relative z-10">
-              <img
-                src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
-                alt="درب للدراسة الدولية - شعار الشركة"
-                className="w-full max-w-md mx-auto h-auto object-contain"
-                loading="eager"
-              />
-            </div>
-            {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-200 rounded-full opacity-50 animate-pulse"></div>
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-yellow-200 rounded-full opacity-50 animate-pulse delay-1000"></div>
-          </div>
+      {/* Bottom Section Title */}
+      <div className="absolute bottom-8 left-0 right-0 z-10">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-xl md:text-2xl font-semibold text-white/90">
+            أفضل الجامعات العالمية
+          </h2>
         </div>
       </div>
     </section>
