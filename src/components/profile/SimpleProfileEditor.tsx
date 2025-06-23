@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/types/profile';
 import { Save, X } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SimpleProfileEditorProps {
   profile: Profile | null;
@@ -23,6 +24,7 @@ const SimpleProfileEditor: React.FC<SimpleProfileEditorProps> = ({
   onSave,
   onCancel
 }) => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
@@ -45,6 +47,7 @@ const SimpleProfileEditor: React.FC<SimpleProfileEditorProps> = ({
         phone_number: formData.phone,
         city: formData.city,
         bio: formData.bio,
+        email: user?.email || profile?.email || '',
         updated_at: new Date().toISOString(),
       };
 
