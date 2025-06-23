@@ -1,152 +1,101 @@
-
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle
-} from '@/components/ui/navigation-menu';
-import ListItem from './ListItem';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Languages } from '@/components/Languages';
+import { useAuth } from '@/hooks/useAuth';
 
-const DesktopNav = () => {
-  const { t } = useTranslation();
+interface DesktopNavProps {
+  t: any;
+}
 
-  const aboutComponents: { title: string; href: string; description: string }[] = [
-    {
-      title: t('nav.about'),
-      href: '/about',
-      description: t('desktopNav.about.description'),
-    },
-    {
-      title: t('nav.locations'),
-      href: '/locations',
-      description: t('desktopNav.locations.description'),
-    },
-  ];
+const DesktopNav = ({ t }: DesktopNavProps) => {
+  const [open, setOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  const moreComponents: { title: string; href: string; description: string }[] = [
-    {
-      title: 'وجهاتنا التعليمية',
-      href: '/educational-destinations',
-      description: 'اكتشف الجامعات ومعاهد اللغة والخدمات التعليمية',
-    },
-    {
-      title: t('nav.partnership'),
-      href: '/partnership',
-      description: t('desktopNav.partnership.description'),
-    },
-    {
-      title: t('nav.broadcast'),
-      href: '/broadcast',
-      description: 'شاهد فيديوهات تعليمية ومباشرة من خبرائنا',
-    }
+  const navigationItems = [
+    { name: t('nav.home'), href: '/' },
+    { name: t('nav.services'), href: '/services' },
+    { name: t('nav.partners'), href: '/partners' },
+    { name: t('nav.partnership'), href: '/partnership' },
+    { name: t('nav.resources'), href: '/resources' },
+    { name: t('nav.about'), href: '/about' },
+    { name: 'المجتمع', href: '/community' }, // Added community link
+    { name: t('nav.contact'), href: '/contact' },
   ];
 
   return (
-    <div className="flex justify-center w-full" dir="rtl">
-      <NavigationMenu>
-        <NavigationMenuList className="flex items-center gap-1">
-          {/* المزيد (dropdown) - First item */}
-          <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
-              المزيد
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px] bg-white shadow-lg border rounded-md">
-                {moreComponents.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    to={component.href}
-                    title={component.title}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+    <nav className="hidden lg:flex items-center space-x-6">
+      {navigationItems.map((item) => (
+        <Link key={item.name} to={item.href} className="text-sm font-medium text-gray-800 hover:text-gray-900">
+          {item.name}
+        </Link>
+      ))}
+      {isAuthenticated ? (
+        <Link to="/dashboard">
+          <Button variant="default" size="sm">
+            {t('nav.dashboard')}
+          </Button>
+        </Link>
+      ) : (
+        <>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                {t('nav.login')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{t('nav.login')}</DialogTitle>
+                <DialogDescription>
+                  {t('login.choose')}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Button onClick={() => window.location.href = '/auth/login/email'} variant="outline" size="sm">{t('login.email')}</Button>
+                <Button onClick={() => window.location.href = '/auth/login/google'} variant="outline" size="sm">{t('login.google')}</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Link to="/auth/register">
+            <Button variant="default" size="sm">
+              {t('nav.register')}
+            </Button>
+          </Link>
+        </>
+      )}
 
-          {/* تواصل معنا */}
-          <NavigationMenuItem>
-            <Link to="/contact">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                {t('nav.contact')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-          {/* موارد */}
-          <NavigationMenuItem>
-            <Link to="/resources">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                {t('nav.resources')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-          {/* اختيار التخصص */}
-          <NavigationMenuItem>
-            <Link to="/quiz">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                اختيار التخصص
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-          {/* التخصصات */}
-          <NavigationMenuItem>
-            <Link to="/educational-programs">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                التخصصات
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-          {/* خدماتنا */}
-          <NavigationMenuItem>
-            <Link to="/services">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                {t('nav.services')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-          {/* من نحن (dropdown) */}
-          <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
-              {t('nav.about')}
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md">
-                {aboutComponents.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    to={component.href}
-                    title={component.title}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-
-          {/* الرئيسية - Last item */}
-          <NavigationMenuItem>
-            <Link to="/">
-              <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                {t('nav.home')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
-    </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost">
+            <Languages />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56">
+          <DropdownMenuLabel>Change language</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'ar')}>
+            Arabic
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'en')}>
+            English
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'fr')}>
+            French
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </nav>
   );
 };
 
