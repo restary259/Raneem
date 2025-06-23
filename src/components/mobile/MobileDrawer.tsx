@@ -15,20 +15,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { 
   Menu, 
   Globe, 
-  Settings, 
   FileText, 
   Heart, 
   Bell, 
   LogOut, 
   User,
-  BookOpen,
   MessageSquare,
   Shield,
-  HelpCircle
+  HelpCircle,
+  BookOpen
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

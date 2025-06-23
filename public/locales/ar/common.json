@@ -13,7 +13,10 @@
     "locations": "مواقعنا",
     "broadcast": "بث درب",
     "studentPortal": "البوابة الطلابية",
-    "majorQuiz": "اختبار التخصص"
+    "majorQuiz": "اختبار التخصص",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "dashboard": "لوحة التحكم"
   },
   "desktopNav": {
     "about": {
@@ -28,6 +31,11 @@
     "partners": {
       "description": "تصفح قائمة شركائنا المعتمدين."
     }
+  },
+  "login": {
+    "choose": "اختر طريقة تسجيل الدخول",
+    "email": "تسجيل الدخول بالإيميل",
+    "google": "تسجيل الدخول بجوجل"
   },
   "applyNow": "قدم الآن",
   "footer": {

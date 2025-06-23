@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ interface DesktopNavProps {
 }
 
 const DesktopNav = ({ t }: DesktopNavProps) => {
+  const { t: translate } = useTranslation();
   const [open, setOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
@@ -29,7 +31,7 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
     { name: t('nav.partnership'), href: '/partnership' },
     { name: t('nav.resources'), href: '/resources' },
     { name: t('nav.about'), href: '/about' },
-    { name: 'المجتمع', href: '/community' }, // Added community link
+    { name: 'المجتمع', href: '/community' },
     { name: t('nav.contact'), href: '/contact' },
   ];
 
@@ -43,7 +45,7 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
       {isAuthenticated ? (
         <Link to="/dashboard">
           <Button variant="default" size="sm">
-            {t('nav.dashboard')}
+            لوحة التحكم
           </Button>
         </Link>
       ) : (
@@ -51,25 +53,25 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
-                {t('nav.login')}
+                تسجيل الدخول
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>{t('nav.login')}</DialogTitle>
+                <DialogTitle>تسجيل الدخول</DialogTitle>
                 <DialogDescription>
-                  {t('login.choose')}
+                  اختر طريقة تسجيل الدخول
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <Button onClick={() => window.location.href = '/auth/login/email'} variant="outline" size="sm">{t('login.email')}</Button>
-                <Button onClick={() => window.location.href = '/auth/login/google'} variant="outline" size="sm">{t('login.google')}</Button>
+                <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بالإيميل</Button>
+                <Button onClick={() => window.location.href = '/student-auth'} variant="outline" size="sm">تسجيل الدخول بجوجل</Button>
               </div>
             </DialogContent>
           </Dialog>
-          <Link to="/auth/register">
+          <Link to="/student-auth">
             <Button variant="default" size="sm">
-              {t('nav.register')}
+              إنشاء حساب
             </Button>
           </Link>
         </>
@@ -82,16 +84,25 @@ const DesktopNav = ({ t }: DesktopNavProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56">
-          <DropdownMenuLabel>Change language</DropdownMenuLabel>
+          <DropdownMenuLabel>تغيير اللغة</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'ar')}>
-            Arabic
+          <DropdownMenuItem onClick={() => {
+            localStorage.setItem('i18nextLng', 'ar');
+            window.location.reload();
+          }}>
+            العربية
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'en')}>
+          <DropdownMenuItem onClick={() => {
+            localStorage.setItem('i18nextLng', 'en');
+            window.location.reload();
+          }}>
             English
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => localStorage.setItem('i18nextLng', 'fr')}>
-            French
+          <DropdownMenuItem onClick={() => {
+            localStorage.setItem('i18nextLng', 'he');
+            window.location.reload();
+          }}>
+            עברית
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
