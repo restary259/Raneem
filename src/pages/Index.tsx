@@ -10,18 +10,20 @@ import PartnersMarquee from "@/components/landing/PartnersMarquee";
 import StudentJourney from "@/components/landing/StudentJourney";
 import StudentGallery from "@/components/landing/StudentGallery";
 import MobileHomeFeed from "@/components/mobile/MobileHomeFeed";
-import HomeFeed from "@/components/feed/HomeFeed";
+import UnifiedFeed from "@/components/feed/UnifiedFeed";
 
 const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
-  // Show authenticated home feed for logged-in users
+  // Show authenticated unified feed for logged-in users
   if (user) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
-        {isMobile ? <MobileHomeFeed /> : <HomeFeed />}
+        {!isMobile && <Header />}
+        <div className="container mx-auto px-4 py-6">
+          {isMobile ? <MobileHomeFeed /> : <UnifiedFeed />}
+        </div>
       </div>
     );
   }

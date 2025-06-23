@@ -53,6 +53,145 @@ export type Database = {
           },
         ]
       }
+      applications: {
+        Row: {
+          created_at: string | null
+          deadline: string | null
+          documents: Json | null
+          id: string
+          notes: string | null
+          partner_id: string | null
+          program_id: string | null
+          status: Database["public"]["Enums"]["application_status"] | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deadline?: string | null
+          documents?: Json | null
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          program_id?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deadline?: string | null
+          documents?: Json | null
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          program_id?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          community_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string | null
+          metadata: Json | null
+          sender_id: string | null
+        }
+        Insert: {
+          community_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender_id?: string | null
+        }
+        Update: {
+          community_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_private: boolean | null
+          member_count: number | null
+          name: string
+          owner_id: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_private?: boolean | null
+          member_count?: number | null
+          name: string
+          owner_id?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_private?: boolean | null
+          member_count?: number | null
+          name?: string
+          owner_id?: string | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_events: {
         Row: {
           created_at: string | null
@@ -94,6 +233,45 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      community_memberships: {
+        Row: {
+          community_id: string | null
+          id: string
+          joined_at: string | null
+          role: Database["public"]["Enums"]["community_role"] | null
+          user_id: string | null
+        }
+        Insert: {
+          community_id?: string | null
+          id?: string
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["community_role"] | null
+          user_id?: string | null
+        }
+        Update: {
+          community_id?: string | null
+          id?: string
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["community_role"] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_memberships_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
@@ -686,6 +864,56 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          is_pinned: boolean | null
+          is_verified: boolean | null
+          metadata: Json | null
+          post_type: Database["public"]["Enums"]["post_type"]
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          is_verified?: boolean | null
+          metadata?: Json | null
+          post_type: Database["public"]["Enums"]["post_type"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          is_verified?: boolean | null
+          metadata?: Json | null
+          post_type?: Database["public"]["Enums"]["post_type"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -998,6 +1226,38 @@ export type Database = {
           },
         ]
       }
+      user_saves: {
+        Row: {
+          id: string
+          item_id: string
+          item_type: string
+          saved_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          item_type: string
+          saved_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          item_type?: string
+          saved_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       views: {
         Row: {
           id: string
@@ -1040,7 +1300,22 @@ export type Database = {
       }
     }
     Enums: {
+      application_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "accepted"
+        | "rejected"
+        | "waitlisted"
+      community_role: "admin" | "moderator" | "member"
       payment_status: "pending" | "partial" | "completed" | "overdue"
+      post_type:
+        | "announcement"
+        | "scholarship"
+        | "program"
+        | "success_story"
+        | "event"
+        | "deadline"
       service_type:
         | "university_application"
         | "visa_assistance"
@@ -1169,7 +1444,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      application_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "accepted",
+        "rejected",
+        "waitlisted",
+      ],
+      community_role: ["admin", "moderator", "member"],
       payment_status: ["pending", "partial", "completed", "overdue"],
+      post_type: [
+        "announcement",
+        "scholarship",
+        "program",
+        "success_story",
+        "event",
+        "deadline",
+      ],
       service_type: [
         "university_application",
         "visa_assistance",

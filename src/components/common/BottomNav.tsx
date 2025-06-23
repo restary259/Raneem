@@ -1,84 +1,80 @@
-
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, MessageCircle, User } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  Home,
+  User,
+  FileText,
+  GraduationCap,
+  Users,
+} from 'lucide-react';
+import '../styles/navigation.css';
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  activeIcon: React.ComponentType<any>;
+}
 
 const BottomNav = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const { user } = useAuth();
 
-  // Only show on mobile devices
-  if (!isMobile) {
-    return null;
-  }
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const navItems = [
+  const navigationItems = [
     {
       name: 'الرئيسية',
       href: '/',
       icon: Home,
-      ariaLabel: 'الصفحة الرئيسية'
+      activeIcon: Home,
     },
     {
-      name: 'التخصصات',
+      name: 'الطلبات',
+      href: '/applications',
+      icon: FileText,
+      activeIcon: FileText,
+    },
+    {
+      name: 'البرامج',
       href: '/educational-programs',
-      icon: Search,
-      ariaLabel: 'البحث في التخصصات'
+      icon: GraduationCap,
+      activeIcon: GraduationCap,
     },
     {
-      name: 'اتصل بنا',
-      href: '/contact',
-      icon: MessageCircle,
-      ariaLabel: 'تواصل معنا'
+      name: 'المجتمع',
+      href: '/community',
+      icon: Users,
+      activeIcon: Users,
     },
     {
-      name: 'الحساب',
-      href: '/student-auth',
+      name: 'الملف الشخصي',
+      href: user ? '/dashboard/profile' : '/student-auth',
       icon: User,
-      ariaLabel: 'حساب الطالب'
-    }
+      activeIcon: User,
+    },
   ];
 
   return (
-    <nav 
-      role="navigation" 
-      aria-label="التنقل الرئيسي"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 pb-safe md:hidden"
-      style={{
-        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
-      }}
+    <nav
+      className="fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 py-2 px-4 flex justify-around items-center 
+      lg:hidden z-50 shadow-md"
       dir="rtl"
     >
-      <div className="flex items-center justify-around max-w-md mx-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              aria-label={item.ariaLabel}
-              className={`bottom-nav-item ${active ? 'active' : ''}`}
-            >
-              <Icon 
-                className={`h-5 w-5 mb-1.5 ${active ? 'stroke-2' : 'stroke-1.5'}`}
-                aria-hidden="true"
-              />
-              <span className={`text-xs font-medium leading-tight truncate max-w-[60px] ${
-                active ? 'text-orange-500' : 'text-gray-600'
-              }`}>
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      {navigationItems.map((item) => {
+        const isActive = location.pathname === item.href;
+        const Icon = isActive ? item.activeIcon : item.icon;
+
+        return (
+          <NavLink
+            key={item.name}
+            to={item.href}
+            className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <Icon className="h-5 w-5" />
+            <span>{item.name}</span>
+          </NavLink>
+        );
+      })}
     </nav>
   );
 };

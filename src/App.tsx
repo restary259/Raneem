@@ -16,6 +16,8 @@ import ProfileManagementPage from '@/pages/ProfileManagementPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import CommunityHubPage from '@/pages/CommunityHubPage';
 import ForumTopicPage from '@/pages/ForumTopicPage';
+import ApplicationsPage from '@/pages/ApplicationsPage';
+import EducationalProgramsPage from '@/pages/EducationalProgramsPage';
 import CustomErrorBoundary from '@/components/ErrorBoundary';
 import MobileLayout from '@/components/mobile/MobileLayout';
 
@@ -39,6 +41,8 @@ function App() {
               <Route path="/resources" element={<ResourcesPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/applications" element={<ApplicationsPage />} />
+              <Route path="/educational-programs" element={<EducationalProgramsPage />} />
               <Route path="/dashboard/profile" element={<ProfileManagementPage />} />
               <Route path="/dashboard/notifications" element={<NotificationsPage />} />
               <Route path="/community" element={<CommunityHubPage />} />
