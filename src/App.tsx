@@ -18,6 +18,8 @@ import CommunityHubPage from '@/pages/CommunityHubPage';
 import ForumTopicPage from '@/pages/ForumTopicPage';
 import ApplicationsPage from '@/pages/ApplicationsPage';
 import EducationalProgramsPage from '@/pages/EducationalProgramsPage';
+import SavedProgramsPage from '@/pages/SavedProgramsPage';
+import DocumentsPage from '@/pages/DocumentsPage';
 import CustomErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from '@/components/layout/MainLayout';
 import MessagesHub from '@/components/messages/MessagesHub';
@@ -34,6 +36,8 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<StudentDashboardPage />} />
               <Route path="/dashboard/messages" element={<MessagesHub />} />
+              <Route path="/dashboard/favorites" element={<SavedProgramsPage />} />
+              <Route path="/dashboard/documents" element={<DocumentsPage />} />
               <Route path="/auth" element={<StudentAuthPage />} />
               <Route path="/student-auth" element={<StudentAuthPage />} />
               <Route path="/services" element={<ServicesPage />} />

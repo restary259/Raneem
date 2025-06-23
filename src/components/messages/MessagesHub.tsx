@@ -1,62 +1,96 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import { useConversations, Conversation } from '@/hooks/useConversations';
+import { useMessages } from '@/hooks/useMessages';
+import ConversationList from './ConversationList';
+import MessageThread from './MessageThread';
 import { Search, Plus, MessageCircle, Users } from 'lucide-react';
-
-interface Chat {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  avatar?: string;
-  isGroup?: boolean;
-}
-
-interface Community {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  members: number;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const MessagesHub = () => {
+  const { user } = useAuth();
+  const { conversations, loading: conversationsLoading, createConversation } = useConversations();
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const { messages, loading: messagesLoading, sendMessage } = useMessages(selectedConversation?.id || null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [newConversationEmail, setNewConversationEmail] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const { toast } = useToast();
 
-  const chats: Chat[] = [
-    {
-      id: '1',
-      name: 'University of Toronto Admissions',
-      lastMessage: 'Thank you for your application. We\'ll review it shortly.',
-      timestamp: '2m ago',
-      unread: 2
-    },
-    {
-      id: '2', 
-      name: 'Computer Science Students 2024',
-      lastMessage: 'Sarah: Has anyone heard back from MIT yet?',
-      timestamp: '15m ago',
-      unread: 5,
-      isGroup: true
-    }
-  ];
+  const handleCreateConversation = async () => {
+    if (!newConversationEmail.trim() || !user) return;
 
-  const communities: Community[] = [
-    {
-      id: '1',
-      name: 'Scholarship Hunters Global',
-      lastMessage: 'Ahmed: Found a great scholarship for engineering students!',
-      timestamp: '1h ago',
-      unread: 13,
-      members: 156
+    setIsCreating(true);
+    try {
+      // Find user by email
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newConversationEmail.trim())
+        .single();
+
+      if (error || !profiles) {
+        toast({
+          variant: "destructive",
+          title: "User not found",
+          description: "No user found with this email address",
+        });
+        return;
+      }
+
+      if (profiles.id === user.id) {
+        toast({
+          variant: "destructive",
+          title: "Invalid action",
+          description: "You cannot start a conversation with yourself",
+        });
+        return;
+      }
+
+      const conversationId = await createConversation([profiles.id]);
+      
+      if (conversationId) {
+        setShowNewConversation(false);
+        setNewConversationEmail('');
+        toast({
+          title: "Conversation created",
+          description: "Successfully started a new conversation",
+        });
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create conversation",
+      });
+    } finally {
+      setIsCreating(false);
     }
-  ];
+  };
+
+  const filteredConversations = conversations.filter(conv => {
+    if (!searchQuery) return true;
+    
+    const title = conv.title || conv.members.find(m => m.user_id !== user?.id)?.profile.full_name || '';
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  if (conversationsLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-lg">Loading conversations...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -64,9 +98,47 @@ const MessagesHub = () => {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">Messages</h1>
-          <Button size="sm" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-          </Button>
+          <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                New Chat
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Start New Conversation</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="email">User Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter user's email address"
+                    value={newConversationEmail}
+                    onChange={(e) => setNewConversationEmail(e.target.value)}
+                    disabled={isCreating}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowNewConversation(false)}
+                    disabled={isCreating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateConversation}
+                    disabled={isCreating || !newConversationEmail.trim()}
+                  >
+                    {isCreating ? 'Creating...' : 'Start Chat'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search */}
@@ -81,104 +153,51 @@ const MessagesHub = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="chats" className="flex-1 flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="chats" className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Chats
-            </TabsTrigger>
-            <TabsTrigger value="communities" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Communities
-            </TabsTrigger>
-          </TabsList>
+      {/* Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full p-4">
+          {/* Conversations List */}
+          <div className="lg:col-span-1 h-full">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Conversations ({filteredConversations.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 overflow-y-auto">
+                <ConversationList
+                  conversations={filteredConversations}
+                  selectedId={selectedConversation?.id}
+                  onSelect={setSelectedConversation}
+                />
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Message Thread */}
+          <div className="lg:col-span-2 h-full">
+            {selectedConversation ? (
+              <MessageThread
+                conversation={selectedConversation}
+                messages={messages}
+                currentUserId={user?.id || ''}
+                onSendMessage={sendMessage}
+                isLoading={messagesLoading}
+              />
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <CardContent>
+                  <div className="text-center text-muted-foreground">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-4" />
+                    <p>Select a conversation to start messaging</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <TabsContent value="chats" className="m-0 h-full">
-            <div className="space-y-1">
-              {chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50"
-                >
-                  <div className="relative">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={chat.avatar} />
-                      <AvatarFallback className="bg-blue-100 text-blue-600">
-                        {chat.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {chat.unread > 0 && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {chat.name}
-                      </h3>
-                      <span className="text-xs text-gray-500">{chat.timestamp}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 truncate">
-                      {chat.lastMessage}
-                    </p>
-                  </div>
-                  
-                  {chat.unread > 0 && (
-                    <Badge className="bg-red-500 text-white min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                      {chat.unread}
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="communities" className="m-0 h-full">
-            <div className="space-y-1">
-              {communities.map((community) => (
-                <div
-                  key={community.id}
-                  className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50"
-                >
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-purple-100 text-purple-600">
-                      {community.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-gray-900 truncate">
-                        {community.name}
-                      </h3>
-                      <span className="text-xs text-gray-500">{community.timestamp}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 truncate">
-                      {community.lastMessage}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500">
-                        {community.members} members
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {community.unread > 0 && (
-                    <Badge className="bg-red-500 text-white min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                      {community.unread}
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        </div>
-      </Tabs>
+      </div>
     </div>
   );
 };

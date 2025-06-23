@@ -7,7 +7,6 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -18,7 +17,6 @@ import {
   File,
   Bell,
   Settings,
-  Globe,
   LogOut
 } from 'lucide-react';
 
@@ -72,13 +70,6 @@ const StudentSidebar = () => {
       label: 'Settings',
       href: '/dashboard/settings',
       count: null
-    },
-    {
-      icon: Globe,
-      label: 'Language',
-      href: '/dashboard/language',
-      count: null,
-      special: 'English'
     }
   ];
 
@@ -87,13 +78,13 @@ const StudentSidebar = () => {
       await supabase.auth.signOut();
       navigate('/');
       toast({
-        title: "تم تسجيل الخروج بنجاح",
-        description: "نراك قريباً!",
+        title: "Successfully logged out",
+        description: "See you soon!",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "خطأ في تسجيل الخروج",
+        title: "Logout error",
         description: error.message,
       });
     }
@@ -115,7 +106,7 @@ const StudentSidebar = () => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-gray-900 truncate">
-                {profile?.full_name || 'مستخدم'}
+                {profile?.full_name || 'User'}
               </h3>
               <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
                 Verified
@@ -150,9 +141,6 @@ const StudentSidebar = () => {
                   <span className="font-medium">{item.label}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.special && (
-                    <span className="text-xs text-gray-500">{item.special}</span>
-                  )}
                   {item.count && (
                     <Badge 
                       variant="secondary" 
