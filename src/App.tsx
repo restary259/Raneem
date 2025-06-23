@@ -32,12 +32,20 @@ const queryClient = new QueryClient();
 const NetflixLoader = () => {
   return (
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center">
-      <div className="animate-[logoScale_2s_ease-out_forwards]">
-        <img 
-          src="/lovable-uploads/efe8829d-07b5-4776-a49f-c111a5219b76.png" 
-          alt="درب" 
-          className="w-16 h-16 object-contain"
-        />
+      <div className="flex flex-col items-center">
+        <div className="animate-[logoScale_2s_ease-out_forwards] mb-4">
+          <img 
+            src="/lovable-uploads/efe8829d-07b5-4776-a49f-c111a5219b76.png" 
+            alt="درب" 
+            className="w-20 h-20 object-contain"
+          />
+        </div>
+        <div className="text-2xl font-bold text-gray-800 animate-fade-in">
+          درب
+        </div>
+        <div className="text-sm text-gray-600 mt-2 animate-fade-in animation-delay-300">
+          رفيقك الدراسي العالمي
+        </div>
       </div>
     </div>
   );

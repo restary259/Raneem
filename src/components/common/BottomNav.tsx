@@ -28,7 +28,7 @@ const BottomNav = () => {
       name: 'التخصصات',
       href: '/educational-programs',
       icon: GraduationCap,
-      ariaLabel: 'البرامج التعليمية'
+      ariaLabel: 'التخصصات الأكاديمية'
     },
     {
       name: 'الوجهات',
@@ -69,11 +69,7 @@ const BottomNav = () => {
               key={item.name}
               to={item.href}
               aria-label={item.ariaLabel}
-              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[48px] px-2 py-1 rounded-lg transition-all duration-200 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                active 
-                  ? 'text-orange-500 bg-orange-50' 
-                  : 'text-gray-600 hover:text-orange-500'
-              }`}
+              className={`bottom-nav-item ${active ? 'active' : ''}`}
             >
               <Icon 
                 className={`h-5 w-5 mb-1 ${active ? 'stroke-2' : 'stroke-1.5'}`}

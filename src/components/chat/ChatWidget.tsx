@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, X } from 'lucide-react';
 import ChatPopup from './ChatPopup';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -13,16 +15,39 @@ const ChatWidget = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-[999]">
-        <Button 
-          onClick={toggleChat} 
-          size="icon" 
-          className="rounded-full h-16 w-16 bg-accent shadow-lg hover:bg-accent/90 transition-transform hover:scale-110"
+      {/* Chat Button */}
+      <div 
+        className={`fixed z-40 ${
+          isMobile 
+            ? 'bottom-20 right-4' // Above the mobile footer navigator
+            : 'bottom-6 right-6'   // Normal position on desktop
+        }`}
+      >
+        <Button
+          onClick={toggleChat}
+          className="w-14 h-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          aria-label={isOpen ? 'إغلاق الدردشة' : 'فتح الدردشة'}
         >
-          {isOpen ? <X className="h-8 w-8 text-primary-foreground" /> : <MessageSquare className="h-8 w-8 text-primary-foreground" />}
+          {isOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <MessageCircle className="h-6 w-6" />
+          )}
         </Button>
       </div>
-      {isOpen && <ChatPopup onClose={toggleChat} />}
+
+      {/* Chat Popup */}
+      {isOpen && (
+        <div 
+          className={`fixed z-50 ${
+            isMobile 
+              ? 'bottom-36 right-4 left-4' // Above the mobile footer and chat button
+              : 'bottom-24 right-6 w-80'   // Normal position on desktop
+          }`}
+        >
+          <ChatPopup onClose={() => setIsOpen(false)} />
+        </div>
+      )}
     </>
   );
 };
