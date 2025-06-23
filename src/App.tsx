@@ -15,7 +15,7 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import CommunityHubPage from '@/pages/CommunityHubPage';
 import ForumTopicPage from '@/pages/ForumTopicPage';
 import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundary as CustomErrorBoundary from '@/components/ErrorBoundary';
+import CustomErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
   return (
