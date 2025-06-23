@@ -18,19 +18,9 @@ export const useSavedPrograms = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('saved_programs' as any)
-        .select('*')
-        .eq('user_id', user.id)
-        .order('saved_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching saved programs:', error);
-        setSavedPrograms([]);
-        return;
-      }
-      
-      setSavedPrograms(data || []);
+      // Since the table doesn't exist yet, return empty array for now
+      console.log('Saved programs feature will be available after database migration');
+      setSavedPrograms([]);
     } catch (error) {
       console.error('Error fetching saved programs:', error);
       setSavedPrograms([]);
@@ -43,20 +33,8 @@ export const useSavedPrograms = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('saved_programs' as any)
-        .insert({
-          user_id: user.id,
-          program_data: programData
-        });
-
-      if (error) {
-        console.error('Error saving program:', error);
-        return false;
-      }
-      
-      await fetchSavedPrograms();
-      return true;
+      console.log('Save program will be available after database migration');
+      return false;
     } catch (error) {
       console.error('Error saving program:', error);
       return false;
@@ -67,19 +45,8 @@ export const useSavedPrograms = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('saved_programs' as any)
-        .delete()
-        .eq('id', programId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error removing program:', error);
-        return false;
-      }
-      
-      await fetchSavedPrograms();
-      return true;
+      console.log('Remove program will be available after database migration');
+      return false;
     } catch (error) {
       console.error('Error removing program:', error);
       return false;

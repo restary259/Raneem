@@ -51,22 +51,11 @@ export const useConversations = () => {
     if (!user) return;
 
     try {
-      // Use direct SQL query to get conversations with members
-      const { data: conversationData, error: convError } = await supabase.rpc('get_user_conversations', {
-        user_id: user.id
-      });
-
-      if (convError) {
-        console.log('RPC not available, using fallback method');
-        // Fallback: Create a mock conversation structure for now
-        setConversations([]);
-        return;
-      }
-
-      setConversations(conversationData || []);
+      // Since the tables don't exist yet, return empty array for now
+      console.log('Conversations feature will be available after database migration');
+      setConversations([]);
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      // For now, return empty array until database is properly set up
       setConversations([]);
     } finally {
       setLoading(false);
@@ -77,41 +66,8 @@ export const useConversations = () => {
     if (!user) return null;
 
     try {
-      // Use direct insert with type assertion
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations' as any)
-        .insert({
-          title,
-          type,
-          created_by: user.id
-        })
-        .select()
-        .single();
-
-      if (convError) {
-        console.error('Error creating conversation:', convError);
-        return null;
-      }
-
-      // Add members
-      const allMemberIds = [user.id, ...memberIds];
-      const { error: membersError } = await supabase
-        .from('conversation_members' as any)
-        .insert(
-          allMemberIds.map(userId => ({
-            conversation_id: conversation.id,
-            user_id: userId,
-            role: userId === user.id ? 'admin' : 'member'
-          }))
-        );
-
-      if (membersError) {
-        console.error('Error adding members:', membersError);
-        return null;
-      }
-
-      await fetchConversations();
-      return conversation.id;
+      console.log('Create conversation will be available after database migration');
+      return null;
     } catch (error) {
       console.error('Error creating conversation:', error);
       return null;
