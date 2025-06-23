@@ -35,10 +35,10 @@ const MobileTabBar = () => {
     },
     {
       id: 'profile',
-      name: 'الملف الشخصي',
+      name: 'الحساب',
       icon: User,
       href: user ? '/dashboard' : '/student-auth',
-      ariaLabel: 'الملف الشخصي'
+      ariaLabel: 'الحساب'
     }
   ];
 

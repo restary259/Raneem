@@ -47,7 +47,7 @@ const BottomNav = () => {
       activeIcon: Users,
     },
     {
-      name: 'الملف الشخصي',
+      name: 'الحساب',
       href: user ? '/dashboard/profile' : '/student-auth',
       icon: User,
       activeIcon: User,
