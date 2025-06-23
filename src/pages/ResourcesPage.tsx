@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,22 +17,22 @@ const ResourcesPage = () => {
   const tools = [
     {
       id: 'cost-calculator',
-      title: 'حاسبة تكاليف الدراسة',
-      description: 'احسب تكلفة دراستك في الخارج',
+      title: t('costCalculator.title'),
+      description: t('costCalculator.description'),
       icon: Calculator,
       component: <CostCalculator />
     },
     {
       id: 'currency-converter',
-      title: 'محول العملات',
-      description: 'تحويل العملات بأسعار محدثة',
+      title: t('currencyComparator.title'),
+      description: t('currencyComparator.description'),
       icon: DollarSign,
       component: <CurrencyConverter />
     },
     {
       id: 'gpa-calculator',
-      title: 'حاسبة المعدل التراكمي',
-      description: 'احسب معدلك التراكمي',
+      title: t('gpaCalculator.title'),
+      description: t('gpaCalculator.description'),
       icon: GraduationCap,
       component: <GpaCalculator />
     }

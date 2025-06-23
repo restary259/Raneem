@@ -22,15 +22,17 @@ const Hero = () => {
       <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm" />
       <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
         <h1 className="text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
-          رفيقك الدراسي العالمي
+          {t('hero.title')}
         </h1>
-        <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج</p>
+        <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
+          {t('hero.subtitle')}
+        </p>
         <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
           <Button size="lg" asChild variant="accent" className="transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
-            <Link to="/contact">{t('applyNow')}</Link>
+            <Link to="/contact">{t('common:applyNow')}</Link>
           </Button>
         </div>
 
