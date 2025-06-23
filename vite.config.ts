@@ -19,4 +19,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Ensure console logs are properly handled in production
+    'console.log': mode === 'production' ? 'function(){}' : 'console.log',
+    'console.warn': mode === 'production' ? 'function(){}' : 'console.warn',
+    'console.error': mode === 'production' ? 'function(){}' : 'console.error',
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
 }));
