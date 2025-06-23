@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useForumPosts, useCreateForumPost } from '@/hooks/useCommunity';
+import { useForumPosts, useCreateForumPost, useForumTopics } from '@/hooks/useCommunity';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,9 +18,12 @@ const ForumTopicPage = () => {
   const navigate = useNavigate();
   const [replyContent, setReplyContent] = useState('');
 
-  const { data: posts = [], isLoading } = useForumPosts(topicId!);
+  const { data: posts = [], isLoading: postsLoading } = useForumPosts(topicId!);
+  const { data: topics = [], isLoading: topicsLoading } = useForumTopics();
   const createPostMutation = useCreateForumPost();
 
+  const isLoading = postsLoading || topicsLoading;
+  const currentTopic = topics.find(topic => topic.id === topicId);
   const mainPost = posts[0]; // First post is the main topic
   const replies = posts.slice(1); // Rest are replies
 
@@ -46,7 +49,7 @@ const ForumTopicPage = () => {
     );
   }
 
-  if (!mainPost) {
+  if (!currentTopic) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -83,36 +86,35 @@ const ForumTopicPage = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-2xl mb-2">{mainPost.topic?.title}</CardTitle>
+                  <CardTitle className="text-2xl mb-2">{currentTopic.title}</CardTitle>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={mainPost.author?.avatar_url} />
+                        <AvatarImage src={currentTopic.author?.avatar_url} />
                         <AvatarFallback>
-                          {mainPost.author?.full_name?.charAt(0)}
+                          {currentTopic.author?.full_name?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{mainPost.author?.full_name}</span>
+                      <span>{currentTopic.author?.full_name}</span>
                     </div>
-                    <span>{format(new Date(mainPost.created_at), 'dd MMM yyyy - HH:mm', { locale: ar })}</span>
+                    <span>{format(new Date(currentTopic.created_at), 'dd MMM yyyy - HH:mm', { locale: ar })}</span>
                   </div>
                 </div>
-                {mainPost.is_accepted && (
+                {currentTopic.is_pinned && (
                   <Badge className="bg-green-100 text-green-800">
-                    <CheckCircle className="h-3 w-3 ml-1" />
-                    إجابة مقبولة
+                    مثبت
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none mb-4">
-                <p className="text-gray-700 whitespace-pre-wrap">{mainPost.content}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{currentTopic.content}</p>
               </div>
               <div className="flex items-center gap-4 pt-4 border-t">
                 <Button variant="ghost" size="sm">
                   <Heart className="h-4 w-4 ml-1" />
-                  {mainPost.likes_count}
+                  0
                 </Button>
                 <Button variant="ghost" size="sm">
                   <MessageSquare className="h-4 w-4 ml-1" />

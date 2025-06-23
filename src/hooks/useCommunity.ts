@@ -30,7 +30,7 @@ export const useForumTopics = (categoryId?: string, searchQuery?: string) => {
         .select(`
           *,
           author:profiles(id, full_name, avatar_url),
-          category:forum_categories(id, name)
+          category:forum_categories(id, name, description, created_at)
         `)
         .order('is_pinned', { ascending: false })
         .order('updated_at', { ascending: false });
@@ -45,7 +45,17 @@ export const useForumTopics = (categoryId?: string, searchQuery?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our types
+      return (data || []).map((item: any) => ({
+        ...item,
+        category: item.category ? {
+          id: item.category.id,
+          name: item.category.name,
+          description: item.category.description || undefined,
+          created_at: item.category.created_at || new Date().toISOString()
+        } : undefined
+      }));
     },
   });
 };
@@ -108,7 +118,17 @@ export const useStudyGroups = (userId?: string) => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our types
+      return (data || []).map((item: any) => ({
+        ...item,
+        user_membership: item.user_membership && item.user_membership.length > 0 ? {
+          role: ['member', 'moderator', 'owner'].includes(item.user_membership[0].role) 
+            ? item.user_membership[0].role as 'member' | 'moderator' | 'owner'
+            : 'member',
+          joined_at: item.user_membership[0].joined_at
+        } : undefined
+      }));
     },
     enabled: !!userId,
   });

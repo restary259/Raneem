@@ -26,7 +26,7 @@ const Header = () => {
 
           {/* Center: Desktop Navigation */}
           <div className="hidden md:block flex-1 mr-6">
-            <DesktopNav />
+            <DesktopNav t={t} />
           </div>
 
           {/* Left Side: Enhanced Student Login Button */}
