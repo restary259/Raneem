@@ -54,12 +54,19 @@ export const useFeedData = (userId: string) => {
     enabled: !!userId,
   });
 
-  // Recently viewed items - mock for now
+  // Recently viewed items - now querying the actual views table
   const { data: recentViews = [], isLoading: viewsLoading } = useQuery({
     queryKey: ['recent-views', userId],
     queryFn: async (): Promise<RecentView[]> => {
-      // Mock data - in real app this would query a views table
-      return [];
+      const { data, error } = await supabase
+        .from('views')
+        .select('*')
+        .eq('user_id', userId)
+        .order('viewed_at', { ascending: false })
+        .limit(8);
+
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!userId,
   });
@@ -141,4 +148,23 @@ export const useRecommendationActions = () => {
     handleSave,
     handleView,
   };
+};
+
+// Hook to track viewed items
+export const useTrackView = () => {
+  const trackView = async (itemType: string, itemId: string, itemData?: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from('views')
+      .insert({
+        user_id: user.id,
+        item_type: itemType,
+        item_id: itemId,
+        item_data: itemData
+      });
+  };
+
+  return { trackView };
 };

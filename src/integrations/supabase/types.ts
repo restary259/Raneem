@@ -588,6 +588,33 @@ export type Database = {
           },
         ]
       }
+      views: {
+        Row: {
+          id: string
+          item_data: Json | null
+          item_id: string
+          item_type: string
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          item_data?: Json | null
+          item_id: string
+          item_type: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          item_data?: Json | null
+          item_id?: string
+          item_type?: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

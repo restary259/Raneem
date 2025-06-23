@@ -3,7 +3,50 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Notification, NotificationFilter, NotificationSettings } from '@/types/notifications';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  category: string;
+  reference_id?: string;
+  title: string;
+  message: string;
+  url?: string;
+  data?: any;
+  is_read: boolean;
+  channel: {
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+  };
+  created_at: string;
+  delivered_at?: any;
+}
+
+export interface NotificationFilter {
+  type?: string;
+  category?: string;
+  is_read?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface NotificationSettings {
+  user_id: string;
+  channels: {
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+  };
+  frequency: {
+    offer: string;
+    deadline: string;
+    digest: string;
+  };
+  custom_rules: any[];
+  push_token?: string;
+}
 
 export const useNotifications = (userId: string, filter?: NotificationFilter) => {
   const [isSubscribed, setIsSubscribed] = useState(false);

@@ -16,7 +16,7 @@ import { ar } from 'date-fns/locale';
 
 const HomeFeed: React.FC = () => {
   const { user } = useAuth();
-  const { recommendations, offers, re‌centViews, deadlines, communityHighlights, isLoading } = useFeedData(user?.id || '');
+  const { recommendations, offers, recentViews, deadlines, communityHighlights, isLoading } = useFeedData(user?.id || '');
   const { handleSave } = useRecommendationActions();
 
   if (isLoading) {
