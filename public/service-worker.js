@@ -1,5 +1,4 @@
-
-const CACHE_NAME = 'darb-education-v1.0.0';
+const CACHE_NAME = 'darb-education-v1.0.1'; // Increment version for updates
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
@@ -10,10 +9,12 @@ const STATIC_CACHE_URLS = [
   '/about',
   '/services',
   '/educational-destinations',
+  '/educational-programs',
   '/contact',
   '/partnership',
   '/quiz',
-  '/resources'
+  '/resources',
+  '/student-auth'
 ];
 
 // Runtime cache patterns
@@ -33,12 +34,12 @@ self.addEventListener('install', event => {
         console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_CACHE_URLS);
       }),
-      self.skipWaiting()
+      self.skipWaiting() // Force activation of new service worker
     ])
   );
 });
 
-// Activate event - cleanup old caches
+// Activate event - cleanup old caches and take control immediately
 self.addEventListener('activate', event => {
   console.log('[SW] Activate event');
   
@@ -54,10 +55,32 @@ self.addEventListener('activate', event => {
           })
         );
       }),
-      self.clients.claim()
+      self.clients.claim() // Take control of all clients immediately
     ])
   );
+  
+  // Notify all clients about the update
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SW_UPDATED',
+        message: 'تم تحديث التطبيق بنجاح!'
+      });
+    });
+  });
 });
+
+// Listen for messages from the main thread
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Check for updates every 30 minutes
+setInterval(() => {
+  self.registration.update();
+}, 30 * 60 * 1000);
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {

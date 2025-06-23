@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Book, MessageCircle, User, GraduationCap } from 'lucide-react';
+import { Home, Search, MessageCircle, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const BottomNav = () => {
@@ -27,26 +27,20 @@ const BottomNav = () => {
     {
       name: 'التخصصات',
       href: '/educational-programs',
-      icon: GraduationCap,
-      ariaLabel: 'التخصصات الأكاديمية'
+      icon: Search,
+      ariaLabel: 'البحث في التخصصات'
     },
     {
-      name: 'الوجهات',
-      href: '/educational-destinations',
-      icon: Book,
-      ariaLabel: 'وجهاتنا التعليمية'
-    },
-    {
-      name: 'الدردشة',
+      name: 'اتصل بنا',
       href: '/contact',
       icon: MessageCircle,
       ariaLabel: 'تواصل معنا'
     },
     {
-      name: 'من نحن',
-      href: '/about',
+      name: 'الملف الشخصي',
+      href: '/student-auth',
       icon: User,
-      ariaLabel: 'من نحن'
+      ariaLabel: 'الملف الشخصي للطالب'
     }
   ];
 
