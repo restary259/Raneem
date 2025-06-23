@@ -61,7 +61,7 @@
     white-space: nowrap;
   }
 
-  /* Header fixes */
+  /* Header fixes - prevent double menus */
   header {
     position: sticky;
     top: 0;
@@ -69,6 +69,11 @@
     background-color: white;
     border-bottom: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Ensure only one header per page */
+  body header:not(:first-of-type) {
+    display: none !important;
   }
 
   /* Logo text fix */
@@ -88,10 +93,15 @@
     z-index: 10;
   }
 
-  /* Prevent menu overlap */
+  /* Prevent menu overlap and double menus */
   .dropdown-menu-content {
     z-index: 60;
     position: relative;
+  }
+
+  /* Prevent duplicate navigation elements */
+  nav + nav {
+    display: none !important;
   }
 
   /* Enhanced responsive navigation adjustments */
@@ -151,7 +161,7 @@
 
   /* Educational Programs Page Sticky Adjustments */
   .educational-sticky-section {
-    top: 64px; /* Updated for enhanced header height */
+    top: 64px;
   }
 
   @media (max-width: 768px) {

@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,17 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import { Languages } from '@/components/Languages';
-import { useAuth } from '@/hooks/useAuth';
 
-interface DesktopNavProps {
-  t: any;
-}
-
-const DesktopNav = ({ t }: DesktopNavProps) => {
-  const { t: translate } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+const DesktopNav = () => {
+  const { t } = useTranslation();
 
   const navigationItems = [
     { name: 'الرئيسية', href: '/' },
