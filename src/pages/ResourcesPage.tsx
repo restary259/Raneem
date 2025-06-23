@@ -40,25 +40,25 @@ const ResourcesPage = () => {
 
   const guides = [
     {
-      title: 'دليل القبول الجامعي',
-      description: 'كل ما تحتاج معرفته عن عملية القبول',
+      title: t('guides.admissionGuide.title'),
+      description: t('guides.admissionGuide.description'),
       icon: FileText,
       link: '#',
-      category: 'القبول'
+      category: t('guides.categories.admission')
     },
     {
-      title: 'دليل التأشيرات الدراسية',
-      description: 'خطوات الحصول على التأشيرة الدراسية',
+      title: t('guides.visaGuide.title'),
+      description: t('guides.visaGuide.description'),
       icon: Globe,
       link: '#',
-      category: 'التأشيرات'
+      category: t('guides.categories.visa')
     },
     {
-      title: 'دليل السكن الطلابي',
-      description: 'أفضل خيارات السكن للطلاب الدوليين',
+      title: t('guides.housingGuide.title'),
+      description: t('guides.housingGuide.description'),
       icon: Users,
       link: '#',
-      category: 'السكن'
+      category: t('guides.categories.housing')
     }
   ];
 
@@ -85,8 +85,8 @@ const ResourcesPage = () => {
         <div className="container mx-auto px-4">
           <Tabs defaultValue="tools" className="w-full max-w-6xl mx-auto">
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="tools">الأدوات التفاعلية</TabsTrigger>
-              <TabsTrigger value="guides">الأدلة والمراجع</TabsTrigger>
+              <TabsTrigger value="tools">{t('tabs.tools')}</TabsTrigger>
+              <TabsTrigger value="guides">{t('tabs.guides')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tools" className="space-y-8">
@@ -130,39 +130,37 @@ const ResourcesPage = () => {
       <section className="py-12 md:py-20 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">الأسئلة الشائعة</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">{t('faq.title')}</h2>
             <div className="grid gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">كيف يمكنني استخدام حاسبة التكاليف؟</CardTitle>
+                  <CardTitle className="text-lg">{t('faq.questions.costCalculator.question')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    ببساطة اختر الدولة التي تريد الدراسة فيها، نوع الجامعة، تخصصك المطلوب، ونوع السكن. 
-                    ستحصل على تقدير شامل لجميع التكاليف المتوقعة.
+                    {t('faq.questions.costCalculator.answer')}
                   </p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">هل أسعار الصرف محدثة؟</CardTitle>
+                  <CardTitle className="text-lg">{t('faq.questions.exchangeRates.question')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    نعم، نحدث أسعار الصرف يومياً من مصادر موثوقة. الأسعار إرشادية وقد تختلف قليلاً عن الأسعار الفعلية في البنوك.
+                    {t('faq.questions.exchangeRates.answer')}
                   </p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">كم دقيقة تقديرات التكاليف؟</CardTitle>
+                  <CardTitle className="text-lg">{t('faq.questions.accuracy.question')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    تقديراتنا مبنية على بيانات حديثة من الجامعات والمؤسسات الرسمية. 
-                    ننصح بالتواصل معنا للحصول على تقديرات مخصصة لحالتك.
+                    {t('faq.questions.accuracy.answer')}
                   </p>
                 </CardContent>
               </Card>
