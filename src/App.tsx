@@ -20,8 +20,10 @@ import StudentAuthPage from "./pages/StudentAuthPage";
 import StudentDashboardPage from "./pages/StudentDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import MajorMatchingQuiz from "./components/quiz/MajorMatchingQuiz";
 import QuizPage from "./pages/QuizPage";
+import PWAInstaller from "./components/common/PWAInstaller";
+import OfflineIndicator from "./components/common/OfflineIndicator";
+import { registerServiceWorker } from "./utils/pwaUtils";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,9 @@ const App = () => {
   useEffect(() => {
     document.documentElement.lang = 'ar';
     document.documentElement.dir = 'rtl';
+    
+    // Register service worker for PWA functionality
+    registerServiceWorker();
     
     // SPA Redirect for original Lovable URL - preserve query parameters
     const redirectPath = sessionStorage.getItem('redirectPath');
@@ -55,6 +60,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<WhoWeArePage />} />
@@ -74,6 +80,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
+        <PWAInstaller />
       </TooltipProvider>
     </QueryClientProvider>
   );

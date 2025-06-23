@@ -7,28 +7,139 @@
     <title>درب | رفيقك الدراسي العالمي للدراسة في الخارج</title>
     <meta name="description" content="من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج. نقدم استشارات تعليمية، قبولات جامعية، خدمات التأشيرة والسكن." />
     <meta name="author" content="Darb Study Pathways" />
+    <meta name="keywords" content="دراسة في الخارج، جامعات، تعليم، استشارات تعليمية، تأشيرة طالب، سكن طلابي" />
 
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#F28C28" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="درب" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="درب" />
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icons -->
+    <link rel="icon" href="/icons/icon-192x192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
+    <!-- Open Graph -->
     <meta property="og:title" content="درب | رفيقك الدراسي العالمي" />
     <meta property="og:description" content="درب هي الجسر الآمن نحو دراستك في الخارج. استشارات، قبولات، تأشيرات، والمزيد." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://darb-education.com" />
+    <meta property="og:site_name" content="درب التعليمية" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:site" content="@darb_education" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="درب | رفيقك الدراسي العالمي" />
+    <meta name="twitter:description" content="من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج" />
+
+    <!-- Performance Optimizations -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" as="style" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+
     <style>
       body {
         font-family: 'Tajawal', sans-serif;
+      }
+      
+      /* PWA Loading Screen */
+      .pwa-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #F28C28 0%, #FF6B35 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+        font-family: 'Tajawal', sans-serif;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+      }
+      
+      .pwa-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      .loading-content {
+        text-align: center;
+        max-width: 300px;
+      }
+      
+      .loading-logo {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+      
+      .loading-text {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      
+      .loading-subtitle {
+        font-size: 1rem;
+        opacity: 0.8;
       }
     </style>
   </head>
 
   <body>
+    <!-- PWA Loading Screen -->
+    <div id="pwa-loading" class="pwa-loading">
+      <div class="loading-content">
+        <div class="loading-logo">🎓</div>
+        <div class="loading-text">درب</div>
+        <div class="loading-subtitle">رفيقك الدراسي العالمي</div>
+      </div>
+    </div>
+
     <div id="root"></div>
+    
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Loading Script -->
+    <script>
+      // Hide loading screen when app is ready
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loading = document.getElementById('pwa-loading');
+          if (loading) {
+            loading.classList.add('hidden');
+            setTimeout(() => loading.remove(), 500);
+          }
+        }, 1000);
+      });
+      
+      // Handle PWA display mode
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        document.body.classList.add('pwa-mode');
+      }
+    </script>
   </body>
 </html>
