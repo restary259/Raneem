@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Award, Users } from 'lucide-react';
-
 interface University {
   name: string;
   location: string;
@@ -13,21 +11,16 @@ interface University {
   ranking: string;
   students: string;
 }
-
 interface UniversityCardProps {
   university: University;
 }
-
-const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
-  return (
-    <Card className="hover:shadow-xl transition-all duration-300 group">
+const UniversityCard: React.FC<UniversityCardProps> = ({
+  university
+}) => {
+  return <Card className="hover:shadow-xl transition-all duration-300 group">
       <CardContent className="p-6">
         <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border">
-          <img 
-            src={university.logoUrl} 
-            alt={university.name}
-            className="h-16 w-auto object-contain"
-          />
+          
         </div>
         <h3 className="text-xl font-bold mb-2">{university.name}</h3>
         <p className="text-gray-600 flex items-center gap-2 mb-3">
@@ -49,17 +42,13 @@ const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
           <div>
             <h4 className="font-semibold mb-2">التخصصات المتاحة:</h4>
             <div className="flex flex-wrap gap-1">
-              {university.majors.map((major, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
+              {university.majors.map((major, idx) => <Badge key={idx} variant="secondary" className="text-xs">
                   {major}
-                </Badge>
-              ))}
+                </Badge>)}
             </div>
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default UniversityCard;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
@@ -10,12 +9,9 @@ import UniversityCard from '@/components/educational/UniversityCard';
 import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
 import ServiceCard from '@/components/educational/ServiceCard';
 import { countries, universities, languageSchools, services } from '@/data/educationalDestinations';
-
 const EducationalDestinationsPage = () => {
   const [selectedCountry, setSelectedCountry] = useState('germany');
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Section */}
@@ -35,11 +31,7 @@ const EducationalDestinationsPage = () => {
         </div>
       </section>
 
-      <CountrySelector
-        countries={countries}
-        selectedCountry={selectedCountry}
-        onCountrySelect={setSelectedCountry}
-      />
+      <CountrySelector countries={countries} selectedCountry={selectedCountry} onCountrySelect={setSelectedCountry} />
 
       <div className="container mx-auto px-4">
         {/* Universities */}
@@ -49,45 +41,35 @@ const EducationalDestinationsPage = () => {
             الجامعات الرائدة
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {universities[selectedCountry as keyof typeof universities]?.map((uni, index) => (
-              <UniversityCard key={index} university={uni} />
-            ))}
+            {universities[selectedCountry as keyof typeof universities]?.map((uni, index) => <UniversityCard key={index} university={uni} />)}
           </div>
         </div>
 
         {/* Language Schools */}
-        {languageSchools[selectedCountry as keyof typeof languageSchools] && (
-          <div className="mb-16">
+        {languageSchools[selectedCountry as keyof typeof languageSchools] && <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
               <Building2 className="h-8 w-8 text-orange-500" />
               معاهد اللغة
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {languageSchools[selectedCountry as keyof typeof languageSchools].map((school, index) => (
-                <LanguageSchoolCard key={index} school={school} />
-              ))}
+              {languageSchools[selectedCountry as keyof typeof languageSchools].map((school, index) => <LanguageSchoolCard key={index} school={school} />)}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Services */}
-        {services[selectedCountry as keyof typeof services] && (
-          <div className="mb-16">
+        {services[selectedCountry as keyof typeof services] && <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
               <Heart className="h-8 w-8 text-orange-500" />
               الخدمات الطلابية
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {services[selectedCountry as keyof typeof services].map((service, index) => (
-                <ServiceCard key={index} service={service} />
-              ))}
+              {services[selectedCountry as keyof typeof services].map((service, index) => <ServiceCard key={index} service={service} />)}
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* CTA Section */}
-      <section className="py-20 bg-orange-500 text-white">
+      <section className="py-20 text-white bg-slate-900">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">
             مستعد لبدء رحلتك التعليمية؟
@@ -96,10 +78,10 @@ const EducationalDestinationsPage = () => {
             احجز استشارة مجانية مع خبرائنا لمساعدتك في اختيار الوجهة والتخصص المناسب لك
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-orange-500 hover:bg-gray-100">
+            <Button size="lg" className="bg-white hover:bg-gray-100 text-zinc-950">
               احجز استشارة مجانية
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+            <Button size="lg" variant="outline" className="border-white text-slate-950 bg-slate-50">
               تحدث مع مستشار
             </Button>
           </div>
@@ -107,8 +89,6 @@ const EducationalDestinationsPage = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default EducationalDestinationsPage;
