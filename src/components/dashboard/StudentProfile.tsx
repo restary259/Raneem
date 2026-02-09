@@ -16,11 +16,15 @@ interface StudentProfileProps {
   userId: string;
 }
 
-const StudentProfile: React.FC<StudentProfileProps> = ({
-  profile,
-  onProfileUpdate,
-  userId
-}) => {
+const visaStatuses: { value: VisaStatus; label: string }[] = [
+  { value: 'not_applied', label: 'لم يتم التقديم' },
+  { value: 'applied', label: 'تم التقديم' },
+  { value: 'approved', label: 'تمت الموافقة' },
+  { value: 'rejected', label: 'تم الرفض' },
+  { value: 'received', label: 'تم الاستلام' },
+];
+
+const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +33,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({
           full_name: editedProfile.full_name,
@@ -37,192 +41,54 @@ const StudentProfile: React.FC<StudentProfileProps> = ({
           city: editedProfile.city,
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
-          visa_status: editedProfile.visa_status as VisaStatus,
+          visa_status: editedProfile.visa_status,
           notes: editedProfile.notes,
         })
         .eq('id', userId);
 
       if (error) throw error;
-
-      toast({
-        title: "تم التحديث بنجاح",
-        description: "تم حفظ بياناتك بنجاح",
-      });
-
+      toast({ title: "تم التحديث بنجاح", description: "تم حفظ بياناتك بنجاح" });
       setIsEditing(false);
       onProfileUpdate(userId);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في التحديث",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "خطأ في التحديث", description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleCancel = () => {
-    setEditedProfile(profile);
-    setIsEditing(false);
-  };
-
-  const visaStatuses: { value: VisaStatus; label: string }[] = [
-    { value: 'not_applied', label: 'لم يتم التقديم' },
-    { value: 'applied', label: 'تم التقديم' },
-    { value: 'approved', label: 'تمت الموافقة' },
-    { value: 'rejected', label: 'تم الرفض' },
-    { value: 'received', label: 'تم الاستلام' },
-  ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>الملف الشخصي</CardTitle>
         {!isEditing && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="ml-2"
-          >
-            <Edit className="h-4 w-4" />
-            تعديل
+          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="ml-2">
+            <Edit className="h-4 w-4" /> تعديل
           </Button>
         )}
       </CardHeader>
       <CardContent>
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            handleSave();
-          }}
-        >
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Full Name */}
+            <div><Label>الاسم الكامل</Label><Input value={editedProfile.full_name} onChange={e => setEditedProfile({ ...editedProfile, full_name: e.target.value })} disabled={!isEditing} required /></div>
+            <div><Label>البريد الإلكتروني</Label><Input value={editedProfile.email} disabled readOnly /></div>
+            <div><Label>رقم الجوال</Label><Input value={editedProfile.phone_number || ''} onChange={e => setEditedProfile({ ...editedProfile, phone_number: e.target.value })} disabled={!isEditing} /></div>
+            <div><Label>المدينة</Label><Input value={editedProfile.city || ''} onChange={e => setEditedProfile({ ...editedProfile, city: e.target.value })} disabled={!isEditing} /></div>
+            <div><Label>شهر القبول</Label><Input value={editedProfile.intake_month || ''} onChange={e => setEditedProfile({ ...editedProfile, intake_month: e.target.value })} disabled={!isEditing} /></div>
+            <div><Label>اسم الجامعة</Label><Input value={editedProfile.university_name || ''} onChange={e => setEditedProfile({ ...editedProfile, university_name: e.target.value })} disabled={!isEditing} /></div>
             <div>
-              <Label htmlFor="full_name">الاسم الكامل</Label>
-              <Input
-                id="full_name"
-                value={editedProfile.full_name}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, full_name: e.target.value })
-                }
-                disabled={!isEditing}
-                required
-              />
-            </div>
-            {/* Email */}
-            <div>
-              <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input
-                id="email"
-                value={editedProfile.email}
-                disabled
-                readOnly
-              />
-            </div>
-            {/* Phone Number */}
-            <div>
-              <Label htmlFor="phone_number">رقم الجوال</Label>
-              <Input
-                id="phone_number"
-                value={editedProfile.phone_number || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, phone_number: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            {/* City */}
-            <div>
-              <Label htmlFor="city">المدينة</Label>
-              <Input
-                id="city"
-                value={editedProfile.city || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, city: e.target.value })
-                }
-                disabled={!isEditing}
-                placeholder="اكتب اسم مدينتك"
-              />
-            </div>
-            {/* Intake Month */}
-            <div>
-              <Label htmlFor="intake_month">شهر القبول</Label>
-              <Input
-                id="intake_month"
-                value={editedProfile.intake_month || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, intake_month: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            {/* University Name */}
-            <div>
-              <Label htmlFor="university_name">اسم الجامعة</Label>
-              <Input
-                id="university_name"
-                value={editedProfile.university_name || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, university_name: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            {/* Visa Status */}
-            <div>
-              <Label htmlFor="visa_status">حالة التأشيرة</Label>
-              <select
-                id="visa_status"
-                value={editedProfile.visa_status || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, visa_status: e.target.value as VisaStatus })
-                }
-                disabled={!isEditing}
-                className="border rounded px-3 py-2 w-full"
-              >
+              <Label>حالة التأشيرة</Label>
+              <select value={editedProfile.visa_status || ''} onChange={e => setEditedProfile({ ...editedProfile, visa_status: e.target.value as VisaStatus })} disabled={!isEditing} className="border rounded px-3 py-2 w-full">
                 <option value="">اختر الحالة</option>
-                {visaStatuses.map(status => (
-                  <option value={status.value} key={status.value}>
-                    {status.label}
-                  </option>
-                ))}
+                {visaStatuses.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            {/* Notes */}
-            <div className="md:col-span-2">
-              <Label htmlFor="notes">ملاحظات</Label>
-              <Textarea
-                id="notes"
-                value={editedProfile.notes || ''}
-                onChange={e =>
-                  setEditedProfile({ ...editedProfile, notes: e.target.value })
-                }
-                disabled={!isEditing}
-                rows={3}
-              />
-            </div>
+            <div className="md:col-span-2"><Label>ملاحظات</Label><Textarea value={editedProfile.notes || ''} onChange={e => setEditedProfile({ ...editedProfile, notes: e.target.value })} disabled={!isEditing} rows={3} /></div>
           </div>
           {isEditing && (
             <div className="flex justify-end gap-2 mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isLoading}
-              >
-                <X className="h-4 w-4" />
-                إلغاء
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-              >
-                <Save className="h-4 w-4" />
-                حفظ
-              </Button>
+              <Button type="button" variant="outline" onClick={() => { setEditedProfile(profile); setIsEditing(false); }} disabled={isLoading}><X className="h-4 w-4" /> إلغاء</Button>
+              <Button type="submit" disabled={isLoading}><Save className="h-4 w-4" /> حفظ</Button>
             </div>
           )}
         </form>
