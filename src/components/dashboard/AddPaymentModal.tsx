@@ -21,11 +21,8 @@ interface AddPaymentModalProps {
 const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [serviceId, setServiceId] = useState('');
-  const [amountTotal, setAmountTotal] = useState('');
-  const [amountPaid, setAmountPaid] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
-  const [dueDate, setDueDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -35,11 +32,10 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
 
   const fetchServices = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('services')
         .select('id, service_type')
         .eq('student_id', userId);
-
       if (error) throw error;
       setServices(data || []);
     } catch (error: any) {
@@ -47,7 +43,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
     }
   };
 
-  const serviceNames = {
+  const serviceNames: Record<string, string> = {
     university_application: 'تقديم الجامعة',
     visa_assistance: 'مساعدة الفيزا',
     accommodation: 'السكن',
@@ -56,71 +52,30 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
     travel_booking: 'حجز السفر',
   };
 
-  const paymentMethods = [
-    'نقداً',
-    'بطاقة ائتمان',
-    'تحويل بنكي',
-    'شيك',
-    'محفظة إلكترونية',
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!amountTotal || parseFloat(amountTotal) <= 0) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "يرجى إدخال مبلغ صحيح",
-      });
-      return;
-    }
-
-    const paidAmount = parseFloat(amountPaid) || 0;
-    const totalAmount = parseFloat(amountTotal);
-
-    if (paidAmount > totalAmount) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "المبلغ المدفوع لا يمكن أن يكون أكبر من إجمالي المبلغ",
-      });
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({ variant: "destructive", title: "خطأ", description: "يرجى إدخال مبلغ صحيح" });
       return;
     }
 
     setIsLoading(true);
     try {
-      const paymentStatus = paidAmount === 0 ? 'pending' : 
-                           paidAmount < totalAmount ? 'partial' : 'completed';
-
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('payments')
         .insert({
           student_id: userId,
           service_id: serviceId || null,
-          amount_total: totalAmount,
-          amount_paid: paidAmount,
-          payment_status: paymentStatus,
-          payment_method: paymentMethod || null,
+          amount: parseFloat(amount),
           notes: notes || null,
-          due_date: dueDate || null,
-          payment_date: paidAmount > 0 ? new Date().toISOString() : null,
+          payment_date: new Date().toISOString(),
         });
 
       if (error) throw error;
-
-      toast({
-        title: "تمت الإضافة بنجاح",
-        description: "تم إضافة الدفعة الجديدة",
-      });
-      
+      toast({ title: "تمت الإضافة بنجاح", description: "تم إضافة الدفعة الجديدة" });
       onSuccess();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في الإضافة",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "خطأ في الإضافة", description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -129,92 +84,27 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="serviceId">الخدمة (اختياري)</Label>
+        <Label>الخدمة (اختياري)</Label>
         <Select value={serviceId} onValueChange={setServiceId}>
-          <SelectTrigger>
-            <SelectValue placeholder="اختر الخدمة (اختياري)" />
-          </SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="اختر الخدمة (اختياري)" /></SelectTrigger>
           <SelectContent>
-            {services.map((service) => (
-              <SelectItem key={service.id} value={service.id}>
-                {serviceNames[service.service_type as keyof typeof serviceNames]}
-              </SelectItem>
+            {services.map((s) => (
+              <SelectItem key={s.id} value={s.id}>{serviceNames[s.service_type] || s.service_type}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="amountTotal">إجمالي المبلغ (ر.س)</Label>
-          <Input
-            id="amountTotal"
-            type="number"
-            value={amountTotal}
-            onChange={(e) => setAmountTotal(e.target.value)}
-            placeholder="0.00"
-            step="0.01"
-            min="0"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="amountPaid">المبلغ المدفوع (ر.س)</Label>
-          <Input
-            id="amountPaid"
-            type="number"
-            value={amountPaid}
-            onChange={(e) => setAmountPaid(e.target.value)}
-            placeholder="0.00"
-            step="0.01"
-            min="0"
-          />
-        </div>
-      </div>
-
       <div className="space-y-2">
-        <Label htmlFor="paymentMethod">طريقة الدفع</Label>
-        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-          <SelectTrigger>
-            <SelectValue placeholder="اختر طريقة الدفع" />
-          </SelectTrigger>
-          <SelectContent>
-            {paymentMethods.map((method) => (
-              <SelectItem key={method} value={method}>
-                {method}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>المبلغ</Label>
+        <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" required />
       </div>
-
       <div className="space-y-2">
-        <Label htmlFor="dueDate">تاريخ الاستحقاق</Label>
-        <Input
-          id="dueDate"
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <Label>ملاحظات</Label>
+        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات اختيارية" rows={3} />
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">ملاحظات</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="أي ملاحظات إضافية (اختياري)"
-          rows={3}
-        />
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "جار الإضافة..." : "إضافة الدفعة"}
-        </Button>
-      </div>
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? "جار الإضافة..." : "إضافة الدفعة"}
+      </Button>
     </form>
   );
 };

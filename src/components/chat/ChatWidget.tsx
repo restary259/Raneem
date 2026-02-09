@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ChatPopup from './ChatPopup';
+import AIChatPopup from './AIChatPopup';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const ChatWidget = () => {
@@ -35,11 +35,11 @@ const ChatWidget = () => {
         <div 
           className={`fixed z-50 ${
             isMobile 
-              ? 'bottom-40 right-4 left-4' // Above the mobile footer and chat button
-              : 'bottom-24 right-6 w-80'   // Normal position on desktop
+              ? 'bottom-40 right-4 left-4'
+              : 'bottom-24 right-6 w-96'
           }`}
         >
-          <ChatPopup onClose={() => setIsOpen(false)} />
+          <AIChatPopup onClose={() => setIsOpen(false)} />
         </div>
       )}
     </>

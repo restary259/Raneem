@@ -9,74 +9,66 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Upload, File, Download, Trash2, Plus } from 'lucide-react';
+import { Upload, File, Download, Trash2, Plus, Search, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Document {
   id: string;
   file_name: string;
-  file_path: string;
+  file_url: string;
   file_size?: number;
-  mime_type?: string;
-  upload_date: string;
+  file_type?: string;
+  category: string;
+  expiry_date?: string;
   notes?: string;
+  created_at: string;
   service_id?: string;
-  service_type?: string;
-}
-
-interface Service {
-  id: string;
-  service_type: string;
 }
 
 interface DocumentsManagerProps {
   userId: string;
 }
 
+const CATEGORIES = [
+  { value: 'passport', label: 'جواز السفر' },
+  { value: 'certificate', label: 'الشهادات الأكاديمية' },
+  { value: 'translation', label: 'الترجمات المعتمدة' },
+  { value: 'visa', label: 'التأشيرة / الإقامة' },
+  { value: 'university_letter', label: 'رسائل الجامعة' },
+  { value: 'language', label: 'شهادات اللغة' },
+  { value: 'insurance', label: 'التأمين الصحي' },
+  { value: 'financial', label: 'المستندات المالية' },
+  { value: 'housing', label: 'عقد السكن' },
+  { value: 'other', label: 'أخرى' },
+];
+
 const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [serviceId, setServiceId] = useState('');
+  const [selectedFile, setSelectedFile] = useState<globalThis.File | null>(null);
+  const [category, setCategory] = useState('other');
+  const [expiryDate, setExpiryDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchDocuments();
-    fetchServices();
   }, [userId]);
 
   const fetchDocuments = async () => {
     try {
-      // First fetch documents
-      const { data: documentsData, error: documentsError } = await supabase
+      const { data, error } = await (supabase as any)
         .from('documents')
         .select('*')
         .eq('student_id', userId)
-        .order('upload_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (documentsError) throw documentsError;
-
-      // Then fetch services separately and merge
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services')
-        .select('id, service_type')
-        .eq('student_id', userId);
-
-      if (servicesError) throw servicesError;
-
-      // Create a map of service_id to service_type
-      const serviceMap = new Map(servicesData?.map(s => [s.id, s.service_type]) || []);
-
-      // Merge the data
-      const enrichedDocuments = documentsData?.map(doc => ({
-        ...doc,
-        service_type: doc.service_id ? serviceMap.get(doc.service_id) : undefined
-      })) || [];
-
-      setDocuments(enrichedDocuments);
+      if (error) throw error;
+      setDocuments(data || []);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -88,145 +80,86 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     }
   };
 
-  const fetchServices = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('id, service_type')
-        .eq('student_id', userId);
-
-      if (error) throw error;
-      setServices(data || []);
-    } catch (error: any) {
-      console.error('Error fetching services:', error);
-    }
-  };
-
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!selectedFile) {
-      toast({
-        variant: "destructive",
-        title: "خطأ",
-        description: "يرجى اختيار ملف للرفع",
-      });
+      toast({ variant: "destructive", title: "خطأ", description: "يرجى اختيار ملف للرفع" });
       return;
     }
 
     setIsUploading(true);
     try {
-      // Upload to Supabase Storage
       const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${userId}/${Date.now()}.${fileExt}`;
-      
+      const filePath = `${userId}/${Date.now()}.${fileExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from('student-documents')
-        .upload(fileName, selectedFile);
+        .upload(filePath, selectedFile);
 
       if (uploadError) throw uploadError;
 
-      // Save to database
-      const { error: dbError } = await supabase
+      const { error: dbError } = await (supabase as any)
         .from('documents')
         .insert({
           student_id: userId,
-          service_id: serviceId || null,
           file_name: selectedFile.name,
-          file_path: fileName,
+          file_url: filePath,
           file_size: selectedFile.size,
-          mime_type: selectedFile.type,
+          file_type: selectedFile.type,
+          category,
+          expiry_date: expiryDate || null,
           notes: notes || null,
         });
 
       if (dbError) throw dbError;
 
-      toast({
-        title: "تم رفع الملف بنجاح",
-        description: "تم حفظ المستند في حسابك",
-      });
-
+      toast({ title: "تم رفع الملف بنجاح", description: "تم حفظ المستند في حسابك" });
       setShowUploadModal(false);
       setSelectedFile(null);
-      setServiceId('');
+      setCategory('other');
+      setExpiryDate('');
       setNotes('');
       fetchDocuments();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في رفع الملف",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "خطأ في رفع الملف", description: error.message });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (doc: Document) => {
     try {
       const { data, error } = await supabase.storage
         .from('student-documents')
-        .download(document.file_path);
-
+        .download(doc.file_url);
       if (error) throw error;
-
       const url = URL.createObjectURL(data);
       const link = window.document.createElement('a');
       link.href = url;
-      link.download = document.file_name;
+      link.download = doc.file_name;
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في تحميل الملف",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "خطأ في تحميل الملف", description: error.message });
     }
   };
 
-  const handleDelete = async (document: Document) => {
+  const handleDelete = async (doc: Document) => {
     if (!confirm('هل أنت متأكد من حذف هذا المستند؟')) return;
-
     try {
-      // Delete from storage
-      await supabase.storage
-        .from('student-documents')
-        .remove([document.file_path]);
-
-      // Delete from database
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', document.id);
-
+      await supabase.storage.from('student-documents').remove([doc.file_url]);
+      const { error } = await (supabase as any).from('documents').delete().eq('id', doc.id);
       if (error) throw error;
-
-      toast({
-        title: "تم حذف المستند",
-        description: "تم حذف المستند بنجاح",
-      });
-
+      toast({ title: "تم حذف المستند", description: "تم حذف المستند بنجاح" });
       fetchDocuments();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في حذف المستند",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "خطأ في حذف المستند", description: error.message });
     }
   };
 
-  const serviceNames: Record<string, string> = {
-    university_application: 'تقديم الجامعة',
-    visa_assistance: 'مساعدة الفيزا',
-    accommodation: 'السكن',
-    scholarship: 'المنح الدراسية',
-    language_support: 'دعم اللغة',
-    travel_booking: 'حجز السفر',
-  };
+  const getCategoryLabel = (value: string) => CATEGORIES.find(c => c.value === value)?.label || value;
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'غير معروف';
@@ -234,14 +167,54 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     return `${mb.toFixed(2)} ميجابايت`;
   };
 
-  if (isLoading) {
-    return <div className="text-center py-8">جار تحميل المستندات...</div>;
-  }
+  const isExpiringSoon = (date?: string) => {
+    if (!date) return false;
+    const expiry = new Date(date);
+    const now = new Date();
+    const diffDays = (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays <= 30 && diffDays > 0;
+  };
+
+  const isExpired = (date?: string) => {
+    if (!date) return false;
+    return new Date(date) < new Date();
+  };
+
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = !searchQuery || 
+      doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || doc.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const expiringDocs = documents.filter(d => isExpiringSoon(d.expiry_date));
+  const expiredDocs = documents.filter(d => isExpired(d.expiry_date));
+
+  if (isLoading) return <div className="text-center py-8">جار تحميل المستندات...</div>;
 
   return (
     <div className="space-y-6">
+      {/* Expiry Alerts */}
+      {(expiringDocs.length > 0 || expiredDocs.length > 0) && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <h3 className="font-semibold text-orange-800">تنبيهات المستندات</h3>
+            </div>
+            {expiredDocs.map(d => (
+              <p key={d.id} className="text-sm text-red-600">⚠️ {d.file_name} - منتهي الصلاحية!</p>
+            ))}
+            {expiringDocs.map(d => (
+              <p key={d.id} className="text-sm text-orange-600">⏰ {d.file_name} - ينتهي قريباً ({new Date(d.expiry_date!).toLocaleDateString('ar-SA')})</p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle className="text-xl">مستنداتي</CardTitle>
           <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
             <DialogTrigger asChild>
@@ -256,105 +229,93 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
               </DialogHeader>
               <form onSubmit={handleFileUpload} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="file">الملف</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    الأنواع المدعومة: PDF, DOC, DOCX, JPG, PNG (حد أقصى 10 ميجابايت)
-                  </p>
+                  <Label>الملف</Label>
+                  <Input type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required />
+                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (حد أقصى 10 ميجابايت)</p>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="serviceId">الخدمة المرتبطة (اختياري)</Label>
-                  <Select value={serviceId} onValueChange={setServiceId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الخدمة (اختياري)" />
-                    </SelectTrigger>
+                  <Label>التصنيف</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {serviceNames[service.service_type] || service.service_type}
-                        </SelectItem>
+                      {CATEGORIES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="notes">ملاحظات</Label>
-                  <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="وصف المستند أو ملاحظات (اختياري)"
-                    rows={3}
-                  />
+                  <Label>تاريخ انتهاء الصلاحية (اختياري)</Label>
+                  <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
                 </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="submit" disabled={isUploading}>
-                    {isUploading ? "جار الرفع..." : "رفع المستند"}
-                  </Button>
+                <div className="space-y-2">
+                  <Label>ملاحظات</Label>
+                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات اختيارية" rows={2} />
                 </div>
+                <Button type="submit" disabled={isUploading} className="w-full">
+                  {isUploading ? "جار الرفع..." : "رفع المستند"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         </CardHeader>
         <CardContent>
-          {documents.length === 0 ? (
+          {/* Search & Filter */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="بحث في المستندات..."
+                className="pr-9"
+              />
+            </div>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع التصنيفات</SelectItem>
+                {CATEGORIES.map(c => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filteredDocuments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              لم يتم رفع أي مستندات بعد
+              {documents.length === 0 ? 'لم يتم رفع أي مستندات بعد' : 'لا توجد نتائج مطابقة'}
             </div>
           ) : (
-            <div className="space-y-4">
-              {documents.map((document) => (
-                <Card key={document.id} className="border border-gray-200">
+            <div className="space-y-3">
+              {filteredDocuments.map((doc) => (
+                <Card key={doc.id} className={`border ${isExpired(doc.expiry_date) ? 'border-red-300 bg-red-50' : isExpiringSoon(doc.expiry_date) ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-blue-100 rounded-lg shrink-0">
                           <File className="h-5 w-5 text-blue-600" />
                         </div>
-                        <div>
-                          <h3 className="font-medium">{document.file_name}</h3>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <div>الحجم: {formatFileSize(document.file_size)}</div>
-                            <div>تاريخ الرفع: {new Date(document.upload_date).toLocaleDateString('ar-SA')}</div>
-                            {document.service_type && (
-                              <div>
-                                الخدمة: {serviceNames[document.service_type] || document.service_type}
-                              </div>
-                            )}
-                            {document.notes && (
-                              <div>الملاحظات: {document.notes}</div>
+                        <div className="min-w-0">
+                          <h3 className="font-medium truncate">{doc.file_name}</h3>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">{getCategoryLabel(doc.category)}</Badge>
+                            <span className="text-xs text-gray-500">{formatFileSize(doc.file_size)}</span>
+                            {doc.expiry_date && (
+                              <span className={`text-xs ${isExpired(doc.expiry_date) ? 'text-red-600 font-bold' : isExpiringSoon(doc.expiry_date) ? 'text-orange-600' : 'text-gray-500'}`}>
+                                {isExpired(doc.expiry_date) ? '⚠️ منتهي' : `ينتهي: ${new Date(doc.expiry_date).toLocaleDateString('ar-SA')}`}
+                              </span>
                             )}
                           </div>
+                          {doc.notes && <p className="text-xs text-gray-500 mt-1 truncate">{doc.notes}</p>}
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(document)}
-                          className="flex items-center gap-1"
-                        >
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => handleDownload(doc)}>
                           <Download className="h-4 w-4" />
-                          تحميل
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(document)}
-                          className="flex items-center gap-1"
-                        >
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(doc)}>
                           <Trash2 className="h-4 w-4" />
-                          حذف
                         </Button>
                       </div>
                     </div>
