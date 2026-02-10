@@ -1,184 +1,122 @@
 
 
-# Plan: Germany-Only AI-Powered Guidance Platform
+# Plan: Partnership Page -- Structure, Clarity & Trust Overhaul
 
 ## Overview
-Seven major changes: replace the static quiz with an AI-powered conversational advisor, update subject pages for accuracy, update social media links, separate resource tools into dedicated pages, improve the Bagrut calculator, clean up educational destinations to Germany-only, and enhance the AI system prompt with subject/university knowledge.
+Improve the Partnership page's content accuracy, interactivity, and trust signals without changing the visual design. This involves fixing text, removing non-Germany countries, replacing the static 4-card "How It Works" with a dynamic scrollable 8-step timeline, rewriting the FAQ to match the real program flow, and adding trust/transparency messaging throughout.
 
 ---
 
-## 1. Replace Quiz with AI-Based Major Recommendation
+## 1. Text Corrections (translation file update)
 
-### What changes
-- **Remove**: `src/components/quiz/MajorMatchingQuiz.tsx` (static quiz component)
-- **Repurpose**: `src/pages/QuizPage.tsx` becomes a wrapper for a new AI-driven conversational quiz
-- **Create**: `src/components/quiz/AIQuizChat.tsx` -- a full-page AI chat styled like the existing `AIAdvisorPage` but with a specialized system prompt focused on major recommendation
+**File**: `public/locales/ar/partnership.json`
 
-### How it works
-- The AI asks adaptive questions one by one in a conversational style (education background, interests, strengths, German level, career goals)
-- Based on the conversation, the AI recommends 2-3 suitable majors with explanations
-- Each recommendation includes a link to `/educational-programs` filtered by that major
-- Uses the same `useAIChat` hook and streaming infrastructure
-- A new edge function `ai-quiz` (or a mode flag on `ai-chat`) with a specialized system prompt for major matching
+- Fix hero title: "دارب" to "درب"
+- Fix hero subtitle: "الدراسة بالخارج" to "الدراسة في ألمانيا" (Germany-only focus)
+- The benefit text "لا تحتاج خبرة سابقة – فقط شغف ومصداقية" alignment is handled by the component -- will add `text-center` to the WhyJoinUs benefit items for visual symmetry
 
-### AI Quiz System Prompt (key points)
-- Act as an academic advisor for Arab 48 students
-- Ask 5-7 adaptive questions about: Bagrut subjects and grades, personal interests, strengths, German language level, career aspirations
-- After gathering enough info, recommend 2-3 majors from the actual majors database
-- Explain why each fits the student
-- Provide links to the relevant subject pages
+**File**: `src/components/partnership/WhyJoinUs.tsx`
+- Change the flex layout from `items-start` with `text-right` to centered card layout matching the rest of the page for visual symmetry
+
+---
+
+## 2. Germany-Only Restriction
+
+**File**: `public/locales/ar/partnership.json`
+- Remove "romania" and "jordan" from `commissionCalculator.countries` -- keep only `"germany": "ألمانيا"`
+
+**File**: `src/components/partnership/CommissionCalculator.tsx`
+- Since only one country exists, remove the country `Select` dropdown entirely
+- Hardcode `country = 'germany'` and remove the selector UI
+- Update the note text to mention Germany specifically
+
+---
+
+## 3. "How the Program Works" -- Dynamic 8-Step Scrollable Timeline
+
+**File**: `src/components/partnership/NewHowItWorks.tsx` (complete rewrite of component body)
+
+Replace the current 4-card static grid with an interactive vertical timeline showing 8 steps. Each step has:
+- A numbered circle connected by a vertical line
+- An icon
+- A title and detailed description
+- Steps animate into view on scroll using `react-intersection-observer` (already installed)
+
+### The 8 Steps (from translation file):
+
+1. **التسجيل في البرنامج** (Sign Up) -- "سجّل في برنامج الشراكة. بعد الموافقة، تحصل على صفحة شخصية مخصصة."
+2. **صفحتك الشخصية** (Custom Partner Page) -- "تحصل على صفحة فريدة، نموذج تسجيل خاص، ورابط تتبع مميز يمكنك مشاركته في ستوريز انستغرام، لينكتري، الهايلايتس، أو البايو."
+3. **حرية المحتوى** (Content Freedom) -- "اختر أسلوبك، طريقتك، والمنصة التي تناسبك. أنشئ محتوى ترويجي بحرية كاملة بما يتناسب مع جمهورك."
+4. **تسجيل الطلاب** (Student Registration) -- "يضغط الطالب على رابطك الخاص ويملأ النموذج. كل طالب يُربط تلقائياً باسمك."
+5. **شفافية البيانات** (Data Transparency) -- "يتم إنشاء جدول بيانات مشترك لكل شريك. يمكنك مشاهدة أسماء الطلاب، حالتهم، وتقدمهم. الجدول للقراءة فقط -- شفاف وموثوق."
+6. **تتبع حالة الطلاب** (Status Tracking) -- "كل طالب يُصنّف: مؤهل، غير مؤهل، تم التواصل، قيد المتابعة، دفع، تم التحويل."
+7. **الدورة الشهرية** (Monthly Cycle) -- "في نهاية كل شهر يُغلق الجدول ويُفتح جدول جديد للشهر التالي. جميع البيانات تبقى مرئية للتاريخ والشفافية."
+8. **العمولة والدفع** (Commission & Payment) -- "تُدفع العمولة بعد 20 يوماً من دفع الطالب. فترة الـ20 يوماً إلزامية لحماية من الإلغاء أو الاسترداد. هذه القاعدة واضحة ومُلزمة."
 
 ### Technical approach
-- Add a `mode` parameter to the existing `ai-chat` edge function (e.g., `mode: "quiz"`) that switches to the quiz-specific system prompt
-- Reuse `useAIChat` with a `mode` prop
-- The quiz page has a welcome screen with an explanation, then transitions into the chat
+- Vertical timeline with alternating left/right cards on desktop, stacked on mobile
+- Each step uses `useInView` from `react-intersection-observer` for fade-in animation
+- Connected by a vertical line with numbered circles (using existing Tailwind classes)
+- Icons from lucide-react: `UserCheck`, `Globe`, `Palette`, `MousePointerClick`, `Table2`, `BarChart3`, `CalendarClock`, `Wallet`
+
+**File**: `public/locales/ar/partnership.json`
+- Replace `howItWorks.steps` array with the 8 new steps including detailed descriptions
 
 ---
 
-## 2. Subject Pages -- Accuracy Update
+## 4. FAQ -- Updated to Match New Program Flow
 
-### What changes
-- **Update**: `src/data/majorsData.ts` -- enhance every `SubMajor` entry with additional fields
+**File**: `public/locales/ar/partnership.json`
+- Replace `partnershipFaq.items` with 7 updated Q&As:
 
-### New fields per subject (added to the `SubMajor` interface)
-```
-suitableFor: string       // Who this subject is suitable for
-requiredBackground: string // Required academic background  
-languageRequirements: string // German/English level needed
-careerOpportunities: string  // Career paths in Germany specifically
-arab48Notes: string        // Special notes for Arab 48 students
-```
-
-### Content updates
-- Remove references to Romania/Jordan universities in quiz results
-- Ensure all career prospects mention Germany-specific opportunities
-- Add language requirements (e.g., "B2 German for most programs, C1 for medicine")
-- Add specific notes for Arab 48 students (e.g., Bagrut equivalency, Studienkolleg requirements)
-- All information must be Germany-focused
-
-### Subject modal update
-- Update `MajorModal.tsx` to display the new fields in organized sections
+1. **كيف يتم تتبع الطلاب؟** -- "كل شريك يحصل على رابط تتبع فريد وجدول بيانات مشترك. عند تسجيل طالب عبر رابطك، يُربط تلقائياً باسمك. يمكنك متابعة حالة كل طالب بشفافية كاملة."
+2. **متى تُدفع العمولات؟** -- "تُدفع العمولة بعد 20 يوماً من تاريخ دفع الطالب. فترة الـ20 يوماً ضرورية لحماية الطرفين من حالات الإلغاء أو الاسترداد."
+3. **لماذا فترة الـ20 يوماً؟** -- "هذه الفترة تحمي الشريك والشركة. إذا غيّر الطالب رأيه أو طلب استرداداً خلال هذه الفترة، لا يتأثر الشريك. بعد انتهاء الفترة، تُحوّل العمولة مباشرة."
+4. **ما البيانات التي يمكنني رؤيتها؟** -- "يمكنك رؤية: أسماء الطلاب المسجلين عبر رابطك، حالة كل طالب (مؤهل، غير مؤهل، تم التواصل، قيد المتابعة، دفع، تم التحويل)، وتاريخ التسجيل."
+5. **كيف تضمنون الشفافية؟** -- "نوفر جدول بيانات مشترك للقراءة فقط، يُحدّث بشكل مستمر. في نهاية كل شهر، يُغلق الجدول ويُفتح جدول جديد. جميع البيانات السابقة تبقى مرئية."
+6. **هل هناك تكاليف للانضمام؟** -- "لا توجد أي تكاليف. الانضمام مجاني تماماً ونوفر لك كل الدعم للبدء."
+7. **هل يمكنني اختيار أسلوب المحتوى الخاص بي؟** -- "نعم، لديك حرية كاملة في اختيار الأسلوب والمنصة وطريقة الترويج. نحن نوفر لك المعلومات والمواد، وأنت تختار كيف تقدمها لجمهورك."
 
 ---
 
-## 3. Update Social Media Links
+## 5. Trust & Transparency Section (New Component)
 
-### Files to update
+**File**: `src/components/partnership/TrustSection.tsx` (new)
 
-| File | Current Link | New Link |
-|------|-------------|----------|
-| `src/components/landing/Footer.tsx` | `instagram.com/darb_studyinternational` | `https://www.instagram.com/darb_studyingermany/` |
-| `src/components/landing/Footer.tsx` | `tiktok.com/@darb_studyinternational` | `https://www.tiktok.com/@darb_studyingrmany` |
-| `src/components/landing/Footer.tsx` | `facebook.com/DARB_STUDYINGERMANY` | `https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/` |
-| `src/components/chat/ChatPopup.tsx` | `wa.me/972524061225` | `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1` |
-| `src/components/landing/OfficeLocations.tsx` | `wa.me/972524061225` | `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1` |
+A new section placed between AgentToolkit and RegistrationForm showing 3-4 trust pillars:
+- **شفافية الأرقام** -- "جدول بيانات مشترك لكل شريك"
+- **عمليات واضحة** -- "كل خطوة موثقة ومرئية"
+- **قواعد عمولة عادلة** -- "20 يوماً لحماية الجميع"
+- **هيكل احترافي** -- "دورة شهرية منظمة وبيانات تاريخية"
 
-Also add WhatsApp link to Footer if not already present.
+Uses existing Card components with icons, same styling as WhyJoinUs section.
 
----
-
-## 4. Resources -- Separate Tools into Dedicated Sections
-
-### What changes
-- **Refactor**: `src/pages/ResourcesPage.tsx` -- instead of stacking all tools in one long page, create a hub with navigation cards
-- **Create**: Individual route pages for each tool:
-  - `/resources/cost-calculator` -- `src/pages/CostCalculatorPage.tsx`
-  - `/resources/currency-converter` -- `src/pages/CurrencyConverterPage.tsx`
-  - `/resources/bagrut-calculator` -- `src/pages/BagrutCalculatorPage.tsx`
-- **Update**: `src/App.tsx` -- add the new routes
-- **Keep**: The main `/resources` page as a hub showing cards that link to each tool
-- Reuse existing components (`CostCalculator`, `CurrencyConverter`, `GpaCalculator`) -- just wrap each in its own page with Header/Footer
-
-### Resources hub layout
-- Grid of cards, each with icon, title, description, and a "Open Tool" button
-- Guides section remains on the main resources page
-- Same design language, no visual changes
-
----
-
-## 5. Bagrut Calculator Improvements
-
-### Current issues
-- The formula `germanGrade = 1 + 3 * ((100 - average) / 30)` is a simplified linear conversion
-- The correct Bavarian formula (modified Bavarian formula) is: `germanGrade = 1 + 3 * ((Nmax - Nd) / (Nmax - Nmin))`
-  - Where Nmax = best possible grade (100), Nmin = minimum passing grade (56 for Bagrut), Nd = student's average
-
-### What changes
-- **Update**: `src/components/calculator/GpaCalculator.tsx`
-  - Fix the formula to use the correct Bavarian method: `1 + 3 * ((100 - average) / (100 - 56))`
-  - Add input validation messages in Arabic (e.g., "Please enter a grade between 0-100")
-  - Add a brief explanation of the Bavarian formula below the results
-  - Add unit validation (units must be between 1-5)
-  - Show a warning if the average is below 56 (minimum passing grade)
-  - Add tooltips explaining what "units" (yehidot) means for each subject
-
----
-
-## 6. Educational Destinations -- Germany Only
-
-### What changes
-- **Already mostly done**: `educationalDestinations.ts` only has Germany data
-- **Clean up**: `CountrySelector.tsx` -- since there's only Germany, either hide the selector or show it as a single selected tab
-- **Clean up**: `GuidesReferences.tsx` -- remove Romania and Jordan tabs from the country filter
-- **Clean up**: `src/components/partners/data/universities.ts` -- already has empty Romania/Jordan arrays, can remove those exports
-- **Update**: `EducationalDestinationsPage.tsx` -- remove the country selector since only Germany exists; show universities directly
-
----
-
-## 7. AI Integration -- Enhanced Knowledge Base
-
-### What changes
-- **Update**: `supabase/functions/ai-chat/index.ts` -- enhance the system prompt with:
-  - A summary of all available majors from `majorsData.ts`
-  - A list of partner universities with their strong fields
-  - Updated information about Bagrut equivalency and Studienkolleg
-  - Links to relevant pages on the platform (e.g., `/educational-programs`, `/resources/bagrut-calculator`)
-
-### System prompt additions
-- List of all subject categories and their majors (from majorsData)
-- Top German universities with their specialties (from educationalDestinations)
-- Language school partners
-- Instructions to always reference platform pages when recommending
+**File**: `src/pages/PartnershipPage.tsx` -- add `TrustSection` between AgentToolkit and RegistrationForm
 
 ---
 
 ## Technical Details
 
 ### New Files
+
 | File | Purpose |
 |------|---------|
-| `src/components/quiz/AIQuizChat.tsx` | AI-powered conversational quiz component |
-| `src/pages/CostCalculatorPage.tsx` | Dedicated cost calculator page |
-| `src/pages/CurrencyConverterPage.tsx` | Dedicated currency converter page |
-| `src/pages/BagrutCalculatorPage.tsx` | Dedicated Bagrut calculator page |
+| `src/components/partnership/TrustSection.tsx` | Trust & transparency pillars section |
 
 ### Modified Files
+
 | File | Changes |
 |------|---------|
-| `src/pages/QuizPage.tsx` | Replace static quiz with AI quiz chat |
-| `src/data/majorsData.ts` | Add new fields (suitableFor, requiredBackground, languageRequirements, careerOpportunities, arab48Notes) to SubMajor interface and all entries |
-| `src/components/educational/MajorModal.tsx` | Display new subject fields |
-| `src/components/landing/Footer.tsx` | Update all social media links |
-| `src/components/chat/ChatPopup.tsx` | Update WhatsApp link |
-| `src/components/landing/OfficeLocations.tsx` | Update WhatsApp link |
-| `src/pages/ResourcesPage.tsx` | Convert to hub page with navigation cards |
-| `src/App.tsx` | Add new tool routes |
-| `src/components/calculator/GpaCalculator.tsx` | Fix Bavarian formula, add validation, tooltips |
-| `src/pages/EducationalDestinationsPage.tsx` | Remove country selector, Germany-only layout |
-| `src/components/educational/CountrySelector.tsx` | Hide or simplify for single country |
-| `src/components/resources/GuidesReferences.tsx` | Remove Romania/Jordan tabs |
-| `supabase/functions/ai-chat/index.ts` | Enhanced system prompt with subject and university knowledge, quiz mode support |
-| `supabase/config.toml` | No changes needed (ai-chat already configured) |
-
-### Deleted Files
-| File | Reason |
-|------|--------|
-| `src/components/quiz/MajorMatchingQuiz.tsx` | Replaced by AI-powered quiz |
+| `public/locales/ar/partnership.json` | Fix title typo, remove Romania/Jordan from calculator, replace howItWorks with 8 steps, replace FAQ with 7 updated items, add trust section translations |
+| `src/components/partnership/NewHowItWorks.tsx` | Replace 4-card grid with interactive 8-step vertical timeline with scroll animations |
+| `src/components/partnership/CommissionCalculator.tsx` | Remove country selector, hardcode Germany only |
+| `src/components/partnership/WhyJoinUs.tsx` | Improve alignment/symmetry of benefit items |
+| `src/pages/PartnershipPage.tsx` | Add TrustSection component |
 
 ### What Will NOT Change
-- Website design, colors, fonts, layout, or spacing
+- Website design, colors, fonts, or branding
 - Navigation order (logo, menu items, student portal button)
-- Existing component styling
-- Authentication or security layers
-- RTL direction behavior
+- Header, Footer, or any other page
+- Registration form structure
+- Closing CTA styling
 
