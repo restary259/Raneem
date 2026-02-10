@@ -1,141 +1,184 @@
 
 
-# Plan: Full Responsive Optimization
+# Plan: Germany-Only AI-Powered Guidance Platform
 
 ## Overview
-Audit and fix all responsive issues across the website to ensure perfect adaptation on mobile phones, tablets, laptops, and desktops -- without changing any colors, fonts, branding, or visual hierarchy. All fixes use responsive Tailwind classes, relative units, and media queries.
+Seven major changes: replace the static quiz with an AI-powered conversational advisor, update subject pages for accuracy, update social media links, separate resource tools into dedicated pages, improve the Bagrut calculator, clean up educational destinations to Germany-only, and enhance the AI system prompt with subject/university knowledge.
 
 ---
 
-## 1. Global CSS Fixes (`src/styles/base.css`, `src/styles/navigation.css`)
+## 1. Replace Quiz with AI-Based Major Recommendation
 
-- Remove `overflow-x: hidden` from `html` and `body` (masks layout bugs instead of fixing them); replace with targeted overflow clipping only where needed
-- Fix `.container` padding to use Tailwind's built-in container config rather than duplicate `padding-inline` rules
-- Remove `!important` from header height overrides in `navigation.css` -- use proper Tailwind classes instead
+### What changes
+- **Remove**: `src/components/quiz/MajorMatchingQuiz.tsx` (static quiz component)
+- **Repurpose**: `src/pages/QuizPage.tsx` becomes a wrapper for a new AI-driven conversational quiz
+- **Create**: `src/components/quiz/AIQuizChat.tsx` -- a full-page AI chat styled like the existing `AIAdvisorPage` but with a specialized system prompt focused on major recommendation
 
-## 2. Header & Navigation (`Header.tsx`, `DesktopNav.tsx`, `MobileNav.tsx`)
+### How it works
+- The AI asks adaptive questions one by one in a conversational style (education background, interests, strengths, German level, career goals)
+- Based on the conversation, the AI recommends 2-3 suitable majors with explanations
+- Each recommendation includes a link to `/educational-programs` filtered by that major
+- Uses the same `useAIChat` hook and streaming infrastructure
+- A new edge function `ai-quiz` (or a mode flag on `ai-chat`) with a specialized system prompt for major matching
 
-- **Header**: Add `px-4` padding on the container for small screens; ensure logo + button don't overlap on narrow tablets (768-1024px)
-- **DesktopNav**: Add `overflow-x-auto` with hidden scrollbar on the nav list so items don't wrap or get cut on medium screens (768-1024px); use `flex-shrink-0` on nav items
-- **MobileNav**: No changes needed -- already responsive via `Sheet` component
-- Navigation menu order and logo position remain unchanged
+### AI Quiz System Prompt (key points)
+- Act as an academic advisor for Arab 48 students
+- Ask 5-7 adaptive questions about: Bagrut subjects and grades, personal interests, strengths, German language level, career aspirations
+- After gathering enough info, recommend 2-3 majors from the actual majors database
+- Explain why each fits the student
+- Provide links to the relevant subject pages
 
-## 3. Hero Section (`Hero.tsx`)
+### Technical approach
+- Add a `mode` parameter to the existing `ai-chat` edge function (e.g., `mode: "quiz"`) that switches to the quiz-specific system prompt
+- Reuse `useAIChat` with a `mode` prop
+- The quiz page has a welcome screen with an explanation, then transitions into the chat
 
-- Change `h-screen min-h-[700px]` to `h-[100dvh] min-h-[500px]` for proper mobile viewport handling (avoids address bar issues)
-- Stats grid at bottom: change `grid-cols-3 gap-8` to `grid-cols-3 gap-3 sm:gap-8` and reduce stat number size on mobile: `text-2xl sm:text-4xl md:text-5xl`
-- Hero title: add smaller mobile size `text-3xl sm:text-5xl md:text-7xl`
-- CTA buttons: ensure full width on very small screens with `w-full sm:w-auto`
+---
 
-## 4. About Stats (`AboutCustom.tsx`)
+## 2. Subject Pages -- Accuracy Update
 
-- Stats cards: change `text-4xl md:text-5xl` to `text-2xl sm:text-4xl md:text-5xl` for number readability on small screens
-- Card padding: reduce to `p-4 sm:p-6` on small screens
+### What changes
+- **Update**: `src/data/majorsData.ts` -- enhance every `SubMajor` entry with additional fields
 
-## 5. Student Journey (`StudentJourney.tsx`)
+### New fields per subject (added to the `SubMajor` interface)
+```
+suitableFor: string       // Who this subject is suitable for
+requiredBackground: string // Required academic background  
+languageRequirements: string // German/English level needed
+careerOpportunities: string  // Career paths in Germany specifically
+arab48Notes: string        // Special notes for Arab 48 students
+```
 
-- Timeline circles: reduce `h-24 w-24` to `h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24`
-- Icons inside circles: reduce to `h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10`
-- Section padding: change `py-20` to `py-10 md:py-20`
-- Heading margin: reduce `mb-16` to `mb-8 md:mb-16`
+### Content updates
+- Remove references to Romania/Jordan universities in quiz results
+- Ensure all career prospects mention Germany-specific opportunities
+- Add language requirements (e.g., "B2 German for most programs, C1 for medicine")
+- Add specific notes for Arab 48 students (e.g., Bagrut equivalency, Studienkolleg requirements)
+- All information must be Germany-focused
 
-## 6. Student Gallery (`StudentGallery.tsx`)
+### Subject modal update
+- Update `MajorModal.tsx` to display the new fields in organized sections
 
-- Image height: change `h-80` to `h-56 sm:h-64 lg:h-80` for better proportions on mobile
+---
 
-## 7. Partners Marquee (`PartnersMarquee.tsx`)
+## 3. Update Social Media Links
 
-- Partner text: change `text-xl` to `text-sm sm:text-base md:text-xl` and reduce `mx-8` to `mx-4 sm:mx-6 md:mx-8`
-- Prevents horizontal overflow from long partner names
+### Files to update
 
-## 8. Contact Page (`Contact.tsx`)
+| File | Current Link | New Link |
+|------|-------------|----------|
+| `src/components/landing/Footer.tsx` | `instagram.com/darb_studyinternational` | `https://www.instagram.com/darb_studyingermany/` |
+| `src/components/landing/Footer.tsx` | `tiktok.com/@darb_studyinternational` | `https://www.tiktok.com/@darb_studyingrmany` |
+| `src/components/landing/Footer.tsx` | `facebook.com/DARB_STUDYINGERMANY` | `https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/` |
+| `src/components/chat/ChatPopup.tsx` | `wa.me/972524061225` | `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1` |
+| `src/components/landing/OfficeLocations.tsx` | `wa.me/972524061225` | `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1` |
 
-- Grid: the `lg:grid-cols-3` layout stacks well on mobile, but the form card padding `p-8` should be `p-4 sm:p-6 md:p-8`
-- Map height: `h-[400px] md:h-[500px]` is fine, add `h-[300px] sm:h-[400px] md:h-[500px]` for small phones
-- Form inner grid `md:grid-cols-2 gap-6`: reduce gap to `gap-4 md:gap-6`
+Also add WhatsApp link to Footer if not already present.
 
-## 9. Services Grid (`ServicesGrid.tsx`)
+---
 
-- Card icon containers: reduce `w-16 h-16` to `w-12 h-12 sm:w-16 sm:h-16` and icon `h-8 w-8` to `h-6 w-6 sm:h-8 sm:w-8`
+## 4. Resources -- Separate Tools into Dedicated Sections
 
-## 10. Services Hero & Contact Hero
+### What changes
+- **Refactor**: `src/pages/ResourcesPage.tsx` -- instead of stacking all tools in one long page, create a hub with navigation cards
+- **Create**: Individual route pages for each tool:
+  - `/resources/cost-calculator` -- `src/pages/CostCalculatorPage.tsx`
+  - `/resources/currency-converter` -- `src/pages/CurrencyConverterPage.tsx`
+  - `/resources/bagrut-calculator` -- `src/pages/BagrutCalculatorPage.tsx`
+- **Update**: `src/App.tsx` -- add the new routes
+- **Keep**: The main `/resources` page as a hub showing cards that link to each tool
+- Reuse existing components (`CostCalculator`, `CurrencyConverter`, `GpaCalculator`) -- just wrap each in its own page with Header/Footer
 
-- Reduce padding `py-20 md:py-32` to `py-12 sm:py-20 md:py-32` 
-- Title size: `text-4xl md:text-6xl` to `text-2xl sm:text-4xl md:text-6xl`
+### Resources hub layout
+- Grid of cards, each with icon, title, description, and a "Open Tool" button
+- Guides section remains on the main resources page
+- Same design language, no visual changes
 
-## 11. Educational Programs (`SearchAndFilter.tsx`, `MajorCard.tsx`, `MajorModal.tsx`)
+---
 
-- **SearchAndFilter**: Filter dropdown positioning -- ensure it doesn't overflow on mobile by adding `min-w-0` to the relative container
-- **MajorCard**: Card padding `p-6` to `p-4 sm:p-6`
-- **MajorModal**: `max-w-2xl` dialog -- add `mx-4` margin on mobile to prevent edge-to-edge flush
+## 5. Bagrut Calculator Improvements
 
-## 12. AI Advisor Page (`AIAdvisorPage.tsx`)
+### Current issues
+- The formula `germanGrade = 1 + 3 * ((100 - average) / 30)` is a simplified linear conversion
+- The correct Bavarian formula (modified Bavarian formula) is: `germanGrade = 1 + 3 * ((Nmax - Nd) / (Nmax - Nmin))`
+  - Where Nmax = best possible grade (100), Nmin = minimum passing grade (56 for Bagrut), Nd = student's average
 
-- Input bar at bottom: add `pb-safe` class for iOS safe area (above the BottomNav)
-- On mobile, add `pb-20` to the main content area to account for BottomNav overlap
-- Categories grid: `grid-cols-2 md:grid-cols-4` is fine, no change needed
+### What changes
+- **Update**: `src/components/calculator/GpaCalculator.tsx`
+  - Fix the formula to use the correct Bavarian method: `1 + 3 * ((100 - average) / (100 - 56))`
+  - Add input validation messages in Arabic (e.g., "Please enter a grade between 0-100")
+  - Add a brief explanation of the Bavarian formula below the results
+  - Add unit validation (units must be between 1-5)
+  - Show a warning if the average is below 56 (minimum passing grade)
+  - Add tooltips explaining what "units" (yehidot) means for each subject
 
-## 13. Quiz Page (`MajorMatchingQuiz.tsx`)
+---
 
-- Result card padding `p-8` to `p-4 sm:p-6 md:p-8`
-- Header title `text-2xl sm:text-3xl` is good
-- Option buttons: ensure proper touch target size (min 44px height) -- already `p-4 h-auto` which is fine
+## 6. Educational Destinations -- Germany Only
 
-## 14. Chat Widget (`ChatWidget.tsx`)
+### What changes
+- **Already mostly done**: `educationalDestinations.ts` only has Germany data
+- **Clean up**: `CountrySelector.tsx` -- since there's only Germany, either hide the selector or show it as a single selected tab
+- **Clean up**: `GuidesReferences.tsx` -- remove Romania and Jordan tabs from the country filter
+- **Clean up**: `src/components/partners/data/universities.ts` -- already has empty Romania/Jordan arrays, can remove those exports
+- **Update**: `EducationalDestinationsPage.tsx` -- remove the country selector since only Germany exists; show universities directly
 
-- Chat button: ensure it sits above BottomNav on mobile -- verify `chat-btn` class positions it at `bottom: 5rem` on mobile (above the ~64px bottom nav)
-- Add `bottom-24 md:bottom-6` positioning
+---
 
-## 15. Bottom Nav (`BottomNav.tsx`)
+## 7. AI Integration -- Enhanced Knowledge Base
 
-- Already well-handled with responsive classes
-- Add `pb-safe` to ensure iOS home indicator doesn't overlap (already has `pb-safe` style)
+### What changes
+- **Update**: `supabase/functions/ai-chat/index.ts` -- enhance the system prompt with:
+  - A summary of all available majors from `majorsData.ts`
+  - A list of partner universities with their strong fields
+  - Updated information about Bagrut equivalency and Studienkolleg
+  - Links to relevant pages on the platform (e.g., `/educational-programs`, `/resources/bagrut-calculator`)
 
-## 16. Footer (`Footer.tsx`)
-
-- Add bottom padding on mobile when BottomNav is visible: `pb-20 md:pb-0`
-- Social links: change `gap-6` to `gap-4 sm:gap-6` and wrap text + icon with `flex-wrap` for small screens
-
-## 17. PWA Standalone Mode (`pwa.css`)
-
-- Ensure standalone mode styles don't interfere with responsive layout
-- No changes needed -- current styles are minimal and correct
+### System prompt additions
+- List of all subject categories and their majors (from majorsData)
+- Top German universities with their specialties (from educationalDestinations)
+- Language school partners
+- Instructions to always reference platform pages when recommending
 
 ---
 
 ## Technical Details
 
-### Files to Modify
+### New Files
+| File | Purpose |
+|------|---------|
+| `src/components/quiz/AIQuizChat.tsx` | AI-powered conversational quiz component |
+| `src/pages/CostCalculatorPage.tsx` | Dedicated cost calculator page |
+| `src/pages/CurrencyConverterPage.tsx` | Dedicated currency converter page |
+| `src/pages/BagrutCalculatorPage.tsx` | Dedicated Bagrut calculator page |
 
-| File | Change Type |
-|------|------------|
-| `src/components/landing/Hero.tsx` | Responsive text, viewport height, stats grid |
-| `src/components/landing/AboutCustom.tsx` | Responsive stat numbers and card padding |
-| `src/components/landing/StudentJourney.tsx` | Responsive timeline circles and spacing |
-| `src/components/landing/StudentGallery.tsx` | Responsive image heights |
-| `src/components/landing/PartnersMarquee.tsx` | Responsive text size and spacing |
-| `src/components/landing/Contact.tsx` | Responsive padding and map height |
-| `src/components/landing/ContactHero.tsx` | Responsive hero padding and text |
-| `src/components/landing/Footer.tsx` | Bottom padding for mobile nav |
-| `src/components/landing/Header.tsx` | Container padding on small screens |
-| `src/components/landing/DesktopNav.tsx` | Overflow handling for medium screens |
-| `src/components/services/ServicesGrid.tsx` | Responsive icon sizes |
-| `src/components/services/ServicesHero.tsx` | Responsive hero padding and text |
-| `src/components/services/ServiceProcess.tsx` | Responsive step sizing |
-| `src/components/educational/SearchAndFilter.tsx` | Filter dropdown overflow fix |
-| `src/components/educational/MajorCard.tsx` | Responsive card padding |
-| `src/components/chat/ChatWidget.tsx` | Position above BottomNav on mobile |
-| `src/pages/AIAdvisorPage.tsx` | Bottom padding for BottomNav, safe area |
-| `src/components/quiz/MajorMatchingQuiz.tsx` | Responsive result card padding |
-| `src/styles/navigation.css` | Remove `!important` on header heights |
-| `src/styles/base.css` | Clean up overflow-x hidden |
+### Modified Files
+| File | Changes |
+|------|---------|
+| `src/pages/QuizPage.tsx` | Replace static quiz with AI quiz chat |
+| `src/data/majorsData.ts` | Add new fields (suitableFor, requiredBackground, languageRequirements, careerOpportunities, arab48Notes) to SubMajor interface and all entries |
+| `src/components/educational/MajorModal.tsx` | Display new subject fields |
+| `src/components/landing/Footer.tsx` | Update all social media links |
+| `src/components/chat/ChatPopup.tsx` | Update WhatsApp link |
+| `src/components/landing/OfficeLocations.tsx` | Update WhatsApp link |
+| `src/pages/ResourcesPage.tsx` | Convert to hub page with navigation cards |
+| `src/App.tsx` | Add new tool routes |
+| `src/components/calculator/GpaCalculator.tsx` | Fix Bavarian formula, add validation, tooltips |
+| `src/pages/EducationalDestinationsPage.tsx` | Remove country selector, Germany-only layout |
+| `src/components/educational/CountrySelector.tsx` | Hide or simplify for single country |
+| `src/components/resources/GuidesReferences.tsx` | Remove Romania/Jordan tabs |
+| `supabase/functions/ai-chat/index.ts` | Enhanced system prompt with subject and university knowledge, quiz mode support |
+| `supabase/config.toml` | No changes needed (ai-chat already configured) |
 
-### No Files Created or Deleted
+### Deleted Files
+| File | Reason |
+|------|--------|
+| `src/components/quiz/MajorMatchingQuiz.tsx` | Replaced by AI-powered quiz |
 
 ### What Will NOT Change
-- Colors, fonts, or branding
+- Website design, colors, fonts, layout, or spacing
 - Navigation order (logo, menu items, student portal button)
-- Visual hierarchy or layout structure
-- Component functionality
+- Existing component styling
+- Authentication or security layers
 - RTL direction behavior
 
