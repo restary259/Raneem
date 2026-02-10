@@ -1,228 +1,245 @@
 
+# Plan: Full Bilingual Scan Fix -- Translate All Remaining Hardcoded Arabic
 
-# Plan: Add English Language Support (Bilingual AR/EN)
-
-## Overview
-Add full English language support to the existing Arabic website. This involves creating all English translation files, moving hardcoded Arabic text to translation keys, adding a language switcher to the header, dynamically switching RTL/LTR direction, and making the AI assistant respond in the selected language.
-
----
-
-## Scope Assessment
-
-There are two categories of Arabic text in the codebase:
-
-**A. Already using i18n (translation keys):** Header nav, Footer, Hero, WhyChooseUs, Testimonials, StudentGallery, About, Services hero, Contact, Partnership, Resources, Broadcast -- these just need English JSON files created.
-
-**B. Hardcoded Arabic text (not using i18n):** Many components have Arabic strings directly in JSX. These must be moved to translation keys first, then translated.
-
-Key components with hardcoded Arabic:
-- `DesktopNav.tsx` -- "المزيد", "اختيار التخصص", "التخصصات", "وجهاتنا التعليمية", dropdown descriptions
-- `MobileNav.tsx` -- "التخصصات", "اختيار التخصص", "المزيد", "وجهاتنا التعليمية", "تسجيل الدخول للطلاب"
-- `Header.tsx` -- "درب", "تسجيل الدخول للطلاب"
-- `BottomNav.tsx` -- all nav item names and aria labels
-- `Hero.tsx` -- stats labels ("طالب راض", "شريك تعليمي", "دولة حول العالم")
-- `Services.tsx` (landing) -- all 7 service titles
-- `AIQuizChat.tsx` -- all UI text, quick questions, category labels
-- `AIChatPopup.tsx` -- title, description, placeholder, offline text
-- `AIAdvisorPage.tsx` -- all UI text, categories, quick questions
-- `ChatWidget.tsx` -- aria labels
-- `StudentAuthPage.tsx` -- all form labels, error messages, toasts
-- `App.tsx` -- NetflixLoader text ("درب", "رفيقك الدراسي العالمي")
-- `useAIChat.ts` -- QUICK_QUESTIONS array, offline messages
-- Various other components
+## Problem Summary
+After scanning the entire codebase, there are **20+ components and 3 data files** with hardcoded Arabic text that does NOT respond to the language switcher. When a user switches to English, these sections remain in Arabic, breaking the bilingual experience.
 
 ---
 
-## 1. i18n Configuration Update
+## Affected Areas (Grouped by Priority)
 
-**File**: `src/i18n.ts`
-- Add language detection from `localStorage` with fallback to `'ar'`
-- Keep `fallbackLng: 'ar'`
-- Add `supportedLngs: ['ar', 'en']`
+### Group 1: Pages with hardcoded `dir="rtl"` (must be dynamic)
 
-```typescript
-i18n.init({
-  lng: localStorage.getItem('i18n_lang') || 'ar',
-  fallbackLng: 'ar',
-  supportedLngs: ['ar', 'en'],
-  // ... rest stays the same
-});
-```
+These pages have `dir="rtl"` hardcoded on their root div. They need to use the `useDirection()` hook instead.
 
----
+| Page | Line |
+|------|------|
+| `src/pages/Index.tsx` | `dir="rtl"` |
+| `src/pages/ContactPage.tsx` | `dir="rtl"` |
+| `src/pages/ServicesPage.tsx` | `dir="rtl"` |
+| `src/pages/LocationsPage.tsx` | `dir="rtl"` |
+| `src/pages/PartnershipPage.tsx` | `dir="rtl"` |
+| `src/pages/BroadcastPage.tsx` | `dir="rtl"` (2 places) |
+| `src/pages/EducationalProgramsPage.tsx` | `dir="rtl"` |
+| `src/pages/BagrutCalculatorPage.tsx` | `dir="rtl"` |
+| `src/pages/CostCalculatorPage.tsx` | `dir="rtl"` |
+| `src/pages/CurrencyConverterPage.tsx` | `dir="rtl"` |
+| `src/pages/AdminDashboardPage.tsx` | `dir="rtl"` |
+| `src/pages/WhoWeArePage.tsx` | `dir="rtl" lang="ar"` |
+| `src/components/landing/ContactHero.tsx` | `dir="rtl"` |
+| `src/components/common/PWAInstaller.tsx` | `dir="rtl"` |
+| `src/components/educational/MajorModal.tsx` | `dir="rtl"` |
+| `src/components/partnership/RegistrationForm.tsx` | Select `dir="rtl"` |
+| `src/components/services/ConsultationCta.tsx` | Select `dir="rtl"` |
+| `src/components/landing/Contact.tsx` | Select `dir="rtl"` (2 places) |
+| `src/components/calculator/CostCalculator.tsx` | Select `dir="rtl"` (4 places) |
+| `src/components/calculator/GpaCalculator.tsx` | `dir="rtl"` |
 
-## 2. Language Switcher Component
-
-**New file**: `src/components/common/LanguageSwitcher.tsx`
-
-A small toggle button showing "EN" when in Arabic mode and "عربي" when in English mode. On click:
-1. Changes i18n language
-2. Saves to `localStorage`
-3. Updates `document.documentElement.dir` to `rtl` or `ltr`
-4. Updates `document.documentElement.lang` to `ar` or `en`
-
-Placement:
-- **Header.tsx**: Add between the desktop nav and "Student Login" button (hidden on mobile)
-- **MobileNav.tsx**: Add at the top of the mobile menu sheet
-
----
-
-## 3. Dynamic RTL/LTR Switching
-
-**File**: `src/App.tsx`
-- Change hardcoded `dir="rtl"` and `lang="ar"` to be reactive based on `i18n.language`
-- Subscribe to `i18n.on('languageChanged')` to update `document.documentElement.dir` and `lang`
-- Move the NetflixLoader text to translation keys
+All these will use `useDirection()` hook to dynamically set direction.
 
 ---
 
-## 4. English Translation Files
+### Group 2: Components with fully hardcoded Arabic content
 
-Create the full `public/locales/en/` directory with 9 JSON files:
+These components have ALL their text in Arabic with no `t()` calls.
 
-| File | Content |
-|------|---------|
-| `public/locales/en/common.json` | Nav items, footer, CTA, 404 page |
-| `public/locales/en/landing.json` | Hero, WhyChooseUs, Testimonials, StudentGallery |
-| `public/locales/en/about.json` | About intro, CEO message, key features, team |
-| `public/locales/en/services.json` | Services hero |
-| `public/locales/en/contact.json` | Contact hero, form labels, toast messages |
-| `public/locales/en/partnership.json` | Full partnership page (hero, FAQ, how it works, trust, forms) |
-| `public/locales/en/resources.json` | All calculator labels, currency comparator, GPA calculator, guides |
-| `public/locales/en/broadcast.json` | Broadcast page labels |
-| `public/locales/en/partners.json` | Partners page (hero, tabs, stats, CTA) |
+**`src/pages/WhoWeArePage.tsx`** -- ~90 lines of hardcoded Arabic
+- Hero title, subtitle, story section, values, features, team members, CTA
+- All `features[]`, `teamMembers[]`, `ourValues[]`, `storyPoints[]` arrays
 
-All translations will maintain accuracy and cultural sensitivity for Arab 48 students reading in English.
+**`src/components/services/ServicesGrid.tsx`** -- All 9 service cards hardcoded
+- titles, descriptions, features arrays, "ابدأ الآن" button text
+- Section title "خدماتنا الشاملة" and subtitle
 
----
+**`src/components/services/ServiceProcess.tsx`** -- 4 steps hardcoded
+- Step titles and descriptions, default title/description props
 
-## 5. Move Hardcoded Arabic to Translation Keys
+**`src/components/services/ConsultationCta.tsx`** -- Full form hardcoded
+- 8 service options, form labels, placeholders, validation messages, toast messages
+- Section title, description, submit button text
 
-### Add new keys to `common.json` (both AR and EN):
+**`src/components/services/TestimonialSection.tsx`** -- 3 testimonials hardcoded
+- Names, texts, section title/subtitle
 
-```json
-{
-  "nav": {
-    "more": "المزيد / More",
-    "majors": "التخصصات / Majors",
-    "majorQuiz": "اختيار التخصص / Find Your Major",
-    "educationalDestinations": "وجهاتنا التعليمية / Educational Destinations",
-    "educationalDestinationsDesc": "... / ...",
-    "broadcastDesc": "... / ...",
-    "studentLogin": "تسجيل الدخول للطلاب / Student Login"
-  },
-  "loader": {
-    "brand": "درب / Darb",
-    "tagline": "رفيقك الدراسي العالمي / Your Global Study Companion"
-  },
-  "bottomNav": { ... },
-  "chat": { ... },
-  "auth": { ... }
-}
-```
+**`src/components/landing/Locations.tsx`** -- 4 location cards hardcoded
+- Country names, cities, services, section title
 
-### Components to update (move hardcoded text to `t()` calls):
+**`src/components/landing/OfficeLocations.tsx`** -- Office info hardcoded
+- Address, hours, "مكتبنا الرئيسي" title, WhatsApp button text
 
-| Component | Hardcoded strings to move |
-|-----------|--------------------------|
-| `Header.tsx` | Brand name "درب", login button text |
-| `DesktopNav.tsx` | "المزيد", "اختيار التخصص", "التخصصات", dropdown descriptions |
-| `MobileNav.tsx` | Same as above + "تسجيل الدخول للطلاب" |
-| `BottomNav.tsx` | All 4 nav items and aria labels |
-| `Hero.tsx` | Stats labels |
-| `Services.tsx` (landing) | All 7 service titles |
-| `App.tsx` | NetflixLoader strings |
-| `AIQuizChat.tsx` | Title, description, categories, quick questions, buttons, placeholder |
-| `AIChatPopup.tsx` | Title, description, placeholder, offline text, empty state |
-| `AIAdvisorPage.tsx` | Title, description, categories, buttons, placeholder |
-| `ChatWidget.tsx` | Aria labels |
-| `useAIChat.ts` | QUICK_QUESTIONS, offline messages |
-| `StudentAuthPage.tsx` | All form labels, placeholders, error messages, toast messages |
+**`src/components/common/PWAInstaller.tsx`** -- All text hardcoded
+- Install prompt, iOS modal instructions, buttons
+
+**`src/components/partnership/AgentToolkit.tsx`** -- 3 icon labels hardcoded
+- "ملفات احترافية", "دعم تسويقي", "أسئلة شائعة"
+
+**`src/components/partnership/RegistrationForm.tsx`** -- Validation messages + toasts
+- zod schema error messages, success/error toast text, file upload description
+
+**`src/pages/EducationalDestinationsPage.tsx`** -- All section text hardcoded
+- Hero badge, title, subtitle, section headings, CTA section
+
+**`src/components/educational/UniversityCard.tsx`** -- "التخصصات المتاحة:" label
+
+**`src/components/educational/HeroSection.tsx`** -- Badge, title, subtitle
+
+**`src/components/educational/CTASection.tsx`** -- Title, subtitle, buttons
+
+**`src/components/educational/NoResults.tsx`** -- All text, buttons
+
+**`src/components/educational/SearchAndFilter.tsx`** -- Placeholder, filter label, results count text
+
+**`src/components/educational/MajorCard.tsx`** -- "اقرأ المزيد" text
+
+**`src/components/educational/MajorModal.tsx`** -- All section labels ("الوصف", "مناسب لـ", etc.)
+
+**`src/components/educational/CategoryFilter.tsx`** -- "تصفية حسب الفئة", "جميع التخصصات"
+
+**`src/components/landing/Contact.tsx`** -- Validation messages, toast messages, "جار الإرسال" text
+
+**`src/pages/ResourcesPage.tsx`** -- "افتح الأداة" button text
 
 ---
 
-## 6. AI Language Detection
+### Group 3: Data files with hardcoded Arabic
 
-**File**: `supabase/functions/ai-chat/index.ts`
-- Accept a `language` parameter from the frontend (`'ar'` or `'en'`)
-- Add English versions of system prompts (SYSTEM_PROMPT_EN and QUIZ_SYSTEM_PROMPT_EN)
-- Select prompt based on the `language` parameter
-- English prompts will instruct the AI to respond in English while maintaining the same knowledge base
+**`src/data/majorsData.ts`** -- 1200+ lines, all major names/descriptions in Arabic only
+- Category titles, SubMajor fields (nameAR, description, detailedDescription, etc.)
+- This is the largest challenge -- need to add `nameEN` and English fields
 
-**File**: `src/hooks/useAIChat.ts`
-- Pass `i18n.language` as `language` parameter in the request body
+**`src/data/educationalDestinations.ts`** -- 230+ lines, all in Arabic
+- University descriptions, locations, major names, school descriptions
 
-**File**: `src/components/chat/AIChatPopup.tsx`, `AIQuizChat.tsx`, `AIAdvisorPage.tsx`
-- Quick questions will use translated arrays from translation files instead of hardcoded arrays
+**`src/components/broadcast/data.ts`** -- 120+ lines, all in Arabic
+- Video titles, descriptions, category names
 
 ---
 
-## 7. Direction-Aware Layout Adjustments
+## Implementation Strategy
 
-Components with hardcoded `dir="rtl"` or RTL-specific classes (like `text-right`, `mr-6`) need to be made direction-aware:
+### Phase 1: Dynamic direction on all pages
+- Import `useDirection()` in every page/component with hardcoded `dir="rtl"`
+- Replace with `dir={dir}`
+- ~20 files, minimal risk
 
-- `Header.tsx`: `dir="rtl"` -> dynamic based on language
-- `DesktopNav.tsx`: `dir="rtl"` -> dynamic
-- `MobileNav.tsx`: `side="right"`, `text-right` -> conditional
-- `BottomNav.tsx`: `dir="rtl"` -> dynamic
-- `App.tsx`: `dir="rtl"` -> dynamic
-- `AIChatPopup.tsx`: `dir="rtl"` -> dynamic
-- `AIQuizChat.tsx`: `dir="rtl"` -> dynamic
-- `AIAdvisorPage.tsx`: `dir="rtl"` -> dynamic
+### Phase 2: Move hardcoded UI text to translation keys
+For each component, move hardcoded Arabic text into `t()` calls and add corresponding keys to both `ar/common.json` (or appropriate namespace) and `en/common.json`.
 
-Approach: Use a small utility or hook (`useDirection`) that returns `'rtl'` or `'ltr'` and corresponding text alignment class based on `i18n.language`.
+New translation namespaces needed:
+- Add keys to `common.json`: PWA, office locations, educational sections
+- Add keys to `services.json` (AR + EN): ServicesGrid, ServiceProcess, ConsultationCta, TestimonialSection
+- Add keys to `about.json` (AR + EN): WhoWeArePage content
+- Add keys to `landing.json` (AR + EN): Locations section
+- Add keys to `resources.json` (EN update): "افتح الأداة" button
+
+### Phase 3: Data files with dual language support
+For data-heavy files (`majorsData.ts`, `educationalDestinations.ts`, `broadcast/data.ts`):
+- Add English fields alongside Arabic (e.g., `nameEN` already exists in SubMajor interface)
+- Add `descriptionEN`, `categoryTitleEN` fields
+- Components consuming this data will select the right field based on `i18n.language`
 
 ---
 
 ## Technical Details
 
-### New Files
+### Translation File Updates
 
-| File | Purpose |
-|------|---------|
-| `src/components/common/LanguageSwitcher.tsx` | Language toggle component |
-| `public/locales/en/common.json` | English common translations |
-| `public/locales/en/landing.json` | English landing page translations |
-| `public/locales/en/about.json` | English about page translations |
-| `public/locales/en/services.json` | English services translations |
-| `public/locales/en/contact.json` | English contact translations |
-| `public/locales/en/partnership.json` | English partnership translations |
-| `public/locales/en/resources.json` | English resources translations |
-| `public/locales/en/broadcast.json` | English broadcast translations |
-| `public/locales/en/partners.json` | English partners translations |
+**`public/locales/ar/services.json`** -- Add:
+- `servicesGrid.*` (section title, subtitle, all 9 service cards, button text)
+- `serviceProcess.*` (4 steps, default title/description)
+- `consultationCta.*` (form labels, service options, validation, toasts)
+- `testimonialSection.*` (section title, subtitle, 3 testimonials)
 
-### Modified Files
+**`public/locales/en/services.json`** -- Add same keys in English
+
+**`public/locales/ar/common.json`** -- Add:
+- `pwa.*` (install prompts, iOS instructions)
+- `officeLocations.*` (address, hours, title)
+- `locations.*` (4 location cards, section title)
+- `educational.*` (hero, CTA, search, filter, modal labels, card labels)
+
+**`public/locales/en/common.json`** -- Add same keys in English
+
+**`public/locales/ar/about.json`** -- Add:
+- `whoWeAre.*` (hero, story, values, features, team, CTA)
+
+**`public/locales/en/about.json`** -- Add same keys in English
+
+**`public/locales/ar/partnership.json`** -- Add:
+- `agentToolkit.labels.*` (3 icon labels)
+- `registrationForm.validation.*` (zod messages)
+- `registrationForm.toasts.*` (success/error)
+
+**`public/locales/en/partnership.json`** -- Add same keys in English
+
+### Data File Updates
+
+**`src/data/majorsData.ts`**:
+- Add `nameEN` (already in interface but not populated), `descriptionEN`, `detailedDescriptionEN`, `categoryTitleEN` fields
+- Components use a helper: `const name = i18n.language === 'en' ? major.nameEN || major.nameAR : major.nameAR`
+
+**`src/data/educationalDestinations.ts`**:
+- Add `descriptionEN`, `locationEN`, `majorsEN` fields to universities/schools/services
+
+**`src/components/broadcast/data.ts`**:
+- Add `titleEN`, `descriptionEN`, `categoryEN` fields
+
+### Modified Files (Complete List)
 
 | File | Changes |
 |------|---------|
-| `src/i18n.ts` | Add localStorage persistence, supportedLngs |
-| `src/App.tsx` | Dynamic dir/lang, move loader text to i18n |
-| `src/components/landing/Header.tsx` | Add LanguageSwitcher, dynamic dir, translate hardcoded text |
-| `src/components/landing/DesktopNav.tsx` | Move all hardcoded Arabic to t() calls, dynamic dir |
-| `src/components/landing/MobileNav.tsx` | Move hardcoded text to t(), dynamic dir/side |
-| `src/components/common/BottomNav.tsx` | Move nav items to t() calls, dynamic dir |
-| `src/components/landing/Hero.tsx` | Move stats labels to t() |
-| `src/components/landing/Services.tsx` | Move service titles to t() |
-| `src/hooks/useAIChat.ts` | Accept language param, translate quick questions and offline messages |
-| `src/components/quiz/AIQuizChat.tsx` | Move all text to t(), pass language to AI |
-| `src/components/chat/AIChatPopup.tsx` | Move all text to t(), dynamic dir |
-| `src/pages/AIAdvisorPage.tsx` | Move all text to t() |
-| `src/components/chat/ChatWidget.tsx` | Translate aria labels |
-| `src/pages/StudentAuthPage.tsx` | Move all form text and error messages to t() |
-| `supabase/functions/ai-chat/index.ts` | Add English system prompts, language parameter |
-| `public/locales/ar/common.json` | Add new keys for previously hardcoded text |
+| `src/pages/Index.tsx` | Dynamic dir |
+| `src/pages/ContactPage.tsx` | Dynamic dir |
+| `src/pages/ServicesPage.tsx` | Dynamic dir |
+| `src/pages/LocationsPage.tsx` | Dynamic dir |
+| `src/pages/PartnershipPage.tsx` | Dynamic dir |
+| `src/pages/BroadcastPage.tsx` | Dynamic dir |
+| `src/pages/EducationalProgramsPage.tsx` | Dynamic dir |
+| `src/pages/BagrutCalculatorPage.tsx` | Dynamic dir |
+| `src/pages/CostCalculatorPage.tsx` | Dynamic dir |
+| `src/pages/CurrencyConverterPage.tsx` | Dynamic dir |
+| `src/pages/AdminDashboardPage.tsx` | Dynamic dir |
+| `src/pages/WhoWeArePage.tsx` | Full i18n migration + dynamic dir |
+| `src/pages/EducationalDestinationsPage.tsx` | Full i18n migration |
+| `src/pages/ResourcesPage.tsx` | Button text i18n |
+| `src/components/services/ServicesGrid.tsx` | Full i18n migration |
+| `src/components/services/ServiceProcess.tsx` | Full i18n migration |
+| `src/components/services/ConsultationCta.tsx` | Full i18n migration + dynamic dir |
+| `src/components/services/TestimonialSection.tsx` | Full i18n migration |
+| `src/components/landing/Locations.tsx` | Full i18n migration |
+| `src/components/landing/OfficeLocations.tsx` | Full i18n migration |
+| `src/components/landing/Contact.tsx` | Validation/toast i18n + dynamic dir |
+| `src/components/landing/ContactHero.tsx` | Dynamic dir |
+| `src/components/common/PWAInstaller.tsx` | Full i18n migration + dynamic dir |
+| `src/components/partnership/AgentToolkit.tsx` | Icon labels i18n |
+| `src/components/partnership/RegistrationForm.tsx` | Validation/toast i18n + dynamic dir |
+| `src/components/educational/HeroSection.tsx` | Full i18n migration |
+| `src/components/educational/CTASection.tsx` | Full i18n migration |
+| `src/components/educational/NoResults.tsx` | Full i18n migration |
+| `src/components/educational/SearchAndFilter.tsx` | Full i18n migration + dynamic dir |
+| `src/components/educational/MajorCard.tsx` | i18n + language-aware field selection |
+| `src/components/educational/MajorModal.tsx` | Full i18n migration + dynamic dir |
+| `src/components/educational/CategoryFilter.tsx` | Full i18n migration |
+| `src/components/educational/UniversityCard.tsx` | Label i18n + language-aware fields |
+| `src/components/calculator/CostCalculator.tsx` | Dynamic dir on Selects |
+| `src/components/calculator/GpaCalculator.tsx` | Dynamic dir |
+| `src/data/majorsData.ts` | Add English fields to all entries |
+| `src/data/educationalDestinations.ts` | Add English fields |
+| `src/components/broadcast/data.ts` | Add English fields |
+| `public/locales/ar/services.json` | Add new keys |
+| `public/locales/en/services.json` | Add new keys |
+| `public/locales/ar/common.json` | Add new keys |
+| `public/locales/en/common.json` | Add new keys |
+| `public/locales/ar/about.json` | Add new keys |
+| `public/locales/en/about.json` | Add new keys |
+| `public/locales/ar/partnership.json` | Add new keys |
+| `public/locales/en/partnership.json` | Add new keys |
 
 ### What Will NOT Change
 - Website design, colors, fonts, layout, or spacing
 - Navigation order (logo, menu items, student portal button)
 - Component structure or functionality
-- PWA behavior
-- Authentication or security layers
+- RTL behavior when Arabic is selected
 
 ### Implementation Note
-Due to the large number of files involved (30+), this will be implemented in focused batches:
-1. Infrastructure (i18n config, LanguageSwitcher, App.tsx direction logic)
-2. English translation files (all 9 JSON files)
-3. Component updates (move hardcoded text to i18n keys)
-4. AI integration (edge function English prompts + language passing)
-
+Due to the very large scope (45+ files), implementation will be done in focused batches to avoid errors. The majorsData.ts file alone has 1200+ lines requiring English translations for every major.
