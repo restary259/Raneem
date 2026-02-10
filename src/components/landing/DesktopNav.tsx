@@ -12,9 +12,11 @@ import {
   navigationMenuTriggerStyle
 } from '@/components/ui/navigation-menu';
 import ListItem from './ListItem';
+import { useDirection } from '@/hooks/useDirection';
 
 const DesktopNav = () => {
   const { t } = useTranslation();
+  const { dir } = useDirection();
 
   const aboutComponents: { title: string; href: string; description: string }[] = [
     {
@@ -31,9 +33,9 @@ const DesktopNav = () => {
 
   const moreComponents: { title: string; href: string; description: string }[] = [
     {
-      title: 'وجهاتنا التعليمية',
+      title: t('nav.educationalDestinations'),
       href: '/educational-destinations',
-      description: 'اكتشف الجامعات ومعاهد اللغة والخدمات التعليمية',
+      description: t('nav.educationalDestinationsDesc'),
     },
     {
       title: t('nav.partnership'),
@@ -43,21 +45,21 @@ const DesktopNav = () => {
     {
       title: t('nav.broadcast'),
       href: '/broadcast',
-      description: 'شاهد فيديوهات تعليمية ومباشرة من خبرائنا',
+      description: t('nav.broadcastDesc'),
     }
   ];
 
   return (
-    <div className="flex justify-center w-full" dir="rtl">
+    <div className="flex justify-center w-full" dir={dir}>
       <NavigationMenu>
         <NavigationMenuList className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {/* المزيد (dropdown) - First item */}
           <NavigationMenuItem>
             <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">
-              المزيد
+              {t('nav.more')}
             </NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[400px] bg-white shadow-lg border rounded-md">
+              <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} md:w-[400px] bg-white shadow-lg border rounded-md`}>
                 {moreComponents.map((component) => (
                   <ListItem
                     key={component.title}
@@ -93,7 +95,7 @@ const DesktopNav = () => {
           <NavigationMenuItem>
             <Link to="/quiz">
               <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                اختيار التخصص
+                {t('nav.majorQuizNav')}
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -102,7 +104,7 @@ const DesktopNav = () => {
           <NavigationMenuItem>
             <Link to="/educational-programs">
               <NavigationMenuLink className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
-                التخصصات
+                {t('nav.majors')}
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -122,7 +124,7 @@ const DesktopNav = () => {
               {t('nav.about')}
             </NavigationMenuTrigger>
             <NavigationMenuContent>
-              <ul className="grid w-[400px] gap-3 p-4 text-right md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md">
+              <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md`}>
                 {aboutComponents.map((component) => (
                   <ListItem
                     key={component.title}

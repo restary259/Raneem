@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WhoWeArePage from "./pages/WhoWeArePage";
@@ -36,21 +37,22 @@ const queryClient = new QueryClient();
 
 // Netflix-style Loading Component
 const NetflixLoader = () => {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center">
       <div className="flex flex-col items-center">
         <div className="animate-[logoScale_2s_ease-out_forwards] mb-4">
           <img 
             src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
-            alt="درب" 
+            alt={t('loader.brand')} 
             className="w-20 h-20 object-contain"
           />
         </div>
         <div className="text-2xl font-bold text-gray-800 animate-fade-in">
-          درب
+          {t('loader.brand')}
         </div>
         <div className="text-sm text-gray-600 mt-2 animate-fade-in animation-delay-300">
-          رفيقك الدراسي العالمي
+          {t('loader.tagline')}
         </div>
       </div>
     </div>
@@ -62,10 +64,12 @@ const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
-    document.documentElement.lang = 'ar';
-    document.documentElement.dir = 'rtl';
+    const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = i18n.language;
+    document.documentElement.dir = dir;
     
     // Register service worker for PWA functionality with auto-updates
     registerServiceWorker();
@@ -79,7 +83,6 @@ const App = () => {
     const redirectPath = sessionStorage.getItem('redirectPath');
     if (redirectPath) {
       sessionStorage.removeItem('redirectPath');
-      // For original Lovable URLs, redirect directly to the path
       const searchParams = new URLSearchParams(location.search);
       const queryString = searchParams.toString();
       const fullPath = queryString ? `${redirectPath}?${queryString}` : redirectPath;
@@ -87,12 +90,14 @@ const App = () => {
     }
 
     return () => clearTimeout(timer);
-  }, [navigate, location.search]);
+  }, [navigate, location.search, i18n.language]);
 
   // Scroll to top when route changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   if (isLoading) {
     return <NetflixLoader />;
@@ -101,7 +106,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen pb-20 md:pb-0 relative" dir="rtl">
+        <div className="min-h-screen pb-20 md:pb-0 relative" dir={dir}>
           <Toaster />
           <Sonner />
           <OfflineIndicator />

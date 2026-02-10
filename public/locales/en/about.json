@@ -1,0 +1,32 @@
+{
+  "aboutIntro": {
+    "title": "Why Choose Darb Study International?",
+    "subtitle": "With over five years of experience, we at Darb Study International take pride in being official representatives of prestigious universities and educational partners. We achieve a success rate exceeding 95% in securing university admissions and visas, offering our students a guaranteed path to achieving their academic ambitions."
+  },
+  "ceoMessage": {
+    "title": "Message from the CEO",
+    "quote": "\"Our vision at Darb is to pave the way for every ambitious student to achieve their dream of studying abroad. We don't just offer consultations — we build bridges of trust and support to ensure a successful educational journey and a bright future.\"",
+    "name": "- Ahmad Al-Ali, Founder & CEO",
+    "avatarAlt": "CEO"
+  },
+  "keyFeatures": {
+    "features": [
+      { "text": "Comprehensive support from paperwork to arrival" },
+      { "text": "Multilingual teams (Arabic, English, German)" },
+      { "text": "Transparent pricing with no hidden fees" },
+      { "text": "Personal 1-on-1 follow-up throughout the journey" },
+      { "text": "Physical offices in Berlin, Amman, and Bucharest" }
+    ]
+  },
+  "teamSection": {
+    "title": "Meet Our Expert Team",
+    "members": [
+      { "name": "Alia Khan", "role": "Senior Educational Advisor", "bio": "Expert in German universities with 7 years of experience helping students.", "imageUrl": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300&auto=format&fit=crop" },
+      { "name": "Markus Schneider", "role": "Head of Admissions", "bio": "Specialized in admission requirements and visas for Germany and Romania.", "imageUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop" },
+      { "name": "Fatima Al-Zahraa", "role": "Student Affairs Coordinator", "bio": "Supports students at every step, from housing to cultural integration.", "imageUrl": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=300&auto=format&fit=crop" },
+      { "name": "Radu Popescu", "role": "Romania Education Expert", "bio": "Knowledgeable about the best universities and programs in Romania.", "imageUrl": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&auto=format&fit=crop" },
+      { "name": "Sami Haddad", "role": "Jordan & Middle East Advisor", "bio": "Helps students from the Middle East transition to studying in Europe.", "imageUrl": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=300&auto=format&fit=crop" },
+      { "name": "Elena Fischer", "role": "University Partnerships Manager", "bio": "Builds and maintains strong relationships with our university partners.", "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=300&auto=format&fit=crop" }
+    ]
+  }
+}

@@ -1,17 +1,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChatMessage, saveChatHistory, loadChatHistory, clearChatHistory, OFFLINE_FAQ } from '@/utils/chatCache';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
-export const QUICK_QUESTIONS = [
-  'كيف أبدأ التقديم للجامعات الألمانية؟',
-  'ما هي متطلبات التأشيرة الدراسية؟',
-  'ما مستوى اللغة الألمانية المطلوب؟',
-  'كم تكلفة المعيشة في ألمانيا؟',
-];
-
 export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'general') => {
+  const { i18n, t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +14,6 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load persisted history
   useEffect(() => {
     if (persistHistory) {
       const saved = loadChatHistory();
@@ -27,14 +21,12 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
     }
   }, [persistHistory]);
 
-  // Save on change
   useEffect(() => {
     if (persistHistory && messages.length > 0) {
       saveChatHistory(messages);
     }
   }, [messages, persistHistory]);
 
-  // Online/offline detection
   useEffect(() => {
     const goOnline = () => setIsOnline(true);
     const goOffline = () => setIsOnline(false);
@@ -46,7 +38,6 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
     };
   }, []);
 
-  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -60,10 +51,9 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
     setInput('');
     setIsLoading(true);
 
-    // Offline fallback
     if (!isOnline) {
       const faqAnswer = OFFLINE_FAQ[text.trim()];
-      const offlineReply = faqAnswer || 'أنت غير متصل بالإنترنت حالياً. يمكنك مراجعة المحادثات السابقة أو تجربة الأسئلة الشائعة.';
+      const offlineReply = faqAnswer || t('chat.offlineReply');
       setMessages(prev => [...prev, { role: 'assistant', content: offlineReply }]);
       setIsLoading(false);
       return;
@@ -78,12 +68,12 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages, mode }),
+        body: JSON.stringify({ messages: allMessages, mode, language: i18n.language }),
       });
 
       if (!resp.ok || !resp.body) {
         const errorData = await resp.json().catch(() => ({}));
-        throw new Error(errorData.error || 'فشل الاتصال بالمساعد الذكي');
+        throw new Error(errorData.error || t('chat.connectionError'));
       }
 
       const reader = resp.body.getReader();
@@ -124,7 +114,6 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
         }
       }
 
-      // Final flush
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split('\n')) {
           if (!raw) continue;
@@ -151,12 +140,12 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
       }
     } catch (e: any) {
       console.error('AI Chat error:', e);
-      setMessages(prev => [...prev, { role: 'assistant', content: `عذراً، حدث خطأ: ${e.message}` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `${t('chat.errorPrefix')} ${e.message}` }]);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [messages, isLoading, isOnline, mode]);
+  }, [messages, isLoading, isOnline, mode, i18n.language, t]);
 
   const handleClearHistory = useCallback(() => {
     setMessages([]);

@@ -1,0 +1,242 @@
+{
+  "costCalculator": {
+    "title": "Study & Living Cost Calculator",
+    "description": "An interactive tool to estimate study costs in Germany, Jordan, and Romania for Palestinian students from Israel (Arab 48). Enter your preferences for a transparent, detailed estimate.",
+    "country": "Choose Country",
+    "germany": "Germany",
+    "jordan": "Jordan",
+    "romania": "Romania",
+    "degreeLevel": "Degree Level",
+    "bachelor": "Bachelor's",
+    "master": "Master's",
+    "prep": "Preparatory Year/Language",
+    "fieldOfStudy": "Field of Study",
+    "engineering": "Engineering",
+    "medicine": "Medicine",
+    "business": "Business Administration",
+    "humanities": "Humanities",
+    "universityType": "University Type",
+    "public": "Public",
+    "private": "Private",
+    "accommodation": "Accommodation Type",
+    "dormitory": "Student Dormitory",
+    "shared": "Shared Apartment",
+    "privateApartment": "Private Apartment",
+    "lifestyle": "Lifestyle",
+    "basic": "Basic",
+    "moderate": "Moderate",
+    "comfortable": "Comfortable",
+    "options": "Additional Options",
+    "healthInsurance": "Include health insurance?",
+    "languagePrep": "Include language preparation costs?",
+    "visaAdmin": "Include visa & residence fees?",
+    "resultsTitle": "Cost Estimate",
+    "resultsDescription": "The following table shows the estimated annual costs in euros (€).",
+    "item": "Item",
+    "annualCost": "Annual Cost (EUR)",
+    "monthlyCost": "Monthly Cost (EUR)",
+    "tuition": "Tuition Fees",
+    "livingExpenses": "Housing & Living Expenses",
+    "semesterFee": "Semester Fee",
+    "totalAnnual": "Total Annual",
+    "totalMonthly": "Monthly Average",
+    "disclaimer": "Please note: These are estimates based on recent data and actual costs may vary. For an accurate, customized quote, please contact us.",
+    "contactUs": "Request a Custom Quote",
+    "germanyTooltip": "Public universities in most German states are tuition-free for international students, except for semester fees.",
+    "lifestyleTooltip": "Your lifestyle affects your monthly expenses for food, entertainment, and personal purchases.",
+    "accommodationTooltip": "Housing costs depend greatly on the city and type of accommodation you choose.",
+    "healthInsuranceCost": "Health Insurance",
+    "visaAdminCost": "Visa & Residence Fees"
+  },
+  "currencyComparator": {
+    "title": "Currency Converter & Transfer Service Comparison",
+    "description": "Enter the amount in ILS and choose the target country for a comprehensive comparison between transfer services and banks to find the best and cheapest option.",
+    "amountInILS": "Amount in ILS",
+    "targetCountry": "Target Country",
+    "germany": "Germany",
+    "romania": "Romania",
+    "jordan": "Jordan",
+    "targetCurrency": "Target Currency",
+    "deliverySpeed": "Transfer Priority",
+    "fastest": "Fastest",
+    "cheapest": "Cheapest",
+    "balanced": "Balanced",
+    "paymentMethod": "Payment Method",
+    "bankTransfer": "Bank Transfer",
+    "creditCard": "Credit Card",
+    "debitCard": "Debit Card",
+    "cashPickup": "Cash Pickup",
+    "eur": "Euro (EUR)",
+    "jod": "Jordanian Dinar (JOD)",
+    "ron": "Romanian Leu (RON)",
+    "compare": "Compare Now",
+    "resultsTitle": "Comparison Results",
+    "service": "Transfer Service",
+    "exchangeRate": "Exchange Rate",
+    "transferFee": "Transfer Fee",
+    "deliveryTime": "Delivery Time",
+    "youReceive": "You Receive",
+    "sendTransfer": "Send Transfer",
+    "disclaimer": "All estimates are approximate based on current exchange rates and information available from service providers. Final fees may vary depending on the receiving bank or payment method. Darb Study International is not responsible for payments or delays, but we provide tools for better comparison.",
+    "wise": "Wise",
+    "revolut": "Revolut",
+    "xoom": "Xoom",
+    "westernunion": "Western Union",
+    "arrivesInHours": "Arrives in hours",
+    "arrivesInDays": "1-2 business days",
+    "exchangeRateDetail": "1 ILS = {{rate}} {{currency}}",
+    "bestRecommendation": "Best Recommendation",
+    "bestRecommendationText": "To transfer {{amount}} ILS to {{country}}, the best option is <1>{{service}}</1> to <2>{{bank}}</2>: you'll receive approximately <3>{{received}} {{currency}}</3> within {{time}} at a total cost of {{fee}} ILS.",
+    "receivingBank": "Receiving Bank",
+    "bankFee": "Bank Fee",
+    "totalFee": "Total Cost"
+  },
+  "gpaCalculator": {
+    "title": "GPA Calculator (German System)",
+    "description": "Enter your grades and credit hours for each subject to calculate your GPA and its German system equivalent.",
+    "subject": "Subject",
+    "units": "Credits",
+    "grade": "Grade (0-100)",
+    "calculate": "Calculate GPA",
+    "reset": "Reset",
+    "results": "Results",
+    "yourAverage": "Your overall average is: <1>{{average}}</1>",
+    "germanGrade": "Your German system grade is: <1>{{germanGrade}}</1>",
+    "errorMinSubjects": "Please enter at least one subject with its credits and grade.",
+    "errorZeroUnits": "Total credits cannot be zero.",
+    "subjects": {
+      "arabic": "Arabic",
+      "hebrew": "Hebrew",
+      "english": "English",
+      "math": "Mathematics",
+      "history": "History",
+      "deen": "Religious Education",
+      "mdniat": "Civic Education",
+      "t5sos1": "Specialization 1",
+      "t5sos2": "Specialization 2",
+      "t5sos3": "Specialization 3"
+    }
+  },
+  "universityFinder": {
+    "title": "Tools & Calculators",
+    "subtitle": "We've compiled useful tools and guides to make your study journey to Germany smoother. Download what you need and use our tools to prepare fully.",
+    "germany": "Germany",
+    "romania": "Romania",
+    "jordan": "Jordan",
+    "gpaCalculator": "GPA Calculator",
+    "currencyComparator": "Currency Converter",
+    "costCalculator": "Cost Calculator",
+    "ctaTitle": "Found a Suitable University?",
+    "ctaSubtitle": "Darb Study International will handle the rest: file preparation, translation, and guidance until admission.",
+    "ctaButton": "Book a Free Consultation Now",
+    "germanyTab": {
+      "description": "Use the official DAAD search engine to find English-taught programs at German universities. We've filtered results to include tuition-free programs.",
+      "iframeError": "Having trouble viewing the content?",
+      "iframeErrorDetail": "Some browsers may block embedded content. You can open it directly in a new tab.",
+      "openInNewTab": "Open in a new tab"
+    },
+    "romaniaTab": {
+      "description": "Browse the official Study in Romania portal to find universities and programs. For help finding the best match, contact us.",
+      "visitPortal": "Visit StudyInRomania.gov.ro"
+    },
+    "jordanTab": {
+      "description": "Below is a curated list of recommended universities in Jordan for international students. For more details about specific programs, please contact us.",
+      "university": "University",
+      "location": "Location",
+      "tuition": "Tuition (Approximate)",
+      "website": "Website",
+      "visitWebsite": "Visit Website"
+    }
+  },
+  "resourcesPage": {
+    "title": "Student Resources & Tools",
+    "subtitle": "We've compiled useful tools and guides to make your study journey to Germany smoother. Download what you need and use our tools to prepare fully.",
+    "toolsTitle": "Useful Tools",
+    "guidesTitle": "Downloadable Guides",
+    "download": "Download",
+    "fileTypePDF": "PDF File",
+    "customGuide": {
+      "title": "Need a Custom Guide?",
+      "subtitle": "If you can't find what you're looking for or need specific information for your city or university, don't hesitate to contact us."
+    },
+    "guides": [
+      {
+        "title": "Packing Checklist: What to Pack?",
+        "description": "A comprehensive checklist of all essential items you'll need for your trip and new beginning in Germany.",
+        "fileUrl": "/downloads/what-to-pack.pdf",
+        "fileSize": "1.2MB"
+      },
+      {
+        "title": "Required Documents Guide",
+        "description": "Don't forget any important document! Use this guide to make sure all your papers are ready and organized.",
+        "fileUrl": "/downloads/required-documents.pdf",
+        "fileSize": "850KB"
+      },
+      {
+        "title": "Tips for Your First Days Abroad",
+        "description": "A guide to help you adjust quickly during your first days and weeks in Germany.",
+        "fileUrl": "/downloads/first-days-tips.pdf",
+        "fileSize": "2.1MB"
+      },
+      {
+        "title": "Heidelberg Medical Services Guide",
+        "description": "Your comprehensive guide to hospitals, doctors, and pharmacies in Heidelberg. Community contributed!",
+        "fileUrl": "/downloads/heidelberg-medical-guide.pdf"
+      }
+    ]
+  },
+  "tabs": {
+    "tools": "Interactive Tools",
+    "guides": "Guides & References"
+  },
+  "guides": {
+    "admissionGuide": {
+      "title": "University Admission Guide",
+      "description": "Everything you need to know about the admission process"
+    },
+    "visaGuide": {
+      "title": "Student Visa Guide",
+      "description": "Steps to obtain a student visa"
+    },
+    "housingGuide": {
+      "title": "Student Housing Guide",
+      "description": "Best housing options for international students"
+    },
+    "categories": {
+      "admission": "Admissions",
+      "visa": "Visas",
+      "housing": "Housing"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "questions": {
+      "costCalculator": {
+        "question": "How do I use the cost calculator?",
+        "answer": "Simply choose the country you want to study in, university type, your desired major, and accommodation type. You'll get a comprehensive estimate of all expected costs."
+      },
+      "exchangeRates": {
+        "question": "Are exchange rates up to date?",
+        "answer": "Yes, we update exchange rates daily from trusted sources. Rates are indicative and may differ slightly from actual bank rates."
+      },
+      "accuracy": {
+        "question": "How accurate are the cost estimates?",
+        "answer": "Our estimates are based on recent data from universities and official institutions. We recommend contacting us for customized estimates for your situation."
+      }
+    }
+  },
+  "banks": {
+    "n26": "N26",
+    "dkb": "DKB",
+    "sparkasse": "Sparkasse",
+    "deutsche": "Deutsche Bank",
+    "bancatransilvania": "Banca Transilvania",
+    "brd": "BRD",
+    "ing": "ING Romania",
+    "raiffeisen": "Raiffeisen Bank",
+    "arab": "Arab Bank",
+    "cairoamman": "Cairo Amman Bank",
+    "etihad": "Bank al Etihad",
+    "housing": "Housing Bank"
+  }
+}
