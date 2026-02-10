@@ -181,8 +181,8 @@
     "title": "Where We Operate",
     "items": [
       { "country": "Germany", "cities": "Heidelberg, Münster, Düsseldorf", "services": "University admissions, visas, language schools, residence permits." },
-      { "country": "Jordan", "cities": "Amman Office", "services": "Student consultations, document collection, translation, embassy coordination." },
-      { "country": "Romania", "cities": "Partner institutions in Bucharest", "services": "Medical & technical university applications, visa preparation." },
+      { "country": "Jordan", "cities": "Amman Office", "services": "New services coming soon." },
+      { "country": "Romania", "cities": "Partner institutions in Bucharest", "services": "New services coming soon." },
       { "country": "Italy", "cities": "Florence (Coming Soon)", "services": "New services coming soon." }
     ]
   },

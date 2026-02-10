@@ -190,23 +190,54 @@
     "guides": "Guides & References"
   },
   "guides": {
-    "admissionGuide": {
-      "title": "University Admission Guide",
-      "description": "Everything you need to know about the admission process"
-    },
-    "visaGuide": {
-      "title": "Student Visa Guide",
-      "description": "Steps to obtain a student visa"
-    },
-    "housingGuide": {
-      "title": "Student Housing Guide",
-      "description": "Best housing options for international students"
-    },
-    "categories": {
-      "admission": "Admissions",
-      "visa": "Visas",
-      "housing": "Housing"
-    }
+    "sectionTitle": "Guides & References",
+    "sectionSubtitle": "Original articles by Darb — written specifically for Arab 48 students looking to study in Germany",
+    "readMore": "Read More",
+    "collapse": "Close",
+    "articles": [
+      {
+        "id": "uni-path",
+        "title": "The Path to a German University: A Practical Guide for Arab 48 Students",
+        "description": "From Bagrut to university admission — every step explained",
+        "category": "Admissions",
+        "content": "If you've finished your Bagrut and decided to study in Germany, the first thing you need to understand is that the Israeli high school diploma isn't always directly recognized. In most cases, you'll need to complete a preparatory year (Studienkolleg) before starting university.\n\nThe first step is applying through uni-assist — the central institution that evaluates your credentials and determines if you qualify for direct admission or need to go through the preparatory program.\n\nIdeal Timeline:\n• 12 months before: Start learning German (aim for B1 minimum)\n• 8 months before: Prepare documents — Bagrut transcript, certified translations, passport\n• 6 months before: Apply through uni-assist (fees around €75)\n• 4 months before: Receive admission and begin visa procedures\n\nDarb's tip: Don't wait for your final Bagrut results to start preparing. Begin language learning and document collection as early as possible. Many of our students lost an entire semester because they started late."
+      },
+      {
+        "id": "visa-guide",
+        "title": "German Student Visa Step by Step: From Appointment to Stamp",
+        "description": "Embassy procedures, blocked account, insurance — everything detailed",
+        "category": "Visas",
+        "content": "As an Israeli passport holder, the student visa process for Germany is relatively straightforward but requires organization.\n\nRequired Documents:\n• Valid passport (at least 6 months validity)\n• University acceptance letter or Studienkolleg admission\n• Financial proof: Blocked account (Sperrkonto) of €11,904 annually (2025)\n• Health insurance (we recommend TK or AOK for students)\n• German language certificate (B1 minimum)\n\nHow to Book an Embassy Appointment:\nThe German Embassy in Tel Aviv — book online through the embassy website. Appointments fill up fast, so try booking at least 3 months ahead.\n\nBlocked Account (Sperrkonto):\nMost popular banks: Expatrio or Fintiba. The process is online and takes 3-5 business days. Transfer the amount and receive confirmation for the embassy.\n\nDarb's tip: Prepare a complete, organized file. The embassy can reject your application if documents are missing. Our team helps review your file before the appointment."
+      },
+      {
+        "id": "first-30-days",
+        "title": "Your First 30 Days in Germany: What Nobody Tells You",
+        "description": "Anmeldung, bank, SIM card, transport — the real starter guide",
+        "category": "Life",
+        "content": "Arrived in Germany? Congratulations! But your first month is the most important and most challenging. Here's your essential checklist:\n\n1. Anmeldung (Address Registration): Within 14 days of arrival, visit the Bürgeramt to register your address. Without this, you can't open a bank account or get insurance.\n\n2. Open a Bank Account: We recommend N26 (online and fast) or Sparkasse (branches everywhere). You'll need your passport and Anmeldung confirmation.\n\n3. Phone SIM Card: Aldi Talk or Lidl Connect — cheapest options that work well. Activation requires a video call with your passport.\n\n4. Transport: Deutschlandticket for €49/month — gets you everywhere by train and bus.\n\n5. Health Insurance: Register immediately. Without insurance, you can't enroll at university.\n\nCulture Shock? It's Normal:\n- Germans value punctuality — arriving 5 minutes late can be an issue\n- Shops are closed on Sundays — shop beforehand!\n- People may seem cold at first but it's their style, not disrespect\n\nDarb's tip: Join our WhatsApp group for new students — you'll find instant help from students who've been through it all."
+      },
+      {
+        "id": "german-language",
+        "title": "German Language: From Zero to B1 — A Realistic Plan",
+        "description": "Institutes, apps, and tips specifically for Arabic speakers",
+        "category": "Language",
+        "content": "The German language is the key to your academic and social life in Germany. The good news: as an Arabic speaker, you have an advantage — many German sounds exist in Arabic.\n\nA Realistic Plan to Reach B1 in 6-8 Months:\n\nMonths 1-2 (A1):\n• Enroll in a language school (Goethe Institut or local institute)\n• 4-5 hours of study daily\n• Use Duolingo and Anki for vocabulary\n\nMonths 3-4 (A2):\n• Start listening to simple German podcasts (Slow German)\n• Watch German series with subtitles (Dark, How to Sell Drugs Online)\n• Practice conversation with a Tandem partner\n\nMonths 5-6 (B1):\n• Focus on advanced grammar (Konjunktiv II, Passiv)\n• Write daily — even simple sentences\n• Enroll in a B1 exam preparation course\n\nRequired Language Exams:\n• Goethe-Zertifikat: Most widely accepted\n• TestDaF: Required by universities (B2-C1 level)\n• DSH: Taken at the university itself after arrival\n\nDarb's tip: Don't wait until you arrive in Germany to start learning. Every day you start earlier saves you a month there."
+      },
+      {
+        "id": "housing",
+        "title": "Student Housing in Germany: How to Find an Apartment Without Losing Your Mind",
+        "description": "Studentenwerk, WG-Gesucht, city prices, and avoiding scams",
+        "category": "Housing",
+        "content": "Finding housing in Germany — especially in big cities — can be a real challenge. But with the right planning, you'll manage.\n\nTypes of Housing:\n1. Student Dorm (Studentenwohnheim): Cheapest (€200-350/month). Apply through Studierendenwerk as soon as you receive admission — waiting lists are long!\n2. Shared Apartment (WG): Most popular among students (€300-500). WG-Gesucht.de is the main platform.\n3. Private Apartment (€500-800+): More expensive but more privacy.\n\nRent by City (Monthly Average):\n• Heidelberg: €350-450\n• Münster: €300-400\n• Düsseldorf: €400-550\n• Berlin: €400-600\n• Munich: €500-750\n\n⚠️ Watch Out for Scams:\n• Never transfer money before seeing the apartment (even via video)\n• If the offer seems too cheap — it's probably a scam\n• Don't use Western Union for payment\n• Trusted platform: WG-Gesucht.de only\n\nDarb's tip: We offer housing assistance — we contact landlords and arrange everything before you arrive."
+      },
+      {
+        "id": "living-costs",
+        "title": "Real Living Costs in Germany 2025: A Detailed Monthly Budget",
+        "description": "Rent, food, transport, insurance — real numbers by city",
+        "category": "Costs",
+        "content": "Many websites tell you living in Germany is cheap. The truth? It depends on the city and your lifestyle.\n\nRealistic Monthly Budget (Medium City like Heidelberg or Münster):\n\n• Rent (WG): €350-400\n• Food & groceries: €200-250\n• Health insurance: €120 (for students)\n• Deutschlandticket: €49\n• Phone & internet: €15-25\n• Personal needs: €50\n• Entertainment: €50-100\n\nTotal: €834-994/month\n\nComparison with Expensive Cities:\n• Munich: Add €150-200 to rent\n• Berlin: Add €50-100\n• Eastern Germany (Leipzig, Dresden): Save €100-150\n\nHow to Save:\n• Cook at home — eating out is expensive\n• Use discount apps: Too Good To Go, Lidl Plus\n• Buy second-hand: eBay Kleinanzeigen for furniture and appliances\n• The blocked account gives you ~€992/month — enough if you budget well\n\nDarb's tip: Use our Cost Calculator to get a customized estimate for your city and major."
+      }
+    ]
   },
   "faq": {
     "title": "Frequently Asked Questions",

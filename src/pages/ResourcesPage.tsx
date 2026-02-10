@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
-import ResourceCard from '@/components/resources/ResourceCard';
-import { Calculator, DollarSign, GraduationCap, FileText, Globe, Users, ArrowLeft } from 'lucide-react';
+import GuidesReferences from '@/components/resources/GuidesReferences';
+import { Calculator, DollarSign, GraduationCap, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 
@@ -48,30 +48,14 @@ const ToolsSection = ({ tools }: { tools: { id: string; title: string; descripti
   );
 };
 
-const GuidesSection = ({ guides }: { guides: { title: string; description: string; icon: any; link: string; category: string }[] }) => {
+const GuidesSection = () => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-  const { t } = useTranslation('resources');
 
   return (
     <section className="py-12 md:py-20 bg-muted/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-10">{t('tabs.guides')}</h2>
-        <div ref={ref} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {guides.map((guide, index) => (
-            <div
-              key={index}
-              className={inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}
-              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
-            >
-              <ResourceCard
-                title={guide.title}
-                description={guide.description}
-                icon={guide.icon}
-                link={guide.link}
-                category={guide.category}
-              />
-            </div>
-          ))}
+        <div ref={ref} className={inView ? 'animate-fade-in' : 'opacity-0'}>
+          <GuidesReferences />
         </div>
       </div>
     </section>
@@ -87,11 +71,6 @@ const ResourcesPage = () => {
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
   ];
 
-  const guides = [
-    { title: t('guides.admissionGuide.title'), description: t('guides.admissionGuide.description'), icon: FileText, link: '#', category: t('guides.categories.admission') },
-    { title: t('guides.visaGuide.title'), description: t('guides.visaGuide.description'), icon: Globe, link: '#', category: t('guides.categories.visa') },
-    { title: t('guides.housingGuide.title'), description: t('guides.housingGuide.description'), icon: Users, link: '#', category: t('guides.categories.housing') },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,7 +91,7 @@ const ResourcesPage = () => {
       </section>
 
       <ToolsSection tools={tools} />
-      <GuidesSection guides={guides} />
+      <GuidesSection />
 
       {/* FAQ Section */}
       <section className="py-12 md:py-20">
