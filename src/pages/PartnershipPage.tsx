@@ -11,18 +11,20 @@ import TrustSection from "@/components/partnership/TrustSection";
 import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
 import ClosingCta from "@/components/partnership/ClosingCta";
+import SEOHead from "@/components/common/SEOHead";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 
 const PartnershipPage = () => {
-    const { t } = useTranslation('partnership');
+    const { t } = useTranslation(['partnership', 'common']);
     const { dir } = useDirection();
     useEffect(() => {
-        document.title = t('partnershipPage.title');
+        document.title = t('partnershipPage.title', { ns: 'partnership' });
     }, [t]);
 
     return (
         <div dir={dir} className="flex flex-col min-h-screen bg-secondary text-foreground">
+            <SEOHead title={t('seo.partnershipTitle', { ns: 'common' })} description={t('seo.partnershipDesc', { ns: 'common' })} />
             <Header />
             <main className="flex-grow">
                 <PartnershipHero />

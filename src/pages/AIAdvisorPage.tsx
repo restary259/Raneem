@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot, User, Loader2, Trash2, WifiOff, GraduationCap, FileText, Globe, Home as HomeIcon } from 'lucide-react';
 import { useAIChat } from '@/hooks/useAIChat';
+import SEOHead from '@/components/common/SEOHead';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 
@@ -35,6 +36,7 @@ const AIAdvisorPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={dir}>
+      <SEOHead title={t('seo.advisorTitle')} description={t('seo.advisorDesc')} />
       <Header />
 
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">

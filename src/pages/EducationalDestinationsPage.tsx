@@ -8,6 +8,7 @@ import UniversityCard from '@/components/educational/UniversityCard';
 import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
 import ServiceCard from '@/components/educational/ServiceCard';
 import { universities, languageSchools, services } from '@/data/educationalDestinations';
+import SEOHead from '@/components/common/SEOHead';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 
@@ -16,6 +17,7 @@ const EducationalDestinationsPage = () => {
   const { dir } = useDirection();
 
   return <div className="min-h-screen bg-background" dir={dir}>
+      <SEOHead title={t('seo.edDestTitle')} description={t('seo.edDestDesc')} />
       <Header />
       <section className="py-20 bg-gradient-to-b from-orange-50 to-background">
         <div className="container mx-auto px-4">

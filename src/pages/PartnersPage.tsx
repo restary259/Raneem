@@ -7,9 +7,10 @@ import EnhancedPartnersPage from '@/components/partners/EnhancedPartnersPage';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Users, GraduationCap, Award } from 'lucide-react';
+import SEOHead from '@/components/common/SEOHead';
 
 const PartnersPage = () => {
-  const { t } = useTranslation('partners');
+  const { t } = useTranslation(['partners', 'common']);
 
   const stats = [
     {
@@ -40,6 +41,7 @@ const PartnersPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title={t('seo.partnersTitle', { ns: 'common' })} description={t('seo.partnersDesc', { ns: 'common' })} />
       <Header />
 
       {/* Hero Section */}

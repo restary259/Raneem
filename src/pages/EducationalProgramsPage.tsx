@@ -9,10 +9,13 @@ import HeroSection from '@/components/educational/HeroSection';
 import SearchAndFilter from '@/components/educational/SearchAndFilter';
 import NoResults from '@/components/educational/NoResults';
 import CTASection from '@/components/educational/CTASection';
+import SEOHead from '@/components/common/SEOHead';
 import { useDirection } from '@/hooks/useDirection';
+import { useTranslation } from 'react-i18next';
 
 const EducationalProgramsPage = () => {
   const { dir } = useDirection();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<SubMajor | null>(null);
@@ -69,6 +72,7 @@ const EducationalProgramsPage = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
+      <SEOHead title={t('seo.edProgTitle')} description={t('seo.edProgDesc')} />
       <Header />
       <HeroSection />
       <SearchAndFilter

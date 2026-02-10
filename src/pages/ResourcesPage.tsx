@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
+import SEOHead from '@/components/common/SEOHead';
 import { Calculator, DollarSign, GraduationCap, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
@@ -71,9 +71,9 @@ const ResourcesPage = () => {
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
   ];
 
-
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title={t('seo.resourcesTitle', { ns: 'common' })} description={t('seo.resourcesDesc', { ns: 'common' })} />
       <Header />
       
       {/* Hero Section */}

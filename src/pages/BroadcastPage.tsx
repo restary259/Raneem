@@ -6,11 +6,12 @@ import VideoCategories from '@/components/broadcast/VideoCategories';
 import VideoGallery from '@/components/broadcast/VideoGallery';
 import SubmitVideo from '@/components/broadcast/SubmitVideo';
 import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
+import SEOHead from '@/components/common/SEOHead';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 
 const BroadcastPage = () => {
-  const { t } = useTranslation('broadcast');
+  const { t } = useTranslation(['broadcast', 'common']);
   const { dir } = useDirection();
   const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
 
@@ -36,6 +37,7 @@ const BroadcastPage = () => {
 
   return (
     <div dir={dir} className="bg-background dark:bg-gray-950">
+      <SEOHead title={t('seo.broadcastTitle', { ns: 'common' })} description={t('seo.broadcastDesc', { ns: 'common' })} />
       <Header />
       <main>
         <HeroVideo post={featuredVideo} />

@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ServiceProcess from "@/components/services/ServiceProcess";
+import SEOHead from "@/components/common/SEOHead";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 
 const iconMap: Record<string, any> = { Users, UserCheck, FileText, Globe, Handshake, Award, ShieldCheck, HeartHandshake, Lightbulb, TrendingUp, Star, BookOpenCheck, Briefcase };
 
 const WhoWeArePage = () => {
-  const { t } = useTranslation('about');
+  const { t } = useTranslation(['about', 'common']);
   const { dir } = useDirection();
 
   const features = (t('whoWeAre.features', { returnObjects: true }) as any[]).map((f: any) => ({
@@ -26,6 +27,7 @@ const WhoWeArePage = () => {
   }));
 
   return <div className="flex flex-col min-h-screen bg-background text-foreground" dir={dir}>
+            <SEOHead title={t('seo.whoWeAreTitle', { ns: 'common' })} description={t('seo.whoWeAreDesc', { ns: 'common' })} />
             <Header />
             <main className="flex-grow">
                 <section className="relative bg-background py-24 md:py-36 text-center text-white">
