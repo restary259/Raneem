@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: string | null
+          id: string
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
+      ai_chat_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message_preview: string | null
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_preview?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_preview?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
@@ -96,6 +150,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
       }
       payments: {
         Row: {

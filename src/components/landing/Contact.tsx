@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -34,13 +35,14 @@ const Contact = () => {
     defaultValues: { name: "", email: "", whatsapp: "", message: "" },
   });
 
+  const [honeypot, setHoneypot] = useState('');
+
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      console.log('🚀 Submitting contact form:', values);
-      
       const result = await supabase.functions.invoke('send-email', {
         body: {
           form_source: 'Contact Page Form',
+          honeypot,
           ...values,
         },
       });
@@ -132,6 +134,17 @@ const Contact = () => {
                 <FormField control={form.control} name="message" render={({ field }) => (
                   <FormItem><FormLabel>{t('contact.form.message')}</FormLabel><FormControl><Textarea placeholder={t('contact.form.messagePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+                {/* Honeypot anti-spam - invisible to humans */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
                 <Button type="submit" className="w-full font-bold" size="lg" variant="default" disabled={isPending}>
                   {isPending ? "جار الإرسال... ⏳" : t('contact.form.submit')}
                 </Button>

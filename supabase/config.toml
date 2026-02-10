@@ -7,3 +7,7 @@ verify_jwt = false
 verify_jwt = false
 [functions.push-notify]
 verify_jwt = false
+[functions.auth-guard]
+verify_jwt = false
+[functions.admin-verify]
+verify_jwt = false

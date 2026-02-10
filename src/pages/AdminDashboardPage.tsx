@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-
-const ADMIN_EMAIL = "ranimdwahde3@gmail.com";
+import { Shield, AlertTriangle } from "lucide-react";
 
 const downloadCSV = (rows: any[], fileName = "export.csv") => {
   if (!rows.length) return;
@@ -37,6 +36,8 @@ const AdminDashboardPage = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [contactSearch, setContactSearch] = useState("");
   const navigate = useNavigate();
@@ -51,20 +52,27 @@ const AdminDashboardPage = () => {
       }
       setUser(session.user);
 
-      // Check admin role
-      if (session.user.email !== ADMIN_EMAIL) {
-        toast({ variant: "destructive", title: "غير مصرح", description: "ليس لديك صلاحية الوصول." });
+      // Server-side admin verification via edge function
+      try {
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-verify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ action: 'dashboard_access' }),
+        });
+
+        const result = await resp.json();
+        if (!result.isAdmin) {
+          toast({ variant: "destructive", title: "غير مصرح", description: "ليس لديك صلاحية الوصول." });
+          navigate('/');
+          return;
+        }
+      } catch {
+        toast({ variant: "destructive", title: "خطأ", description: "فشل التحقق من الصلاحيات." });
         navigate('/');
         return;
-      }
-
-      // Verify via DB role
-      const { data: roles } = await (supabase as any).from("user_roles").select("role").eq("user_id", session.user.id);
-      const hasAdmin = roles?.some((r: any) => r.role === 'admin');
-      
-      if (!hasAdmin) {
-        // Auto-assign admin role for the admin email
-        await (supabase as any).from("user_roles").insert({ user_id: session.user.id, role: 'admin' });
       }
 
       setIsAdmin(true);
@@ -76,18 +84,22 @@ const AdminDashboardPage = () => {
   }, [navigate, toast]);
 
   const fetchAllData = async () => {
-    const [p, s, pay, docs, con] = await Promise.all([
+    const [p, s, pay, docs, con, audit, logins] = await Promise.all([
       (supabase as any).from("profiles").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("services").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("payments").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("documents").select("id, student_id, file_name, category, file_type, file_size, created_at, expiry_date").order("created_at", { ascending: false }),
       (supabase as any).from("contact_submissions").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(100),
+      (supabase as any).from("login_attempts").select("*").order("created_at", { ascending: false }).limit(200),
     ]);
     if (p.data) setStudents(p.data);
     if (s.data) setServices(s.data);
     if (pay.data) setPayments(pay.data);
     if (docs.data) setDocuments(docs.data);
     if (con.data) setContacts(con.data);
+    if (audit.data) setAuditLogs(audit.data);
+    if (logins.data) setLoginAttempts(logins.data);
   };
 
   const updateContactStatus = async (id: string, status: string) => {
@@ -106,13 +118,20 @@ const AdminDashboardPage = () => {
   const totalPayments = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
   const newContacts = contacts.filter((c: any) => c.status === 'new').length;
 
+  // Security alerts: 10+ failed logins for same email in last hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const recentFailed = loginAttempts.filter(a => !a.success && a.created_at >= oneHourAgo);
+  const emailCounts: Record<string, number> = {};
+  recentFailed.forEach(a => { emailCounts[a.email] = (emailCounts[a.email] || 0) + 1; });
+  const suspiciousEmails = Object.entries(emailCounts).filter(([, c]) => c >= 10);
+
   const filteredStudents = students.filter((s: any) =>
     !search || s.full_name?.toLowerCase().includes(search.toLowerCase()) || s.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   const filteredContacts = contacts.filter((c: any) =>
-    !contactSearch || 
-    c.data?.name?.toLowerCase().includes(contactSearch.toLowerCase()) || 
+    !contactSearch ||
+    c.data?.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
     c.data?.email?.toLowerCase().includes(contactSearch.toLowerCase())
   );
 
@@ -128,6 +147,20 @@ const AdminDashboardPage = () => {
         </div>
       </header>
 
+      {suspiciousEmails.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 mt-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+            <div>
+              <h3 className="font-bold text-red-800">تنبيه أمني</h3>
+              <p className="text-sm text-red-700">
+                محاولات تسجيل دخول مشبوهة ({suspiciousEmails.map(([e, c]) => `${e}: ${c} محاولة`).join(', ')})
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 flex-wrap">
@@ -137,6 +170,11 @@ const AdminDashboardPage = () => {
             <TabsTrigger value="documents">المستندات ({documents.length})</TabsTrigger>
             <TabsTrigger value="services">الخدمات ({services.length})</TabsTrigger>
             <TabsTrigger value="payments">المدفوعات</TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-1">
+              <Shield className="h-3 w-3" />
+              الأمان
+            </TabsTrigger>
+            <TabsTrigger value="audit">سجل النشاط</TabsTrigger>
           </TabsList>
 
           {/* Overview */}
@@ -275,6 +313,60 @@ const AdminDashboardPage = () => {
               </table>
               {payments.length === 0 && <p className="p-8 text-center text-muted-foreground">لا توجد مدفوعات</p>}
             </div>
+          </TabsContent>
+
+          {/* Security */}
+          <TabsContent value="security">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5" /> محاولات تسجيل الدخول الأخيرة</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead><tr className="bg-gray-50 border-b"><th className="px-4 py-3 text-right">البريد</th><th className="px-4 py-3 text-right">IP</th><th className="px-4 py-3 text-right">النتيجة</th><th className="px-4 py-3 text-right">التاريخ</th></tr></thead>
+                      <tbody>
+                        {loginAttempts.slice(0, 50).map((a: any) => (
+                          <tr key={a.id} className={`border-b ${!a.success ? 'bg-red-50/50' : ''}`}>
+                            <td className="px-4 py-3">{a.email}</td>
+                            <td className="px-4 py-3 font-mono text-xs">{a.ip_address || '—'}</td>
+                            <td className="px-4 py-3">
+                              <Badge variant={a.success ? 'default' : 'destructive'}>{a.success ? 'نجاح' : 'فشل'}</Badge>
+                            </td>
+                            <td className="px-4 py-3 text-xs">{new Date(a.created_at).toLocaleString('ar')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {loginAttempts.length === 0 && <p className="p-8 text-center text-muted-foreground">لا توجد محاولات</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Audit Log */}
+          <TabsContent value="audit">
+            <Card>
+              <CardHeader><CardTitle>سجل نشاط المدير</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead><tr className="bg-gray-50 border-b"><th className="px-4 py-3 text-right">الإجراء</th><th className="px-4 py-3 text-right">الجدول</th><th className="px-4 py-3 text-right">التفاصيل</th><th className="px-4 py-3 text-right">التاريخ</th></tr></thead>
+                    <tbody>
+                      {auditLogs.map((log: any) => (
+                        <tr key={log.id} className="border-b">
+                          <td className="px-4 py-3 font-medium">{log.action}</td>
+                          <td className="px-4 py-3">{log.target_table || '—'}</td>
+                          <td className="px-4 py-3 text-xs">{log.details || '—'}</td>
+                          <td className="px-4 py-3 text-xs">{new Date(log.created_at).toLocaleString('ar')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {auditLogs.length === 0 && <p className="p-8 text-center text-muted-foreground">لا يوجد نشاط مسجل</p>}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
