@@ -8,6 +8,7 @@
     <meta name="description" content="من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج. نقدم استشارات تعليمية، قبولات جامعية، خدمات التأشيرة والسكن." />
     <meta name="author" content="Darb Study Pathways" />
     <meta name="keywords" content="دراسة في الخارج، جامعات، تعليم، استشارات تعليمية، تأشيرة طالب، سكن طلابي" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#F28C28" />
@@ -132,6 +133,29 @@
     <div id="root"></div>
     
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "درب للدراسة في الخارج",
+      "alternateName": "Darb Study Pathways",
+      "url": "https://darb-agency.lovable.app",
+      "logo": "https://darb-agency.lovable.app/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+      "description": "Education consultancy agency helping Arab students study in Germany",
+      "sameAs": [
+        "https://www.instagram.com/darb_studyingermany/",
+        "https://www.tiktok.com/@darb_studyingrmany",
+        "https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["Arabic", "English", "German"]
+      }
+    }
+    </script>
     
     <!-- PWA Loading Script -->
     <script>

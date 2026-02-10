@@ -1,4 +1,4 @@
-git add vercel.json && git commit -m "Add vercel.json for Vercel SPA routing" && git push{
+{
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]

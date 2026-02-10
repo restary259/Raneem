@@ -236,5 +236,38 @@
     "successTitle": "Your message was sent successfully! ✅",
     "successDesc": "Thank you for contacting us. One of our advisors will reply to you soon.",
     "errorTitle": "Error sending message ❌"
+  },
+  "offline": {
+    "message": "You are offline — using locally saved version"
+  },
+  "seo": {
+    "indexTitle": "Darb — Your Global Study Companion for Studying in Germany",
+    "indexDesc": "Educational consultations, university admissions, visas, housing and more. Your bridge to studying abroad.",
+    "aboutTitle": "About Us — Darb Study Pathways",
+    "aboutDesc": "Learn about the Darb team, our vision, and our values in guiding students to study in Germany.",
+    "servicesTitle": "Our Services — Darb Study in Germany",
+    "servicesDesc": "Comprehensive services from university admission to arrival — visas, language courses, housing, and ongoing support.",
+    "contactTitle": "Contact Us — Darb",
+    "contactDesc": "Get in touch with Darb for a free consultation about studying in Germany.",
+    "partnershipTitle": "Become an Agent — Earn with Darb",
+    "partnershipDesc": "Join Darb's agent network and earn commissions by helping students study in Germany.",
+    "resourcesTitle": "Guides & Resources — Darb",
+    "resourcesDesc": "Practical guides, cost calculators, and tools for Arab students planning to study in Germany.",
+    "edDestTitle": "Educational Destinations — Darb",
+    "edDestDesc": "Discover universities, language schools, and educational services in Germany.",
+    "edProgTitle": "Academic Majors — Darb",
+    "edProgDesc": "Browse available academic majors and find the right career path for your ambitions.",
+    "quizTitle": "Find Your Major — Darb",
+    "quizDesc": "Discover the most suitable university major for you in Germany with our AI quiz.",
+    "advisorTitle": "AI Advisor — Darb",
+    "advisorDesc": "Talk to Darb's AI advisor about admissions, visas, language, and student life in Germany.",
+    "broadcastTitle": "Darb Broadcast",
+    "broadcastDesc": "Watch educational and live videos from our experts about studying in Germany.",
+    "partnersTitle": "Our Partners — Darb",
+    "partnersDesc": "Browse our accredited university and institutional partners around the world.",
+    "locationsTitle": "Our Locations — Darb",
+    "locationsDesc": "Discover Darb's office locations and where we operate around the world.",
+    "whoWeAreTitle": "Who We Are — Darb",
+    "whoWeAreDesc": "Learn about Darb's story, team, values, and what sets us apart in education consulting."
   }
 }
