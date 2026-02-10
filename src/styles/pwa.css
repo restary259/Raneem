@@ -34,8 +34,3 @@
     overscroll-behavior-y: contain;
   }
 }
-
-  .pwa-content {
-    @apply px-4 py-6 pb-20;
-  }
-}
