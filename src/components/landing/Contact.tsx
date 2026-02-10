@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import Map from "./Map";
 import OfficeLocations from "./OfficeLocations";
-import { Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
+import { Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 import TikTokIcon from "../icons/TikTokIcon";
@@ -152,9 +152,10 @@ const Contact = () => {
             <div className="bg-background/80 backdrop-blur-sm border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
               <h3 className="text-xl font-semibold mb-4 text-center">{t('contact.follow')}</h3>
               <div className="flex justify-center items-center gap-6">
-                <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
-                <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
-                <a href="https://www.facebook.com/DARB_STUDYINGERMANY" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
+                <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
+                <a href="https://www.tiktok.com/@darb_studyingrmany" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
+                <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
+                <a href="https://api.whatsapp.com/message/IVC4VCAEJ6TBD1" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
               </div>
             </div>
           </div>

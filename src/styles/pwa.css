@@ -1,39 +1,6 @@
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer components {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .pl-safe {
-    padding-left: env(safe-area-inset-left);
-  }
-
-  .pr-safe {
-    padding-right: env(safe-area-inset-right);
-  }
-
-  .pwa-container {
-    @apply max-w-md mx-auto bg-white min-h-screen;
-  }
-
-  .pwa-content {
-    @apply px-4 py-6 pb-20;
-  }
-}
-
-/* Standalone mode adjustments - hide browser-specific UI */
+/* PWA standalone mode adjustments */
 @media all and (display-mode: standalone) {
   body {
-    -webkit-user-select: none;
-    user-select: auto;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
   }
