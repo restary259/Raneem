@@ -23,30 +23,6 @@
     "currency": "ILS",
     "note": "Figures are approximate and depend on performance. The program is currently available for studying in Germany only."
   },
-  "registrationForm": {
-    "title": "Join Our Agent Network",
-    "description": "Fill out the form below and our team will review your application within 3-5 business days and get back to you soon.",
-    "fullName": "Full Name",
-    "countryCity": "Country / City",
-    "email": "Email",
-    "phone": "Phone Number (with country code)",
-    "preferredContact": "Preferred Contact Method",
-    "contactOptions": {
-      "whatsapp": "WhatsApp",
-      "call": "Phone Call",
-      "email": "Email"
-    },
-    "aboutYou": "About You or Your Background (optional)",
-    "previousExperience": "Do you have prior experience in student services or sales?",
-    "experienceOptions": {
-      "yes": "Yes",
-      "no": "No"
-    },
-    "whyDarb": "What makes you interested in representing Darb?",
-    "attachment": "Upload Optional Attachment (CV / License / ID)",
-    "submit": "Submit Your Application Now",
-    "success": "Your application was submitted successfully! We'll get back to you soon."
-  },
   "agentToolkit": {
     "title": "Everything You Need to Succeed",
     "teaser": "We work hand-in-hand with you to provide marketing support and the information needed to engage with students. Your success is our success.",
@@ -89,6 +65,9 @@
       "error": "An error occurred. Please try again."
     }
   },
+  "trustSection": {
+    "title": "Built on Transparency & Trust",
+    "pillars": [
       { "icon": "Eye", "title": "Clear Processes", "description": "Every step is documented and visible" },
       { "icon": "Scale", "title": "Fair Commission Rules", "description": "20-day protection period for everyone" },
       { "icon": "Building2", "title": "Professional Structure", "description": "Organized monthly cycles and historical data" }
