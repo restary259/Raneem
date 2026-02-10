@@ -132,7 +132,7 @@ const AIAdvisorPage = () => {
         </div>
 
         {/* Input bar */}
-        <div className="border-t bg-background p-3 md:p-4 sticky bottom-0">
+        <div className="border-t bg-background p-3 md:p-4 sticky bottom-0 pb-20 md:pb-4">
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
             className="flex gap-2 max-w-2xl mx-auto"

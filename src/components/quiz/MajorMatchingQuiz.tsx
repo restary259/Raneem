@@ -190,8 +190,8 @@ const MajorMatchingQuiz = () => {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6 p-8">
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-6">
+            <CardContent className="space-y-6 p-4 sm:p-6 md:p-8">
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 sm:p-6">
                 <h3 className="text-xl font-bold text-primary mb-3 flex items-center gap-2">
                   <GraduationCap className="h-6 w-6" />
                   التخصص المقترح لك:
@@ -316,7 +316,7 @@ const MajorMatchingQuiz = () => {
             </div>
           </CardHeader>
           
-          <CardContent className="space-y-6 p-8">
+          <CardContent className="space-y-6 p-4 sm:p-6 md:p-8">
             <div className="text-center">
               <h3 className="text-xl font-semibold mb-6 text-gray-800 leading-relaxed">
                 {currentQ.question}

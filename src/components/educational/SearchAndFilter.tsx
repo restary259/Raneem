@@ -58,7 +58,7 @@ const SearchAndFilter = ({
 
           {/* Filter Section with Dropdown */}
           <div className="flex items-center justify-between">
-            <div className="relative">
+            <div className="relative min-w-0">
               <Button
                 variant="outline"
                 onClick={toggleFilters}

@@ -1,4 +1,8 @@
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer components {
   .bottom-nav-item {
     @apply flex flex-col items-center justify-center min-w-[52px] min-h-[52px] px-1.5 py-2 rounded-lg transition-all duration-200;
@@ -79,11 +83,6 @@
       padding-inline: clamp(0.3rem, 1vw, 0.8rem);
     }
     
-    /* Enhanced mobile header adjustments */
-    header {
-      height: 64px !important;
-    }
-    
     header .container {
       padding-inline: clamp(1rem, 4vw, 1.5rem);
     }
@@ -105,10 +104,6 @@
     .nav-item {
       font-size: 0.7rem;
       padding-inline: 0.4rem;
-    }
-    
-    header {
-      height: 60px !important;
     }
     
     header .container {

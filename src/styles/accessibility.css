@@ -1,4 +1,8 @@
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer utilities {
   @media (prefers-contrast: high) {
     .bottom-nav-item {
