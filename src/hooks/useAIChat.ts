@@ -11,7 +11,7 @@ export const QUICK_QUESTIONS = [
   'كم تكلفة المعيشة في ألمانيا؟',
 ];
 
-export const useAIChat = (persistHistory = false) => {
+export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'general') => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +78,7 @@ export const useAIChat = (persistHistory = false) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages }),
+        body: JSON.stringify({ messages: allMessages, mode }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -156,7 +156,7 @@ export const useAIChat = (persistHistory = false) => {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [messages, isLoading, isOnline]);
+  }, [messages, isLoading, isOnline, mode]);
 
   const handleClearHistory = useCallback(() => {
     setMessages([]);

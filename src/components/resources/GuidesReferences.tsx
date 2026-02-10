@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BookOpen, 
   FileText, 
@@ -20,7 +19,7 @@ interface Guide {
   title: string;
   description: string;
   type: 'pdf' | 'video' | 'article' | 'checklist';
-  country: 'germany' | 'romania' | 'jordan' | 'general';
+  country: 'germany' | 'general';
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   duration: string;
   downloadUrl?: string;
@@ -60,7 +59,7 @@ const guides: Guide[] = [
   {
     id: '3',
     title: 'قائمة مراجعة ما قبل السفر',
-    description: 'قائمة شاملة بكل ما تحتاج إلى تجهيزه قبل السفر للدراسة',
+    description: 'قائمة شاملة بكل ما تحتاج إلى تجهيزه قبل السفر للدراسة في ألمانيا',
     type: 'checklist',
     country: 'general',
     difficulty: 'beginner',
@@ -69,24 +68,10 @@ const guides: Guide[] = [
     views: 2100,
     rating: 4.9,
     tags: ['تحضير', 'سفر', 'مستندات']
-  },
-  {
-    id: '4',
-    title: 'التعليم الطبي في رومانيا',
-    description: 'دليل شامل للدراسة الطبية في رومانيا والجامعات المعتمدة',
-    type: 'article',
-    country: 'romania',
-    difficulty: 'intermediate',
-    duration: '20 دقيقة قراءة',
-    externalUrl: '/resources/medical-studies-romania',
-    views: 650,
-    rating: 4.6,
-    tags: ['طب', 'رومانيا', 'جامعات']
   }
 ];
 
 const GuidesReferences = () => {
-  const [selectedCountry, setSelectedCountry] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
   const getTypeIcon = (type: string) => {
@@ -128,9 +113,7 @@ const GuidesReferences = () => {
   };
 
   const filteredGuides = guides.filter(guide => {
-    const countryMatch = selectedCountry === 'all' || guide.country === selectedCountry || guide.country === 'general';
-    const typeMatch = selectedType === 'all' || guide.type === selectedType;
-    return countryMatch && typeMatch;
+    return selectedType === 'all' || guide.type === selectedType;
   });
 
   const GuideCard = ({ guide }: { guide: Guide }) => {
@@ -204,86 +187,41 @@ const GuidesReferences = () => {
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-primary">الأدلة والمراجع</h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          مجموعة شاملة من الأدلة والموارد لمساعدتك في كل خطوة من رحلة دراستك في الخارج
+          مجموعة شاملة من الأدلة والموارد لمساعدتك في كل خطوة من رحلة دراستك في ألمانيا
         </p>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="all" onClick={() => setSelectedCountry('all')}>
-              الكل
-            </TabsTrigger>
-            <TabsTrigger value="germany" onClick={() => setSelectedCountry('germany')}>
-              ألمانيا
-            </TabsTrigger>
-            <TabsTrigger value="romania" onClick={() => setSelectedCountry('romania')}>
-              رومانيا
-            </TabsTrigger>
-            <TabsTrigger value="jordan" onClick={() => setSelectedCountry('jordan')}>
-              الأردن
-            </TabsTrigger>
-          </TabsList>
+      <div className="flex gap-2 justify-center mb-6">
+        <Button
+          variant={selectedType === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedType('all')}
+        >
+          جميع الأنواع
+        </Button>
+        <Button
+          variant={selectedType === 'pdf' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedType('pdf')}
+        >
+          <FileText className="h-4 w-4 mr-1" />
+          PDF
+        </Button>
+        <Button
+          variant={selectedType === 'video' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedType('video')}
+        >
+          <Video className="h-4 w-4 mr-1" />
+          فيديو
+        </Button>
+      </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant={selectedType === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedType('all')}
-            >
-              جميع الأنواع
-            </Button>
-            <Button
-              variant={selectedType === 'pdf' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedType('pdf')}
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              PDF
-            </Button>
-            <Button
-              variant={selectedType === 'video' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedType('video')}
-            >
-              <Video className="h-4 w-4 mr-1" />
-              فيديو
-            </Button>
-          </div>
-        </div>
-
-        <TabsContent value="all" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGuides.map((guide) => (
-              <GuideCard key={guide.id} guide={guide} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="germany" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGuides.map((guide) => (
-              <GuideCard key={guide.id} guide={guide} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="romania" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGuides.map((guide) => (
-              <GuideCard key={guide.id} guide={guide} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="jordan" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGuides.map((guide) => (
-              <GuideCard key={guide.id} guide={guide} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredGuides.map((guide) => (
+          <GuideCard key={guide.id} guide={guide} />
+        ))}
+      </div>
     </div>
   );
 };

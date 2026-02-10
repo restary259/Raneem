@@ -23,6 +23,9 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import QuizPage from "./pages/QuizPage";
 import AIAdvisorPage from "./pages/AIAdvisorPage";
+import CostCalculatorPage from "./pages/CostCalculatorPage";
+import CurrencyConverterPage from "./pages/CurrencyConverterPage";
+import BagrutCalculatorPage from "./pages/BagrutCalculatorPage";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import BottomNav from "./components/common/BottomNav";
@@ -113,6 +116,9 @@ const App = () => {
             <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
             <Route path="/educational-programs" element={<EducationalProgramsPage />} />
             <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/resources/cost-calculator" element={<CostCalculatorPage />} />
+            <Route path="/resources/currency-converter" element={<CurrencyConverterPage />} />
+            <Route path="/resources/bagrut-calculator" element={<BagrutCalculatorPage />} />
             <Route path="/broadcast" element={<BroadcastPage />} />
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/student-dashboard" element={<StudentDashboardPage />} />
