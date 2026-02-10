@@ -1,245 +1,278 @@
+Plan: Mobile Layout Fix, PWA Maintenance, Social Links, Content Updates
 
-# Plan: Full Bilingual Scan Fix -- Translate All Remaining Hardcoded Arabic
+Overview
+This plan addresses 5 priority areas: (1) mobile layout rendering fix for in-app browsers, (2) keep and harden PWA behavior with a lightweight install prompt, (3) Contact page social links fix, (4) Guides section original content, and (5) Locations description updates. A header navigation recommendation is provided separately at the end.
 
-## Problem Summary
-After scanning the entire codebase, there are **20+ components and 3 data files** with hardcoded Arabic text that does NOT respond to the language switcher. When a user switches to English, these sections remain in Arabic, breaking the bilingual experience.
+1. Mobile Layout Fix (TOP PRIORITY)
 
----
+Goal: Website must render correctly on mobile screens when opened from Instagram, WhatsApp, or other in-app browsers — no horizontal scrolling, edge-to-edge layout.
 
-## Affected Areas (Grouped by Priority)
+Changes
 
-### Group 1: Pages with hardcoded `dir="rtl"` (must be dynamic)
+index.html
 
-These pages have `dir="rtl"` hardcoded on their root div. They need to use the `useDirection()` hook instead.
+Update viewport meta to:
 
-| Page | Line |
-|------|------|
-| `src/pages/Index.tsx` | `dir="rtl"` |
-| `src/pages/ContactPage.tsx` | `dir="rtl"` |
-| `src/pages/ServicesPage.tsx` | `dir="rtl"` |
-| `src/pages/LocationsPage.tsx` | `dir="rtl"` |
-| `src/pages/PartnershipPage.tsx` | `dir="rtl"` |
-| `src/pages/BroadcastPage.tsx` | `dir="rtl"` (2 places) |
-| `src/pages/EducationalProgramsPage.tsx` | `dir="rtl"` |
-| `src/pages/BagrutCalculatorPage.tsx` | `dir="rtl"` |
-| `src/pages/CostCalculatorPage.tsx` | `dir="rtl"` |
-| `src/pages/CurrencyConverterPage.tsx` | `dir="rtl"` |
-| `src/pages/AdminDashboardPage.tsx` | `dir="rtl"` |
-| `src/pages/WhoWeArePage.tsx` | `dir="rtl" lang="ar"` |
-| `src/components/landing/ContactHero.tsx` | `dir="rtl"` |
-| `src/components/common/PWAInstaller.tsx` | `dir="rtl"` |
-| `src/components/educational/MajorModal.tsx` | `dir="rtl"` |
-| `src/components/partnership/RegistrationForm.tsx` | Select `dir="rtl"` |
-| `src/components/services/ConsultationCta.tsx` | Select `dir="rtl"` |
-| `src/components/landing/Contact.tsx` | Select `dir="rtl"` (2 places) |
-| `src/components/calculator/CostCalculator.tsx` | Select `dir="rtl"` (4 places) |
-| `src/components/calculator/GpaCalculator.tsx` | `dir="rtl"` |
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 
-All these will use `useDirection()` hook to dynamically set direction.
 
----
+This prevents in-app browsers from scaling incorrectly.
 
-### Group 2: Components with fully hardcoded Arabic content
+src/styles/base.css
 
-These components have ALL their text in Arabic with no `t()` calls.
+Add to the html/body rules:
 
-**`src/pages/WhoWeArePage.tsx`** -- ~90 lines of hardcoded Arabic
-- Hero title, subtitle, story section, values, features, team members, CTA
-- All `features[]`, `teamMembers[]`, `ourValues[]`, `storyPoints[]` arrays
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-overflow-scrolling: touch;
+}
 
-**`src/components/services/ServicesGrid.tsx`** -- All 9 service cards hardcoded
-- titles, descriptions, features arrays, "ابدأ الآن" button text
-- Section title "خدماتنا الشاملة" and subtitle
 
-**`src/components/services/ServiceProcess.tsx`** -- 4 steps hardcoded
-- Step titles and descriptions, default title/description props
+Add a global overflow guard:
 
-**`src/components/services/ConsultationCta.tsx`** -- Full form hardcoded
-- 8 service options, form labels, placeholders, validation messages, toast messages
-- Section title, description, submit button text
+img, video, iframe, table, pre, code {
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
-**`src/components/services/TestimonialSection.tsx`** -- 3 testimonials hardcoded
-- Names, texts, section title/subtitle
 
-**`src/components/landing/Locations.tsx`** -- 4 location cards hardcoded
-- Country names, cities, services, section title
+Ensure any component containers use width:100% and avoid fixed pixel widths exceeding viewport.
 
-**`src/components/landing/OfficeLocations.tsx`** -- Office info hardcoded
-- Address, hours, "مكتبنا الرئيسي" title, WhatsApp button text
+Notes for devs
 
-**`src/components/common/PWAInstaller.tsx`** -- All text hardcoded
-- Install prompt, iOS modal instructions, buttons
+Audit third-party embeds and iframes (Instagram embeds, video players) — wrap them in containers that enforce max-width:100% and aspect-ratio where possible.
 
-**`src/components/partnership/AgentToolkit.tsx`** -- 3 icon labels hardcoded
-- "ملفات احترافية", "دعم تسويقي", "أسئلة شائعة"
+Test inside common in-app browsers (Instagram, Facebook, WhatsApp, Telegram) on iOS and Android.
 
-**`src/components/partnership/RegistrationForm.tsx`** -- Validation messages + toasts
-- zod schema error messages, success/error toast text, file upload description
+2. PWA Maintenance + Lightweight Install Prompt (KEEP PWA)
 
-**`src/pages/EducationalDestinationsPage.tsx`** -- All section text hardcoded
-- Hero badge, title, subtitle, section headings, CTA section
+Change of approach: Do not delete PWA files. Keep the PWA active as a strategic channel for returning students, but harden and adjust it to avoid interfering with mobile layout or in-app rendering.
 
-**`src/components/educational/UniversityCard.tsx`** -- "التخصصات المتاحة:" label
+Files to KEEP (PWA)
 
-**`src/components/educational/HeroSection.tsx`** -- Badge, title, subtitle
+public/service-worker.js — keep, but update caching strategy (see below)
 
-**`src/components/educational/CTASection.tsx`** -- Title, subtitle, buttons
+public/manifest.json — keep and review icons and display settings
 
-**`src/components/educational/NoResults.tsx`** -- All text, buttons
+public/offline.html — keep as fallback
 
-**`src/components/educational/SearchAndFilter.tsx`** -- Placeholder, filter label, results count text
+src/utils/pwaUtils.ts — keep, update as needed
 
-**`src/components/educational/MajorCard.tsx`** -- "اقرأ المزيد" text
+src/hooks/usePWA.ts — keep
 
-**`src/components/educational/MajorModal.tsx`** -- All section labels ("الوصف", "مناسب لـ", etc.)
+src/components/common/OfflineIndicator.tsx — keep but make unobtrusive
 
-**`src/components/educational/CategoryFilter.tsx`** -- "تصفية حسب الفئة", "جميع التخصصات"
+src/styles/pwa.css — keep but remove any layout overrides that cause horizontal overflow
 
-**`src/components/landing/Contact.tsx`** -- Validation messages, toast messages, "جار الإرسال" text
+Files / Code to MODIFY (PWA)
 
-**`src/pages/ResourcesPage.tsx`** -- "افتح الأداة" button text
+Goal: retain offline/install benefits while preventing layout or in-app rendering issues.
 
----
+Service worker
 
-### Group 3: Data files with hardcoded Arabic
+Review cache rules: use a network-first for HTML/routes and cache-first for static assets (images, fonts), to avoid stale pages that render desktop CSS.
 
-**`src/data/majorsData.ts`** -- 1200+ lines, all major names/descriptions in Arabic only
-- Category titles, SubMajor fields (nameAR, description, detailedDescription, etc.)
-- This is the largest challenge -- need to add `nameEN` and English fields
+Ensure service worker does not inject or modify the page DOM at load time.
 
-**`src/data/educationalDestinations.ts`** -- 230+ lines, all in Arabic
-- University descriptions, locations, major names, school descriptions
+Add versioned cache names and an activation strategy that clears old caches safely.
 
-**`src/components/broadcast/data.ts`** -- 120+ lines, all in Arabic
-- Video titles, descriptions, category names
+manifest.json
 
----
+Ensure display is appropriate (standalone or fullscreen if intentionally desired) — but avoid forcing standalone for all devices; keep prefer_related_applications: false.
 
-## Implementation Strategy
+Ensure icons include correct sizes and are optimized.
 
-### Phase 1: Dynamic direction on all pages
-- Import `useDirection()` in every page/component with hardcoded `dir="rtl"`
-- Replace with `dir={dir}`
-- ~20 files, minimal risk
+PWAInstaller component
 
-### Phase 2: Move hardcoded UI text to translation keys
-For each component, move hardcoded Arabic text into `t()` calls and add corresponding keys to both `ar/common.json` (or appropriate namespace) and `en/common.json`.
+Replace or update src/components/common/PWAInstaller.tsx to a small, non-intrusive corner popup (mobile only):
 
-New translation namespaces needed:
-- Add keys to `common.json`: PWA, office locations, educational sections
-- Add keys to `services.json` (AR + EN): ServicesGrid, ServiceProcess, ConsultationCta, TestimonialSection
-- Add keys to `about.json` (AR + EN): WhoWeArePage content
-- Add keys to `landing.json` (AR + EN): Locations section
-- Add keys to `resources.json` (EN update): "افتح الأداة" button
+Small rounded card in the bottom-right (above BottomNav)
 
-### Phase 3: Data files with dual language support
-For data-heavy files (`majorsData.ts`, `educationalDestinations.ts`, `broadcast/data.ts`):
-- Add English fields alongside Arabic (e.g., `nameEN` already exists in SubMajor interface)
-- Add `descriptionEN`, `categoryTitleEN` fields
-- Components consuming this data will select the right field based on `i18n.language`
+Shows Darb logo + "Install Darb" + native install button
 
----
+Dismiss button (X) — dismissed state saved to sessionStorage
 
-## Technical Details
+Only appears on mobile after 15 seconds
 
-### Translation File Updates
+Uses the beforeinstallprompt event for Android/Chrome
 
-**`public/locales/ar/services.json`** -- Add:
-- `servicesGrid.*` (section title, subtitle, all 9 service cards, button text)
-- `serviceProcess.*` (4 steps, default title/description)
-- `consultationCta.*` (form labels, service options, validation, toasts)
-- `testimonialSection.*` (section title, subtitle, 3 testimonials)
+For iOS show a brief tooltip instructing “Add to Home Screen” via Share → Add to Home Screen
 
-**`public/locales/en/services.json`** -- Add same keys in English
+No backdrop, no full-screen modal
 
-**`public/locales/ar/common.json`** -- Add:
-- `pwa.*` (install prompts, iOS instructions)
-- `officeLocations.*` (address, hours, title)
-- `locations.*` (4 location cards, section title)
-- `educational.*` (hero, CTA, search, filter, modal labels, card labels)
+Remove any PWA code that causes layout shifts
 
-**`public/locales/en/common.json`** -- Add same keys in English
+Remove or refactor any splash screen markup that causes width overflow (keep a minimal splash if needed, ensure it’s responsive).
 
-**`public/locales/ar/about.json`** -- Add:
-- `whoWeAre.*` (hero, story, values, features, team, CTA)
+Move safe-area utilities from pwa.css into base.css (safe area CSS is useful site-wide).
 
-**`public/locales/en/about.json`** -- Add same keys in English
+One-time cleanup for legacy clients
 
-**`public/locales/ar/partnership.json`** -- Add:
-- `agentToolkit.labels.*` (3 icon labels)
-- `registrationForm.validation.*` (zod messages)
-- `registrationForm.toasts.*` (success/error)
+Instead of unregistering the SW globally, add a migration step: on first load after this deploy, the SW can compare cache version and clean old caches — do not unregister so users retain offline benefits.
 
-**`public/locales/en/partnership.json`** -- Add same keys in English
+Why keep the PWA: retention & engagement benefits (installable quick access for students), and offline resilience — valuable for students who rely on mobile data.
 
-### Data File Updates
+3. Contact Page Social Links Fix
 
-**`src/data/majorsData.ts`**:
-- Add `nameEN` (already in interface but not populated), `descriptionEN`, `detailedDescriptionEN`, `categoryTitleEN` fields
-- Components use a helper: `const name = i18n.language === 'en' ? major.nameEN || major.nameAR : major.nameAR`
+File: src/components/landing/Contact.tsx
 
-**`src/data/educationalDestinations.ts`**:
-- Add `descriptionEN`, `locationEN`, `majorsEN` fields to universities/schools/services
+Action
 
-**`src/components/broadcast/data.ts`**:
-- Add `titleEN`, `descriptionEN`, `categoryEN` fields
+Replace the broken social links with the exact working URLs from the Footer.
 
-### Modified Files (Complete List)
+Mapping
 
-| File | Changes |
-|------|---------|
-| `src/pages/Index.tsx` | Dynamic dir |
-| `src/pages/ContactPage.tsx` | Dynamic dir |
-| `src/pages/ServicesPage.tsx` | Dynamic dir |
-| `src/pages/LocationsPage.tsx` | Dynamic dir |
-| `src/pages/PartnershipPage.tsx` | Dynamic dir |
-| `src/pages/BroadcastPage.tsx` | Dynamic dir |
-| `src/pages/EducationalProgramsPage.tsx` | Dynamic dir |
-| `src/pages/BagrutCalculatorPage.tsx` | Dynamic dir |
-| `src/pages/CostCalculatorPage.tsx` | Dynamic dir |
-| `src/pages/CurrencyConverterPage.tsx` | Dynamic dir |
-| `src/pages/AdminDashboardPage.tsx` | Dynamic dir |
-| `src/pages/WhoWeArePage.tsx` | Full i18n migration + dynamic dir |
-| `src/pages/EducationalDestinationsPage.tsx` | Full i18n migration |
-| `src/pages/ResourcesPage.tsx` | Button text i18n |
-| `src/components/services/ServicesGrid.tsx` | Full i18n migration |
-| `src/components/services/ServiceProcess.tsx` | Full i18n migration |
-| `src/components/services/ConsultationCta.tsx` | Full i18n migration + dynamic dir |
-| `src/components/services/TestimonialSection.tsx` | Full i18n migration |
-| `src/components/landing/Locations.tsx` | Full i18n migration |
-| `src/components/landing/OfficeLocations.tsx` | Full i18n migration |
-| `src/components/landing/Contact.tsx` | Validation/toast i18n + dynamic dir |
-| `src/components/landing/ContactHero.tsx` | Dynamic dir |
-| `src/components/common/PWAInstaller.tsx` | Full i18n migration + dynamic dir |
-| `src/components/partnership/AgentToolkit.tsx` | Icon labels i18n |
-| `src/components/partnership/RegistrationForm.tsx` | Validation/toast i18n + dynamic dir |
-| `src/components/educational/HeroSection.tsx` | Full i18n migration |
-| `src/components/educational/CTASection.tsx` | Full i18n migration |
-| `src/components/educational/NoResults.tsx` | Full i18n migration |
-| `src/components/educational/SearchAndFilter.tsx` | Full i18n migration + dynamic dir |
-| `src/components/educational/MajorCard.tsx` | i18n + language-aware field selection |
-| `src/components/educational/MajorModal.tsx` | Full i18n migration + dynamic dir |
-| `src/components/educational/CategoryFilter.tsx` | Full i18n migration |
-| `src/components/educational/UniversityCard.tsx` | Label i18n + language-aware fields |
-| `src/components/calculator/CostCalculator.tsx` | Dynamic dir on Selects |
-| `src/components/calculator/GpaCalculator.tsx` | Dynamic dir |
-| `src/data/majorsData.ts` | Add English fields to all entries |
-| `src/data/educationalDestinations.ts` | Add English fields |
-| `src/components/broadcast/data.ts` | Add English fields |
-| `public/locales/ar/services.json` | Add new keys |
-| `public/locales/en/services.json` | Add new keys |
-| `public/locales/ar/common.json` | Add new keys |
-| `public/locales/en/common.json` | Add new keys |
-| `public/locales/ar/about.json` | Add new keys |
-| `public/locales/en/about.json` | Add new keys |
-| `public/locales/ar/partnership.json` | Add new keys |
-| `public/locales/en/partnership.json` | Add new keys |
+Instagram → https://www.instagram.com/darb_studyingermany/
 
-### What Will NOT Change
-- Website design, colors, fonts, layout, or spacing
-- Navigation order (logo, menu items, student portal button)
-- Component structure or functionality
-- RTL behavior when Arabic is selected
+TikTok → https://www.tiktok.com/@darb_studyingermany
 
-### Implementation Note
-Due to the very large scope (45+ files), implementation will be done in focused batches to avoid errors. The majorsData.ts file alone has 1200+ lines requiring English translations for every major.
+Facebook → https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/
+
+Add WhatsApp (missing on Contact):
+
+<a href="https://api.whatsapp.com/message/IVC4VCAEJ6TBD1" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors">
+  <MessageCircle className="h-7 w-7" />
+</a>
+
+
+Import MessageCircle from lucide-react if not already imported.
+
+Notes
+
+Keep icons and styling identical to footer — only update link hrefs.
+
+Test each link on mobile and confirm they open the expected app or web fallback.
+
+4. Guides Section — Original Content (Written by Darb, localized)
+
+Files: src/components/resources/GuidesReferences.tsx, src/pages/ResourcesPage.tsx, public/locales/ar/resources.json, public/locales/en/resources.json
+
+Action
+
+Replace placeholder external guides with original in-house articles targeted to Arab 48 students (Arabic first-person, professional tone).
+
+Each article will be stored in the translation files (AR + EN) and rendered as expandable internal content (Accordion/Collapsible) — no external links.
+
+New Guide Articles (6):
+
+"الطريق إلى الجامعة الألمانية: دليل عملي لطلاب عرب 48" — Bagrut equivalency, Studienkolleg, uni-assist, timelines.
+
+"تأشيرة الدراسة الألمانية خطوة بخطوة: من الموعد حتى الختم" — embassy appointments, blocked accounts, insurance (specific to Israeli passport holders).
+
+"أول 30 يوم في ألمانيا: ما لا يقوله لك أحد" — Anmeldung, bank, SIM, transport, culture shock.
+
+"اللغة الألمانية: من الصفر إلى B1 -- خطة واقعية" — language options, TestDaF/DSH prep, Arabic speaker tips.
+
+"السكن الطلابي في ألمانيا: كيف تلاقي شقة بدون ما تجنّ" — Studentenwerk, WG-Gesucht, scams, city pricing.
+
+"تكاليف المعيشة الحقيقية في ألمانيا 2025: ميزانية شهرية مفصّلة" — rent, food, transport, insurance, phone; city comparisons.
+
+Technical approach
+
+Add full article content into public/locales/ar/resources.json and public/locales/en/resources.json.
+
+Update GuidesReferences.tsx to render each article as expandable cards (Accordion) or internal routes with anchors.
+
+Remove external link buttons; replace with “اقرأ المزيد” expand behavior.
+
+Tone + QA
+
+Content must be original, localized, practical, and avoid AI-generic phrasing.
+
+Proofread in Arabic (formal but relatable) and run a quick cultural review to ensure relevance to Arab 48 students.
+
+5. Locations Description Update
+
+Files: public/locales/ar/common.json and public/locales/en/common.json
+
+Action
+
+For every country except Germany, replace services description with:
+
+Arabic: "خدمات جديدة ستتوفر قريباً."
+
+English: "New services coming soon."
+
+Countries to update
+
+Jordan, Romania (and others except Germany). Italy is already correct.
+
+6. Header Navigation Recommendation (NOT Applied)
+
+(Kept identical to your previous recommendation; provide separately and DO NOT implement without approval.)
+
+Recommended order (RTL / LTR aware):
+Home | About Us (dropdown) | Our Services | Majors | Find Your Major | Resources | Contact Us | More (dropdown)
+
+Rationale: builds trust and a guided student journey. Keep the recommendation for review only.
+
+Technical Summary (UPDATED: PWA KEPT)
+
+Files to KEEP (PWA)
+
+public/service-worker.js (update caching strategy)
+
+public/manifest.json
+
+public/offline.html
+
+src/utils/pwaUtils.ts
+
+src/hooks/usePWA.ts
+
+src/components/common/OfflineIndicator.tsx
+
+src/styles/pwa.css (refactor to remove layout overrides)
+
+Files to Modify
+
+index.html — update viewport, remove layout-breaking PWA markup if present, keep manifest link.
+
+src/App.tsx — keep PWA-related imports but remove any intrusive UI that causes layout shifts; keep OfflineIndicator if unobtrusive.
+
+src/index.css — ensure no pwa css overrides remain (move safe-area to base.css).
+
+src/styles/base.css — add overflow-x protection, safe-area utilities, max-width guards.
+
+src/components/common/PWAInstaller.tsx — replace with lightweight corner popup as described.
+
+src/components/landing/Contact.tsx — fix social links, add WhatsApp.
+
+public/locales/ar/common.json & public/locales/en/common.json — update locations descriptions.
+
+public/locales/ar/resources.json & public/locales/en/resources.json — add 6 original guides.
+
+src/pages/ResourcesPage.tsx & src/components/resources/GuidesReferences.tsx — render expandable internal articles.
+
+Files to DELETE
+
+None of the PWA files should be deleted. (All previous delete recommendations are revoked.)
+
+What Will NOT Change
+
+Website design, colors, fonts, layout, or spacing (visuals remain identical)
+
+Navigation order (logo, menu items, student portal button) unless explicitly approved
+
+BottomNav mobile navigation
+
+Component structure or visual hierarchy
+
+Bilingual (AR/EN) support
+
+AI chat, dashboards, tools, authentication
+
+Final Notes for the Dev / Lovable Agent
+
+Top priority: fix mobile layout when links are opened externally — test in multiple in-app browsers before moving to other tasks.
+
+PWA kept: preserve offline/install benefits; make the PWA less intrusive and safe for in-app browsers. Do not unregister the service worker globally.
+
+Provide a short QA checklist after changes: screenshots on iPhone Safari, iPhone Instagram in-app, Android Chrome, Android WhatsApp in-app; verify social links; verify install prompt behavior; verify Guides content renders properly as expandable cards.
+
+If any visual change is unavoidable, pause and request approval before proceeding.
