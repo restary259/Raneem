@@ -27,6 +27,7 @@ import AIAdvisorPage from "./pages/AIAdvisorPage";
 import CostCalculatorPage from "./pages/CostCalculatorPage";
 import CurrencyConverterPage from "./pages/CurrencyConverterPage";
 import BagrutCalculatorPage from "./pages/BagrutCalculatorPage";
+import InfluencerDashboardPage from "./pages/InfluencerDashboardPage";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import BottomNav from "./components/common/BottomNav";
@@ -128,6 +129,7 @@ const App = () => {
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/student-dashboard" element={<StudentDashboardPage />} />
             <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/ai-advisor" element={<AIAdvisorPage />} />

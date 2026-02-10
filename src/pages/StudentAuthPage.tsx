@@ -29,19 +29,34 @@ const StudentAuthPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const redirectByRole = async (userId: string) => {
+    const { data: roles } = await (supabase as any)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    
+    if (roles?.some((r: any) => r.role === 'admin')) {
+      navigate('/admin');
+    } else if (roles?.some((r: any) => r.role === 'influencer')) {
+      navigate('/influencer-dashboard');
+    } else {
+      navigate('/student-dashboard');
+    }
+  };
+
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
-        navigate('/student-dashboard');
+        await redirectByRole(session.user.id);
       }
     };
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) navigate('/student-dashboard');
+      if (session?.user) await redirectByRole(session.user.id);
     });
 
     return () => subscription.unsubscribe();
