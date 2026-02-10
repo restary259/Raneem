@@ -1,100 +1,203 @@
 
 
-# Plan: Enhanced PWA + Dedicated AI Chat Page
+# Plan: Complete Security Layers for Darb Platform
 
 ## Overview
-Enhance the existing PWA infrastructure and add a dedicated AI advisor page -- all without changing the current website design.
+Add comprehensive security hardening across authentication, API endpoints, admin access, contact form, AI chat, document storage, and PWA -- all without changing the existing design.
 
 ---
 
-## Phase 1: Dedicated AI Chat Page (`/ai-advisor`)
+## Phase 1: Authentication Hardening
 
-**What**: A new full-page route for immersive AI conversations, reusing existing components and styling.
+### 1A. Strong Password Enforcement (Client + Server)
+- Update `StudentAuthPage.tsx` to enforce password rules client-side:
+  - Minimum 8 characters (Supabase default is 6 -- we add client-side validation for 8+)
+  - Must include uppercase, lowercase, number, and symbol
+  - Show real-time password strength indicator (weak/medium/strong) using existing Tailwind classes
+- Add a visual password requirements checklist below the password field
 
-- Create `src/pages/AIAdvisorPage.tsx` -- full-screen chat interface using the same Header/Footer as other pages
-- Reuse the existing `AIChatPopup` streaming logic but adapted for a full-page layout
-- Add conversation history persistence using `localStorage` (no new DB table needed for MVP)
-- Students can continue previous conversations and see past messages
-- Quick-question cards, topic categories (Admissions, Visa, Language, Life in Germany)
-- Add route `/ai-advisor` in `App.tsx`
-- Add link in BottomNav (replace or add an "AI" tab) and in the desktop navigation
+### 1B. Rate Limiting on Auth
+- Create a new edge function `auth-guard` that wraps login attempts
+- Track failed login attempts per IP/email in a `login_attempts` table
+- Block after 5 failed attempts for 15 minutes
+- Return appropriate Arabic error messages
 
-**Design rule**: Same fonts, colors (orange gradient), card styles, and RTL layout as the rest of the site.
-
----
-
-## Phase 2: Enhanced Service Worker & Caching
-
-**What**: Upgrade `public/service-worker.js` for better offline support.
-
-- **Versioned cache**: Bump to `v2.0.0` with smarter cache invalidation
-- **AI conversation caching**: Cache recent AI responses in a dedicated `darb-ai-cache` so students can read past conversations offline (read-only)
-- **Document caching**: When a student views a document, cache it in a `darb-docs-cache` for offline access
-- **Stale-while-revalidate** strategy for API responses (show cached data, update in background)
-- **Font caching**: Explicitly cache Google Fonts for offline use
-- Add `/ai-advisor` to `STATIC_CACHE_URLS`
+### 1C. Session Security
+- Verify `persistSession: true` and `autoRefreshToken: true` are set (already configured in client.ts)
+- Add auto-logout on inactivity (30 minutes) via a `useSessionTimeout` hook
+- Clear sensitive data from localStorage on logout
 
 ---
 
-## Phase 3: Offline AI Fallback
+## Phase 2: Admin Dashboard Security (EXTRA HARDENED)
 
-**What**: When offline, the AI chat shows cached FAQ answers and last conversation.
+### 2A. Server-Side Admin Verification
+- Remove the client-side `ADMIN_EMAIL` check from `AdminDashboardPage.tsx`
+- Use ONLY the `has_role()` database function to verify admin status
+- Create an `admin-verify` edge function that checks the `user_roles` table server-side
+- All admin data fetches go through this edge function (not direct Supabase client queries)
 
-- In `AIChatPopup` and the new AI page, detect `navigator.onLine`
-- If offline: load last conversation from localStorage, show a banner "You're offline - viewing saved conversations"
-- Provide pre-cached FAQ answers for the 4 quick questions (stored as static JSON)
-- When back online, auto-sync and resume normal streaming
+### 2B. Admin Re-Authentication
+- Require password re-entry for sensitive admin actions (deleting data, exporting CSV)
+- Add a re-auth modal component that uses `supabase.auth.reauthenticate()`
 
----
-
-## Phase 4: Push Notifications Foundation
-
-**What**: Opt-in notification system for document reminders and deadline alerts.
-
-- Create a notification preferences component (toggle in student dashboard settings)
-- Use the existing `requestNotificationPermission()` from `pwaUtils.ts`
-- Store subscription endpoint in a new `push_subscriptions` DB table
-- Create an edge function `push-notify` to send notifications via Web Push API
-- Notification triggers: document expiry (7 days before), visa deadline reminders
+### 2C. Admin Activity Logging
+- Create `admin_audit_log` table (admin_id, action, target_table, target_id, timestamp, ip_address)
+- Log all admin actions: view, update status, export data
+- Display audit log in a new "Activity Log" tab on the admin dashboard
 
 ---
 
-## Phase 5: PWA Install & Session Enhancements
+## Phase 3: Contact Form Protection
 
-**What**: Polish the install experience and session persistence.
+### 3A. Honeypot Anti-Spam
+- Add a hidden honeypot field to the contact form (invisible to humans, filled by bots)
+- Server-side: reject submissions where the honeypot field has a value
 
-- Improve `PWAInstaller.tsx`: Add iOS-specific install instructions modal (not just `alert()`)
-- Ensure auth tokens persist across app restarts (already using Supabase session -- verify `persistSession: true`)
-- Add `display: standalone` CSS adjustments (hide browser-specific UI elements)
-- Update `manifest.json` to include the new `/ai-advisor` shortcut
-- Cross-platform testing notes for iOS Safari PWA limitations
+### 3B. Rate Limiting
+- Add rate limiting in the `send-email` edge function
+- Max 3 submissions per IP per hour
+- Track in a `rate_limits` table or use in-memory Map with TTL
+
+### 3C. Input Sanitization
+- Add server-side validation with length limits in the edge function:
+  - name: max 100 chars
+  - email: max 255 chars, valid format
+  - whatsapp: max 20 chars, digits only
+  - message: max 2000 chars
+- Strip HTML tags from all text inputs
+- Add client-side validation to match (already partially done with zod)
+
+---
+
+## Phase 4: AI Chat Security
+
+### 4A. Prompt Injection Protection
+- Update the `ai-chat` edge function system prompt to include explicit anti-injection rules
+- Sanitize user messages before sending to AI (strip control characters, limit length to 2000 chars)
+- Add a content filter that blocks attempts to extract the system prompt
+
+### 4B. AI Usage Limits
+- Track AI requests per session/user in localStorage (for anonymous) or database (for authenticated)
+- Limit to 30 messages per hour for anonymous users, 100 for authenticated
+- Show remaining quota in the chat UI
+
+### 4C. AI Interaction Logging (Admin-Only)
+- Create `ai_chat_logs` table (user_id nullable, message_preview first 100 chars, timestamp)
+- Log interactions for abuse detection (admin viewable only)
+- Add RLS: only admin can SELECT
+
+---
+
+## Phase 5: Document & File Security
+
+### 5A. Upload Safety
+- In the document upload flow, validate:
+  - File type whitelist: PDF, JPG, PNG, DOCX only
+  - Max file size: 10MB
+  - Rename files on upload (UUID-based names, no original filenames in storage path)
+- Client-side + server-side validation
+
+### 5B. Signed URLs
+- Generate signed URLs with 1-hour expiration for document access (already using private bucket)
+- Never expose raw storage URLs to the client
+
+---
+
+## Phase 6: Edge Function & API Security
+
+### 6A. Input Validation on All Edge Functions
+- Add zod-style validation at the start of every edge function
+- Reject requests with unexpected fields
+- Return consistent error format
+
+### 6B. CORS Tightening
+- Replace `Access-Control-Allow-Origin: '*'` with the actual domain:
+  - `https://darb-agency.lovable.app` and preview URL
+- Keep `*` only for development
+
+### 6C. Security Headers
+- Add a `_headers` file or inject headers via edge functions:
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+
+---
+
+## Phase 7: PWA & Client-Side Security
+
+### 7A. Service Worker Security
+- Restrict service worker scope to the app origin
+- Never cache auth tokens or sensitive user data
+- Clear caches on logout
+- Validate cached content integrity
+
+### 7B. Secure Storage
+- Audit all localStorage usage: ensure no passwords, tokens, or PII are stored in plain text
+- AI chat cache: store only message text, no auth data
+
+---
+
+## Phase 8: Monitoring & Alerts
+
+### 8A. Failed Login Tracking
+- The `login_attempts` table from Phase 1B doubles as monitoring
+- Admin dashboard tab: "Security" showing failed login patterns
+
+### 8B. Admin Alert System
+- When 10+ failed logins occur for any account in 1 hour, flag it in the admin dashboard
+- Show security alerts in the admin overview tab
 
 ---
 
 ## Technical Details
 
-### New Files
-| File | Purpose |
-|------|---------|
-| `src/pages/AIAdvisorPage.tsx` | Full-page AI chat interface |
-| `src/hooks/useAIChat.ts` | Shared hook for AI chat logic (streaming, history, offline) |
-| `src/utils/chatCache.ts` | localStorage helpers for conversation persistence |
+### New Database Tables
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `login_attempts` | id, email, ip_address, success, created_at | Track login attempts for rate limiting |
+| `admin_audit_log` | id, admin_id, action, target_table, target_id, details, created_at | Admin activity logging |
+| `ai_chat_logs` | id, user_id (nullable), message_preview, tokens_used, created_at | AI usage tracking |
+
+### New Edge Functions
+
+| Function | Purpose |
+|----------|---------|
+| `auth-guard` | Rate-limited login wrapper |
+| `admin-verify` | Server-side admin role verification |
 
 ### Modified Files
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Add `/ai-advisor` route |
-| `src/components/common/BottomNav.tsx` | Add AI advisor nav item |
-| `src/components/chat/AIChatPopup.tsx` | Extract logic into shared hook, add offline fallback |
-| `src/components/chat/ChatWidget.tsx` | Link to full page option |
-| `src/components/common/PWAInstaller.tsx` | iOS install modal improvement |
-| `public/service-worker.js` | Enhanced caching strategies |
-| `public/manifest.json` | Add AI advisor shortcut |
 
-### Database Migration
-- New table `push_subscriptions` (user_id, endpoint, p256dh, auth_key, created_at) with RLS policies
-- Edge function `push-notify` for sending web push notifications
+| File | Changes |
+|------|---------|
+| `src/pages/StudentAuthPage.tsx` | Password strength indicator, strong password rules |
+| `src/pages/AdminDashboardPage.tsx` | Remove client-side email check, add re-auth modal, audit log tab, security alerts tab |
+| `src/components/landing/Contact.tsx` | Add honeypot field |
+| `supabase/functions/send-email/index.ts` | Rate limiting, input sanitization, honeypot check |
+| `supabase/functions/ai-chat/index.ts` | Prompt injection protection, input length limits, usage tracking |
+| `src/hooks/useAIChat.ts` | Usage quota tracking |
+| `src/components/chat/AIChatPopup.tsx` | Usage quota display |
+| `public/service-worker.js` | Cache security audit, clear on logout |
+| `src/App.tsx` | Add session timeout hook |
 
-### No Design Changes
-All new UI uses existing Tailwind classes, orange/amber gradient theme, Tajawal font, and RTL direction. No new colors, fonts, or layout patterns introduced.
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `src/hooks/useSessionTimeout.ts` | Auto-logout after 30 min inactivity |
+| `src/components/admin/ReAuthModal.tsx` | Re-authentication modal for sensitive actions |
+| `src/components/auth/PasswordStrength.tsx` | Password strength indicator component |
+| `supabase/functions/auth-guard/index.ts` | Rate-limited auth endpoint |
+| `supabase/functions/admin-verify/index.ts` | Server-side admin verification |
+
+### RLS Policies
+- `login_attempts`: service role INSERT only, admin SELECT
+- `admin_audit_log`: service role INSERT, admin SELECT
+- `ai_chat_logs`: service role INSERT, admin SELECT
+
+### What Will NOT Change
+- Website design, layout, colors, fonts
+- Navigation order and structure
+- Existing user-facing flows (just adding security layers underneath)
 
