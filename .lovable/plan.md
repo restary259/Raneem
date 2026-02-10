@@ -1,249 +1,322 @@
 
-# Plan: Security Hardening, Mobile Responsiveness, SEO Optimization + PWA Install Prompt
+# Plan: Role-Based Dashboard System (Admin, Influencer, Student)
 
 ## Overview
 
-This plan addresses four areas: (1) security headers and HTTPS enforcement, (2) mobile responsiveness fixes for in-app browsers, (3) comprehensive SEO optimization across all pages, and (4) ensuring the PWA install prompt works correctly. The existing design, layout, and visual hierarchy will not be changed.
+Build a comprehensive, high-end dashboard system with three role-based views: Admin (full control), Influencer (view-only), and Student (checklist tracker). This involves database schema changes, new edge functions, role-based routing, and a completely redesigned UI with a premium aesthetic.
 
 ---
 
-## 1. Security / HTTPS Hardening
+## Phase 1: Database Schema Changes
 
-### What needs to happen
+### 1a. Add 'influencer' to `app_role` enum
 
-The site is hosted on Lovable Cloud which already serves over HTTPS with a valid SSL certificate. However, we can add security headers and eliminate mixed content risks.
-
-**Create `public/_headers` file** (Netlify/Lovable compatible):
-```
-/*
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: upgrade-insecure-requests
+```sql
+ALTER TYPE public.app_role ADD VALUE 'influencer';
 ```
 
-**Audit and fix mixed content**:
-- The Hero component loads a video from `https://videos.pexels.com/...` -- already HTTPS, OK
-- All image assets use relative paths (`/lovable-uploads/...`) -- OK
-- Google Fonts loaded via HTTPS -- OK
-- No mixed content issues found in the codebase
+### 1b. Add columns to `profiles` table
 
-**`index.html`** -- Add meta tag for HTTPS upgrade:
-```html
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+```sql
+ALTER TABLE public.profiles
+  ADD COLUMN student_status text NOT NULL DEFAULT 'eligible',
+  ADD COLUMN influencer_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+```
+
+Student status values: `eligible`, `ineligible`, `converted`, `paid`, `nurtured`
+
+### 1c. Create `checklist_items` table (admin-defined required items)
+
+```sql
+CREATE TABLE public.checklist_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  item_name text NOT NULL,
+  description text,
+  is_required boolean NOT NULL DEFAULT true,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.checklist_items ENABLE ROW LEVEL SECURITY;
+```
+
+RLS: Admins can CRUD, authenticated users can SELECT.
+
+### 1d. Create `student_checklist` table (per-student completion tracking)
+
+```sql
+CREATE TABLE public.student_checklist (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  checklist_item_id uuid NOT NULL REFERENCES public.checklist_items(id) ON DELETE CASCADE,
+  is_completed boolean NOT NULL DEFAULT false,
+  completed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(student_id, checklist_item_id)
+);
+ALTER TABLE public.student_checklist ENABLE ROW LEVEL SECURITY;
+```
+
+RLS: Students can read/update own rows. Admins can read all. Influencers can read rows where student's `influencer_id` matches their user ID.
+
+### 1e. Create `influencer_invites` table
+
+```sql
+CREATE TABLE public.influencer_invites (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text NOT NULL,
+  full_name text NOT NULL,
+  status text NOT NULL DEFAULT 'pending',
+  invited_by uuid NOT NULL,
+  created_user_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.influencer_invites ENABLE ROW LEVEL SECURITY;
+```
+
+RLS: Admins only.
+
+### 1f. Seed default checklist items
+
+```sql
+INSERT INTO public.checklist_items (item_name, description, sort_order) VALUES
+  ('جواز السفر', 'نسخة سارية المفعول من جواز السفر', 1),
+  ('الشهادات الأكاديمية', 'شهادة الثانوية / البجروت مع كشف الدرجات', 2),
+  ('الترجمات المعتمدة', 'ترجمة معتمدة للشهادات والمستندات', 3),
+  ('شهادة اللغة', 'شهادة لغة ألمانية أو إنجليزية', 4),
+  ('الحساب البنكي المغلق', 'Blocked Account أو كفالة مالية', 5),
+  ('التأمين الصحي', 'تأمين صحي ساري المفعول', 6),
+  ('صور شخصية', 'صور بحجم جواز السفر', 7),
+  ('خطاب القبول الجامعي', 'Zulassungsbescheid أو شرط القبول', 8);
 ```
 
 ---
 
-## 2. Mobile Responsiveness (Critical Fix)
+## Phase 2: Edge Function for Influencer Account Creation
 
-The viewport and overflow rules are already partially in place from prior work. This phase verifies and hardens them.
+### Create `supabase/functions/create-influencer/index.ts`
 
-### Already in place (from previous work):
-- `overflow-x: hidden` and `max-width: 100vw` on `html` and `body` in `base.css`
-- `img, video, iframe` constrained to `max-width: 100%`
-- Viewport meta: `width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover`
-- Fluid typography with `clamp()` values
-- Safe-area utilities
+Admin-only edge function that:
+1. Verifies caller is admin (using `has_role`)
+2. Creates a new auth user with the provided email and a generated password
+3. Inserts a `user_roles` row with role = `influencer`
+4. Creates a `profiles` row for the influencer
+5. Updates the `influencer_invites` table status to `accepted`
+6. Returns the created account details (admin can share credentials manually or via email)
 
-### Additional fixes needed:
-
-**`src/styles/base.css`** -- Add touch-action constraint to prevent horizontal panning:
-```css
-html {
-  touch-action: pan-y pinch-zoom;
-}
-```
-
-**`src/components/landing/DesktopNav.tsx`** -- The nav list has `overflow-x-auto` which could cause horizontal scrolling on narrow viewports. This is hidden on mobile (`hidden md:block` in Header), so it's safe. No change needed.
-
-**`src/components/landing/PartnersMarquee.tsx`** -- Verify marquee animation doesn't cause overflow. Add `overflow: hidden` wrapper if needed.
-
-**`src/App.css`** -- This file contains legacy Vite boilerplate (`#root { max-width: 1280px; padding: 2rem; }`) that could restrict layout width. Clean it up or remove conflicting rules.
+Note: Since Lovable Cloud email is auth-only, the admin will receive the generated password in the response and share it with the influencer manually.
 
 ---
 
-## 3. SEO Optimization
+## Phase 3: Role-Based Routing
 
-### 3a. Per-page meta tags using a reusable SEO component
+### Modify `src/pages/StudentAuthPage.tsx`
 
-**Create `src/components/common/SEOHead.tsx`**:
-A component that sets `document.title` and manages meta description via `useEffect`. React Helmet is not in deps and unnecessary -- a simple hook approach works.
+After successful login, check the user's role:
+1. Query `user_roles` for the logged-in user
+2. If role = `admin` -> redirect to `/admin`
+3. If role = `influencer` -> redirect to `/influencer-dashboard`
+4. Otherwise -> redirect to `/student-dashboard`
+
+### Add new route in `src/App.tsx`
 
 ```tsx
-const SEOHead = ({ title, description }: { title: string; description: string }) => {
-  useEffect(() => {
-    document.title = title;
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) { meta = document.createElement('meta'); meta.setAttribute('name', 'description'); document.head.appendChild(meta); }
-    meta.setAttribute('content', description);
-    return () => { document.title = 'درب | رفيقك الدراسي العالمي'; };
-  }, [title, description]);
-  return null;
-};
+<Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
 ```
-
-**Add SEOHead to every page** with unique titles and descriptions:
-
-| Page | Title (AR) | Description |
-|------|-----------|-------------|
-| Index | درب - رفيقك الدراسي العالمي للدراسة في ألمانيا | استشارات تعليمية، قبولات جامعية، تأشيرات، سكن... |
-| About | من نحن - درب للدراسة في الخارج | تعرف على فريق درب ورؤيتنا... |
-| Services | خدماتنا - درب للدراسة في ألمانيا | خدمات شاملة من القبول حتى الوصول... |
-| Contact | تواصل معنا - درب | تواصل مع درب للاستشارة المجانية... |
-| Partnership | كن وكيلاً - اربح مع درب | انضم لشبكة وكلاء درب... |
-| Resources | أدلة ومراجع - درب | أدلة عملية للطلاب العرب... |
-| Educational Destinations | وجهات تعليمية - درب | اكتشف الجامعات والبرامج... |
-| Educational Programs | التخصصات - درب | تصفح التخصصات المتاحة... |
-| Quiz | اختيار التخصص - درب | اكتشف التخصص المناسب لك... |
-| AI Advisor | المستشار الذكي - درب | تحدث مع مستشار درب الذكي... |
-
-English versions will also be provided via i18n translation keys.
-
-### 3b. XML Sitemap
-
-**Create `public/sitemap.xml`** with all public routes:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://darb-agency.lovable.app/</loc><priority>1.0</priority></url>
-  <url><loc>https://darb-agency.lovable.app/about</loc><priority>0.8</priority></url>
-  <url><loc>https://darb-agency.lovable.app/services</loc><priority>0.9</priority></url>
-  <url><loc>https://darb-agency.lovable.app/contact</loc><priority>0.9</priority></url>
-  <url><loc>https://darb-agency.lovable.app/partnership</loc><priority>0.7</priority></url>
-  <url><loc>https://darb-agency.lovable.app/educational-destinations</loc><priority>0.8</priority></url>
-  <url><loc>https://darb-agency.lovable.app/educational-programs</loc><priority>0.8</priority></url>
-  <url><loc>https://darb-agency.lovable.app/resources</loc><priority>0.7</priority></url>
-  <url><loc>https://darb-agency.lovable.app/quiz</loc><priority>0.7</priority></url>
-  <url><loc>https://darb-agency.lovable.app/ai-advisor</loc><priority>0.6</priority></url>
-  <url><loc>https://darb-agency.lovable.app/broadcast</loc><priority>0.5</priority></url>
-</urlset>
-```
-
-### 3c. Update `public/robots.txt`
-
-Add sitemap reference:
-```
-User-agent: *
-Allow: /
-Disallow: /student-dashboard
-Disallow: /admin
-Disallow: /reset-password
-
-Sitemap: https://darb-agency.lovable.app/sitemap.xml
-```
-
-### 3d. Structured Data (JSON-LD)
-
-**Add to `index.html`** -- Organization schema:
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "درب للدراسة في الخارج",
-  "alternateName": "Darb Study Pathways",
-  "url": "https://darb-agency.lovable.app",
-  "logo": "https://darb-agency.lovable.app/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-  "description": "Education consultancy agency helping Arab students study in Germany",
-  "sameAs": [
-    "https://www.instagram.com/darb_studyingermany/",
-    "https://www.tiktok.com/@darb_studyingrmany",
-    "https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/"
-  ],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "contactType": "customer service",
-    "availableLanguage": ["Arabic", "English", "German"]
-  }
-}
-</script>
-```
-
-### 3e. Image alt text audit
-
-Most images already have alt attributes. Verify and add missing alt text to:
-- Partner logos in `PartnersMarquee`
-- Student gallery images in `StudentGallery`
-- Any decorative images should get `alt=""`
 
 ---
 
-## 4. PWA Install Prompt (Already Working)
+## Phase 4: Redesigned Admin Dashboard (High-End UI)
 
-The PWA install prompt is already implemented as a non-intrusive corner popup (`PWAInstaller.tsx`):
-- Mobile only, appears after 15 seconds
-- Small corner card with dismiss button
-- iOS modal with share instructions
-- Session-based dismissal
+### New file structure under `src/components/admin/`
 
-**No changes needed** -- it's already functional. The service worker, manifest, and install prompt are all in place.
-
-### Minor PWA cleanup:
-
-**`src/App.css`** -- Remove legacy Vite boilerplate that's not used:
-```css
-/* Remove #root { max-width: 1280px; padding: 2rem; } */
-/* This conflicts with full-width layout */
+```
+src/components/admin/
+  AdminLayout.tsx          -- Glass-morphism sidebar + header layout
+  AdminOverview.tsx        -- Stats cards with gradients and charts
+  StudentManagement.tsx    -- Full CRUD table with status, checklist progress, influencer assignment
+  InfluencerManagement.tsx -- Influencer table + invite modal
+  ChecklistManagement.tsx  -- Define/edit checklist items
+  ContactsManager.tsx      -- Contact submissions (migrated from current)
+  SecurityPanel.tsx         -- Login attempts + alerts (migrated from current)
+  AuditLog.tsx              -- Audit trail (migrated from current)
 ```
 
-**`src/components/common/OfflineIndicator.tsx`** -- Localize the hardcoded Arabic text:
-Replace `"غير متصل بالإنترنت - تستخدم النسخة المحفوظة محلياً"` with `t('offline.message')` and add translation keys.
+### Redesign `src/pages/AdminDashboardPage.tsx`
+
+Replace the current monolithic 379-line file with a clean layout using:
+- Dark navy sidebar with gradient accents (matching Darb brand)
+- Stat cards with subtle gradients and animated counters
+- Professional data tables using the existing `Table` UI component
+- Color-coded status badges
+- Inline editing for student status and influencer assignment
+- Checklist progress bars (visual percentage)
+- Search, filter by status/influencer/checklist completion
+- CSV/Excel export buttons
+- Invite influencer modal (creates account via edge function)
+
+### Key Admin Features
+
+**Student Management Table:**
+| Column | Details |
+|--------|---------|
+| Name | Editable inline |
+| Email | Read-only |
+| Student Status | Dropdown: Eligible/Ineligible/Converted/Paid/Nurtured |
+| Checklist Progress | Visual progress bar (e.g., 5/8 = 62%) |
+| Influencer | Dropdown to assign (hidden from student/influencer) |
+| Actions | Edit, view details |
+
+**Influencer Management:**
+- Table: Name, Email, Number of assigned students
+- "Invite Influencer" button -> modal with name + email -> calls edge function
+- Track invite status (Pending/Active)
+
+**Checklist Management:**
+- Add/edit/remove required checklist items
+- Drag-reorder (or sort_order field)
+- Items auto-sync to all student checklists
 
 ---
 
-## 5. Clean Up Legacy Code
+## Phase 5: Redesigned Student Dashboard
 
-**`src/App.css`** -- This file contains Vite boilerplate CSS that's unused and potentially harmful:
-- `#root { max-width: 1280px; padding: 2rem; }` -- forces max-width constraint
-- `.logo`, `.card`, `.read-the-docs` -- unused classes
+### Update `src/pages/StudentDashboardPage.tsx` and components
 
-Action: Clear this file completely or remove conflicting rules. The actual styles are in `src/styles/base.css`.
+Premium design with:
+- Welcome banner with student name and progress ring
+- Checklist tracker as the primary view (card-based with checkboxes)
+- Each checklist item shows: item name, description, status (completed/pending), completion date
+- Students can toggle completion status
+- Overall progress percentage with animated circular progress
+- Existing features retained: profile, documents, services, payments
+- Mobile-first responsive layout with smooth transitions
 
-**`vercel.json`** -- Contains a malformed git command prepended to the JSON. Fix to valid JSON:
-```json
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
+### New sidebar tab: "Checklist" (primary tab)
+
+---
+
+## Phase 6: Influencer Dashboard (New Page)
+
+### Create `src/pages/InfluencerDashboardPage.tsx`
+
+Structure:
+1. Auth guard: verify session + role = `influencer`
+2. Premium header with influencer name + stats
+3. Stats cards: Total Referred, Total Converted, % Checklist Complete
+4. Read-only student table showing only students assigned to this influencer:
+   - Name, Email, Student Status, Checklist Progress
+   - No edit capabilities
+5. Mobile-responsive card layout on small screens
+
+### Components under `src/components/influencer/`
+
 ```
+src/components/influencer/
+  InfluencerLayout.tsx
+  InfluencerStats.tsx
+  InfluencerStudentTable.tsx
+```
+
+---
+
+## Phase 7: RLS Policies
+
+### `checklist_items`
+
+- SELECT: All authenticated users
+- INSERT/UPDATE/DELETE: Admins only
+
+### `student_checklist`
+
+- SELECT: Own rows (student_id = auth.uid()) OR admin OR influencer where student's influencer_id = auth.uid()
+- INSERT: Own rows (student_id = auth.uid()) OR admin
+- UPDATE: Own rows OR admin
+- DELETE: Admin only
+
+### `influencer_invites`
+
+- ALL: Admin only
+
+### Updated `profiles` policies
+
+- Influencers can SELECT profiles where `influencer_id = auth.uid()` (to see their assigned students)
+
+---
+
+## Phase 8: UI/UX Design Language
+
+All three dashboards will share a consistent premium aesthetic:
+
+- **Color palette**: Navy blue (`#1e3a5f`) sidebar, white content area, orange/amber accents for CTAs, subtle gray borders
+- **Cards**: White with subtle shadow (`shadow-lg`), rounded-xl corners, hover elevation transitions
+- **Typography**: Bold headings, muted descriptions, proper hierarchy
+- **Tables**: Alternating row backgrounds, hover states, sticky headers
+- **Status badges**: Color-coded (green=completed/paid, amber=pending/eligible, red=ineligible/rejected, blue=converted, purple=nurtured)
+- **Progress indicators**: Circular progress rings for checklists, linear progress bars in tables
+- **Animations**: Fade-in on load, smooth tab transitions, counter animations for stats
+- **Mobile**: Cards collapse into stacked layout, tables become scrollable or card-based
+- **RTL support**: Full RTL layout using `useDirection()` hook
 
 ---
 
 ## Technical Summary
 
-### New Files
+### Database Changes (Migration)
+
+| Change | Type |
+|--------|------|
+| Add `influencer` to `app_role` enum | ALTER TYPE |
+| Add `student_status` and `influencer_id` to `profiles` | ALTER TABLE |
+| Create `checklist_items` table + RLS | CREATE TABLE |
+| Create `student_checklist` table + RLS | CREATE TABLE |
+| Create `influencer_invites` table + RLS | CREATE TABLE |
+| Seed default checklist items | INSERT |
+| Add influencer SELECT policy on `profiles` | CREATE POLICY |
+| Add influencer SELECT policy on `student_checklist` | CREATE POLICY |
+
+### New Edge Function
+
+| Function | Purpose |
+|----------|---------|
+| `create-influencer` | Admin creates influencer account (auth user + role + profile) |
+
+### New Files (~15)
+
 | File | Purpose |
 |------|---------|
-| `public/_headers` | Security headers (HSTS, X-Frame-Options, etc.) |
-| `public/sitemap.xml` | XML sitemap for search engines |
-| `src/components/common/SEOHead.tsx` | Reusable per-page SEO component |
+| `src/pages/InfluencerDashboardPage.tsx` | Influencer dashboard page |
+| `src/components/admin/AdminLayout.tsx` | Shared admin layout with sidebar |
+| `src/components/admin/AdminOverview.tsx` | Stats and overview |
+| `src/components/admin/StudentManagement.tsx` | Student CRUD table |
+| `src/components/admin/InfluencerManagement.tsx` | Influencer table + invites |
+| `src/components/admin/ChecklistManagement.tsx` | Checklist item management |
+| `src/components/admin/ContactsManager.tsx` | Contact submissions |
+| `src/components/admin/SecurityPanel.tsx` | Security monitoring |
+| `src/components/admin/AuditLog.tsx` | Audit trail |
+| `src/components/influencer/InfluencerLayout.tsx` | Influencer dashboard layout |
+| `src/components/influencer/InfluencerStats.tsx` | Influencer stats cards |
+| `src/components/influencer/InfluencerStudentTable.tsx` | Read-only student table |
+| `src/components/dashboard/ChecklistTracker.tsx` | Student checklist component |
+| `supabase/functions/create-influencer/index.ts` | Edge function |
 
 ### Files to Modify
+
 | File | Changes |
 |------|---------|
-| `index.html` | Add CSP meta tag, JSON-LD structured data |
-| `public/robots.txt` | Add sitemap URL, disallow private routes |
-| `src/styles/base.css` | Add `touch-action: pan-y pinch-zoom` to html |
-| `src/App.css` | Remove Vite boilerplate (conflicting max-width/padding) |
-| `vercel.json` | Fix malformed JSON |
-| `src/components/common/OfflineIndicator.tsx` | Localize hardcoded Arabic text |
-| All page components (10+) | Add `<SEOHead>` with unique title/description |
-
-### Files to Add Translation Keys
-| File | Keys |
-|------|------|
-| `public/locales/ar/common.json` | `seo.*` keys for all page titles/descriptions, `offline.message` |
-| `public/locales/en/common.json` | Same keys in English |
+| `src/pages/AdminDashboardPage.tsx` | Complete redesign using new admin components |
+| `src/pages/StudentDashboardPage.tsx` | Add checklist tab, redesign UI |
+| `src/pages/StudentAuthPage.tsx` | Role-based redirect after login |
+| `src/App.tsx` | Add `/influencer-dashboard` route |
+| `src/components/dashboard/DashboardSidebar.tsx` | Add checklist tab, premium styling |
+| `src/components/dashboard/DashboardMainContent.tsx` | Add checklist case |
+| `src/components/dashboard/DashboardHeader.tsx` | Premium styling |
+| `src/types/profile.ts` | Add `student_status` and `influencer_id` fields |
 
 ### What Will NOT Change
-- Website design, colors, fonts, layout, or spacing
-- Navigation order (logo, menu items, student portal button)
-- BottomNav mobile navigation
-- Component structure or visual hierarchy
-- PWA functionality (kept and working)
-- Bilingual (AR/EN) support
-- AI chat, dashboards, tools, authentication
+
+- Website design, navigation, logo, or public pages
+- Existing authentication flow (email/password)
+- PWA functionality
+- Bilingual support structure
+- Security architecture (auth-guard, admin-verify edge functions)
+- Existing data in profiles, documents, services, payments tables
