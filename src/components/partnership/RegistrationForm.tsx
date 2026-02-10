@@ -15,23 +15,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "الاسم يجب أن يحتوي على حرفين على الأقل." }),
-  countryCity: z.string().min(2, { message: "الرجاء إدخال الدولة والمدينة." }),
-  email: z.string().email({ message: "البريد الإلكتروني غير صالح." }),
-  phone: z.string().min(9, { message: "الرجاء إدخال رقم هاتف صالح." }),
-  preferredContact: z.string({ required_error: "الرجاء اختيار وسيلة التواصل." }),
-  aboutYou: z.string().optional(),
-  previousExperience: z.enum(["yes", "no"], { required_error: "الرجاء تحديد خبرتك السابقة." }),
-  whyDarb: z.string().min(10, { message: "الرجاء كتابة 10 أحرف على الأقل." }),
-  attachment: z.instanceof(FileList).optional(),
-});
+import { useDirection } from '@/hooks/useDirection';
 
 const RegistrationForm = () => {
   const { t } = useTranslation('partnership');
+  const { dir } = useDirection();
   const formContent = t('registrationForm', { returnObjects: true }) as any;
   const contactOptions = formContent.contactOptions as Record<string, string>;
-  
+
+  const formSchema = z.object({
+    name: z.string().min(2, { message: t('registrationForm.validation.nameMin') }),
+    countryCity: z.string().min(2, { message: t('registrationForm.validation.countryCityMin') }),
+    email: z.string().email({ message: t('registrationForm.validation.emailInvalid') }),
+    phone: z.string().min(9, { message: t('registrationForm.validation.phoneMin') }),
+    preferredContact: z.string({ required_error: t('registrationForm.validation.contactRequired') }),
+    aboutYou: z.string().optional(),
+    previousExperience: z.enum(["yes", "no"], { required_error: t('registrationForm.validation.experienceRequired') }),
+    whyDarb: z.string().min(10, { message: t('registrationForm.validation.whyDarbMin') }),
+    attachment: z.instanceof(FileList).optional(),
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,12 +80,12 @@ const RegistrationForm = () => {
     },
     onSuccess: (data) => {
         console.log('✅ Partnership form submitted successfully:', data);
-        toast.success("تم إرسال طلب الشراكة بنجاح! ✅ سنتواصل معك قريباً.");
+        toast.success(t('registrationForm.toasts.success'));
         form.reset();
     },
     onError: (error) => {
         console.error('❌ Partnership form submission failed:', error);
-        toast.error(`حدث خطأ: ${error.message}. الرجاء المحاولة مرة أخرى.`);
+        toast.error(t('registrationForm.toasts.error', { error: error.message }));
     },
   });
 
@@ -119,7 +122,7 @@ const RegistrationForm = () => {
                 </div>
                  <FormField control={form.control} name="preferredContact" render={({ field }) => (
                     <FormItem><FormLabel>{formContent.preferredContact}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             {Object.entries(contactOptions).map(([key, value]) => (
@@ -160,13 +163,13 @@ const RegistrationForm = () => {
                       <FormControl>
                         <Input type="file" onChange={e => onChange(e.target.files)} {...rest} disabled />
                       </FormControl>
-                      <FormDescription>خاصية رفع الملفات غير متاحة حالياً.</FormDescription>
+                      <FormDescription>{t('registrationForm.fileUploadDisabled')}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
-                  {isPending ? "جار الإرسال... ⏳" : formContent.submit}
+                  {isPending ? t('registrationForm.submitting') : formContent.submit}
                 </Button>
               </form>
             </Form>
