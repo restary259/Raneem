@@ -6,10 +6,12 @@ import ServicesGrid from "@/components/services/ServicesGrid";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import TestimonialSection from "@/components/services/TestimonialSection";
 import ConsultationCta from "@/components/services/ConsultationCta";
+import { useDirection } from "@/hooks/useDirection";
 
 const ServicesPage = () => {
+  const { dir } = useDirection();
   return (
-    <div dir="rtl" className="flex flex-col min-h-screen bg-background text-foreground">
+    <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <main className="flex-grow">
         <ServicesHero />

@@ -5,10 +5,14 @@ import Footer from '@/components/landing/Footer';
 import CurrencyConverter from '@/components/calculator/CurrencyConverter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DollarSign } from 'lucide-react';
+import { useDirection } from '@/hooks/useDirection';
+import { useTranslation } from 'react-i18next';
 
 const CurrencyConverterPage = () => {
+  const { dir } = useDirection();
+  const { t } = useTranslation('resources');
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background" dir={dir}>
       <Header />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -16,9 +20,9 @@ const CurrencyConverterPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-2xl">
                 <DollarSign className="h-6 w-6 text-primary" />
-                محول العملات
+                {t('currencyComparator.title')}
               </CardTitle>
-              <CardDescription>حوّل العملات واحسب التكاليف بعملتك المحلية</CardDescription>
+              <CardDescription>{t('currencyComparator.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <CurrencyConverter />

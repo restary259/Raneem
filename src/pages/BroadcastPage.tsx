@@ -7,9 +7,11 @@ import VideoGallery from '@/components/broadcast/VideoGallery';
 import SubmitVideo from '@/components/broadcast/SubmitVideo';
 import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
 import { useTranslation } from 'react-i18next';
+import { useDirection } from '@/hooks/useDirection';
 
 const BroadcastPage = () => {
   const { t } = useTranslation('broadcast');
+  const { dir } = useDirection();
   const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory | 'all'>('all');
 
   const featuredVideo = useMemo(() => broadcastData.find(p => p.featured), []);
@@ -26,21 +28,21 @@ const BroadcastPage = () => {
 
   if (!featuredVideo) {
     return (
-        <div dir="rtl" className="flex items-center justify-center h-screen">
+        <div dir={dir} className="flex items-center justify-center h-screen">
             <p>{t('broadcastPage.loading')}</p>
         </div>
     );
   }
 
   return (
-    <div dir="rtl" className="bg-background dark:bg-gray-950">
+    <div dir={dir} className="bg-background dark:bg-gray-950">
       <Header />
       <main>
         <HeroVideo post={featuredVideo} />
         
         <section className="py-8 md:py-16">
           <div className="container">
-              <div className="text-right mb-8">
+              <div className="mb-8">
                   <h2 className="text-3xl font-bold">{t('broadcastPage.categoriesTitle')}</h2>
               </div>
               <VideoCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
@@ -49,7 +51,7 @@ const BroadcastPage = () => {
 
         <section className="pb-12 md:pb-24">
             <div className="container">
-                <div className="text-right mb-8">
+                <div className="mb-8">
                     <h2 className="text-3xl font-bold">{t('broadcastPage.galleryTitle')}</h2>
                 </div>
                 <VideoGallery posts={galleryVideos} />
