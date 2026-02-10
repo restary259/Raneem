@@ -149,7 +149,7 @@ const CostCalculator = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('costCalculator.country')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder={t('costCalculator.country')} /></SelectTrigger>
                       </FormControl>
@@ -165,7 +165,7 @@ const CostCalculator = () => {
               <FormField name="degreeLevel" control={form.control} render={({ field }) => (
                  <FormItem>
                     <FormLabel>{t('costCalculator.degreeLevel')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="bachelor">{t('costCalculator.bachelor')}</SelectItem>
@@ -178,7 +178,7 @@ const CostCalculator = () => {
               <FormField name="fieldOfStudy" control={form.control} render={({ field }) => (
                  <FormItem>
                     <FormLabel>{t('costCalculator.fieldOfStudy')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="medicine">{t('costCalculator.medicine')}</SelectItem>
@@ -226,7 +226,7 @@ const CostCalculator = () => {
               <FormField name="accommodation" control={form.control} render={({ field }) => (
                  <FormItem>
                     <FormLabel>{t('costCalculator.accommodation')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="dormitory">{t('costCalculator.dormitory')}</SelectItem>

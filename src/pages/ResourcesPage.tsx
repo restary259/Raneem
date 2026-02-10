@@ -35,7 +35,7 @@ const ToolsSection = ({ tools }: { tools: { id: string; title: string; descripti
               <CardContent className="text-center">
                 <Button asChild>
                   <Link to={tool.path} className="flex items-center gap-2">
-                    افتح الأداة
+                    {t('educational.openTool', { ns: 'common' })}
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -79,7 +79,7 @@ const GuidesSection = ({ guides }: { guides: { title: string; description: strin
 };
 
 const ResourcesPage = () => {
-  const { t } = useTranslation('resources');
+  const { t } = useTranslation(['resources', 'common']);
 
   const tools = [
     { id: 'cost-calculator', title: t('costCalculator.title'), description: t('costCalculator.description'), icon: Calculator, path: '/resources/cost-calculator' },

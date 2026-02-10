@@ -13,22 +13,24 @@ import Map from "./Map";
 import OfficeLocations from "./OfficeLocations";
 import { Instagram, Linkedin, Youtube, Facebook } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDirection } from "@/hooks/useDirection";
 import TikTokIcon from "../icons/TikTokIcon";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "يجب أن يتكون الاسم من حرفين على الأقل." }),
-  email: z.string().email({ message: "الرجاء إدخال بريد إلكتروني صالح." }),
-  whatsapp: z.string().min(9, { message: "الرجاء إدخال رقم واتساب صالح." }),
-  studyDestination: z.string({ required_error: "الرجاء اختيار بلد الدراسة." }),
-  service: z.string({ required_error: "الرجاء اختيار الخدمة المطلوبة." }),
-  message: z.string().optional(),
-});
-
 const Contact = () => {
-  const { t } = useTranslation('contact');
-  const serviceOptions = t('contact.form.serviceOptions', { returnObjects: true }) as string[];
+  const { t } = useTranslation(['contact', 'common']);
+  const { dir } = useDirection();
+  const serviceOptions = t('contact.form.serviceOptions', { returnObjects: true, ns: 'contact' }) as string[];
+
+  const formSchema = z.object({
+    name: z.string().min(2, { message: t('contact.validation.nameMin', { ns: 'common' }) }),
+    email: z.string().email({ message: t('contact.validation.emailInvalid', { ns: 'common' }) }),
+    whatsapp: z.string().min(9, { message: t('contact.validation.whatsappMin', { ns: 'common' }) }),
+    studyDestination: z.string({ required_error: t('contact.validation.destinationRequired', { ns: 'common' }) }),
+    service: z.string({ required_error: t('contact.validation.serviceRequired', { ns: 'common' }) }),
+    message: z.string().optional(),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,19 +71,12 @@ const Contact = () => {
     },
     onSuccess: (data) => {
       console.log('✅ Contact form submitted successfully:', data);
-      toast({
-        title: "تم إرسال رسالتك بنجاح! ✅",
-        description: "شكرًا لتواصلك معنا. سيقوم أحد مستشارينا بالرد عليك قريبًا.",
-      });
+      toast({ title: t('contact.successTitle', { ns: 'common' }), description: t('contact.successDesc', { ns: 'common' }) });
       form.reset();
     },
     onError: (error) => {
       console.error('❌ Contact form submission failed:', error);
-      toast({
-        variant: "destructive",
-        title: "حدث خطأ في إرسال الرسالة ❌",
-        description: `فشل إرسال النموذج: ${error.message}. الرجاء المحاولة مرة أخرى أو التواصل معنا مباشرة.`,
-      });
+      toast({ variant: "destructive", title: t('contact.errorTitle', { ns: 'common' }), description: error.message });
     },
   });
 
@@ -118,14 +113,14 @@ const Contact = () => {
                  <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                     <FormField control={form.control} name="studyDestination" render={({ field }) => (
                         <FormItem><FormLabel>{t('contact.form.destination')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
                             <FormControl><SelectTrigger><SelectValue placeholder={t('contact.form.destinationPlaceholder')} /></SelectTrigger></FormControl>
                             <SelectContent><SelectItem value="germany">{t('contact.form.destinationOptions.germany')}</SelectItem></SelectContent>
                         </Select><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="service" render={({ field }) => (
                         <FormItem><FormLabel>{t('contact.form.service')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                        <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
                             <FormControl><SelectTrigger><SelectValue placeholder={t('contact.form.servicePlaceholder')} /></SelectTrigger></FormControl>
                             <SelectContent>{serviceOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                         </Select><FormMessage /></FormItem>
@@ -146,7 +141,7 @@ const Contact = () => {
                   aria-hidden="true"
                 />
                 <Button type="submit" className="w-full font-bold" size="lg" variant="default" disabled={isPending}>
-                  {isPending ? "جار الإرسال... ⏳" : t('contact.form.submit')}
+                  {isPending ? t('contact.submitting', { ns: 'common' }) : t('contact.form.submit')}
                 </Button>
               </form>
             </Form>

@@ -28,5 +28,41 @@
       { "name": "Sami Haddad", "role": "Jordan & Middle East Advisor", "bio": "Helps students from the Middle East transition to studying in Europe.", "imageUrl": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=300&auto=format&fit=crop" },
       { "name": "Elena Fischer", "role": "University Partnerships Manager", "bio": "Builds and maintains strong relationships with our university partners.", "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=300&auto=format&fit=crop" }
     ]
+  },
+  "whoWeAre": {
+    "heroTitle": "Your Partner Towards a Bright Future",
+    "heroSubtitle": "At Darb Study International, we are more than a student services agency; we are your trusted partner on your academic journey. Our belief that education is the key to unlocking potential drives us to provide comprehensive, personalized support from the first step to achieving your goal.",
+    "heroAlt": "Abstract blue gradient background",
+    "storyTitle": "Our Story: A Path of Inspiration",
+    "storySubtitle": "Darb started from our personal experiences as international students. We faced challenges and wished for a guiding hand. From there, we decided to be that guide for the students who come after us.",
+    "storyPoints": [
+      { "icon": "Lightbulb", "title": "The Beginning: A Spark of an Idea", "description": "A vision born from necessity, to provide accurate information and honest support for ambitious Arab students." },
+      { "icon": "TrendingUp", "title": "Growth: Building Bridges", "description": "Expanding our network of prestigious university partners and building a team of dedicated experts serving students." },
+      { "icon": "Star", "title": "Our Mission: Our Compass", "description": "Connecting Arab students with the best international educational opportunities, with our absolute commitment to transparency, integrity, and student-first service." },
+      { "icon": "HeartHandshake", "title": "Our Vision: Empowering the Future", "description": "Empowering every student to achieve their academic and personal aspirations with confidence, to become future leaders in their communities." },
+      { "icon": "Globe", "title": "The Future: Global Horizons", "description": "We aspire to be the first destination for Arab students, committed to our core values and continuous innovation in our services." }
+    ],
+    "valuesTitle": "Our Core Values",
+    "valuesSubtitle": "The principles that guide every decision we make and every service we provide.",
+    "values": [
+      { "icon": "ShieldCheck", "title": "Integrity & Transparency", "description": "We adhere to the highest standards of honesty and clarity in all our dealings." },
+      { "icon": "HeartHandshake", "title": "Student First", "description": "The student's interest is our compass, and their success is our top priority." },
+      { "icon": "Lightbulb", "title": "Excellence & Innovation", "description": "We constantly strive to provide innovative solutions and services that exceed expectations." },
+      { "icon": "TrendingUp", "title": "Continuous Growth", "description": "We believe in continuous learning and development for ourselves and our students alike." }
+    ],
+    "featuresTitle": "What Sets Us Apart",
+    "featuresSubtitle": "We don't just provide a service — we build a relationship. Here's what makes us the ideal choice for your educational journey.",
+    "features": [
+      { "icon": "Users", "title": "Expert Team", "description": "We have deep expertise in educational systems across Europe and the Middle East, especially in Germany, Jordan, and Romania." },
+      { "icon": "UserCheck", "title": "Personal Guidance", "description": "We provide guidance specifically designed to fit each student's individual needs and circumstances." },
+      { "icon": "FileText", "title": "Full Transparency", "description": "Our processes are clear and fully transparent, with no hidden fees or unexpected surprises." },
+      { "icon": "Globe", "title": "Cultural & Language Support", "description": "We understand cultural and linguistic challenges and provide the support needed to overcome them successfully." },
+      { "icon": "Handshake", "title": "Strong Partner Network", "description": "We have a strong network of trusted partners including universities and service providers in our study destinations." },
+      { "icon": "Award", "title": "Ongoing Support", "description": "We accompany you at every step, from travel preparation to ongoing support during your studies to ensure your success." }
+    ],
+    "processTitle": "Our Methodology & Quality Assurance",
+    "processDesc": "We follow a transparent and organized process to ensure an exceptional experience and the best results for every student.",
+    "ctaLine1": "We invite you to start your journey with us with confidence. Your success is our success.",
+    "ctaLine2": "Your trusted partner for achieving the dream of higher education."
   }
 }
