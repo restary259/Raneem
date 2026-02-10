@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
 import { Shield, AlertTriangle } from "lucide-react";
+import { useDirection } from "@/hooks/useDirection";
 
 const downloadCSV = (rows: any[], fileName = "export.csv") => {
   if (!rows.length) return;
@@ -135,8 +136,9 @@ const AdminDashboardPage = () => {
     c.data?.email?.toLowerCase().includes(contactSearch.toLowerCase())
   );
 
+  const { dir } = useDirection();
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir={dir}>
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">لوحة تحكم المدير</h1>

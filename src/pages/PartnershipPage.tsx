@@ -12,15 +12,17 @@ import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
 import ClosingCta from "@/components/partnership/ClosingCta";
 import { useTranslation } from "react-i18next";
+import { useDirection } from "@/hooks/useDirection";
 
 const PartnershipPage = () => {
     const { t } = useTranslation('partnership');
+    const { dir } = useDirection();
     useEffect(() => {
         document.title = t('partnershipPage.title');
     }, [t]);
 
     return (
-        <div dir="rtl" className="flex flex-col min-h-screen bg-secondary text-foreground">
+        <div dir={dir} className="flex flex-col min-h-screen bg-secondary text-foreground">
             <Header />
             <main className="flex-grow">
                 <PartnershipHero />

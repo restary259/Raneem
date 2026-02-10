@@ -2,5 +2,63 @@
   "servicesHero": {
     "title": "Our Services – Guiding You Step by Step to Your University",
     "subtitle": "Whether you're looking for university admission, a visa, or housing — we're with you. We provide integrated, customized solutions to meet your needs and ensure a successful educational journey in Germany, Romania, and Jordan."
+  },
+  "servicesGrid": {
+    "sectionTitle": "Our Comprehensive Services",
+    "sectionSubtitle": "We offer a full range of services to ensure a successful academic journey",
+    "startNow": "Get Started",
+    "services": [
+      { "title": "Academic Consultation", "description": "Personalized consultation for choosing the right major and university", "features": ["Personal student assessment", "Suitable major selection", "Top university recommendations"] },
+      { "title": "Document Preparation", "description": "Preparation and translation of all required documents", "features": ["Certified translation", "Document review", "University-specific formatting"] },
+      { "title": "Visa Processing", "description": "Complete assistance with student visa procedures", "features": ["File preparation", "Embassy appointment booking", "Application review"] },
+      { "title": "Housing Search", "description": "Help finding suitable accommodation near your university", "features": ["Budget-based search", "Landlord communication", "Contract review"] },
+      { "title": "Banking Services", "description": "Assistance with bank account opening and financial procedures", "features": ["Bank account opening", "Credit card", "Money transfers"] },
+      { "title": "Post-Arrival Support", "description": "Ongoing assistance after arriving in the new country", "features": ["Phone support", "Problem solving", "Adaptation tips"] },
+      { "title": "Cost Calculator", "description": "Calculate study and living costs accurately", "features": ["Study costs", "Living costs", "Country comparison"] },
+      { "title": "Major Matching Quiz", "description": "Discover the most suitable university major for you", "features": ["Personality test", "Interest analysis", "Custom recommendations"] },
+      { "title": "Free Consultation", "description": "Book a free consultation with our experts", "features": ["30 minutes free", "Specialized experts", "Instant answers"] }
+    ]
+  },
+  "serviceProcess": {
+    "title": "Your Journey With Us in 4 Steps",
+    "description": "Our process is transparent and straightforward to ensure the best results.",
+    "steps": [
+      { "title": "Consultation & Assessment", "description": "Your journey begins with a free consultation session to understand your goals and evaluate your profile." },
+      { "title": "Application Preparation & Submission", "description": "We help you prepare all documents and submit your applications to universities and embassies." },
+      { "title": "Travel Preparation", "description": "After receiving admission and visa, we help you book accommodation and prepare for travel." },
+      { "title": "Post-Arrival Support", "description": "We welcome you and provide the necessary support to help you settle and start your studies comfortably." }
+    ]
+  },
+  "consultationCta": {
+    "title": "Ready to Start Your Journey?",
+    "subtitle": "Fill out the form below to book a free consultation with one of our experts. Let us help you achieve your dream of studying abroad.",
+    "fullName": "Full Name",
+    "namePlaceholder": "e.g. Ahmad Mohammed",
+    "email": "Email",
+    "country": "Current Country of Residence",
+    "countryPlaceholder": "e.g. Haifa",
+    "serviceType": "Required Service",
+    "servicePlaceholder": "Select a service...",
+    "submit": "Get Started",
+    "submitting": "Sending... ⏳",
+    "successTitle": "Your request was sent successfully! ✅",
+    "successDesc": "We'll get back to you as soon as possible.",
+    "errorTitle": "An error occurred ❌",
+    "serviceOptions": ["University Application", "Translation & Documentation", "Language Courses", "Visas & Residency", "Housing Services", "Reception & Follow-up", "Personal Consultations", "General Consultation"],
+    "validation": {
+      "nameMin": "Name must be at least 2 characters.",
+      "emailInvalid": "Please enter a valid email address.",
+      "countryMin": "Please enter the country name.",
+      "serviceRequired": "Please select a service type."
+    }
+  },
+  "testimonialSection": {
+    "title": "Student Testimonials",
+    "subtitle": "Discover our students' successful experiences on their journey to study abroad",
+    "testimonials": [
+      { "name": "Ahmad Mohammed", "country": "Germany", "university": "TU Munich", "text": "Thanks to Darb, I was able to get accepted at the Technical University of Munich. The team was very cooperative and provided all the support I needed." },
+      { "name": "Fatima Al-Ali", "country": "Romania", "university": "Carol Davila University", "text": "My journey to study medicine was easy and comfortable thanks to the outstanding services provided by Darb." },
+      { "name": "Youssef Al-Hassan", "country": "Germany", "university": "RWTH Aachen", "text": "One of the best decisions I made was working with Darb. They helped me every step of the way from getting accepted to arriving." }
+    ]
   }
 }

@@ -22,18 +22,10 @@
     "studentLogin": "Student Login"
   },
   "desktopNav": {
-    "about": {
-      "description": "Learn about our story, vision, and values."
-    },
-    "locations": {
-      "description": "Discover our office locations around the world."
-    },
-    "partnership": {
-      "description": "Join our network as a partner or influencer."
-    },
-    "partners": {
-      "description": "Browse our list of accredited partners."
-    }
+    "about": { "description": "Learn about our story, vision, and values." },
+    "locations": { "description": "Discover our office locations around the world." },
+    "partnership": { "description": "Join our network as a partner or influencer." },
+    "partners": { "description": "Browse our list of accredited partners." }
   },
   "applyNow": "Apply Now",
   "footer": {
@@ -160,5 +152,89 @@
       "Ongoing Post-Arrival Student Support",
       "Marketing & Influencer Collaboration (B2B Service)"
     ]
+  },
+  "pwa": {
+    "installTitle": "Install Darb App",
+    "installDesc": "For quick access and offline use",
+    "mobileUse": "Mobile use",
+    "offlineUse": "Offline",
+    "installNow": "Install Now",
+    "later": "Later",
+    "iosTitle": "Install Darb App on iOS",
+    "iosDesc": "Follow these steps to add the app",
+    "iosStep1Title": "Tap the Share button",
+    "iosStep1Desc": "Look for the share icon in the Safari toolbar",
+    "iosStep2Title": "Choose \"Add to Home Screen\"",
+    "iosStep2Desc": "Scroll down in the menu until you find it",
+    "iosStep3Title": "Tap \"Add\"",
+    "iosStep3Desc": "The app will appear on your home screen",
+    "understood": "Got it!"
+  },
+  "officeLocations": {
+    "title": "Our Main Office",
+    "whatsappButton": "Start a WhatsApp Chat",
+    "hours": "Sunday - Thursday: 9 AM - 5 PM",
+    "city": "Tamra, Israel",
+    "address": "Tamra Mall, Tamra 3081100"
+  },
+  "locations": {
+    "title": "Where We Operate",
+    "items": [
+      { "country": "Germany", "cities": "Heidelberg, Münster, Düsseldorf", "services": "University admissions, visas, language schools, residence permits." },
+      { "country": "Jordan", "cities": "Amman Office", "services": "Student consultations, document collection, translation, embassy coordination." },
+      { "country": "Romania", "cities": "Partner institutions in Bucharest", "services": "Medical & technical university applications, visa preparation." },
+      { "country": "Italy", "cities": "Florence (Coming Soon)", "services": "New services coming soon." }
+    ]
+  },
+  "educational": {
+    "heroBadge": "Discover Your Ideal Major",
+    "heroTitle": "Academic Majors",
+    "heroSubtitle": "Explore a wide range of academic majors and choose the career path that suits your ambitions",
+    "ctaTitle": "Need Help Choosing a Major?",
+    "ctaSubtitle": "Book a free consultation with our educational experts to help you choose the right major for your interests and abilities",
+    "ctaButton1": "Book a Free Consultation",
+    "ctaButton2": "Major Quiz",
+    "searchPlaceholder": "Search academic majors...",
+    "filterByCategory": "Filter by Category",
+    "allMajors": "All Majors",
+    "foundResults": "Found {{count}} majors",
+    "availableMajors": "{{count}} majors available",
+    "readMore": "Read More",
+    "noResultsTitle": "No Results Found",
+    "noResultsDesc": "Try different keywords or choose another category",
+    "clearSearch": "Clear Search",
+    "showAllCategories": "Show All Categories",
+    "availableMajorsLabel": "Available Majors:",
+    "modalDescription": "Description",
+    "modalSuitableFor": "Suitable For",
+    "modalRequiredBackground": "Required Background",
+    "modalLanguageRequirements": "Language Requirements",
+    "modalCareerOpportunities": "Career Opportunities in Germany",
+    "modalStudyRequirements": "Study Requirements",
+    "modalArab48Notes": "Notes for Arab 48 Students",
+    "openTool": "Open Tool",
+    "edHeroBadge": "🇩🇪 Your Educational Destination in Germany",
+    "edHeroTitle": "Our Educational Destinations in Germany",
+    "edHeroSubtitle": "Explore the best universities, language schools, and educational services in Germany",
+    "edUniversitiesTitle": "Leading German Universities",
+    "edLanguageSchoolsTitle": "Language Schools",
+    "edServicesTitle": "Student Services",
+    "edCtaTitle": "Ready to Start Your Educational Journey in Germany?",
+    "edCtaSubtitle": "Book a free consultation with our experts to help you choose the right university and major",
+    "edCtaButton1": "Book a Free Consultation",
+    "edCtaButton2": "Talk to an Advisor"
+  },
+  "contact": {
+    "submitting": "Sending... ⏳",
+    "validation": {
+      "nameMin": "Name must be at least 2 characters.",
+      "emailInvalid": "Please enter a valid email address.",
+      "whatsappMin": "Please enter a valid WhatsApp number.",
+      "destinationRequired": "Please select a study destination.",
+      "serviceRequired": "Please select the required service."
+    },
+    "successTitle": "Your message was sent successfully! ✅",
+    "successDesc": "Thank you for contacting us. One of our advisors will reply to you soon.",
+    "errorTitle": "Error sending message ❌"
   }
 }
