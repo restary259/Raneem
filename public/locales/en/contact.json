@@ -1,0 +1,34 @@
+{
+  "contactHero": {
+    "title": "We're Here to Help – Contact Us Today",
+    "subtitle": "Whether you're asking about admissions, visas, or housing — the Darb team is ready to answer and guide you every step of the way."
+  },
+  "contact": {
+    "title": "Fill Out the Form to Get in Touch",
+    "subtitle": "Our team is ready to answer all your questions and help you achieve your academic goals.",
+    "form": {
+      "name": "Full Name",
+      "namePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "your.email@example.com",
+      "whatsapp": "WhatsApp Number",
+      "whatsappPlaceholder": "With country code",
+      "destination": "Country of Interest",
+      "destinationPlaceholder": "Choose a country",
+      "destinationOptions": { "germany": "Germany", "romania": "Romania", "jordan": "Jordan" },
+      "service": "Required Service",
+      "servicePlaceholder": "Choose a service",
+      "serviceOptions": ["University Application", "Translation & Authentication", "Language Courses", "Visas & Residence", "Housing Services", "Reception & Follow-up", "Personal Consultations", "General Inquiry"],
+      "message": "Additional Message (optional)",
+      "messagePlaceholder": "Write your message here...",
+      "submit": "Send Now"
+    },
+    "toast": {
+      "successTitle": "Your message was sent successfully!",
+      "successDescription": "Thank you for reaching out. One of our advisors will respond to you soon."
+    },
+    "follow": "Follow Us",
+    "mapTitle": "Our Location on the Map",
+    "mapSubtitle": "Explore our office locations around the world."
+  }
+}

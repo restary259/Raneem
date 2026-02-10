@@ -1,0 +1,51 @@
+{
+  "partnersPage": {
+    "heroTitle": "We Trust Our Partners – And Our Students Trust Us",
+    "heroSubtitle": "Discover our international network of universities and educational institutions, and join us on the path to academic success.",
+    "tabs": {
+      "germany": "Germany 🇩🇪",
+      "romania": "Romania 🇷🇴",
+      "jordan": "Jordan 🇯🇴"
+    },
+    "sections": {
+      "universities": "Universities & Educational Institutions",
+      "services": "Student Services & Platforms",
+      "influencers": "Influencer Partners"
+    },
+    "card": {
+      "partnerSince": "Partner since: {{year}}",
+      "specialization": "Specialization",
+      "learnMore": "Learn More",
+      "darbBenefit": "Benefits for Darb Students",
+      "followers": "followers"
+    },
+    "stats": {
+      "trustedPartners": {
+        "number": "16+",
+        "label": "Trusted Partners",
+        "description": "Universities and educational institutions"
+      },
+      "countries": {
+        "number": "5+",
+        "label": "Countries",
+        "description": "Around the world"
+      },
+      "students": {
+        "number": "47+",
+        "label": "Students",
+        "description": "Successfully admitted"
+      },
+      "experience": {
+        "number": "10+",
+        "label": "Years of Experience",
+        "description": "In international education"
+      }
+    },
+    "cta": {
+      "title": "Do you represent a university, student service, or are you an influencer?",
+      "subtitle": "We're always looking for new partners. Become part of the Darb partner network and connect with hundreds of students monthly.",
+      "button": "Join Us as a Partner"
+    },
+    "disclaimer": "All partnerships shown are real and documented. Some partnerships are displayed for promotional purposes with prior consent from partners."
+  }
+}

@@ -12,8 +12,10 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
+import { useTranslation } from 'react-i18next';
 
 const StudentAuthPage = () => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,7 +53,6 @@ const StudentAuthPage = () => {
 
     try {
       if (isLogin) {
-        // Use rate-limited auth-guard edge function
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-guard`, {
           method: 'POST',
           headers: {
@@ -64,10 +65,9 @@ const StudentAuthPage = () => {
         const result = await resp.json();
 
         if (!resp.ok) {
-          throw new Error(result.error || 'فشل تسجيل الدخول');
+          throw new Error(result.error || t('auth.loginFailed'));
         }
 
-        // Set the session from the edge function response
         if (result.session) {
           await supabase.auth.setSession({
             access_token: result.session.access_token,
@@ -76,16 +76,15 @@ const StudentAuthPage = () => {
         }
 
         toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك في لوحة التحكم الخاصة بك",
+          title: t('auth.loginSuccess'),
+          description: t('auth.loginSuccessDesc'),
         });
       } else {
-        // Signup: enforce strong password
         if (!validatePassword(password)) {
           toast({
             variant: "destructive",
-            title: "كلمة المرور ضعيفة",
-            description: "يجب أن تحتوي على 8 أحرف على الأقل، حرف كبير، حرف صغير، رقم، ورمز خاص.",
+            title: t('auth.weakPassword'),
+            description: t('auth.weakPasswordDesc'),
           });
           setIsLoading(false);
           return;
@@ -107,23 +106,23 @@ const StudentAuthPage = () => {
         if (error) throw error;
 
         toast({
-          title: "تم إنشاء الحساب بنجاح",
-          description: "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب",
+          title: t('auth.signupSuccess'),
+          description: t('auth.signupSuccessDesc'),
         });
       }
     } catch (error: any) {
       let errorMessage = error.message;
       if (error.message.includes('Invalid login credentials')) {
-        errorMessage = 'بيانات تسجيل الدخول غير صحيحة';
+        errorMessage = t('auth.invalidCredentials');
       } else if (error.message.includes('User already registered')) {
-        errorMessage = 'هذا البريد الإلكتروني مسجل مسبقاً';
+        errorMessage = t('auth.alreadyRegistered');
       } else if (error.message.includes('Invalid email')) {
-        errorMessage = 'البريد الإلكتروني غير صالح';
+        errorMessage = t('auth.invalidEmail');
       }
 
       toast({
         variant: "destructive",
-        title: "حدث خطأ",
+        title: t('auth.errorTitle'),
         description: errorMessage,
       });
     } finally {
@@ -137,7 +136,7 @@ const StudentAuthPage = () => {
         <Card className="shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">
-              {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+              {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -145,32 +144,32 @@ const StudentAuthPage = () => {
               {!isLogin && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">الاسم الكامل *</Label>
-                    <Input id="fullName" placeholder="أدخل اسمك الكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} required={!isLogin} />
+                    <Label htmlFor="fullName">{t('auth.fullName')}</Label>
+                    <Input id="fullName" placeholder={t('auth.fullNamePlaceholder')} value={fullName} onChange={(e) => setFullName(e.target.value)} required={!isLogin} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">رقم الجوال</Label>
-                    <Input id="phoneNumber" type="tel" placeholder="أدخل رقم جوالك" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                    <Label htmlFor="phoneNumber">{t('auth.phone')}</Label>
+                    <Input id="phoneNumber" type="tel" placeholder={t('auth.phonePlaceholder')} value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="country">الدولة</Label>
-                    <Input id="country" placeholder="أدخل دولتك" value={country} onChange={(e) => setCountry(e.target.value)} />
+                    <Label htmlFor="country">{t('auth.country')}</Label>
+                    <Input id="country" placeholder={t('auth.countryPlaceholder')} value={country} onChange={(e) => setCountry(e.target.value)} />
                   </div>
                 </>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني *</Label>
-                <Input id="email" type="email" placeholder="أدخل بريدك الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Label htmlFor="email">{t('auth.email')}</Label>
+                <Input id="email" type="email" placeholder={t('auth.emailPlaceholder')} value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">كلمة المرور *</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="أدخل كلمة المرور"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -190,7 +189,7 @@ const StudentAuthPage = () => {
                 {isLogin && (
                   <div className="text-left">
                     <Button type="button" variant="link" size="sm" onClick={() => setShowResetModal(true)} className="p-0 h-auto font-normal text-sm text-primary hover:underline">
-                      نسيت كلمة المرور؟
+                      {t('auth.forgotPassword')}
                     </Button>
                   </div>
                 )}
@@ -200,17 +199,17 @@ const StudentAuthPage = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    جار التحميل...
+                    {t('auth.loading')}
                   </>
                 ) : (
-                  isLogin ? "تسجيل الدخول" : "إنشاء حساب"
+                  isLogin ? t('auth.loginButton') : t('auth.signupButton')
                 )}
               </Button>
             </form>
 
             <div className="mt-4 text-center">
               <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-sm">
-                {isLogin ? "ليس لديك حساب؟ سجل الآن" : "لديك حساب؟ سجل الدخول"}
+                {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
               </Button>
             </div>
           </CardContent>

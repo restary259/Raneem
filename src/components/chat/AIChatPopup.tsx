@@ -5,9 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Send, Bot, User, Loader2, WifiOff, Maximize2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAIChat, QUICK_QUESTIONS } from '@/hooks/useAIChat';
+import { useAIChat } from '@/hooks/useAIChat';
+import { useTranslation } from 'react-i18next';
+import { useDirection } from '@/hooks/useDirection';
 
 const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
+  const { dir } = useDirection();
+  const quickQuestions = t('quickQuestions', { returnObjects: true }) as string[];
+
   const {
     messages,
     input,
@@ -20,18 +26,18 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
   } = useAIChat(true);
 
   return (
-    <Card className="flex flex-col h-[550px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background/95 backdrop-blur-sm border-white/20" dir="rtl">
+    <Card className="flex flex-col h-[550px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background/95 backdrop-blur-sm border-white/20" dir={dir}>
       <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-l from-orange-500 to-amber-500 text-white p-4 shrink-0">
         <div className="flex items-center gap-2">
           <Bot className="h-6 w-6" />
           <div>
-            <CardTitle className="text-lg">مساعد درب الذكي</CardTitle>
-            <CardDescription className="text-white/80 text-xs">مرشدك للدراسة في ألمانيا 🇩🇪</CardDescription>
+            <CardTitle className="text-lg">{t('chat.title')}</CardTitle>
+            <CardDescription className="text-white/80 text-xs">{t('chat.description')}</CardDescription>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <Link to="/ai-advisor">
-            <Button variant="ghost" size="icon" className="hover:bg-white/20 text-white shrink-0" title="فتح في صفحة كاملة">
+            <Button variant="ghost" size="icon" className="hover:bg-white/20 text-white shrink-0" title={t('chat.openFullPage')}>
               <Maximize2 className="h-4 w-4" />
             </Button>
           </Link>
@@ -44,7 +50,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
       {!isOnline && (
         <div className="bg-amber-50 px-3 py-1.5 flex items-center gap-2 text-amber-700 text-xs border-b border-amber-200">
           <WifiOff className="h-3 w-3" />
-          <span>غير متصل — محادثات محفوظة فقط</span>
+          <span>{t('chat.offlineNotice')}</span>
         </div>
       )}
 
@@ -52,15 +58,16 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
         {messages.length === 0 && (
           <div className="space-y-3">
             <p className="text-sm text-center text-muted-foreground">
-              مرحباً! أنا مساعد درب الذكي. أساعدك في كل ما يخص الدراسة في ألمانيا 🎓
+              {t('chat.emptyState')}
             </p>
             <div className="space-y-2">
-              <p className="text-xs text-center text-muted-foreground font-medium">أسئلة شائعة:</p>
-              {QUICK_QUESTIONS.map((q, i) => (
+              <p className="text-xs text-center text-muted-foreground font-medium">{t('chat.quickQuestionsTitle')}</p>
+              {quickQuestions.map((q, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-right text-sm p-2 rounded-lg border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  className="w-full text-sm p-2 rounded-lg border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  style={{ textAlign: dir === 'rtl' ? 'right' : 'left' }}
                 >
                   {q}
                 </button>
@@ -123,8 +130,8 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="اكتب سؤالك هنا..."
-            className="flex-1 text-right"
+            placeholder={t('chat.placeholder')}
+            className="flex-1"
             disabled={isLoading}
           />
         </form>

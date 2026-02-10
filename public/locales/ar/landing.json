@@ -4,7 +4,12 @@
   "hero": {
     "title": "رفيقك الدراسي العالمي",
     "subtitle": "من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج",
-    "consultation": "احجز استشارة مجانية"
+    "consultation": "احجز استشارة مجانية",
+    "stats": {
+      "satisfiedStudents": "طالب راض",
+      "educationalPartners": "شريك تعليمي",
+      "countriesWorldwide": "دولة حول العالم"
+    }
   },
   "whyChooseUs": {
     "title": "لماذا تختار درب؟",

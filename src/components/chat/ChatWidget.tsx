@@ -4,10 +4,12 @@ import { MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AIChatPopup from './AIChatPopup';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -15,12 +17,11 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Chat Button */}
       <div className="fixed z-40 bottom-24 md:bottom-6 right-4 md:right-6 w-14 h-14">
         <Button
           onClick={toggleChat}
           className="w-full h-full rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
-          aria-label={isOpen ? 'إغلاق الدردشة' : 'فتح الدردشة'}
+          aria-label={isOpen ? t('chat.closeChat') : t('chat.openChat')}
         >
           {isOpen ? (
             <X className="w-1/2 h-1/2" />
@@ -30,7 +31,6 @@ const ChatWidget = () => {
         </Button>
       </div>
 
-      {/* Chat Popup */}
       {isOpen && (
         <div 
           className={`fixed z-50 ${

@@ -1,0 +1,164 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "services": "Our Services",
+    "partners": "Our Partners",
+    "partnership": "Partnership Program",
+    "resources": "Resources",
+    "universityFinder": "Find a University",
+    "contact": "Contact Us",
+    "brand": "Darb",
+    "locations": "Our Locations",
+    "broadcast": "Darb Broadcast",
+    "studentPortal": "Student Portal",
+    "majorQuiz": "Major Quiz",
+    "more": "More",
+    "majors": "Majors",
+    "majorQuizNav": "Find Your Major",
+    "educationalDestinations": "Educational Destinations",
+    "educationalDestinationsDesc": "Discover universities, language schools, and educational services",
+    "broadcastDesc": "Watch educational and live videos from our experts",
+    "studentLogin": "Student Login"
+  },
+  "desktopNav": {
+    "about": {
+      "description": "Learn about our story, vision, and values."
+    },
+    "locations": {
+      "description": "Discover our office locations around the world."
+    },
+    "partnership": {
+      "description": "Join our network as a partner or influencer."
+    },
+    "partners": {
+      "description": "Browse our list of accredited partners."
+    }
+  },
+  "applyNow": "Apply Now",
+  "footer": {
+    "quote": "I wish all our students success, safety, and purpose at every step of their journey abroad.",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "facebook": "Facebook",
+    "copyright": "© {{year}} Darb Study International. All rights reserved."
+  },
+  "notFound": {
+    "title": "404",
+    "subtitle": "Oops! Page not found",
+    "button": "Back to Home"
+  },
+  "callToAction": {
+    "title": "Ready to Start Your Journey?",
+    "subtitle": "Our team is ready to answer all your questions and guide you every step of the way.",
+    "button": "Book a Free Consultation"
+  },
+  "loader": {
+    "brand": "Darb",
+    "tagline": "Your Global Study Companion"
+  },
+  "bottomNav": {
+    "home": "Home",
+    "majors": "Majors",
+    "advisor": "Advisor",
+    "account": "Account",
+    "homeAria": "Home Page",
+    "majorsAria": "Browse Majors",
+    "advisorAria": "AI Advisor",
+    "accountAria": "Student Account",
+    "mainNav": "Main Navigation"
+  },
+  "chat": {
+    "title": "Darb AI Assistant",
+    "description": "Your guide to studying in Germany 🇩🇪",
+    "placeholder": "Type your question here...",
+    "offlineNotice": "Offline — saved conversations only",
+    "emptyState": "Hello! I'm Darb's AI assistant. I help you with everything about studying in Germany 🎓",
+    "quickQuestionsTitle": "Common questions:",
+    "openChat": "Open chat",
+    "closeChat": "Close chat",
+    "openFullPage": "Open full page",
+    "clearHistory": "Clear conversation",
+    "startQuestion": "Start with a question:",
+    "offlineBanner": "You're offline — showing saved conversations only",
+    "errorPrefix": "Sorry, an error occurred:",
+    "offlineReply": "You're currently offline. You can review previous conversations or try common questions.",
+    "connectionError": "Failed to connect to AI assistant"
+  },
+  "quickQuestions": [
+    "How do I start applying to German universities?",
+    "What are the student visa requirements?",
+    "What German language level is required?",
+    "How much does it cost to live in Germany?"
+  ],
+  "auth": {
+    "loginTitle": "Sign In",
+    "signupTitle": "Create Account",
+    "fullName": "Full Name *",
+    "fullNamePlaceholder": "Enter your full name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "country": "Country",
+    "countryPlaceholder": "Enter your country",
+    "email": "Email *",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password *",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Sign In",
+    "signupButton": "Create Account",
+    "loading": "Loading...",
+    "noAccount": "Don't have an account? Sign up",
+    "hasAccount": "Already have an account? Sign in",
+    "loginSuccess": "Signed in successfully",
+    "loginSuccessDesc": "Welcome to your dashboard",
+    "signupSuccess": "Account created successfully",
+    "signupSuccessDesc": "Please check your email to verify your account",
+    "errorTitle": "An error occurred",
+    "weakPassword": "Weak password",
+    "weakPasswordDesc": "Password must contain at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character.",
+    "invalidCredentials": "Invalid login credentials",
+    "alreadyRegistered": "This email is already registered",
+    "invalidEmail": "Invalid email address",
+    "loginFailed": "Login failed"
+  },
+  "advisor": {
+    "title": "Darb AI Advisor",
+    "description": "Your personal guide to studying in Germany 🇩🇪 — Ask me about admissions, visas, language, or student life",
+    "categories": {
+      "admissions": "University Admissions",
+      "visa": "Visa & Travel",
+      "language": "Language & Prep",
+      "life": "Life in Germany"
+    }
+  },
+  "quiz": {
+    "title": "Discover Your Ideal Major",
+    "description": "I'll help you discover the most suitable university major for you in Germany 🇩🇪 — Tell me about your background and interests and I'll guide you to the ideal major",
+    "categories": {
+      "background": "Academic Background",
+      "interests": "Your Interests",
+      "strengths": "Your Strengths",
+      "goals": "Career Goals"
+    },
+    "quickQuestions": [
+      "I want to discover the right major for me",
+      "I have a Bagrut and want to study in Germany",
+      "What majors are available for Arab 48 students?",
+      "I love technology and programming, what major suits me?"
+    ],
+    "newConversation": "Start new conversation",
+    "inputPlaceholder": "Tell me about your interests and academic background..."
+  },
+  "services_landing": {
+    "items": [
+      "Visa & Residence Permit Guidance",
+      "University Admission Support (Bachelor & Master)",
+      "Language Course Registration",
+      "Housing Assistance",
+      "Pre-Departure Preparation",
+      "Ongoing Post-Arrival Student Support",
+      "Marketing & Influencer Collaboration (B2B Service)"
+    ]
+  }
+}

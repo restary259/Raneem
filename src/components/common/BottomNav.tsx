@@ -1,14 +1,17 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Bot, MessageCircle, User } from 'lucide-react';
+import { Home, Search, Bot, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
+import { useDirection } from '@/hooks/useDirection';
 
 const BottomNav = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
+  const { dir } = useDirection();
 
-  // Only show on mobile devices
   if (!isMobile) {
     return null;
   }
@@ -19,40 +22,40 @@ const BottomNav = () => {
 
   const navItems = [
     {
-      name: 'الرئيسية',
+      name: t('bottomNav.home'),
       href: '/',
       icon: Home,
-      ariaLabel: 'الصفحة الرئيسية'
+      ariaLabel: t('bottomNav.homeAria')
     },
     {
-      name: 'التخصصات',
+      name: t('bottomNav.majors'),
       href: '/educational-programs',
       icon: Search,
-      ariaLabel: 'البحث في التخصصات'
+      ariaLabel: t('bottomNav.majorsAria')
     },
     {
-      name: 'المستشار',
+      name: t('bottomNav.advisor'),
       href: '/ai-advisor',
       icon: Bot,
-      ariaLabel: 'المستشار الذكي'
+      ariaLabel: t('bottomNav.advisorAria')
     },
     {
-      name: 'الحساب',
+      name: t('bottomNav.account'),
       href: '/student-auth',
       icon: User,
-      ariaLabel: 'حساب الطالب'
+      ariaLabel: t('bottomNav.accountAria')
     }
   ];
 
   return (
     <nav 
       role="navigation" 
-      aria-label="التنقل الرئيسي"
+      aria-label={t('bottomNav.mainNav')}
       className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 pb-safe md:hidden"
       style={{
         paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
       }}
-      dir="rtl"
+      dir={dir}
     >
       <div className="flex items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
@@ -61,7 +64,7 @@ const BottomNav = () => {
           
           return (
             <Link
-              key={item.name}
+              key={item.href}
               to={item.href}
               aria-label={item.ariaLabel}
               className={`bottom-nav-item ${active ? 'active' : ''}`}

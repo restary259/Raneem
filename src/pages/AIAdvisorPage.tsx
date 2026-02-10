@@ -5,16 +5,22 @@ import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot, User, Loader2, Trash2, WifiOff, GraduationCap, FileText, Globe, Home as HomeIcon } from 'lucide-react';
-import { useAIChat, QUICK_QUESTIONS } from '@/hooks/useAIChat';
-
-const CATEGORIES = [
-  { label: 'القبول الجامعي', icon: GraduationCap, color: 'bg-orange-100 text-orange-600' },
-  { label: 'التأشيرة والسفر', icon: FileText, color: 'bg-blue-100 text-blue-600' },
-  { label: 'اللغة والتحضير', icon: Globe, color: 'bg-green-100 text-green-600' },
-  { label: 'الحياة في ألمانيا', icon: HomeIcon, color: 'bg-purple-100 text-purple-600' },
-];
+import { useAIChat } from '@/hooks/useAIChat';
+import { useTranslation } from 'react-i18next';
+import { useDirection } from '@/hooks/useDirection';
 
 const AIAdvisorPage = () => {
+  const { t } = useTranslation();
+  const { dir } = useDirection();
+  const quickQuestions = t('quickQuestions', { returnObjects: true }) as string[];
+
+  const CATEGORIES = [
+    { label: t('advisor.categories.admissions'), icon: GraduationCap, color: 'bg-orange-100 text-orange-600' },
+    { label: t('advisor.categories.visa'), icon: FileText, color: 'bg-blue-100 text-blue-600' },
+    { label: t('advisor.categories.language'), icon: Globe, color: 'bg-green-100 text-green-600' },
+    { label: t('advisor.categories.life'), icon: HomeIcon, color: 'bg-purple-100 text-purple-600' },
+  ];
+
   const {
     messages,
     input,
@@ -25,37 +31,33 @@ const AIAdvisorPage = () => {
     messagesEndRef,
     sendMessage,
     clearHistory,
-  } = useAIChat(true); // persist history
+  } = useAIChat(true);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <Header />
 
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        {/* Offline Banner */}
         {!isOnline && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-amber-700 text-sm">
             <WifiOff className="h-4 w-4 shrink-0" />
-            <span>أنت غير متصل — تعرض المحادثات المحفوظة فقط</span>
+            <span>{t('chat.offlineBanner')}</span>
           </div>
         )}
 
-        {/* Chat area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-8">
-              {/* Hero */}
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center mx-auto shadow-lg">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-foreground">مستشار درب الذكي</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t('advisor.title')}</h1>
                 <p className="text-muted-foreground max-w-md">
-                  مرشدك الشخصي للدراسة في ألمانيا 🇩🇪 — اسألني عن القبول، التأشيرة، اللغة، أو الحياة الطلابية
+                  {t('advisor.description')}
                 </p>
               </div>
 
-              {/* Categories */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-lg">
                 {CATEGORIES.map((cat) => {
                   const Icon = cat.icon;
@@ -68,14 +70,14 @@ const AIAdvisorPage = () => {
                 })}
               </div>
 
-              {/* Quick questions */}
               <div className="w-full max-w-lg space-y-2">
-                <p className="text-sm text-muted-foreground font-medium text-center">ابدأ بسؤال:</p>
-                {QUICK_QUESTIONS.map((q, i) => (
+                <p className="text-sm text-muted-foreground font-medium text-center">{t('chat.startQuestion')}</p>
+                {quickQuestions.map((q, i) => (
                   <button
                     key={i}
                     onClick={() => sendMessage(q)}
-                    className="w-full text-right text-sm p-3 rounded-xl border hover:bg-secondary transition-colors"
+                    className="w-full text-sm p-3 rounded-xl border hover:bg-secondary transition-colors"
+                    style={{ textAlign: dir === 'rtl' ? 'right' : 'left' }}
                   >
                     {q}
                   </button>
@@ -84,11 +86,10 @@ const AIAdvisorPage = () => {
             </div>
           ) : (
             <>
-              {/* Clear history button */}
               <div className="flex justify-center">
                 <Button variant="ghost" size="sm" onClick={clearHistory} className="text-muted-foreground text-xs gap-1">
                   <Trash2 className="h-3 w-3" />
-                  مسح المحادثة
+                  {t('chat.clearHistory')}
                 </Button>
               </div>
 
@@ -131,7 +132,6 @@ const AIAdvisorPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input bar */}
         <div className="border-t bg-background p-3 md:p-4 sticky bottom-0 pb-20 md:pb-4">
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
@@ -149,8 +149,8 @@ const AIAdvisorPage = () => {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اكتب سؤالك هنا..."
-              className="flex-1 text-right"
+              placeholder={t('chat.placeholder')}
+              className="flex-1"
               disabled={isLoading}
             />
           </form>

@@ -1,0 +1,114 @@
+{
+  "partnershipPage": {
+    "title": "Become an Agent | Earn with Darb Study"
+  },
+  "partnershipHero": {
+    "title": "Shine with Darb: Become Our Digital Ambassador",
+    "subtitle": "Help students achieve their dream of studying in Germany and be part of the success network.",
+    "button": "Apply Now to Become an Agent"
+  },
+  "whyJoinUs": {
+    "title": "Why Join Us?",
+    "benefits": [
+      { "icon": "ShieldCheck", "text": "Represent a trusted and accredited agency" },
+      { "icon": "TrendingUp", "text": "Attractive commissions per student" },
+      { "icon": "FileText", "text": "Marketing support and collaboration" },
+      { "icon": "UserPlus", "text": "No prior experience needed — just passion and credibility" }
+    ]
+  },
+  "commissionCalculator": {
+    "title": "How Much Can You Earn?",
+    "studentsLabel": "Expected number of students to enroll monthly:",
+    "earningsTitle": "Estimated Monthly Earnings:",
+    "currency": "ILS",
+    "note": "Figures are approximate and depend on performance. The program is currently available for studying in Germany only."
+  },
+  "registrationForm": {
+    "title": "Join Our Agent Network",
+    "description": "Fill out the form below and our team will review your application within 3-5 business days and get back to you soon.",
+    "fullName": "Full Name",
+    "countryCity": "Country / City",
+    "email": "Email",
+    "phone": "Phone Number (with country code)",
+    "preferredContact": "Preferred Contact Method",
+    "contactOptions": {
+      "whatsapp": "WhatsApp",
+      "call": "Phone Call",
+      "email": "Email"
+    },
+    "aboutYou": "About You or Your Background (optional)",
+    "previousExperience": "Do you have prior experience in student services or sales?",
+    "experienceOptions": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "whyDarb": "What makes you interested in representing Darb?",
+    "attachment": "Upload Optional Attachment (CV / License / ID)",
+    "submit": "Submit Your Application Now",
+    "success": "Your application was submitted successfully! We'll get back to you soon."
+  },
+  "agentToolkit": {
+    "title": "Everything You Need to Succeed",
+    "teaser": "We work hand-in-hand with you to provide marketing support and the information needed to engage with students. Your success is our success.",
+    "button": "Request Access to the Agent Guide"
+  },
+  "trustSection": {
+    "title": "Why Do Our Partners Trust Us?",
+    "pillars": [
+      { "icon": "Table2", "title": "Data Transparency", "description": "Shared spreadsheet for every partner" },
+      { "icon": "Eye", "title": "Clear Processes", "description": "Every step is documented and visible" },
+      { "icon": "Scale", "title": "Fair Commission Rules", "description": "20-day protection period for everyone" },
+      { "icon": "Building2", "title": "Professional Structure", "description": "Organized monthly cycles and historical data" }
+    ]
+  },
+  "closingCta": {
+    "title": "We're looking for ambitious, honest people with a passion to make an impact.\nIf that sounds like you, your place is with us.",
+    "button": "Join the Darb Partner Network Now"
+  },
+  "partnershipFaq": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      {
+        "question": "How are students tracked?",
+        "answer": "Each partner gets a unique tracking link and shared spreadsheet. When a student registers through your link, they are automatically linked to your name. You can track each student's status with full transparency."
+      },
+      {
+        "question": "When are commissions paid?",
+        "answer": "Commissions are paid 20 days after the student's payment date. The 20-day period is necessary to protect both parties from cancellations or refunds."
+      },
+      {
+        "question": "Why the 20-day period?",
+        "answer": "This period protects both the partner and the company. If a student changes their mind or requests a refund during this period, the partner is not affected. After the period ends, the commission is transferred directly."
+      },
+      {
+        "question": "What data can I see?",
+        "answer": "You can see: names of students registered through your link, each student's status (qualified, unqualified, contacted, in progress, paid, transferred), and registration date."
+      },
+      {
+        "question": "How do you ensure transparency?",
+        "answer": "We provide a read-only shared spreadsheet that is continuously updated. At the end of each month, the spreadsheet is closed and a new one is opened. All previous data remains visible."
+      },
+      {
+        "question": "Are there costs to join?",
+        "answer": "There are no costs at all. Joining is completely free and we provide you with all the support to get started."
+      },
+      {
+        "question": "Can I choose my own content style?",
+        "answer": "Yes, you have complete freedom to choose your style, platform, and promotion method. We provide you with the information and materials, and you choose how to present them to your audience."
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "How Does the Program Work?",
+    "steps": [
+      { "icon": "UserCheck", "title": "Register for the Program", "description": "Sign up for the partnership program. After approval, you get a personalized page." },
+      { "icon": "Globe", "title": "Your Personal Page", "description": "You get a unique page, a custom registration form, and a tracking link you can share on Instagram stories, Linktree, highlights, or bio." },
+      { "icon": "Palette", "title": "Content Freedom", "description": "Choose your style, method, and the platform that suits you. Create promotional content freely to match your audience." },
+      { "icon": "MousePointerClick", "title": "Student Registration", "description": "Students click your special link and fill out the form. Each student is automatically linked to your name." },
+      { "icon": "Table2", "title": "Data Transparency", "description": "A shared spreadsheet is created for each partner. You can see student names, their status, and progress. The spreadsheet is read-only — transparent and reliable." },
+      { "icon": "BarChart3", "title": "Track Student Status", "description": "Each student is categorized: qualified, unqualified, contacted, in progress, paid, transferred." },
+      { "icon": "CalendarClock", "title": "Monthly Cycle", "description": "At the end of each month, the spreadsheet is closed and a new one opens for the next month. All data remains visible for history and transparency." },
+      { "icon": "Wallet", "title": "Commission & Payment", "description": "Commission is paid 20 days after student payment. The 20-day period is mandatory to protect against cancellations or refunds. This rule is clear and binding." }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "applyNow": "Apply Now",
+  "hero": {
+    "title": "Your Global Study Companion",
+    "subtitle": "From your first decision to your first achievement... Darb is the safe bridge to your studies abroad",
+    "consultation": "Book a Free Consultation",
+    "stats": {
+      "satisfiedStudents": "Satisfied Students",
+      "educationalPartners": "Educational Partners",
+      "countriesWorldwide": "Countries Worldwide"
+    }
+  },
+  "whyChooseUs": {
+    "title": "Why Choose Darb?",
+    "subtitle": "We don't just promise success — we create it with you. Here's how we ensure an exceptional experience.",
+    "reasons": [
+      {
+        "title": "Personal Support & Ongoing Follow-up",
+        "description": "You get a dedicated advisor who accompanies you every step, from choosing your major to settling in your study destination."
+      },
+      {
+        "title": "Fast & Reliable Processes",
+        "description": "Thanks to our direct relationships with universities, we ensure your application is processed quickly and efficiently."
+      },
+      {
+        "title": "Highly Experienced Specialists",
+        "description": "Our team consists of experts who have lived the study abroad experience and are ready to share their knowledge with you."
+      },
+      {
+        "title": "Global Network of Accredited Partners",
+        "description": "We open doors to the best universities and educational institutions worldwide through our extensive partner network."
+      },
+      {
+        "title": "Complete Transparency at Every Step",
+        "description": "We believe in full clarity. No hidden fees, and we keep you informed of all details about your application."
+      },
+      {
+        "title": "End-to-End Support from Application to Arrival",
+        "description": "Our services don't end at university admission — they extend to visa assistance, housing, and reception."
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "Success Stories",
+    "items": [
+      { "quote": "Thanks to Darb, I was accepted at a prestigious university in Germany without any stress!", "name": "Ahmad", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=1" },
+      { "quote": "Excellent experience! They helped me every step of the way to reach my dream university in Romania. Thank you so much!", "name": "Sara", "location": "Israel", "avatar": "https://i.pravatar.cc/150?img=4" },
+      { "quote": "The team was very supportive throughout the process. I highly recommend them!", "name": "Fatima", "location": "Romania", "avatar": "https://i.pravatar.cc/150?img=2" },
+      { "quote": "Their guidance for the visa application was invaluable. I couldn't have done it without them.", "name": "Youssef", "location": "Jordan", "avatar": "https://i.pravatar.cc/150?img=3" }
+    ]
+  },
+  "studentGallery": {
+    "title": "Our Students Around the World",
+    "subtitle": "See the inspiring success stories of our students at top universities worldwide.",
+    "students": [
+      { "name": "Naseem Khatib", "destination": "Germany", "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.png" },
+      { "name": "Adam Diab", "destination": "Germany", "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.png" },
+      { "name": "Adam Diab", "destination": "Germany", "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.png" },
+      { "name": "Yazan Dawahde", "destination": "Germany", "image": "/lovable-uploads/5ea3a257-c055-46c3-a5ce-85067e67b401.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/e42cefe5-bba2-4e2b-bd5b-fb4da05e4c6b.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/2df2a47a-8c67-4b8a-932b-192562d5472f.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.png" },
+      { "name": "", "destination": "Germany", "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.png" }
+    ]
+  }
+}

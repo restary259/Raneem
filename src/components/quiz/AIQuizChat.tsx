@@ -6,15 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot, User, Loader2, Trash2, WifiOff, GraduationCap, BookOpen, Target, MessageCircle } from 'lucide-react';
 import { useAIChat } from '@/hooks/useAIChat';
-
-const QUIZ_QUICK_QUESTIONS = [
-  'أريد اكتشاف التخصص المناسب لي',
-  'أنا حاصل على بجروت وأريد الدراسة في ألمانيا',
-  'ما هي التخصصات المتاحة لطلاب عرب 48؟',
-  'أحب التكنولوجيا والبرمجة، ما التخصص المناسب؟',
-];
+import { useTranslation } from 'react-i18next';
+import { useDirection } from '@/hooks/useDirection';
 
 const AIQuizChat = () => {
+  const { t } = useTranslation();
+  const { dir } = useDirection();
+  const quizQuickQuestions = t('quiz.quickQuestions', { returnObjects: true }) as string[];
+
+  const CATEGORIES = [
+    { label: t('quiz.categories.background'), icon: BookOpen, color: 'bg-orange-100 text-orange-600' },
+    { label: t('quiz.categories.interests'), icon: Target, color: 'bg-blue-100 text-blue-600' },
+    { label: t('quiz.categories.strengths'), icon: GraduationCap, color: 'bg-green-100 text-green-600' },
+    { label: t('quiz.categories.goals'), icon: MessageCircle, color: 'bg-purple-100 text-purple-600' },
+  ];
+
   const {
     messages,
     input,
@@ -28,14 +34,14 @@ const AIQuizChat = () => {
   } = useAIChat(false, 'quiz');
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <Header />
 
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         {!isOnline && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-amber-700 text-sm">
             <WifiOff className="h-4 w-4 shrink-0" />
-            <span>أنت غير متصل — تعرض المحادثات المحفوظة فقط</span>
+            <span>{t('chat.offlineBanner')}</span>
           </div>
         )}
 
@@ -46,19 +52,14 @@ const AIQuizChat = () => {
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center mx-auto shadow-lg">
                   <GraduationCap className="h-8 w-8 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-foreground">اكتشف تخصصك المثالي</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t('quiz.title')}</h1>
                 <p className="text-muted-foreground max-w-md">
-                  سأساعدك في اكتشاف التخصص الجامعي الأنسب لك في ألمانيا 🇩🇪 — أخبرني عن خلفيتك واهتماماتك وسأرشدك للتخصص المثالي
+                  {t('quiz.description')}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-lg">
-                {[
-                  { label: 'خلفيتك الدراسية', icon: BookOpen, color: 'bg-orange-100 text-orange-600' },
-                  { label: 'اهتماماتك', icon: Target, color: 'bg-blue-100 text-blue-600' },
-                  { label: 'نقاط قوتك', icon: GraduationCap, color: 'bg-green-100 text-green-600' },
-                  { label: 'أهدافك المهنية', icon: MessageCircle, color: 'bg-purple-100 text-purple-600' },
-                ].map((cat) => {
+                {CATEGORIES.map((cat) => {
                   const Icon = cat.icon;
                   return (
                     <div key={cat.label} className={`flex flex-col items-center gap-2 p-3 rounded-xl ${cat.color} cursor-default`}>
@@ -70,12 +71,13 @@ const AIQuizChat = () => {
               </div>
 
               <div className="w-full max-w-lg space-y-2">
-                <p className="text-sm text-muted-foreground font-medium text-center">ابدأ بسؤال:</p>
-                {QUIZ_QUICK_QUESTIONS.map((q, i) => (
+                <p className="text-sm text-muted-foreground font-medium text-center">{t('chat.startQuestion')}</p>
+                {quizQuickQuestions.map((q, i) => (
                    <button
                     key={i}
                     onClick={() => sendMessage(q)}
-                    className="w-full text-right text-sm p-3 rounded-xl border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    className="w-full text-sm p-3 rounded-xl border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    style={{ textAlign: dir === 'rtl' ? 'right' : 'left' }}
                   >
                     {q}
                   </button>
@@ -87,7 +89,7 @@ const AIQuizChat = () => {
               <div className="flex justify-center">
                 <Button variant="ghost" size="sm" onClick={clearHistory} className="text-muted-foreground text-xs gap-1">
                   <Trash2 className="h-3 w-3" />
-                  بدء محادثة جديدة
+                  {t('quiz.newConversation')}
                 </Button>
               </div>
 
@@ -147,8 +149,8 @@ const AIQuizChat = () => {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="أخبرني عن اهتماماتك وخلفيتك الدراسية..."
-              className="flex-1 text-right"
+              placeholder={t('quiz.inputPlaceholder')}
+              className="flex-1"
               disabled={isLoading}
             />
           </form>
