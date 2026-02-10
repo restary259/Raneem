@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { User as UserIcon, CreditCard, FileText, Settings } from 'lucide-react';
+import { User as UserIcon, CreditCard, FileText, Settings, ClipboardCheck } from 'lucide-react';
 
 interface Tab {
   id: string;
@@ -16,6 +16,7 @@ interface DashboardSidebarProps {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabChange }) => {
   const tabs: Tab[] = [
+    { id: 'checklist', label: 'قائمة المتطلبات', icon: ClipboardCheck },
     { id: 'overview', label: 'نظرة عامة', icon: UserIcon },
     { id: 'services', label: 'الخدمات', icon: Settings },
     { id: 'payments', label: 'المدفوعات', icon: CreditCard },

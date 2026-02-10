@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_required: boolean
+          item_name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_required?: boolean
+          item_name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_required?: boolean
+          item_name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
@@ -151,6 +178,36 @@ export type Database = {
           },
         ]
       }
+      influencer_invites: {
+        Row: {
+          created_at: string
+          created_user_id: string | null
+          email: string
+          full_name: string
+          id: string
+          invited_by: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_user_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          invited_by: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_user_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          invited_by?: string
+          status?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
@@ -227,9 +284,11 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          influencer_id: string | null
           intake_month: string | null
           notes: string | null
           phone_number: string | null
+          student_status: string
           university_name: string | null
           updated_at: string
           visa_status: string
@@ -241,9 +300,11 @@ export type Database = {
           email?: string
           full_name?: string
           id: string
+          influencer_id?: string | null
           intake_month?: string | null
           notes?: string | null
           phone_number?: string | null
+          student_status?: string
           university_name?: string | null
           updated_at?: string
           visa_status?: string
@@ -255,9 +316,11 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          influencer_id?: string | null
           intake_month?: string | null
           notes?: string | null
           phone_number?: string | null
+          student_status?: string
           university_name?: string | null
           updated_at?: string
           visa_status?: string
@@ -321,6 +384,41 @@ export type Database = {
         }
         Relationships: []
       }
+      student_checklist: {
+        Row: {
+          checklist_item_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          student_id: string
+        }
+        Insert: {
+          checklist_item_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          student_id: string
+        }
+        Update: {
+          checklist_item_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_checklist_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -353,7 +451,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "influencer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -481,7 +579,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "influencer"],
     },
   },
 } as const

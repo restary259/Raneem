@@ -6,6 +6,7 @@ import StudentProfile from '@/components/dashboard/StudentProfile';
 import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
+import ChecklistTracker from '@/components/dashboard/ChecklistTracker';
 
 interface DashboardMainContentProps {
   activeTab: string;
@@ -22,6 +23,8 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
 }) => {
   const renderContent = () => {
     switch (activeTab) {
+      case 'checklist':
+        return <ChecklistTracker userId={user.id} />;
       case 'overview':
         return (
           <StudentProfile 
