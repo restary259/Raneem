@@ -1,203 +1,141 @@
 
 
-# Plan: Complete Security Layers for Darb Platform
+# Plan: Full Responsive Optimization
 
 ## Overview
-Add comprehensive security hardening across authentication, API endpoints, admin access, contact form, AI chat, document storage, and PWA -- all without changing the existing design.
+Audit and fix all responsive issues across the website to ensure perfect adaptation on mobile phones, tablets, laptops, and desktops -- without changing any colors, fonts, branding, or visual hierarchy. All fixes use responsive Tailwind classes, relative units, and media queries.
 
 ---
 
-## Phase 1: Authentication Hardening
+## 1. Global CSS Fixes (`src/styles/base.css`, `src/styles/navigation.css`)
 
-### 1A. Strong Password Enforcement (Client + Server)
-- Update `StudentAuthPage.tsx` to enforce password rules client-side:
-  - Minimum 8 characters (Supabase default is 6 -- we add client-side validation for 8+)
-  - Must include uppercase, lowercase, number, and symbol
-  - Show real-time password strength indicator (weak/medium/strong) using existing Tailwind classes
-- Add a visual password requirements checklist below the password field
+- Remove `overflow-x: hidden` from `html` and `body` (masks layout bugs instead of fixing them); replace with targeted overflow clipping only where needed
+- Fix `.container` padding to use Tailwind's built-in container config rather than duplicate `padding-inline` rules
+- Remove `!important` from header height overrides in `navigation.css` -- use proper Tailwind classes instead
 
-### 1B. Rate Limiting on Auth
-- Create a new edge function `auth-guard` that wraps login attempts
-- Track failed login attempts per IP/email in a `login_attempts` table
-- Block after 5 failed attempts for 15 minutes
-- Return appropriate Arabic error messages
+## 2. Header & Navigation (`Header.tsx`, `DesktopNav.tsx`, `MobileNav.tsx`)
 
-### 1C. Session Security
-- Verify `persistSession: true` and `autoRefreshToken: true` are set (already configured in client.ts)
-- Add auto-logout on inactivity (30 minutes) via a `useSessionTimeout` hook
-- Clear sensitive data from localStorage on logout
+- **Header**: Add `px-4` padding on the container for small screens; ensure logo + button don't overlap on narrow tablets (768-1024px)
+- **DesktopNav**: Add `overflow-x-auto` with hidden scrollbar on the nav list so items don't wrap or get cut on medium screens (768-1024px); use `flex-shrink-0` on nav items
+- **MobileNav**: No changes needed -- already responsive via `Sheet` component
+- Navigation menu order and logo position remain unchanged
 
----
+## 3. Hero Section (`Hero.tsx`)
 
-## Phase 2: Admin Dashboard Security (EXTRA HARDENED)
+- Change `h-screen min-h-[700px]` to `h-[100dvh] min-h-[500px]` for proper mobile viewport handling (avoids address bar issues)
+- Stats grid at bottom: change `grid-cols-3 gap-8` to `grid-cols-3 gap-3 sm:gap-8` and reduce stat number size on mobile: `text-2xl sm:text-4xl md:text-5xl`
+- Hero title: add smaller mobile size `text-3xl sm:text-5xl md:text-7xl`
+- CTA buttons: ensure full width on very small screens with `w-full sm:w-auto`
 
-### 2A. Server-Side Admin Verification
-- Remove the client-side `ADMIN_EMAIL` check from `AdminDashboardPage.tsx`
-- Use ONLY the `has_role()` database function to verify admin status
-- Create an `admin-verify` edge function that checks the `user_roles` table server-side
-- All admin data fetches go through this edge function (not direct Supabase client queries)
+## 4. About Stats (`AboutCustom.tsx`)
 
-### 2B. Admin Re-Authentication
-- Require password re-entry for sensitive admin actions (deleting data, exporting CSV)
-- Add a re-auth modal component that uses `supabase.auth.reauthenticate()`
+- Stats cards: change `text-4xl md:text-5xl` to `text-2xl sm:text-4xl md:text-5xl` for number readability on small screens
+- Card padding: reduce to `p-4 sm:p-6` on small screens
 
-### 2C. Admin Activity Logging
-- Create `admin_audit_log` table (admin_id, action, target_table, target_id, timestamp, ip_address)
-- Log all admin actions: view, update status, export data
-- Display audit log in a new "Activity Log" tab on the admin dashboard
+## 5. Student Journey (`StudentJourney.tsx`)
 
----
+- Timeline circles: reduce `h-24 w-24` to `h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24`
+- Icons inside circles: reduce to `h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10`
+- Section padding: change `py-20` to `py-10 md:py-20`
+- Heading margin: reduce `mb-16` to `mb-8 md:mb-16`
 
-## Phase 3: Contact Form Protection
+## 6. Student Gallery (`StudentGallery.tsx`)
 
-### 3A. Honeypot Anti-Spam
-- Add a hidden honeypot field to the contact form (invisible to humans, filled by bots)
-- Server-side: reject submissions where the honeypot field has a value
+- Image height: change `h-80` to `h-56 sm:h-64 lg:h-80` for better proportions on mobile
 
-### 3B. Rate Limiting
-- Add rate limiting in the `send-email` edge function
-- Max 3 submissions per IP per hour
-- Track in a `rate_limits` table or use in-memory Map with TTL
+## 7. Partners Marquee (`PartnersMarquee.tsx`)
 
-### 3C. Input Sanitization
-- Add server-side validation with length limits in the edge function:
-  - name: max 100 chars
-  - email: max 255 chars, valid format
-  - whatsapp: max 20 chars, digits only
-  - message: max 2000 chars
-- Strip HTML tags from all text inputs
-- Add client-side validation to match (already partially done with zod)
+- Partner text: change `text-xl` to `text-sm sm:text-base md:text-xl` and reduce `mx-8` to `mx-4 sm:mx-6 md:mx-8`
+- Prevents horizontal overflow from long partner names
 
----
+## 8. Contact Page (`Contact.tsx`)
 
-## Phase 4: AI Chat Security
+- Grid: the `lg:grid-cols-3` layout stacks well on mobile, but the form card padding `p-8` should be `p-4 sm:p-6 md:p-8`
+- Map height: `h-[400px] md:h-[500px]` is fine, add `h-[300px] sm:h-[400px] md:h-[500px]` for small phones
+- Form inner grid `md:grid-cols-2 gap-6`: reduce gap to `gap-4 md:gap-6`
 
-### 4A. Prompt Injection Protection
-- Update the `ai-chat` edge function system prompt to include explicit anti-injection rules
-- Sanitize user messages before sending to AI (strip control characters, limit length to 2000 chars)
-- Add a content filter that blocks attempts to extract the system prompt
+## 9. Services Grid (`ServicesGrid.tsx`)
 
-### 4B. AI Usage Limits
-- Track AI requests per session/user in localStorage (for anonymous) or database (for authenticated)
-- Limit to 30 messages per hour for anonymous users, 100 for authenticated
-- Show remaining quota in the chat UI
+- Card icon containers: reduce `w-16 h-16` to `w-12 h-12 sm:w-16 sm:h-16` and icon `h-8 w-8` to `h-6 w-6 sm:h-8 sm:w-8`
 
-### 4C. AI Interaction Logging (Admin-Only)
-- Create `ai_chat_logs` table (user_id nullable, message_preview first 100 chars, timestamp)
-- Log interactions for abuse detection (admin viewable only)
-- Add RLS: only admin can SELECT
+## 10. Services Hero & Contact Hero
 
----
+- Reduce padding `py-20 md:py-32` to `py-12 sm:py-20 md:py-32` 
+- Title size: `text-4xl md:text-6xl` to `text-2xl sm:text-4xl md:text-6xl`
 
-## Phase 5: Document & File Security
+## 11. Educational Programs (`SearchAndFilter.tsx`, `MajorCard.tsx`, `MajorModal.tsx`)
 
-### 5A. Upload Safety
-- In the document upload flow, validate:
-  - File type whitelist: PDF, JPG, PNG, DOCX only
-  - Max file size: 10MB
-  - Rename files on upload (UUID-based names, no original filenames in storage path)
-- Client-side + server-side validation
+- **SearchAndFilter**: Filter dropdown positioning -- ensure it doesn't overflow on mobile by adding `min-w-0` to the relative container
+- **MajorCard**: Card padding `p-6` to `p-4 sm:p-6`
+- **MajorModal**: `max-w-2xl` dialog -- add `mx-4` margin on mobile to prevent edge-to-edge flush
 
-### 5B. Signed URLs
-- Generate signed URLs with 1-hour expiration for document access (already using private bucket)
-- Never expose raw storage URLs to the client
+## 12. AI Advisor Page (`AIAdvisorPage.tsx`)
 
----
+- Input bar at bottom: add `pb-safe` class for iOS safe area (above the BottomNav)
+- On mobile, add `pb-20` to the main content area to account for BottomNav overlap
+- Categories grid: `grid-cols-2 md:grid-cols-4` is fine, no change needed
 
-## Phase 6: Edge Function & API Security
+## 13. Quiz Page (`MajorMatchingQuiz.tsx`)
 
-### 6A. Input Validation on All Edge Functions
-- Add zod-style validation at the start of every edge function
-- Reject requests with unexpected fields
-- Return consistent error format
+- Result card padding `p-8` to `p-4 sm:p-6 md:p-8`
+- Header title `text-2xl sm:text-3xl` is good
+- Option buttons: ensure proper touch target size (min 44px height) -- already `p-4 h-auto` which is fine
 
-### 6B. CORS Tightening
-- Replace `Access-Control-Allow-Origin: '*'` with the actual domain:
-  - `https://darb-agency.lovable.app` and preview URL
-- Keep `*` only for development
+## 14. Chat Widget (`ChatWidget.tsx`)
 
-### 6C. Security Headers
-- Add a `_headers` file or inject headers via edge functions:
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
-  - `Referrer-Policy: strict-origin-when-cross-origin`
+- Chat button: ensure it sits above BottomNav on mobile -- verify `chat-btn` class positions it at `bottom: 5rem` on mobile (above the ~64px bottom nav)
+- Add `bottom-24 md:bottom-6` positioning
 
----
+## 15. Bottom Nav (`BottomNav.tsx`)
 
-## Phase 7: PWA & Client-Side Security
+- Already well-handled with responsive classes
+- Add `pb-safe` to ensure iOS home indicator doesn't overlap (already has `pb-safe` style)
 
-### 7A. Service Worker Security
-- Restrict service worker scope to the app origin
-- Never cache auth tokens or sensitive user data
-- Clear caches on logout
-- Validate cached content integrity
+## 16. Footer (`Footer.tsx`)
 
-### 7B. Secure Storage
-- Audit all localStorage usage: ensure no passwords, tokens, or PII are stored in plain text
-- AI chat cache: store only message text, no auth data
+- Add bottom padding on mobile when BottomNav is visible: `pb-20 md:pb-0`
+- Social links: change `gap-6` to `gap-4 sm:gap-6` and wrap text + icon with `flex-wrap` for small screens
 
----
+## 17. PWA Standalone Mode (`pwa.css`)
 
-## Phase 8: Monitoring & Alerts
-
-### 8A. Failed Login Tracking
-- The `login_attempts` table from Phase 1B doubles as monitoring
-- Admin dashboard tab: "Security" showing failed login patterns
-
-### 8B. Admin Alert System
-- When 10+ failed logins occur for any account in 1 hour, flag it in the admin dashboard
-- Show security alerts in the admin overview tab
+- Ensure standalone mode styles don't interfere with responsive layout
+- No changes needed -- current styles are minimal and correct
 
 ---
 
 ## Technical Details
 
-### New Database Tables
+### Files to Modify
 
-| Table | Columns | Purpose |
-|-------|---------|---------|
-| `login_attempts` | id, email, ip_address, success, created_at | Track login attempts for rate limiting |
-| `admin_audit_log` | id, admin_id, action, target_table, target_id, details, created_at | Admin activity logging |
-| `ai_chat_logs` | id, user_id (nullable), message_preview, tokens_used, created_at | AI usage tracking |
+| File | Change Type |
+|------|------------|
+| `src/components/landing/Hero.tsx` | Responsive text, viewport height, stats grid |
+| `src/components/landing/AboutCustom.tsx` | Responsive stat numbers and card padding |
+| `src/components/landing/StudentJourney.tsx` | Responsive timeline circles and spacing |
+| `src/components/landing/StudentGallery.tsx` | Responsive image heights |
+| `src/components/landing/PartnersMarquee.tsx` | Responsive text size and spacing |
+| `src/components/landing/Contact.tsx` | Responsive padding and map height |
+| `src/components/landing/ContactHero.tsx` | Responsive hero padding and text |
+| `src/components/landing/Footer.tsx` | Bottom padding for mobile nav |
+| `src/components/landing/Header.tsx` | Container padding on small screens |
+| `src/components/landing/DesktopNav.tsx` | Overflow handling for medium screens |
+| `src/components/services/ServicesGrid.tsx` | Responsive icon sizes |
+| `src/components/services/ServicesHero.tsx` | Responsive hero padding and text |
+| `src/components/services/ServiceProcess.tsx` | Responsive step sizing |
+| `src/components/educational/SearchAndFilter.tsx` | Filter dropdown overflow fix |
+| `src/components/educational/MajorCard.tsx` | Responsive card padding |
+| `src/components/chat/ChatWidget.tsx` | Position above BottomNav on mobile |
+| `src/pages/AIAdvisorPage.tsx` | Bottom padding for BottomNav, safe area |
+| `src/components/quiz/MajorMatchingQuiz.tsx` | Responsive result card padding |
+| `src/styles/navigation.css` | Remove `!important` on header heights |
+| `src/styles/base.css` | Clean up overflow-x hidden |
 
-### New Edge Functions
-
-| Function | Purpose |
-|----------|---------|
-| `auth-guard` | Rate-limited login wrapper |
-| `admin-verify` | Server-side admin role verification |
-
-### Modified Files
-
-| File | Changes |
-|------|---------|
-| `src/pages/StudentAuthPage.tsx` | Password strength indicator, strong password rules |
-| `src/pages/AdminDashboardPage.tsx` | Remove client-side email check, add re-auth modal, audit log tab, security alerts tab |
-| `src/components/landing/Contact.tsx` | Add honeypot field |
-| `supabase/functions/send-email/index.ts` | Rate limiting, input sanitization, honeypot check |
-| `supabase/functions/ai-chat/index.ts` | Prompt injection protection, input length limits, usage tracking |
-| `src/hooks/useAIChat.ts` | Usage quota tracking |
-| `src/components/chat/AIChatPopup.tsx` | Usage quota display |
-| `public/service-worker.js` | Cache security audit, clear on logout |
-| `src/App.tsx` | Add session timeout hook |
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `src/hooks/useSessionTimeout.ts` | Auto-logout after 30 min inactivity |
-| `src/components/admin/ReAuthModal.tsx` | Re-authentication modal for sensitive actions |
-| `src/components/auth/PasswordStrength.tsx` | Password strength indicator component |
-| `supabase/functions/auth-guard/index.ts` | Rate-limited auth endpoint |
-| `supabase/functions/admin-verify/index.ts` | Server-side admin verification |
-
-### RLS Policies
-- `login_attempts`: service role INSERT only, admin SELECT
-- `admin_audit_log`: service role INSERT, admin SELECT
-- `ai_chat_logs`: service role INSERT, admin SELECT
+### No Files Created or Deleted
 
 ### What Will NOT Change
-- Website design, layout, colors, fonts
-- Navigation order and structure
-- Existing user-facing flows (just adding security layers underneath)
+- Colors, fonts, or branding
+- Navigation order (logo, menu items, student portal button)
+- Visual hierarchy or layout structure
+- Component functionality
+- RTL direction behavior
 
