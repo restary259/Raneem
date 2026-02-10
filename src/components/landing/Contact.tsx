@@ -118,7 +118,7 @@ const Contact = () => {
                         <FormItem><FormLabel>{t('contact.form.destination')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
                             <FormControl><SelectTrigger><SelectValue placeholder={t('contact.form.destinationPlaceholder')} /></SelectTrigger></FormControl>
-                            <SelectContent><SelectItem value="germany">{t('contact.form.destinationOptions.germany')}</SelectItem><SelectItem value="romania">{t('contact.form.destinationOptions.romania')}</SelectItem><SelectItem value="jordan">{t('contact.form.destinationOptions.jordan')}</SelectItem></SelectContent>
+                            <SelectContent><SelectItem value="germany">{t('contact.form.destinationOptions.germany')}</SelectItem></SelectContent>
                         </Select><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="service" render={({ field }) => (

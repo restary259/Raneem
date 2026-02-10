@@ -1,7 +1,5 @@
 export const countries = [
   { code: 'germany', name: 'ألمانيا', flag: '🇩🇪', color: 'bg-red-600' },
-  { code: 'romania', name: 'رومانيا', flag: '🇷🇴', color: 'bg-blue-600' },
-  { code: 'jordan', name: 'الأردن', flag: '🇯🇴', color: 'bg-green-600' }
 ];
 
 export const universities = {
@@ -187,37 +185,6 @@ export const universities = {
       students: "12,000+ طالب"
     }
   ],
-  romania: [
-    {
-      name: "Carol Davila University",
-      location: "بوخارست، رومانيا",
-      logoUrl: "/lovable-uploads/dfca3402-c6b9-4560-88d7-6e8c19f26ab4.png",
-      description: "جامعة طبية رائدة في رومانيا",
-      majors: ["طب بشري", "طب أسنان", "صيدلة", "تمريض"],
-      ranking: "#1 في رومانيا للطب",
-      students: "15,000 طالب"
-    },
-    {
-      name: "Ovidius University",
-      location: "كونستانتا، رومانيا",
-      logoUrl: "/lovable-uploads/03767a14-eafc-4beb-8e8f-12a2491e4ee5.png",
-      description: "جامعة شاملة مع برامج متنوعة",
-      majors: ["هندسة", "اقتصاد", "قانون", "علوم إنسانية"],
-      ranking: "Top 10 في رومانيا",
-      students: "18,000 طالب"
-    }
-  ],
-  jordan: [
-    {
-      name: "جامعة اليرموك",
-      location: "إربد، الأردن",
-      logoUrl: "/lovable-uploads/125fa6e2-60ae-4bd0-91bb-a2b2dc342ebd.png",
-      description: "جامعة حكومية رائدة في الأردن",
-      majors: ["هندسة", "تكنولوجيا معلومات", "فنون جميلة", "تربية"],
-      ranking: "#2 في الأردن",
-      students: "40,000 طالب"
-    }
-  ]
 };
 
 export const languageSchools = {

@@ -8,8 +8,6 @@ import { Label } from '@/components/ui/label';
 
 const commissionRates: Record<string, number> = {
   germany: 2000,
-  romania: 1000,
-  jordan: 1000,
 };
 
 const CommissionCalculator = () => {
