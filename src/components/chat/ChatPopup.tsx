@@ -19,7 +19,7 @@ const formSchema = z.object({
 });
 
 const office = {
-    whatsapp: '972524061225',
+    whatsapp: 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1',
     hours: 'الأحد - الخميس: 9 صباحًا - 5 مساءً',
 };
 
@@ -65,7 +65,7 @@ const ChatPopup = ({ onClose }: { onClose: () => void }) => {
                         <h4 className="font-semibold text-center text-primary">إجراءات سريعة</h4>
                         <div className="grid grid-cols-1 gap-2">
                              <Button asChild variant="outline" className="justify-end">
-                                <a href={`https://wa.me/${office.whatsapp}?text=${encodeURIComponent("مرحباً درب، أود الاستفسار بخصوص خدماتكم.")}`} target="_blank" rel="noopener noreferrer">
+                                <a href={office.whatsapp} target="_blank" rel="noopener noreferrer">
                                     تحدث معنا عبر واتساب
                                     <MessageCircle className="mr-2 h-5 w-5" />
                                 </a>

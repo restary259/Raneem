@@ -1,9 +1,9 @@
 
 import React from 'react';
-import MajorMatchingQuiz from '@/components/quiz/MajorMatchingQuiz';
+import AIQuizChat from '@/components/quiz/AIQuizChat';
 
 const QuizPage = () => {
-  return <MajorMatchingQuiz />;
+  return <AIQuizChat />;
 };
 
 export default QuizPage;

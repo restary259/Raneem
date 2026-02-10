@@ -17,9 +17,9 @@ const Footer = () => {
           </p>
         </div>
         <div className="flex justify-center items-center gap-4 sm:gap-6 mb-8 flex-wrap">
-          <a href="https://instagram.com/darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <Instagram size={24} /></a>
-          <a href="https://tiktok.com/@darb_studyinternational" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon className="h-6 w-6" /></a>
-          <a href="https://www.facebook.com/DARB_STUDYINGERMANY" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <Facebook size={24} /></a>
+          <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <Instagram size={24} /></a>
+          <a href="https://www.tiktok.com/@darb_studyingrmany" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon className="h-6 w-6" /></a>
+          <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <Facebook size={24} /></a>
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
           {t('footer.copyright', { year })}

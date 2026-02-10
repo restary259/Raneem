@@ -10,7 +10,7 @@ const office = {
   phone: '+972 52-940-2168',
   email: 'darbsocial27@gmail.com',
   hours: 'الأحد - الخميس: 9 صباحًا - 5 مساءً',
-  whatsapp: '972524061225',
+  whatsapp: 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1',
 };
 
 const OfficeLocations = () => {
@@ -39,7 +39,7 @@ const OfficeLocations = () => {
               <Clock className="h-5 w-5 text-accent" />
             </div>
              <Button asChild className="w-full mt-4" variant="outline">
-                <a href={`https://wa.me/${office.whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                <a href={office.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                     <MessageCircle className="h-5 w-5" />
                     ابدأ محادثة واتساب
                 </a>

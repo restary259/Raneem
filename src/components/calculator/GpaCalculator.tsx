@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Calculator } from "lucide-react";
+import { Calculator, Info, AlertTriangle } from "lucide-react";
 import { useTranslation, Trans } from "react-i18next";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Subject = {
   id: string;
@@ -28,11 +29,16 @@ const initialSubjects: Subject[] = [
     { id: 't5sos3', units: '', grade: '' },
 ];
 
+// Bavarian formula constants
+const NMAX = 100; // Best possible grade
+const NMIN = 56;  // Minimum passing grade for Bagrut
+
 const GpaCalculator = () => {
   const { t } = useTranslation('resources');
   const [subjects, setSubjects] = useState<Subject[]>(() => JSON.parse(JSON.stringify(initialSubjects)));
   const [results, setResults] = useState<{ average: number | null; germanGrade: number | null }>({ average: null, germanGrade: null });
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
 
   const handleSubjectChange = (index: number, field: 'units' | 'grade', value: string) => {
     const newSubjects = [...subjects];
@@ -49,12 +55,31 @@ const GpaCalculator = () => {
 
   const handleCalculate = () => {
     setError(null);
+    setWarnings([]);
+    const newWarnings: string[] = [];
+
     const validSubjects = subjects.filter(s => s.units && s.grade);
     
     if (validSubjects.length === 0) {
         setError(t('gpaCalculator.errorMinSubjects'));
         setResults({ average: null, germanGrade: null });
         return;
+    }
+
+    // Validate units (1-5)
+    for (const s of validSubjects) {
+      const units = parseInt(s.units, 10);
+      if (units < 1 || units > 5) {
+        setError('عدد الوحدات يجب أن يكون بين 1 و 5');
+        setResults({ average: null, germanGrade: null });
+        return;
+      }
+      const grade = parseInt(s.grade, 10);
+      if (grade < 0 || grade > 100) {
+        setError('العلامة يجب أن تكون بين 0 و 100');
+        setResults({ average: null, germanGrade: null });
+        return;
+      }
     }
 
     const totalWeightedGrade = validSubjects.reduce((acc, s) => acc + (parseInt(s.units, 10) * parseInt(s.grade, 10)), 0);
@@ -67,11 +92,19 @@ const GpaCalculator = () => {
     }
 
     const average = totalWeightedGrade / totalUnits;
-    const germanGrade = 1 + 3 * ((100 - average) / 30);
+
+    // Warning if below passing grade
+    if (average < NMIN) {
+      newWarnings.push(`⚠️ معدلك (${average.toFixed(1)}) أقل من الحد الأدنى للنجاح (${NMIN}). قد لا يتم قبول الشهادة للدراسة في ألمانيا.`);
+    }
+
+    // Correct Bavarian formula: 1 + 3 * ((Nmax - Nd) / (Nmax - Nmin))
+    const germanGrade = 1 + 3 * ((NMAX - average) / (NMAX - NMIN));
     
+    setWarnings(newWarnings);
     setResults({
         average: parseFloat(average.toFixed(2)),
-        germanGrade: parseFloat(Math.max(1.0, Math.min(5.0, germanGrade)).toFixed(2))
+        germanGrade: parseFloat(Math.max(1.0, Math.min(4.0, germanGrade)).toFixed(2))
     });
   };
   
@@ -79,6 +112,7 @@ const GpaCalculator = () => {
     setSubjects(JSON.parse(JSON.stringify(initialSubjects)));
     setResults({ average: null, germanGrade: null });
     setError(null);
+    setWarnings([]);
   };
 
   return (
@@ -91,7 +125,17 @@ const GpaCalculator = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                 {subjects.map((subject, index) => (
                     <div key={subject.id} className="space-y-2">
-                        <Label htmlFor={subject.id}>{t(`gpaCalculator.subjects.${subject.id}`)}</Label>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor={subject.id}>{t(`gpaCalculator.subjects.${subject.id}`)}</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[200px] text-right">
+                              <p className="text-xs">الوحدات (يحידות לימוד): عدد وحدات البجروت من 1 إلى 5</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <div className="flex gap-2">
                             <Select
                                 value={subject.units}
@@ -101,8 +145,8 @@ const GpaCalculator = () => {
                                     <SelectValue placeholder={t('gpaCalculator.units')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {[...Array(6).keys()].map(i => (
-                                        <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <SelectItem key={i} value={String(i)}>{i}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -124,8 +168,15 @@ const GpaCalculator = () => {
                    <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
+            {warnings.map((w, i) => (
+              <Alert key={i} className="bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">{w}</AlertDescription>
+              </Alert>
+            ))}
             {results.average !== null && results.germanGrade !== null && (
-                 <Alert variant="default" className="bg-primary/10 border-primary/50" dir="rtl">
+              <>
+                <Alert variant="default" className="bg-primary/10 border-primary/50" dir="rtl">
                     <Calculator className="h-4 w-4 text-primary" />
                     <AlertTitle className="font-bold text-primary">{t('gpaCalculator.results')}</AlertTitle>
                     <AlertDescription className="space-y-1 text-foreground">
@@ -147,6 +198,15 @@ const GpaCalculator = () => {
                         </p>
                     </AlertDescription>
                 </Alert>
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+                  <p className="font-semibold text-foreground">📐 الطريقة البافارية (Modified Bavarian Formula):</p>
+                  <p dir="ltr" className="text-center font-mono bg-background rounded p-2">
+                    German Grade = 1 + 3 × ((100 - Average) / (100 - 56))
+                  </p>
+                  <p>حيث 100 هي أعلى علامة ممكنة و 56 هي الحد الأدنى للنجاح في البجروت الإسرائيلي.</p>
+                  <p>النتيجة بين 1.0 (ممتاز) و 4.0 (مقبول). العلامات أقل من 56 لا تُقبل عادةً.</p>
+                </div>
+              </>
             )}
         </CardContent>
         <CardFooter className="flex justify-center gap-4 pt-6 px-0">
