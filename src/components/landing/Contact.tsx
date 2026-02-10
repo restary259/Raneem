@@ -95,7 +95,7 @@ const Contact = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
           
-          <div className="lg:col-span-2 text-right p-8 bg-background/50 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
+          <div className="lg:col-span-2 text-right p-4 sm:p-6 md:p-8 bg-background/50 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
             <div className="text-center md:text-right max-w-2xl mb-8">
               <h2 className="text-3xl md:text-4xl font-bold">{t('contact.title')}</h2>
               <p className="mt-4 text-lg text-muted-foreground">
@@ -104,7 +104,7 @@ const Contact = () => {
             </div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem><FormLabel>{t('contact.form.name')}</FormLabel><FormControl><Input placeholder={t('contact.form.namePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -115,7 +115,7 @@ const Contact = () => {
                     <FormItem><FormLabel>{t('contact.form.whatsapp')}</FormLabel><FormControl><Input placeholder={t('contact.form.whatsappPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
-                 <div className="grid md:grid-cols-2 gap-6">
+                 <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                     <FormField control={form.control} name="studyDestination" render={({ field }) => (
                         <FormItem><FormLabel>{t('contact.form.destination')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
@@ -170,7 +170,7 @@ const Contact = () => {
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
                 {t('contact.mapSubtitle')}
             </p>
-            <div className="mt-8 h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 animate-scale-in">
+            <div className="mt-8 h-[300px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 animate-scale-in">
                 <Map />
             </div>
         </div>

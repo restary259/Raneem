@@ -39,7 +39,7 @@ const ServiceProcess: React.FC<ServiceProcessProps> = ({
 }) => (
   <section className={cn("py-12 md:py-24", className)}>
     <div className="container mx-auto px-4">
-      <div className="text-center max-w-3xl mx-auto mb-16">
+      <div className="text-center max-w-3xl mx-auto mb-8 md:mb-16">
         <h2 className="text-3xl md:text-4xl font-bold font-cairo text-primary">{title}</h2>
         <p className="mt-4 text-lg text-muted-foreground">
           {description}

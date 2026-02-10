@@ -32,7 +32,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
       className="hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-105 group"
       onClick={() => onMajorClick(major)}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 text-right">
             <div className="flex items-center gap-2 justify-end mb-3">

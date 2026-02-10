@@ -16,7 +16,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" dir="rtl">
         <DialogHeader className="text-right">
           <DialogTitle className="text-2xl font-bold text-orange-600 mb-4">
             {major.nameAR}

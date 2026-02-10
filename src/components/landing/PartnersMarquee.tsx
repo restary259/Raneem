@@ -39,7 +39,7 @@ const PartnersMarquee = () => {
                       style={{ animationDuration: '20s' }}
                     >
                         {extendedPartners.map((partner, index) => (
-                            <span key={index} className="mx-8 text-xl font-semibold text-muted-foreground">
+                            <span key={index} className="mx-4 sm:mx-6 md:mx-8 text-sm sm:text-base md:text-xl font-semibold text-muted-foreground">
                                 {partner}
                             </span>
                         ))}

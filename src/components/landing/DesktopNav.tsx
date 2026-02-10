@@ -50,7 +50,7 @@ const DesktopNav = () => {
   return (
     <div className="flex justify-center w-full" dir="rtl">
       <NavigationMenu>
-        <NavigationMenuList className="flex items-center gap-1">
+        <NavigationMenuList className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {/* المزيد (dropdown) - First item */}
           <NavigationMenuItem>
             <NavigationMenuTrigger className="nav-item text-gray-700 hover:text-orange-500 font-medium">

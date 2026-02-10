@@ -1,6 +1,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -79,8 +80,6 @@
   html {
     @apply scroll-smooth;
     font-size: clamp(14px, 2.2vw, 16px);
-    /* Prevent horizontal scrolling on mobile */
-    overflow-x: hidden;
   }
 
   * {
@@ -95,8 +94,6 @@
     font-size: var(--body-text);
     line-height: 1.5;
     word-break: break-word;
-    /* Prevent horizontal scrolling */
-    overflow-x: hidden;
     /* Ensure proper mobile viewport */
     min-height: 100vh;
     min-height: 100dvh;
