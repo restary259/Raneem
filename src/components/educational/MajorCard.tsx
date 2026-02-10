@@ -29,7 +29,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
 
   return (
     <Card 
-      className="hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-105 group"
+      className="hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:border-accent/30 group"
       onClick={() => onMajorClick(major)}
     >
       <CardContent className="p-4 sm:p-6">

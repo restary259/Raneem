@@ -18,12 +18,12 @@ const InteractiveCard: React.FC<InteractiveCardProps> = ({
   onToggle
 }) => {
   return (
-    <Card 
+     <Card 
       className={`
         transition-all duration-300 cursor-pointer h-full
         ${isExpanded 
           ? 'scale-105 shadow-2xl border-2 border-orange-400 z-10' 
-          : 'hover:scale-102 hover:shadow-xl hover:border-orange-200'
+          : 'hover:scale-102 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:border-orange-200'
         }
         ${className}
       `}

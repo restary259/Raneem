@@ -72,10 +72,10 @@ const AIQuizChat = () => {
               <div className="w-full max-w-lg space-y-2">
                 <p className="text-sm text-muted-foreground font-medium text-center">ابدأ بسؤال:</p>
                 {QUIZ_QUICK_QUESTIONS.map((q, i) => (
-                  <button
+                   <button
                     key={i}
                     onClick={() => sendMessage(q)}
-                    className="w-full text-right text-sm p-3 rounded-xl border hover:bg-secondary transition-colors"
+                    className="w-full text-right text-sm p-3 rounded-xl border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                   >
                     {q}
                   </button>
@@ -98,8 +98,8 @@ const AIQuizChat = () => {
                       <User className="h-4 w-4 text-orange-600" />
                     </div>
                   )}
-                  <div
-                    className={`max-w-[80%] p-4 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
+                   <div
+                    className={`max-w-[80%] p-4 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed animate-fade-in ${
                       msg.role === 'user'
                         ? 'bg-orange-50 text-foreground rounded-tr-sm'
                         : 'bg-secondary text-foreground rounded-tl-sm'

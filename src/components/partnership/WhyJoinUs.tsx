@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserPlus } from "lucide-react";
 import { icons } from "lucide-react";
+import { useInView } from "react-intersection-observer";
 
 type Benefit = {
   icon: keyof typeof icons;
@@ -12,6 +13,7 @@ type Benefit = {
 const WhyJoinUs = () => {
   const { t } = useTranslation('partnership');
   const benefits = t('whyJoinUs.benefits', { returnObjects: true }) as Benefit[];
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const renderIcon = (iconName: keyof typeof icons) => {
     const IconComponent = icons[iconName];
@@ -23,9 +25,13 @@ const WhyJoinUs = () => {
     <section className="py-12 md:py-24 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{t('whyJoinUs.title')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.isArray(benefits) && benefits.map((benefit, index) => (
-            <Card key={index} className="border-0 shadow-none text-center">
+            <Card 
+              key={index} 
+              className={`border-0 shadow-none text-center hover:shadow-lg hover:-translate-y-1 ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+            >
               <CardContent className="p-6 flex flex-col items-center gap-4">
                 <div className="p-4 bg-accent/10 rounded-full">
                   {renderIcon(benefit.icon)}
