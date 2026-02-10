@@ -64,6 +64,13 @@
   ],
   "shortcuts": [
     {
+      "name": "المستشار الذكي",
+      "short_name": "المستشار",
+      "description": "تحدث مع مستشار درب الذكي",
+      "url": "/ai-advisor",
+      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
+    },
+    {
       "name": "الخدمات",
       "short_name": "الخدمات",
       "description": "تصفح خدماتنا التعليمية",

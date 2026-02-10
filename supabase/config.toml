@@ -5,3 +5,5 @@ project_id = "mzbadxfvxioedzdjxamc"
 verify_jwt = false
 [functions.ai-chat]
 verify_jwt = false
+[functions.push-notify]
+verify_jwt = false

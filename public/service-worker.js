@@ -1,5 +1,9 @@
 
-const CACHE_NAME = 'darb-education-v1.0.2'; // Increment version for updates
+const CACHE_VERSION = '2.0.0';
+const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
+const AI_CACHE = 'darb-ai-cache';
+const DOCS_CACHE = 'darb-docs-cache';
+const FONT_CACHE = 'darb-fonts-cache';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
@@ -15,255 +19,192 @@ const STATIC_CACHE_URLS = [
   '/partnership',
   '/quiz',
   '/resources',
-  '/student-auth'
+  '/student-auth',
+  '/ai-advisor'
 ];
 
-// Runtime cache patterns
-const RUNTIME_CACHE_PATTERNS = [
-  /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-  /\.(?:js|css)$/,
-  /\.(?:woff|woff2|eot|ttf|otf)$/
-];
-
-// Install event - cache static assets
+// Install event
 self.addEventListener('install', event => {
-  console.log('[SW] Install event - Version 1.0.2');
-  
+  console.log('[SW] Install - v' + CACHE_VERSION);
   event.waitUntil(
     Promise.all([
-      caches.open(CACHE_NAME).then(cache => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_CACHE_URLS);
-      }),
-      self.skipWaiting() // Force activation of new service worker
+      caches.open(STATIC_CACHE).then(cache => cache.addAll(STATIC_CACHE_URLS)),
+      self.skipWaiting()
     ])
   );
 });
 
-// Activate event - cleanup old caches and take control immediately
+// Activate - cleanup old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate event - New version ready');
-  
+  console.log('[SW] Activate - v' + CACHE_VERSION);
+  const keepCaches = [STATIC_CACHE, AI_CACHE, DOCS_CACHE, FONT_CACHE];
   event.waitUntil(
     Promise.all([
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              console.log('[SW] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      self.clients.claim() // Take control of all clients immediately
+      caches.keys().then(names =>
+        Promise.all(names.filter(n => !keepCaches.includes(n)).map(n => caches.delete(n)))
+      ),
+      self.clients.claim()
     ])
   );
-  
-  // Notify all clients about the update with enhanced messaging
   self.clients.matchAll().then(clients => {
-    clients.forEach(client => {
-      client.postMessage({
-        type: 'SW_UPDATED',
-        message: 'تم تحديث التطبيق بنجاح! إصدار جديد متاح.',
-        version: '1.0.2'
-      });
-    });
+    clients.forEach(c => c.postMessage({ type: 'SW_UPDATED', message: 'تم تحديث التطبيق', version: CACHE_VERSION }));
   });
 });
 
-// Listen for messages from the main thread
+// Message handler
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  // Cache AI conversation
+  if (event.data?.type === 'CACHE_AI_RESPONSE') {
+    caches.open(AI_CACHE).then(cache => {
+      const resp = new Response(JSON.stringify(event.data.conversation));
+      cache.put('latest-conversation', resp);
+    });
+  }
+  // Cache document for offline
+  if (event.data?.type === 'CACHE_DOCUMENT') {
+    caches.open(DOCS_CACHE).then(cache => {
+      fetch(event.data.url).then(resp => {
+        if (resp.ok) cache.put(event.data.url, resp);
+      }).catch(() => {});
+    });
   }
 });
 
-// Check for updates every 15 minutes (reduced from 30)
-setInterval(() => {
-  self.registration.update();
-}, 15 * 60 * 1000);
+// Stale-while-revalidate helper
+function staleWhileRevalidate(event, cacheName) {
+  event.respondWith(
+    caches.open(cacheName).then(cache =>
+      cache.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(networkResp => {
+          if (networkResp.ok) cache.put(event.request, networkResp.clone());
+          return networkResp;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    )
+  );
+}
 
-// Fetch event - serve from cache, fallback to network
+// Fetch handler
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip external requests
+  // Google Fonts -> font cache
+  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
+    event.respondWith(
+      caches.open(FONT_CACHE).then(cache =>
+        cache.match(request).then(cached => {
+          if (cached) return cached;
+          return fetch(request).then(resp => {
+            cache.put(request, resp.clone());
+            return resp;
+          }).catch(() => cached);
+        })
+      )
+    );
+    return;
+  }
+
+  // Skip non-origin requests (except fonts handled above)
   if (!url.origin.includes(self.location.origin)) return;
 
-  // Handle navigation requests
+  // Document files from storage -> docs cache with stale-while-revalidate
+  if (url.pathname.includes('/storage/') || url.pathname.includes('/student-documents/')) {
+    staleWhileRevalidate(event, DOCS_CACHE);
+    return;
+  }
+
+  // Navigation requests
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match(request)
-        .then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          
-          return fetch(request)
-            .then(response => {
-              // Clone the response before caching
-              const responseClone = response.clone();
-              
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, responseClone);
-              });
-              
-              return response;
-            })
-            .catch(() => {
-              // Return offline page for navigation requests
-              return caches.match(OFFLINE_URL);
-            });
-        })
+      fetch(request).then(resp => {
+        const clone = resp.clone();
+        caches.open(STATIC_CACHE).then(c => c.put(request, clone));
+        return resp;
+      }).catch(() => caches.match(request).then(c => c || caches.match(OFFLINE_URL)))
     );
     return;
   }
 
-  // Handle static assets with cache-first strategy
-  if (RUNTIME_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
+  // Static assets (images, JS, CSS, fonts) -> cache-first
+  if (/\.(png|jpg|jpeg|svg|gif|webp|js|css|woff2?|eot|ttf|otf)$/.test(url.pathname)) {
     event.respondWith(
-      caches.match(request)
-        .then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(resp => {
+          if (resp.ok && resp.type === 'basic') {
+            const clone = resp.clone();
+            caches.open(STATIC_CACHE).then(c => c.put(request, clone));
           }
-          
-          return fetch(request)
-            .then(response => {
-              // Don't cache if not a valid response
-              if (!response || response.status !== 200 || response.type !== 'basic') {
-                return response;
-              }
-              
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, responseClone);
-              });
-              
-              return response;
-            })
-            .catch(() => {
-              // Return a placeholder for failed image requests
-              if (url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp)$/)) {
-                return new Response(
-                  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">صورة غير متاحة</text></svg>',
-                  { headers: { 'Content-Type': 'image/svg+xml' } }
-                );
-              }
-              return new Response('المحتوى غير متاح حالياً', { 
-                status: 503,
-                headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-              });
-            });
-        })
+          return resp;
+        }).catch(() => {
+          if (/\.(png|jpg|jpeg|svg|gif|webp)$/.test(url.pathname)) {
+            return new Response(
+              '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">غير متاح</text></svg>',
+              { headers: { 'Content-Type': 'image/svg+xml' } }
+            );
+          }
+          return new Response('غير متاح', { status: 503 });
+        });
+      })
     );
     return;
   }
 
-  // Default: network first for other requests
+  // Default: network-first
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        return caches.match(request);
-      })
+    fetch(request).then(resp => {
+      const clone = resp.clone();
+      caches.open(STATIC_CACHE).then(c => c.put(request, clone));
+      return resp;
+    }).catch(() => caches.match(request))
   );
 });
 
-// Handle background sync for offline form submissions
+// Background sync
 self.addEventListener('sync', event => {
   if (event.tag === 'contact-form-sync') {
     event.waitUntil(syncContactForms());
   }
 });
 
-// Function to sync contact forms when back online
 async function syncContactForms() {
   try {
-    const cache = await caches.open(CACHE_NAME);
-    const requests = await cache.keys();
-    
-    const formRequests = requests.filter(req => 
-      req.url.includes('/api/contact') && req.method === 'POST'
-    );
-    
-    for (const request of formRequests) {
-      try {
-        await fetch(request);
-        await cache.delete(request);
-      } catch (error) {
-        console.log('[SW] Failed to sync form:', error);
-      }
+    const cache = await caches.open(STATIC_CACHE);
+    const reqs = await cache.keys();
+    for (const req of reqs.filter(r => r.url.includes('/api/contact') && r.method === 'POST')) {
+      try { await fetch(req); await cache.delete(req); } catch {}
     }
-  } catch (error) {
-    console.log('[SW] Background sync failed:', error);
-  }
+  } catch {}
 }
 
-// Enhanced push notification handler
+// Push notifications
 self.addEventListener('push', event => {
   if (!event.data) return;
-
   const data = event.data.json();
-  const options = {
-    body: data.body || 'تحديث جديد متاح في تطبيق درب',
-    icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
-    badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
-    vibrate: [100, 50, 100],
-    tag: 'app-update',
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: data.primaryKey || 1,
-      url: data.url || '/'
-    },
-    actions: [
-      {
-        action: 'update',
-        title: 'تحديث الآن',
-        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
-      },
-      {
-        action: 'later',
-        title: 'لاحقاً',
-        icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png'
-      }
-    ]
-  };
-
   event.waitUntil(
-    self.registration.showNotification(data.title || 'درب - تحديث التطبيق', options)
+    self.registration.showNotification(data.title || 'درب', {
+      body: data.body || 'تحديث جديد',
+      icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+      badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+      vibrate: [100, 50, 100],
+      tag: data.tag || 'darb-notification',
+      data: { url: data.url || '/' },
+      actions: [
+        { action: 'open', title: 'فتح' },
+        { action: 'dismiss', title: 'تجاهل' }
+      ]
+    })
   );
 });
 
-// Enhanced notification click handler
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-
-  if (event.action === 'update') {
-    event.waitUntil(
-      clients.openWindow('/').then(client => {
-        if (client) {
-          client.postMessage({ type: 'FORCE_RELOAD' });
-        }
-      })
-    );
-  } else if (event.action === 'later') {
-    // Do nothing, just close
-  } else {
-    // Default click action
-    event.waitUntil(
-      clients.openWindow(event.notification.data?.url || '/')
-    );
+  if (event.action !== 'dismiss') {
+    event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
   }
 });

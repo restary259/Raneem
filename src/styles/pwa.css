@@ -24,3 +24,18 @@
     @apply px-4 py-6 pb-20;
   }
 }
+
+/* Standalone mode adjustments - hide browser-specific UI */
+@media all and (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    user-select: auto;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+}
+
+  .pwa-content {
+    @apply px-4 py-6 pb-20;
+  }
+}

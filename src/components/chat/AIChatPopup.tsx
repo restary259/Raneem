@@ -1,132 +1,23 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send, Bot, User, Loader2 } from 'lucide-react';
-
-type Msg = { role: 'user' | 'assistant'; content: string };
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
-
-const QUICK_QUESTIONS = [
-  'كيف أبدأ التقديم للجامعات الألمانية؟',
-  'ما هي متطلبات التأشيرة الدراسية؟',
-  'ما مستوى اللغة الألمانية المطلوب؟',
-  'كم تكلفة المعيشة في ألمانيا؟',
-];
+import { X, Send, Bot, User, Loader2, WifiOff, Maximize2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAIChat, QUICK_QUESTIONS } from '@/hooks/useAIChat';
 
 const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
-
-    const userMsg: Msg = { role: 'user', content: text.trim() };
-    const allMessages = [...messages, userMsg];
-    setMessages(allMessages);
-    setInput('');
-    setIsLoading(true);
-
-    let assistantSoFar = '';
-    
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: allMessages }),
-      });
-
-      if (!resp.ok || !resp.body) {
-        const errorData = await resp.json().catch(() => ({}));
-        throw new Error(errorData.error || 'فشل الاتصال بالمساعد الذكي');
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantSoFar += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: 'assistant', content: assistantSoFar }];
-              });
-            }
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
-      }
-
-      // Final flush
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantSoFar += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: 'assistant', content: assistantSoFar }];
-              });
-            }
-          } catch { /* ignore */ }
-        }
-      }
-    } catch (e: any) {
-      console.error('AI Chat error:', e);
-      setMessages(prev => [...prev, { role: 'assistant', content: `عذراً، حدث خطأ: ${e.message}` }]);
-    } finally {
-      setIsLoading(false);
-      inputRef.current?.focus();
-    }
-  };
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    isOnline,
+    inputRef,
+    messagesEndRef,
+    sendMessage,
+  } = useAIChat(true);
 
   return (
     <Card className="flex flex-col h-[550px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background/95 backdrop-blur-sm border-white/20" dir="rtl">
@@ -138,10 +29,24 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
             <CardDescription className="text-white/80 text-xs">مرشدك للدراسة في ألمانيا 🇩🇪</CardDescription>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white shrink-0">
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Link to="/ai-advisor">
+            <Button variant="ghost" size="icon" className="hover:bg-white/20 text-white shrink-0" title="فتح في صفحة كاملة">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white shrink-0">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </CardHeader>
+
+      {!isOnline && (
+        <div className="bg-amber-50 px-3 py-1.5 flex items-center gap-2 text-amber-700 text-xs border-b border-amber-200">
+          <WifiOff className="h-3 w-3" />
+          <span>غير متصل — محادثات محفوظة فقط</span>
+        </div>
+      )}
 
       <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (

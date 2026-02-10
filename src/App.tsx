@@ -22,6 +22,7 @@ import StudentDashboardPage from "./pages/StudentDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import QuizPage from "./pages/QuizPage";
+import AIAdvisorPage from "./pages/AIAdvisorPage";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import BottomNav from "./components/common/BottomNav";
@@ -116,6 +117,7 @@ const App = () => {
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/quiz" element={<QuizPage />} />
+            <Route path="/ai-advisor" element={<AIAdvisorPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <ChatWidget />
