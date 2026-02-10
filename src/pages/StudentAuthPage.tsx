@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
+import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 
 const StudentAuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,46 +28,21 @@ const StudentAuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('🔐 Auth page mounted');
-    
-    // Check if user is already logged in
     const getSession = async () => {
-      try {
-        console.log('🔐 Checking existing session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('🔐 Session check error:', error);
-          return;
-        }
-        
-        if (session?.user) {
-          console.log('🔐 User already authenticated, redirecting to dashboard');
-          setUser(session.user);
-          navigate('/student-dashboard');
-        }
-      } catch (error) {
-        console.error('🔐 Session check failed:', error);
-      }
-    };
-    
-    getSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state change:', event, session?.user?.id);
-      setUser(session?.user ?? null);
-      
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        console.log('🔐 User authenticated, navigating to dashboard');
+        setUser(session.user);
         navigate('/student-dashboard');
       }
+    };
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) navigate('/student-dashboard');
     });
 
-    return () => {
-      console.log('🔐 Auth page cleanup');
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -74,28 +50,48 @@ const StudentAuthPage = () => {
     setIsLoading(true);
 
     try {
-      console.log('🔐 Starting auth process:', { isLogin, email });
-
       if (isLogin) {
-        console.log('🔐 Attempting login...');
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        // Use rate-limited auth-guard edge function
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-guard`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ email, password }),
         });
-        
-        if (error) {
-          console.error('🔐 Login error:', error);
-          throw error;
+
+        const result = await resp.json();
+
+        if (!resp.ok) {
+          throw new Error(result.error || 'فشل تسجيل الدخول');
         }
-        
-        console.log('🔐 Login successful:', data.user?.id);
+
+        // Set the session from the edge function response
+        if (result.session) {
+          await supabase.auth.setSession({
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token,
+          });
+        }
+
         toast({
           title: "تم تسجيل الدخول بنجاح",
           description: "مرحباً بك في لوحة التحكم الخاصة بك",
         });
       } else {
-        console.log('🔐 Attempting signup...');
-        const { data, error } = await supabase.auth.signUp({
+        // Signup: enforce strong password
+        if (!validatePassword(password)) {
+          toast({
+            variant: "destructive",
+            title: "كلمة المرور ضعيفة",
+            description: "يجب أن تحتوي على 8 أحرف على الأقل، حرف كبير، حرف صغير، رقم، ورمز خاص.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -107,29 +103,20 @@ const StudentAuthPage = () => {
             emailRedirectTo: `${window.location.origin}/student-dashboard`
           }
         });
-        
-        if (error) {
-          console.error('🔐 Signup error:', error);
-          throw error;
-        }
-        
-        console.log('🔐 Signup successful:', data.user?.id);
+
+        if (error) throw error;
+
         toast({
           title: "تم إنشاء الحساب بنجاح",
           description: "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب",
         });
       }
     } catch (error: any) {
-      console.error('🔐 Auth error:', error);
       let errorMessage = error.message;
-      
-      // Provide more user-friendly error messages in Arabic
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'بيانات تسجيل الدخول غير صحيحة';
       } else if (error.message.includes('User already registered')) {
         errorMessage = 'هذا البريد الإلكتروني مسجل مسبقاً';
-      } else if (error.message.includes('Password should be at least 6 characters')) {
-        errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
       } else if (error.message.includes('Invalid email')) {
         errorMessage = 'البريد الإلكتروني غير صالح';
       }
@@ -159,50 +146,24 @@ const StudentAuthPage = () => {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="fullName">الاسم الكامل *</Label>
-                    <Input
-                      id="fullName"
-                      placeholder="أدخل اسمك الكامل"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required={!isLogin}
-                    />
+                    <Input id="fullName" placeholder="أدخل اسمك الكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} required={!isLogin} />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="phoneNumber">رقم الجوال</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      placeholder="أدخل رقم جوالك"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
+                    <Input id="phoneNumber" type="tel" placeholder="أدخل رقم جوالك" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="country">الدولة</Label>
-                    <Input
-                      id="country"
-                      placeholder="أدخل دولتك"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                    />
+                    <Input id="country" placeholder="أدخل دولتك" value={country} onChange={(e) => setCountry(e.target.value)} />
                   </div>
                 </>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">البريد الإلكتروني *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="أدخل بريدك الإلكتروني"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="email" type="email" placeholder="أدخل بريدك الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">كلمة المرور *</Label>
                 <div className="relative">
@@ -213,7 +174,7 @@ const StudentAuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                   <Button
                     type="button"
@@ -225,21 +186,16 @@ const StudentAuthPage = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                {!isLogin && <PasswordStrength password={password} />}
                 {isLogin && (
                   <div className="text-left">
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={() => setShowResetModal(true)}
-                      className="p-0 h-auto font-normal text-sm text-primary hover:underline"
-                    >
+                    <Button type="button" variant="link" size="sm" onClick={() => setShowResetModal(true)} className="p-0 h-auto font-normal text-sm text-primary hover:underline">
                       نسيت كلمة المرور؟
                     </Button>
                   </div>
                 )}
               </div>
-              
+
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
@@ -251,13 +207,9 @@ const StudentAuthPage = () => {
                 )}
               </Button>
             </form>
-            
+
             <div className="mt-4 text-center">
-              <Button
-                variant="link"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm"
-              >
+              <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-sm">
                 {isLogin ? "ليس لديك حساب؟ سجل الآن" : "لديك حساب؟ سجل الدخول"}
               </Button>
             </div>
@@ -265,11 +217,7 @@ const StudentAuthPage = () => {
         </Card>
 
         <AuthDebugPanel />
-
-        <PasswordResetModal 
-          isOpen={showResetModal} 
-          onClose={() => setShowResetModal(false)} 
-        />
+        <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
       </div>
     </div>
   );

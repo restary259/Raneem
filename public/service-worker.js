@@ -54,6 +54,15 @@ self.addEventListener('activate', event => {
 // Message handler
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  // Clear all caches on logout (security)
+  if (event.data?.type === 'CLEAR_CACHES_ON_LOGOUT') {
+    caches.keys().then(names =>
+      Promise.all(names.map(n => caches.delete(n)))
+    ).then(() => {
+      console.log('[SW] All caches cleared on logout');
+    });
+    return;
+  }
   // Cache AI conversation
   if (event.data?.type === 'CACHE_AI_RESPONSE') {
     caches.open(AI_CACHE).then(cache => {

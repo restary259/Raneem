@@ -7,12 +7,43 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
+// Simple HTML tag stripper
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, '').trim();
+}
+
+// In-memory rate limiter
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 3;
+const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+
+    // Rate limit
+    if (isRateLimited(ip)) {
+      return new Response(JSON.stringify({ error: "تم تجاوز الحد المسموح. يرجى المحاولة بعد ساعة.", success: false }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 429,
+      });
+    }
+
     let requestBody;
     try {
       requestBody = await req.json();
@@ -23,7 +54,16 @@ serve(async (req) => {
       });
     }
 
-    const { form_source, ...formData } = requestBody;
+    const { form_source, honeypot, ...formData } = requestBody;
+
+    // Honeypot check - bots fill this hidden field
+    if (honeypot) {
+      // Silently accept but don't process
+      return new Response(JSON.stringify({ success: true, message: "تم إرسال رسالتك بنجاح" }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
 
     if (!form_source) {
       return new Response(JSON.stringify({ error: "form_source is required", success: false }), {
@@ -32,25 +72,39 @@ serve(async (req) => {
       });
     }
 
-    // Validate required fields
-    if (!formData.name || !formData.email) {
-      return new Response(JSON.stringify({ error: "الاسم والبريد الإلكتروني مطلوبان", success: false }), {
+    // Input validation and sanitization
+    const name = stripHtml(String(formData.name || '')).slice(0, 100);
+    const email = stripHtml(String(formData.email || '')).slice(0, 255);
+    const whatsapp = String(formData.whatsapp || '').replace(/[^\d+\-\s]/g, '').slice(0, 20);
+    const message = stripHtml(String(formData.message || '')).slice(0, 2000);
+    const service = stripHtml(String(formData.service || '')).slice(0, 200);
+
+    if (!name || name.length < 2) {
+      return new Response(JSON.stringify({ error: "الاسم مطلوب (حرفين على الأقل)", success: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "بريد إلكتروني غير صالح", success: false }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const sanitizedData = { ...formData, name, email, whatsapp, message, service };
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    // Save to database
     const { data: dbData, error: dbError } = await supabaseClient
       .from('contact_submissions')
       .insert([{
         form_source,
-        data: formData,
+        data: sanitizedData,
         status: 'new',
         created_at: new Date().toISOString()
       }])
@@ -67,8 +121,6 @@ serve(async (req) => {
       });
     }
 
-    console.log('Contact submission saved:', dbData);
-
     // Optionally send email via Resend if configured
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (RESEND_API_KEY) {
@@ -79,11 +131,11 @@ serve(async (req) => {
           from: 'Darb Study <onboarding@resend.dev>',
           to: ['darbsocial27@gmail.com'],
           subject: `New Contact - ${form_source}`,
-          html: `<h2>رسالة جديدة من ${formData.name}</h2>
-            <p><strong>البريد:</strong> ${formData.email}</p>
-            <p><strong>واتساب:</strong> ${formData.whatsapp || 'غير محدد'}</p>
-            <p><strong>الخدمة:</strong> ${formData.service || 'غير محدد'}</p>
-            <p><strong>الرسالة:</strong> ${formData.message || 'لا يوجد'}</p>`,
+          html: `<h2>رسالة جديدة من ${name}</h2>
+            <p><strong>البريد:</strong> ${email}</p>
+            <p><strong>واتساب:</strong> ${whatsapp || 'غير محدد'}</p>
+            <p><strong>الخدمة:</strong> ${service || 'غير محدد'}</p>
+            <p><strong>الرسالة:</strong> ${message || 'لا يوجد'}</p>`,
         });
       } catch (emailErr) {
         console.warn('Email sending failed (non-critical):', emailErr);
@@ -101,7 +153,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Critical error:', error);
     return new Response(JSON.stringify({ 
-      error: `خطأ في الخادم: ${error.message}`,
+      error: "خطأ في الخادم",
       success: false,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

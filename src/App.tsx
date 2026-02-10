@@ -27,6 +27,7 @@ import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const NetflixLoader = () => {
 };
 
 const App = () => {
+  useSessionTimeout();
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
