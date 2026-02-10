@@ -76,32 +76,6 @@ export const germanyUniversities: University[] = [
   }
 ];
 
-export const romaniaUniversities: University[] = [
-  {
-    name: "Carol Davila University of Medicine and Pharmacy",
-    logoUrl: "/lovable-uploads/dfca3402-c6b9-4560-88d7-6e8c19f26ab4.png",
-    location: "بوخارست، رومانيا",
-    description: "جامعة طبية عريقة ومرموقة في أوروبا الشرقية.",
-    websiteUrl: "https://www.umfcd.ro/",
-    keyFacts: ["تأسست عام 1857", "8,000+ طالب", "معترف بها دولياً"]
-  },
-  {
-    name: "Ovidius University",
-    logoUrl: "/lovable-uploads/03767a14-eafc-4beb-8e8f-12a2491e4ee5.png",
-    location: "كونستانتا، رومانيا", 
-    description: "جامعة شاملة تقدم برامج متنوعة في الهندسة والاقتصاد.",
-    websiteUrl: "https://www.univ-ovidius.ro/",
-    keyFacts: ["تأسست عام 1961", "15,000+ طالب", "قوية في الهندسة البحرية"]
-  }
-];
-
-export const jordanUniversities: University[] = [
-  {
-    name: "جامعة اليرموك",
-    logoUrl: "/lovable-uploads/125fa6e2-60ae-4bd0-91bb-a2b2dc342ebd.png",
-    location: "إربد، الأردن",
-    description: "جامعة أردنية رائدة في التعليم العالي والبحث العلمي.",
-    websiteUrl: "https://www.yu.edu.jo/",
-    keyFacts: ["تأسست عام 1976", "40,000+ طالب", "متميزة في الهندسة وتكنولوجيا المعلومات"]
-  }
-];
+// Removed Romania and Jordan universities - Germany only
+export const romaniaUniversities: University[] = [];
+export const jordanUniversities: University[] = [];

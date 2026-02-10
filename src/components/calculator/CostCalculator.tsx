@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Link } from 'react-router-dom';
 
 const formSchema = z.object({
-  country: z.enum(['germany', 'jordan', 'romania']),
+  country: z.enum(['germany']),
   degreeLevel: z.enum(['bachelor', 'master', 'prep']),
   fieldOfStudy: z.enum(['engineering', 'medicine', 'business', 'humanities']),
   universityType: z.enum(['public', 'private']),
@@ -79,19 +79,9 @@ const CostCalculator = () => {
         languagePrep: 0,
       };
 
-      // Tuition
-      if (country === 'romania') {
-        const romaniaData = costData.romania;
-        let tuition = romaniaData.tuition[fieldOfStudy as keyof Omit<typeof romaniaData.tuition, 'private_multiplier'>];
-        if (universityType === 'private' && romaniaData.tuition.private_multiplier) {
-          tuition *= romaniaData.tuition.private_multiplier;
-        }
-        breakdown.tuition = tuition;
-      } else {
-        // Germany and Jordan have the same structure for tuition
-        const tuitionData = countryData.tuition as typeof costData.germany.tuition;
-        breakdown.tuition = tuitionData[universityType as 'public' | 'private'];
-      }
+      // Germany tuition
+      const tuitionData = countryData.tuition as typeof costData.germany.tuition;
+      breakdown.tuition = tuitionData[universityType as 'public' | 'private'];
 
       // Living & Accommodation
       const lifestyleMap = { 0: 'basic', 1: 'moderate', 2: 'comfortable' };
@@ -165,8 +155,6 @@ const CostCalculator = () => {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="germany">{t('costCalculator.germany')}</SelectItem>
-                        <SelectItem value="jordan">{t('costCalculator.jordan')}</SelectItem>
-                        <SelectItem value="romania">{t('costCalculator.romania')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
