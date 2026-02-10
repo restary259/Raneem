@@ -1,6 +1,6 @@
 
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { UserPlus } from "lucide-react";
 import { icons } from "lucide-react";
 
@@ -15,7 +15,7 @@ const WhyJoinUs = () => {
 
   const renderIcon = (iconName: keyof typeof icons) => {
     const IconComponent = icons[iconName];
-    if (!IconComponent) return <UserPlus className="h-10 w-10 text-accent" />; // Fallback icon
+    if (!IconComponent) return <UserPlus className="h-10 w-10 text-accent" />;
     return <IconComponent className="h-10 w-10 text-accent" />;
   };
 
@@ -23,16 +23,16 @@ const WhyJoinUs = () => {
     <section className="py-12 md:py-24 bg-background">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{t('whyJoinUs.title')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.isArray(benefits) && benefits.map((benefit, index) => (
-            <div key={index} className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                {renderIcon(benefit.icon)}
-              </div>
-              <div className="text-right">
+            <Card key={index} className="border-0 shadow-none text-center">
+              <CardContent className="p-6 flex flex-col items-center gap-4">
+                <div className="p-4 bg-accent/10 rounded-full">
+                  {renderIcon(benefit.icon)}
+                </div>
                 <p className="text-lg font-semibold text-foreground">{benefit.text}</p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

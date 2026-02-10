@@ -7,6 +7,7 @@ import WhyJoinUs from "@/components/partnership/WhyJoinUs";
 import CommissionCalculator from "@/components/partnership/CommissionCalculator";
 import NewHowItWorks from "@/components/partnership/NewHowItWorks";
 import AgentToolkit from "@/components/partnership/AgentToolkit";
+import TrustSection from "@/components/partnership/TrustSection";
 import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
 import ClosingCta from "@/components/partnership/ClosingCta";
@@ -27,7 +28,7 @@ const PartnershipPage = () => {
                 <CommissionCalculator />
                 <NewHowItWorks />
                 <AgentToolkit />
-                {/* Success Stories section removed */}
+                <TrustSection />
                 <RegistrationForm />
                 <NewFaq />
                 <ClosingCta />
