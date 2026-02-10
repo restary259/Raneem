@@ -14,12 +14,12 @@ const UniversityCard = ({ partner }: UniversityCardProps) => {
   const { t } = useTranslation('partners');
 
   return (
-    <Card className="group flex flex-col bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden rounded-lg border-transparent hover:ring-2 hover:ring-accent h-full">
+    <Card className="group flex flex-col bg-card hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden rounded-lg border-transparent hover:ring-2 hover:ring-accent h-full">
       <div className="bg-white p-4 flex items-center justify-center aspect-video">
         <img 
           src={partner.logoUrl} 
           alt={`${partner.name} logo`}
-          className="h-20 w-auto object-contain filter grayscale group-hover:filter-none transition-all duration-300"
+          className="h-20 w-auto object-contain filter grayscale group-hover:filter-none group-hover:scale-105 transition-all duration-300"
         />
       </div>
       <CardContent className="p-6 flex flex-col flex-grow">

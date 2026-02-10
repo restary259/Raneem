@@ -14,6 +14,7 @@ import {
   Brain
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
 
 const ServicesGrid = () => {
   const { t } = useTranslation(['services', 'common']);
@@ -85,6 +86,8 @@ const ServicesGrid = () => {
     }
   ];
 
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+
   return (
     <section className="py-12 sm:py-16 md:py-20">
       <div className="container mx-auto px-4">
@@ -97,11 +100,15 @@ const ServicesGrid = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <Card 
+              key={index} 
+              className={`group hover:shadow-xl hover:-translate-y-1 hover:border-accent/30 ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'forwards' }}
+            >
               <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                   <service.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </div>
                 <CardTitle className="text-xl mb-2">{service.title}</CardTitle>

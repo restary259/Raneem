@@ -2,10 +2,12 @@
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { useInView } from "react-intersection-observer";
 
 const Testimonials = () => {
   const { t } = useTranslation('landing');
   const testimonials = t('testimonials.items', { returnObjects: true });
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
     <section id="testimonials" className="py-12 md:py-24">
@@ -13,16 +15,20 @@ const Testimonials = () => {
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold">{t('testimonials.title')}</h2>
         </div>
-        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div ref={ref} className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {Array.isArray(testimonials) && testimonials.map((testimonial: { quote: string; name: string; location: string; avatar: string; }, index: number) => (
-            <Card key={index} className="text-right">
+            <Card 
+              key={index} 
+              className={`text-right hover:shadow-lg hover:-translate-y-1 ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'forwards' }}
+            >
               <CardContent className="pt-6">
                 <div className="flex justify-end mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
-                <p className="text-muted-foreground italic">“{testimonial.quote}”</p>
+                <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
                 <div className="mt-4 flex items-center flex-row-reverse">
                   <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full ml-4" />
                   <div>

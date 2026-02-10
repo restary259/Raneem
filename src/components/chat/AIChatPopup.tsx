@@ -60,7 +60,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
                 <button
                   key={i}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-right text-sm p-2 rounded-lg border hover:bg-secondary transition-colors"
+                  className="w-full text-right text-sm p-2 rounded-lg border hover:bg-secondary hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                 >
                   {q}
                 </button>
@@ -77,7 +77,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
               </div>
             )}
             <div
-              className={`max-w-[80%] p-3 rounded-xl text-sm whitespace-pre-wrap leading-relaxed ${
+              className={`max-w-[80%] p-3 rounded-xl text-sm whitespace-pre-wrap leading-relaxed animate-fade-in ${
                 msg.role === 'user'
                   ? 'bg-orange-50 text-foreground rounded-tr-sm'
                   : 'bg-secondary text-foreground rounded-tl-sm'
