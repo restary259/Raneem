@@ -1,97 +1,133 @@
 
 
-# Plan: Partnership Page -- Structure, Clarity & Trust Overhaul
+# Plan: Animation & Card Enhancement
 
 ## Overview
-Improve the Partnership page's content accuracy, interactivity, and trust signals without changing the visual design. This involves fixing text, removing non-Germany countries, replacing the static 4-card "How It Works" with a dynamic scrollable 8-step timeline, rewriting the FAQ to match the real program flow, and adding trust/transparency messaging throughout.
+Enhance the visual polish of all cards and interactive elements across the website with smoother animations, better hover effects, and scroll-triggered entrance animations -- without changing any design, layout, colors, fonts, or spacing.
 
 ---
 
-## 1. Text Corrections (translation file update)
+## 1. Global Animation Infrastructure
 
-**File**: `public/locales/ar/partnership.json`
+### `tailwind.config.ts` -- Add new keyframes & animations:
+- `fade-in-up`: fade + translate up (for scroll-triggered card entrances)
+- `fade-in-left` / `fade-in-right`: for staggered grid items
+- `shimmer`: subtle shine effect for card borders on hover
+- `float`: gentle floating effect for icons
 
-- Fix hero title: "دارب" to "درب"
-- Fix hero subtitle: "الدراسة بالخارج" to "الدراسة في ألمانيا" (Germany-only focus)
-- The benefit text "لا تحتاج خبرة سابقة – فقط شغف ومصداقية" alignment is handled by the component -- will add `text-center` to the WhyJoinUs benefit items for visual symmetry
-
-**File**: `src/components/partnership/WhyJoinUs.tsx`
-- Change the flex layout from `items-start` with `text-right` to centered card layout matching the rest of the page for visual symmetry
-
----
-
-## 2. Germany-Only Restriction
-
-**File**: `public/locales/ar/partnership.json`
-- Remove "romania" and "jordan" from `commissionCalculator.countries` -- keep only `"germany": "ألمانيا"`
-
-**File**: `src/components/partnership/CommissionCalculator.tsx`
-- Since only one country exists, remove the country `Select` dropdown entirely
-- Hardcode `country = 'germany'` and remove the selector UI
-- Update the note text to mention Germany specifically
+### `src/styles/animations.css` -- Add new utility classes:
+- `.card-hover`: unified hover effect (shadow lift + subtle scale + border glow transition)
+- `.animate-on-scroll`: base class for scroll-triggered animations (starts invisible)
+- `.btn-press`: active state scale-down for buttons (press feedback)
+- `.focus-ring`: enhanced focus ring animation for accessibility
 
 ---
 
-## 3. "How the Program Works" -- Dynamic 8-Step Scrollable Timeline
+## 2. Reusable Scroll Animation Hook
 
-**File**: `src/components/partnership/NewHowItWorks.tsx` (complete rewrite of component body)
-
-Replace the current 4-card static grid with an interactive vertical timeline showing 8 steps. Each step has:
-- A numbered circle connected by a vertical line
-- An icon
-- A title and detailed description
-- Steps animate into view on scroll using `react-intersection-observer` (already installed)
-
-### The 8 Steps (from translation file):
-
-1. **التسجيل في البرنامج** (Sign Up) -- "سجّل في برنامج الشراكة. بعد الموافقة، تحصل على صفحة شخصية مخصصة."
-2. **صفحتك الشخصية** (Custom Partner Page) -- "تحصل على صفحة فريدة، نموذج تسجيل خاص، ورابط تتبع مميز يمكنك مشاركته في ستوريز انستغرام، لينكتري، الهايلايتس، أو البايو."
-3. **حرية المحتوى** (Content Freedom) -- "اختر أسلوبك، طريقتك، والمنصة التي تناسبك. أنشئ محتوى ترويجي بحرية كاملة بما يتناسب مع جمهورك."
-4. **تسجيل الطلاب** (Student Registration) -- "يضغط الطالب على رابطك الخاص ويملأ النموذج. كل طالب يُربط تلقائياً باسمك."
-5. **شفافية البيانات** (Data Transparency) -- "يتم إنشاء جدول بيانات مشترك لكل شريك. يمكنك مشاهدة أسماء الطلاب، حالتهم، وتقدمهم. الجدول للقراءة فقط -- شفاف وموثوق."
-6. **تتبع حالة الطلاب** (Status Tracking) -- "كل طالب يُصنّف: مؤهل، غير مؤهل، تم التواصل، قيد المتابعة، دفع، تم التحويل."
-7. **الدورة الشهرية** (Monthly Cycle) -- "في نهاية كل شهر يُغلق الجدول ويُفتح جدول جديد للشهر التالي. جميع البيانات تبقى مرئية للتاريخ والشفافية."
-8. **العمولة والدفع** (Commission & Payment) -- "تُدفع العمولة بعد 20 يوماً من دفع الطالب. فترة الـ20 يوماً إلزامية لحماية من الإلغاء أو الاسترداد. هذه القاعدة واضحة ومُلزمة."
-
-### Technical approach
-- Vertical timeline with alternating left/right cards on desktop, stacked on mobile
-- Each step uses `useInView` from `react-intersection-observer` for fade-in animation
-- Connected by a vertical line with numbered circles (using existing Tailwind classes)
-- Icons from lucide-react: `UserCheck`, `Globe`, `Palette`, `MousePointerClick`, `Table2`, `BarChart3`, `CalendarClock`, `Wallet`
-
-**File**: `public/locales/ar/partnership.json`
-- Replace `howItWorks.steps` array with the 8 new steps including detailed descriptions
+### New file: `src/hooks/useScrollAnimation.ts`
+A lightweight hook wrapping `react-intersection-observer` to apply staggered fade-in animations to lists of cards:
+- Takes a `delay` multiplier for stagger
+- Returns `ref` and `className` with the appropriate animation state
+- Uses `triggerOnce: true` for performance
 
 ---
 
-## 4. FAQ -- Updated to Match New Program Flow
+## 3. Card Component Enhancement (`src/components/ui/card.tsx`)
 
-**File**: `public/locales/ar/partnership.json`
-- Replace `partnershipFaq.items` with 7 updated Q&As:
-
-1. **كيف يتم تتبع الطلاب؟** -- "كل شريك يحصل على رابط تتبع فريد وجدول بيانات مشترك. عند تسجيل طالب عبر رابطك، يُربط تلقائياً باسمك. يمكنك متابعة حالة كل طالب بشفافية كاملة."
-2. **متى تُدفع العمولات؟** -- "تُدفع العمولة بعد 20 يوماً من تاريخ دفع الطالب. فترة الـ20 يوماً ضرورية لحماية الطرفين من حالات الإلغاء أو الاسترداد."
-3. **لماذا فترة الـ20 يوماً؟** -- "هذه الفترة تحمي الشريك والشركة. إذا غيّر الطالب رأيه أو طلب استرداداً خلال هذه الفترة، لا يتأثر الشريك. بعد انتهاء الفترة، تُحوّل العمولة مباشرة."
-4. **ما البيانات التي يمكنني رؤيتها؟** -- "يمكنك رؤية: أسماء الطلاب المسجلين عبر رابطك، حالة كل طالب (مؤهل، غير مؤهل، تم التواصل، قيد المتابعة، دفع، تم التحويل)، وتاريخ التسجيل."
-5. **كيف تضمنون الشفافية؟** -- "نوفر جدول بيانات مشترك للقراءة فقط، يُحدّث بشكل مستمر. في نهاية كل شهر، يُغلق الجدول ويُفتح جدول جديد. جميع البيانات السابقة تبقى مرئية."
-6. **هل هناك تكاليف للانضمام؟** -- "لا توجد أي تكاليف. الانضمام مجاني تماماً ونوفر لك كل الدعم للبدء."
-7. **هل يمكنني اختيار أسلوب المحتوى الخاص بي؟** -- "نعم، لديك حرية كاملة في اختيار الأسلوب والمنصة وطريقة الترويج. نحن نوفر لك المعلومات والمواد، وأنت تختار كيف تقدمها لجمهورك."
+Add a default `transition-all duration-300` to the base Card component so all cards benefit from smooth transitions. This is a minimal change -- just adding transition classes to the default className string.
 
 ---
 
-## 5. Trust & Transparency Section (New Component)
+## 4. Card-Specific Enhancements
 
-**File**: `src/components/partnership/TrustSection.tsx` (new)
+### Landing Page Cards
 
-A new section placed between AgentToolkit and RegistrationForm showing 3-4 trust pillars:
-- **شفافية الأرقام** -- "جدول بيانات مشترك لكل شريك"
-- **عمليات واضحة** -- "كل خطوة موثقة ومرئية"
-- **قواعد عمولة عادلة** -- "20 يوماً لحماية الجميع"
-- **هيكل احترافي** -- "دورة شهرية منظمة وبيانات تاريخية"
+**`Services.tsx`** (landing):
+- Add `useInView` for staggered entrance with `animation-delay` per card
+- Enhance hover: `hover:shadow-xl hover:-translate-y-1 hover:border-accent/30`
 
-Uses existing Card components with icons, same styling as WhyJoinUs section.
+**`WhyChooseUs.tsx`**:
+- Already has `animate-fade-in` -- add `hover:shadow-2xl` and smooth border transition on hover
+- Add `hover:border-accent/20` for subtle accent border glow
 
-**File**: `src/pages/PartnershipPage.tsx` -- add `TrustSection` between AgentToolkit and RegistrationForm
+**`Testimonials.tsx`**:
+- Add staggered scroll entrance animation per testimonial card
+- Add `hover:shadow-lg hover:-translate-y-1` with smooth transition
+
+### Services Page Cards
+
+**`ServicesGrid.tsx`**:
+- Add staggered scroll entrance (cards fade in sequentially as user scrolls)
+- Icon container: add `group-hover:scale-110 group-hover:shadow-lg` transition
+- Button: add `active:scale-95` press feedback
+
+### Educational Cards
+
+**`MajorCard.tsx`**:
+- Refine hover: replace `hover:scale-105` (too aggressive) with `hover:scale-[1.02] hover:shadow-xl hover:border-accent/30`
+- Add staggered entrance animation
+
+### Resources Page Cards
+
+**`ResourcesPage.tsx`**:
+- Add staggered entrance for tool cards and guide cards
+- Icon: add `group-hover:scale-110 group-hover:rotate-3` micro-animation
+
+### Partner Cards
+
+**`partners/UniversityCard.tsx`**:
+- Already has hover effects -- enhance with `hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)]` for deeper shadow
+- Logo: add `group-hover:scale-105` subtle zoom
+
+**`partners/ServiceCard.tsx`**:
+- Already good -- add entrance animation
+
+**`partners/InteractiveCard.tsx`**:
+- Add smooth `transition-shadow` and `hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)]`
+
+### Partnership Page Cards
+
+**`NewHowItWorks.tsx`** timeline cards:
+- Add `hover:shadow-md hover:border-accent/20` to timeline step cards
+- Circle icons: add `hover:scale-110` transition
+
+**`TrustSection.tsx`**:
+- Add staggered entrance and `hover:shadow-lg hover:-translate-y-1` to trust pillar cards
+
+**`WhyJoinUs.tsx`**:
+- Add staggered scroll entrance per benefit card
+
+### Resource Cards
+
+**`ResourceCard.tsx`**:
+- Add `hover:border-accent/20` and entrance animation
+
+---
+
+## 5. Button Micro-Interactions
+
+### `src/components/ui/button.tsx`
+Add `active:scale-[0.97]` to the base button CVA class for press feedback on all buttons. This is a single-line addition to the base string. Also add `transition-transform` to ensure smooth animation.
+
+---
+
+## 6. Section Entrance Animations
+
+### Components getting scroll-triggered section titles:
+- `Hero.tsx`: hero text already has `animate-fade-in` -- no change needed
+- `StudentJourney.tsx`: Add `useInView` to each step for staggered entrance (steps appear one by one as user scrolls)
+- `Contact.tsx`: Add fade-in for the contact form card
+- `Footer.tsx`: Add subtle fade-in for footer content
+
+---
+
+## 7. Chat/AI Interaction Animations
+
+### `AIQuizChat.tsx` and `AIChatPopup.tsx`:
+- Message bubbles: add `animate-fade-in` with short duration for new messages appearing
+- Loading indicator: already has `animate-spin` -- no change needed
+- Quick question buttons: add `hover:scale-[1.02] active:scale-[0.98]` feedback
 
 ---
 
@@ -101,22 +137,43 @@ Uses existing Card components with icons, same styling as WhyJoinUs section.
 
 | File | Purpose |
 |------|---------|
-| `src/components/partnership/TrustSection.tsx` | Trust & transparency pillars section |
+| `src/hooks/useScrollAnimation.ts` | Reusable hook for staggered scroll-triggered animations |
 
 ### Modified Files
 
 | File | Changes |
 |------|---------|
-| `public/locales/ar/partnership.json` | Fix title typo, remove Romania/Jordan from calculator, replace howItWorks with 8 steps, replace FAQ with 7 updated items, add trust section translations |
-| `src/components/partnership/NewHowItWorks.tsx` | Replace 4-card grid with interactive 8-step vertical timeline with scroll animations |
-| `src/components/partnership/CommissionCalculator.tsx` | Remove country selector, hardcode Germany only |
-| `src/components/partnership/WhyJoinUs.tsx` | Improve alignment/symmetry of benefit items |
-| `src/pages/PartnershipPage.tsx` | Add TrustSection component |
+| `tailwind.config.ts` | Add `fade-in-up`, `fade-in-left`, `fade-in-right` keyframes and animations |
+| `src/styles/animations.css` | Add `.card-hover`, `.btn-press`, `.animate-on-scroll` utilities |
+| `src/components/ui/card.tsx` | Add `transition-all duration-300` to base Card class |
+| `src/components/ui/button.tsx` | Add `active:scale-[0.97] transition-transform` to base class |
+| `src/components/landing/Services.tsx` | Staggered entrance + enhanced hover |
+| `src/components/landing/WhyChooseUs.tsx` | Enhanced hover border glow |
+| `src/components/landing/Testimonials.tsx` | Staggered entrance + hover lift |
+| `src/components/landing/StudentJourney.tsx` | Staggered step entrance |
+| `src/components/services/ServicesGrid.tsx` | Staggered entrance + icon animation + button press |
+| `src/components/educational/MajorCard.tsx` | Refined hover scale + entrance animation |
+| `src/pages/ResourcesPage.tsx` | Staggered card entrance + icon micro-animation |
+| `src/components/resources/ResourceCard.tsx` | Hover border accent + entrance |
+| `src/components/partners/UniversityCard.tsx` | Enhanced shadow depth |
+| `src/components/partners/ServiceCard.tsx` | Entrance animation |
+| `src/components/partners/InteractiveCard.tsx` | Enhanced shadow |
+| `src/components/partnership/NewHowItWorks.tsx` | Card hover + icon scale |
+| `src/components/partnership/TrustSection.tsx` | Staggered entrance + hover lift |
+| `src/components/partnership/WhyJoinUs.tsx` | Staggered entrance |
+| `src/components/quiz/AIQuizChat.tsx` | Message fade-in + button feedback |
+| `src/components/chat/AIChatPopup.tsx` | Message fade-in |
+
+### Performance Safeguards
+- All animations use `transform` and `opacity` only (GPU-accelerated, no layout thrashing)
+- `triggerOnce: true` on all intersection observers (fire once, then disconnect)
+- No heavy JS animation libraries -- pure CSS transitions + Tailwind
+- `will-change` not used globally (browser handles optimization)
+- `prefers-reduced-motion` respected via `tailwindcss-animate` plugin
 
 ### What Will NOT Change
-- Website design, colors, fonts, or branding
+- Colors, fonts, layout, spacing, or design language
 - Navigation order (logo, menu items, student portal button)
-- Header, Footer, or any other page
-- Registration form structure
-- Closing CTA styling
+- Component structure or functionality
+- RTL behavior
 
