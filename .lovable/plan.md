@@ -1,322 +1,201 @@
 
-# Plan: Role-Based Dashboard System (Admin, Influencer, Student)
+
+# Plan: Performance Optimization, PWA Install Button, and Admin Routing
 
 ## Overview
 
-Build a comprehensive, high-end dashboard system with three role-based views: Admin (full control), Influencer (view-only), and Student (checklist tracker). This involves database schema changes, new edge functions, role-based routing, and a completely redesigned UI with a premium aesthetic.
+Optimize LCP, reduce bundle size, improve caching, add a fixed PWA install button (visible on all devices), and ensure admin email auto-redirects to the admin dashboard. The existing design, navigation order, and functionality will not change.
 
 ---
 
-## Phase 1: Database Schema Changes
+## 1. LCP Optimization
 
-### 1a. Add 'influencer' to `app_role` enum
+### 1a. Hero Video is the LCP Element
 
-```sql
-ALTER TYPE public.app_role ADD VALUE 'influencer';
-```
+The Hero component loads a full HD video from Pexels as the background. This is the primary LCP bottleneck.
 
-### 1b. Add columns to `profiles` table
+**Fix**: Add a static poster image to the video element so the browser renders a lightweight image immediately while the video loads in the background.
 
-```sql
-ALTER TABLE public.profiles
-  ADD COLUMN student_status text NOT NULL DEFAULT 'eligible',
-  ADD COLUMN influencer_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
-```
+**In `src/components/landing/Hero.tsx`**:
+- Add `poster="/lovable-uploads/[hero-poster].webp"` to the `<video>` tag
+- Use an existing uploaded image or a screenshot from the video as the poster
+- Add `fetchpriority="high"` to ensure the poster loads first
 
-Student status values: `eligible`, `ineligible`, `converted`, `paid`, `nurtured`
+**In `index.html`**:
+- Preload the poster image: `<link rel="preload" as="image" href="/lovable-uploads/[poster].webp">`
 
-### 1c. Create `checklist_items` table (admin-defined required items)
+### 1b. Font Loading Optimization
 
-```sql
-CREATE TABLE public.checklist_items (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  item_name text NOT NULL,
-  description text,
-  is_required boolean NOT NULL DEFAULT true,
-  sort_order integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE public.checklist_items ENABLE ROW LEVEL SECURITY;
-```
+Fonts are already preconnected. Additional fix:
+- The `base.css` imports Google Fonts via `@import url(...)` which is render-blocking
+- Remove the `@import` from `base.css` (line 2) since the same font is already loaded in `index.html` via `<link>` tag
+- This eliminates a duplicate render-blocking request
 
-RLS: Admins can CRUD, authenticated users can SELECT.
+### 1c. Remove Duplicate Loading Screens
 
-### 1d. Create `student_checklist` table (per-student completion tracking)
+Currently there are TWO loading screens:
+1. `index.html` has a PWA loading screen (lines 123-131) that shows for 1 second
+2. `App.tsx` has a `NetflixLoader` that shows for 2 seconds (line 80)
 
-```sql
-CREATE TABLE public.student_checklist (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  checklist_item_id uuid NOT NULL REFERENCES public.checklist_items(id) ON DELETE CASCADE,
-  is_completed boolean NOT NULL DEFAULT false,
-  completed_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(student_id, checklist_item_id)
-);
-ALTER TABLE public.student_checklist ENABLE ROW LEVEL SECURITY;
-```
+Users wait 2+ seconds before seeing any content. This directly hurts LCP.
 
-RLS: Students can read/update own rows. Admins can read all. Influencers can read rows where student's `influencer_id` matches their user ID.
-
-### 1e. Create `influencer_invites` table
-
-```sql
-CREATE TABLE public.influencer_invites (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text NOT NULL,
-  full_name text NOT NULL,
-  status text NOT NULL DEFAULT 'pending',
-  invited_by uuid NOT NULL,
-  created_user_id uuid,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE public.influencer_invites ENABLE ROW LEVEL SECURITY;
-```
-
-RLS: Admins only.
-
-### 1f. Seed default checklist items
-
-```sql
-INSERT INTO public.checklist_items (item_name, description, sort_order) VALUES
-  ('جواز السفر', 'نسخة سارية المفعول من جواز السفر', 1),
-  ('الشهادات الأكاديمية', 'شهادة الثانوية / البجروت مع كشف الدرجات', 2),
-  ('الترجمات المعتمدة', 'ترجمة معتمدة للشهادات والمستندات', 3),
-  ('شهادة اللغة', 'شهادة لغة ألمانية أو إنجليزية', 4),
-  ('الحساب البنكي المغلق', 'Blocked Account أو كفالة مالية', 5),
-  ('التأمين الصحي', 'تأمين صحي ساري المفعول', 6),
-  ('صور شخصية', 'صور بحجم جواز السفر', 7),
-  ('خطاب القبول الجامعي', 'Zulassungsbescheid أو شرط القبول', 8);
-```
+**Fix**: Remove the React `NetflixLoader` entirely. Keep only the HTML loading screen (which hides automatically when the app loads). This saves ~2 seconds on LCP.
 
 ---
 
-## Phase 2: Edge Function for Influencer Account Creation
+## 2. Bundle Size Reduction (Lazy Loading)
 
-### Create `supabase/functions/create-influencer/index.ts`
+### 2a. Lazy-Load Route Pages
 
-Admin-only edge function that:
-1. Verifies caller is admin (using `has_role`)
-2. Creates a new auth user with the provided email and a generated password
-3. Inserts a `user_roles` row with role = `influencer`
-4. Creates a `profiles` row for the influencer
-5. Updates the `influencer_invites` table status to `accepted`
-6. Returns the created account details (admin can share credentials manually or via email)
-
-Note: Since Lovable Cloud email is auth-only, the admin will receive the generated password in the response and share it with the influencer manually.
-
----
-
-## Phase 3: Role-Based Routing
-
-### Modify `src/pages/StudentAuthPage.tsx`
-
-After successful login, check the user's role:
-1. Query `user_roles` for the logged-in user
-2. If role = `admin` -> redirect to `/admin`
-3. If role = `influencer` -> redirect to `/influencer-dashboard`
-4. Otherwise -> redirect to `/student-dashboard`
-
-### Add new route in `src/App.tsx`
+All 20+ page components are eagerly imported in `App.tsx`. Convert to lazy imports:
 
 ```tsx
-<Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
+const InfluencerDashboardPage = lazy(() => import('./pages/InfluencerDashboardPage'));
+const QuizPage = lazy(() => import('./pages/QuizPage'));
+const AIAdvisorPage = lazy(() => import('./pages/AIAdvisorPage'));
+const BroadcastPage = lazy(() => import('./pages/BroadcastPage'));
+const CostCalculatorPage = lazy(() => import('./pages/CostCalculatorPage'));
+const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
+const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
+const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
+const EducationalProgramsPage = lazy(() => import('./pages/EducationalProgramsPage'));
 ```
+
+Keep eagerly loaded (used on first visit): `Index`, `WhoWeArePage`, `ServicesPage`, `ContactPage`, `EducationalDestinationsPage`, `LocationsPage`, `StudentAuthPage`, `NotFound`.
+
+Wrap routes in `<Suspense fallback={<div />}>`.
+
+### 2b. Vite Build Optimization
+
+Add to `vite.config.ts`:
+
+```ts
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        'vendor-supabase': ['@supabase/supabase-js'],
+        'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+        'vendor-charts': ['recharts'],
+      }
+    }
+  },
+  target: 'esnext',
+  minify: 'esbuild',
+}
+```
+
+This splits the bundle into smaller cacheable chunks, reducing initial JS parse time.
 
 ---
 
-## Phase 4: Redesigned Admin Dashboard (High-End UI)
+## 3. CSS Optimization
 
-### New file structure under `src/components/admin/`
+### 3a. Remove Duplicate Font Import
 
-```
-src/components/admin/
-  AdminLayout.tsx          -- Glass-morphism sidebar + header layout
-  AdminOverview.tsx        -- Stats cards with gradients and charts
-  StudentManagement.tsx    -- Full CRUD table with status, checklist progress, influencer assignment
-  InfluencerManagement.tsx -- Influencer table + invite modal
-  ChecklistManagement.tsx  -- Define/edit checklist items
-  ContactsManager.tsx      -- Contact submissions (migrated from current)
-  SecurityPanel.tsx         -- Login attempts + alerts (migrated from current)
-  AuditLog.tsx              -- Audit trail (migrated from current)
+`src/styles/base.css` line 2 has:
+```css
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
 ```
 
-### Redesign `src/pages/AdminDashboardPage.tsx`
+This is a render-blocking CSS import that loads two additional font families (Noto Sans Arabic + Noto Sans) ON TOP of the Tajawal font already loaded in `index.html`. The body uses Noto Sans Arabic (base.css line 96) while index.html loads Tajawal.
 
-Replace the current monolithic 379-line file with a clean layout using:
-- Dark navy sidebar with gradient accents (matching Darb brand)
-- Stat cards with subtle gradients and animated counters
-- Professional data tables using the existing `Table` UI component
-- Color-coded status badges
-- Inline editing for student status and influencer assignment
-- Checklist progress bars (visual percentage)
-- Search, filter by status/influencer/checklist completion
-- CSV/Excel export buttons
-- Invite influencer modal (creates account via edge function)
-
-### Key Admin Features
-
-**Student Management Table:**
-| Column | Details |
-|--------|---------|
-| Name | Editable inline |
-| Email | Read-only |
-| Student Status | Dropdown: Eligible/Ineligible/Converted/Paid/Nurtured |
-| Checklist Progress | Visual progress bar (e.g., 5/8 = 62%) |
-| Influencer | Dropdown to assign (hidden from student/influencer) |
-| Actions | Edit, view details |
-
-**Influencer Management:**
-- Table: Name, Email, Number of assigned students
-- "Invite Influencer" button -> modal with name + email -> calls edge function
-- Track invite status (Pending/Active)
-
-**Checklist Management:**
-- Add/edit/remove required checklist items
-- Drag-reorder (or sort_order field)
-- Items auto-sync to all student checklists
+**Fix**: Move this font loading to `index.html` as a `<link>` tag with `display=swap` (non-blocking), or consolidate to one font family. This saves ~400ms of render blocking.
 
 ---
 
-## Phase 5: Redesigned Student Dashboard
+## 4. Caching Improvements
 
-### Update `src/pages/StudentDashboardPage.tsx` and components
+### 4a. Update `public/_headers`
 
-Premium design with:
-- Welcome banner with student name and progress ring
-- Checklist tracker as the primary view (card-based with checkboxes)
-- Each checklist item shows: item name, description, status (completed/pending), completion date
-- Students can toggle completion status
-- Overall progress percentage with animated circular progress
-- Existing features retained: profile, documents, services, payments
-- Mobile-first responsive layout with smooth transitions
-
-### New sidebar tab: "Checklist" (primary tab)
-
----
-
-## Phase 6: Influencer Dashboard (New Page)
-
-### Create `src/pages/InfluencerDashboardPage.tsx`
-
-Structure:
-1. Auth guard: verify session + role = `influencer`
-2. Premium header with influencer name + stats
-3. Stats cards: Total Referred, Total Converted, % Checklist Complete
-4. Read-only student table showing only students assigned to this influencer:
-   - Name, Email, Student Status, Checklist Progress
-   - No edit capabilities
-5. Mobile-responsive card layout on small screens
-
-### Components under `src/components/influencer/`
+Add cache headers for static assets:
 
 ```
-src/components/influencer/
-  InfluencerLayout.tsx
-  InfluencerStats.tsx
-  InfluencerStudentTable.tsx
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/lovable-uploads/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: no-cache
 ```
 
----
+### 4b. Service Worker Already Handles Caching Well
 
-## Phase 7: RLS Policies
-
-### `checklist_items`
-
-- SELECT: All authenticated users
-- INSERT/UPDATE/DELETE: Admins only
-
-### `student_checklist`
-
-- SELECT: Own rows (student_id = auth.uid()) OR admin OR influencer where student's influencer_id = auth.uid()
-- INSERT: Own rows (student_id = auth.uid()) OR admin
-- UPDATE: Own rows OR admin
-- DELETE: Admin only
-
-### `influencer_invites`
-
-- ALL: Admin only
-
-### Updated `profiles` policies
-
-- Influencers can SELECT profiles where `influencer_id = auth.uid()` (to see their assigned students)
+The current service worker uses cache-first for static assets and network-first for navigation. No changes needed.
 
 ---
 
-## Phase 8: UI/UX Design Language
+## 5. Fixed PWA Install Button (All Devices)
 
-All three dashboards will share a consistent premium aesthetic:
+### Current Behavior
+- Mobile only, delayed 15 seconds, dismissible via session storage
+- Desktop users never see it
 
-- **Color palette**: Navy blue (`#1e3a5f`) sidebar, white content area, orange/amber accents for CTAs, subtle gray borders
-- **Cards**: White with subtle shadow (`shadow-lg`), rounded-xl corners, hover elevation transitions
-- **Typography**: Bold headings, muted descriptions, proper hierarchy
-- **Tables**: Alternating row backgrounds, hover states, sticky headers
-- **Status badges**: Color-coded (green=completed/paid, amber=pending/eligible, red=ineligible/rejected, blue=converted, purple=nurtured)
-- **Progress indicators**: Circular progress rings for checklists, linear progress bars in tables
-- **Animations**: Fade-in on load, smooth tab transitions, counter animations for stats
-- **Mobile**: Cards collapse into stacked layout, tables become scrollable or card-based
-- **RTL support**: Full RTL layout using `useDirection()` hook
+### New Behavior
+- Fixed floating button visible on ALL devices (mobile + desktop)
+- Bottom-right corner, clean rounded design
+- Shows when `beforeinstallprompt` fires (Android/Desktop Chrome) or always on iOS
+- On iOS: opens the share instructions modal
+- Respects session dismissal
+- Non-intrusive, small pill-shaped button
+
+**Modify `src/components/common/PWAInstaller.tsx`**:
+- Remove `if (!isMobile()) return;` check
+- Change from corner card popup to a small floating pill button
+- Show immediately when install prompt is available (remove 15s delay)
+- Add desktop styling (slightly larger on desktop)
+- Keep iOS modal for Safari users
+
+---
+
+## 6. Admin Auto-Redirect (Already Implemented)
+
+The admin routing is already correctly implemented in `StudentAuthPage.tsx`:
+- `redirectByRole()` checks `user_roles` table (server-side, not email-based)
+- Admin role redirects to `/admin`
+- Influencer role redirects to `/influencer-dashboard`
+- Others go to `/student-dashboard`
+
+**No changes needed** -- the current implementation uses proper server-side role validation via the `user_roles` table and `has_role` function, not client-side email checks. This is already secure.
 
 ---
 
 ## Technical Summary
 
-### Database Changes (Migration)
-
-| Change | Type |
-|--------|------|
-| Add `influencer` to `app_role` enum | ALTER TYPE |
-| Add `student_status` and `influencer_id` to `profiles` | ALTER TABLE |
-| Create `checklist_items` table + RLS | CREATE TABLE |
-| Create `student_checklist` table + RLS | CREATE TABLE |
-| Create `influencer_invites` table + RLS | CREATE TABLE |
-| Seed default checklist items | INSERT |
-| Add influencer SELECT policy on `profiles` | CREATE POLICY |
-| Add influencer SELECT policy on `student_checklist` | CREATE POLICY |
-
-### New Edge Function
-
-| Function | Purpose |
-|----------|---------|
-| `create-influencer` | Admin creates influencer account (auth user + role + profile) |
-
-### New Files (~15)
-
-| File | Purpose |
-|------|---------|
-| `src/pages/InfluencerDashboardPage.tsx` | Influencer dashboard page |
-| `src/components/admin/AdminLayout.tsx` | Shared admin layout with sidebar |
-| `src/components/admin/AdminOverview.tsx` | Stats and overview |
-| `src/components/admin/StudentManagement.tsx` | Student CRUD table |
-| `src/components/admin/InfluencerManagement.tsx` | Influencer table + invites |
-| `src/components/admin/ChecklistManagement.tsx` | Checklist item management |
-| `src/components/admin/ContactsManager.tsx` | Contact submissions |
-| `src/components/admin/SecurityPanel.tsx` | Security monitoring |
-| `src/components/admin/AuditLog.tsx` | Audit trail |
-| `src/components/influencer/InfluencerLayout.tsx` | Influencer dashboard layout |
-| `src/components/influencer/InfluencerStats.tsx` | Influencer stats cards |
-| `src/components/influencer/InfluencerStudentTable.tsx` | Read-only student table |
-| `src/components/dashboard/ChecklistTracker.tsx` | Student checklist component |
-| `supabase/functions/create-influencer/index.ts` | Edge function |
-
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/AdminDashboardPage.tsx` | Complete redesign using new admin components |
-| `src/pages/StudentDashboardPage.tsx` | Add checklist tab, redesign UI |
-| `src/pages/StudentAuthPage.tsx` | Role-based redirect after login |
-| `src/App.tsx` | Add `/influencer-dashboard` route |
-| `src/components/dashboard/DashboardSidebar.tsx` | Add checklist tab, premium styling |
-| `src/components/dashboard/DashboardMainContent.tsx` | Add checklist case |
-| `src/components/dashboard/DashboardHeader.tsx` | Premium styling |
-| `src/types/profile.ts` | Add `student_status` and `influencer_id` fields |
+| `src/App.tsx` | Remove `NetflixLoader`, add lazy imports + Suspense |
+| `src/components/landing/Hero.tsx` | Add `poster` attribute to video |
+| `src/styles/base.css` | Remove render-blocking `@import` on line 2 |
+| `index.html` | Add font preload link for Noto Sans Arabic, add poster preload |
+| `vite.config.ts` | Add build optimization (manual chunks, esbuild minify) |
+| `public/_headers` | Add cache headers for assets |
+| `src/components/common/PWAInstaller.tsx` | Make visible on all devices, change to floating pill button |
 
 ### What Will NOT Change
 
-- Website design, navigation, logo, or public pages
-- Existing authentication flow (email/password)
-- PWA functionality
-- Bilingual support structure
-- Security architecture (auth-guard, admin-verify edge functions)
-- Existing data in profiles, documents, services, payments tables
+- Website design, navigation order, logo, or student portal button
+- Service worker caching strategy
+- Admin routing logic (already secure and role-based)
+- SEO meta tags
+- RTL/LTR support
+- Any existing page content or layout
+
+### Expected Performance Impact
+
+| Metric | Current | After |
+|--------|---------|-------|
+| LCP | 3-5s | Less than 2.5s |
+| Initial JS | All pages loaded | Only visible page loaded |
+| Render blocking | Font @import + 2s loader | Eliminated |
+| Repeat visit | Partial cache | Full immutable cache |
+| PWA install | Mobile only, 15s delay | All devices, immediate |
+
