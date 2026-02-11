@@ -12,7 +12,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-const isMobile = () => window.innerWidth < 768;
 
 const PWAInstaller = () => {
   const { t } = useTranslation('common');
@@ -23,7 +22,6 @@ const PWAInstaller = () => {
   const [showIOSModal, setShowIOSModal] = useState(false);
 
   useEffect(() => {
-    if (!isMobile()) return;
     const standalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     if (standalone || isInWebAppiOS) { setIsInstalled(true); return; }
@@ -31,12 +29,16 @@ const PWAInstaller = () => {
     const handlePrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 15000);
+      setShowPrompt(true);
     };
     const handleInstalled = () => { setIsInstalled(true); setShowPrompt(false); };
 
     window.addEventListener('beforeinstallprompt', handlePrompt);
     window.addEventListener('appinstalled', handleInstalled);
+
+    // Show for iOS users too
+    if (isIOS()) setShowPrompt(true);
+
     return () => { window.removeEventListener('beforeinstallprompt', handlePrompt); window.removeEventListener('appinstalled', handleInstalled); };
   }, []);
 
@@ -56,20 +58,14 @@ const PWAInstaller = () => {
 
   return (
     <>
-      {/* Small corner popup - mobile only */}
-      <div className="fixed bottom-24 right-3 z-40 max-w-[200px] animate-fade-in">
-        <div className="bg-primary text-primary-foreground rounded-xl shadow-lg p-3">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" alt="Darb" className="h-5 w-5" />
-              <span className="text-sm font-semibold">{t('pwa.installTitle')}</span>
-            </div>
-            <button onClick={dismiss} className="text-primary-foreground/70 hover:text-primary-foreground">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <Button size="sm" onClick={handleInstall} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs h-7">
-            <Download className="h-3 w-3 mr-1" />{t('pwa.installNow')}
+      {/* Fixed floating pill button - all devices */}
+      <div className="fixed bottom-24 md:bottom-6 right-3 md:right-6 z-40 animate-fade-in">
+        <div className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-3 py-2 md:px-4 md:py-2.5">
+          <button onClick={dismiss} className="text-primary-foreground/70 hover:text-primary-foreground shrink-0">
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <Button size="sm" onClick={handleInstall} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full text-xs md:text-sm h-7 md:h-8 px-3">
+            <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />{t('pwa.installNow')}
           </Button>
         </div>
       </div>

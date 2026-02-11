@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,59 +12,36 @@ import WhoWeArePage from "./pages/WhoWeArePage";
 import ServicesPage from "./pages/ServicesPage";
 import LocationsPage from "./pages/LocationsPage";
 import ContactPage from "./pages/ContactPage";
-import PartnershipPage from "./pages/PartnershipPage";
 import EducationalDestinationsPage from "./pages/EducationalDestinationsPage";
-import EducationalProgramsPage from "./pages/EducationalProgramsPage";
-import ResourcesPage from "./pages/ResourcesPage";
-import ChatWidget from "./components/chat/ChatWidget";
-import BroadcastPage from "./pages/BroadcastPage";
 import StudentAuthPage from "./pages/StudentAuthPage";
-import StudentDashboardPage from "./pages/StudentDashboardPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import QuizPage from "./pages/QuizPage";
-import AIAdvisorPage from "./pages/AIAdvisorPage";
-import CostCalculatorPage from "./pages/CostCalculatorPage";
-import CurrencyConverterPage from "./pages/CurrencyConverterPage";
-import BagrutCalculatorPage from "./pages/BagrutCalculatorPage";
-import InfluencerDashboardPage from "./pages/InfluencerDashboardPage";
+import ChatWidget from "./components/chat/ChatWidget";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
-const queryClient = new QueryClient();
+// Lazy-loaded routes
+const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
+const EducationalProgramsPage = lazy(() => import('./pages/EducationalProgramsPage'));
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
+const BroadcastPage = lazy(() => import('./pages/BroadcastPage'));
+const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const InfluencerDashboardPage = lazy(() => import('./pages/InfluencerDashboardPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const QuizPage = lazy(() => import('./pages/QuizPage'));
+const AIAdvisorPage = lazy(() => import('./pages/AIAdvisorPage'));
+const CostCalculatorPage = lazy(() => import('./pages/CostCalculatorPage'));
+const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
+const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
 
-// Netflix-style Loading Component
-const NetflixLoader = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center">
-      <div className="flex flex-col items-center">
-        <div className="animate-[logoScale_2s_ease-out_forwards] mb-4">
-          <img 
-            src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
-            alt={t('loader.brand')} 
-            className="w-20 h-20 object-contain"
-          />
-        </div>
-        <div className="text-2xl font-bold text-gray-800 animate-fade-in">
-          {t('loader.brand')}
-        </div>
-        <div className="text-sm text-gray-600 mt-2 animate-fade-in animation-delay-300">
-          {t('loader.tagline')}
-        </div>
-      </div>
-    </div>
-  );
-};
+const queryClient = new QueryClient();
 
 const App = () => {
   useSessionTimeout();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
   const { i18n } = useTranslation();
 
   useEffect(() => {
@@ -72,15 +49,9 @@ const App = () => {
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = dir;
     
-    // Register service worker for PWA functionality with auto-updates
     registerServiceWorker();
-    
-    // Netflix-style loading animation
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
 
-    // SPA Redirect for original Lovable URL - preserve query parameters
+    // SPA Redirect for original Lovable URL
     const redirectPath = sessionStorage.getItem('redirectPath');
     if (redirectPath) {
       sessionStorage.removeItem('redirectPath');
@@ -89,8 +60,6 @@ const App = () => {
       const fullPath = queryString ? `${redirectPath}?${queryString}` : redirectPath;
       navigate(fullPath, { replace: true });
     }
-
-    return () => clearTimeout(timer);
   }, [navigate, location.search, i18n.language]);
 
   // Scroll to top when route changes
@@ -100,10 +69,6 @@ const App = () => {
 
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
-  if (isLoading) {
-    return <NetflixLoader />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -111,30 +76,32 @@ const App = () => {
           <Toaster />
           <Sonner />
           <OfflineIndicator />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<WhoWeArePage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/locations" element={<LocationsPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/partnership" element={<PartnershipPage />} />
-            <Route path="/partners" element={<EducationalDestinationsPage />} />
-            <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
-            <Route path="/educational-programs" element={<EducationalProgramsPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/resources/cost-calculator" element={<CostCalculatorPage />} />
-            <Route path="/resources/currency-converter" element={<CurrencyConverterPage />} />
-            <Route path="/resources/bagrut-calculator" element={<BagrutCalculatorPage />} />
-            <Route path="/broadcast" element={<BroadcastPage />} />
-            <Route path="/student-auth" element={<StudentAuthPage />} />
-            <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/quiz" element={<QuizPage />} />
-            <Route path="/ai-advisor" element={<AIAdvisorPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<div />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<WhoWeArePage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/locations" element={<LocationsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/partnership" element={<PartnershipPage />} />
+              <Route path="/partners" element={<EducationalDestinationsPage />} />
+              <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
+              <Route path="/educational-programs" element={<EducationalProgramsPage />} />
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/resources/cost-calculator" element={<CostCalculatorPage />} />
+              <Route path="/resources/currency-converter" element={<CurrencyConverterPage />} />
+              <Route path="/resources/bagrut-calculator" element={<BagrutCalculatorPage />} />
+              <Route path="/broadcast" element={<BroadcastPage />} />
+              <Route path="/student-auth" element={<StudentAuthPage />} />
+              <Route path="/student-dashboard" element={<StudentDashboardPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/quiz" element={<QuizPage />} />
+              <Route path="/ai-advisor" element={<AIAdvisorPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <ChatWidget />
           <PWAInstaller />
           <BottomNav />

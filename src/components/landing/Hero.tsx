@@ -15,7 +15,7 @@ const Hero = () => {
 
   return (
     <section className="relative h-[100dvh] min-h-[500px] flex items-center justify-center text-white overflow-hidden">
-      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover">
+      <video autoPlay loop muted playsInline poster="/lovable-uploads/hero-poster.webp" className="absolute top-0 left-0 w-full h-full object-cover">
         <source src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
