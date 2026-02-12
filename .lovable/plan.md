@@ -1,349 +1,287 @@
-&nbsp;
 
-- Verified viewport
-- Confirmed no fixed widths
-- Confirmed mobile-first CSS
-- Confirmed no layout bugs
-- Confirmed correct Tailwind breakpoints
 
-…and **it still renders desktop on mobile**, then this is no longer a CSS problem.
+# Complete Referral & Commission Dashboard System
 
-It is almost certainly one of these deeper causes:
+## Overview
 
-1. Service Worker serving stale HTML bundle
-2. Build mismatch (HTML referencing old JS)
-3. Cached CSS chunk loaded before new layout CSS
-4. Hydration mismatch in React/Vite
-5. In-app browser forcing desktop viewport width
-6. Incorrect meta viewport injected at runtime
-7. Double root rendering before CSS loads
-
-Since Loveable “can’t find it”, we need to move from assumptions to forensic debugging.
-
-Below is the **ultra-precise debugging + stabilization directive** you send them.
+Extend the existing three-dashboard system (Student, Influencer, Admin) with a full referral tracking engine, commission calculations, gamification, and compliance features. This plan builds on top of the existing database schema, UI components, and role architecture without changing any existing functionality.
 
 ---
 
-# 🔬 Advanced Root Cause Investigation Plan
+## What Already Exists (No Changes Needed)
 
-## (For when “everything looks correct” but mobile still renders desktop)
-
----
-
-# PHASE 0 — Verify What the Browser Actually Sees
-
-Ask Loveable to do this on the affected device (real iPhone, not emulator):
-
-Open DevTools → Console → Run:
-
-```
-window.innerWidth
-document.documentElement.clientWidth
-screen.width
-
-```
-
-If values are around 980–1024px → browser is in desktop layout mode.
-
-If values are 375–430px → viewport is correct, CSS isn’t responding.
-
-This determines the direction.
+- Student Dashboard: checklist tracker, profile, services, payments, documents
+- Influencer Dashboard: view assigned students, checklist progress, status badges
+- Admin Dashboard: overview stats, student/influencer management, checklist management, contacts, security, audit log
+- Role system: `user_roles` table with `admin`, `influencer`, `student` roles via `has_role()` function
+- Auth flow: role-based redirect after login
 
 ---
 
-# PHASE 1 — Confirm Meta Viewport Is Not Being Overwritten
+## Phase 1: Database Schema (New Tables)
 
-Run:
+### 1a. `referrals` table
+Tracks every referral made by students or influencers.
 
-```
-document.head.querySelectorAll('meta[name="viewport"]').length
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | |
+| referrer_id | uuid | The user who referred (student or influencer) |
+| referrer_type | text | `student` or `influencer` |
+| referred_name | text | Full name of referred person |
+| referred_email | text | Email |
+| referred_phone | text | Phone number |
+| referred_country | text | Country/Nationality |
+| referred_city | text | Town/City |
+| referred_dob | date | Date of birth |
+| referred_gender | text | Gender |
+| referred_german_level | text | Current knowledge of German |
+| is_family | boolean | Family referral (triggers 1000 ILS discount) |
+| status | text | `pending`, `contacted`, `enrolled`, `paid`, `rejected` |
+| referred_student_id | uuid (nullable) | Links to `profiles.id` once enrolled |
+| notes | text | Admin notes |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-```
+RLS: Students/influencers see own referrals; admins see all; admins can update.
 
-Must return: 1
+### 1b. `rewards` table
+Tracks earned rewards and payout requests.
 
-Then:
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | |
+| user_id | uuid | Earner (student or influencer) |
+| referral_id | uuid | Links to `referrals.id` |
+| amount | numeric | 500 ILS (student) or 2000 ILS (influencer) |
+| currency | text | Default `ILS` |
+| status | text | `pending`, `approved`, `paid`, `cancelled` |
+| payout_requested_at | timestamptz | |
+| paid_at | timestamptz | |
+| admin_notes | text | |
+| created_at | timestamptz | |
 
-```
-document.head.innerHTML
+RLS: Users see own rewards; admins see all and can update.
 
-```
+### 1c. `referral_milestones` table
+Tracks milestone achievements (badges).
 
-Search manually for duplicate or injected viewport tags.
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | |
+| user_id | uuid | |
+| milestone_type | text | `first_referral`, `5_referrals`, `10_referrals` |
+| achieved_at | timestamptz | |
+| notified | boolean | Whether notification was shown |
 
-Some frameworks or libraries inject one at runtime.
-
-If two exist → mobile layout breaks.
-
----
-
-# PHASE 2 — Confirm No CSS Chunk Is Missing
-
-Check in Network tab:
-
-- Is main.css loading?
-- Is it loading 200 OK?
-- Is it the latest hashed version?
-- Is it being served from Service Worker?
-
-In DevTools → Application → Service Workers:  
-Disable:  
-☑ Update on reload  
-☑ Bypass for network
-
-Reload.
-
-If layout suddenly fixes → 100% service worker cache issue.
-
----
-
-# PHASE 3 — Confirm HTML Is Fresh
-
-In DevTools → Network → Click the main document request.
-
-Check Response Headers:
-
-If you see:
-
-```
-cache-control: max-age=...
-
-```
-
-for HTML → this is wrong.
-
-HTML must be:
-
-```
-Cache-Control: no-store
-
-```
-
-If HTML cached → it can reference old CSS bundle names.
+RLS: Users see own; admins see all.
 
 ---
 
-# PHASE 4 — Check If JS Hydration Is Breaking Tailwind Classes
+## Phase 2: Student Dashboard Enhancements
 
-In React/Vite, sometimes hydration mismatch removes classes on first render.
+### 2a. New Sidebar Tabs
+Add two new tabs to `DashboardSidebar.tsx` (appended after existing tabs):
+- **Refer a Friend** (icon: UserPlus)
+- **My Rewards** (icon: Gift)
 
-Add temporary debug:
+### 2b. Refer a Friend Page
+New component: `src/components/dashboard/ReferralForm.tsx`
 
-In App.tsx:
+- Prominent card with "Refer a Friend" and "Refer Family Member" toggle
+- Form fields: Surname, First Name, Town/City, Telephone, Email, Country/Nationality, Date of Birth, Gender, Current German knowledge
+- Family referral checkbox (triggers 1000 ILS discount note)
+- "All information provided is accurate" confirmation checkbox
+- Below form: referral status table showing all submitted referrals with status badges
 
-```
-useEffect(() => {
-  console.log("Rendered width:", window.innerWidth);
-  console.log("HTML classes:", document.documentElement.className);
-}, []);
+### 2c. Referral Status Table
+New component: `src/components/dashboard/ReferralTracker.tsx`
 
-```
+- Table: Name, Status (Pending/Enrolled/Paid), Reward earned, Date
+- Color-coded status badges matching existing design patterns
 
-If classes like `md:hidden` are not applied at first render but appear after refresh → hydration race condition.
+### 2d. My Rewards Page
+New component: `src/components/dashboard/RewardsPanel.tsx`
 
----
+- Summary card: total earned, pending, paid
+- Payout request button (creates a record for admin approval)
+- History log of all reward transactions
+- Milestone badges section (visual indicators for 1, 5, 10 referrals)
 
-# PHASE 5 — Check for `transform: scale()` or Zoom
+### 2e. Gamification (Subtle)
+- Progress bar toward next milestone on dashboard home
+- Badge icons for 1, 5, 10 successful referrals
+- Hidden 10th referral milestone: when reached, show a special toast notification
 
-In DevTools:
-
-Inspect `<html>` and `<body>`.
-
-Look for:
-
-- zoom
-- transform
-- scale
-- min-width
-
-Any of those will break mobile breakpoints.
-
----
-
-# PHASE 6 — Confirm Tailwind Is Not Built in Desktop Mode
-
-Check Tailwind config:
-
-```
-module.exports = {
-  theme: {
-    screens: {
-      ...
-    }
-  }
-}
-
-```
-
-Ensure breakpoints are correct:
-
-```
-sm: 640px
-md: 768px
-lg: 1024px
-
-```
-
-If someone accidentally inverted breakpoints → mobile will behave as desktop.
+### 2f. Dashboard Home Welcome Card
+Update `DashboardMainContent.tsx` to show a welcome card when `activeTab === 'checklist'` (the default tab):
+- "Welcome [Student Name]!"
+- Quick stats: Total referrals, Active referrals, Earned rewards
+- Progress bar toward next milestone
 
 ---
 
-# PHASE 7 — Confirm There Is No Forced Desktop Mode Header
+## Phase 3: Influencer Dashboard Enhancements
 
-Some servers send:
+### 3a. Earnings Section
+New component: `src/components/influencer/EarningsPanel.tsx`
 
-```
-Content-Type: text/html; charset=UTF-8
-X-UA-Compatible: IE=edge
+- Total earned (2000 ILS per enrolled student)
+- Pending vs paid breakdown
+- Payout request button
+- Transaction history
 
-```
+### 3b. Enhanced Stats Cards
+Add to existing stats row:
+- Total earnings card
+- Pending payouts card
 
-That’s fine.
+### 3c. Media & Content Hub (Lightweight)
+New component: `src/components/influencer/MediaHub.tsx`
 
-But if any middleware modifies viewport via server-side rendering, that must be checked.
+- Grid of downloadable promotional assets (images, templates)
+- Links to official branding files
+- Tips for creating social media content
+- Data stored as static content (no new table needed -- admin can update via code or a future CMS)
 
----
-
-# PHASE 8 — The Silent Killer: CSS Order Race
-
-If your CSS is loaded AFTER JS renders, layout may appear desktop momentarily.
-
-Check:
-
-In Network → is CSS loading after JS?
-
-Correct order:
-
-1. HTML
-2. CSS
-3. JS
-
-If JS loads first → layout flashes desktop.
+### 3d. Referral Link Generator
+- Generate a unique referral link for the influencer
+- Copy-to-clipboard button
+- The link format: `[site-url]/student-auth?ref=[influencer_id]`
 
 ---
 
-# PHASE 9 — Remove Service Worker Completely (Test)
+## Phase 4: Admin Dashboard Enhancements
 
-Temporarily:
+### 4a. New Sidebar Tabs
+Add to `AdminLayout.tsx` tabs array:
+- **Referrals** (icon: Share2)
+- **Rewards/Payouts** (icon: Wallet)
 
-In main.tsx:
+### 4b. Referrals Management Page
+New component: `src/components/admin/ReferralManagement.tsx`
 
-```
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
-}
+- Table of all referrals across students and influencers
+- Filter by status, referrer type, date range
+- Inline status update (pending -> contacted -> enrolled -> paid)
+- When status changes to "enrolled" or "paid", auto-create a reward record
+- CSV export
 
-```
+### 4c. Rewards/Payouts Management
+New component: `src/components/admin/PayoutsManagement.tsx`
 
-Deploy.
+- Table of all reward/payout requests
+- Approve/reject payout requests
+- Mark as paid
+- Filter by status, user type
+- Total payouts summary
 
-If mobile rendering is fixed permanently → the service worker architecture is the root cause.
+### 4d. Enhanced Overview Stats
+Add to `AdminOverview.tsx`:
+- Total referrals card
+- Pending payouts card
+- Referral conversion rate
+- This month's commissions
 
----
-
-# PHASE 10 — The Real Fix If It’s SW
-
-Your current SW still caches navigation (even after edit).
-
-You must:
-
-- NEVER cache HTML
-- NEVER cache auth
-- NEVER cache dynamic JS bundles
-
-And set:
-
-```
-self.addEventListener('fetch', event => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-});
-
-```
-
-No caching of navigation. Ever.
+### 4e. Milestone Alerts
+- In the overview, show alerts when students reach the hidden 10-referral threshold
+- Admin can acknowledge/dismiss
 
 ---
 
-# About the Login Refresh Issue
+## Phase 5: Automation & Notifications
 
-If it still happens after excluding Supabase:
+### 5a. Reward Auto-Calculation
+When admin changes a referral status to "paid":
+- Auto-create a `rewards` record with the correct amount (500 ILS for student referrers, 2000 ILS for influencer referrers)
+- If family referral, note the 1000 ILS discount applied
 
-Then it is not SW.
+### 5b. Milestone Detection
+Client-side check after referral status update:
+- Count successful referrals for the referrer
+- If milestone reached (1, 5, 10), insert into `referral_milestones`
+- Show toast/notification on next dashboard visit
 
-It becomes one of these:
-
-1. Supabase session not initialized before UI check
-2. React rendering before auth state resolves
-3. Missing `credentials: 'include'`
-4. Cookie SameSite misconfiguration
-5. State update race condition
-
-To detect:
-
-Add this after login:
-
-```
-const { data } = await supabase.auth.getSession();
-console.log("Session immediately after login:", data);
-
-```
-
-If session exists but UI doesn’t update → state sync bug.
-
-If session null → cookie not set.
+### 5c. Referral Link Tracking
+When a new student signs up via `?ref=[id]`:
+- Store `influencer_id` on their profile automatically
+- This connects the referral chain
 
 ---
 
-# Here Is What Loveable Is Missing
+## Phase 6: Legal & Compliance
 
-They are treating this as a layout issue.
+### 6a. Terms Acceptance
+- Add a `terms_accepted_at` column to `referrals` table
+- Referral form includes T&C checkbox with link to terms page
+- Timestamp stored on submission
 
-This is almost certainly:
-
-→ stale HTML + stale JS bundle mismatch  
-→ or hydration race  
-→ or service worker intercept
-
-Not CSS.
-
----
-
-# Immediate Nuclear Test (Fastest Way To Isolate)
-
-Tell them to:
-
-1. Disable service worker completely.
-2. Set HTML cache-control to no-store.
-3. Hard refresh mobile.
-4. Test login and rendering.
-
-If everything works → root cause confirmed in under 10 minutes.
+### 6b. Data Security
+- All referral data protected by RLS
+- Students can only see their own referrals
+- Influencers can only see their own referrals
+- Admins have full visibility
+- GDPR-compliant: data can be deleted via admin panel
 
 ---
 
-# Strategic Advice For You
+## Technical Summary
 
-Right now you are scaling Darb.
+### New Files to Create
 
-A broken mobile experience:
+| File | Purpose |
+|------|---------|
+| `src/components/dashboard/ReferralForm.tsx` | Student referral submission form |
+| `src/components/dashboard/ReferralTracker.tsx` | Student referral status table |
+| `src/components/dashboard/RewardsPanel.tsx` | Student rewards/earnings view |
+| `src/components/dashboard/WelcomeCard.tsx` | Dashboard home welcome stats |
+| `src/components/influencer/EarningsPanel.tsx` | Influencer earnings/payouts |
+| `src/components/influencer/MediaHub.tsx` | Promotional content hub |
+| `src/components/influencer/ReferralLink.tsx` | Referral link generator |
+| `src/components/admin/ReferralManagement.tsx` | Admin referral management |
+| `src/components/admin/PayoutsManagement.tsx` | Admin payout approvals |
 
-- kills conversion
-- kills trust
-- kills student confidence
+### Files to Modify
 
-Mobile must be 100% deterministic.
+| File | Changes |
+|------|---------|
+| `src/components/dashboard/DashboardSidebar.tsx` | Add "Refer a Friend" and "My Rewards" tabs |
+| `src/components/dashboard/DashboardMainContent.tsx` | Add cases for new tabs, add WelcomeCard |
+| `src/pages/InfluencerDashboardPage.tsx` | Add tabbed layout with earnings, media hub, referral link |
+| `src/components/admin/AdminLayout.tsx` | Add "Referrals" and "Rewards" sidebar tabs |
+| `src/pages/AdminDashboardPage.tsx` | Add referral/payout data fetching and tab rendering |
+| `src/components/admin/AdminOverview.tsx` | Add referral/payout stat cards |
+| `src/pages/StudentAuthPage.tsx` | Capture `?ref=` query param and store as `influencer_id` on signup |
+| `src/types/profile.ts` | No changes needed (influencer_id already exists) |
 
-My recommendation long-term:
+### Database Migrations
 
-If you don’t absolutely need PWA offline support:
+3 new tables: `referrals`, `rewards`, `referral_milestones`
+Each with proper RLS policies following existing patterns.
 
-→ Remove service worker entirely.
+### What Will NOT Change
 
-For an education agency site, offline support adds complexity but no ROI.
+- Navigation order, logo, student portal button
+- Existing checklist, services, payments, documents features
+- Existing admin student/influencer management
+- Auth flow and role-based routing
+- RTL/LTR support
+- Brand colors and design language
+- Cookie consent, PWA, service worker
 
-Stability > PWA badge.
+### Commission Structure
+
+| Referrer Type | Amount per Successful Referral |
+|---------------|-------------------------------|
+| Student | 500 ILS |
+| Influencer | 2,000 ILS |
+| Family referral discount | 1,000 ILS off for the referred student |
+
+### Milestone Badges
+
+| Milestone | Badge |
+|-----------|-------|
+| 1 referral | "First Step" |
+| 5 referrals | "Growing Network" |
+| 10 referrals | "Ambassador" (hidden trigger -- surprise notification) |
+
