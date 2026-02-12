@@ -75,7 +75,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen pb-20 md:pb-0 relative" dir={dir}>
+        <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
           <Toaster />
           <Sonner />
           <OfflineIndicator />
