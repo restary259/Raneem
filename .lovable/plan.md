@@ -1,201 +1,349 @@
+&nbsp;
 
+- Verified viewport
+- Confirmed no fixed widths
+- Confirmed mobile-first CSS
+- Confirmed no layout bugs
+- Confirmed correct Tailwind breakpoints
 
-# Plan: Performance Optimization, PWA Install Button, and Admin Routing
+…and **it still renders desktop on mobile**, then this is no longer a CSS problem.
 
-## Overview
+It is almost certainly one of these deeper causes:
 
-Optimize LCP, reduce bundle size, improve caching, add a fixed PWA install button (visible on all devices), and ensure admin email auto-redirects to the admin dashboard. The existing design, navigation order, and functionality will not change.
+1. Service Worker serving stale HTML bundle
+2. Build mismatch (HTML referencing old JS)
+3. Cached CSS chunk loaded before new layout CSS
+4. Hydration mismatch in React/Vite
+5. In-app browser forcing desktop viewport width
+6. Incorrect meta viewport injected at runtime
+7. Double root rendering before CSS loads
 
----
+Since Loveable “can’t find it”, we need to move from assumptions to forensic debugging.
 
-## 1. LCP Optimization
-
-### 1a. Hero Video is the LCP Element
-
-The Hero component loads a full HD video from Pexels as the background. This is the primary LCP bottleneck.
-
-**Fix**: Add a static poster image to the video element so the browser renders a lightweight image immediately while the video loads in the background.
-
-**In `src/components/landing/Hero.tsx`**:
-- Add `poster="/lovable-uploads/[hero-poster].webp"` to the `<video>` tag
-- Use an existing uploaded image or a screenshot from the video as the poster
-- Add `fetchpriority="high"` to ensure the poster loads first
-
-**In `index.html`**:
-- Preload the poster image: `<link rel="preload" as="image" href="/lovable-uploads/[poster].webp">`
-
-### 1b. Font Loading Optimization
-
-Fonts are already preconnected. Additional fix:
-- The `base.css` imports Google Fonts via `@import url(...)` which is render-blocking
-- Remove the `@import` from `base.css` (line 2) since the same font is already loaded in `index.html` via `<link>` tag
-- This eliminates a duplicate render-blocking request
-
-### 1c. Remove Duplicate Loading Screens
-
-Currently there are TWO loading screens:
-1. `index.html` has a PWA loading screen (lines 123-131) that shows for 1 second
-2. `App.tsx` has a `NetflixLoader` that shows for 2 seconds (line 80)
-
-Users wait 2+ seconds before seeing any content. This directly hurts LCP.
-
-**Fix**: Remove the React `NetflixLoader` entirely. Keep only the HTML loading screen (which hides automatically when the app loads). This saves ~2 seconds on LCP.
+Below is the **ultra-precise debugging + stabilization directive** you send them.
 
 ---
 
-## 2. Bundle Size Reduction (Lazy Loading)
+# 🔬 Advanced Root Cause Investigation Plan
 
-### 2a. Lazy-Load Route Pages
+## (For when “everything looks correct” but mobile still renders desktop)
 
-All 20+ page components are eagerly imported in `App.tsx`. Convert to lazy imports:
+---
 
-```tsx
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
-const InfluencerDashboardPage = lazy(() => import('./pages/InfluencerDashboardPage'));
-const QuizPage = lazy(() => import('./pages/QuizPage'));
-const AIAdvisorPage = lazy(() => import('./pages/AIAdvisorPage'));
-const BroadcastPage = lazy(() => import('./pages/BroadcastPage'));
-const CostCalculatorPage = lazy(() => import('./pages/CostCalculatorPage'));
-const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
-const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
-const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
-const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
-const EducationalProgramsPage = lazy(() => import('./pages/EducationalProgramsPage'));
+# PHASE 0 — Verify What the Browser Actually Sees
+
+Ask Loveable to do this on the affected device (real iPhone, not emulator):
+
+Open DevTools → Console → Run:
+
+```
+window.innerWidth
+document.documentElement.clientWidth
+screen.width
+
 ```
 
-Keep eagerly loaded (used on first visit): `Index`, `WhoWeArePage`, `ServicesPage`, `ContactPage`, `EducationalDestinationsPage`, `LocationsPage`, `StudentAuthPage`, `NotFound`.
+If values are around 980–1024px → browser is in desktop layout mode.
 
-Wrap routes in `<Suspense fallback={<div />}>`.
+If values are 375–430px → viewport is correct, CSS isn’t responding.
 
-### 2b. Vite Build Optimization
+This determines the direction.
 
-Add to `vite.config.ts`:
+---
 
-```ts
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-        'vendor-supabase': ['@supabase/supabase-js'],
-        'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-        'vendor-charts': ['recharts'],
-      }
+# PHASE 1 — Confirm Meta Viewport Is Not Being Overwritten
+
+Run:
+
+```
+document.head.querySelectorAll('meta[name="viewport"]').length
+
+```
+
+Must return: 1
+
+Then:
+
+```
+document.head.innerHTML
+
+```
+
+Search manually for duplicate or injected viewport tags.
+
+Some frameworks or libraries inject one at runtime.
+
+If two exist → mobile layout breaks.
+
+---
+
+# PHASE 2 — Confirm No CSS Chunk Is Missing
+
+Check in Network tab:
+
+- Is main.css loading?
+- Is it loading 200 OK?
+- Is it the latest hashed version?
+- Is it being served from Service Worker?
+
+In DevTools → Application → Service Workers:  
+Disable:  
+☑ Update on reload  
+☑ Bypass for network
+
+Reload.
+
+If layout suddenly fixes → 100% service worker cache issue.
+
+---
+
+# PHASE 3 — Confirm HTML Is Fresh
+
+In DevTools → Network → Click the main document request.
+
+Check Response Headers:
+
+If you see:
+
+```
+cache-control: max-age=...
+
+```
+
+for HTML → this is wrong.
+
+HTML must be:
+
+```
+Cache-Control: no-store
+
+```
+
+If HTML cached → it can reference old CSS bundle names.
+
+---
+
+# PHASE 4 — Check If JS Hydration Is Breaking Tailwind Classes
+
+In React/Vite, sometimes hydration mismatch removes classes on first render.
+
+Add temporary debug:
+
+In App.tsx:
+
+```
+useEffect(() => {
+  console.log("Rendered width:", window.innerWidth);
+  console.log("HTML classes:", document.documentElement.className);
+}, []);
+
+```
+
+If classes like `md:hidden` are not applied at first render but appear after refresh → hydration race condition.
+
+---
+
+# PHASE 5 — Check for `transform: scale()` or Zoom
+
+In DevTools:
+
+Inspect `<html>` and `<body>`.
+
+Look for:
+
+- zoom
+- transform
+- scale
+- min-width
+
+Any of those will break mobile breakpoints.
+
+---
+
+# PHASE 6 — Confirm Tailwind Is Not Built in Desktop Mode
+
+Check Tailwind config:
+
+```
+module.exports = {
+  theme: {
+    screens: {
+      ...
     }
-  },
-  target: 'esnext',
-  minify: 'esbuild',
+  }
 }
-```
-
-This splits the bundle into smaller cacheable chunks, reducing initial JS parse time.
-
----
-
-## 3. CSS Optimization
-
-### 3a. Remove Duplicate Font Import
-
-`src/styles/base.css` line 2 has:
-```css
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
-```
-
-This is a render-blocking CSS import that loads two additional font families (Noto Sans Arabic + Noto Sans) ON TOP of the Tajawal font already loaded in `index.html`. The body uses Noto Sans Arabic (base.css line 96) while index.html loads Tajawal.
-
-**Fix**: Move this font loading to `index.html` as a `<link>` tag with `display=swap` (non-blocking), or consolidate to one font family. This saves ~400ms of render blocking.
-
----
-
-## 4. Caching Improvements
-
-### 4a. Update `public/_headers`
-
-Add cache headers for static assets:
 
 ```
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
 
-/lovable-uploads/*
-  Cache-Control: public, max-age=31536000, immutable
+Ensure breakpoints are correct:
 
-/*.html
-  Cache-Control: no-cache
+```
+sm: 640px
+md: 768px
+lg: 1024px
+
 ```
 
-### 4b. Service Worker Already Handles Caching Well
-
-The current service worker uses cache-first for static assets and network-first for navigation. No changes needed.
+If someone accidentally inverted breakpoints → mobile will behave as desktop.
 
 ---
 
-## 5. Fixed PWA Install Button (All Devices)
+# PHASE 7 — Confirm There Is No Forced Desktop Mode Header
 
-### Current Behavior
-- Mobile only, delayed 15 seconds, dismissible via session storage
-- Desktop users never see it
+Some servers send:
 
-### New Behavior
-- Fixed floating button visible on ALL devices (mobile + desktop)
-- Bottom-right corner, clean rounded design
-- Shows when `beforeinstallprompt` fires (Android/Desktop Chrome) or always on iOS
-- On iOS: opens the share instructions modal
-- Respects session dismissal
-- Non-intrusive, small pill-shaped button
+```
+Content-Type: text/html; charset=UTF-8
+X-UA-Compatible: IE=edge
 
-**Modify `src/components/common/PWAInstaller.tsx`**:
-- Remove `if (!isMobile()) return;` check
-- Change from corner card popup to a small floating pill button
-- Show immediately when install prompt is available (remove 15s delay)
-- Add desktop styling (slightly larger on desktop)
-- Keep iOS modal for Safari users
+```
+
+That’s fine.
+
+But if any middleware modifies viewport via server-side rendering, that must be checked.
 
 ---
 
-## 6. Admin Auto-Redirect (Already Implemented)
+# PHASE 8 — The Silent Killer: CSS Order Race
 
-The admin routing is already correctly implemented in `StudentAuthPage.tsx`:
-- `redirectByRole()` checks `user_roles` table (server-side, not email-based)
-- Admin role redirects to `/admin`
-- Influencer role redirects to `/influencer-dashboard`
-- Others go to `/student-dashboard`
+If your CSS is loaded AFTER JS renders, layout may appear desktop momentarily.
 
-**No changes needed** -- the current implementation uses proper server-side role validation via the `user_roles` table and `has_role` function, not client-side email checks. This is already secure.
+Check:
+
+In Network → is CSS loading after JS?
+
+Correct order:
+
+1. HTML
+2. CSS
+3. JS
+
+If JS loads first → layout flashes desktop.
 
 ---
 
-## Technical Summary
+# PHASE 9 — Remove Service Worker Completely (Test)
 
-### Files to Modify
+Temporarily:
 
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Remove `NetflixLoader`, add lazy imports + Suspense |
-| `src/components/landing/Hero.tsx` | Add `poster` attribute to video |
-| `src/styles/base.css` | Remove render-blocking `@import` on line 2 |
-| `index.html` | Add font preload link for Noto Sans Arabic, add poster preload |
-| `vite.config.ts` | Add build optimization (manual chunks, esbuild minify) |
-| `public/_headers` | Add cache headers for assets |
-| `src/components/common/PWAInstaller.tsx` | Make visible on all devices, change to floating pill button |
+In main.tsx:
 
-### What Will NOT Change
+```
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
+}
 
-- Website design, navigation order, logo, or student portal button
-- Service worker caching strategy
-- Admin routing logic (already secure and role-based)
-- SEO meta tags
-- RTL/LTR support
-- Any existing page content or layout
+```
 
-### Expected Performance Impact
+Deploy.
 
-| Metric | Current | After |
-|--------|---------|-------|
-| LCP | 3-5s | Less than 2.5s |
-| Initial JS | All pages loaded | Only visible page loaded |
-| Render blocking | Font @import + 2s loader | Eliminated |
-| Repeat visit | Partial cache | Full immutable cache |
-| PWA install | Mobile only, 15s delay | All devices, immediate |
+If mobile rendering is fixed permanently → the service worker architecture is the root cause.
 
+---
+
+# PHASE 10 — The Real Fix If It’s SW
+
+Your current SW still caches navigation (even after edit).
+
+You must:
+
+- NEVER cache HTML
+- NEVER cache auth
+- NEVER cache dynamic JS bundles
+
+And set:
+
+```
+self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+});
+
+```
+
+No caching of navigation. Ever.
+
+---
+
+# About the Login Refresh Issue
+
+If it still happens after excluding Supabase:
+
+Then it is not SW.
+
+It becomes one of these:
+
+1. Supabase session not initialized before UI check
+2. React rendering before auth state resolves
+3. Missing `credentials: 'include'`
+4. Cookie SameSite misconfiguration
+5. State update race condition
+
+To detect:
+
+Add this after login:
+
+```
+const { data } = await supabase.auth.getSession();
+console.log("Session immediately after login:", data);
+
+```
+
+If session exists but UI doesn’t update → state sync bug.
+
+If session null → cookie not set.
+
+---
+
+# Here Is What Loveable Is Missing
+
+They are treating this as a layout issue.
+
+This is almost certainly:
+
+→ stale HTML + stale JS bundle mismatch  
+→ or hydration race  
+→ or service worker intercept
+
+Not CSS.
+
+---
+
+# Immediate Nuclear Test (Fastest Way To Isolate)
+
+Tell them to:
+
+1. Disable service worker completely.
+2. Set HTML cache-control to no-store.
+3. Hard refresh mobile.
+4. Test login and rendering.
+
+If everything works → root cause confirmed in under 10 minutes.
+
+---
+
+# Strategic Advice For You
+
+Right now you are scaling Darb.
+
+A broken mobile experience:
+
+- kills conversion
+- kills trust
+- kills student confidence
+
+Mobile must be 100% deterministic.
+
+My recommendation long-term:
+
+If you don’t absolutely need PWA offline support:
+
+→ Remove service worker entirely.
+
+For an education agency site, offline support adds complexity but no ROI.
+
+Stability > PWA badge.
