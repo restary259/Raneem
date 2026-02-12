@@ -1,330 +1,243 @@
-
-import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { costData } from '@/lib/cost-data';
-import { Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
-
-const formSchema = z.object({
-  country: z.enum(['germany']),
-  degreeLevel: z.enum(['bachelor', 'master', 'prep']),
-  fieldOfStudy: z.enum(['engineering', 'medicine', 'business', 'humanities']),
-  universityType: z.enum(['public', 'private']),
-  accommodation: z.enum(['dormitory', 'shared', 'privateApartment']),
-  lifestyle: z.array(z.number()).default([1]),
-  healthInsurance: z.boolean().default(true),
-  languagePrep: z.boolean().default(false),
-  visaAdmin: z.boolean().default(true),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-interface CostBreakdown {
-  [key: string]: number;
-}
+import {
+  languageSchools,
+  HEALTH_INSURANCE_SHORT,
+  HEALTH_INSURANCE_LONG,
+  MOBILE_INTERNET,
+  DEUTSCHLAND_TICKET,
+  VISA_FEE,
+  FOOD_BUDGET_MIN,
+  FOOD_BUDGET_MAX,
+  FOOD_BUDGET_DEFAULT,
+} from '@/lib/language-school-data';
 
 const CostCalculator = () => {
-  const { t } = useTranslation('resources');
-  const [results, setResults] = useState<CostBreakdown | null>(null);
+  const { t, i18n } = useTranslation('resources');
+  const isAr = i18n.language === 'ar';
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      country: 'germany',
-      degreeLevel: 'bachelor',
-      fieldOfStudy: 'engineering',
-      universityType: 'public',
-      accommodation: 'dormitory',
-      lifestyle: [1],
-      healthInsurance: true,
-      languagePrep: false,
-      visaAdmin: true,
-    },
-  });
+  const [schoolId, setSchoolId] = useState(languageSchools[0].id);
+  const [weeks, setWeeks] = useState(52);
+  const [accommodationId, setAccommodationId] = useState('');
+  const [insuranceType, setInsuranceType] = useState<'long' | 'short'>('long');
+  const [includeMobile, setIncludeMobile] = useState(true);
+  const [includeTransport, setIncludeTransport] = useState(true);
+  const [includeVisa, setIncludeVisa] = useState(true);
+  const [foodBudget, setFoodBudget] = useState(FOOD_BUDGET_DEFAULT);
 
-  const watchedValues = form.watch();
+  const school = languageSchools.find(s => s.id === schoolId)!;
+  const isLongTerm = weeks >= school.coursePricing.shortTermThreshold;
 
-  useEffect(() => {
-    const calculateCosts = () => {
-      const {
-        country,
-        fieldOfStudy,
-        universityType,
-        accommodation,
-        lifestyle,
-        healthInsurance,
-        languagePrep,
-        visaAdmin,
-      } = watchedValues;
-      
-      const countryData = costData[country as keyof typeof costData];
-      let breakdown: CostBreakdown = {
-        tuition: 0,
-        livingAndAccommodation: 0,
-        healthInsurance: 0,
-        semesterFee: 0,
-        visaAdmin: 0,
-        languagePrep: 0,
-      };
+  // Reset accommodation when school changes
+  const accommodations = school.accommodations;
+  const selectedAccommodation = accommodations.find(a => a.id === accommodationId) || accommodations[0];
 
-      // Germany tuition
-      const tuitionData = countryData.tuition as typeof costData.germany.tuition;
-      breakdown.tuition = tuitionData[universityType as 'public' | 'private'];
+  const months = Math.round(weeks / 4.33);
 
-      // Living & Accommodation
-      const lifestyleMap = { 0: 'basic', 1: 'moderate', 2: 'comfortable' };
-      const lifestyleKey = lifestyleMap[lifestyle[0] as keyof typeof lifestyleMap];
-      const livingCost = countryData.livingCost[lifestyleKey as keyof typeof countryData.livingCost] * 12;
-      
-      const accommodationKey = accommodation === 'privateApartment' ? 'private' : accommodation;
-      const accommodationCost = countryData.accommodation[accommodationKey as keyof typeof countryData.accommodation] * 12;
+  const breakdown = useMemo(() => {
+    const courseRate = isLongTerm ? school.coursePricing.longTermWeekly : school.coursePricing.shortTermWeekly;
+    const courseCost = courseRate * weeks;
+    const registration = school.registrationFee;
 
-      breakdown.livingAndAccommodation = livingCost + accommodationCost;
+    const accRate = isLongTerm ? selectedAccommodation.weeklyRateLong : selectedAccommodation.weeklyRateShort;
+    const accommodationCost = accRate * weeks;
+    const deposit = school.accommodationDeposit;
+    const adminFee = school.accommodationAdminFee;
 
-      // Other costs
-      if (healthInsurance && countryData.healthInsurance) {
-        breakdown.healthInsurance = countryData.healthInsurance * 12;
-      }
-      if (country === 'germany' && 'semesterFee' in countryData) {
-        breakdown.semesterFee = countryData.semesterFee * 2;
-      }
-      if (visaAdmin) {
-        breakdown.visaAdmin = countryData.visaFee;
-      }
-      if (languagePrep) {
-        breakdown.languagePrep = countryData.languagePrep;
-      }
+    const insurance = (insuranceType === 'long' ? HEALTH_INSURANCE_LONG : HEALTH_INSURANCE_SHORT) * months;
+    const mobile = includeMobile ? MOBILE_INTERNET * months : 0;
+    const transport = includeTransport ? DEUTSCHLAND_TICKET * months : 0;
+    const food = foodBudget * months;
+    const visa = includeVisa ? VISA_FEE : 0;
 
-      const totalAnnual = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
-      breakdown.totalAnnual = totalAnnual;
-      breakdown.totalMonthly = totalAnnual / 12;
+    const total = courseCost + registration + accommodationCost + deposit + adminFee + insurance + mobile + transport + food + visa;
 
-      setResults(breakdown);
+    return {
+      courseCost,
+      registration,
+      accommodationCost,
+      deposit,
+      adminFee,
+      insurance,
+      mobile,
+      transport,
+      food,
+      visa,
+      total,
+      monthly: total / (months || 1),
     };
+  }, [school, selectedAccommodation, weeks, isLongTerm, months, insuranceType, includeMobile, includeTransport, includeVisa, foodBudget]);
 
-    calculateCosts();
-  }, [watchedValues]);
-
-  const lifestyleLabels = [
-    t('costCalculator.basic'),
-    t('costCalculator.moderate'),
-    t('costCalculator.comfortable')
-  ];
-  
   const resultItems = [
-    { key: 'tuition', label: t('costCalculator.tuition') },
-    { key: 'livingAndAccommodation', label: t('costCalculator.livingExpenses') },
-    { key: 'healthInsurance', label: t('costCalculator.healthInsurance') },
-    { key: 'semesterFee', label: t('costCalculator.semesterFee') },
-    { key: 'visaAdmin', label: t('costCalculator.visaAdmin') },
-    { key: 'languagePrep', label: t('costCalculator.languagePrep') },
+    { key: 'courseCost', label: t('costCalc.courseFees') },
+    { key: 'registration', label: t('costCalc.registrationFee') },
+    { key: 'accommodationCost', label: t('costCalc.accommodationCost') },
+    { key: 'deposit', label: t('costCalc.deposit') },
+    { key: 'adminFee', label: t('costCalc.adminFee') },
+    { key: 'insurance', label: t('costCalc.healthInsurance') },
+    { key: 'mobile', label: t('costCalc.mobile') },
+    { key: 'transport', label: t('costCalc.transport') },
+    { key: 'food', label: t('costCalc.food') },
+    { key: 'visa', label: t('costCalc.visa') },
   ];
 
   return (
     <div className="p-4 bg-background rounded-lg">
       <div className="mb-6 text-center">
-        <h3 className="text-2xl font-bold text-primary">{t('costCalculator.title')}</h3>
-        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{t('costCalculator.description')}</p>
+        <h3 className="text-2xl font-bold text-primary">{t('costCalc.title')}</h3>
+        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{t('costCalc.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-2">
-          <Form {...form}>
-            <form className="space-y-6">
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('costCalculator.country')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder={t('costCalculator.country')} /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="germany">{t('costCalculator.germany')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        {/* Form */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* School selector */}
+          <div className="space-y-2">
+            <Label>{t('costCalc.selectSchool')}</Label>
+            <Select value={schoolId} onValueChange={(v) => { setSchoolId(v); setAccommodationId(''); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {languageSchools.map(s => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {isAr ? `${s.nameAr} (${s.cityAr})` : `${s.nameEn} (${s.cityEn})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {school.lessonsPerWeek} {t('costCalc.lessonsPerWeek')}
+            </p>
+          </div>
 
-              <FormField name="degreeLevel" control={form.control} render={({ field }) => (
-                 <FormItem>
-                    <FormLabel>{t('costCalculator.degreeLevel')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="bachelor">{t('costCalculator.bachelor')}</SelectItem>
-                            <SelectItem value="master">{t('costCalculator.master')}</SelectItem>
-                            <SelectItem value="prep">{t('costCalculator.prep')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                 </FormItem>
-              )} />
-              <FormField name="fieldOfStudy" control={form.control} render={({ field }) => (
-                 <FormItem>
-                    <FormLabel>{t('costCalculator.fieldOfStudy')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="medicine">{t('costCalculator.medicine')}</SelectItem>
-                            <SelectItem value="engineering">{t('costCalculator.engineering')}</SelectItem>
-                            <SelectItem value="business">{t('costCalculator.business')}</SelectItem>
-                            <SelectItem value="humanities">{t('costCalculator.humanities')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                 </FormItem>
-              )} />
+          {/* Duration slider */}
+          <div className="space-y-2">
+            <Label>{t('costCalc.duration')}: <span className="text-primary font-bold">{weeks} {t('costCalc.weeks')}</span></Label>
+            <Slider
+              min={1}
+              max={52}
+              step={1}
+              value={[weeks]}
+              onValueChange={([v]) => setWeeks(v)}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>1 {t('costCalc.week')}</span>
+              <span>52 {t('costCalc.weeks')}</span>
+            </div>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="universityType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel className="flex items-center gap-2">
-                        {t('costCalculator.universityType')}
-                        {watchedValues.country === 'germany' && (
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{t('costCalculator.germanyTooltip')}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        )}
-                    </FormLabel>
-                    <FormControl>
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl><RadioGroupItem value="public" id="public" /></FormControl>
-                          <FormLabel htmlFor="public" className="font-normal">{t('costCalculator.public')}</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl><RadioGroupItem value="private" id="private" /></FormControl>
-                          <FormLabel htmlFor="private" className="font-normal">{t('costCalculator.private')}</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField name="accommodation" control={form.control} render={({ field }) => (
-                 <FormItem>
-                    <FormLabel>{t('costCalculator.accommodation')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="dormitory">{t('costCalculator.dormitory')}</SelectItem>
-                            <SelectItem value="shared">{t('costCalculator.shared')}</SelectItem>
-                            <SelectItem value="privateApartment">{t('costCalculator.privateApartment')}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                 </FormItem>
-              )} />
-              
-              <FormField
-                control={form.control}
-                name="lifestyle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="lifestyle-slider">{t('costCalculator.lifestyle')}: <span className="text-primary font-bold">{lifestyleLabels[field.value[0]]}</span></FormLabel>
-                    <FormControl>
-                      <Slider
-                        id="lifestyle-slider"
-                        dir='rtl'
-                        min={0}
-                        max={2}
-                        step={1}
-                        defaultValue={field.value}
-                        onValueChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+          {/* Accommodation */}
+          <div className="space-y-2">
+            <Label>{t('costCalc.accommodation')}</Label>
+            <Select value={selectedAccommodation.id} onValueChange={setAccommodationId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {accommodations.map(a => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {isAr ? a.nameAr : a.nameEn} — €{isLongTerm ? a.weeklyRateLong : a.weeklyRateShort}/{t('costCalc.week')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="space-y-4">
-                <h4 className="font-medium">{t('costCalculator.options')}</h4>
-                <FormField control={form.control} name="healthInsurance" render={({ field }) => (
-                    <FormItem className="flex flex-row-reverse items-center justify-end gap-4 space-y-0 rounded-md border p-3 shadow-sm">
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        <FormLabel className="text-base m-0 !mt-0">{t('costCalculator.healthInsurance')}</FormLabel>
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="languagePrep" render={({ field }) => (
-                    <FormItem className="flex flex-row-reverse items-center justify-end gap-4 space-y-0 rounded-md border p-3 shadow-sm">
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        <FormLabel className="text-base m-0 !mt-0">{t('costCalculator.languagePrep')}</FormLabel>
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="visaAdmin" render={({ field }) => (
-                    <FormItem className="flex flex-row-reverse items-center justify-end gap-4 space-y-0 rounded-md border p-3 shadow-sm">
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        <FormLabel className="text-base m-0 !mt-0">{t('costCalculator.visaAdmin')}</FormLabel>
-                    </FormItem>
-                )} />
-              </div>
+          {/* Health Insurance */}
+          <div className="space-y-2">
+            <Label>{t('costCalc.healthInsurance')}</Label>
+            <Select value={insuranceType} onValueChange={(v) => setInsuranceType(v as 'long' | 'short')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="long">{t('costCalc.insuranceLong')} (€{HEALTH_INSURANCE_LONG}/{t('costCalc.month')})</SelectItem>
+                <SelectItem value="short">{t('costCalc.insuranceShort')} (€{HEALTH_INSURANCE_SHORT}/{t('costCalc.month')})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            </form>
-          </Form>
+          {/* Toggles */}
+          <div className="space-y-4">
+            <h4 className="font-medium">{t('costCalc.additionalOptions')}</h4>
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+              <Switch checked={includeMobile} onCheckedChange={setIncludeMobile} />
+              <Label className="m-0">{t('costCalc.mobileLabel')} (€{MOBILE_INTERNET}/{t('costCalc.month')})</Label>
+            </div>
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+              <Switch checked={includeTransport} onCheckedChange={setIncludeTransport} />
+              <Label className="m-0">{t('costCalc.transportLabel')} (€{DEUTSCHLAND_TICKET}/{t('costCalc.month')})</Label>
+            </div>
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+              <Switch checked={includeVisa} onCheckedChange={setIncludeVisa} />
+              <Label className="m-0">{t('costCalc.visaLabel')} (€{VISA_FEE})</Label>
+            </div>
+          </div>
+
+          {/* Food budget */}
+          <div className="space-y-2">
+            <Label>{t('costCalc.foodBudget')}: <span className="text-primary font-bold">€{foodBudget}/{t('costCalc.month')}</span></Label>
+            <Slider
+              min={FOOD_BUDGET_MIN}
+              max={FOOD_BUDGET_MAX}
+              step={10}
+              value={[foodBudget]}
+              onValueChange={([v]) => setFoodBudget(v)}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>€{FOOD_BUDGET_MIN}</span>
+              <span>€{FOOD_BUDGET_MAX}</span>
+            </div>
+          </div>
         </div>
+
+        {/* Results */}
         <div className="lg:col-span-3">
-            <Card className="sticky top-24">
-                <CardHeader>
-                    <CardTitle>{t('costCalculator.resultsTitle')}</CardTitle>
-                    <CardDescription>{t('costCalculator.resultsDescription')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {results ? (
-                        <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-right">{t('costCalculator.item')}</TableHead>
-                                        <TableHead className="text-left">{t('costCalculator.annualCost')}</TableHead>
-                                        <TableHead className="text-left">{t('costCalculator.monthlyCost')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {resultItems.map(item => results[item.key] > 0 && (
-                                        <TableRow key={item.key}>
-                                            <TableCell className="font-medium">{item.label}</TableCell>
-                                            <TableCell className="text-left">€{Math.round(results[item.key]).toLocaleString()}</TableCell>
-                                            <TableCell className="text-left">€{Math.round(results[item.key] / 12).toLocaleString()}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    <TableRow className="bg-secondary/50 font-bold text-lg">
-                                        <TableCell>{t('costCalculator.totalAnnual')}</TableCell>
-                                        <TableCell className="text-left">€{Math.round(results.totalAnnual).toLocaleString()}</TableCell>
-                                        <TableCell className="text-left text-primary">€{Math.round(results.totalMonthly).toLocaleString()}</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                            <p className="text-xs text-muted-foreground mt-4">{t('costCalculator.disclaimer')}</p>
-                            <Button asChild className="w-full mt-6" size="lg">
-                              <Link to="/contact">
-                                {t('costCalculator.contactUs')}
-                              </Link>
-                            </Button>
-                        </>
-                    ) : null}
-                </CardContent>
-            </Card>
+          <Card className="sticky top-24">
+            <CardHeader>
+              <CardTitle>{t('costCalc.resultsTitle')}</CardTitle>
+              <CardDescription>
+                {isAr ? school.nameAr : school.nameEn} — {weeks} {t('costCalc.weeks')} ({months} {t('costCalc.months')})
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">{t('costCalc.item')}</TableHead>
+                    <TableHead className="text-left">{t('costCalc.cost')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {resultItems.map(item => {
+                    const val = breakdown[item.key as keyof typeof breakdown] as number;
+                    if (val <= 0) return null;
+                    return (
+                      <TableRow key={item.key}>
+                        <TableCell className="font-medium">{item.label}</TableCell>
+                        <TableCell className="text-left">€{Math.round(val).toLocaleString()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  <TableRow className="bg-secondary/50 font-bold text-lg">
+                    <TableCell>{t('costCalc.total')}</TableCell>
+                    <TableCell className="text-left">€{Math.round(breakdown.total).toLocaleString()}</TableCell>
+                  </TableRow>
+                  <TableRow className="bg-primary/10 font-bold">
+                    <TableCell>{t('costCalc.monthlyAvg')}</TableCell>
+                    <TableCell className="text-left text-primary">€{Math.round(breakdown.monthly).toLocaleString()}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              <p className="text-xs text-muted-foreground mt-4">{t('costCalc.disclaimer')}</p>
+              <Button asChild className="w-full mt-6" size="lg">
+                <Link to="/contact">{t('costCalc.contactUs')}</Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
