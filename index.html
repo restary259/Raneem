@@ -163,15 +163,13 @@
     
     <!-- PWA Loading Script -->
     <script>
-      // Hide loading screen when app is ready
+      // Hide loading screen immediately when app is ready
       window.addEventListener('load', () => {
-        setTimeout(() => {
-          const loading = document.getElementById('pwa-loading');
-          if (loading) {
-            loading.classList.add('hidden');
-            setTimeout(() => loading.remove(), 500);
-          }
-        }, 1000);
+        const loading = document.getElementById('pwa-loading');
+        if (loading) {
+          loading.classList.add('hidden');
+          setTimeout(() => loading.remove(), 500);
+        }
       });
       
       // Handle PWA display mode
