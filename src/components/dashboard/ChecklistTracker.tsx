@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ChecklistTrackerProps {
   userId: string;
@@ -14,6 +15,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   const [completions, setCompletions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { t, i18n } = useTranslation('dashboard');
 
   useEffect(() => {
     fetchData();
@@ -58,11 +60,9 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Progress header */}
       <Card className="overflow-hidden">
         <CardContent className="p-6">
           <div className="flex items-center gap-6">
-            {/* Circular progress */}
             <div className="relative w-24 h-24 shrink-0">
               <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
@@ -82,14 +82,14 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
             <div>
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <ClipboardCheck className="h-5 w-5 text-primary" />
-                قائمة المتطلبات
+                {t('checklist.title')}
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                أكملت {completedCount} من {items.length} متطلبات
+                {t('checklist.progress', { completed: completedCount, total: items.length })}
               </p>
               {progress === 100 && (
                 <p className="text-emerald-600 font-semibold text-sm mt-2 flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4" />تم إكمال جميع المتطلبات!
+                  <CheckCircle2 className="h-4 w-4" />{t('checklist.allComplete')}
                 </p>
               )}
             </div>
@@ -97,7 +97,6 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
         </CardContent>
       </Card>
 
-      {/* Checklist items */}
       <div className="space-y-2">
         {items.map((item) => {
           const completion = completions.find(c => c.checklist_item_id === item.id);
@@ -123,7 +122,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
                 </div>
                 {isCompleted && completion?.completed_at && (
                   <span className="text-xs text-muted-foreground">
-                    {new Date(completion.completed_at).toLocaleDateString('ar')}
+                    {new Date(completion.completed_at).toLocaleDateString(i18n.language === 'ar' ? 'ar' : 'en-US')}
                   </span>
                 )}
               </CardContent>
@@ -133,7 +132,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
       </div>
 
       {items.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">لم يتم تحديد متطلبات بعد</p>
+        <p className="text-center text-muted-foreground py-8">{t('checklist.noItems')}</p>
       )}
     </div>
   );

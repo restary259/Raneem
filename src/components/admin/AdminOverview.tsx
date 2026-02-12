@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, DollarSign, Mail, FileText, TrendingUp, UserCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AdminOverviewProps {
   totalStudents: number;
@@ -32,18 +33,20 @@ const StatCard = ({ icon: Icon, label, value, color, subtext }: { icon: any; lab
 const AdminOverview: React.FC<AdminOverviewProps> = ({
   totalStudents, newThisMonth, totalPayments, newContacts, totalDocuments, activeServices, totalInfluencers
 }) => {
+  const { t } = useTranslation('dashboard');
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="إجمالي الطلاب" value={totalStudents} color="bg-blue-600" subtext={`+${newThisMonth} هذا الشهر`} />
-        <StatCard icon={DollarSign} label="إجمالي المدفوعات" value={`${totalPayments.toLocaleString()} ₪`} color="bg-emerald-600" />
-        <StatCard icon={Mail} label="رسائل جديدة" value={newContacts} color="bg-amber-500" />
-        <StatCard icon={UserCheck} label="الوكلاء" value={totalInfluencers} color="bg-violet-600" />
+        <StatCard icon={Users} label={t('admin.overview.totalStudents')} value={totalStudents} color="bg-blue-600" subtext={`+${newThisMonth} ${t('admin.overview.newThisMonth')}`} />
+        <StatCard icon={DollarSign} label={t('admin.overview.totalPayments')} value={`${totalPayments.toLocaleString()} ₪`} color="bg-emerald-600" />
+        <StatCard icon={Mail} label={t('admin.overview.newMessages')} value={newContacts} color="bg-amber-500" />
+        <StatCard icon={UserCheck} label={t('admin.overview.agents')} value={totalInfluencers} color="bg-violet-600" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard icon={FileText} label="المستندات المرفوعة" value={totalDocuments} color="bg-sky-500" />
-        <StatCard icon={TrendingUp} label="الخدمات النشطة" value={activeServices} color="bg-orange-500" />
-        <StatCard icon={TrendingUp} label="طلاب جدد هذا الشهر" value={newThisMonth} color="bg-teal-600" />
+        <StatCard icon={FileText} label={t('admin.overview.uploadedDocs')} value={totalDocuments} color="bg-sky-500" />
+        <StatCard icon={TrendingUp} label={t('admin.overview.activeServices')} value={activeServices} color="bg-orange-500" />
+        <StatCard icon={TrendingUp} label={t('admin.overview.newStudentsThisMonth')} value={newThisMonth} color="bg-teal-600" />
       </div>
     </div>
   );

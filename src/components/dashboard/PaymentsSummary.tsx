@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, CreditCard } from 'lucide-react';
 import AddPaymentModal from './AddPaymentModal';
+import { useTranslation } from 'react-i18next';
 
 interface Payment {
   id: string;
@@ -29,6 +29,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const { toast } = useToast();
+  const { t, i18n } = useTranslation('dashboard');
 
   useEffect(() => {
     fetchPayments();
@@ -45,23 +46,23 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
       if (error) throw error;
       setPayments(data || []);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "خطأ في تحميل المدفوعات", description: error.message });
+      toast({ variant: "destructive", title: t('payments.loadError'), description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      pending: { label: 'في الانتظار', variant: 'secondary' },
-      completed: { label: 'مكتمل', variant: 'default' },
+    const map: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+      pending: { variant: 'secondary' },
+      completed: { variant: 'default' },
     };
-    return map[status] || { label: status, variant: 'secondary' as const };
+    return map[status] || { variant: 'secondary' as const };
   };
 
   const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  if (isLoading) return <div className="text-center py-8">جار تحميل المدفوعات...</div>;
+  if (isLoading) return <div className="text-center py-8">{t('payments.loading')}</div>;
 
   return (
     <div className="space-y-6">
@@ -72,7 +73,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
               <CreditCard className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">إجمالي المدفوعات</p>
+              <p className="text-sm text-gray-600">{t('payments.totalPayments')}</p>
               <p className="text-xl font-bold">{totalAmount.toLocaleString()} ₪</p>
             </div>
           </div>
@@ -81,20 +82,20 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">تفاصيل المدفوعات</CardTitle>
+          <CardTitle className="text-xl">{t('payments.title')}</CardTitle>
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2"><Plus className="h-4 w-4" />إضافة دفعة</Button>
+              <Button className="flex items-center gap-2"><Plus className="h-4 w-4" />{t('payments.addPayment')}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>إضافة دفعة جديدة</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t('payments.addNewPayment')}</DialogTitle></DialogHeader>
               <AddPaymentModal userId={userId} onSuccess={() => { setShowAddModal(false); fetchPayments(); }} />
             </DialogContent>
           </Dialog>
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">لا توجد مدفوعات مسجلة</div>
+            <div className="text-center py-8 text-gray-500">{t('payments.noPayments')}</div>
           ) : (
             <div className="space-y-3">
               {payments.map((payment) => {
@@ -104,12 +105,12 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                          <Badge variant={statusInfo.variant}>{t(`payments.status.${payment.status}`, payment.status)}</Badge>
                           <p className="font-medium mt-1">{(payment.amount || 0).toLocaleString()} {payment.currency}</p>
                           {payment.notes && <p className="text-xs text-gray-500 mt-1">{payment.notes}</p>}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {new Date(payment.created_at).toLocaleDateString('ar-SA')}
+                          {new Date(payment.created_at).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US')}
                         </div>
                       </div>
                     </CardContent>

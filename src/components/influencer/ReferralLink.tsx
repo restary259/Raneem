@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Copy, Link, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Link, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ReferralLinkProps {
   userId: string;
@@ -11,13 +12,14 @@ interface ReferralLinkProps {
 
 const ReferralLink: React.FC<ReferralLinkProps> = ({ userId }) => {
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
   const [copied, setCopied] = useState(false);
   const referralUrl = `${window.location.origin}/student-auth?ref=${userId}`;
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(referralUrl);
     setCopied(true);
-    toast({ title: 'تم نسخ الرابط!' });
+    toast({ title: t('influencer.referralLink.copied') });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -26,13 +28,11 @@ const ReferralLink: React.FC<ReferralLinkProps> = ({ userId }) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Link className="h-5 w-5 text-primary" />
-          رابط الإحالة الخاص بك
+          {t('influencer.referralLink.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          شارك هذا الرابط مع الطلاب المحتملين. عند تسجيلهم عبر الرابط، سيتم ربطهم بحسابك تلقائياً.
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">{t('influencer.referralLink.description')}</p>
         <div className="flex gap-2">
           <Input value={referralUrl} readOnly className="font-mono text-sm" dir="ltr" />
           <Button onClick={copyLink} variant="outline" className="shrink-0">

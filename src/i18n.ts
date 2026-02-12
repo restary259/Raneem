@@ -22,6 +22,7 @@ i18n
       'partners',
       'resources',
       'broadcast',
+      'dashboard',
     ],
     defaultNS: 'common',
     debug: false,
