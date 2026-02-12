@@ -15,7 +15,8 @@ import { useTranslation } from 'react-i18next';
 
 const EducationalProgramsPage = () => {
   const { dir } = useDirection();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<SubMajor | null>(null);
@@ -23,12 +24,13 @@ const EducationalProgramsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const allSubMajors = useMemo(() => {
-    const flattened: (SubMajor & { categoryTitle: string; categoryId: string })[] = [];
+    const flattened: (SubMajor & { categoryTitle: string; categoryTitleEN: string; categoryId: string })[] = [];
     majorsData.forEach(category => {
       category.subMajors.forEach(subMajor => {
         flattened.push({
           ...subMajor,
           categoryTitle: category.title,
+          categoryTitleEN: category.titleEN,
           categoryId: category.id
         });
       });
@@ -43,10 +45,13 @@ const EducationalProgramsPage = () => {
     }
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(major => 
+      filtered = filtered.filter(major =>
         major.nameAR.toLowerCase().includes(query) ||
+        major.nameEN.toLowerCase().includes(query) ||
         major.description.toLowerCase().includes(query) ||
-        major.categoryTitle.toLowerCase().includes(query)
+        major.descriptionEN.toLowerCase().includes(query) ||
+        major.categoryTitle.toLowerCase().includes(query) ||
+        major.categoryTitleEN.toLowerCase().includes(query)
       );
     }
     return filtered;

@@ -7,6 +7,7 @@ import { Search, Filter, ChevronDown } from 'lucide-react';
 import { majorsData } from '@/data/majorsData';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
+import { getLocalizedCategoryTitle } from '@/utils/majorLocale';
 
 interface SearchAndFilterProps {
   searchQuery: string;
@@ -24,8 +25,9 @@ const SearchAndFilter = ({
   searchQuery, setSearchQuery, selectedCategory, setSelectedCategory,
   showFilters, setShowFilters, filteredMajorsCount, allMajorsCount, categoryMajorCounts
 }: SearchAndFilterProps) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const { dir, isRtl } = useDirection();
+  const lang = i18n.language;
 
   return (
     <section className="educational-sticky-section sticky bg-white border-b shadow-sm z-40">
@@ -60,7 +62,7 @@ const SearchAndFilter = ({
                       </Button>
                       {majorsData.map((category) => (
                         <Button key={category.id} variant={selectedCategory === category.id ? "default" : "outline"} onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }} className={`w-full justify-between text-sm ${selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}>
-                          <span>{category.title}</span>
+                          <span>{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
                           <Badge variant="secondary" className="mr-2">{categoryMajorCounts[category.id] || 0}</Badge>
                         </Button>
                       ))}
