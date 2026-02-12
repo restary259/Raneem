@@ -4,4 +4,11 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
   }
+
+  /* Hide footer in PWA standalone mode on mobile */
+  @media (max-width: 768px) {
+    footer {
+      display: none !important;
+    }
+  }
 }
