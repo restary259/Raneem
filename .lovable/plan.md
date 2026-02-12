@@ -1,189 +1,214 @@
 
-## Fix All Issues - Complete Implementation Plan
 
-### Issue 1: Mobile Overflow in Admin Dashboard Tables
+# Two New Features: Revamped Cost Calculator + Lebenslauf Builder
 
-**Problem**: The referral and payout management tables use fixed-width HTML tables that overflow horizontally on mobile devices (< 768px), creating poor UX and violating mobile-first responsiveness standards.
+## Feature 1: Revamped Cost Calculator (Language School First Year)
 
-**Root Cause**: 
-- Tables in `ReferralManagement.tsx` and `PayoutsManagement.tsx` are wrapped in `.overflow-x-auto` containers
-- No responsive table-to-card conversion for mobile viewports
-- CSS in `layouts.css` only enables smooth scrolling, doesn't restructure layout
+### What Changes
 
-**Solution**:
+The current calculator uses generic tuition/living data. It will be completely rebuilt to reflect **real, verified pricing from specific language schools** in Germany, letting students pick a school and see accurate first-year costs.
 
-#### A. Create Responsive Table Component Wrapper
-Create `src/components/ui/responsive-table.tsx` that automatically converts tables to stacked cards on mobile:
-- Detects viewport size
-- On mobile (< 768px): Renders data as card rows instead of table columns
-- On desktop (≥ 768px): Renders as normal HTML table
-- Preserves sorting, filtering, and selection functionality
+### New Calculator Flow
 
-#### B. Update ReferralManagement.tsx
-- Import and use the responsive table wrapper
-- Define column configuration for mobile card layout
-- Each referral renders as a stacked card with:
-  - Name + Type (badge)
-  - Email + Family status (side-by-side)
-  - Status dropdown (full-width on mobile, dropdown on desktop)
-  - Date + Action buttons
+1. **Select Language School** (dropdown):
+   - AlphaAktiv (Heidelberg)
+   - F+U Academy (Heidelberg)
+   - KAPITO (Munster)
+   - GO Academy (Dusseldorf)
+   - VICTORIA Academy (Berlin)
 
-#### C. Update PayoutsManagement.tsx
-- Same responsive table approach
-- Card layout shows: Amount + Status badge, Date, Action buttons
-- Summary cards (pending/paid totals) stack vertically on mobile (already correct)
+2. **Select Course Duration** (slider: 1-52 weeks, default 52)
 
-#### D. Update layouts.css
-- Add `.responsive-table-card` class for mobile styling
-- Add `.responsive-table-header` for card header rows on mobile
-- Ensure proper spacing and tap-friendly buttons (44px minimum)
-- Remove unnecessary horizontal padding on mobile
+3. **Select Accommodation Type** (per school -- options vary):
+   - Single room (central/non-central)
+   - Double room
+   - Shared room
+   - Host family (half-board / breakfast only)
+   - Private apartment
 
-**Key Technical Details**:
+4. **Toggle Options**:
+   - Health insurance (short-term 28 EUR/mo vs long-term 125 EUR/mo)
+   - Mobile/Internet (O2 unlimited 29.99 EUR/mo)
+   - Deutschlandticket (58 EUR/mo)
+   - Visa fee (75 EUR one-time)
+   - Food budget (slider: 150-250 EUR/mo)
+
+5. **Results Table**: Itemized annual breakdown with monthly average
+
+### Data Structure (new `src/lib/language-school-data.ts`)
+
+Each school object contains:
+- Name, city (AR + EN)
+- Course pricing tiers (short-term vs long-term per-week rates)
+- Registration fee (one-time)
+- Accommodation options with weekly rates (short vs long term)
+- Accommodation deposit & admin fees
+
+Verified data from the user's message will be encoded exactly as provided.
+
+### Files to Create
+| File | Purpose |
+|------|---------|
+| `src/lib/language-school-data.ts` | All verified school pricing data |
+
+### Files to Modify
+| File | Changes |
+|------|---------|
+| `src/components/calculator/CostCalculator.tsx` | Complete rewrite: school selector, duration slider, dynamic accommodation options per school, new calculation logic |
+| `src/lib/cost-data.ts` | Keep existing (not removed), but no longer used by the main calculator |
+| `public/locales/ar/resources.json` | Add new translation keys for schools, accommodation types, toggles |
+| `public/locales/en/resources.json` | Same English translations |
+
+### Calculation Logic
+
+```text
+Total = Course Cost + Registration Fee
+      + (Accommodation weekly rate x weeks)
+      + Accommodation deposit + admin fee
+      + (Health insurance monthly x months)
+      + (Mobile monthly x months)
+      + (Transport monthly x months)
+      + (Food monthly x months)
+      + Visa fee
+```
+
+Where `months = weeks / 4.33` (rounded).
+
+---
+
+## Feature 2: Lebenslauf (CV) Builder
+
+### Overview
+
+A new tool page at `/resources/lebenslauf-builder` where students fill in sections of a German-style CV, see a live preview, and download as PDF -- all client-side (no server needed).
+
+### Scope (MVP -- Client-Side Only)
+
+- **3 Templates**: Academic CV, German Standard (reverse-chronological), Europass-compatible
+- **Form sections**: Personal info (with optional photo upload), Education (repeatable), Experience (repeatable), Skills/Languages (CEFR levels), Certificates, Volunteer work, References
+- **Live preview** panel beside the form (desktop) or below (mobile)
+- **PDF export** using browser `window.print()` with `@media print` CSS (no external library needed for MVP -- cleanest output)
+- **Bilingual UI** (AR/EN) with RTL support
+- **Draft save** to localStorage
+- **Validation**: email format, date consistency, required fields
+
+### Templates Design
+
+All templates render as styled HTML with print-optimized CSS:
+- **Academic**: Two-column, research/publications prominent
+- **German Standard**: Single-column, reverse-chronological, optional photo top-right
+- **Europass**: Europass-style layout with skill bars
+
+### User Flow
+
+1. Landing: Choose template + language of CV content (DE/EN/AR)
+2. Fill sections via accordion/tab form (click to expand)
+3. Live preview updates as you type
+4. Add/remove repeatable entries (education, experience)
+5. Reorder sections via up/down buttons
+6. Click "Download PDF" -- opens print dialog with print-optimized stylesheet
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/pages/LebenslaufBuilderPage.tsx` | Page wrapper with Header/Footer |
+| `src/components/lebenslauf/LebenslaufBuilder.tsx` | Main component: form + preview layout |
+| `src/components/lebenslauf/CVForm.tsx` | All form sections (personal, education, etc.) |
+| `src/components/lebenslauf/CVPreview.tsx` | Live preview renderer |
+| `src/components/lebenslauf/templates/AcademicTemplate.tsx` | Academic CV template |
+| `src/components/lebenslauf/templates/GermanStandardTemplate.tsx` | German standard template |
+| `src/components/lebenslauf/templates/EuropassTemplate.tsx` | Europass template |
+| `src/components/lebenslauf/types.ts` | TypeScript interfaces for CV data |
+| `src/components/lebenslauf/useLebenslauf.ts` | Hook for state management + localStorage persistence |
+| `src/styles/cv-print.css` | Print-only stylesheet for PDF export |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Add route `/resources/lebenslauf-builder` |
+| `src/pages/ResourcesPage.tsx` | Add 4th tool card for Lebenslauf Builder |
+| `public/locales/ar/resources.json` | Add `lebenslaufBuilder` translation keys |
+| `public/locales/en/resources.json` | Same in English |
+
+### CV Data Schema (TypeScript)
+
 ```typescript
-// Mobile detection and conditional rendering
-const isMobile = window.innerWidth < 768;
-
-// Card layout for mobile
-{isMobile ? (
-  <div className="space-y-4">
-    {data.map(item => (
-      <div className="responsive-table-card">
-        {/* Card content */}
-      </div>
-    ))}
-  </div>
-) : (
-  <table className="w-full">
-    {/* Table content */}
-  </table>
-)}
+interface CVData {
+  template: 'academic' | 'german-standard' | 'europass';
+  contentLanguage: 'de' | 'en' | 'ar';
+  personal: {
+    firstName: string;
+    lastName: string;
+    photo?: string; // base64
+    email: string;
+    phone: string;
+    address: string;
+    birthDate?: string;
+    birthPlace?: string;
+    nationality?: string;
+    linkedin?: string;
+    github?: string;
+  };
+  education: Array<{
+    degree: string;
+    institution: string;
+    city: string;
+    country: string;
+    from: string;
+    to: string;
+    current: boolean;
+    details: string[];
+  }>;
+  experience: Array<{...}>;
+  publications: Array<{...}>; // academic template
+  certificates: Array<{...}>;
+  skills: {
+    languages: Array<{ name: string; level: string; exam?: string }>;
+    technical: string[];
+    other: string[];
+  };
+  volunteer: Array<{...}>;
+  references: Array<{...}>;
+  showPhoto: boolean;
+  showBirthDate: boolean;
+}
 ```
 
----
+### PDF Strategy
 
-### Issue 2: CORS Error for manifest.json
+Use `window.print()` with a dedicated print stylesheet that:
+- Hides the form panel and site chrome
+- Shows only the CV preview at A4 dimensions
+- Embeds proper fonts (Inter for Latin, Noto Sans Arabic for AR)
+- Sets margins to 15-20mm
+- Handles page breaks between sections
 
-**Problem**: Browser console shows non-blocking CORS error when loading `/manifest.json`.
-
-**Root Cause**: 
-- Strict CSP headers in `_headers` file don't explicitly allow manifest requests
-- manifest.json link in `index.html` may not have proper CORS attributes
-- Global `Cache-Control: no-store` on root is too aggressive
-
-**Solution**:
-
-#### A. Fix manifest.json Link in index.html
-- Add `crossorigin="use-credentials"` attribute to manifest link
-- Ensures proper CORS handling for the manifest resource
-
-#### B. Update public/_headers
-- Add explicit `/manifest.json` rule with proper headers:
-  - Allow CORS: `Access-Control-Allow-Origin: *`
-  - Cache: `Cache-Control: public, max-age=86400` (1 day, safe for manifest changes)
-  - Content-Type: `Content-Type: application/manifest+json`
-- Keep strict CSP for HTML, assets, and other resources
-
-#### C. Ensure manifest.json is Valid
-- Verify all icon paths exist and are accessible
-- Check JSON syntax is valid
-- Ensure icon sizes match declared sizes
-
-**Updated _headers structure**:
-```
-/*
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: upgrade-insecure-requests
-  Cache-Control: no-store
-
-/manifest.json
-  Cache-Control: public, max-age=86400
-  Access-Control-Allow-Origin: *
-  Content-Type: application/manifest+json
-
-/index.html
-  Cache-Control: no-store
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/lovable-uploads/*
-  Cache-Control: public, max-age=31536000, immutable
-```
+This approach produces the highest-fidelity PDF with zero external dependencies.
 
 ---
 
-### Implementation Order & Files to Modify
+## Implementation Order
 
-**Phase 1: Fix CORS (5 minutes)**
-1. Update `public/_headers` - Add manifest.json section
-2. Update `index.html` - Add crossorigin attribute to manifest link
-
-**Phase 2: Fix Mobile Tables (30-40 minutes)**
-1. Create `src/components/ui/responsive-table.tsx`
-2. Update `src/components/admin/ReferralManagement.tsx` - Implement responsive layout
-3. Update `src/components/admin/PayoutsManagement.tsx` - Implement responsive layout
-4. Update `src/styles/layouts.css` - Add mobile card styling
-
-**Files to Create**:
-- `src/components/ui/responsive-table.tsx` (new responsive table component)
-
-**Files to Modify**:
-- `public/_headers` (CORS fix)
-- `index.html` (manifest crossorigin)
-- `src/components/admin/ReferralManagement.tsx` (mobile responsive)
-- `src/components/admin/PayoutsManagement.tsx` (mobile responsive)
-- `src/styles/layouts.css` (mobile card styles)
+1. **Cost Calculator data file** (`language-school-data.ts`)
+2. **Cost Calculator component** rewrite
+3. **Translation files** update (cost calculator keys)
+4. **Lebenslauf types + hook**
+5. **CV templates** (3 files)
+6. **CV form + preview components**
+7. **Lebenslauf page + routing**
+8. **Translation files** update (lebenslauf keys)
+9. **Print stylesheet**
+10. **Resources page** update (add 4th tool card)
 
 ---
 
-### Testing Checklist After Implementation
+## What Will NOT Change
 
-**Desktop (1920x1080)**:
-- [ ] Admin referral table displays as proper HTML table
-- [ ] Admin payout table displays as proper HTML table
-- [ ] All columns visible and aligned
-- [ ] Filters and dropdowns work correctly
-
-**Mobile (390x844 - iPhone 12)**:
-- [ ] Referral table converts to stacked cards
-- [ ] Payout table converts to stacked cards
-- [ ] No horizontal scroll
-- [ ] All buttons are tap-friendly (44px minimum height)
-- [ ] Text is readable and properly sized
-- [ ] Card spacing is consistent
-
-**CORS / Network**:
-- [ ] No console errors related to manifest.json
-- [ ] manifest.json loads successfully (200 status)
-- [ ] PWA installation works on mobile
-- [ ] Browser doesn't show CORS warnings
-
----
-
-### Acceptance Criteria
-
-✅ **Mobile responsiveness**:
-- Admin dashboard tables don't overflow on mobile
-- Data is readable and actionable on all viewport sizes
-- Touch targets are 44px minimum height
-
-✅ **CORS compliance**:
-- manifest.json loads without console errors
-- PWA manifests correctly on iOS and Android
-- No CSP violations
-
-✅ **Brand consistency**:
-- RTL layout maintained on mobile cards
-- Color scheme and spacing follow existing design
-- No disruption to existing functionality
-
-✅ **Performance**:
-- No layout shift when switching viewports
-- Mobile cards render efficiently (no animation lag)
-- Responsive detection doesn't impact load time
+- Navigation order, logo, student portal button
+- Existing currency converter and bagrut calculator
+- RTL/LTR support architecture
+- Brand colors and design language
+- Any dashboard functionality
 
