@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle
+  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,6 +21,8 @@ const tabs = [
   { id: 'influencers', label: 'الوكلاء', icon: UserCheck },
   { id: 'checklist', label: 'قائمة المتطلبات', icon: ClipboardCheck },
   { id: 'contacts', label: 'رسائل التواصل', icon: Mail },
+  { id: 'referrals', label: 'الإحالات', icon: Share2 },
+  { id: 'payouts', label: 'المكافآت والصرف', icon: Wallet },
   { id: 'security', label: 'الأمان', icon: Shield },
   { id: 'audit', label: 'سجل النشاط', icon: ScrollText },
 ];

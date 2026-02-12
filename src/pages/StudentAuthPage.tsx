@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
@@ -28,6 +28,8 @@ const StudentAuthPage = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refId = searchParams.get('ref');
 
   const redirectByRole = async (userId: string) => {
     const { data: roles } = await (supabase as any)
@@ -113,6 +115,7 @@ const StudentAuthPage = () => {
               full_name: fullName,
               phone_number: phoneNumber,
               country: country,
+              ...(refId ? { influencer_id: refId } : {}),
             },
             emailRedirectTo: `${window.location.origin}/student-dashboard`
           }

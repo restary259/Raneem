@@ -7,6 +7,9 @@ import ServicesOverview from '@/components/dashboard/ServicesOverview';
 import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
 import ChecklistTracker from '@/components/dashboard/ChecklistTracker';
+import ReferralForm from '@/components/dashboard/ReferralForm';
+import RewardsPanel from '@/components/dashboard/RewardsPanel';
+import WelcomeCard from '@/components/dashboard/WelcomeCard';
 
 interface DashboardMainContentProps {
   activeTab: string;
@@ -24,7 +27,12 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
   const renderContent = () => {
     switch (activeTab) {
       case 'checklist':
-        return <ChecklistTracker userId={user.id} />;
+        return (
+          <>
+            <WelcomeCard fullName={profile.full_name} userId={user.id} />
+            <ChecklistTracker userId={user.id} />
+          </>
+        );
       case 'overview':
         return (
           <StudentProfile 
@@ -39,6 +47,10 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
         return <PaymentsSummary userId={user.id} />;
       case 'documents':
         return <DocumentsManager userId={user.id} />;
+      case 'referrals':
+        return <ReferralForm userId={user.id} />;
+      case 'rewards':
+        return <RewardsPanel userId={user.id} />;
       default:
         return null;
     }

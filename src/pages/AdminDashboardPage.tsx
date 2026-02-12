@@ -11,6 +11,8 @@ import ChecklistManagement from '@/components/admin/ChecklistManagement';
 import ContactsManager from '@/components/admin/ContactsManager';
 import SecurityPanel from '@/components/admin/SecurityPanel';
 import AuditLog from '@/components/admin/AuditLog';
+import ReferralManagement from '@/components/admin/ReferralManagement';
+import PayoutsManagement from '@/components/admin/PayoutsManagement';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -155,6 +157,10 @@ const AdminDashboardPage = () => {
         return <ChecklistManagement items={checklistItems} onRefresh={fetchAllData} />;
       case 'contacts':
         return <ContactsManager contacts={contacts} onRefresh={fetchAllData} />;
+      case 'referrals':
+        return <ReferralManagement onRefresh={fetchAllData} />;
+      case 'payouts':
+        return <PayoutsManagement onRefresh={fetchAllData} />;
       case 'security':
         return <SecurityPanel loginAttempts={loginAttempts} />;
       case 'audit':
