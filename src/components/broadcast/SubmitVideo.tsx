@@ -7,75 +7,40 @@ import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 const SubmitVideo: React.FC = () => {
     const { toast } = useToast();
+    const { t } = useTranslation('broadcast');
     const [name, setName] = useState('');
     const [university, setUniversity] = useState('');
     const [videoLink, setVideoLink] = useState('');
 
     const { mutate, isPending } = useMutation({
         mutationFn: async (values: { name: string, university: string, videoLink: string }) => {
-            console.log('🚀 Submitting video form:', values);
-            
             const result = await supabase.functions.invoke('send-email', {
-                body: {
-                    form_source: 'Broadcast Video Submission Form',
-                    ...values,
-                },
+                body: { form_source: 'Broadcast Video Submission Form', ...values },
             });
-
-            console.log('📧 Email function result:', result);
-
-            if (result.error) {
-                console.error('❌ Supabase function error:', result.error);
-                throw new Error(`Function error: ${result.error.message}`);
-            }
-
-            if (result.data?.error) {
-                console.error('❌ Email function returned error:', result.data.error);
-                throw new Error(result.data.error);
-            }
-
-            if (!result.data?.success) {
-                console.error('❌ Email function failed without specific error');
-                throw new Error('Email sending failed');
-            }
-
-            console.log('✅ Email sent successfully:', result.data);
+            if (result.error) throw new Error(`Function error: ${result.error.message}`);
+            if (result.data?.error) throw new Error(result.data.error);
+            if (!result.data?.success) throw new Error('Email sending failed');
             return result.data;
         },
-        onSuccess: (data) => {
-            console.log('✅ Video form submitted successfully:', data);
-            toast({
-                title: "تم إرسال الفيديو بنجاح! ✅",
-                description: "شكراً لمشاركتك. سنراجعه قريباً.",
-            });
-            setName('');
-            setUniversity('');
-            setVideoLink('');
+        onSuccess: () => {
+            toast({ title: t('broadcastPage.submitSuccess'), description: t('broadcastPage.submitSuccessDesc') });
+            setName(''); setUniversity(''); setVideoLink('');
         },
         onError: (error) => {
-            console.error('❌ Video form submission failed:', error);
-            toast({
-                variant: "destructive",
-                title: "حدث خطأ ❌",
-                description: `فشل إرسال الفيديو: ${error.message}. الرجاء المحاولة مرة أخرى.`,
-            });
+            toast({ variant: "destructive", title: t('broadcastPage.submitError'), description: t('broadcastPage.submitErrorDesc', { error: error.message }) });
         },
     });
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!name || !university || !videoLink) {
-            toast({
-                variant: 'destructive',
-                title: 'بيانات ناقصة',
-                description: 'الرجاء ملء حقول الاسم والجامعة ورابط الفيديو.',
-            });
+            toast({ variant: 'destructive', title: t('broadcastPage.missingFields'), description: t('broadcastPage.missingFieldsDesc') });
             return;
         }
-        console.log('📝 Video form submitted with values:', { name, university, videoLink });
         mutate({ name, university, videoLink });
     };
 
@@ -84,44 +49,42 @@ const SubmitVideo: React.FC = () => {
             <div className="container">
                 <Card className="max-w-2xl mx-auto">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">هل لديك لحظة مميزة تريد مشاركتها؟</CardTitle>
-                        <CardDescription>شاركنا قصة نجاحك أو تجربتك لتلهم الآخرين</CardDescription>
+                        <CardTitle className="text-2xl">{t('broadcastPage.submitTitle')}</CardTitle>
+                        <CardDescription>{t('broadcastPage.submitDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col gap-4">
                             <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white w-full" asChild>
                                 <a href="https://wa.me/972524061225" target="_blank" rel="noopener noreferrer">
-                                    أرسل لنا عبر واتساب
+                                    {t('broadcastPage.sendWhatsapp')}
                                 </a>
                             </Button>
                             <div className="relative my-4">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t" />
-                                </div>
+                                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
                                 <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-card px-2 text-muted-foreground">أو</span>
+                                    <span className="bg-card px-2 text-muted-foreground">{t('broadcastPage.or')}</span>
                                 </div>
                             </div>
                             <form className="space-y-4 text-right" onSubmit={handleSubmit}>
                                 <div className="space-y-2">
-                                    <Label htmlFor="name-sv">الاسم</Label>
-                                    <Input id="name-sv" placeholder="اسمك الكامل" value={name} onChange={e => setName(e.target.value)} />
+                                    <Label htmlFor="name-sv">{t('broadcastPage.nameLabel')}</Label>
+                                    <Input id="name-sv" placeholder={t('broadcastPage.namePlaceholder')} value={name} onChange={e => setName(e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="university-sv">الجامعة</Label>
-                                    <Input id="university-sv" placeholder="جامعتك الحالية" value={university} onChange={e => setUniversity(e.target.value)} />
+                                    <Label htmlFor="university-sv">{t('broadcastPage.universityLabel')}</Label>
+                                    <Input id="university-sv" placeholder={t('broadcastPage.universityPlaceholder')} value={university} onChange={e => setUniversity(e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="videoLink-sv">رابط الفيديو (يوتيوب, ...)</Label>
-                                    <Input id="videoLink-sv" placeholder="https://youtube.com/..." value={videoLink} onChange={e => setVideoLink(e.target.value)} />
+                                    <Label htmlFor="videoLink-sv">{t('broadcastPage.videoLinkLabel')}</Label>
+                                    <Input id="videoLink-sv" placeholder={t('broadcastPage.videoLinkPlaceholder')} value={videoLink} onChange={e => setVideoLink(e.target.value)} />
                                 </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="videoFile-sv">أو ارفع ملف الفيديو</Label>
+                                <div className="space-y-2">
+                                    <Label htmlFor="videoFile-sv">{t('broadcastPage.uploadLabel')}</Label>
                                     <Input id="videoFile-sv" type="file" accept="video/*" className="file:ml-4 file:font-sans" disabled />
-                                    <p className="text-xs text-muted-foreground">الحد الأقصى: 50 ميجابايت (غير متاح حاليًا)</p>
+                                    <p className="text-xs text-muted-foreground">{t('broadcastPage.uploadLimit')}</p>
                                 </div>
                                 <Button type="submit" className="w-full" disabled={isPending}>
-                                  {isPending ? "جار الإرسال... ⏳" : "إرسال الفيديو"}
+                                    {isPending ? t('broadcastPage.submitting') : t('broadcastPage.submitButton')}
                                 </Button>
                             </form>
                         </div>
