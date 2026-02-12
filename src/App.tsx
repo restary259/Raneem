@@ -17,6 +17,7 @@ import StudentAuthPage from "./pages/StudentAuthPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
+import InAppBrowserBanner from "./components/common/InAppBrowserBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -76,6 +77,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <OfflineIndicator />
+          <InAppBrowserBanner />
           <Suspense fallback={<div />}>
             <Routes>
               <Route path="/" element={<Index />} />

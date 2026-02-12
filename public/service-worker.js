@@ -1,5 +1,5 @@
 
-const CACHE_VERSION = '2.0.0';
+const CACHE_VERSION = '3.0.0';
 const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
 const AI_CACHE = 'darb-ai-cache';
 const DOCS_CACHE = 'darb-docs-cache';
@@ -102,6 +102,11 @@ self.addEventListener('fetch', event => {
 
   if (request.method !== 'GET') return;
 
+  // NEVER cache Supabase API requests (auth, database, storage API)
+  if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in')) {
+    return; // Let browser handle directly
+  }
+
   // Google Fonts -> font cache
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
     event.respondWith(
@@ -127,14 +132,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Navigation requests
+  // Navigation requests — NETWORK ONLY (never cache HTML)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).then(resp => {
-        const clone = resp.clone();
-        caches.open(STATIC_CACHE).then(c => c.put(request, clone));
-        return resp;
-      }).catch(() => caches.match(request).then(c => c || caches.match(OFFLINE_URL)))
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
