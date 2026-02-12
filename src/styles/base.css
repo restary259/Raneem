@@ -100,6 +100,14 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
   /* ===== Responsive Media ===== */
   img, video, iframe, table, pre, code, svg {
     max-width: 100%;
