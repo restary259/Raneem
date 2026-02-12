@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DollarSign } from 'lucide-react';
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'معلّق',
+  approved: 'تمت الموافقة',
+  paid: 'مدفوع',
+  cancelled: 'ملغى',
+};
 
 const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { toast } = useToast();
   const [rewards, setRewards] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
+  const isMobile = useIsMobile();
 
   const fetchRewards = async () => {
     const { data } = await (supabase as any)
@@ -45,11 +54,14 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   const filtered = filter === 'all' ? rewards : rewards.filter(r => r.status === filter);
 
-  const STATUS_LABELS: Record<string, string> = {
-    pending: 'معلّق',
-    approved: 'تمت الموافقة',
-    paid: 'مدفوع',
-    cancelled: 'ملغى',
+  const ActionButtons = ({ reward }: { reward: any }) => {
+    if (reward.status === 'paid' || reward.status === 'cancelled') return null;
+    return (
+      <div className="flex gap-2">
+        <Button size="sm" variant="default" className="min-h-[44px] sm:min-h-0" onClick={() => updateRewardStatus(reward.id, 'paid')}>صرف</Button>
+        <Button size="sm" variant="destructive" className="min-h-[44px] sm:min-h-0" onClick={() => updateRewardStatus(reward.id, 'cancelled')}>إلغاء</Button>
+      </div>
+    );
   };
 
   return (
@@ -80,44 +92,63 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         </SelectContent>
       </Select>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-3 text-start font-semibold">المبلغ</th>
-                  <th className="px-4 py-3 text-start font-semibold">الحالة</th>
-                  <th className="px-4 py-3 text-start font-semibold">تاريخ الطلب</th>
-                  <th className="px-4 py-3 text-start font-semibold">إجراء</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(r => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                        {STATUS_LABELS[r.status] || r.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString('ar')}</td>
-                    <td className="px-4 py-3">
-                      {r.status !== 'paid' && r.status !== 'cancelled' && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="default" onClick={() => updateRewardStatus(r.id, 'paid')}>صرف</Button>
-                          <Button size="sm" variant="destructive" onClick={() => updateRewardStatus(r.id, 'cancelled')}>إلغاء</Button>
-                        </div>
-                      )}
-                    </td>
+      {isMobile ? (
+        <div className="space-y-3">
+          {filtered.map(r => (
+            <Card key={r.id} className="overflow-hidden">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-base">{Number(r.amount).toLocaleString()} ₪</span>
+                  <Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                    {STATUS_LABELS[r.status] || r.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(r.created_at).toLocaleDateString('ar')}
+                  </span>
+                  <ActionButtons reward={r} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">لا توجد مكافآت</p>}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-3 text-start font-semibold">المبلغ</th>
+                    <th className="px-4 py-3 text-start font-semibold">الحالة</th>
+                    <th className="px-4 py-3 text-start font-semibold">تاريخ الطلب</th>
+                    <th className="px-4 py-3 text-start font-semibold">إجراء</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">لا توجد مكافآت</p>}
-          </div>
-        </CardContent>
-      </Card>
+                </thead>
+                <tbody>
+                  {filtered.map(r => (
+                    <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                      <td className="px-4 py-3">
+                        <Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                          {STATUS_LABELS[r.status] || r.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString('ar')}</td>
+                      <td className="px-4 py-3">
+                        <ActionButtons reward={r} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">لا توجد مكافآت</p>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
