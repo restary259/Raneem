@@ -354,6 +354,140 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_milestones: {
+        Row: {
+          achieved_at: string
+          id: string
+          milestone_type: string
+          notified: boolean
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          id?: string
+          milestone_type: string
+          notified?: boolean
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          id?: string
+          milestone_type?: string
+          notified?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          is_family: boolean
+          notes: string | null
+          referred_city: string | null
+          referred_country: string | null
+          referred_dob: string | null
+          referred_email: string | null
+          referred_gender: string | null
+          referred_german_level: string | null
+          referred_name: string
+          referred_phone: string | null
+          referred_student_id: string | null
+          referrer_id: string
+          referrer_type: string
+          status: string
+          terms_accepted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_family?: boolean
+          notes?: string | null
+          referred_city?: string | null
+          referred_country?: string | null
+          referred_dob?: string | null
+          referred_email?: string | null
+          referred_gender?: string | null
+          referred_german_level?: string | null
+          referred_name: string
+          referred_phone?: string | null
+          referred_student_id?: string | null
+          referrer_id: string
+          referrer_type?: string
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_family?: boolean
+          notes?: string | null
+          referred_city?: string | null
+          referred_country?: string | null
+          referred_dob?: string | null
+          referred_email?: string | null
+          referred_gender?: string | null
+          referred_german_level?: string | null
+          referred_name?: string
+          referred_phone?: string | null
+          referred_student_id?: string | null
+          referrer_id?: string
+          referrer_type?: string
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rewards: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          payout_requested_at: string | null
+          referral_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payout_requested_at?: string | null
+          referral_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payout_requested_at?: string | null
+          referral_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           created_at: string
