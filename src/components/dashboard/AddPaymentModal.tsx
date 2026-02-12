@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface Service {
   id: string;
@@ -25,6 +25,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
 
   useEffect(() => {
     fetchServices();
@@ -43,19 +44,10 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
     }
   };
 
-  const serviceNames: Record<string, string> = {
-    university_application: 'تقديم الجامعة',
-    visa_assistance: 'مساعدة الفيزا',
-    accommodation: 'السكن',
-    scholarship: 'المنح الدراسية',
-    language_support: 'دعم اللغة',
-    travel_booking: 'حجز السفر',
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) {
-      toast({ variant: "destructive", title: "خطأ", description: "يرجى إدخال مبلغ صحيح" });
+      toast({ variant: "destructive", title: t('common.error'), description: t('payments.invalidAmount') });
       return;
     }
 
@@ -72,10 +64,10 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
         });
 
       if (error) throw error;
-      toast({ title: "تمت الإضافة بنجاح", description: "تم إضافة الدفعة الجديدة" });
+      toast({ title: t('payments.addSuccess'), description: t('payments.addSuccessDesc') });
       onSuccess();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "خطأ في الإضافة", description: error.message });
+      toast({ variant: "destructive", title: t('payments.addError'), description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -84,26 +76,26 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({ userId, onSuccess }) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>الخدمة (اختياري)</Label>
+        <Label>{t('payments.serviceOptional')}</Label>
         <Select value={serviceId} onValueChange={setServiceId}>
-          <SelectTrigger><SelectValue placeholder="اختر الخدمة (اختياري)" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={t('payments.selectServiceOptional')} /></SelectTrigger>
           <SelectContent>
             {services.map((s) => (
-              <SelectItem key={s.id} value={s.id}>{serviceNames[s.service_type] || s.service_type}</SelectItem>
+              <SelectItem key={s.id} value={s.id}>{t(`services.types.${s.service_type}`, s.service_type)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>المبلغ</Label>
+        <Label>{t('payments.amount')}</Label>
         <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" step="0.01" min="0" required />
       </div>
       <div className="space-y-2">
-        <Label>ملاحظات</Label>
-        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات اختيارية" rows={3} />
+        <Label>{t('payments.notes')}</Label>
+        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('payments.optionalNotes')} rows={3} />
       </div>
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? "جار الإضافة..." : "إضافة الدفعة"}
+        {isLoading ? t('payments.adding') : t('payments.addPaymentBtn')}
       </Button>
     </form>
   );

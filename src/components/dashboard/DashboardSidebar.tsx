@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { User as UserIcon, FileText, Settings, ClipboardCheck, UserPlus, Gift } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Tab {
   id: string;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
@@ -15,13 +15,15 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabChange }) => {
+  const { t } = useTranslation('dashboard');
+
   const tabs: Tab[] = [
-    { id: 'checklist', label: 'قائمة المتطلبات', icon: ClipboardCheck },
-    { id: 'overview', label: 'نظرة عامة', icon: UserIcon },
-    { id: 'services', label: 'الخدمات', icon: Settings },
-    { id: 'documents', label: 'المستندات', icon: FileText },
-    { id: 'referrals', label: 'إحالة صديق', icon: UserPlus },
-    { id: 'rewards', label: 'مكافآتي', icon: Gift },
+    { id: 'checklist', labelKey: 'sidebar.checklist', icon: ClipboardCheck },
+    { id: 'overview', labelKey: 'sidebar.overview', icon: UserIcon },
+    { id: 'services', labelKey: 'sidebar.services', icon: Settings },
+    { id: 'documents', labelKey: 'sidebar.documents', icon: FileText },
+    { id: 'referrals', labelKey: 'sidebar.referrals', icon: UserPlus },
+    { id: 'rewards', labelKey: 'sidebar.rewards', icon: Gift },
   ];
 
   return (
@@ -42,7 +44,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
                   }`}
                 >
                   <Icon className="h-5 w-5" />
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               );
             })}

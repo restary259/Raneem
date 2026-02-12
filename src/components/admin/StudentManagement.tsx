@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,20 +7,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Download, Edit2, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  eligible: { label: 'مؤهل', color: 'bg-emerald-100 text-emerald-800' },
-  ineligible: { label: 'غير مؤهل', color: 'bg-red-100 text-red-800' },
-  converted: { label: 'محوّل', color: 'bg-blue-100 text-blue-800' },
-  paid: { label: 'مدفوع', color: 'bg-green-100 text-green-800' },
-  nurtured: { label: 'متابَع', color: 'bg-purple-100 text-purple-800' },
-};
+interface Student {
+  id: string;
+  created_at: string;
+  full_name: string;
+  email: string;
+  student_status: string;
+  influencer_id: string | null;
+}
+
+interface Influencer {
+  id: string;
+  full_name: string;
+}
+
+interface ChecklistItem {
+  id: string;
+  item_name: string;
+}
+
+interface StudentChecklist {
+  id: string;
+  student_id: string;
+  checklist_item_id: string;
+  is_completed: boolean;
+}
 
 interface StudentManagementProps {
-  students: any[];
-  influencers: any[];
-  checklistItems: any[];
-  studentChecklists: any[];
+  students: Student[];
+  influencers: Influencer[];
+  checklistItems: ChecklistItem[];
+  studentChecklists: StudentChecklist[];
   onRefresh: () => void;
 }
 
@@ -30,7 +49,10 @@ const downloadCSV = (rows: any[], fileName = "export.csv") => {
   const csv = [header.join(","), ...rows.map(row => header.map(f => `"${String(row[f] ?? "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = fileName; a.click();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
   window.URL.revokeObjectURL(url);
 };
 
@@ -41,6 +63,9 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
   const [editStatus, setEditStatus] = useState('');
   const [editInfluencer, setEditInfluencer] = useState('');
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
+
+  const statusKeys = ['eligible', 'ineligible', 'converted', 'paid', 'nurtured'];
 
   const getChecklistProgress = (studentId: string) => {
     const total = checklistItems.length;
@@ -59,62 +84,49 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
     const updates: any = {};
     if (editStatus) updates.student_status = editStatus;
     if (editInfluencer) updates.influencer_id = editInfluencer === 'none' ? null : editInfluencer;
-
     const { error } = await (supabase as any).from('profiles').update(updates).eq('id', studentId);
-    if (error) {
-      toast({ variant: 'destructive', title: 'خطأ', description: error.message });
-    } else {
-      toast({ title: 'تم التحديث بنجاح' });
-      setEditingId(null);
-      onRefresh();
-    }
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
+    else { toast({ title: t('admin.students.updateSuccess') }); setEditingId(null); onRefresh(); }
   };
 
-  const startEdit = (s: any) => {
-    setEditingId(s.id);
-    setEditStatus(s.student_status || 'eligible');
-    setEditInfluencer(s.influencer_id || 'none');
-  };
+  const startEdit = (s: any) => { setEditingId(s.id); setEditStatus(s.student_status || 'eligible'); setEditInfluencer(s.influencer_id || 'none'); };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="ps-10" placeholder="بحث بالاسم أو البريد..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input className="ps-10" placeholder={t('admin.students.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="الحالة" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder={t('admin.students.statusFilter')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">الكل</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+            <SelectItem value="all">{t('admin.students.all')}</SelectItem>
+            {statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.students.statuses.${k}`, { defaultValue: k }))}</SelectItem>)}
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={() => downloadCSV(filteredStudents, 'students.csv')}>
-          <Download className="h-4 w-4 me-2" />تصدير CSV
+          <Download className="h-4 w-4 me-2" />{t('admin.students.exportCSV')}
         </Button>
       </div>
-
       <div className="bg-background rounded-xl border shadow-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-start font-semibold">الاسم</th>
-              <th className="px-4 py-3 text-start font-semibold">البريد</th>
-              <th className="px-4 py-3 text-start font-semibold">الحالة</th>
-              <th className="px-4 py-3 text-start font-semibold">التقدم</th>
-              <th className="px-4 py-3 text-start font-semibold">الوكيل</th>
-              <th className="px-4 py-3 text-start font-semibold">التسجيل</th>
-              <th className="px-4 py-3 text-start font-semibold">إجراءات</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredStudents.map((s: any) => {
               const progress = getChecklistProgress(s.id);
               const isEditing = editingId === s.id;
-              const statusInfo = STATUS_LABELS[s.student_status] || STATUS_LABELS.eligible;
               const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
-
               return (
                 <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{s.full_name}</td>
@@ -123,34 +135,20 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                     {isEditing ? (
                       <Select value={editStatus} onValueChange={setEditStatus}>
                         <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.students.statuses.${k}`, { defaultValue: k }))}</SelectItem>)}</SelectContent>
                       </Select>
                     ) : (
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.color}`}>
-                        {statusInfo.label}
-                      </span>
+                      <Badge variant="secondary">{String(t(`admin.students.statuses.${s.student_status}`, { defaultValue: s.student_status }))}</Badge>
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Progress value={progress} className="h-2 w-20" />
-                      <span className="text-xs text-muted-foreground">{progress}%</span>
-                    </div>
-                  </td>
+                  <td className="px-4 py-3"><div className="flex items-center gap-2"><Progress value={progress} className="h-2 w-20" /><span className="text-xs text-muted-foreground">{progress}%</span></div></td>
                   <td className="px-4 py-3">
                     {isEditing ? (
                       <Select value={editInfluencer} onValueChange={setEditInfluencer}>
                         <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">بدون</SelectItem>
-                          {influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent><SelectItem value="none">{t('admin.students.none')}</SelectItem>{influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}</SelectContent>
                       </Select>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">{assignedInfluencer?.full_name || '—'}</span>
-                    )}
+                    ) : (<span className="text-muted-foreground text-xs">{assignedInfluencer?.full_name || '—'}</span>)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{s.created_at?.split('T')[0]}</td>
                   <td className="px-4 py-3">
@@ -159,16 +157,14 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 text-green-600" /></Button>
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setEditingId(null)}><X className="h-4 w-4 text-red-600" /></Button>
                       </div>
-                    ) : (
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>
-                    )}
+                    ) : (<Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>)}
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">لا يوجد طلاب</p>}
+        {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.students.noStudents')}</p>}
       </div>
     </div>
   );
