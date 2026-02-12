@@ -1,271 +1,175 @@
-# Comprehensive i18n Audit and Fix Plan
 
-## Audit Findings
 
-After scanning the entire codebase, here is the full picture of translation coverage:
+# Fix Majors Cards + Broadcast Translation + Full Site Translation Audit
 
-### GOOD -- Already using i18n (react-i18next)
+## Problem
 
-- All **public-facing pages**: Index, About, Services, Contact, Partners, Partnership, Resources, Broadcast, Educational Destinations, Educational Programs, Quiz, AI Advisor, Locations, Cost Calculator, Currency Converter, Bagrut Calculator, Lebenslauf Builder
-- All **public-facing components**: Header, Footer, DesktopNav, MobileNav, BottomNav, LanguageSwitcher, ChatWidget, PWAInstaller, CookieBanner, OfflineIndicator
-- **SEOHead** component with per-page meta titles/descriptions
+Two categories of untranslated content were found:
 
-### BAD -- Zero i18n (100% hardcoded Arabic strings)
+### 1. Majors Data (Critical)
+The entire `majorsData.ts` file (1211 lines, ~40+ majors) contains **Arabic-only content**. The `SubMajor` interface only has `nameAR` and `description` (Arabic) with no English equivalents. When the site is switched to English, all major cards and modal details still show Arabic text for:
+- Major names (`nameAR`)
+- Short descriptions (`description`)
+- Detailed descriptions (`detailedDescription`)
+- Duration, career prospects, requirements, suitableFor, requiredBackground, languageRequirements, careerOpportunities, arab48Notes
+- Category titles (`MajorCategory.title`)
 
-**Dashboard (16 files, ~50+ hardcoded strings):**
+Components affected: `MajorCard.tsx`, `MajorModal.tsx`, `SearchAndFilter.tsx`, `CategoryFilter.tsx`
 
-- `WelcomeCard.tsx` -- "مرحبا", "تابع تقدمك..."
-- `DashboardHeader.tsx` -- "لوحة التحكم الطلابية", "تسجيل الخروج", "العودة إلى الموقع", toast messages
-- `DashboardSidebar.tsx` -- 6 tab labels hardcoded in Arabic
-- `DashboardMainContent.tsx` -- section content
-- `ServicesOverview.tsx` -- "خدماتي", "إضافة خدمة", empty states
-- `DocumentsManager.tsx` -- titles, badges, placeholders, upload modal labels
-- `AddPaymentModal.tsx` -- form labels, placeholders
-- `AddServiceModal.tsx` -- form labels, select options
-- `ReferralForm.tsx` -- all form labels, select options (gender, German level, destination)
-- `ReferralTracker.tsx` -- status labels
-- `RewardsPanel.tsx` -- earnings labels
-- `PaymentsSummary.tsx` -- payment labels
-- `ChecklistTracker.tsx` -- checklist labels
-- `StudentProfile.tsx` -- profile labels
-
-**Admin (10 files, ~80+ hardcoded strings):**
-
-- `AdminLayout.tsx` -- 9 tab labels, "لوحة الإدارة", "العودة للموقع", "تسجيل الخروج"
-- `AdminOverview.tsx` -- stats cards, labels
-- `StudentManagement.tsx` -- table headers, actions
-- `InfluencerManagement.tsx` -- table headers, actions
-- `ChecklistManagement.tsx` -- form labels
-- `ContactsManager.tsx` -- table headers
-- `ReferralManagement.tsx` -- table headers
-- `PayoutsManagement.tsx` -- payment labels
-- `SecurityPanel.tsx` -- security labels
-- `AuditLog.tsx` -- log labels
-
-**Influencer Dashboard (3 files, ~20+ hardcoded strings):**
-
-- `EarningsPanel.tsx` -- earnings/status labels
-- `MediaHub.tsx` -- media labels
-- `ReferralLink.tsx` -- referral labels
-
-**CV Templates (3 files -- hardcoded English section headers):**
-
-- `GermanStandardTemplate.tsx` -- "Education", "Experience", "Skills", "Certificates", "Volunteer Work", "References", "Present"
-- `AcademicTemplate.tsx` -- same section headers + "Technical Skills", "Publications"
-- `EuropassTemplate.tsx` -- same + "Language Skills", "Digital & Other Skills", field labels like "Phone:", "Email:", "Address:", "Date of Birth:", "Nationality:"
-
-**Manifest (1 file -- Arabic only, no English):**
-
-- `manifest.json` -- name, short_name, description, shortcut names are all Arabic-only
-
-**Other hardcoded items found:**
-
-- 45 `aria-label` attributes in UI components (carousel, breadcrumb, pagination, sidebar) -- English-only, not translated
-- `InAppBrowserBanner.tsx` -- inline ternary (`isAr ? ... : ...`) instead of i18n
+### 2. Broadcast Page (Moderate)
+Multiple broadcast components have hardcoded Arabic strings:
+- **BroadcastVideoCard.tsx**: "مشاركة" (Share), "تم نسخ الرابط!" (Link copied), toast messages, date locale always Arabic
+- **VideoCategories.tsx**: Category names hardcoded ("نصائح الدراسة", "تجارب الطلبة", etc.), "الكل" (All) button
+- **HeroVideo.tsx**: "مشاهدة على يوتيوب" / "مشاهدة الفيديو" buttons
+- **SubmitVideo.tsx**: ~15 hardcoded Arabic strings (form labels, placeholders, toast messages, button text)
+- **data.ts**: All video titles, descriptions, country names are Arabic-only
+- **BroadcastCategory type**: Categories are Arabic string literals
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Create new translation namespace files
+### Phase 1: Add bilingual fields to majorsData
 
-Create two new namespace files for dashboard/admin/influencer content:
-
-
-| File                               | Purpose                                             |
-| ---------------------------------- | --------------------------------------------------- |
-| `public/locales/ar/dashboard.json` | All dashboard, admin, influencer strings in Arabic  |
-| `public/locales/en/dashboard.json` | All dashboard, admin, influencer strings in English |
-
-
-Add `'dashboard'` to the `ns` array in `src/i18n.ts`.
-
-### Phase 2: Dashboard components (16 files)
-
-Replace every hardcoded Arabic string with `t('key')` using the `dashboard` namespace.
-
-Example transformation for `DashboardHeader.tsx`:
-
-```
-Before: <h1>لوحة التحكم الطلابية</h1>
-After:  <h1>{t('dashboard:header.title')}</h1>
-```
-
-Files to modify:
-
-1. `WelcomeCard.tsx`
-2. `DashboardHeader.tsx`
-3. `DashboardSidebar.tsx`
-4. `DashboardMainContent.tsx`
-5. `ServicesOverview.tsx`
-6. `DocumentsManager.tsx`
-7. `AddPaymentModal.tsx`
-8. `AddServiceModal.tsx`
-9. `ReferralForm.tsx`
-10. `ReferralTracker.tsx`
-11. `RewardsPanel.tsx`
-12. `PaymentsSummary.tsx`
-13. `ChecklistTracker.tsx`
-14. `StudentProfile.tsx`
-
-### Phase 3: Admin components (10 files)
-
-Same approach for all admin components -- add `useTranslation('dashboard')` and replace hardcoded strings:
-
-1. `AdminLayout.tsx`
-2. `AdminOverview.tsx`
-3. `StudentManagement.tsx`
-4. `InfluencerManagement.tsx`
-5. `ChecklistManagement.tsx`
-6. `ContactsManager.tsx`
-7. `ReferralManagement.tsx`
-8. `PayoutsManagement.tsx`
-9. `SecurityPanel.tsx`
-10. `AuditLog.tsx`
-
-### Phase 4: Influencer dashboard (3 files)
-
-1. `EarningsPanel.tsx`
-2. `MediaHub.tsx`
-3. `ReferralLink.tsx`
-
-### Phase 5: CV Template section headers
-
-The CV templates have hardcoded English section headers ("Education", "Experience", etc.). These should adapt to the CV's `contentLanguage` property.
-
-Approach: Pass a lookup object based on `data.contentLanguage` to each template with all section header labels in DE/EN/AR.
-
-Files to modify:
-
-1. `GermanStandardTemplate.tsx`
-2. `AcademicTemplate.tsx`
-3. `EuropassTemplate.tsx`
-
-Add a shared `cvLabels` utility:
-
+**Update `SubMajor` interface** to add English fields:
 ```typescript
-// src/components/lebenslauf/cvLabels.ts
-export const cvLabels = {
-  de: { education: 'Bildung', experience: 'Berufserfahrung', ... },
-  en: { education: 'Education', experience: 'Experience', ... },
-  ar: { education: 'التعليم', experience: 'الخبرة العملية', ... },
-};
+export interface SubMajor {
+  id: string;
+  nameAR: string;
+  nameEN: string;        // NEW
+  nameDE?: string;
+  description: string;   // Arabic description
+  descriptionEN: string;  // NEW
+  detailedDescription?: string;
+  detailedDescriptionEN?: string;  // NEW
+  duration?: string;
+  durationEN?: string;    // NEW
+  // Same pattern for all text fields...
+}
 ```
 
-### Phase 6: Manifest localization note
-
-The `manifest.json` is Arabic-only. Since the Web App Manifest spec does not support dynamic localization (it's a static file), this is acceptable for an Arabic-primary PWA. No change needed.
-
-### Phase 7: aria-label cleanup
-
-The hardcoded `aria-label` strings in UI primitives (carousel, breadcrumb, pagination) are from shadcn/ui defaults. These are low-priority since they are generic navigation labels used by screen readers. No change for now -- can be addressed in a future accessibility pass.
-
----
-
-## Translation Key Structure (dashboard.json)
-
+**Update `MajorCategory` interface:**
+```typescript
+export interface MajorCategory {
+  id: string;
+  title: string;      // Arabic
+  titleEN: string;     // NEW
+  subMajors: SubMajor[];
+}
 ```
+
+**Add English content for all ~40 majors** in `majorsData.ts`. Each major needs English translations for: nameEN, descriptionEN, detailedDescriptionEN, durationEN, careerProspectsEN, requirementsEN, suitableForEN, requiredBackgroundEN, languageRequirementsEN, careerOpportunitiesEN, arab48NotesEN.
+
+### Phase 2: Create a bilingual data helper
+
+**Create `src/utils/majorLocale.ts`** -- a helper that picks the right field based on current language:
+```typescript
+export const getLocalizedMajor = (major: SubMajor, lang: string) => ({
+  ...major,
+  name: lang === 'en' ? major.nameEN : major.nameAR,
+  desc: lang === 'en' ? major.descriptionEN : major.description,
+  detailedDesc: lang === 'en' ? (major.detailedDescriptionEN || major.descriptionEN) : (major.detailedDescription || major.description),
+  // ... same for all fields
+});
+```
+
+### Phase 3: Update Major components
+
+**MajorCard.tsx** -- Use localized fields instead of `major.nameAR` / `major.description`:
+- Import `useTranslation` to get current language
+- Display `name` (localized) instead of `nameAR`
+- Display `desc` (localized) instead of `description`
+- Pass localized `categoryTitle` / `categoryTitleEN`
+
+**MajorModal.tsx** -- Same approach for all modal sections (description, suitableFor, requiredBackground, languageRequirements, careerOpportunities, requirements, arab48Notes, duration)
+
+**SearchAndFilter.tsx** -- Category filter buttons use localized titles; search works on both language fields
+
+**EducationalProgramsPage.tsx** -- When flattening majors, include localized category title
+
+### Phase 4: Broadcast page translation
+
+**Add keys to `public/locales/en/broadcast.json` and `public/locales/ar/broadcast.json`:**
+```json
 {
-  "header": {
-    "title": "Student Dashboard" / "لوحة التحكم الطلابية",
-    "signOut": "Sign Out" / "تسجيل الخروج",
-    "returnToSite": "Return to Website" / "العودة إلى الموقع",
-    "signOutSuccess": "Signed out successfully" / "تم تسجيل الخروج بنجاح",
-    ...
-  },
-  "sidebar": {
-    "checklist": "Checklist" / "قائمة المتطلبات",
-    "overview": "Overview" / "نظرة عامة",
-    "services": "Services" / "الخدمات",
-    ...
-  },
-  "welcome": {
-    "greeting": "Hello, {{name}}!",
-    "subtitle": "Track your progress..."
-  },
-  "admin": {
-    "title": "Admin Panel" / "لوحة الإدارة",
-    "tabs": { ... },
-    ...
-  },
-  "influencer": {
-    "earnings": { ... },
-    ...
+  "broadcastPage": {
+    "share": "Share",
+    "linkCopied": "Link copied!",
+    "linkCopiedDesc": "You can now share the video.",
+    "watchOnYoutube": "Watch on YouTube",
+    "watchVideo": "Watch Video",
+    "allCategories": "All",
+    "cat_studyTips": "Study Tips",
+    "cat_studentExperiences": "Student Experiences",
+    "cat_visaProcedures": "Visa Procedures",
+    "cat_workshops": "Workshops & Guidance",
+    "submitTitle": "Have a special moment to share?",
+    "submitDesc": "Share your success story to inspire others",
+    "sendWhatsapp": "Send via WhatsApp",
+    "or": "or",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your full name",
+    "universityLabel": "University",
+    "universityPlaceholder": "Your current university",
+    "videoLinkLabel": "Video Link (YouTube, ...)",
+    "videoLinkPlaceholder": "https://youtube.com/...",
+    "uploadLabel": "Or upload a video file",
+    "uploadLimit": "Max size: 50MB (currently unavailable)",
+    "submitting": "Sending... ⏳",
+    "submitButton": "Submit Video",
+    "submitSuccess": "Video sent successfully! ✅",
+    "submitSuccessDesc": "Thank you for sharing. We'll review it soon.",
+    "submitError": "An error occurred ❌",
+    "missingFields": "Missing data",
+    "missingFieldsDesc": "Please fill in name, university, and video link.",
+    "copyTooltip": "📎 Copy link to share"
   }
 }
 ```
 
+**Update components:**
+- `BroadcastVideoCard.tsx` -- Replace 4 hardcoded strings with `t()` calls; use locale-aware date formatting
+- `VideoCategories.tsx` -- Map category IDs to translation keys instead of Arabic literals; change `BroadcastCategory` to use IDs
+- `HeroVideo.tsx` -- Replace 2 button labels with `t()` calls
+- `SubmitVideo.tsx` -- Replace ~15 hardcoded strings with `t()` calls
+
+**Update `data.ts`:**
+- Add English fields to `BroadcastPost` (titleEN, descriptionEN, countryEN)
+- Change `BroadcastCategory` from Arabic literals to English IDs: `'study-tips' | 'student-experiences' | 'visa-procedures' | 'workshops'`
+
+### Phase 5: Broadcast data bilingual content
+
+Add English titles and descriptions for all 10 broadcast videos in `data.ts`.
+
 ---
 
-## Implementation Order
+## Files to Modify
 
-1. Create `public/locales/ar/dashboard.json` and `public/locales/en/dashboard.json` with all keys
-2. Register `'dashboard'` namespace in `src/i18n.ts`
-3. Create `src/components/lebenslauf/cvLabels.ts` for CV template labels
-4. Update all 16 dashboard component files
-5. Update all 10 admin component files
-6. Update all 3 influencer component files
-7. Update 3 CV template files
+| File | Changes |
+|------|---------|
+| `src/data/majorsData.ts` | Add EN fields to interfaces + English content for all ~40 majors |
+| `src/utils/majorLocale.ts` | NEW -- helper to pick localized fields |
+| `src/components/educational/MajorCard.tsx` | Use localized name/description |
+| `src/components/educational/MajorModal.tsx` | Use localized fields for all sections |
+| `src/components/educational/SearchAndFilter.tsx` | Localized category titles |
+| `src/components/educational/CategoryFilter.tsx` | Localized category titles |
+| `src/pages/EducationalProgramsPage.tsx` | Pass localized category title when flattening |
+| `public/locales/en/broadcast.json` | Add ~25 new translation keys |
+| `public/locales/ar/broadcast.json` | Add ~25 matching Arabic keys |
+| `src/components/broadcast/data.ts` | Add EN fields, change category type to IDs |
+| `src/components/broadcast/BroadcastVideoCard.tsx` | i18n for share/toast + locale-aware dates |
+| `src/components/broadcast/VideoCategories.tsx` | i18n for category names + "All" button |
+| `src/components/broadcast/HeroVideo.tsx` | i18n for CTA button text |
+| `src/components/broadcast/SubmitVideo.tsx` | i18n for all form labels/toasts |
+| `src/pages/BroadcastPage.tsx` | Minor -- pass language for data localization |
 
-**Estimated scope:** ~30 files modified, ~200+ strings extracted to translation keys.
+**Estimated: 15 files, ~200+ strings**
 
 ---
 
 ## What Will NOT Change
-
-- Navigation order, logo, student portal button
+- Navigation order, logo, student portal button position
 - Brand colors and design language
-- Existing public-facing translations (already working)
-- manifest.json content (Arabic-primary, static file)
-- shadcn/ui aria-label defaults (low priority)   Got it — you want a **focused highlight checklist** for the main page, cards, and key sections to make sure everything has **proper translation** and nothing is missed. Here’s a **concise, high-impact “must-check” guide** for your team or yourself:
-  ---
-  # 🔹 Translation & Content Highlight Checklist
-  ## 1️⃣ Main Page / Hero Sections
-  - **أرقامنا تتحدث** → “Our Numbers Speak”
-  - **الشفافية والنجاح هما أساس عملنا، وهذه الأرقام تعكس ثقة طلابنا بنا.** → “Transparency and success are the foundation of our work, and these numbers reflect our students’ trust.”
-  - Numbers + labels (cards):
-    - 47+ → **Satisfied Students / طلاب راض**
-    - 16+ → **Partners / شريك**
-    - 5+ → **Countries Around the World / دول حول العالم**
-    - 98% → **Success Rate / نسبة النجاح**
-  - Check: numbers **remain unchanged**, text translates clearly, layout doesn’t break with Arabic or long English phrases.
-  ---
-  ## 2️⃣ Step-by-Step Journey Cards
-  Section: **رحلتك نحو الدراسة في الخارج / Your Journey to Study Abroad**
-  - **الاستشارة والتقييم** → “Consultation & Assessment”
-  - Description: “تبدأ رحلتك بجلسة استشارية مجانية لفهم أهدافك وتقييم ملفك.” → “Your journey starts with a free consultation to understand your goals and assess your profile.”
-  - **تجهيز وتقديم الطلبات** → “Document Preparation & Submission”
-  - Description: “نساعدك في إعداد كافة المستندات وتقديم طلباتك للجامعات والسفارة.” → “We help you prepare all documents and submit your applications to universities and embassies.”
-  - **الاستعداد للسفر** → “Travel Preparation”
-  - Description: “بعد الحصول على القبول والتأشيرة، نساعدك في حجز السكن والتحضير للسفر.” → “After receiving your acceptance and visa, we help you book accommodation and prepare for travel.”
-  - **الدعم بعد الوصول** → “Post-Arrival Support”
-  - Description: “نستقبلك ونقدم لك الدعم اللازم لتستقر.” → “We welcome you and provide the necessary support to settle in.”
-  **Check:** Cards are fully translated, titles + descriptions, no text overflows, and responsive on mobile.
-  ---
-  ## 3️⃣ Educational Destinations / Universities Cards
-  Section: **Our Educational Destinations in Germany**
-  - **Explore the best universities, language schools, and educational services in Germany** → Translate to Arabic.
-  - Cards: **Leading German Universities / Language Schools / Services**
-    - Titles
-    - Descriptions / short snippets
-    - Any “Read More” / CTA buttons
-  - Ensure icons, images, and links are contextually accurate.
-  **Check:** All cards on this section are visible, RTL-compliant for Arabic, English translations don’t break layout.
-  ---
-  ## 4️⃣ Broadcast / Major Pages
-  Section: **Darb Broadcast / News / Updates**
-  - Titles, subtitles, and summary text
-  - Cards: article headlines, descriptions, dates
-  - Buttons / CTAs like “Read More” / “اقرأ المزيد”
-  - Tags, categories, meta info
-  **Check:** Cards are fully translated, long headlines don’t break the card, dynamic text (like numbers or dates) formatted for locale.
-  ---
-  ## 5️⃣ Global Checks
-  - **Buttons / CTAs**: All “Apply Now”, “Learn More”, “Contact Us”, etc., have translation.
-  - **Placeholders**: forms (email, name, message) translated.
-  - **Meta tags / SEO**: page title, description, Open Graph for EN & AR.
-  - **PWA / manifest**: `short_name`, `name` localized.
-  - **Accessibility attributes**: `aria-label`, `alt`, `title` fully translated.
-  - **Layout / RTL**: Arabic translations don’t break cards, spacing, or icons.
-  ---
-  ✅ **Tip:** For numeric cards (like 47+, 16+, 5+, 98%), **don’t translate numbers**, only labels. Keep the icons, colors, and spacing consistent in both languages.
+- Existing working translations on public pages
+- Video URLs, YouTube IDs, poster images
+- Any database or backend logic
