@@ -18,6 +18,7 @@ import ChatWidget from "./components/chat/ChatWidget";
 import PWAInstaller from "./components/common/PWAInstaller";
 import OfflineIndicator from "./components/common/OfflineIndicator";
 import InAppBrowserBanner from "./components/common/InAppBrowserBanner";
+import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -106,6 +107,7 @@ const App = () => {
           </Suspense>
           <ChatWidget />
           <PWAInstaller />
+          <CookieBanner />
           <BottomNav />
         </div>
       </TooltipProvider>

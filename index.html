@@ -161,6 +161,15 @@
     }
     </script>
     
+    <!-- Emergency: force unregister stale service workers -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(r) { r.unregister(); });
+        }).catch(function() {});
+      }
+    </script>
+
     <!-- PWA Loading Script -->
     <script>
       // Hide loading screen immediately when app is ready
