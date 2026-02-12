@@ -4,7 +4,6 @@ import { User } from '@supabase/supabase-js';
 import { Profile } from '@/types/profile';
 import StudentProfile from '@/components/dashboard/StudentProfile';
 import ServicesOverview from '@/components/dashboard/ServicesOverview';
-import PaymentsSummary from '@/components/dashboard/PaymentsSummary';
 import DocumentsManager from '@/components/dashboard/DocumentsManager';
 import ChecklistTracker from '@/components/dashboard/ChecklistTracker';
 import ReferralForm from '@/components/dashboard/ReferralForm';
@@ -27,12 +26,7 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
   const renderContent = () => {
     switch (activeTab) {
       case 'checklist':
-        return (
-          <>
-            <WelcomeCard fullName={profile.full_name} userId={user.id} />
-            <ChecklistTracker userId={user.id} />
-          </>
-        );
+        return <ChecklistTracker userId={user.id} />;
       case 'overview':
         return (
           <StudentProfile 
@@ -43,8 +37,6 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
         );
       case 'services':
         return <ServicesOverview userId={user.id} />;
-      case 'payments':
-        return <PaymentsSummary userId={user.id} />;
       case 'documents':
         return <DocumentsManager userId={user.id} />;
       case 'referrals':

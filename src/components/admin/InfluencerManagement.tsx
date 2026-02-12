@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Copy, Loader2 } from 'lucide-react';
+import { UserPlus, Copy, Loader2, UserX, RotateCcw } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface InfluencerManagementProps {
   influencers: any[];
@@ -65,6 +66,19 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
   const getStudentCount = (influencerId: string) =>
     students.filter(s => s.influencer_id === influencerId).length;
 
+  const handleToggleAgent = async (agentId: string, newStatus: string) => {
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ student_status: newStatus })
+      .eq('id', agentId);
+    if (error) {
+      toast({ variant: 'destructive', title: 'خطأ', description: error.message });
+    } else {
+      toast({ title: newStatus === 'inactive' ? 'تم إلغاء تنشيط الوكيل' : 'تم استعادة الوكيل' });
+      onRefresh();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -114,6 +128,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <th className="px-4 py-3 text-start font-semibold">البريد</th>
               <th className="px-4 py-3 text-start font-semibold">عدد الطلاب</th>
               <th className="px-4 py-3 text-start font-semibold">الحالة</th>
+              <th className="px-4 py-3 text-start font-semibold">إجراء</th>
             </tr>
           </thead>
           <tbody>
@@ -125,7 +140,34 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
                   <Badge variant="secondary">{getStudentCount(inf.id)}</Badge>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">نشط</span>
+                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${inf.student_status === 'inactive' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                    {inf.student_status === 'inactive' ? 'غير نشط' : 'نشط'}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  {inf.student_status === 'inactive' ? (
+                    <Button size="sm" variant="outline" onClick={() => handleToggleAgent(inf.id, 'eligible')}>
+                      <RotateCcw className="h-3 w-3 me-1" />استعادة
+                    </Button>
+                  ) : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive">
+                          <UserX className="h-3 w-3 me-1" />إلغاء تنشيط
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>إلغاء تنشيط الوكيل</AlertDialogTitle>
+                          <AlertDialogDescription>هل أنت متأكد من إلغاء تنشيط {inf.full_name}؟ سيتم إخفاؤه من النظام ولكن يمكن استعادته لاحقاً.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleToggleAgent(inf.id, 'inactive')}>تأكيد</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </td>
               </tr>
             ))}

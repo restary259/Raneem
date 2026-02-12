@@ -41,14 +41,32 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
       toast({ variant: 'destructive', title: 'يرجى الموافقة على الشروط والأحكام' });
       return;
     }
+    // Phone validation
+    const phoneRegex = /^\+?\d{7,15}$/;
+    if (!phoneRegex.test(form.phone.replace(/[\s\-()]/g, ''))) {
+      toast({ variant: 'destructive', title: 'رقم الهاتف غير صالح', description: 'يرجى إدخال رقم هاتف صحيح مع رمز البلد' });
+      return;
+    }
+    // Prevent self-referral
+    const { data: selfProfile } = await (supabase as any).from('profiles').select('email').eq('id', userId).maybeSingle();
+    if (selfProfile && form.email.toLowerCase() === selfProfile.email?.toLowerCase()) {
+      toast({ variant: 'destructive', title: 'لا يمكنك إحالة نفسك' });
+      return;
+    }
+    // Duplicate check
+    const { data: existing } = await (supabase as any).from('referrals').select('id').eq('referred_email', form.email).eq('referrer_id', userId);
+    if (existing?.length) {
+      toast({ variant: 'destructive', title: 'تم إحالة هذا الشخص مسبقاً' });
+      return;
+    }
     setIsLoading(true);
     try {
       const { error } = await (supabase as any).from('referrals').insert({
         referrer_id: userId,
         referrer_type: 'student',
         referred_name: `${form.first_name} ${form.surname}`.trim(),
-        referred_email: form.email || null,
-        referred_phone: form.phone || null,
+        referred_email: form.email,
+        referred_phone: form.phone,
         referred_country: form.country || null,
         referred_city: form.city || null,
         referred_dob: form.dob || null,
@@ -105,12 +123,12 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
               <Input id="surname" value={form.surname} onChange={e => updateField('surname', e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ref_email">البريد الإلكتروني</Label>
-              <Input id="ref_email" type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+              <Label htmlFor="ref_email">البريد الإلكتروني *</Label>
+              <Input id="ref_email" type="email" value={form.email} onChange={e => updateField('email', e.target.value)} required placeholder="example@email.com" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ref_phone">الهاتف</Label>
-              <Input id="ref_phone" type="tel" value={form.phone} onChange={e => updateField('phone', e.target.value)} />
+              <Label htmlFor="ref_phone">الهاتف (مع رمز البلد) *</Label>
+              <Input id="ref_phone" type="tel" value={form.phone} onChange={e => updateField('phone', e.target.value)} required placeholder="+972 52 XXX XXXX" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ref_country">البلد / الجنسية</Label>
