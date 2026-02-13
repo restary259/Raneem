@@ -66,5 +66,26 @@
       { "name": "", "destination": "Germany", "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.png" },
       { "name": "", "destination": "Germany", "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.png" }
     ]
+  },
+  "aboutStats": {
+    "title": "Our Numbers Speak",
+    "subtitle": "Transparency and success are the foundation of our work, and these numbers reflect our students' trust in us.",
+    "satisfiedStudents": "Satisfied Students",
+    "partners": "Partners",
+    "countries": "Countries Worldwide",
+    "successRate": "Success Rate"
+  },
+  "journey": {
+    "title": "Your Journey to Studying Abroad",
+    "subtitle": "We're with you step by step, from the idea to your first day of class.",
+    "steps": [
+      { "title": "Consultation & Assessment", "description": "Your journey begins with a free consultation to understand your goals and evaluate your profile." },
+      { "title": "Document Preparation & Applications", "description": "We help you prepare all documents and submit your applications to universities and embassies." },
+      { "title": "Travel Preparation", "description": "After receiving your acceptance and visa, we help you book housing and prepare for travel." },
+      { "title": "Post-Arrival Support", "description": "We welcome you and provide the support you need to settle in and start your studies comfortably." }
+    ]
+  },
+  "partnersMarquee": {
+    "title": "Top Global Universities"
   }
 }
