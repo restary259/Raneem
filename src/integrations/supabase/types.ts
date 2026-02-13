@@ -68,6 +68,44 @@ export type Database = {
         }
         Relationships: []
       }
+      case_payments: {
+        Row: {
+          amount: number
+          case_id: string
+          created_at: string
+          id: string
+          paid_date: string | null
+          paid_status: string
+          payment_type: string
+        }
+        Insert: {
+          amount?: number
+          case_id: string
+          created_at?: string
+          id?: string
+          paid_date?: string | null
+          paid_status?: string
+          payment_type?: string
+        }
+        Update: {
+          amount?: number
+          case_id?: string
+          created_at?: string
+          id?: string
+          paid_date?: string | null
+          paid_status?: string
+          payment_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "student_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           created_at: string
@@ -94,6 +132,44 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      commissions: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          influencer_amount: number
+          lawyer_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          influencer_amount?: number
+          lawyer_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          influencer_amount?: number
+          lawyer_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "student_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_submissions: {
         Row: {
@@ -204,6 +280,60 @@ export type Database = {
           full_name?: string
           id?: string
           invited_by?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          accommodation: boolean
+          age: number | null
+          budget_range: string | null
+          city: string | null
+          created_at: string
+          education_level: string | null
+          eligibility_score: number | null
+          full_name: string
+          german_level: string | null
+          id: string
+          phone: string
+          preferred_city: string | null
+          source_id: string | null
+          source_type: string
+          status: string
+        }
+        Insert: {
+          accommodation?: boolean
+          age?: number | null
+          budget_range?: string | null
+          city?: string | null
+          created_at?: string
+          education_level?: string | null
+          eligibility_score?: number | null
+          full_name: string
+          german_level?: string | null
+          id?: string
+          phone: string
+          preferred_city?: string | null
+          source_id?: string | null
+          source_type?: string
+          status?: string
+        }
+        Update: {
+          accommodation?: boolean
+          age?: number | null
+          budget_range?: string | null
+          city?: string | null
+          created_at?: string
+          education_level?: string | null
+          eligibility_score?: number | null
+          full_name?: string
+          german_level?: string | null
+          id?: string
+          phone?: string
+          preferred_city?: string | null
+          source_id?: string | null
+          source_type?: string
           status?: string
         }
         Relationships: []
@@ -518,6 +648,74 @@ export type Database = {
         }
         Relationships: []
       }
+      student_cases: {
+        Row: {
+          accommodation_status: string | null
+          assigned_lawyer_id: string | null
+          case_status: string
+          created_at: string
+          id: string
+          influencer_commission: number
+          lawyer_commission: number
+          lead_id: string
+          notes: string | null
+          referral_discount: number
+          school_commission: number
+          selected_city: string | null
+          selected_school: string | null
+          service_fee: number
+          student_profile_id: string | null
+          translation_fee: number
+          updated_at: string
+        }
+        Insert: {
+          accommodation_status?: string | null
+          assigned_lawyer_id?: string | null
+          case_status?: string
+          created_at?: string
+          id?: string
+          influencer_commission?: number
+          lawyer_commission?: number
+          lead_id: string
+          notes?: string | null
+          referral_discount?: number
+          school_commission?: number
+          selected_city?: string | null
+          selected_school?: string | null
+          service_fee?: number
+          student_profile_id?: string | null
+          translation_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          accommodation_status?: string | null
+          assigned_lawyer_id?: string | null
+          case_status?: string
+          created_at?: string
+          id?: string
+          influencer_commission?: number
+          lawyer_commission?: number
+          lead_id?: string
+          notes?: string | null
+          referral_discount?: number
+          school_commission?: number
+          selected_city?: string | null
+          selected_school?: string | null
+          service_fee?: number
+          student_profile_id?: string | null
+          translation_fee?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_cases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_checklist: {
         Row: {
           checklist_item_id: string
@@ -585,7 +783,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "influencer"
+      app_role: "admin" | "moderator" | "user" | "influencer" | "lawyer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -713,7 +911,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "influencer"],
+      app_role: ["admin", "moderator", "user", "influencer", "lawyer"],
     },
   },
 } as const
