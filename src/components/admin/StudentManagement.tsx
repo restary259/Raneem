@@ -5,35 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download, Edit2, Check, X } from 'lucide-react';
+import { Search, Download, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface Student {
-  id: string;
-  created_at: string;
-  full_name: string;
-  email: string;
-  student_status: string;
-  influencer_id: string | null;
-}
-
-interface Influencer {
-  id: string;
-  full_name: string;
-}
-
-interface ChecklistItem {
-  id: string;
-  item_name: string;
-}
-
-interface StudentChecklist {
-  id: string;
-  student_id: string;
-  checklist_item_id: string;
-  is_completed: boolean;
-}
+interface Student { id: string; created_at: string; full_name: string; email: string; student_status: string; influencer_id: string | null; }
+interface Influencer { id: string; full_name: string; }
+interface ChecklistItem { id: string; item_name: string; }
+interface StudentChecklist { id: string; student_id: string; checklist_item_id: string; is_completed: boolean; }
 
 interface StudentManagementProps {
   students: Student[];
@@ -49,10 +29,7 @@ const downloadCSV = (rows: any[], fileName = "export.csv") => {
   const csv = [header.join(","), ...rows.map(row => header.map(f => `"${String(row[f] ?? "").replace(/"/g, '""')}"`).join(","))].join("\r\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  a.click();
+  const a = document.createElement("a"); a.href = url; a.download = fileName; a.click();
   window.URL.revokeObjectURL(url);
 };
 
@@ -62,6 +39,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState('');
   const [editInfluencer, setEditInfluencer] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
@@ -70,8 +48,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
   const getChecklistProgress = (studentId: string) => {
     const total = checklistItems.length;
     if (!total) return 0;
-    const completed = studentChecklists.filter(sc => sc.student_id === studentId && sc.is_completed).length;
-    return Math.round((completed / total) * 100);
+    return Math.round((studentChecklists.filter(sc => sc.student_id === studentId && sc.is_completed).length / total) * 100);
   };
 
   const filteredStudents = students.filter(s => {
@@ -87,6 +64,14 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
     const { error } = await (supabase as any).from('profiles').update(updates).eq('id', studentId);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
     else { toast({ title: t('admin.students.updateSuccess') }); setEditingId(null); onRefresh(); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await (supabase as any).from('profiles').delete().eq('id', deleteId);
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
+    else { toast({ title: 'تم الحذف' }); onRefresh(); }
+    setDeleteId(null);
   };
 
   const startEdit = (s: any) => { setEditingId(s.id); setEditStatus(s.student_status || 'eligible'); setEditInfluencer(s.influencer_id || 'none'); };
@@ -157,7 +142,12 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 text-green-600" /></Button>
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setEditingId(null)}><X className="h-4 w-4 text-red-600" /></Button>
                       </div>
-                    ) : (<Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>)}
+                    ) : (
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -166,6 +156,20 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
         </table>
         {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.students.noStudents')}</p>}
       </div>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

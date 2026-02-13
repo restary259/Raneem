@@ -13,22 +13,39 @@ interface AdminOverviewProps {
   totalInfluencers: number;
 }
 
-const StatCard = ({ icon: Icon, label, value, color, subtext }: { icon: any; label: string; value: string | number; color: string; subtext?: string }) => (
-  <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-    <CardContent className="p-0">
-      <div className="flex items-center gap-4 p-5">
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="h-6 w-6 text-white" />
+const ZERO_TIPS: Record<string, string> = {
+  totalStudents: 'أضف أول طالب للبدء',
+  totalPayments: 'لم يتم تسجيل مدفوعات بعد',
+  newContacts: 'لا توجد رسائل جديدة',
+  agents: 'أضف أول وكيل للبدء',
+  uploadedDocs: 'لم يتم رفع مستندات بعد',
+  activeServices: 'لا خدمات نشطة حالياً',
+  newStudentsThisMonth: 'لا طلاب جدد هذا الشهر',
+};
+
+const StatCard = ({ icon: Icon, label, value, color, subtext, tipKey }: { icon: any; label: string; value: string | number; color: string; subtext?: string; tipKey?: string }) => {
+  const isZero = value === 0 || value === '0' || value === '0 ₪';
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <CardContent className="p-0">
+        <div className="flex items-center gap-4 p-4">
+          <div className={`p-3 rounded-xl ${color}`}>
+            <Icon className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-muted-foreground font-medium">{label}</p>
+            {isZero && tipKey ? (
+              <p className="text-xs text-muted-foreground/70 mt-1">{ZERO_TIPS[tipKey] || '—'}</p>
+            ) : (
+              <p className="text-xl font-bold text-foreground">{value}</p>
+            )}
+            {subtext && !isZero && <p className="text-xs text-muted-foreground mt-0.5">{subtext}</p>}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-muted-foreground font-medium">{label}</p>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          {subtext && <p className="text-xs text-muted-foreground mt-0.5">{subtext}</p>}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+      </CardContent>
+    </Card>
+  );
+};
 
 const AdminOverview: React.FC<AdminOverviewProps> = ({
   totalStudents, newThisMonth, totalPayments, newContacts, totalDocuments, activeServices, totalInfluencers
@@ -38,15 +55,15 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label={t('admin.overview.totalStudents')} value={totalStudents} color="bg-blue-600" subtext={`+${newThisMonth} ${t('admin.overview.newThisMonth')}`} />
-        <StatCard icon={DollarSign} label={t('admin.overview.totalPayments')} value={`${totalPayments.toLocaleString()} ₪`} color="bg-emerald-600" />
-        <StatCard icon={Mail} label={t('admin.overview.newMessages')} value={newContacts} color="bg-amber-500" />
-        <StatCard icon={UserCheck} label={t('admin.overview.agents')} value={totalInfluencers} color="bg-violet-600" />
+        <StatCard icon={Users} label={t('admin.overview.totalStudents')} value={totalStudents} color="bg-blue-600" subtext={`+${newThisMonth} ${t('admin.overview.newThisMonth')}`} tipKey="totalStudents" />
+        <StatCard icon={DollarSign} label={t('admin.overview.totalPayments')} value={`${totalPayments.toLocaleString()} ₪`} color="bg-emerald-600" tipKey="totalPayments" />
+        <StatCard icon={Mail} label={t('admin.overview.newMessages')} value={newContacts} color="bg-amber-500" tipKey="newContacts" />
+        <StatCard icon={UserCheck} label={t('admin.overview.agents')} value={totalInfluencers} color="bg-violet-600" tipKey="agents" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard icon={FileText} label={t('admin.overview.uploadedDocs')} value={totalDocuments} color="bg-sky-500" />
-        <StatCard icon={TrendingUp} label={t('admin.overview.activeServices')} value={activeServices} color="bg-orange-500" />
-        <StatCard icon={TrendingUp} label={t('admin.overview.newStudentsThisMonth')} value={newThisMonth} color="bg-teal-600" />
+        <StatCard icon={FileText} label={t('admin.overview.uploadedDocs')} value={totalDocuments} color="bg-sky-500" tipKey="uploadedDocs" />
+        <StatCard icon={TrendingUp} label={t('admin.overview.activeServices')} value={activeServices} color="bg-orange-500" tipKey="activeServices" />
+        <StatCard icon={TrendingUp} label={t('admin.overview.newStudentsThisMonth')} value={newThisMonth} color="bg-teal-600" tipKey="newStudentsThisMonth" />
       </div>
     </div>
   );

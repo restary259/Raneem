@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
 
 interface KPIAnalyticsProps {
@@ -12,14 +12,12 @@ interface KPIAnalyticsProps {
 }
 
 const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, influencers, commissions }) => {
-  // Business metrics
   const paidCases = cases.filter(c => c.case_status === 'paid' || c.case_status === 'completed');
   const totalRevenue = paidCases.reduce((sum, c) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
   const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0) + (Number(c.translation_fee) || 0), 0);
   const totalProfit = totalRevenue - totalCosts;
   const avgProfitPerStudent = paidCases.length > 0 ? Math.round(totalProfit / paidCases.length) : 0;
 
-  // Lawyer metrics
   const lawyerMetrics = lawyers.map(lawyer => {
     const lawyerCases = cases.filter(c => c.assigned_lawyer_id === lawyer.id);
     const closedCases = lawyerCases.filter(c => ['paid', 'completed', 'closed'].includes(c.case_status));
@@ -28,15 +26,11 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
     return { ...lawyer, total: lawyerCases.length, closed: closedCases.length, closeRate, revenue };
   });
 
-  // Influencer metrics
   const influencerMetrics = influencers.map(inf => {
     const infLeads = leads.filter(l => l.source_id === inf.id);
     const eligible = infLeads.filter(l => l.status !== 'not_eligible').length;
     const qualityRate = infLeads.length > 0 ? Math.round((eligible / infLeads.length) * 100) : 0;
-    const infCases = cases.filter(c => {
-      const lead = leads.find(l => l.id === c.lead_id);
-      return lead?.source_id === inf.id;
-    });
+    const infCases = cases.filter(c => { const lead = leads.find(l => l.id === c.lead_id); return lead?.source_id === inf.id; });
     const paid = infCases.filter(c => c.case_status === 'paid' || c.case_status === 'completed').length;
     const convRate = infLeads.length > 0 ? Math.round((paid / infLeads.length) * 100) : 0;
     const totalComm = commissions.filter(cm => infCases.some(ic => ic.id === cm.case_id)).reduce((s, cm) => s + (Number(cm.influencer_amount) || 0), 0);
@@ -46,27 +40,36 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
 
   return (
     <div className="space-y-6">
-      {/* Business Overview */}
-      <div>
-        <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><BarChart3 className="h-5 w-5" />مؤشرات الأعمال</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card><CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">إجمالي الإيرادات</p>
-            <p className="text-xl font-bold text-primary">{totalRevenue} €</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">صافي الربح</p>
-            <p className={`text-xl font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{totalProfit} €</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
+      {/* Hero Net Profit Card */}
+      <Card className={`overflow-hidden ${totalProfit >= 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-700' : 'bg-gradient-to-br from-red-500 to-red-700'} text-white border-0`}>
+        <CardContent className="p-6 text-center">
+          <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-80" />
+          <p className="text-sm opacity-80">صافي الربح الإجمالي</p>
+          <p className="text-4xl font-bold mt-1">{totalProfit} €</p>
+          <p className="text-xs opacity-70 mt-2">{paidCases.length} طالب مدفوع</p>
+        </CardContent>
+      </Card>
+
+      {/* Revenue / Expenses / Profit blocks */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="border-emerald-200 bg-emerald-50/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-emerald-700 font-medium">الإيرادات</p>
+            <p className="text-2xl font-bold text-emerald-700">{totalRevenue} €</p>
+          </CardContent>
+        </Card>
+        <Card className="border-red-200 bg-red-50/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-red-700 font-medium">المصروفات</p>
+            <p className="text-2xl font-bold text-red-700">{totalCosts} €</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">ربح/طالب</p>
-            <p className="text-xl font-bold">{avgProfitPerStudent} €</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">طلاب مدفوعين</p>
-            <p className="text-xl font-bold">{paidCases.length}</p>
-          </CardContent></Card>
-        </div>
+            <p className="text-2xl font-bold">{avgProfitPerStudent} €</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Lawyer KPIs */}

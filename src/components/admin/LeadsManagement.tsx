@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, MapPin, GraduationCap, DollarSign, Plus, Search, UserCheck, UserX, Gavel } from 'lucide-react';
+import { Phone, MapPin, GraduationCap, DollarSign, Plus, Search, UserCheck, UserX, Gavel, Trash2 } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -53,6 +54,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignModal, setAssignModal] = useState<{ leadId: string; leadName: string } | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedLawyer, setSelectedLawyer] = useState('');
   const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '' });
   const [loading, setLoading] = useState(false);
@@ -68,17 +70,11 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
     if (!newLead.full_name || !newLead.phone) { toast({ variant: 'destructive', title: 'خطأ', description: 'الاسم ورقم الهاتف مطلوبان' }); return; }
     setLoading(true);
     const { error } = await (supabase as any).from('leads').insert({
-      full_name: newLead.full_name,
-      phone: newLead.phone,
-      city: newLead.city || null,
-      age: newLead.age ? parseInt(newLead.age) : null,
-      education_level: newLead.education_level || null,
-      german_level: newLead.german_level || null,
-      budget_range: newLead.budget_range || null,
-      preferred_city: newLead.preferred_city || null,
-      accommodation: newLead.accommodation,
-      source_type: newLead.source_type,
-      eligibility_score: newLead.eligibility_score ? parseInt(newLead.eligibility_score) : null,
+      full_name: newLead.full_name, phone: newLead.phone, city: newLead.city || null,
+      age: newLead.age ? parseInt(newLead.age) : null, education_level: newLead.education_level || null,
+      german_level: newLead.german_level || null, budget_range: newLead.budget_range || null,
+      preferred_city: newLead.preferred_city || null, accommodation: newLead.accommodation,
+      source_type: newLead.source_type, eligibility_score: newLead.eligibility_score ? parseInt(newLead.eligibility_score) : null,
     });
     setLoading(false);
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); return; }
@@ -92,12 +88,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
     setLoading(true);
     const { error: updateErr } = await (supabase as any).from('leads').update({ status: 'eligible' }).eq('id', lead.id);
     if (updateErr) { toast({ variant: 'destructive', title: 'خطأ', description: updateErr.message }); setLoading(false); return; }
-    // Auto-create student case
-    const { error: caseErr } = await (supabase as any).from('student_cases').insert({
-      lead_id: lead.id,
-      selected_city: lead.preferred_city,
-      accommodation_status: lead.accommodation ? 'needed' : 'not_needed',
-    });
+    const { error: caseErr } = await (supabase as any).from('student_cases').insert({ lead_id: lead.id, selected_city: lead.preferred_city, accommodation_status: lead.accommodation ? 'needed' : 'not_needed' });
     if (caseErr) { toast({ variant: 'destructive', title: 'خطأ في إنشاء الملف', description: caseErr.message }); }
     setLoading(false);
     toast({ title: 'تم التحديث', description: `${lead.full_name} تم تأهيله وإنشاء ملف الطالب` });
@@ -107,30 +98,30 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
   const markNotEligible = async (leadId: string) => {
     const { error } = await (supabase as any).from('leads').update({ status: 'not_eligible' }).eq('id', leadId);
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); return; }
-    toast({ title: 'تم التحديث' });
-    onRefresh();
+    toast({ title: 'تم التحديث' }); onRefresh();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await (supabase as any).from('leads').delete().eq('id', deleteId);
+    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
+    else { toast({ title: 'تم الحذف' }); onRefresh(); }
+    setDeleteId(null);
   };
 
   const assignLawyer = async () => {
     if (!assignModal || !selectedLawyer) return;
     setLoading(true);
-    // Update the lead status
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
-    // Find the case for this lead and assign lawyer
     const { data: cases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
-    if (cases?.[0]) {
-      await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', cases[0].id);
-    }
+    if (cases?.[0]) { await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', cases[0].id); }
     setLoading(false);
     toast({ title: 'تم التعيين', description: `تم تعيين محامي للعميل ${assignModal.leadName}` });
-    setAssignModal(null);
-    setSelectedLawyer('');
-    onRefresh();
+    setAssignModal(null); setSelectedLawyer(''); onRefresh();
   };
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-2 flex-1 w-full sm:w-auto">
           <div className="relative flex-1">
@@ -151,7 +142,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
         <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />إضافة عميل</Button>
       </div>
 
-      {/* Lead Cards */}
       <div className="grid gap-3">
         {filtered.map(lead => {
           const st = STATUS_MAP[lead.status] || STATUS_MAP.new;
@@ -165,9 +155,12 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
                       <Phone className="h-3.5 w-3.5" />{lead.phone}
                     </a>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
                     <Badge variant={st.variant}>{st.label}</Badge>
                     <Badge variant="outline" className="text-xs">{SOURCE_MAP[lead.source_type] || lead.source_type}</Badge>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(lead.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
@@ -180,12 +173,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
 
                 {lead.status === 'new' && (
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="default" onClick={() => markEligible(lead)} disabled={loading}>
-                      <UserCheck className="h-3.5 w-3.5 me-1" />مؤهل
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => markNotEligible(lead.id)} disabled={loading}>
-                      <UserX className="h-3.5 w-3.5 me-1" />غير مؤهل
-                    </Button>
+                    <Button size="sm" variant="default" onClick={() => markEligible(lead)} disabled={loading}><UserCheck className="h-3.5 w-3.5 me-1" />مؤهل</Button>
+                    <Button size="sm" variant="destructive" onClick={() => markNotEligible(lead.id)} disabled={loading}><UserX className="h-3.5 w-3.5 me-1" />غير مؤهل</Button>
                   </div>
                 )}
                 {lead.status === 'eligible' && (
@@ -200,23 +189,33 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
         {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">لا يوجد عملاء محتملين</p>}
       </div>
 
-      {/* Add Lead Modal */}
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add Lead Modal - Two Column */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>إضافة عميل محتمل</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><Label>الاسم الكامل *</Label><Input value={newLead.full_name} onChange={e => setNewLead(p => ({ ...p, full_name: e.target.value }))} /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2"><Label>الاسم الكامل *</Label><Input value={newLead.full_name} onChange={e => setNewLead(p => ({ ...p, full_name: e.target.value }))} /></div>
             <div><Label>الهاتف *</Label><Input value={newLead.phone} onChange={e => setNewLead(p => ({ ...p, phone: e.target.value }))} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>المدينة</Label><Input value={newLead.city} onChange={e => setNewLead(p => ({ ...p, city: e.target.value }))} /></div>
-              <div><Label>العمر</Label><Input type="number" value={newLead.age} onChange={e => setNewLead(p => ({ ...p, age: e.target.value }))} /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>مستوى الألمانية</Label><Input value={newLead.german_level} onChange={e => setNewLead(p => ({ ...p, german_level: e.target.value }))} /></div>
-              <div><Label>الميزانية</Label><Input value={newLead.budget_range} onChange={e => setNewLead(p => ({ ...p, budget_range: e.target.value }))} /></div>
-            </div>
+            <div><Label>المدينة</Label><Input value={newLead.city} onChange={e => setNewLead(p => ({ ...p, city: e.target.value }))} /></div>
+            <div><Label>العمر</Label><Input type="number" value={newLead.age} onChange={e => setNewLead(p => ({ ...p, age: e.target.value }))} /></div>
+            <div><Label>مستوى الألمانية</Label><Input value={newLead.german_level} onChange={e => setNewLead(p => ({ ...p, german_level: e.target.value }))} /></div>
+            <div><Label>الميزانية</Label><Input value={newLead.budget_range} onChange={e => setNewLead(p => ({ ...p, budget_range: e.target.value }))} /></div>
             <div><Label>المدينة المفضلة</Label><Input value={newLead.preferred_city} onChange={e => setNewLead(p => ({ ...p, preferred_city: e.target.value }))} /></div>
-            <div><Label>نقاط الأهلية</Label><Input type="number" value={newLead.eligibility_score} onChange={e => setNewLead(p => ({ ...p, eligibility_score: e.target.value }))} /></div>
+            <div className="sm:col-span-2"><Label>نقاط الأهلية</Label><Input type="number" value={newLead.eligibility_score} onChange={e => setNewLead(p => ({ ...p, eligibility_score: e.target.value }))} /></div>
           </div>
           <DialogFooter>
             <Button onClick={handleAddLead} disabled={loading}>{loading ? 'جاري...' : 'إضافة'}</Button>

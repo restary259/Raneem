@@ -28,7 +28,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['"Noto Sans"', '"Noto Sans Arabic"', 'sans-serif'],
+				sans: ['"IBM Plex Sans Arabic"', '"Tajawal"', '"Noto Sans Arabic"', '"Noto Sans"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
