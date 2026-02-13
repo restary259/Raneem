@@ -4,12 +4,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { formSchema, Result, FormValues, countries, banksByCountry, timeToSortValue } from "./data";
 
-// Uses your exchangerate.host API key
+// Uses edge function to proxy exchange rate API securely
 async function fetchExchangeRate(from: string, to: string): Promise<number | null> {
-  const apiKey = "98faa4668bf440cf9c2c113446cd11c2";
-  const url = `https://api.exchangerate.host/convert?from=${from}&to=${to}&api_key=${apiKey}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-exchange-rate`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ from, to }),
+      }
+    );
     const data = await res.json();
     return data.result ?? null;
   } catch {
