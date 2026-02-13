@@ -46,6 +46,11 @@ const DesktopNav = () => {
       title: t('nav.broadcast'),
       href: '/broadcast',
       description: t('nav.broadcastDesc'),
+    },
+    {
+      title: t('housing.title', 'Student Housing'),
+      href: '/housing',
+      description: t('housing.heroSubtitle', 'Find your perfect accommodation'),
     }
   ];
 

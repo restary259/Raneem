@@ -67,28 +67,34 @@ const MobileNav = () => {
             {t('nav.contact')}
           </Link>
           
-          {/* More section */}
-          <div className="border-t pt-3 mt-3">
-            <p className={`text-xs font-semibold text-gray-500 mb-2 ${textAlign}`}>{t('nav.more')}</p>
-            <Link 
-              to="/educational-destinations" 
-              className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
-            >
-              {t('nav.educationalDestinations')}
-            </Link>
-            <Link 
-              to="/partnership" 
-              className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
-            >
-              {t('nav.partnership')}
-            </Link>
-            <Link 
-              to="/broadcast" 
-              className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-3 py-2`}
-            >
-              {t('nav.broadcast')}
-            </Link>
-          </div>
+           {/* More section */}
+           <div className="border-t pt-3 mt-3">
+             <p className={`text-xs font-semibold text-gray-500 mb-2 ${textAlign}`}>{t('nav.more')}</p>
+             <Link 
+               to="/educational-destinations" 
+               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
+             >
+               {t('nav.educationalDestinations')}
+             </Link>
+             <Link 
+               to="/partnership" 
+               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
+             >
+               {t('nav.partnership')}
+             </Link>
+             <Link 
+               to="/broadcast" 
+               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
+             >
+               {t('nav.broadcast')}
+             </Link>
+             <Link 
+               to="/housing" 
+               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-3 py-2`}
+             >
+               {t('housing.title', 'Student Housing')}
+             </Link>
+           </div>
           
           <Link 
             to="/student-auth" 
