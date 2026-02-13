@@ -132,8 +132,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
               {t(allTabs.find(tab => tab.id === activeTab)?.labelKey || '')}
             </h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {userEmail && <Badge variant="secondary" className="hidden sm:inline-flex">{userEmail}</Badge>}
+            <Button variant="ghost" size="sm" className="lg:hidden h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={() => navigate('/')}>
+              <ArrowLeftCircle className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="sm" className="lg:hidden h-9 w-9 p-0 text-destructive hover:text-destructive" onClick={handleSignOut}>
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
