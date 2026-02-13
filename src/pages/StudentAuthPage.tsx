@@ -47,21 +47,32 @@ const StudentAuthPage = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
+      if (session?.user && isMounted) {
         setUser(session.user);
         await redirectByRole(session.user.id);
       }
     };
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
       setUser(session?.user ?? null);
-      if (session?.user) await redirectByRole(session.user.id);
+      // Defer Supabase calls to avoid deadlock inside onAuthStateChange
+      if (session?.user) {
+        setTimeout(() => {
+          if (isMounted) redirectByRole(session.user.id);
+        }, 0);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
