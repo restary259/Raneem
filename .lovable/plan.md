@@ -1,80 +1,40 @@
 
 
-## Aggressive Mobile Performance Optimization
+## Beautify Resources Page -- Background and Card Shadows
 
-### Problem
-The app has a high LCP (~6.8s) and FCP, primarily caused by:
-- 27 PNG images in `lovable-uploads/` (no modern formats, no responsive sizing, no lazy loading)
-- Render-blocking CSS bundle
-- Hero video loading competing with critical resources
-- `backdrop-blur` effects causing GPU strain on mobile
-- No skeleton loaders for perceived performance
+### What Changes
 
-### Changes Overview
+**1. Hero Section -- Richer gradient background**
+- Replace the subtle `from-primary/5` gradient with a more vibrant multi-stop gradient using the brand colors (primary navy + accent orange highlights)
+- Add a subtle decorative pattern/glow effect using CSS pseudo-elements
 
-**1. Image Optimization -- All `<img>` tags across components**
+**2. Tools Section -- Card shadows and background**
+- Add a soft background gradient to the tools section
+- Give each tool card a visible shadow (`shadow-md`) by default, with a stronger lift on hover (`shadow-2xl`)
+- Add a subtle border accent and rounded corners for polish
 
-Add `loading="lazy"` and `decoding="async"` to all below-the-fold images. The header logo (above-the-fold) keeps eager loading.
+**3. Guides Section -- Enhanced background contrast**
+- Strengthen the muted background from `bg-muted/50` to `bg-muted/30` with a gradient overlay for depth
 
-Files affected:
-- `src/components/landing/Header.tsx` -- add `fetchpriority="high"` to logo (LCP candidate)
-- `src/components/landing/StudentGallery.tsx` -- add `loading="lazy"` + `decoding="async"`
-- `src/components/partners/partnersData.ts` uses image URLs in data; the rendering components need lazy loading
-- `src/components/partners/components/UniversityCarousel.tsx`, `LanguageSchoolCarousel.tsx`, `LocalServiceCarousel.tsx` -- add lazy loading to card images
-- `src/components/partners/InfluencerCard.tsx`, `ServiceCard.tsx`, `UniversityCard.tsx` -- lazy load
-- `src/components/about/CeoMessage.tsx`, `TeamSection.tsx` -- lazy load avatars
+**4. FAQ Section -- Card visibility**
+- Add `shadow-md` and a subtle left border accent (`border-l-4 border-accent`) to each FAQ card
+- Add a light background gradient behind the FAQ section for visual separation
 
-**2. Critical Rendering Path -- `index.html`**
-
-Inline the minimal critical CSS (background color, font-family, layout) directly in `<style>` so the browser paints immediately without waiting for the CSS bundle. The existing `<style>` block already has some inline styles; we extend it with above-the-fold critical styles (header background, text color, basic layout).
-
-**3. Hero Video Optimization -- `src/components/landing/Hero.tsx`**
-
-- Add `preload="none"` to the video element so it doesn't compete with LCP resources on mobile
-- The poster image is already preloaded in `index.html` -- this is correct
-- Remove `backdrop-blur-sm` from the hero overlay on mobile (GPU-intensive), replace with a solid overlay
-
-**4. Reduce `backdrop-blur` on Mobile -- Multiple components**
-
-`backdrop-blur` triggers expensive compositing on mobile GPUs. Replace with solid backgrounds on mobile:
-- `src/components/landing/Hero.tsx` -- use `bg-primary/85` instead of `bg-primary/80 backdrop-blur-sm`
-- `src/components/landing/Contact.tsx` -- simplify blur classes
-- `src/components/chat/ChatPopup.tsx` and `AIChatPopup.tsx` -- use `bg-background` instead of `bg-background/80 backdrop-blur-sm`
-
-**5. Skeleton Loaders -- New component + usage**
-
-Create a reusable `ImageSkeleton` component and use it in `StudentGallery` for visual loading placeholders. This improves Speed Index by showing a populated UI frame immediately.
-
-File: `src/components/ui/image-with-skeleton.tsx` (new)
-- Wraps `<img>` with an `onLoad` callback that hides the skeleton
-- Uses the existing `Skeleton` component
-
-**6. Bundle Cleanup -- `vite.config.ts`**
-
-The manual chunks config is already good. Add `cssCodeSplit: true` (default but explicit) and ensure tree-shaking is working. No major changes needed here since Vite handles this well.
-
-**7. Cache Headers -- `public/_headers`**
-
-Already well-configured with immutable caching for assets. No changes needed.
+**5. Overall page background**
+- Add a very subtle gradient or pattern to the page `bg-background` to make it feel less flat
 
 ### Technical Details
 
-| File | Change |
-|------|--------|
-| `index.html` | Extend inline `<style>` with critical above-the-fold CSS (header bg, container layout) |
-| `src/components/landing/Hero.tsx` | Add `preload="none"` to video; remove `backdrop-blur-sm` |
-| `src/components/landing/StudentGallery.tsx` | Add `loading="lazy"` + `decoding="async"` to images |
-| `src/components/landing/Header.tsx` | Add `fetchpriority="high"` to logo img |
-| `src/components/landing/Contact.tsx` | Remove `backdrop-blur-sm` from mobile |
-| `src/components/chat/ChatPopup.tsx` | Simplify `bg-background/80 backdrop-blur-sm` to `bg-background` |
-| `src/components/chat/AIChatPopup.tsx` | Simplify blur |
-| `src/components/about/CeoMessage.tsx` | Remove `backdrop-blur-lg`, use solid bg |
-| `src/components/ui/image-with-skeleton.tsx` | New: reusable lazy image with skeleton placeholder |
-| Multiple partner card components | Add `loading="lazy"` to all `<img>` tags |
+**File: `src/pages/ResourcesPage.tsx`**
 
-### Expected Impact
-- **LCP reduction**: ~4-5s savings from lazy-loading images + video `preload="none"` + eliminating blur compositing
-- **FCP reduction**: ~2-3s from inlined critical CSS
-- **Speed Index improvement**: Skeleton loaders provide immediate visual population
-- **No visual changes**: All styling and layouts remain identical
+| Section | Current | Updated |
+|---------|---------|---------|
+| Page wrapper | `bg-background` | `bg-gradient-to-b from-background via-primary/[0.02] to-background` |
+| Hero section | `bg-gradient-to-b from-primary/5 to-background` | `bg-gradient-to-br from-primary/10 via-accent/5 to-background` |
+| Tools section | `py-12 md:py-20` (no bg) | `py-12 md:py-20 bg-gradient-to-b from-background to-muted/30` |
+| Tool cards | `hover:shadow-xl` only | `shadow-md hover:shadow-2xl border-t-2 border-t-accent/20` |
+| Guides section | `bg-muted/50` | `bg-gradient-to-b from-muted/40 to-muted/20` |
+| FAQ section | no bg | `bg-gradient-to-b from-background to-primary/[0.03]` |
+| FAQ cards | default Card | `shadow-md hover:shadow-lg border-l-4 border-l-accent/60 transition-shadow duration-300` |
 
+No new files or dependencies needed. Only the `ResourcesPage.tsx` file is modified with Tailwind utility classes.
