@@ -42,7 +42,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
-      setCreatedPassword(result.temp_password);
+      setCreatedPassword('sent_via_email');
       toast({ title: t('admin.influencers.createSuccess') }); onRefresh();
     } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
     finally { setIsCreating(false); }
@@ -85,12 +85,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               {createdPassword && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
                   <p className="text-sm font-semibold text-green-800">{t('admin.influencers.accountCreated')}</p>
-                  <p className="text-xs text-green-700">{t('admin.influencers.tempPassword')}</p>
-                  <div className="flex items-center gap-2">
-                    <code className="bg-white px-3 py-1 rounded border text-sm flex-1">{createdPassword}</code>
-                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(createdPassword); toast({ title: t('admin.influencers.copied') }); }}><Copy className="h-4 w-4" /></Button>
-                  </div>
-                  <p className="text-xs text-green-600">{t('admin.influencers.sharePassword')}</p>
+                  <p className="text-xs text-green-700">تم إرسال بيانات الدخول إلى البريد الإلكتروني: {email}</p>
+                  <p className="text-xs text-green-600">سيُطلب من العضو تغيير كلمة المرور عند أول تسجيل دخول.</p>
                 </div>
               )}
               {!createdPassword && (

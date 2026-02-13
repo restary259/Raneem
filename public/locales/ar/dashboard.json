@@ -342,6 +342,7 @@
     "payouts": {
       "pendingPayout": "معلّق / بانتظار الصرف",
       "totalPaid": "تم الصرف",
+      "requester": "مقدّم الطلب",
       "amount": "المبلغ",
       "status": "الحالة",
       "requestDate": "تاريخ الطلب",

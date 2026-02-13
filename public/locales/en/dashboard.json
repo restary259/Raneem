@@ -342,6 +342,7 @@
     "payouts": {
       "pendingPayout": "Pending / Awaiting Payout",
       "totalPaid": "Total Paid",
+      "requester": "Requester",
       "amount": "Amount",
       "status": "Status",
       "requestDate": "Request Date",
