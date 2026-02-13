@@ -1,88 +1,67 @@
 
 
-## DSOS Ultimate Security Hardening Plan
+## Apply Page Success Animation, Payouts Identity, 20-Day Timer, and Influencer Auto-Tag
 
-This plan addresses all actionable security findings from the scan and implements the comprehensive security measures you outlined. Changes are organized by priority.
-
----
-
-### Phase 1: Fix Active Security Findings (Critical)
-
-#### 1A. Remove Temp Password Exposure from API Responses
-**Problem**: `create-team-member` and `create-influencer` edge functions return plaintext temp passwords in the API response body. These are visible in browser DevTools.
-
-**Fix**: Instead of returning the password in the response, send it to the new team member via email using the existing `send-branded-email` function or built-in Supabase email. The admin UI will show a success message without the password.
-
-**Files**:
-- `supabase/functions/create-team-member/index.ts` -- remove `temp_password` from response, send password via email to the new user
-- `supabase/functions/create-influencer/index.ts` -- same fix, also add `must_change_password: true` to profile (currently missing)
-
-#### 1B. Fix "RLS Policy Always True" on contact_submissions
-**Problem**: The `Anyone can submit contact form` INSERT policy uses `WITH CHECK (true)`, flagged by the linter.
-
-**Fix**: This is intentional for public contact forms, but we should tighten it by restricting which columns can be set. Since the `send-email` edge function uses service role to insert, we can safely remove the public INSERT policy and rely entirely on the edge function (which already validates and sanitizes input).
-
-**Migration**: Drop the `Anyone can submit contact form` policy.
-
-#### 1C. Address profiles/leads exposure warnings
-**Problem**: Scanner flags that profiles and leads tables lack explicit "deny anonymous" policies. While RLS is enabled and all existing policies require `auth.uid()`, adding explicit denial is defense-in-depth.
-
-**Fix**: These tables already have RLS enabled with policies that all check `auth.uid()` or `has_role()`. Anonymous users cannot match any policy. This is already secure by default (RLS denies when no policy matches). We will mark these findings as acknowledged with justification rather than adding redundant policies.
+This plan addresses four interconnected issues: the apply page lacks a post-submission CTA, the admin payouts view doesn't show who requested money, the 20-day payout timer needs to be visible properly, and leads from influencer links need to auto-display the influencer name.
 
 ---
 
-### Phase 2: Security Headers and CSP Enhancement
+### 1. Apply Page -- Success Animation and "Explore Website" Button
 
-#### 2A. Strengthen Content-Security-Policy
-**Current**: `Content-Security-Policy: upgrade-insecure-requests` (minimal)
+**Current**: After submission, users see a static checkmark and text with no way to navigate further.
 
-**Fix**: Update `public/_headers` with a more comprehensive CSP:
-- Add `default-src 'self'`
-- Add `script-src 'self'` (with necessary hashes/nonces for inline scripts)
-- Add `style-src 'self' 'unsafe-inline' fonts.googleapis.com`
-- Add `font-src fonts.gstatic.com`
-- Add `img-src 'self' data: blob: *.supabase.co`
-- Add `connect-src 'self' *.supabase.co`
-- Add `frame-ancestors 'none'` (replaces X-Frame-Options)
+**Changes to `src/pages/ApplyPage.tsx`**:
+- Add a confetti-style CSS animation (scaling circles or a pulse ring effect) around the checkmark icon on the success screen
+- Add a styled "Explore Our Website" button that links to `/` (home page)
+- Add a secondary text line encouraging the user to browse services while they wait
+- The animation will use Tailwind keyframes already defined in the project (scale-in, fade-in) plus a new pulse-ring animation
 
-Note: CSP will need testing to ensure no legitimate resources are blocked.
+**Translations**: Add `apply.exploreWebsite` and `apply.whileYouWait` keys to `en/landing.json` and `ar/landing.json`.
 
----
+### 2. Admin Payouts -- Show Requester Name
 
-### Phase 3: PWA and Cache Security
+**Current**: The PayoutsManagement component queries `rewards` with `select('*')`, which only contains `user_id` -- no name is displayed. Admin cannot identify who requested the payout.
 
-#### 3A. Clear sensitive data from service worker caches on logout
-**Status**: Already implemented -- the service worker handles `CLEAR_CACHES_ON_LOGOUT` messages and the `useSessionTimeout` hook clears caches. This is verified and working.
+**Changes to `src/components/admin/PayoutsManagement.tsx`**:
+- Change the rewards query to join with profiles: `select('*, profiles!rewards_user_id_fkey(full_name, email)')` -- but since there's no FK, we'll use a two-step approach:
+  1. Fetch rewards
+  2. Fetch all profiles for the reward `user_id` values
+  3. Map names onto rewards
+- Add a "Requester" column to both desktop table and mobile cards showing the influencer/student name
+- Show email as a secondary line for additional identification
 
-#### 3B. Prevent caching of sensitive dashboard routes
-**Status**: Already implemented -- the service worker uses network-only for navigation requests and never caches Supabase API calls. Verified and working.
+### 3. 20-Day Timer on Cases (Visible to Admin)
 
----
+**Current**: The 20-day timer logic exists in the influencer's `EarningsPanel` but is NOT visible in the admin's `CasesManagement` when a case status changes to "paid".
 
-### Phase 4: Input Validation Hardening
+**Changes to `src/components/admin/CasesManagement.tsx`**:
+- When a case has `case_status === 'paid'` and `paid_at` is set, calculate days remaining (20 - days since `paid_at`)
+- Display a timer badge next to the student name on paid cases: e.g., "14 days remaining" with a Clock icon
+- When the timer reaches 0, show "Ready for payout" in green
 
-#### 4A. Email validation in edge functions
-**Current**: `auth-guard` accepts any email string without validation.
+### 4. Auto-Tag Influencer Name on Leads from Referral Links
 
-**Fix**: Add email format validation in `auth-guard/index.ts` before attempting login:
-```typescript
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  return new Response(JSON.stringify({ error: "Invalid email" }), { status: 400 });
-}
-```
+**Current**: When a lead submits via `/apply?ref=INFLUENCER_UUID`, the `source_id` is saved but no influencer name is displayed in the admin Leads view.
 
-#### 4B. Input length limits in team creation functions
-Add explicit length limits for `email` (max 255), `full_name` (max 100), and `role` validation in both `create-team-member` and `create-influencer`.
+**Changes to `src/components/admin/LeadsManagement.tsx`**:
+- The admin dashboard already fetches `influencers` (profiles with influencer role). We need to pass influencers list to `LeadsManagement`.
+- In the lead card, when `source_type === 'influencer'` and `source_id` exists, look up the influencer name from the profiles/influencers list and display it as a badge: "via [Influencer Name]"
 
----
+**Changes to `src/pages/AdminDashboardPage.tsx`**:
+- Pass the `influencers` array to `LeadsManagement` as a new prop
 
-### Phase 5: Resolve Remaining Scan Findings
+### 5. Reward Creation Trigger on "Paid" Status
 
-After implementing the above, update the security findings:
-- **Delete** `temp_password_in_response` finding (fixed)
-- **Ignore** `profiles_table_public_exposure` and `leads_table_sensitive_exposure` with justification (RLS deny-by-default already protects)
-- **Ignore** `user_roles_partial_public_access` with justification (needed for public referral link validation)
-- **Ignore** `SUPA_rls_policy_always_true` for checklist_items SELECT (intentional public read for authenticated users)
+**Current**: In `CasesManagement.tsx`, when a case is marked "paid", commissions are created in the `commissions` table but NO reward record is created for the influencer in the `rewards` table. The influencer's 20-day timer and payout request depend on rewards being created.
+
+**Fix in `src/components/admin/CasesManagement.tsx`**:
+- When `case_status` changes to `paid`, check if the lead has `source_type === 'influencer'` and `source_id`
+- If yes, create a reward record in the `rewards` table:
+  - `user_id`: the influencer's UUID (from `source_id`)
+  - `amount`: the `influencer_commission` value
+  - `status`: 'pending'
+  - `created_at`: now (this is when the 20-day timer starts)
+- This connects the case payment to the influencer's earnings panel and payout flow
 
 ---
 
@@ -90,16 +69,18 @@ After implementing the above, update the security findings:
 
 | Action | File | Changes |
 |--------|------|---------|
-| Edit | `supabase/functions/create-team-member/index.ts` | Remove temp_password from response, send via email, add input validation |
-| Edit | `supabase/functions/create-influencer/index.ts` | Remove temp_password from response, add must_change_password, send via email, add input validation |
-| Edit | `supabase/functions/auth-guard/index.ts` | Add email format validation and input length limits |
-| Edit | `public/_headers` | Strengthen CSP headers |
-| Migration | Drop `Anyone can submit contact form` INSERT policy | Tighten contact_submissions access |
-| Security findings | Update/ignore justified findings | Clean up scan results |
+| Edit | `src/pages/ApplyPage.tsx` | Success animation with pulse ring, "Explore Website" CTA button |
+| Edit | `src/components/admin/PayoutsManagement.tsx` | Join rewards with profiles to show requester name/email |
+| Edit | `src/components/admin/CasesManagement.tsx` | 20-day timer badge on paid cases + auto-create influencer reward |
+| Edit | `src/components/admin/LeadsManagement.tsx` | Show influencer name badge on referral leads |
+| Edit | `src/pages/AdminDashboardPage.tsx` | Pass influencers prop to LeadsManagement |
+| Edit | `public/locales/en/landing.json` | Add apply success CTA translations |
+| Edit | `public/locales/ar/landing.json` | Add apply success CTA translations |
 
 ### Implementation Order
-1. Edge function fixes (temp password removal + input validation)
-2. Database migration (contact_submissions policy)
-3. Security headers update
-4. Security findings cleanup and re-scan
+1. Apply page success screen (animation + CTA)
+2. Payouts requester identity
+3. Cases 20-day timer display + reward auto-creation
+4. Leads influencer name auto-tag
+5. End-to-end testing of full flow
 
