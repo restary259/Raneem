@@ -293,14 +293,18 @@ export type Database = {
           created_at: string
           education_level: string | null
           eligibility_score: number | null
+          email: string | null
           full_name: string
           german_level: string | null
           id: string
+          notes: string | null
           phone: string
           preferred_city: string | null
+          service_requested: string | null
           source_id: string | null
           source_type: string
           status: string
+          study_destination: string | null
         }
         Insert: {
           accommodation?: boolean
@@ -310,14 +314,18 @@ export type Database = {
           created_at?: string
           education_level?: string | null
           eligibility_score?: number | null
+          email?: string | null
           full_name: string
           german_level?: string | null
           id?: string
+          notes?: string | null
           phone: string
           preferred_city?: string | null
+          service_requested?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
+          study_destination?: string | null
         }
         Update: {
           accommodation?: boolean
@@ -327,14 +335,18 @@ export type Database = {
           created_at?: string
           education_level?: string | null
           eligibility_score?: number | null
+          email?: string | null
           full_name?: string
           german_level?: string | null
           id?: string
+          notes?: string | null
           phone?: string
           preferred_city?: string | null
+          service_requested?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
+          study_destination?: string | null
         }
         Relationships: []
       }
@@ -780,6 +792,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      upsert_lead_from_contact: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_notes: string
+          p_phone: string
+          p_service_requested: string
+          p_study_destination: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

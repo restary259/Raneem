@@ -41,27 +41,20 @@ const Contact = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const result = await supabase.functions.invoke('send-email', {
-        body: {
-          form_source: 'Contact Page Form',
-          honeypot,
-          ...values,
-        },
+      // Honeypot check — silently succeed if filled
+      if (honeypot) return { success: true };
+
+      const { error } = await supabase.rpc('upsert_lead_from_contact', {
+        p_full_name: values.name,
+        p_email: values.email,
+        p_phone: values.whatsapp,
+        p_study_destination: values.studyDestination,
+        p_service_requested: values.service,
+        p_notes: values.message || '',
       });
 
-      if (result.error) {
-        throw new Error(`Function error: ${result.error.message}`);
-      }
-
-      if (result.data?.error) {
-        throw new Error(result.data.error);
-      }
-
-      if (!result.data?.success) {
-        throw new Error('Email sending failed');
-      }
-
-      return result.data;
+      if (error) throw new Error(error.message);
+      return { success: true };
     },
     onSuccess: () => {
       toast({ title: t('contact.successTitle', { ns: 'common' }), description: t('contact.successDesc', { ns: 'common' }) });

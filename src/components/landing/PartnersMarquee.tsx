@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const partners = [
     'Technical University of Munich', 
@@ -25,13 +26,14 @@ const partners = [
 ];
 
 const PartnersMarquee = () => {
+    const { t } = useTranslation('landing');
     const extendedPartners = [...partners, ...partners];
 
     return (
         <section className="py-12 bg-secondary">
             <div className="container mx-auto text-center">
                  <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-8">
-                    أفضل الجامعات العالمية
+                    {t('partnersMarquee.title')}
                 </h2>
                 <div className="relative w-full overflow-hidden mask-gradient">
                     <div 
