@@ -12,13 +12,44 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAuth = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const authenticatedUserId = claimsData.claims.sub;
     const { action, subscription, user_id, title, body, url, tag } = await req.json();
 
-    // Save subscription
+    // Subscribe — only allow for own user_id
     if (action === "subscribe") {
-      const { error } = await supabase.from("push_subscriptions").upsert({
+      if (user_id !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Cannot subscribe for another user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error } = await supabaseAdmin.from("push_subscriptions").upsert({
         user_id,
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
@@ -31,9 +62,16 @@ serve(async (req) => {
       });
     }
 
-    // Unsubscribe
+    // Unsubscribe — only allow for own user_id
     if (action === "unsubscribe") {
-      const { error } = await supabase
+      if (user_id !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Cannot unsubscribe another user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error } = await supabaseAdmin
         .from("push_subscriptions")
         .delete()
         .eq("user_id", user_id)
@@ -45,16 +83,26 @@ serve(async (req) => {
       });
     }
 
-    // Send notification to a specific user (admin only)
+    // Send notification — admin only
     if (action === "send") {
-      // Note: Web Push requires VAPID keys. This is a foundation - 
-      // actual sending requires configuring VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY secrets.
-      const { data: subs } = await supabase
+      const { data: roles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authenticatedUserId)
+        .eq("role", "admin");
+
+      if (!roles?.length) {
+        return new Response(JSON.stringify({ error: "Admin access required" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: subs } = await supabaseAdmin
         .from("push_subscriptions")
         .select("*")
         .eq("user_id", user_id);
 
-      // For now, return the count of subscriptions found
       return new Response(JSON.stringify({ 
         success: true, 
         message: `Found ${subs?.length || 0} subscription(s) for user`,

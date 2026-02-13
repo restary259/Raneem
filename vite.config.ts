@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => ({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-charts': ['recharts'],
+          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-http-backend'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'vendor-date': ['date-fns'],
         }
       }
     }

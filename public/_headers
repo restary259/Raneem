@@ -5,6 +5,8 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Content-Security-Policy: upgrade-insecure-requests
+
+/index.html
   Cache-Control: no-store
 
 /manifest.json
@@ -12,11 +14,11 @@
   Access-Control-Allow-Origin: *
   Content-Type: application/manifest+json
 
-/index.html
-  Cache-Control: no-store
-
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
 /lovable-uploads/*
   Cache-Control: public, max-age=31536000, immutable
+
+/locales/*
+  Cache-Control: public, max-age=3600

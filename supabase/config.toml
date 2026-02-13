@@ -13,3 +13,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.create-influencer]
 verify_jwt = false
+[functions.get-exchange-rate]
+verify_jwt = false
