@@ -11,6 +11,11 @@ const ChatWidget = () => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
 
+  // Hide chat widget on /apply page
+  if (typeof window !== 'undefined' && window.location.pathname === '/apply') {
+    return null;
+  }
+
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };

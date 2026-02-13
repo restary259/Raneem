@@ -374,9 +374,9 @@ const FieldGroup = ({ label, children }: { label: string; children: React.ReactN
 const ApplyTopBar = () => (
   <header className="flex items-center justify-center py-3 px-4 border-b border-border bg-card/80 backdrop-blur-md">
     <img
-      src="/lovable-uploads/fc80f423-4215-4afe-ab5f-60a784436ae5.png"
+      src="/lovable-uploads/darb-chat-logo.png"
       alt="Darb Study"
-      className="h-9 object-contain"
+      className="h-10 object-contain"
     />
   </header>
 );
