@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { User as UserIcon, FileText, Settings, ClipboardCheck, UserPlus, Gift } from 'lucide-react';
+import { User as UserIcon, FileText, Settings, ClipboardCheck, UserPlus, Gift, GraduationCap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Tab {
@@ -19,6 +19,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
   const tabs: Tab[] = [
     { id: 'checklist', labelKey: 'sidebar.checklist', icon: ClipboardCheck },
+    { id: 'application', labelKey: 'sidebar.application', icon: GraduationCap },
     { id: 'overview', labelKey: 'sidebar.overview', icon: UserIcon },
     { id: 'services', labelKey: 'sidebar.services', icon: Settings },
     { id: 'documents', labelKey: 'sidebar.documents', icon: FileText },

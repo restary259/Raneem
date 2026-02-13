@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { User } from '@supabase/supabase-js';
-import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link } from 'lucide-react';
+import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock } from 'lucide-react';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import MediaHub from '@/components/influencer/MediaHub';
 import ReferralLink from '@/components/influencer/ReferralLink';
@@ -34,6 +35,8 @@ const InfluencerDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [studentChecklists, setStudentChecklists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,6 +60,18 @@ const InfluencerDashboardPage = () => {
 
       const { data: prof } = await (supabase as any).from('profiles').select('*').eq('id', session.user.id).maybeSingle();
       if (prof) setProfile(prof);
+
+      // Fetch leads for this influencer
+      const { data: myLeads } = await (supabase as any)
+        .from('leads').select('*').eq('source_id', session.user.id).order('created_at', { ascending: false });
+      if (myLeads) setLeads(myLeads);
+
+      // Fetch commissions for this influencer's cases
+      const { data: allCommissions } = await (supabase as any)
+        .from('commissions').select('*, student_cases!inner(lead_id, leads!inner(source_id))');
+      // Filter client-side since RLS only allows admin
+      // Actually commissions table is admin-only, so influencer won't see them
+      // We'll use the leads data to show stats instead
 
       const { data: assignedStudents } = await (supabase as any)
         .from('profiles').select('*').eq('influencer_id', session.user.id).order('created_at', { ascending: false });
@@ -89,6 +104,10 @@ const InfluencerDashboardPage = () => {
     );
   }
 
+  const totalLeads = leads.length;
+  const eligibleLeads = leads.filter(l => l.status === 'eligible' || l.status === 'assigned').length;
+  const closedLeads = leads.filter(l => l.status === 'assigned').length;
+  const paidStudents = students.filter(s => s.student_status === 'paid').length;
   const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
   const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
 
@@ -117,19 +136,37 @@ const InfluencerDashboardPage = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card><CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-600"><Users className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">إجمالي الطلاب</p><p className="text-2xl font-bold">{students.length}</p></div>
+        {/* Enhanced Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Card><CardContent className="p-4 text-center">
+            <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+            <p className="text-xs text-muted-foreground">إجمالي العملاء</p>
+            <p className="text-xl font-bold">{totalLeads}</p>
           </CardContent></Card>
-          <Card><CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-emerald-600"><TrendingUp className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">محوّل / مدفوع</p><p className="text-2xl font-bold">{totalConverted}</p></div>
+          <Card><CardContent className="p-4 text-center">
+            <Target className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
+            <p className="text-xs text-muted-foreground">مؤهل</p>
+            <p className="text-xl font-bold">{eligibleLeads}</p>
           </CardContent></Card>
-          <Card><CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-amber-500"><ClipboardCheck className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">متوسط تقدم القائمة</p><p className="text-2xl font-bold">{avgProgress}%</p></div>
+          <Card><CardContent className="p-4 text-center">
+            <CheckCircle className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+            <p className="text-xs text-muted-foreground">محوّل</p>
+            <p className="text-xl font-bold">{totalConverted}</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-4 text-center">
+            <CreditCard className="h-5 w-5 mx-auto mb-1 text-green-600" />
+            <p className="text-xs text-muted-foreground">مدفوع</p>
+            <p className="text-xl font-bold">{paidStudents}</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-4 text-center">
+            <DollarSign className="h-5 w-5 mx-auto mb-1 text-amber-600" />
+            <p className="text-xs text-muted-foreground">الطلاب المعينين</p>
+            <p className="text-xl font-bold">{students.length}</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-4 text-center">
+            <ClipboardCheck className="h-5 w-5 mx-auto mb-1 text-orange-600" />
+            <p className="text-xs text-muted-foreground">متوسط التقدم</p>
+            <p className="text-xl font-bold">{avgProgress}%</p>
           </CardContent></Card>
         </div>
 
@@ -156,46 +193,63 @@ const InfluencerDashboardPage = () => {
 
         {/* Tab content */}
         {activeTab === 'students' && (
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="px-4 py-3 text-start font-semibold">الاسم</th>
-                      <th className="px-4 py-3 text-start font-semibold">البريد</th>
-                      <th className="px-4 py-3 text-start font-semibold">الحالة</th>
-                      <th className="px-4 py-3 text-start font-semibold">تقدم القائمة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map(s => {
-                      const progress = getProgress(s.id);
-                      const statusInfo = STATUS_LABELS[s.student_status] || STATUS_LABELS.eligible;
-                      return (
-                        <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 font-medium">{s.full_name}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.color}`}>
-                              {statusInfo.label}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Progress value={progress} className="h-2 w-20" />
-                              <span className="text-xs text-muted-foreground">{progress}%</span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                {students.length === 0 && <p className="p-8 text-center text-muted-foreground">لا يوجد طلاب معينين لك حالياً</p>}
+          <div className="space-y-3">
+            {/* Leads from leads table */}
+            {leads.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm text-muted-foreground">العملاء المحالين</h3>
+                {leads.map(lead => {
+                  const statusMap: Record<string, { label: string; color: string }> = {
+                    new: { label: 'جديد', color: 'bg-blue-100 text-blue-800' },
+                    eligible: { label: 'مؤهل', color: 'bg-emerald-100 text-emerald-800' },
+                    not_eligible: { label: 'غير مؤهل', color: 'bg-red-100 text-red-800' },
+                    assigned: { label: 'معيّن', color: 'bg-purple-100 text-purple-800' },
+                  };
+                  const st = statusMap[lead.status] || statusMap.new;
+                  return (
+                    <Card key={lead.id}>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{lead.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{lead.city || '—'} • {lead.german_level || '—'}</p>
+                        </div>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{st.label}</span>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            {/* Assigned students */}
+            {students.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm text-muted-foreground">الطلاب المسجلين</h3>
+                {students.map(s => {
+                  const progress = getProgress(s.id);
+                  const statusInfo = STATUS_LABELS[s.student_status] || STATUS_LABELS.eligible;
+                  return (
+                    <Card key={s.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium text-sm">{s.full_name}</p>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={progress} className="h-2 flex-1" />
+                          <span className="text-xs text-muted-foreground">{progress}%</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {leads.length === 0 && students.length === 0 && (
+              <p className="p-8 text-center text-muted-foreground">لا يوجد طلاب معينين لك حالياً</p>
+            )}
+          </div>
         )}
         {activeTab === 'earnings' && user && <EarningsPanel userId={user.id} />}
         {activeTab === 'media' && <MediaHub />}
