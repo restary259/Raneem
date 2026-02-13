@@ -15,8 +15,10 @@ if (import.meta.main) {
       const apiKey = Deno.env.get('UNIPLACES_API_KEY');
       if (!apiKey) {
         return new Response(
-          JSON.stringify({ error: 'API key not configured' }),
-          { status: 500, headers: corsHeaders }
+          JSON.stringify({ 
+            message: 'Student housing search is coming soon. Please check back later!' 
+          }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 

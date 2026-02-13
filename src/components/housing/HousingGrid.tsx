@@ -47,9 +47,11 @@ const HousingGrid: React.FC<HousingGridProps> = ({ filters, page, onPageChange }
         
         const data = await response.json();
         
-        if (data.data) {
+        if (data.message) {
+          // Service coming soon – show friendly message
+          setError(data.message);
+        } else if (data.data) {
           setListings(data.data);
-          // Calculate total pages from meta if available
           if (data.meta?.pagination) {
             setTotalPages(Math.ceil(data.meta.pagination.total / 12));
           }
@@ -68,14 +70,17 @@ const HousingGrid: React.FC<HousingGridProps> = ({ filters, page, onPageChange }
   }, [filters, page, t]);
 
   if (error) {
+    const isComingSoon = error.includes('coming soon');
     return (
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+          <div className={`flex items-center gap-3 p-6 rounded-lg border ${isComingSoon ? 'bg-accent/50 border-accent' : 'bg-destructive/10 border-destructive/30'}`}>
+            <AlertCircle className={`h-6 w-6 flex-shrink-0 ${isComingSoon ? 'text-primary' : 'text-destructive'}`} />
             <div>
-              <h3 className="font-semibold text-red-900">{t('housing.error', 'Error')}</h3>
-              <p className="text-sm text-red-700">{error}</p>
+              <h3 className={`font-semibold ${isComingSoon ? 'text-foreground' : 'text-destructive'}`}>
+                {isComingSoon ? t('housing.comingSoon', 'Coming Soon') : t('housing.error', 'Error')}
+              </h3>
+              <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           </div>
         </div>

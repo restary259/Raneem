@@ -32,7 +32,10 @@ const HousingHero: React.FC<HousingHeroProps> = ({ onCitySelect }) => {
           }
         );
         const data = await response.json();
-        if (data.data) {
+        if (data.message) {
+          // Service not yet available – silently handle
+          console.info(data.message);
+        } else if (data.data) {
           setCities(data.data);
         }
       } catch (error) {
