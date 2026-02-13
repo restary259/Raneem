@@ -15,6 +15,7 @@
   },
   "sidebar": {
     "checklist": "Checklist",
+    "application": "My Application",
     "overview": "Overview",
     "services": "Services",
     "documents": "Documents",

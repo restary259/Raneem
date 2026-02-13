@@ -39,15 +39,21 @@ interface CasesManagementProps {
 }
 
 const CASE_STATUSES = [
-  { value: 'assigned', label: 'معيّن' },
-  { value: 'contacted', label: 'تم التواصل' },
-  { value: 'appointment', label: 'موعد' },
-  { value: 'closed', label: 'مغلق' },
-  { value: 'paid', label: 'مدفوع' },
-  { value: 'registration_submitted', label: 'تم تقديم التسجيل' },
-  { value: 'visa_stage', label: 'مرحلة الفيزا' },
-  { value: 'completed', label: 'مكتمل' },
+  { value: 'assigned', label: 'معيّن', order: 0 },
+  { value: 'contacted', label: 'تم التواصل', order: 1 },
+  { value: 'appointment', label: 'موعد', order: 2 },
+  { value: 'closed', label: 'مغلق', order: 3 },
+  { value: 'paid', label: 'مدفوع', order: 4 },
+  { value: 'registration_submitted', label: 'تم تقديم التسجيل', order: 5 },
+  { value: 'visa_stage', label: 'مرحلة الفيزا', order: 6 },
+  { value: 'completed', label: 'مكتمل', order: 7 },
 ];
+
+// Valid transitions: can only move forward or stay, except admin can also go one step back
+const getValidStatuses = (currentStatus: string) => {
+  const currentOrder = CASE_STATUSES.find(s => s.value === currentStatus)?.order ?? 0;
+  return CASE_STATUSES.filter(s => s.order >= currentOrder - 1);
+};
 
 const STATUS_COLORS: Record<string, string> = {
   assigned: 'bg-blue-100 text-blue-800',
@@ -179,7 +185,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                       <div><Label className="text-xs">حالة الملف</Label>
                         <Select value={editValues.case_status} onValueChange={v => setEditValues(ev => ({ ...ev, case_status: v }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{CASE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                          <SelectContent>{getValidStatuses(c.case_status).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                       <div className="grid grid-cols-2 gap-3">

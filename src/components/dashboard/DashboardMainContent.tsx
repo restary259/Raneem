@@ -9,6 +9,7 @@ import ChecklistTracker from '@/components/dashboard/ChecklistTracker';
 import ReferralForm from '@/components/dashboard/ReferralForm';
 import RewardsPanel from '@/components/dashboard/RewardsPanel';
 import WelcomeCard from '@/components/dashboard/WelcomeCard';
+import MyApplicationTab from '@/components/dashboard/MyApplicationTab';
 
 interface DashboardMainContentProps {
   activeTab: string;
@@ -27,6 +28,8 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
     switch (activeTab) {
       case 'checklist':
         return <ChecklistTracker userId={user.id} />;
+      case 'application':
+        return <MyApplicationTab userId={user.id} />;
       case 'overview':
         return (
           <StudentProfile 
