@@ -87,5 +87,31 @@
   },
   "partnersMarquee": {
     "title": "Top Global Universities"
+  },
+  "apply": {
+    "heroTitle": "Start Your Journey to Study in Germany 🇩🇪",
+    "heroSubtitle": "Fill in your details and we'll contact you via WhatsApp shortly",
+    "step": "Step",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "phone": "Phone / WhatsApp",
+    "city": "City (inside 48)",
+    "cityPlaceholder": "e.g. Haifa",
+    "educationLevel": "Education Level",
+    "germanLevel": "German Level",
+    "budgetRange": "Expected Budget",
+    "preferredCity": "Preferred City in Germany",
+    "accommodation": "Need Accommodation?",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit My Details",
+    "successTitle": "Your details have been received ✅",
+    "successSubtitle": "We'll contact you via WhatsApp soon",
+    "error": "An error occurred, please try again",
+    "trustBadge1": "Free Consultation",
+    "trustBadge2": "Accredited Schools",
+    "trustBadge3": "Support Until Enrollment"
   }
 }

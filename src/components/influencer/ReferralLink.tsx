@@ -14,7 +14,7 @@ const ReferralLink: React.FC<ReferralLinkProps> = ({ userId }) => {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
   const [copied, setCopied] = useState(false);
-  const referralUrl = `${window.location.origin}/student-auth?ref=${userId}`;
+  const referralUrl = `${window.location.origin}/apply?ref=${userId}`;
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(referralUrl);

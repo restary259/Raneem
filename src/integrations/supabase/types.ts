@@ -793,6 +793,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      insert_lead_from_apply: {
+        Args: {
+          p_accommodation?: boolean
+          p_budget_range?: string
+          p_city?: string
+          p_education_level?: string
+          p_full_name: string
+          p_german_level?: string
+          p_phone: string
+          p_preferred_city?: string
+          p_source_id?: string
+          p_source_type?: string
+        }
+        Returns: undefined
+      }
       upsert_lead_from_contact: {
         Args: {
           p_email: string

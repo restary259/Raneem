@@ -40,6 +40,7 @@ const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
 const LebenslaufBuilderPage = lazy(() => import('./pages/LebenslaufBuilderPage'));
 const HousingPage = lazy(() => import('./pages/HousingPage'));
 const LawyerDashboardPage = lazy(() => import('./pages/LawyerDashboardPage'));
+const ApplyPage = lazy(() => import('./pages/ApplyPage'));
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ const App = () => {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/quiz" element={<QuizPage />} />
               <Route path="/ai-advisor" element={<AIAdvisorPage />} />
+              <Route path="/apply" element={<ApplyPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
