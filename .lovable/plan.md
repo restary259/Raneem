@@ -1,118 +1,90 @@
 
 
-## DSOS v4 -- Comprehensive Upgrade Plan
+## CV Builder Fix, Image Export, Bottom Nav Update, and Platform-Wide Verification
 
-This is a large set of changes spanning the apply funnel, all four dashboards, eligibility logic, team member management, and the 20-day payout timer. The plan is broken into focused phases to keep each change safe and testable.
-
----
-
-### Phase 1: Apply Page Overhaul (Form Fields + Auto-Eligibility)
-
-**What changes on `/apply`:**
-
-- **Remove fields**: Budget Range, Preferred City in Germany, Accommodation
-- **Add fields**: Passport Type (dropdown: Israeli Blue / Israeli Red / Other), English Units (number), Math Units (number)
-- **Remove WhatsApp floating button** (protects influencer attribution)
-- **Add auto light/dark mode** based on time of day (dark after 7pm)
-- **Update form steps**:
-  - Step 1: Full Name, Phone
-  - Step 2: Passport Type, English Units, Math Units, Education Level
-  - Step 3: German Level (simplified: Beginner / Intermediate / Advanced)
-
-**Database changes (leads table)**:
-- Add columns: `passport_type` (text), `english_units` (integer), `math_units` (integer)
-- Remove from form only (keep columns in DB for backward compatibility): budget_range, preferred_city, accommodation
-
-**Auto-Eligibility Calculation**:
-- New database function `calculate_eligibility_score` that runs inside `insert_lead_from_apply`:
-  - Passport = Israeli Blue: +30 points
-  - Passport = Israeli Red: +20 points
-  - Passport = Other: 0 points
-  - English units >= 4: +20 points
-  - Math units >= 4: +20 points
-  - Education = Bagrut/Highschool+: +10 points
-  - German level Intermediate+: +10 points
-  - Score >= 50: status remains "new" (eligible candidate)
-  - Score < 30: auto-set status to "not_eligible"
-- Store computed `eligibility_score` and `eligibility_reason` (text, new column) on the lead
-
-**Update the RPC function** `insert_lead_from_apply` to accept new fields and call eligibility calculation.
+This plan covers the CV builder print/export improvements, adding screenshot/image download, replacing the Housing tab with Apply in the mobile bottom nav, and a systematic English/LTR verification pass across all dashboards.
 
 ---
 
-### Phase 2: Team Member (Lawyer) Management
+### 1. CV Builder -- Remove Lovable Branding from Print/Export
 
-**Current state**: The admin can create influencer accounts via `create-influencer` edge function. No equivalent exists for lawyers.
+**Problem**: When printing, the Lovable badge (injected globally) may appear in the PDF output.
 
-**What to build**:
-- **New edge function**: `create-team-member` -- accepts `email`, `full_name`, and `role` (lawyer or influencer)
-  - Creates auth user with temp password
-  - Assigns role in `user_roles`
-  - Creates profile
-  - Logs to audit
-  - Same forced password change pattern as influencers
-- **Update `InfluencerManagement.tsx`** to become a general "Team Management" component:
-  - Rename section to "Team" in sidebar
-  - Add a role selector (Influencer / Lawyer) in the create dialog
-  - Show both influencers AND lawyers in the same table with a role badge
-  - Admin can delete invites
-- **Update `AdminLayout.tsx`**: Replace "Influencers" with "Team" in sidebar, update icon
+**Fix**:
+- Update `src/styles/cv-print.css` to explicitly hide the Lovable badge element during print:
+  - Add rules targeting `[data-lovable-badge]`, `#lovable-badge`, and any iframe/div with Lovable branding classes using `display: none !important` inside the `@media print` block.
+- Also hide `BottomNav`, `ChatWidget`, `PWAInstaller`, `CookieBanner` in print via selectors.
 
-**Forced Password Change on First Login**:
-- Add `must_change_password` column to `profiles` (boolean, default false)
-- Set to `true` when creating team members via edge function
-- In `StudentAuthPage.tsx`, after successful login, check `must_change_password` -- if true, show a password change modal before redirecting
-- After password changed, update profile `must_change_password = false`
+### 2. CV Builder -- Optimize PDF/Print Margins
 
----
+**Fix in `src/styles/cv-print.css`**:
+- Change `@page` margin from `15mm` to `10mm 15mm` (tighter top/bottom, comfortable sides) for better A4 fit.
+- Add `overflow: visible` to `#cv-preview` so content is never clipped.
+- Ensure the preview container has no max-height in print mode.
+- Add `page-break-inside: avoid` to individual CV entry blocks (education, experience items).
 
-### Phase 3: Influencer Dashboard Eligibility Display
+### 3. CV Builder -- Add Screenshot and Image Download Options
 
-**Current state**: Influencer dashboard shows leads with basic status badges but no eligibility reasoning.
+**Changes to `src/components/lebenslauf/useLebenslauf.ts`**:
+- Add `handleDownloadImage` function using the Canvas API:
+  - Use `html2canvas` approach via a simple DOM-to-canvas utility (we'll implement a lightweight version using the built-in browser APIs or add a small helper).
+  - Since we can't install new npm packages easily, we'll use the browser's native `window.print()` for PDF and implement image capture using a canvas-based approach with `document.querySelector('#cv-preview')`.
 
-**What to add**:
-- On each lead card, show eligibility result:
-  - Green checkmark + "Eligible" if score >= 50
-  - Red X + reason if not eligible (e.g., "Passport type: Other", "English units: 2 (minimum 4)")
-- Show `eligibility_score` as a small badge on each card
-- Display `eligibility_reason` text below the status
+**Alternative approach (more reliable)**: Use the browser's built-in `Selection` and `Range` API with `document.execCommand('copy')` -- but for image download, we'll implement a canvas rendering approach:
 
-**20-Day Payout Timer**:
-- In `EarningsPanel.tsx`, for each reward with status `approved`:
-  - Calculate days since the associated case was marked `paid`
-  - If < 20 days: show countdown timer, disable payout request button
-  - If >= 20 days: enable payout request
-- Add `paid_at` timestamp to `student_cases` table (set when case_status changes to 'paid')
-- Update the payout request logic to check the 20-day condition server-side
+- Create a utility function `captureElementAsImage(elementId: string, format: 'png' | 'jpeg')` in `src/utils/captureUtils.ts`:
+  - Clone the target element
+  - Use `XMLSerializer` to convert to SVG foreignObject
+  - Draw on canvas
+  - Export as blob and trigger download
 
----
+**Changes to `src/components/lebenslauf/LebenslaufBuilder.tsx`**:
+- Add two new toolbar buttons: "Download as Image (PNG)" and "Download as JPG"
+- Wire them to the new capture utility
 
-### Phase 4: Lawyer Dashboard Enhancements
+**Changes to `useLebenslauf.ts`**:
+- Add `handleDownloadPNG` and `handleDownloadJPG` functions
+- Return them from the hook
 
-**Current state**: Lawyers can view/edit assigned cases with status, city, school, notes.
+**Translations**: Add keys `downloadPNG` and `downloadJPG` to both `en/resources.json` and `ar/resources.json` under `lebenslaufBuilder.actions`.
 
-**What to add**:
-- Show auto-eligibility info on each case card (read-only, from lead data)
-- Fetch lead's `eligibility_score` and `eligibility_reason` alongside case data
-- Add `contact_form` source badge to help lawyers see lead origin
-- Lawyer RLS: Allow lawyers to SELECT from leads table for their assigned cases (new policy)
+### 4. Mobile Bottom Nav -- Replace Housing with Apply
 
----
+**File: `src/components/common/BottomNav.tsx`**:
+- Replace the Housing nav item with Apply:
+  - Change `name` from `t('housing.title', 'Housing')` to `t('bottomNav.apply', 'Apply')`
+  - Change `href` from `/housing` to `/apply`
+  - Change `icon` from `Home` to a relevant icon like `FileText` or `Send` from lucide-react
+  - Update `ariaLabel`
 
-### Phase 5: Admin Enhancements
+**Translations**: Add `bottomNav.apply` and `bottomNav.applyAria` to both `en/common.json` and `ar/common.json`.
 
-**Export functionality**:
-- Add "Export" button to LeadsManagement and CasesManagement
-- Generate CSV with selectable columns
-- Pre-formatted for language school submissions
+### 5. English/LTR Verification and Fixes
 
-**Admin eligibility override**:
-- In LeadsManagement, add an "Override Score" button that lets admin manually set eligibility_score and status
-- Log override to audit trail
+This is a systematic pass through the codebase to verify all components render correctly in English/LTR mode. Based on code review, the following areas need attention:
 
-**Delete invites**:
-- In InfluencerManagement (now TeamManagement), add delete button on invite rows
-- Delete from `influencer_invites` table
+**Contact form (`src/components/landing/Contact.tsx`)**:
+- The form container has `text-right` hardcoded -- should be `text-right` only in RTL. Change to use dynamic direction class.
+
+**Dashboard components**:
+- Verify all dashboard pages (Admin, Lawyer, Student, Influencer) use `useDirection()` hook and apply `dir` attribute.
+- Check that status badges, timers, and card layouts don't break with longer English text.
+
+**Forms and validation**:
+- Ensure all form validation messages are translated and positioned correctly in LTR.
+- Check that required field markers and error messages align properly.
+
+### 6. Platform-Wide Functional Verification
+
+This phase involves testing (not code changes) across:
+- Admin dashboard: leads, cases, team management, export, eligibility override
+- Lawyer dashboard: case cards with eligibility display
+- Student dashboard: application tracking, document uploads
+- Influencer dashboard: lead cards, eligibility badges, 20-day timer
+- Referral system: tracking, rewards
+- All forms: apply, contact, partnership registration
+
+Any bugs found during testing will be fixed inline.
 
 ---
 
@@ -120,25 +92,21 @@ This is a large set of changes spanning the apply funnel, all four dashboards, e
 
 | Action | File | Changes |
 |--------|------|---------|
-| Migration | Database | Add `passport_type`, `english_units`, `math_units`, `eligibility_reason`, `paid_at` columns; update `insert_lead_from_apply` RPC; add `must_change_password` to profiles |
-| Edit | `src/pages/ApplyPage.tsx` | New form fields, remove old fields, remove WhatsApp button, add dark mode |
-| Create | `supabase/functions/create-team-member/index.ts` | Generic team member creation (influencer or lawyer) |
-| Edit | `src/components/admin/InfluencerManagement.tsx` | Rename to TeamManagement, add role selector, show lawyers, delete invites |
-| Edit | `src/components/admin/AdminLayout.tsx` | Update sidebar label |
-| Edit | `src/pages/AdminDashboardPage.tsx` | Update component references |
-| Edit | `src/pages/InfluencerDashboardPage.tsx` | Add eligibility display per lead card |
-| Edit | `src/components/influencer/EarningsPanel.tsx` | Add 20-day timer logic |
-| Edit | `src/pages/LawyerDashboardPage.tsx` | Show eligibility info on cases |
-| Edit | `src/pages/StudentAuthPage.tsx` | Add forced password change check |
-| Edit | `src/components/admin/LeadsManagement.tsx` | Add eligibility override, export button |
-| Edit | `src/components/admin/CasesManagement.tsx` | Add export button |
+| Edit | `src/styles/cv-print.css` | Hide Lovable badge, optimize margins, prevent content clipping |
+| Create | `src/utils/captureUtils.ts` | Canvas-based element-to-image capture utility |
+| Edit | `src/components/lebenslauf/useLebenslauf.ts` | Add image download handlers |
+| Edit | `src/components/lebenslauf/LebenslaufBuilder.tsx` | Add PNG/JPG download buttons |
+| Edit | `src/components/common/BottomNav.tsx` | Replace Housing with Apply |
+| Edit | `src/components/landing/Contact.tsx` | Fix hardcoded text-right for LTR support |
+| Edit | `public/locales/en/resources.json` | Add downloadPNG/downloadJPG translation keys |
+| Edit | `public/locales/ar/resources.json` | Add downloadPNG/downloadJPG translation keys |
+| Edit | `public/locales/en/common.json` | Add bottomNav.apply key |
+| Edit | `public/locales/ar/common.json` | Add bottomNav.apply key |
 
 ### Implementation Order
-1. Database migration (new columns + updated RPC with eligibility calculation)
-2. Apply page form overhaul
-3. Team member edge function + management UI
-4. Forced password change flow
-5. Influencer dashboard eligibility + 20-day timer
-6. Lawyer dashboard enhancements
-7. Admin export and override features
+1. CV print CSS fixes (branding removal + margin optimization)
+2. Image capture utility + CV builder download buttons
+3. Bottom nav update (Housing to Apply)
+4. Contact form LTR fix
+5. End-to-end testing across all dashboards in English mode
 
