@@ -120,12 +120,23 @@ const ApplyPage: React.FC = () => {
         <div className="min-h-screen flex flex-col bg-background text-foreground">
           <ApplyTopBar />
           <main className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-md text-center space-y-4 animate-fade-in">
-              <div className="mx-auto w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle className="h-10 w-10 text-green-500" />
+            <div className="w-full max-w-md text-center space-y-6 animate-fade-in">
+              <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
+                {/* Pulse rings */}
+                <span className="absolute inset-0 rounded-full bg-green-400/20 animate-[ping_1.5s_ease-out_infinite]" />
+                <span className="absolute inset-2 rounded-full bg-green-400/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
+                <div className="relative w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center animate-scale-in">
+                  <CheckCircle className="h-10 w-10 text-green-500" />
+                </div>
               </div>
               <h2 className="text-2xl font-bold">{t('apply.successTitle', 'تم استلام بياناتك ✅')}</h2>
               <p className="text-muted-foreground">{t('apply.successSubtitle', 'سيتم التواصل معك عبر واتساب قريباً')}</p>
+              <p className="text-sm text-muted-foreground/70">{t('apply.whileYouWait', 'في هذه الأثناء، تصفّح خدماتنا واكتشف المزيد')}</p>
+              <a href="/">
+                <Button className="h-12 px-8 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold mt-2">
+                  {t('apply.exploreWebsite', 'تصفّح موقعنا')}
+                </Button>
+              </a>
             </div>
           </main>
         </div>

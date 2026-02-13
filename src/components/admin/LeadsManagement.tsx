@@ -37,6 +37,7 @@ interface Lead {
 interface LeadsManagementProps {
   leads: Lead[];
   lawyers: { id: string; full_name: string }[];
+  influencers?: { id: string; full_name: string }[];
   onRefresh: () => void;
 }
 
@@ -53,7 +54,7 @@ const SOURCE_MAP: Record<string, string> = {
   organic: 'عضوي',
 };
 
-const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRefresh }) => {
+const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh }) => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -213,6 +214,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
                   <div className="flex items-center gap-2">
                     <Badge variant={st.variant}>{st.label}</Badge>
                     <Badge variant="outline" className="text-xs">{SOURCE_MAP[lead.source_type] || lead.source_type}</Badge>
+                    {lead.source_type === 'influencer' && lead.source_id && (() => {
+                      const inf = influencers.find(i => i.id === lead.source_id);
+                      return inf ? <Badge variant="secondary" className="text-xs">عبر {inf.full_name}</Badge> : null;
+                    })()}
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(lead.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>

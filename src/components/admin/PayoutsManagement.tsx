@@ -13,10 +13,29 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
   const [rewards, setRewards] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
   const [filter, setFilter] = useState('all');
   const isMobile = useIsMobile();
 
-  const fetchRewards = async () => { const { data } = await (supabase as any).from('rewards').select('*').order('created_at', { ascending: false }); if (data) setRewards(data); };
+  const fetchRewards = async () => {
+    const { data } = await (supabase as any).from('rewards').select('*').order('created_at', { ascending: false });
+    if (data) {
+      setRewards(data);
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set(data.map((r: any) => r.user_id))];
+      if (userIds.length > 0) {
+        const { data: profilesData } = await (supabase as any)
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        if (profilesData) {
+          const map: Record<string, { full_name: string; email: string }> = {};
+          profilesData.forEach((p: any) => { map[p.id] = { full_name: p.full_name, email: p.email }; });
+          setProfiles(map);
+        }
+      }
+    }
+  };
   useEffect(() => { fetchRewards(); }, []);
 
   const updateRewardStatus = async (id: string, newStatus: string) => {
@@ -32,6 +51,9 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const filtered = filter === 'all' ? rewards : rewards.filter(r => r.status === filter);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const statusKeys = ['pending', 'approved', 'paid', 'cancelled'];
+
+  const getRequesterName = (userId: string) => profiles[userId]?.full_name || 'غير معروف';
+  const getRequesterEmail = (userId: string) => profiles[userId]?.email || '';
 
   const ActionButtons = ({ reward }: { reward: any }) => {
     if (reward.status === 'paid' || reward.status === 'cancelled') return null;
@@ -58,6 +80,10 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         <div className="space-y-3">
           {filtered.map(r => (<Card key={r.id} className="overflow-hidden"><CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between gap-2"><span className="font-semibold text-base">{Number(r.amount).toLocaleString()} ₪</span><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></div>
+            <div>
+              <p className="text-sm font-medium">{getRequesterName(r.user_id)}</p>
+              <p className="text-xs text-muted-foreground">{getRequesterEmail(r.user_id)}</p>
+            </div>
             <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</span><ActionButtons reward={r} /></div>
           </CardContent></Card>))}
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
@@ -65,12 +91,17 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       ) : (
         <Card><CardContent className="p-0"><div className="overflow-x-auto">
           <table className="w-full text-sm"><thead><tr className="border-b bg-muted/50">
+            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.requester', 'الطالب')}</th>
             <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.amount')}</th>
             <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.status')}</th>
             <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.requestDate')}</th>
             <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.action')}</th>
           </tr></thead><tbody>{filtered.map(r => (
             <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
+              <td className="px-4 py-3">
+                <p className="font-medium">{getRequesterName(r.user_id)}</p>
+                <p className="text-xs text-muted-foreground">{getRequesterEmail(r.user_id)}</p>
+              </td>
               <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
               <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
               <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString(locale)}</td>
