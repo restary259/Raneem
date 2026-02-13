@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronDown, DollarSign, Save, Trash2, Download } from 'lucide-react';
+import { ChevronDown, DollarSign, Save, Trash2, Download, Clock } from 'lucide-react';
 
 interface StudentCase {
   id: string;
@@ -28,13 +28,14 @@ interface StudentCase {
   translation_fee: number;
   case_status: string;
   notes: string | null;
+  paid_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
 interface CasesManagementProps {
   cases: StudentCase[];
-  leads: { id: string; full_name: string; phone: string }[];
+  leads: { id: string; full_name: string; phone: string; source_type?: string; source_id?: string | null }[];
   lawyers: { id: string; full_name: string }[];
   onRefresh: () => void;
 }
@@ -112,7 +113,19 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
         case_id: caseId, influencer_amount: Number(editValues.influencer_commission) || 0,
         lawyer_amount: Number(editValues.lawyer_commission) || 0, status: 'approved',
       });
-      toast({ title: 'تم إنشاء العمولات', description: 'تم إنشاء سجل العمولات تلقائياً' });
+
+      // Auto-create reward for influencer if lead came from one
+      const lead = leads.find(l => l.id === originalCase?.lead_id);
+      if (lead?.source_type === 'influencer' && lead?.source_id) {
+        await (supabase as any).from('rewards').insert({
+          user_id: lead.source_id,
+          amount: Number(editValues.influencer_commission) || 0,
+          status: 'pending',
+        });
+        toast({ title: 'تم إنشاء العمولات والمكافأة', description: 'تم إنشاء سجل العمولات ومكافأة الوكيل تلقائياً' });
+      } else {
+        toast({ title: 'تم إنشاء العمولات', description: 'تم إنشاء سجل العمولات تلقائياً' });
+      }
     }
 
     setLoading(false); setEditingCase(null);
@@ -166,7 +179,22 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                 <CardContent className="p-4 cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <h3 className="font-bold text-sm">{getLeadName(c.lead_id)}</h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-sm">{getLeadName(c.lead_id)}</h3>
+                        {c.case_status === 'paid' && c.paid_at && (() => {
+                          const daysElapsed = Math.floor((Date.now() - new Date(c.paid_at).getTime()) / (1000 * 60 * 60 * 24));
+                          const daysRemaining = Math.max(0, 20 - daysElapsed);
+                          return daysRemaining > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                              <Clock className="h-3 w-3" />{daysRemaining} يوم متبقي
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
+                              جاهز للدفع
+                            </span>
+                          );
+                        })()}
+                      </div>
                       <p className="text-xs text-muted-foreground">محامي: {getLawyerName(c.assigned_lawyer_id)}</p>
                       {c.selected_city && <p className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</p>}
                     </div>

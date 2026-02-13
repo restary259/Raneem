@@ -161,9 +161,9 @@ const AdminDashboardPage = () => {
           />
         );
       case 'leads':
-        return <LeadsManagement leads={leads} lawyers={lawyers} onRefresh={fetchAllData} />;
+        return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
       case 'cases':
-        return <CasesManagement cases={cases} leads={leads.map(l => ({ id: l.id, full_name: l.full_name, phone: l.phone }))} lawyers={lawyers} onRefresh={fetchAllData} />;
+        return <CasesManagement cases={cases} leads={leads.map(l => ({ id: l.id, full_name: l.full_name, phone: l.phone, source_type: l.source_type, source_id: l.source_id }))} lawyers={lawyers} onRefresh={fetchAllData} />;
       case 'students':
         return (
           <StudentManagement
