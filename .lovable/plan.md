@@ -1,132 +1,114 @@
 
-## Global UI Refinement + Structural Enhancements + Financial Visuals
 
-This is a comprehensive UI/UX overhaul across all four dashboards (Admin, Lawyer, Student, Influencer) covering visual theme, delete functionality, sidebar restructuring, and financial presentation improvements.
+## Contact Form to Leads + Home Page English Translations
 
----
+### Part 1: Redirect Contact Form to Leads Table
 
-### Phase 1: Global Theme Update
+**Current behavior**: Form submits to `send-email` edge function, which saves to `contact_submissions` and optionally emails.
 
-**1.1 Background and Color Palette**
-- Change all dashboard backgrounds from `bg-muted/30` and `bg-gray-50` to `bg-[#F8FAFC]` (Ghost White) across:
-  - `AdminLayout.tsx` (main container)
-  - `LawyerDashboardPage.tsx`
-  - `InfluencerDashboardPage.tsx`
-  - `StudentDashboardPage.tsx`
-- Soften the admin/lawyer sidebar from `bg-[hsl(215,50%,23%)]` to a deep charcoal `bg-[#1E293B]` (Slate 800)
-- Active sidebar items get a brand accent glow: `bg-accent/20 text-white shadow-[0_0_12px_rgba(234,88,12,0.3)]` (orange glow)
+**New behavior**: Form inserts directly into the `leads` table from the frontend. No edge function call. No email.
 
-**1.2 Border Radius**
-- Update the Card component (`src/components/ui/card.tsx`) border-radius from `rounded-lg` to `rounded-2xl` (16px)
-- Update the Button component (`src/components/ui/button.tsx`) from `rounded-md` to `rounded-xl` (12px)
-- Update the Input component (`src/components/ui/input.tsx`) from `rounded-md` to `rounded-xl`
-- Update the Select trigger similarly
-- Update CSS variable `--radius` from `0.5rem` to `0.75rem` in `base.css`
+**Database Changes Required**
 
-**1.3 Typography**
-- Add `'IBM Plex Sans Arabic'` as the primary font in `base.css` body and in `tailwind.config.ts` fontFamily
-- Load the font via a Google Fonts import in `index.html`
+The `leads` table is missing columns that the contact form collects. We need to add:
 
-**1.4 Icons**
-- All icons are already using Lucide consistently -- no changes needed here. Verified across all dashboard components.
+| New Column | Type | Purpose |
+|---|---|---|
+| `email` | text, nullable | From form email field |
+| `service_requested` | text, nullable | From form service dropdown |
+| `notes` | text, nullable | From form message field |
+| `study_destination` | text, nullable | From form destination dropdown |
 
----
+We also need an RLS policy allowing anonymous inserts (public-facing form, no auth required). This will use a restrictive approach -- only INSERT, no SELECT/UPDATE/DELETE for anon.
 
-### Phase 2: Delete Functionality + Sidebar Cleanup
+**Field Mapping**
 
-**2.1 Delete with Confirmation**
-Add delete capability to the following management views with a shared confirmation dialog pattern ("Are you sure? This action cannot be undone."):
+| Form Field | Leads Column |
+|---|---|
+| `name` | `full_name` |
+| `email` | `email` (new) |
+| `whatsapp` | `phone` |
+| `studyDestination` | `study_destination` (new) + `preferred_city` |
+| `service` | `service_requested` (new) |
+| `message` | `notes` (new) |
+| -- | `status` = 'new' |
+| -- | `eligibility_score` = 0 |
+| -- | `source_type` = 'contact_form' |
 
-- **LeadsManagement.tsx**: Add a `Trash2` icon button on each lead card. On confirm, delete from `leads` table.
-- **CasesManagement.tsx**: Add a `Trash2` icon in the collapsed card header. On confirm, delete the case and related `case_payments` and `commissions`.
-- **StudentManagement.tsx**: Add a `Trash2` icon in the actions column. On confirm, delete profile.
-- **ContactsManager.tsx**: Add delete button per contact row.
-- **ChecklistManagement.tsx**: Add delete button per checklist item.
+**Duplicate Prevention**: Before inserting, query by phone number. If a match exists, update `created_at` instead of creating a duplicate. Since anon users can't SELECT the leads table, this check will be done via a database function (`upsert_lead_from_contact`) called through `.rpc()`.
 
-Each uses a shared `AlertDialog` confirmation modal:
-```
-"Are you sure? This action cannot be undone."
-[Cancel] [Delete]
-```
+**Code Changes (Contact.tsx)**
+- Remove the `supabase.functions.invoke('send-email', ...)` call
+- Replace with `supabase.rpc('upsert_lead_from_contact', { ... })` 
+- Keep honeypot check on the client side (silently succeed if filled)
+- Keep all form fields, validation, design, layout, and success/error messages exactly as they are
+- Disable submit button while pending (already done)
 
-**2.2 Admin Sidebar Restructuring**
-Reorganize `AdminLayout.tsx` tabs into grouped categories:
-
-```
-Dashboard
-  - Overview
-  - Analytics
-
-Students
-  - Leads (Potential Clients)
-  - Cases (Student Files)
-  - Students
-  - Checklist
-
-Team
-  - Influencers (Agents)
-  - Referrals
-
-Finance
-  - Payouts
-
-Tools
-  - Contacts (Messages)
-  - Security
-  - Audit Log
-```
-
-Implementation: Add section headers in the sidebar nav with small uppercase labels and a thin divider between groups.
+**Admin Dashboard**
+- `LeadsManagement.tsx` already shows all leads sorted by newest. New contact form leads will appear with `source_type = 'contact_form'` and `status = 'new'`. No changes needed -- they appear instantly on next query/refetch.
 
 ---
 
-### Phase 3: Dashboard and Financial Visuals
+### Part 2: Home Page English Translations
 
-**3.1 Stats Cards (AdminOverview.tsx)**
-- Reduce card padding from `p-5` to `p-4`
-- When a value is `0`, show a subtle "Getting Started" tip instead of a large "0" (e.g., "Add your first lead to get started" in muted text)
-- Reduce the large `text-2xl` number to `text-xl` for a more compact feel
+Three components on the home page have hardcoded Arabic text with no i18n:
 
-**3.2 Profit Analysis (KPIAnalytics.tsx)**
-- Add a hero "Net Profit" card at the top with a distinct gradient background (green if positive, red if negative)
-- Color-code revenue cards with green text/accent and expense cards with red text/accent
-- Show Revenue, Expenses, and Net Profit as three distinct visual blocks before the detailed breakdowns
+**2.1 AboutCustom.tsx** -- Stats section
+- Hardcoded: "ارقامنا تتحدث", "الشفافية والنجاح...", "طالب راض", "شريك", "دول حول العالم", "نسبة النجاح"
+- Fix: Use `t()` keys from landing namespace
 
-**3.3 Cases Financial Breakdown (CasesManagement.tsx)**
-- In the expanded view, color-code revenue items (service fee, school commission) in green and cost items (influencer/lawyer commission, discount, translation) in red
-- Make the "Net Profit" row more prominent with a larger font and colored background
+**2.2 StudentJourney.tsx** -- Journey steps
+- Hardcoded: "رحلتك نحو الدراسة في الخارج", step titles and descriptions
+- Fix: Use `t()` keys from landing namespace
 
-**3.4 Add Lead Modal (LeadsManagement.tsx)**
-- Convert from single-column to two-column layout on screens wider than mobile (`grid grid-cols-1 sm:grid-cols-2 gap-3`)
-- Set modal max-width to `max-w-lg` to give more room
+**2.3 PartnersMarquee.tsx** -- Section heading
+- Hardcoded: "أفضل الجامعات العالمية"
+- Fix: Use `t()` key from landing namespace
+
+**Translation keys to add to `public/locales/en/landing.json`**:
+
+```json
+"aboutStats": {
+  "title": "Our Numbers Speak",
+  "subtitle": "Transparency and success are the foundation of our work, and these numbers reflect our students' trust in us.",
+  "satisfiedStudents": "Satisfied Students",
+  "partners": "Partners",
+  "countries": "Countries Worldwide",
+  "successRate": "Success Rate"
+},
+"journey": {
+  "title": "Your Journey to Studying Abroad",
+  "subtitle": "We're with you step by step, from the idea to your first day of class.",
+  "steps": [
+    { "title": "Consultation & Assessment", "description": "Your journey begins with a free consultation to understand your goals and evaluate your profile." },
+    { "title": "Document Preparation & Applications", "description": "We help you prepare all documents and submit your applications to universities and embassies." },
+    { "title": "Travel Preparation", "description": "After receiving your acceptance and visa, we help you book housing and prepare for travel." },
+    { "title": "Post-Arrival Support", "description": "We welcome you and provide the support you need to settle in and start your studies comfortably." }
+  ]
+},
+"partnersMarquee": { "title": "Top Global Universities" }
+```
+
+**Same keys added to `public/locales/ar/landing.json`** with the existing Arabic text, so both components use `t()` consistently.
+
+**Component updates**: Replace all hardcoded strings with `t('key')` calls.
 
 ---
 
 ### Technical File Summary
 
 | Action | File | Changes |
-|--------|------|---------|
-| Edit | `index.html` | Add IBM Plex Sans Arabic Google Font link |
-| Edit | `src/styles/base.css` | Update `--radius`, add IBM Plex Sans Arabic to font-family |
-| Edit | `tailwind.config.ts` | Update fontFamily to include IBM Plex Sans Arabic |
-| Edit | `src/components/ui/card.tsx` | `rounded-lg` to `rounded-2xl` |
-| Edit | `src/components/ui/button.tsx` | `rounded-md` to `rounded-xl` |
-| Edit | `src/components/ui/input.tsx` | `rounded-md` to `rounded-xl` |
-| Edit | `src/components/admin/AdminLayout.tsx` | Sidebar color, active state glow, grouped sections, background color |
-| Edit | `src/components/admin/AdminOverview.tsx` | Compact stats, zero-state tips |
-| Edit | `src/components/admin/LeadsManagement.tsx` | Delete button, confirmation dialog, two-column modal |
-| Edit | `src/components/admin/CasesManagement.tsx` | Delete button, confirmation dialog, color-coded financials |
-| Edit | `src/components/admin/KPIAnalytics.tsx` | Hero net profit card, color-coded revenue/expenses |
-| Edit | `src/components/admin/StudentManagement.tsx` | Delete button with confirmation |
-| Edit | `src/pages/LawyerDashboardPage.tsx` | Background color, sidebar color update |
-| Edit | `src/pages/InfluencerDashboardPage.tsx` | Background color, header color update |
-| Edit | `src/pages/StudentDashboardPage.tsx` | Background color |
-| Edit | `src/components/dashboard/DashboardHeader.tsx` | Background update |
-| Edit | `src/components/dashboard/DashboardSidebar.tsx` | Active state styling |
+|---|---|---|
+| Migration | Database | Add `email`, `service_requested`, `notes`, `study_destination` to `leads`; create `upsert_lead_from_contact` RPC function; add anon insert policy |
+| Edit | `src/components/landing/Contact.tsx` | Replace edge function call with `supabase.rpc('upsert_lead_from_contact', ...)` |
+| Edit | `src/components/landing/AboutCustom.tsx` | Replace hardcoded Arabic with `t()` calls |
+| Edit | `src/components/landing/StudentJourney.tsx` | Replace hardcoded Arabic with `t()` calls |
+| Edit | `src/components/landing/PartnersMarquee.tsx` | Replace hardcoded Arabic with `t()` call |
+| Edit | `public/locales/en/landing.json` | Add `aboutStats`, `journey`, `partnersMarquee` keys |
+| Edit | `public/locales/ar/landing.json` | Add same keys with Arabic text |
 
 ### Implementation Order
-1. Global theme (fonts, colors, border-radius, backgrounds)
-2. Delete functionality with confirmation dialogs
-3. Sidebar grouping
-4. Financial visual improvements
-5. Stats cards zero-state and compact layout
+1. Database migration (new columns + RPC function + RLS)
+2. Contact.tsx backend swap
+3. Home page i18n (all three components + both locale files)
+
