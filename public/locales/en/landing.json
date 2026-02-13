@@ -14,30 +14,12 @@
     "title": "Why Choose Darb?",
     "subtitle": "We don't just promise success — we create it with you. Here's how we ensure an exceptional experience.",
     "reasons": [
-      {
-        "title": "Personal Support & Ongoing Follow-up",
-        "description": "You get a dedicated advisor who accompanies you every step, from choosing your major to settling in your study destination."
-      },
-      {
-        "title": "Fast & Reliable Processes",
-        "description": "Thanks to our direct relationships with universities, we ensure your application is processed quickly and efficiently."
-      },
-      {
-        "title": "Highly Experienced Specialists",
-        "description": "Our team consists of experts who have lived the study abroad experience and are ready to share their knowledge with you."
-      },
-      {
-        "title": "Global Network of Accredited Partners",
-        "description": "We open doors to the best universities and educational institutions worldwide through our extensive partner network."
-      },
-      {
-        "title": "Complete Transparency at Every Step",
-        "description": "We believe in full clarity. No hidden fees, and we keep you informed of all details about your application."
-      },
-      {
-        "title": "End-to-End Support from Application to Arrival",
-        "description": "Our services don't end at university admission — they extend to visa assistance, housing, and reception."
-      }
+      { "title": "Personal Support & Ongoing Follow-up", "description": "You get a dedicated advisor who accompanies you every step, from choosing your major to settling in your study destination." },
+      { "title": "Fast & Reliable Processes", "description": "Thanks to our direct relationships with universities, we ensure your application is processed quickly and efficiently." },
+      { "title": "Highly Experienced Specialists", "description": "Our team consists of experts who have lived the study abroad experience and are ready to share their knowledge with you." },
+      { "title": "Global Network of Accredited Partners", "description": "We open doors to the best universities and educational institutions worldwide through our extensive partner network." },
+      { "title": "Complete Transparency at Every Step", "description": "We believe in full clarity. No hidden fees, and we keep you informed of all details about your application." },
+      { "title": "End-to-End Support from Application to Arrival", "description": "Our services don't end at university admission — they extend to visa assistance, housing, and reception." }
     ]
   },
   "testimonials": {
@@ -90,25 +72,21 @@
   },
   "apply": {
     "heroTitle": "Start Your Journey to Study in Germany 🇩🇪",
-    "heroSubtitle": "Fill in your details and we'll contact you via WhatsApp shortly",
+    "heroSubtitle": "Fill in your details and we'll contact you soon",
     "step": "Step",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Enter your full name",
     "phone": "Phone / WhatsApp",
-    "city": "City (inside 48)",
-    "cityPlaceholder": "e.g. Haifa",
+    "passportType": "Passport Type",
+    "englishUnits": "English Units",
+    "mathUnits": "Math Units",
     "educationLevel": "Education Level",
     "germanLevel": "German Level",
-    "budgetRange": "Expected Budget",
-    "preferredCity": "Preferred City in Germany",
-    "accommodation": "Need Accommodation?",
-    "yes": "Yes",
-    "no": "No",
     "back": "Back",
     "next": "Next",
     "submit": "Submit My Details",
     "successTitle": "Your details have been received ✅",
-    "successSubtitle": "We'll contact you via WhatsApp soon",
+    "successSubtitle": "We'll contact you soon",
     "error": "An error occurred, please try again",
     "trustBadge1": "Free Consultation",
     "trustBadge2": "Accredited Schools",

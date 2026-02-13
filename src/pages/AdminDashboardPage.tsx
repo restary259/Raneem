@@ -180,6 +180,7 @@ const AdminDashboardPage = () => {
             influencers={influencers}
             invites={invites}
             students={students}
+            lawyers={lawyers}
             onRefresh={fetchAllData}
           />
         );

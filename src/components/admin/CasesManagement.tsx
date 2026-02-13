@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronDown, DollarSign, Save, Trash2 } from 'lucide-react';
+import { ChevronDown, DollarSign, Save, Trash2, Download } from 'lucide-react';
 
 interface StudentCase {
   id: string;
@@ -89,17 +89,24 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
 
   const saveCase = async (caseId: string) => {
     setLoading(true);
-    const { error } = await (supabase as any).from('student_cases').update({
+    const originalCase = cases.find(c => c.id === caseId);
+    const updateData: any = {
       service_fee: Number(editValues.service_fee) || 0, influencer_commission: Number(editValues.influencer_commission) || 0,
       lawyer_commission: Number(editValues.lawyer_commission) || 0, referral_discount: Number(editValues.referral_discount) || 0,
       school_commission: Number(editValues.school_commission) || 0, translation_fee: Number(editValues.translation_fee) || 0,
       selected_city: editValues.selected_city || null, selected_school: editValues.selected_school || null,
       case_status: editValues.case_status, notes: editValues.notes || null,
-    }).eq('id', caseId);
+    };
+
+    // Set paid_at when marking as paid
+    if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
+      updateData.paid_at = new Date().toISOString();
+    }
+
+    const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
 
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); setLoading(false); return; }
 
-    const originalCase = cases.find(c => c.id === caseId);
     if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
       await (supabase as any).from('commissions').insert({
         case_id: caseId, influencer_amount: Number(editValues.influencer_commission) || 0,
@@ -114,7 +121,6 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    // Delete related records first
     await (supabase as any).from('case_payments').delete().eq('case_id', deleteId);
     await (supabase as any).from('commissions').delete().eq('case_id', deleteId);
     const { error } = await (supabase as any).from('student_cases').delete().eq('id', deleteId);
@@ -125,9 +131,28 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
 
   const getNetProfit = (c: StudentCase) => c.service_fee + c.school_commission - c.influencer_commission - c.lawyer_commission - c.referral_discount - c.translation_fee;
 
+  const exportCSV = () => {
+    const headers = ['الطالب', 'المحامي', 'المدينة', 'المدرسة', 'الحالة', 'رسوم الخدمة', 'عمولة الوكيل', 'عمولة المحامي', 'صافي الربح', 'التاريخ'];
+    const rows = cases.map(c => [
+      getLeadName(c.lead_id), getLawyerName(c.assigned_lawyer_id), c.selected_city || '', c.selected_school || '',
+      CASE_STATUSES.find(s => s.value === c.case_status)?.label || c.case_status,
+      c.service_fee, c.influencer_commission, c.lawyer_commission, getNetProfit(c),
+      new Date(c.created_at).toLocaleDateString('ar'),
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'cases.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">{cases.length} ملف طالب</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{cases.length} ملف طالب</p>
+        <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />تصدير CSV</Button>
+      </div>
 
       {cases.map(c => {
         const isEditing = editingCase === c.id;
@@ -209,7 +234,6 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
       })}
       {cases.length === 0 && <p className="text-center text-muted-foreground py-8">لا يوجد ملفات طلاب بعد</p>}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
