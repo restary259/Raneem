@@ -233,7 +233,7 @@ const StudentAuthPage = () => {
           </CardContent>
         </Card>
 
-        <AuthDebugPanel />
+        {import.meta.env.DEV && <AuthDebugPanel />}
         <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
       </div>
     </div>

@@ -49,39 +49,30 @@ const Contact = () => {
         },
       });
 
-      console.log('📧 Email function result:', result);
-
       if (result.error) {
-        console.error('❌ Supabase function error:', result.error);
         throw new Error(`Function error: ${result.error.message}`);
       }
 
       if (result.data?.error) {
-        console.error('❌ Email function returned error:', result.data.error);
         throw new Error(result.data.error);
       }
 
       if (!result.data?.success) {
-        console.error('❌ Email function failed without specific error');
         throw new Error('Email sending failed');
       }
 
-      console.log('✅ Email sent successfully:', result.data);
       return result.data;
     },
-    onSuccess: (data) => {
-      console.log('✅ Contact form submitted successfully:', data);
+    onSuccess: () => {
       toast({ title: t('contact.successTitle', { ns: 'common' }), description: t('contact.successDesc', { ns: 'common' }) });
       form.reset();
     },
     onError: (error) => {
-      console.error('❌ Contact form submission failed:', error);
       toast({ variant: "destructive", title: t('contact.errorTitle', { ns: 'common' }), description: error.message });
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('📝 Form submitted with values:', values);
     mutate(values);
   }
 

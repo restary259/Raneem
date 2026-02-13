@@ -15,11 +15,19 @@ const countries = [
   },
 ];
 
-async function fetchRate(toCurrency: string, date = "2025-06-16"): Promise<number | null> {
-  const url = `https://api.exchangerate.host/convert?from=ILS&to=${toCurrency}&date=${date}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.result ?? null;
+async function fetchRate(toCurrency: string): Promise<number | null> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-exchange-rate`;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      body: JSON.stringify({ from: 'ILS', to: toCurrency }),
+    });
+    const data = await res.json();
+    return data.result ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function compareRates(live: number | null, reference: number | null) {
