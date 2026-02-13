@@ -25,7 +25,7 @@ const TeamSection = () => {
                 <TooltipTrigger asChild>
                   <div className="flex flex-col items-center gap-2 cursor-pointer group">
                     <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-transparent group-hover:border-accent transition-all duration-300 shadow-lg">
-                      <AvatarImage src={member.imageUrl} alt={member.name} loading="lazy" />
+                      <AvatarImage src={member.imageUrl} alt={member.name} loading="lazy" decoding="async" />
                       <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <h3 className="font-bold text-lg mt-2">{member.name}</h3>

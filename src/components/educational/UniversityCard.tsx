@@ -20,7 +20,7 @@ const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
   const { t } = useTranslation('common');
   return <Card className="hover:shadow-xl transition-all duration-300 group">
       <CardContent className="p-6">
-        <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border"></div>
+        <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border" />
         <h3 className="text-xl font-bold mb-2">{university.name}</h3>
         <p className="text-gray-600 flex items-center gap-2 mb-3"><MapPin className="h-4 w-4" />{university.location}</p>
         <p className="text-sm text-gray-600 mb-4">{university.description}</p>

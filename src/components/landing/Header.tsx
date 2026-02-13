@@ -22,6 +22,7 @@ const Header = () => {
                 src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
                 alt={t('loader.brand')} 
                 className="h-8 md:h-10 w-auto object-contain"
+                fetchPriority="high"
               />
               <span className="font-bold text-lg md:text-xl text-gray-900 hidden sm:block">{t('loader.brand')}</span>
             </Link>

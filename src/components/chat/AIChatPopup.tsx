@@ -26,7 +26,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
   } = useAIChat(true);
 
   return (
-    <Card className="flex flex-col h-[550px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background/95 backdrop-blur-sm border-white/20" dir={dir}>
+    <Card className="flex flex-col h-[550px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background border-white/20" dir={dir}>
       <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-l from-orange-500 to-amber-500 text-white p-4 shrink-0">
         <div className="flex items-center gap-2">
           <Bot className="h-6 w-6" />

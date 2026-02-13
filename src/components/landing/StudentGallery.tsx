@@ -29,6 +29,8 @@ const StudentGallery = () => {
                   src={student.image} 
                   alt={`Student ${student.name || 'story'}`}
                   className="w-full h-56 sm:h-64 lg:h-80 object-contain object-center group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                 <div className="absolute bottom-0 right-0 p-6 text-white text-right">

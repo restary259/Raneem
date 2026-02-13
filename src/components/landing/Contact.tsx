@@ -81,7 +81,7 @@ const Contact = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
           
-          <div className="lg:col-span-2 text-right p-4 sm:p-6 md:p-8 bg-background/50 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
+          <div className="lg:col-span-2 text-right p-4 sm:p-6 md:p-8 bg-background/80 border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
             <div className="text-center md:text-right max-w-2xl mb-8">
               <h2 className="text-3xl md:text-4xl font-bold">{t('contact.title')}</h2>
               <p className="mt-4 text-lg text-muted-foreground">
@@ -140,7 +140,7 @@ const Contact = () => {
 
           <div className="space-y-8">
             <OfficeLocations />
-            <div className="bg-background/80 backdrop-blur-sm border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
+            <div className="bg-background/90 border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
               <h3 className="text-xl font-semibold mb-4 text-center">{t('contact.follow')}</h3>
               <div className="flex justify-center items-center gap-6">
                 <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
