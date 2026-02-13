@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase } from 'lucide-react';
+import { Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 
 const CASE_STATUSES = [
   { value: 'assigned', label: 'معيّن' },
@@ -31,6 +31,13 @@ const STATUS_COLORS: Record<string, string> = {
   closed: 'bg-gray-100 text-gray-800',
   lost: 'bg-red-100 text-red-800',
   paid: 'bg-green-100 text-green-800',
+};
+
+const SOURCE_MAP: Record<string, string> = {
+  influencer: 'وكيل',
+  referral: 'إحالة',
+  organic: 'عضوي',
+  contact_form: 'نموذج التواصل',
 };
 
 const LawyerDashboardPage = () => {
@@ -73,10 +80,9 @@ const LawyerDashboardPage = () => {
       .from('student_cases').select('*').eq('assigned_lawyer_id', userId).order('created_at', { ascending: false });
     if (casesData) {
       setCases(casesData);
-      // Fetch lead names for these cases
       const leadIds = [...new Set(casesData.map((c: any) => c.lead_id))];
       if (leadIds.length > 0) {
-        const { data: leadsData } = await (supabase as any).from('leads').select('id, full_name, phone').in('id', leadIds);
+        const { data: leadsData } = await (supabase as any).from('leads').select('id, full_name, phone, eligibility_score, eligibility_reason, source_type, passport_type, english_units, math_units').in('id', leadIds);
         if (leadsData) setLeads(leadsData);
       }
     }
@@ -92,16 +98,22 @@ const LawyerDashboardPage = () => {
   const saveCase = async (caseId: string) => {
     setSaving(true);
     const prevCase = cases.find(c => c.id === caseId);
-    const { error } = await (supabase as any).from('student_cases').update({
+    const updateData: any = {
       case_status: editValues.case_status,
       notes: editValues.notes || null,
       selected_city: editValues.selected_city || null,
       selected_school: editValues.selected_school || null,
-    }).eq('id', caseId);
+    };
+
+    // Set paid_at when marking as paid
+    if (editValues.case_status === 'paid' && prevCase?.case_status !== 'paid') {
+      updateData.paid_at = new Date().toISOString();
+    }
+
+    const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
 
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); setSaving(false); return; }
 
-    // If marked as paid, log for admin notification
     if (editValues.case_status === 'paid' && prevCase?.case_status !== 'paid') {
       toast({ title: 'تنبيه', description: 'تم إرسال إشعار للإدارة لتأكيد الدفع. لن يتم تفعيل العمولات حتى التأكيد.' });
     }
@@ -147,7 +159,6 @@ const LawyerDashboardPage = () => {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <Card><CardContent className="p-3 text-center">
             <p className="text-xs text-muted-foreground">إجمالي</p>
@@ -163,13 +174,14 @@ const LawyerDashboardPage = () => {
           </CardContent></Card>
         </div>
 
-        {/* Cases */}
         <h2 className="font-bold text-base flex items-center gap-2"><Briefcase className="h-4 w-4" />الملفات المعينة</h2>
         {cases.map(c => {
           const lead = getLeadInfo(c.lead_id);
           const isEditing = editingCase === c.id;
           const statusLabel = CASE_STATUSES.find(s => s.value === c.case_status)?.label || c.case_status;
           const statusColor = STATUS_COLORS[c.case_status] || 'bg-gray-100 text-gray-800';
+          const score = (lead as any).eligibility_score ?? null;
+          const isEligible = score !== null && score >= 50;
 
           return (
             <Collapsible key={c.id}>
@@ -184,7 +196,10 @@ const LawyerDashboardPage = () => {
                             <Phone className="h-3 w-3" />{lead.phone}
                           </a>
                         )}
-                        {c.selected_city && <p className="text-xs text-muted-foreground mt-0.5">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</p>}
+                        <div className="flex items-center gap-2 mt-1">
+                          {c.selected_city && <span className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</span>}
+                          {(lead as any).source_type && <Badge variant="outline" className="text-[10px]">{SOURCE_MAP[(lead as any).source_type] || (lead as any).source_type}</Badge>}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
@@ -195,6 +210,17 @@ const LawyerDashboardPage = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="px-4 pb-4 border-t pt-3 space-y-3">
+                    {/* Eligibility info */}
+                    {score !== null && (
+                      <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+                        {isEligible ? (
+                          <><CheckCircle className="h-4 w-4 shrink-0" /><span>مؤهل ({score} نقطة)</span></>
+                        ) : (
+                          <><XCircle className="h-4 w-4 shrink-0" /><span>{(lead as any).eligibility_reason || 'غير مؤهل'} ({score} نقطة)</span></>
+                        )}
+                      </div>
+                    )}
+
                     {!isEditing ? (
                       <>
                         {c.notes && <p className="text-sm text-muted-foreground bg-muted/30 p-2 rounded">{c.notes}</p>}

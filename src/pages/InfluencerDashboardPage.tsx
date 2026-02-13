@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { User } from '@supabase/supabase-js';
-import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock } from 'lucide-react';
+import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import MediaHub from '@/components/influencer/MediaHub';
 import ReferralLink from '@/components/influencer/ReferralLink';
@@ -36,7 +36,6 @@ const InfluencerDashboardPage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
-  const [commissions, setCommissions] = useState<any[]>([]);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [studentChecklists, setStudentChecklists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,17 +60,9 @@ const InfluencerDashboardPage = () => {
       const { data: prof } = await (supabase as any).from('profiles').select('*').eq('id', session.user.id).maybeSingle();
       if (prof) setProfile(prof);
 
-      // Fetch leads for this influencer
       const { data: myLeads } = await (supabase as any)
         .from('leads').select('*').eq('source_id', session.user.id).order('created_at', { ascending: false });
       if (myLeads) setLeads(myLeads);
-
-      // Fetch commissions for this influencer's cases
-      const { data: allCommissions } = await (supabase as any)
-        .from('commissions').select('*, student_cases!inner(lead_id, leads!inner(source_id))');
-      // Filter client-side since RLS only allows admin
-      // Actually commissions table is admin-only, so influencer won't see them
-      // We'll use the leads data to show stats instead
 
       const { data: assignedStudents } = await (supabase as any)
         .from('profiles').select('*').eq('influencer_id', session.user.id).order('created_at', { ascending: false });
@@ -105,7 +96,8 @@ const InfluencerDashboardPage = () => {
   }
 
   const totalLeads = leads.length;
-  const eligibleLeads = leads.filter(l => l.status === 'eligible' || l.status === 'assigned').length;
+  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
+  const notEligibleLeads = leads.filter(l => l.status === 'not_eligible').length;
   const closedLeads = leads.filter(l => l.status === 'assigned').length;
   const paidStudents = students.filter(s => s.student_status === 'paid').length;
   const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
@@ -136,7 +128,7 @@ const InfluencerDashboardPage = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Enhanced Stats */}
+        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card><CardContent className="p-4 text-center">
             <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
@@ -194,11 +186,12 @@ const InfluencerDashboardPage = () => {
         {/* Tab content */}
         {activeTab === 'students' && (
           <div className="space-y-3">
-            {/* Leads from leads table */}
             {leads.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm text-muted-foreground">العملاء المحالين</h3>
                 {leads.map(lead => {
+                  const score = lead.eligibility_score ?? 0;
+                  const isEligible = score >= 50;
                   const statusMap: Record<string, { label: string; color: string }> = {
                     new: { label: 'جديد', color: 'bg-blue-100 text-blue-800' },
                     eligible: { label: 'مؤهل', color: 'bg-emerald-100 text-emerald-800' },
@@ -208,12 +201,25 @@ const InfluencerDashboardPage = () => {
                   const st = statusMap[lead.status] || statusMap.new;
                   return (
                     <Card key={lead.id}>
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{lead.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{lead.city || '—'} • {lead.german_level || '—'}</p>
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{lead.full_name}</p>
+                            <p className="text-xs text-muted-foreground">{lead.city || '—'} • {lead.german_level || '—'}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{st.label}</span>
+                            <Badge variant="outline" className="text-xs">{score} نقطة</Badge>
+                          </div>
                         </div>
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{st.label}</span>
+                        {/* Eligibility display */}
+                        <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+                          {isEligible ? (
+                            <><CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>مؤهل للتقديم</span></>
+                          ) : (
+                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{lead.eligibility_reason || 'لم يستوفِ الشروط'}</span></>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -221,7 +227,6 @@ const InfluencerDashboardPage = () => {
               </div>
             )}
 
-            {/* Assigned students */}
             {students.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm text-muted-foreground">الطلاب المسجلين</h3>

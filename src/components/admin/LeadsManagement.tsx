@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, MapPin, GraduationCap, DollarSign, Plus, Search, UserCheck, UserX, Gavel, Trash2 } from 'lucide-react';
+import { Phone, MapPin, GraduationCap, DollarSign, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -26,6 +26,10 @@ interface Lead {
   source_type: string;
   source_id: string | null;
   eligibility_score: number | null;
+  eligibility_reason: string | null;
+  passport_type: string | null;
+  english_units: number | null;
+  math_units: number | null;
   status: string;
   created_at: string;
 }
@@ -56,6 +60,9 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
   const [assignModal, setAssignModal] = useState<{ leadId: string; leadName: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedLawyer, setSelectedLawyer] = useState('');
+  const [overrideModal, setOverrideModal] = useState<Lead | null>(null);
+  const [overrideScore, setOverrideScore] = useState('');
+  const [overrideStatus, setOverrideStatus] = useState('');
   const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '' });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -78,7 +85,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
     });
     setLoading(false);
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); return; }
-    toast({ title: 'تمت الإضافة', description: 'تم إضافة العميل المحتمل بنجاح' });
+    toast({ title: 'تمت الإضافة' });
     setShowAddModal(false);
     setNewLead({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '' });
     onRefresh();
@@ -116,8 +123,51 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
     const { data: cases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
     if (cases?.[0]) { await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', cases[0].id); }
     setLoading(false);
-    toast({ title: 'تم التعيين', description: `تم تعيين محامي للعميل ${assignModal.leadName}` });
+    toast({ title: 'تم التعيين' });
     setAssignModal(null); setSelectedLawyer(''); onRefresh();
+  };
+
+  const handleOverrideScore = async () => {
+    if (!overrideModal) return;
+    setLoading(true);
+    const { error } = await (supabase as any).from('leads').update({
+      eligibility_score: overrideScore ? parseInt(overrideScore) : null,
+      status: overrideStatus || overrideModal.status,
+    }).eq('id', overrideModal.id);
+
+    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
+    else {
+      // Audit log
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id,
+          action: 'override_eligibility',
+          target_id: overrideModal.id,
+          target_table: 'leads',
+          details: `Override score to ${overrideScore}, status to ${overrideStatus || overrideModal.status}`,
+        });
+      }
+      toast({ title: 'تم تحديث النقاط' });
+      onRefresh();
+    }
+    setLoading(false);
+    setOverrideModal(null);
+  };
+
+  const exportCSV = () => {
+    const headers = ['الاسم', 'الهاتف', 'المدينة', 'جواز السفر', 'إنجليزي', 'رياضيات', 'التعليم', 'الألمانية', 'النقاط', 'الحالة', 'المصدر', 'التاريخ'];
+    const rows = filtered.map(l => [
+      l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '',
+      l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type,
+      new Date(l.created_at).toLocaleDateString('ar'),
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'leads.csv'; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -139,12 +189,17 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />إضافة عميل</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />تصدير CSV</Button>
+          <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />إضافة عميل</Button>
+        </div>
       </div>
 
       <div className="grid gap-3">
         {filtered.map(lead => {
           const st = STATUS_MAP[lead.status] || STATUS_MAP.new;
+          const score = lead.eligibility_score ?? 0;
+          const isEligible = score >= 50;
           return (
             <Card key={lead.id} className="shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-4 space-y-3">
@@ -167,8 +222,21 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
                 <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                   {lead.city && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{lead.city}</span>}
                   {lead.german_level && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{lead.german_level}</span>}
-                  {lead.budget_range && <span className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" />{lead.budget_range}</span>}
-                  {lead.eligibility_score != null && <span>نقاط: {lead.eligibility_score}</span>}
+                  {lead.passport_type && <span>جواز: {lead.passport_type}</span>}
+                  {lead.english_units != null && <span>إنجليزي: {lead.english_units} وحدات</span>}
+                  {lead.math_units != null && <span>رياضيات: {lead.math_units} وحدات</span>}
+                </div>
+
+                {/* Eligibility display */}
+                <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+                  {isEligible ? (
+                    <><CheckCircle className="h-4 w-4 shrink-0" /><span>مؤهل ({score} نقطة)</span></>
+                  ) : (
+                    <><XCircle className="h-4 w-4 shrink-0" /><span>{lead.eligibility_reason || 'غير مؤهل'} ({score} نقطة)</span></>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-5 px-1 ms-auto text-xs" onClick={() => { setOverrideModal(lead); setOverrideScore(String(score)); setOverrideStatus(lead.status); }}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
                 </div>
 
                 {lead.status === 'new' && (
@@ -203,7 +271,30 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Add Lead Modal - Two Column */}
+      {/* Override Eligibility Modal */}
+      <Dialog open={!!overrideModal} onOpenChange={() => setOverrideModal(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>تعديل الأهلية - {overrideModal?.full_name}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>النقاط</Label><Input type="number" value={overrideScore} onChange={e => setOverrideScore(e.target.value)} /></div>
+            <div><Label>الحالة</Label>
+              <Select value={overrideStatus} onValueChange={setOverrideStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">جديد</SelectItem>
+                  <SelectItem value="eligible">مؤهل</SelectItem>
+                  <SelectItem value="not_eligible">غير مؤهل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleOverrideScore} disabled={loading}>{loading ? 'جاري...' : 'حفظ'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Lead Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>إضافة عميل محتمل</DialogTitle></DialogHeader>
@@ -213,8 +304,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, onRef
             <div><Label>المدينة</Label><Input value={newLead.city} onChange={e => setNewLead(p => ({ ...p, city: e.target.value }))} /></div>
             <div><Label>العمر</Label><Input type="number" value={newLead.age} onChange={e => setNewLead(p => ({ ...p, age: e.target.value }))} /></div>
             <div><Label>مستوى الألمانية</Label><Input value={newLead.german_level} onChange={e => setNewLead(p => ({ ...p, german_level: e.target.value }))} /></div>
-            <div><Label>الميزانية</Label><Input value={newLead.budget_range} onChange={e => setNewLead(p => ({ ...p, budget_range: e.target.value }))} /></div>
-            <div><Label>المدينة المفضلة</Label><Input value={newLead.preferred_city} onChange={e => setNewLead(p => ({ ...p, preferred_city: e.target.value }))} /></div>
             <div className="sm:col-span-2"><Label>نقاط الأهلية</Label><Input type="number" value={newLead.eligibility_score} onChange={e => setNewLead(p => ({ ...p, eligibility_score: e.target.value }))} /></div>
           </div>
           <DialogFooter>

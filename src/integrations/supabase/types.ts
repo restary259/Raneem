@@ -292,12 +292,16 @@ export type Database = {
           city: string | null
           created_at: string
           education_level: string | null
+          eligibility_reason: string | null
           eligibility_score: number | null
           email: string | null
+          english_units: number | null
           full_name: string
           german_level: string | null
           id: string
+          math_units: number | null
           notes: string | null
+          passport_type: string | null
           phone: string
           preferred_city: string | null
           service_requested: string | null
@@ -313,12 +317,16 @@ export type Database = {
           city?: string | null
           created_at?: string
           education_level?: string | null
+          eligibility_reason?: string | null
           eligibility_score?: number | null
           email?: string | null
+          english_units?: number | null
           full_name: string
           german_level?: string | null
           id?: string
+          math_units?: number | null
           notes?: string | null
+          passport_type?: string | null
           phone: string
           preferred_city?: string | null
           service_requested?: string | null
@@ -334,12 +342,16 @@ export type Database = {
           city?: string | null
           created_at?: string
           education_level?: string | null
+          eligibility_reason?: string | null
           eligibility_score?: number | null
           email?: string | null
+          english_units?: number | null
           full_name?: string
           german_level?: string | null
           id?: string
+          math_units?: number | null
           notes?: string | null
+          passport_type?: string | null
           phone?: string
           preferred_city?: string | null
           service_requested?: string | null
@@ -428,6 +440,7 @@ export type Database = {
           id: string
           influencer_id: string | null
           intake_month: string | null
+          must_change_password: boolean
           notes: string | null
           phone_number: string | null
           student_status: string
@@ -444,6 +457,7 @@ export type Database = {
           id: string
           influencer_id?: string | null
           intake_month?: string | null
+          must_change_password?: boolean
           notes?: string | null
           phone_number?: string | null
           student_status?: string
@@ -460,6 +474,7 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           intake_month?: string | null
+          must_change_password?: boolean
           notes?: string | null
           phone_number?: string | null
           student_status?: string
@@ -671,6 +686,7 @@ export type Database = {
           lawyer_commission: number
           lead_id: string
           notes: string | null
+          paid_at: string | null
           referral_discount: number
           school_commission: number
           selected_city: string | null
@@ -690,6 +706,7 @@ export type Database = {
           lawyer_commission?: number
           lead_id: string
           notes?: string | null
+          paid_at?: string | null
           referral_discount?: number
           school_commission?: number
           selected_city?: string | null
@@ -709,6 +726,7 @@ export type Database = {
           lawyer_commission?: number
           lead_id?: string
           notes?: string | null
+          paid_at?: string | null
           referral_discount?: number
           school_commission?: number
           selected_city?: string | null
@@ -793,21 +811,40 @@ export type Database = {
         }
         Returns: boolean
       }
-      insert_lead_from_apply: {
-        Args: {
-          p_accommodation?: boolean
-          p_budget_range?: string
-          p_city?: string
-          p_education_level?: string
-          p_full_name: string
-          p_german_level?: string
-          p_phone: string
-          p_preferred_city?: string
-          p_source_id?: string
-          p_source_type?: string
-        }
-        Returns: undefined
-      }
+      insert_lead_from_apply:
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_education_level?: string
+              p_full_name: string
+              p_german_level?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_education_level?: string
+              p_english_units?: number
+              p_full_name: string
+              p_german_level?: string
+              p_math_units?: number
+              p_passport_type?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
       upsert_lead_from_contact: {
         Args: {
           p_email: string

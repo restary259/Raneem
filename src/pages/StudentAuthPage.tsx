@@ -13,6 +13,7 @@ import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const StudentAuthPage = () => {
   const { t } = useTranslation();
@@ -26,12 +27,22 @@ const StudentAuthPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const refId = searchParams.get('ref');
 
   const redirectByRole = async (userId: string) => {
+    // Check must_change_password first
+    const { data: profile } = await (supabase as any).from('profiles').select('must_change_password').eq('id', userId).maybeSingle();
+    if (profile?.must_change_password) {
+      setShowChangePasswordModal(true);
+      return;
+    }
+
     const { data: roles } = await (supabase as any)
       .from('user_roles')
       .select('role')
@@ -39,6 +50,8 @@ const StudentAuthPage = () => {
     
     if (roles?.some((r: any) => r.role === 'admin')) {
       navigate('/admin');
+    } else if (roles?.some((r: any) => r.role === 'lawyer')) {
+      navigate('/lawyer-dashboard');
     } else if (roles?.some((r: any) => r.role === 'influencer')) {
       navigate('/influencer-dashboard');
     } else {
@@ -61,7 +74,6 @@ const StudentAuthPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
       setUser(session?.user ?? null);
-      // Defer Supabase calls to avoid deadlock inside onAuthStateChange
       if (session?.user) {
         setTimeout(() => {
           if (isMounted) redirectByRole(session.user.id);
@@ -74,6 +86,36 @@ const StudentAuthPage = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  const handleChangePassword = async () => {
+    if (!validatePassword(newPassword)) {
+      toast({ variant: 'destructive', title: 'كلمة مرور ضعيفة', description: 'يجب أن تحتوي على 8 أحرف على الأقل' });
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+
+      // Update must_change_password
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await (supabase as any).from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
+      }
+
+      setShowChangePasswordModal(false);
+      toast({ title: 'تم تغيير كلمة المرور بنجاح' });
+
+      // Now redirect
+      if (session) {
+        await redirectByRole(session.user.id);
+      }
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'خطأ', description: err.message });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,6 +288,24 @@ const StudentAuthPage = () => {
 
         {import.meta.env.DEV && <AuthDebugPanel />}
         <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
+
+        {/* Forced Password Change Modal */}
+        <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
+          <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
+            <DialogHeader><DialogTitle>يجب تغيير كلمة المرور</DialogTitle></DialogHeader>
+            <p className="text-sm text-muted-foreground">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
+            <div className="space-y-3">
+              <div>
+                <Label>كلمة المرور الجديدة</Label>
+                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="أدخل كلمة مرور جديدة" />
+                <PasswordStrength password={newPassword} />
+              </div>
+              <Button className="w-full" onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
+                {changingPassword ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />جاري...</> : 'تغيير كلمة المرور'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Gift } from 'lucide-react';
+import { DollarSign, Gift, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface EarningsPanelProps {
@@ -27,10 +27,32 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
   const pendingAmount = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const paidAmount = rewards.filter(r => r.status === 'paid').reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
+  // 20-day timer logic
+  const getDaysRemaining = (reward: any) => {
+    if (!reward.paid_at && !reward.payout_requested_at) return null;
+    const referenceDate = reward.paid_at || reward.created_at;
+    const daysSince = Math.floor((Date.now() - new Date(referenceDate).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, 20 - daysSince);
+  };
+
+  const canRequestPayout = () => {
+    const pendingRewards = rewards.filter(r => r.status === 'pending');
+    if (!pendingRewards.length) return false;
+    // Check all have passed 20-day timer
+    return pendingRewards.every(r => {
+      const remaining = getDaysRemaining(r);
+      return remaining === null || remaining <= 0;
+    });
+  };
+
   const requestPayout = async () => {
     const pendingRewards = rewards.filter(r => r.status === 'pending');
     if (!pendingRewards.length) {
       toast({ title: t('influencer.earnings.noPending') });
+      return;
+    }
+    if (!canRequestPayout()) {
+      toast({ title: 'لم تنتهِ فترة الانتظار (20 يوم) بعد', variant: 'destructive' });
       return;
     }
     for (const r of pendingRewards) {
@@ -65,7 +87,17 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
         </Card>
       </div>
 
-      <Button onClick={requestPayout}>{t('influencer.earnings.requestPayout')}</Button>
+      <div className="flex items-center gap-3">
+        <Button onClick={requestPayout} disabled={!canRequestPayout()}>
+          {t('influencer.earnings.requestPayout')}
+        </Button>
+        {!canRequestPayout() && rewards.some(r => r.status === 'pending') && (
+          <div className="flex items-center gap-1 text-sm text-amber-600">
+            <Clock className="h-4 w-4" />
+            <span>فترة انتظار 20 يوم</span>
+          </div>
+        )}
+      </div>
 
       <Card>
         <CardHeader><CardTitle className="text-lg">{t('influencer.earnings.earningsHistory')}</CardTitle></CardHeader>
@@ -79,17 +111,28 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.amount')}</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.status')}</th>
+                    <th className="px-4 py-3 text-start font-semibold">المؤقت</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.date')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rewards.map(r => (
-                    <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
-                      <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
-                      <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</td>
-                    </tr>
-                  ))}
+                  {rewards.map(r => {
+                    const daysLeft = getDaysRemaining(r);
+                    return (
+                      <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                        <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
+                        <td className="px-4 py-3">
+                          {r.status === 'pending' && daysLeft !== null && daysLeft > 0 ? (
+                            <span className="text-amber-600 text-xs flex items-center gap-1"><Clock className="h-3 w-3" />{daysLeft} يوم</span>
+                          ) : r.status === 'pending' ? (
+                            <span className="text-emerald-600 text-xs">جاهز</span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
