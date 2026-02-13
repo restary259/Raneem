@@ -18,19 +18,56 @@
     padding: 0;
     box-shadow: none;
     border: none;
+    overflow: visible;
+    max-height: none;
   }
 
-  .print\\:hidden {
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Hide Lovable branding */
+  [data-lovable-badge],
+  #lovable-badge,
+  iframe[src*="lovable"],
+  div[class*="lovable-badge"],
+  a[href*="lovable.dev"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Hide UI overlays */
+  nav,
+  footer,
+  .bottom-nav-item,
+  [role="navigation"],
+  .fixed.bottom-0,
+  .chat-widget,
+  .pwa-installer,
+  .cookie-banner,
+  .offline-indicator {
     display: none !important;
   }
 
   @page {
     size: A4;
-    margin: 15mm;
+    margin: 10mm 15mm;
   }
 
   /* Page break handling */
   section {
     break-inside: avoid;
+  }
+
+  /* Avoid breaking individual CV entries */
+  .cv-entry,
+  .education-entry,
+  .experience-entry,
+  .certificate-entry,
+  .volunteer-entry,
+  .publication-entry,
+  .reference-entry {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

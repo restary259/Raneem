@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Bot, User } from 'lucide-react';
+import { Home, Search, Bot, User, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
@@ -40,10 +40,10 @@ const BottomNav = () => {
       ariaLabel: t('bottomNav.advisorAria')
     },
     {
-      name: t('housing.title', 'Housing'),
-      href: '/housing',
-      icon: Home,
-      ariaLabel: t('housing.title', 'Student Housing')
+      name: t('bottomNav.apply', 'Apply'),
+      href: '/apply',
+      icon: FileText,
+      ariaLabel: t('bottomNav.applyAria', 'Apply Now')
     },
     {
       name: t('bottomNav.account'),

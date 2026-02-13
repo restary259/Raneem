@@ -74,8 +74,8 @@ const Contact = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
           
-          <div className="lg:col-span-2 text-right p-4 sm:p-6 md:p-8 bg-background/80 border border-white/20 rounded-2xl shadow-2xl animate-scale-in">
-            <div className="text-center md:text-right max-w-2xl mb-8">
+          <div className={`lg:col-span-2 ${dir === 'rtl' ? 'text-right' : 'text-left'} p-4 sm:p-6 md:p-8 bg-background/80 border border-white/20 rounded-2xl shadow-2xl animate-scale-in`}>
+            <div className={`text-center ${dir === 'rtl' ? 'md:text-right' : 'md:text-left'} max-w-2xl mb-8`}>
               <h2 className="text-3xl md:text-4xl font-bold">{t('contact.title')}</h2>
               <p className="mt-4 text-lg text-muted-foreground">
                 {t('contact.subtitle')}

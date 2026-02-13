@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { CVData, createEmptyCVData } from './types';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { captureElementAsImage } from '@/utils/captureUtils';
 
 const STORAGE_KEY = 'lebenslauf-draft';
 
@@ -42,5 +43,23 @@ export const useLebenslauf = () => {
     window.print();
   }, []);
 
-  return { data, setData, updateData, updatePersonal, saveDraft, loadDraft, clearAll, handlePrint };
+  const handleDownloadPNG = useCallback(async () => {
+    try {
+      await captureElementAsImage('cv-preview', 'png', 'lebenslauf.png');
+      toast({ title: t('lebenslaufBuilder.actions.downloadPNG', 'Downloaded as PNG') });
+    } catch {
+      toast({ title: 'Export failed', variant: 'destructive' });
+    }
+  }, [toast, t]);
+
+  const handleDownloadJPG = useCallback(async () => {
+    try {
+      await captureElementAsImage('cv-preview', 'jpeg', 'lebenslauf.jpg');
+      toast({ title: t('lebenslaufBuilder.actions.downloadJPG', 'Downloaded as JPG') });
+    } catch {
+      toast({ title: 'Export failed', variant: 'destructive' });
+    }
+  }, [toast, t]);
+
+  return { data, setData, updateData, updatePersonal, saveDraft, loadDraft, clearAll, handlePrint, handleDownloadPNG, handleDownloadJPG };
 };
