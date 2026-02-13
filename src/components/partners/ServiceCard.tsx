@@ -12,10 +12,12 @@ const ServiceCard = ({ partner }: ServiceCardProps) => {
   return (
     <Card className="flex flex-col text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 h-full overflow-hidden rounded-lg p-4 sm:p-6 group w-full">
        <div className="flex-shrink-0 mb-4">
-         <img 
+          <img 
           src={partner.logoUrl} 
           alt={`${partner.name} logo`}
           className="h-12 sm:h-16 w-auto mx-auto object-contain filter grayscale group-hover:filter-none transition-all duration-300"
+          loading="lazy"
+          decoding="async"
         />
        </div>
        <div className="flex-grow flex flex-col">

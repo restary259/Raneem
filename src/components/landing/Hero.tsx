@@ -15,11 +15,11 @@ const Hero = () => {
 
   return (
     <section className="relative h-[100dvh] min-h-[500px] flex items-center justify-center text-white overflow-hidden">
-      <video autoPlay loop muted playsInline poster="/lovable-uploads/hero-poster.webp" className="absolute top-0 left-0 w-full h-full object-cover">
+      <video autoPlay loop muted playsInline preload="none" poster="/lovable-uploads/hero-poster.webp" className="absolute top-0 left-0 w-full h-full object-cover">
         <source src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-primary/85" />
       <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
           {t('hero.title')}

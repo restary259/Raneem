@@ -56,6 +56,7 @@ const LocalServiceCarousel: React.FC<LocalServiceCarouselProps> = ({
                               alt={`${service.name} logo`}
                               className="h-10 md:h-12 w-auto object-contain"
                               loading="lazy"
+                              decoding="async"
                             />
                           </div>
                           

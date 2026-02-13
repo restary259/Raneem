@@ -45,7 +45,7 @@ const ChatPopup = ({ onClose }: { onClose: () => void }) => {
             dir="rtl" 
             className="fixed bottom-24 right-6 z-[998] w-[350px] animate-in slide-in-from-bottom-10 fade-in duration-300 sm:w-[380px]"
         >
-            <Card className="flex flex-col h-[600px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background/80 backdrop-blur-sm border-white/20">
+            <Card className="flex flex-col h-[600px] max-h-[80vh] shadow-2xl rounded-2xl overflow-hidden bg-background border-white/20">
                 <CardHeader className="flex flex-row items-center justify-between bg-primary text-primary-foreground p-4">
                     <div>
                         <CardTitle className="text-lg">مرحبا بك في درب!</CardTitle>

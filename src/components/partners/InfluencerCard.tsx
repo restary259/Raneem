@@ -17,7 +17,7 @@ const InfluencerCard = ({ partner }: InfluencerCardProps) => {
   return (
     <Card className="flex flex-col items-center justify-center text-center bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer h-full overflow-hidden rounded-lg p-6">
       <Avatar className="w-24 h-24 mb-4 border-2 border-primary/10">
-        <AvatarImage src={partner.avatarUrl} alt={`${partner.name} avatar`} className="object-cover" />
+        <AvatarImage src={partner.avatarUrl} alt={`${partner.name} avatar`} className="object-cover" loading="lazy" decoding="async" />
         <AvatarFallback>{partner.name.substring(0, 2)}</AvatarFallback>
       </Avatar>
       <h3 className="text-lg font-bold text-primary">{partner.name}</h3>

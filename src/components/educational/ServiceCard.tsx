@@ -23,6 +23,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             src={service.logoUrl} 
             alt={service.name}
             className="h-12 w-auto object-contain"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         <h3 className="text-lg font-bold mb-2">{service.name}</h3>

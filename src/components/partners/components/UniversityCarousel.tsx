@@ -60,6 +60,7 @@ const UniversityCarousel: React.FC<UniversityCarouselProps> = ({
                             alt={`${university.name} logo`}
                             className="h-12 md:h-16 w-auto object-contain"
                             loading="lazy"
+                            decoding="async"
                           />
                         </div>
                         
