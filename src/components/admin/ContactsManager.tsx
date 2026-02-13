@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download } from 'lucide-react';
+import { Search, Download, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ContactsManagerProps { contacts: any[]; onRefresh: () => void; }
@@ -13,12 +14,21 @@ const downloadCSV = (rows: any[], fileName = "export.csv") => { if (!rows.length
 
 const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }) => {
   const [search, setSearch] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
   const updateStatus = async (id: string, status: string) => {
     await (supabase as any).from('contact_submissions').update({ status }).eq('id', id);
     toast({ title: t('admin.contacts.statusUpdated') }); onRefresh();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await (supabase as any).from('contact_submissions').delete().eq('id', deleteId);
+    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
+    else { toast({ title: 'تم الحذف' }); onRefresh(); }
+    setDeleteId(null);
   };
 
   const filtered = contacts.filter(c => !search || c.data?.name?.toLowerCase().includes(search.toLowerCase()) || c.data?.email?.toLowerCase().includes(search.toLowerCase()));
@@ -45,6 +55,9 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
                     {c.status === 'new' ? t('admin.contacts.new') : c.status === 'replied' ? t('admin.contacts.replied') : c.status}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{c.created_at?.split('T')[0]}</span>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(c.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
               {c.data?.message && <p className="text-sm bg-muted/50 p-3 rounded-lg mt-2">{c.data.message}</p>}
@@ -57,6 +70,19 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
         ))}
         {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.contacts.noMessages')}</p>}
       </div>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

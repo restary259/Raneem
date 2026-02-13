@@ -98,7 +98,7 @@ const InfluencerDashboardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -112,8 +112,8 @@ const InfluencerDashboardPage = () => {
   const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
 
   return (
-    <div className="min-h-screen bg-muted/30" dir={dir}>
-      <header className="bg-[hsl(215,50%,23%)] text-white">
+    <div className="min-h-screen bg-[#F8FAFC]" dir={dir}>
+      <header className="bg-[#1E293B] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

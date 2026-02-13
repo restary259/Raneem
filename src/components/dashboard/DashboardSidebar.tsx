@@ -38,10 +38,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-gray-50 transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted transition-colors rounded-xl ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
-                      : 'text-gray-700'
+                      ? 'bg-accent/10 text-accent border-s-4 border-accent font-semibold'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   <Icon className="h-5 w-5" />

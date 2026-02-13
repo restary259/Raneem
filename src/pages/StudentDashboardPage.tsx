@@ -127,7 +127,7 @@ const StudentDashboardPage = () => {
 
   if (error && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">خطأ في تحميل لوحة التحكم</h2>
           <p className="text-gray-600 mb-4">{error}</p>
@@ -141,7 +141,7 @@ const StudentDashboardPage = () => {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg">جار تحميل بيانات المستخدم...</div>
         </div>
@@ -151,7 +151,7 @@ const StudentDashboardPage = () => {
 
   return (
     <DashboardErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F8FAFC]">
         <DashboardHeader fullName={profile.full_name} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">

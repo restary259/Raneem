@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ interface ChecklistManagementProps { items: any[]; onRefresh: () => void; }
 const ChecklistManagement: React.FC<ChecklistManagementProps> = ({ items, onRefresh }) => {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
@@ -23,10 +25,12 @@ const ChecklistManagement: React.FC<ChecklistManagementProps> = ({ items, onRefr
     else { setNewName(''); setNewDesc(''); toast({ title: t('admin.checklistMgmt.added') }); onRefresh(); }
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await (supabase as any).from('checklist_items').delete().eq('id', id);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await (supabase as any).from('checklist_items').delete().eq('id', deleteId);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
     else { toast({ title: t('admin.checklistMgmt.deleted') }); onRefresh(); }
+    setDeleteId(null);
   };
 
   return (
@@ -47,11 +51,24 @@ const ChecklistManagement: React.FC<ChecklistManagementProps> = ({ items, onRefr
             <GripVertical className="h-5 w-5 text-muted-foreground/50 shrink-0" />
             <div className="flex-1"><p className="font-medium text-sm">{item.item_name}</p>{item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}</div>
             <span className="text-xs text-muted-foreground">#{index + 1}</span>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-4 w-4" /></Button>
           </div>
         ))}
       </div>
       {items.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.checklistMgmt.noItems')}</p>}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

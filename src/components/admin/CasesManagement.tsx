@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronDown, DollarSign, Save } from 'lucide-react';
+import { ChevronDown, DollarSign, Save, Trash2 } from 'lucide-react';
 
 interface StudentCase {
   id: string;
@@ -49,7 +50,6 @@ const CASE_STATUSES = [
   { value: 'completed', label: 'مكتمل', order: 7 },
 ];
 
-// Valid transitions: can only move forward or stay, except admin can also go one step back
 const getValidStatuses = (currentStatus: string) => {
   const currentOrder = CASE_STATUSES.find(s => s.value === currentStatus)?.order ?? 0;
   return CASE_STATUSES.filter(s => s.order >= currentOrder - 1);
@@ -70,6 +70,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const [editingCase, setEditingCase] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || 'غير معروف';
@@ -78,57 +79,51 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const startEdit = (c: StudentCase) => {
     setEditingCase(c.id);
     setEditValues({
-      service_fee: c.service_fee,
-      influencer_commission: c.influencer_commission,
-      lawyer_commission: c.lawyer_commission,
-      referral_discount: c.referral_discount,
-      school_commission: c.school_commission,
-      translation_fee: c.translation_fee,
-      selected_city: c.selected_city || '',
-      selected_school: c.selected_school || '',
-      case_status: c.case_status,
-      notes: c.notes || '',
+      service_fee: c.service_fee, influencer_commission: c.influencer_commission,
+      lawyer_commission: c.lawyer_commission, referral_discount: c.referral_discount,
+      school_commission: c.school_commission, translation_fee: c.translation_fee,
+      selected_city: c.selected_city || '', selected_school: c.selected_school || '',
+      case_status: c.case_status, notes: c.notes || '',
     });
   };
 
   const saveCase = async (caseId: string) => {
     setLoading(true);
     const { error } = await (supabase as any).from('student_cases').update({
-      service_fee: Number(editValues.service_fee) || 0,
-      influencer_commission: Number(editValues.influencer_commission) || 0,
-      lawyer_commission: Number(editValues.lawyer_commission) || 0,
-      referral_discount: Number(editValues.referral_discount) || 0,
-      school_commission: Number(editValues.school_commission) || 0,
-      translation_fee: Number(editValues.translation_fee) || 0,
-      selected_city: editValues.selected_city || null,
-      selected_school: editValues.selected_school || null,
-      case_status: editValues.case_status,
-      notes: editValues.notes || null,
+      service_fee: Number(editValues.service_fee) || 0, influencer_commission: Number(editValues.influencer_commission) || 0,
+      lawyer_commission: Number(editValues.lawyer_commission) || 0, referral_discount: Number(editValues.referral_discount) || 0,
+      school_commission: Number(editValues.school_commission) || 0, translation_fee: Number(editValues.translation_fee) || 0,
+      selected_city: editValues.selected_city || null, selected_school: editValues.selected_school || null,
+      case_status: editValues.case_status, notes: editValues.notes || null,
     }).eq('id', caseId);
 
     if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); setLoading(false); return; }
 
-    // If status is paid, create commission record
     const originalCase = cases.find(c => c.id === caseId);
     if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
       await (supabase as any).from('commissions').insert({
-        case_id: caseId,
-        influencer_amount: Number(editValues.influencer_commission) || 0,
-        lawyer_amount: Number(editValues.lawyer_commission) || 0,
-        status: 'approved',
+        case_id: caseId, influencer_amount: Number(editValues.influencer_commission) || 0,
+        lawyer_amount: Number(editValues.lawyer_commission) || 0, status: 'approved',
       });
       toast({ title: 'تم إنشاء العمولات', description: 'تم إنشاء سجل العمولات تلقائياً' });
     }
 
-    setLoading(false);
-    setEditingCase(null);
-    toast({ title: 'تم الحفظ' });
-    onRefresh();
+    setLoading(false); setEditingCase(null);
+    toast({ title: 'تم الحفظ' }); onRefresh();
   };
 
-  const getNetProfit = (c: StudentCase) => {
-    return c.service_fee + c.school_commission - c.influencer_commission - c.lawyer_commission - c.referral_discount - c.translation_fee;
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    // Delete related records first
+    await (supabase as any).from('case_payments').delete().eq('case_id', deleteId);
+    await (supabase as any).from('commissions').delete().eq('case_id', deleteId);
+    const { error } = await (supabase as any).from('student_cases').delete().eq('id', deleteId);
+    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
+    else { toast({ title: 'تم الحذف' }); onRefresh(); }
+    setDeleteId(null);
   };
+
+  const getNetProfit = (c: StudentCase) => c.service_fee + c.school_commission - c.influencer_commission - c.lawyer_commission - c.referral_discount - c.translation_fee;
 
   return (
     <div className="space-y-3">
@@ -152,6 +147,9 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
@@ -163,14 +161,14 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                   {!isEditing ? (
                     <>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>رسوم الخدمة</span><span className="font-semibold">{c.service_fee} €</span></div>
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>عمولة الوكيل</span><span className="font-semibold">{c.influencer_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>عمولة المحامي</span><span className="font-semibold">{c.lawyer_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>خصم الإحالة</span><span className="font-semibold">{c.referral_discount} €</span></div>
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>عمولة المدرسة</span><span className="font-semibold">{c.school_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-muted/30 rounded"><span>رسوم الترجمة</span><span className="font-semibold">{c.translation_fee} €</span></div>
+                        <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>رسوم الخدمة</span><span className="font-semibold text-emerald-700">{c.service_fee} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>عمولة الوكيل</span><span className="font-semibold text-red-700">{c.influencer_commission} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>عمولة المحامي</span><span className="font-semibold text-red-700">{c.lawyer_commission} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>خصم الإحالة</span><span className="font-semibold text-red-700">{c.referral_discount} €</span></div>
+                        <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>عمولة المدرسة</span><span className="font-semibold text-emerald-700">{c.school_commission} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>رسوم الترجمة</span><span className="font-semibold text-red-700">{c.translation_fee} €</span></div>
                       </div>
-                      <div className="flex justify-between p-3 bg-primary/10 rounded-lg font-bold">
+                      <div className={`flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(c) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
                         <span className="flex items-center gap-1"><DollarSign className="h-4 w-4" />صافي الربح</span>
                         <span className={getNetProfit(c) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(c)} €</span>
                       </div>
@@ -210,6 +208,20 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
         );
       })}
       {cases.length === 0 && <p className="text-center text-muted-foreground py-8">لا يوجد ملفات طلاب بعد</p>}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الملف وجميع المدفوعات والعمولات المرتبطة.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
