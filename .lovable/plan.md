@@ -1,113 +1,144 @@
 
 
-## Public Apply Funnel Page + Influencer Referral Link Update
+## DSOS v4 -- Comprehensive Upgrade Plan
 
-### What We're Building
-
-A standalone, high-converting public landing page at `/apply` that influencers can share via Instagram bio/stories. Students click, fill a branded multi-step form (no login required), and a new lead appears instantly in the Admin Dashboard.
+This is a large set of changes spanning the apply funnel, all four dashboards, eligibility logic, team member management, and the 20-day payout timer. The plan is broken into focused phases to keep each change safe and testable.
 
 ---
 
-### 1. New Page: `/apply`
+### Phase 1: Apply Page Overhaul (Form Fields + Auto-Eligibility)
 
-**Route**: Add `/apply` to `App.tsx` routes (public, no auth).
+**What changes on `/apply`:**
 
-**Design**:
-- Standalone page -- NO Header, NO Footer, NO BottomNav, NO ChatWidget
-- Minimal branded top bar: just the Darb logo
-- Ghost White background (#F8FAFC)
-- Mobile-first, Arabic RTL, IBM Plex Sans Arabic
-- No horizontal scroll, vertical card layout
+- **Remove fields**: Budget Range, Preferred City in Germany, Accommodation
+- **Add fields**: Passport Type (dropdown: Israeli Blue / Israeli Red / Other), English Units (number), Math Units (number)
+- **Remove WhatsApp floating button** (protects influencer attribution)
+- **Add auto light/dark mode** based on time of day (dark after 7pm)
+- **Update form steps**:
+  - Step 1: Full Name, Phone
+  - Step 2: Passport Type, English Units, Math Units, Education Level
+  - Step 3: German Level (simplified: Beginner / Intermediate / Advanced)
 
-**Page Structure**:
+**Database changes (leads table)**:
+- Add columns: `passport_type` (text), `english_units` (integer), `math_units` (integer)
+- Remove from form only (keep columns in DB for backward compatibility): budget_range, preferred_city, accommodation
 
-**Section A -- Hero (Trust)**
-- Headline: "ابدأ رحلتك للدراسة في ألمانيا" with German flag emoji
-- Subtext: "املأ البيانات وسنتواصل معك عبر واتساب خلال وقت قصير"
-- Clean, centered, large Arabic font
+**Auto-Eligibility Calculation**:
+- New database function `calculate_eligibility_score` that runs inside `insert_lead_from_apply`:
+  - Passport = Israeli Blue: +30 points
+  - Passport = Israeli Red: +20 points
+  - Passport = Other: 0 points
+  - English units >= 4: +20 points
+  - Math units >= 4: +20 points
+  - Education = Bagrut/Highschool+: +10 points
+  - German level Intermediate+: +10 points
+  - Score >= 50: status remains "new" (eligible candidate)
+  - Score < 30: auto-set status to "not_eligible"
+- Store computed `eligibility_score` and `eligibility_reason` (text, new column) on the lead
 
-**Section B -- Multi-Step Form (3 steps with progress bar)**
-
-Step 1 (Personal Info):
-- Full Name (text)
-- Phone / WhatsApp (text)
-
-Step 2 (Background):
-- City (inside 48) (text)
-- Education Level (select: ثانوية / بكالوريوس / ماجستير)
-- German Level (select: لا يوجد / A1 / A2 / B1 / B2 / C1)
-
-Step 3 (Preferences):
-- Budget Range (select: ranges)
-- Preferred City in Germany (select: Berlin / Munich / Hamburg / Frankfurt / Other)
-- Need Accommodation? (Yes/No toggle)
-
-Each step has Next/Back buttons. Final step has "أرسل بياناتي" CTA.
-
-Progress bar at top of form card showing Step 1/2/3.
-
-**Section C -- Trust Elements**
-- Three small badges below form: "استشارة مجانية" / "مدارس معتمدة" / "متابعة حتى التسجيل"
-
-**Section D -- Confirmation Screen**
-- After submit, replace form with: "تم استلام بياناتك" with checkmark
-- Subtext: "سيتم التواصل معك عبر واتساب قريبا"
-- No redirect, no reload
-
-**Floating WhatsApp Button**:
-- Bottom-right corner, always visible
-- Links to Darb WhatsApp: `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1`
-- Label tooltip: "راسلنا مباشرة"
+**Update the RPC function** `insert_lead_from_apply` to accept new fields and call eligibility calculation.
 
 ---
 
-### 2. Backend Logic
+### Phase 2: Team Member (Lawyer) Management
 
-**Referral Detection**:
-- Read `?ref=USER_ID` from URL query params
-- If `ref` param exists, look up `user_roles` to verify the user is an influencer
-- If valid: set `source_type = 'influencer'` and `source_id = influencer_id`
-- If no ref or invalid: set `source_type = 'organic'`, `source_id = null`
+**Current state**: The admin can create influencer accounts via `create-influencer` edge function. No equivalent exists for lawyers.
 
-**Submission**:
-- Use existing `upsert_lead_from_contact` RPC pattern but we need a new RPC function `insert_lead_from_apply` that accepts all the apply-specific fields (city, education_level, german_level, budget_range, preferred_city, accommodation, source_type, source_id)
-- Duplicate prevention by phone number (same pattern -- update if exists, insert if not)
-- Set `status = 'new'`, `eligibility_score = 0`
+**What to build**:
+- **New edge function**: `create-team-member` -- accepts `email`, `full_name`, and `role` (lawyer or influencer)
+  - Creates auth user with temp password
+  - Assigns role in `user_roles`
+  - Creates profile
+  - Logs to audit
+  - Same forced password change pattern as influencers
+- **Update `InfluencerManagement.tsx`** to become a general "Team Management" component:
+  - Rename section to "Team" in sidebar
+  - Add a role selector (Influencer / Lawyer) in the create dialog
+  - Show both influencers AND lawyers in the same table with a role badge
+  - Admin can delete invites
+- **Update `AdminLayout.tsx`**: Replace "Influencers" with "Team" in sidebar, update icon
 
-**Database**: Create a new `insert_lead_from_apply` SECURITY DEFINER function that handles the upsert with all fields + source tracking. Add an RLS-bypassing function so anonymous users can submit without auth.
+**Forced Password Change on First Login**:
+- Add `must_change_password` column to `profiles` (boolean, default false)
+- Set to `true` when creating team members via edge function
+- In `StudentAuthPage.tsx`, after successful login, check `must_change_password` -- if true, show a password change modal before redirecting
+- After password changed, update profile `must_change_password = false`
 
 ---
 
-### 3. Influencer Referral Link Update
+### Phase 3: Influencer Dashboard Eligibility Display
 
-Update `ReferralLink.tsx` to point to `/apply?ref=USER_ID` instead of `/student-auth?ref=USER_ID`.
+**Current state**: Influencer dashboard shows leads with basic status badges but no eligibility reasoning.
 
-The influencer's link becomes:
-`darbstudy.com/apply?ref=5bd865af-...`
+**What to add**:
+- On each lead card, show eligibility result:
+  - Green checkmark + "Eligible" if score >= 50
+  - Red X + reason if not eligible (e.g., "Passport type: Other", "English units: 2 (minimum 4)")
+- Show `eligibility_score` as a small badge on each card
+- Display `eligibility_reason` text below the status
+
+**20-Day Payout Timer**:
+- In `EarningsPanel.tsx`, for each reward with status `approved`:
+  - Calculate days since the associated case was marked `paid`
+  - If < 20 days: show countdown timer, disable payout request button
+  - If >= 20 days: enable payout request
+- Add `paid_at` timestamp to `student_cases` table (set when case_status changes to 'paid')
+- Update the payout request logic to check the 20-day condition server-side
 
 ---
 
-### 4. English Translations
+### Phase 4: Lawyer Dashboard Enhancements
 
-Add English translations for all apply page strings in `public/locales/en/landing.json` and Arabic in `public/locales/ar/landing.json` under an `apply` key.
+**Current state**: Lawyers can view/edit assigned cases with status, city, school, notes.
+
+**What to add**:
+- Show auto-eligibility info on each case card (read-only, from lead data)
+- Fetch lead's `eligibility_score` and `eligibility_reason` alongside case data
+- Add `contact_form` source badge to help lawyers see lead origin
+- Lawyer RLS: Allow lawyers to SELECT from leads table for their assigned cases (new policy)
+
+---
+
+### Phase 5: Admin Enhancements
+
+**Export functionality**:
+- Add "Export" button to LeadsManagement and CasesManagement
+- Generate CSV with selectable columns
+- Pre-formatted for language school submissions
+
+**Admin eligibility override**:
+- In LeadsManagement, add an "Override Score" button that lets admin manually set eligibility_score and status
+- Log override to audit trail
+
+**Delete invites**:
+- In InfluencerManagement (now TeamManagement), add delete button on invite rows
+- Delete from `influencer_invites` table
 
 ---
 
 ### Technical File Summary
 
 | Action | File | Changes |
-|---|---|---|
-| Create | `src/pages/ApplyPage.tsx` | Full multi-step funnel page component |
-| Edit | `src/App.tsx` | Add `/apply` route |
-| Edit | `src/components/influencer/ReferralLink.tsx` | Change link from `/student-auth?ref=` to `/apply?ref=` |
-| Migration | Database | Create `insert_lead_from_apply` RPC function (SECURITY DEFINER) |
-| Edit | `public/locales/ar/landing.json` | Add `apply` translation keys |
-| Edit | `public/locales/en/landing.json` | Add `apply` translation keys |
+|--------|------|---------|
+| Migration | Database | Add `passport_type`, `english_units`, `math_units`, `eligibility_reason`, `paid_at` columns; update `insert_lead_from_apply` RPC; add `must_change_password` to profiles |
+| Edit | `src/pages/ApplyPage.tsx` | New form fields, remove old fields, remove WhatsApp button, add dark mode |
+| Create | `supabase/functions/create-team-member/index.ts` | Generic team member creation (influencer or lawyer) |
+| Edit | `src/components/admin/InfluencerManagement.tsx` | Rename to TeamManagement, add role selector, show lawyers, delete invites |
+| Edit | `src/components/admin/AdminLayout.tsx` | Update sidebar label |
+| Edit | `src/pages/AdminDashboardPage.tsx` | Update component references |
+| Edit | `src/pages/InfluencerDashboardPage.tsx` | Add eligibility display per lead card |
+| Edit | `src/components/influencer/EarningsPanel.tsx` | Add 20-day timer logic |
+| Edit | `src/pages/LawyerDashboardPage.tsx` | Show eligibility info on cases |
+| Edit | `src/pages/StudentAuthPage.tsx` | Add forced password change check |
+| Edit | `src/components/admin/LeadsManagement.tsx` | Add eligibility override, export button |
+| Edit | `src/components/admin/CasesManagement.tsx` | Add export button |
 
 ### Implementation Order
-1. Database migration (new RPC function)
-2. Create ApplyPage.tsx with multi-step form
-3. Add route in App.tsx
-4. Update ReferralLink.tsx
-5. Add translations
+1. Database migration (new columns + updated RPC with eligibility calculation)
+2. Apply page form overhaul
+3. Team member edge function + management UI
+4. Forced password change flow
+5. Influencer dashboard eligibility + 20-day timer
+6. Lawyer dashboard enhancements
+7. Admin export and override features
 
