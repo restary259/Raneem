@@ -20,3 +20,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.create-team-member]
 verify_jwt = false
+[functions.send-custom-notification]
+verify_jwt = false

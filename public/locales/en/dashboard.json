@@ -238,7 +238,8 @@
       "payouts": "Rewards & Payouts",
       "analytics": "Analytics",
       "security": "Security",
-      "audit": "Activity Log"
+      "audit": "Activity Log",
+      "notifications": "Notifications"
     },
     "overview": {
       "totalStudents": "Total Students",

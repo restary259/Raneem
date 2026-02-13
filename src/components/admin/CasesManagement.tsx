@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronDown, DollarSign, Save, Trash2, Download, Clock } from 'lucide-react';
+import PasswordVerifyDialog from './PasswordVerifyDialog';
 
 interface StudentCase {
   id: string;
@@ -72,6 +73,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const [editValues, setEditValues] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showExportVerify, setShowExportVerify] = useState(false);
   const { toast } = useToast();
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || 'غير معروف';
@@ -164,8 +166,15 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{cases.length} ملف طالب</p>
-        <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />تصدير CSV</Button>
+        <Button variant="outline" size="sm" onClick={() => setShowExportVerify(true)}><Download className="h-4 w-4 me-1" />تصدير CSV</Button>
       </div>
+      <PasswordVerifyDialog
+        open={showExportVerify}
+        onOpenChange={setShowExportVerify}
+        onVerified={exportCSV}
+        title="تأكيد التصدير"
+        description="أدخل كلمة المرور لتصدير البيانات المالية."
+      />
 
       {cases.map(c => {
         const isEditing = editingCase === c.id;

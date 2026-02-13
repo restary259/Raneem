@@ -16,6 +16,7 @@ import PayoutsManagement from '@/components/admin/PayoutsManagement';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import CasesManagement from '@/components/admin/CasesManagement';
 import KPIAnalytics from '@/components/admin/KPIAnalytics';
+import CustomNotifications from '@/components/admin/CustomNotifications';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -36,6 +37,7 @@ const AdminDashboardPage = () => {
   const [cases, setCases] = useState<any[]>([]);
   const [lawyers, setLawyers] = useState<any[]>([]);
   const [commissions, setCommissions] = useState<any[]>([]);
+  const [rewards, setRewards] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -71,7 +73,7 @@ const AdminDashboardPage = () => {
   }, [navigate, toast]);
 
   const fetchAllData = async () => {
-    const [p, s, pay, con, audit, logins, items, checklists, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes] = await Promise.all([
+    const [p, s, pay, con, audit, logins, items, checklists, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes, rewardsRes] = await Promise.all([
       (supabase as any).from('profiles').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('services').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('payments').select('*').order('created_at', { ascending: false }),
@@ -86,6 +88,7 @@ const AdminDashboardPage = () => {
       (supabase as any).from('student_cases').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('user_roles').select('*').eq('role', 'lawyer'),
       (supabase as any).from('commissions').select('*'),
+      (supabase as any).from('rewards').select('*'),
     ]);
 
     if (p.data) setStudents(p.data);
@@ -100,6 +103,7 @@ const AdminDashboardPage = () => {
     if (leadsRes.data) setLeads(leadsRes.data);
     if (casesRes.data) setCases(casesRes.data);
     if (commissionsRes.data) setCommissions(commissionsRes.data);
+    if (rewardsRes.data) setRewards(rewardsRes.data);
 
     // Get influencer profiles
     if (roles.data) {
@@ -158,6 +162,11 @@ const AdminDashboardPage = () => {
             totalDocuments={0}
             activeServices={services.filter((s: any) => s.status !== 'completed').length}
             totalInfluencers={influencers.length}
+            leads={leads}
+            cases={cases}
+            rewards={rewards}
+            lawyers={lawyers}
+            influencers={influencers}
           />
         );
       case 'leads':
@@ -196,6 +205,8 @@ const AdminDashboardPage = () => {
         return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
       case 'security':
         return <SecurityPanel loginAttempts={loginAttempts} />;
+      case 'notifications':
+        return <CustomNotifications />;
       case 'audit':
         return <AuditLog logs={auditLogs} />;
       default:
