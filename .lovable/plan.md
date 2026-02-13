@@ -1,97 +1,95 @@
 
 
-## Contact Form to Leads + Home Page English Translations
+## Public Apply Funnel Page + Influencer Referral Link Update
 
-### Part 1: Redirect Contact Form to Leads Table
+### What We're Building
 
-**Current behavior**: Form submits to `send-email` edge function, which saves to `contact_submissions` and optionally emails.
-
-**New behavior**: Form inserts directly into the `leads` table from the frontend. No edge function call. No email.
-
-**Database Changes Required**
-
-The `leads` table is missing columns that the contact form collects. We need to add:
-
-| New Column | Type | Purpose |
-|---|---|---|
-| `email` | text, nullable | From form email field |
-| `service_requested` | text, nullable | From form service dropdown |
-| `notes` | text, nullable | From form message field |
-| `study_destination` | text, nullable | From form destination dropdown |
-
-We also need an RLS policy allowing anonymous inserts (public-facing form, no auth required). This will use a restrictive approach -- only INSERT, no SELECT/UPDATE/DELETE for anon.
-
-**Field Mapping**
-
-| Form Field | Leads Column |
-|---|---|
-| `name` | `full_name` |
-| `email` | `email` (new) |
-| `whatsapp` | `phone` |
-| `studyDestination` | `study_destination` (new) + `preferred_city` |
-| `service` | `service_requested` (new) |
-| `message` | `notes` (new) |
-| -- | `status` = 'new' |
-| -- | `eligibility_score` = 0 |
-| -- | `source_type` = 'contact_form' |
-
-**Duplicate Prevention**: Before inserting, query by phone number. If a match exists, update `created_at` instead of creating a duplicate. Since anon users can't SELECT the leads table, this check will be done via a database function (`upsert_lead_from_contact`) called through `.rpc()`.
-
-**Code Changes (Contact.tsx)**
-- Remove the `supabase.functions.invoke('send-email', ...)` call
-- Replace with `supabase.rpc('upsert_lead_from_contact', { ... })` 
-- Keep honeypot check on the client side (silently succeed if filled)
-- Keep all form fields, validation, design, layout, and success/error messages exactly as they are
-- Disable submit button while pending (already done)
-
-**Admin Dashboard**
-- `LeadsManagement.tsx` already shows all leads sorted by newest. New contact form leads will appear with `source_type = 'contact_form'` and `status = 'new'`. No changes needed -- they appear instantly on next query/refetch.
+A standalone, high-converting public landing page at `/apply` that influencers can share via Instagram bio/stories. Students click, fill a branded multi-step form (no login required), and a new lead appears instantly in the Admin Dashboard.
 
 ---
 
-### Part 2: Home Page English Translations
+### 1. New Page: `/apply`
 
-Three components on the home page have hardcoded Arabic text with no i18n:
+**Route**: Add `/apply` to `App.tsx` routes (public, no auth).
 
-**2.1 AboutCustom.tsx** -- Stats section
-- Hardcoded: "ارقامنا تتحدث", "الشفافية والنجاح...", "طالب راض", "شريك", "دول حول العالم", "نسبة النجاح"
-- Fix: Use `t()` keys from landing namespace
+**Design**:
+- Standalone page -- NO Header, NO Footer, NO BottomNav, NO ChatWidget
+- Minimal branded top bar: just the Darb logo
+- Ghost White background (#F8FAFC)
+- Mobile-first, Arabic RTL, IBM Plex Sans Arabic
+- No horizontal scroll, vertical card layout
 
-**2.2 StudentJourney.tsx** -- Journey steps
-- Hardcoded: "رحلتك نحو الدراسة في الخارج", step titles and descriptions
-- Fix: Use `t()` keys from landing namespace
+**Page Structure**:
 
-**2.3 PartnersMarquee.tsx** -- Section heading
-- Hardcoded: "أفضل الجامعات العالمية"
-- Fix: Use `t()` key from landing namespace
+**Section A -- Hero (Trust)**
+- Headline: "ابدأ رحلتك للدراسة في ألمانيا" with German flag emoji
+- Subtext: "املأ البيانات وسنتواصل معك عبر واتساب خلال وقت قصير"
+- Clean, centered, large Arabic font
 
-**Translation keys to add to `public/locales/en/landing.json`**:
+**Section B -- Multi-Step Form (3 steps with progress bar)**
 
-```json
-"aboutStats": {
-  "title": "Our Numbers Speak",
-  "subtitle": "Transparency and success are the foundation of our work, and these numbers reflect our students' trust in us.",
-  "satisfiedStudents": "Satisfied Students",
-  "partners": "Partners",
-  "countries": "Countries Worldwide",
-  "successRate": "Success Rate"
-},
-"journey": {
-  "title": "Your Journey to Studying Abroad",
-  "subtitle": "We're with you step by step, from the idea to your first day of class.",
-  "steps": [
-    { "title": "Consultation & Assessment", "description": "Your journey begins with a free consultation to understand your goals and evaluate your profile." },
-    { "title": "Document Preparation & Applications", "description": "We help you prepare all documents and submit your applications to universities and embassies." },
-    { "title": "Travel Preparation", "description": "After receiving your acceptance and visa, we help you book housing and prepare for travel." },
-    { "title": "Post-Arrival Support", "description": "We welcome you and provide the support you need to settle in and start your studies comfortably." }
-  ]
-},
-"partnersMarquee": { "title": "Top Global Universities" }
-```
+Step 1 (Personal Info):
+- Full Name (text)
+- Phone / WhatsApp (text)
 
-**Same keys added to `public/locales/ar/landing.json`** with the existing Arabic text, so both components use `t()` consistently.
+Step 2 (Background):
+- City (inside 48) (text)
+- Education Level (select: ثانوية / بكالوريوس / ماجستير)
+- German Level (select: لا يوجد / A1 / A2 / B1 / B2 / C1)
 
-**Component updates**: Replace all hardcoded strings with `t('key')` calls.
+Step 3 (Preferences):
+- Budget Range (select: ranges)
+- Preferred City in Germany (select: Berlin / Munich / Hamburg / Frankfurt / Other)
+- Need Accommodation? (Yes/No toggle)
+
+Each step has Next/Back buttons. Final step has "أرسل بياناتي" CTA.
+
+Progress bar at top of form card showing Step 1/2/3.
+
+**Section C -- Trust Elements**
+- Three small badges below form: "استشارة مجانية" / "مدارس معتمدة" / "متابعة حتى التسجيل"
+
+**Section D -- Confirmation Screen**
+- After submit, replace form with: "تم استلام بياناتك" with checkmark
+- Subtext: "سيتم التواصل معك عبر واتساب قريبا"
+- No redirect, no reload
+
+**Floating WhatsApp Button**:
+- Bottom-right corner, always visible
+- Links to Darb WhatsApp: `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1`
+- Label tooltip: "راسلنا مباشرة"
+
+---
+
+### 2. Backend Logic
+
+**Referral Detection**:
+- Read `?ref=USER_ID` from URL query params
+- If `ref` param exists, look up `user_roles` to verify the user is an influencer
+- If valid: set `source_type = 'influencer'` and `source_id = influencer_id`
+- If no ref or invalid: set `source_type = 'organic'`, `source_id = null`
+
+**Submission**:
+- Use existing `upsert_lead_from_contact` RPC pattern but we need a new RPC function `insert_lead_from_apply` that accepts all the apply-specific fields (city, education_level, german_level, budget_range, preferred_city, accommodation, source_type, source_id)
+- Duplicate prevention by phone number (same pattern -- update if exists, insert if not)
+- Set `status = 'new'`, `eligibility_score = 0`
+
+**Database**: Create a new `insert_lead_from_apply` SECURITY DEFINER function that handles the upsert with all fields + source tracking. Add an RLS-bypassing function so anonymous users can submit without auth.
+
+---
+
+### 3. Influencer Referral Link Update
+
+Update `ReferralLink.tsx` to point to `/apply?ref=USER_ID` instead of `/student-auth?ref=USER_ID`.
+
+The influencer's link becomes:
+`darbstudy.com/apply?ref=5bd865af-...`
+
+---
+
+### 4. English Translations
+
+Add English translations for all apply page strings in `public/locales/en/landing.json` and Arabic in `public/locales/ar/landing.json` under an `apply` key.
 
 ---
 
@@ -99,16 +97,17 @@ Three components on the home page have hardcoded Arabic text with no i18n:
 
 | Action | File | Changes |
 |---|---|---|
-| Migration | Database | Add `email`, `service_requested`, `notes`, `study_destination` to `leads`; create `upsert_lead_from_contact` RPC function; add anon insert policy |
-| Edit | `src/components/landing/Contact.tsx` | Replace edge function call with `supabase.rpc('upsert_lead_from_contact', ...)` |
-| Edit | `src/components/landing/AboutCustom.tsx` | Replace hardcoded Arabic with `t()` calls |
-| Edit | `src/components/landing/StudentJourney.tsx` | Replace hardcoded Arabic with `t()` calls |
-| Edit | `src/components/landing/PartnersMarquee.tsx` | Replace hardcoded Arabic with `t()` call |
-| Edit | `public/locales/en/landing.json` | Add `aboutStats`, `journey`, `partnersMarquee` keys |
-| Edit | `public/locales/ar/landing.json` | Add same keys with Arabic text |
+| Create | `src/pages/ApplyPage.tsx` | Full multi-step funnel page component |
+| Edit | `src/App.tsx` | Add `/apply` route |
+| Edit | `src/components/influencer/ReferralLink.tsx` | Change link from `/student-auth?ref=` to `/apply?ref=` |
+| Migration | Database | Create `insert_lead_from_apply` RPC function (SECURITY DEFINER) |
+| Edit | `public/locales/ar/landing.json` | Add `apply` translation keys |
+| Edit | `public/locales/en/landing.json` | Add `apply` translation keys |
 
 ### Implementation Order
-1. Database migration (new columns + RPC function + RLS)
-2. Contact.tsx backend swap
-3. Home page i18n (all three components + both locale files)
+1. Database migration (new RPC function)
+2. Create ApplyPage.tsx with multi-step form
+3. Add route in App.tsx
+4. Update ReferralLink.tsx
+5. Add translations
 
