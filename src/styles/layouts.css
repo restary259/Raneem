@@ -73,4 +73,31 @@
       -webkit-backdrop-filter: none !important;
     }
   }
+
+  /* ===== Global Mobile Safety Net ===== */
+  /* Prevent horizontal overflow globally */
+  table {
+    word-break: break-word;
+  }
+
+  td, th {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Ensure all table wrappers are scrollable */
+  .overflow-x-auto {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* RTL-safe padding/margin consistency */
+  [dir="rtl"] .text-start {
+    text-align: right;
+  }
+
+  [dir="ltr"] .text-start {
+    text-align: left;
+  }
 }
