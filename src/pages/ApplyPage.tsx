@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -12,28 +11,29 @@ import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 
 const PASSPORT_TYPES = [
-  { value: 'israeli_blue', label: 'جواز أزرق (إسرائيلي)' },
-  { value: 'israeli_red', label: 'جواز أحمر (لم الشمل)' },
-  { value: 'other', label: 'أخرى' },
+  { value: 'israeli_blue', label: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
+  { value: 'israeli_red', label: 'جواز أحمر (لم الشمل)', labelEn: 'Israeli Red Passport' },
+  { value: 'other', label: 'أخرى', labelEn: 'Other' },
 ];
 
 const EDUCATION_LEVELS = [
-  { value: 'bagrut', label: 'بجروت / ثانوية' },
-  { value: 'bachelor', label: 'بكالوريوس' },
-  { value: 'master', label: 'ماجستير' },
+  { value: 'bagrut', label: 'بجروت / ثانوية', labelEn: 'Bagrut / High School' },
+  { value: 'bachelor', label: 'بكالوريوس', labelEn: 'Bachelor' },
+  { value: 'master', label: 'ماجستير', labelEn: 'Master' },
 ];
 
 const GERMAN_LEVELS = [
-  { value: 'beginner', label: 'مبتدئ' },
-  { value: 'intermediate', label: 'متوسط' },
-  { value: 'advanced', label: 'متقدم' },
+  { value: 'beginner', label: 'مبتدئ', labelEn: 'Beginner' },
+  { value: 'intermediate', label: 'متوسط', labelEn: 'Intermediate' },
+  { value: 'advanced', label: 'متقدم', labelEn: 'Advanced' },
 ];
 
 const ApplyPage: React.FC = () => {
-  const { t } = useTranslation('landing');
+  const { t, i18n } = useTranslation('landing');
   const { dir, isRtl } = useDirection();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const isAr = i18n.language === 'ar';
 
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -114,158 +114,269 @@ const ApplyPage: React.FC = () => {
   const NextIcon = isRtl ? ChevronLeft : ChevronRight;
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
-  const bgClass = isDark ? 'bg-[hsl(222,47%,11%)] text-white' : 'bg-[hsl(210,40%,98%)]';
-  const cardClass = isDark ? 'bg-[hsl(222,47%,15%)] border-white/10' : '';
-
   if (submitted) {
     return (
-      <div className={`min-h-screen flex flex-col ${bgClass}`} dir={dir}>
-        <TopBar />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <Card className={`w-full max-w-md text-center p-8 ${cardClass}`}>
-            <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold mb-2">{t('apply.successTitle', 'تم استلام بياناتك ✅')}</h2>
-            <p className="text-muted-foreground">{t('apply.successSubtitle', 'سيتم التواصل معك عبر واتساب قريباً')}</p>
-          </Card>
-        </main>
+      <div className={`min-h-screen flex flex-col ${isDark ? 'dark' : ''}`} dir={dir}>
+        <div className="min-h-screen flex flex-col bg-background text-foreground">
+          <ApplyTopBar />
+          <main className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-md text-center space-y-4 animate-fade-in">
+              <div className="mx-auto w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CheckCircle className="h-10 w-10 text-green-500" />
+              </div>
+              <h2 className="text-2xl font-bold">{t('apply.successTitle', 'تم استلام بياناتك ✅')}</h2>
+              <p className="text-muted-foreground">{t('apply.successSubtitle', 'سيتم التواصل معك عبر واتساب قريباً')}</p>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
 
+  const stepTitles = [
+    t('apply.stepTitle1', 'المعلومات الشخصية'),
+    t('apply.stepTitle2', 'الخلفية التعليمية'),
+    t('apply.stepTitle3', 'اللغة الألمانية'),
+  ];
+
   return (
-    <div className={`min-h-screen flex flex-col ${bgClass}`} dir={dir}>
-      <TopBar />
+    <div className={`min-h-screen flex flex-col ${isDark ? 'dark' : ''}`} dir={dir}>
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <ApplyTopBar />
 
-      <main className="flex-1 flex flex-col items-center px-4 py-8 gap-6 max-w-lg mx-auto w-full">
-        {/* Hero */}
-        <section className="text-center space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold">{t('apply.heroTitle', 'ابدأ رحلتك للدراسة في ألمانيا 🇩🇪')}</h1>
-          <p className="text-muted-foreground text-sm md:text-base">{t('apply.heroSubtitle', 'املأ البيانات وسنتواصل معك قريباً')}</p>
-        </section>
+        <main className="flex-1 flex flex-col items-center px-4 py-6 md:py-10 gap-6 max-w-lg mx-auto w-full">
+          {/* Hero */}
+          <section className="text-center space-y-2 animate-fade-in">
+            <h1 className="text-xl md:text-2xl font-bold leading-tight">
+              {t('apply.heroTitle', 'ابدأ رحلتك للدراسة في ألمانيا 🇩🇪')}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {t('apply.heroSubtitle', 'املأ البيانات وسنتواصل معك قريباً')}
+            </p>
+          </section>
 
-        {/* Form Card */}
-        <Card className={`w-full ${cardClass}`}>
-          <CardContent className="p-6 space-y-6">
-            {/* Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t('apply.step', 'خطوة')} {step}/3</span>
+          {/* Step Indicators */}
+          <div className="w-full flex items-center gap-2">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    s < step
+                      ? 'bg-accent text-accent-foreground'
+                      : s === step
+                      ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {s < step ? <CheckCircle className="h-4 w-4" /> : s}
+                </div>
+                <span className="text-[10px] text-muted-foreground text-center leading-tight hidden sm:block">
+                  {stepTitles[s - 1]}
+                </span>
               </div>
-              <Progress value={progressValue} className="h-2" />
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          <Progress value={progressValue} className="h-1.5 w-full" />
+
+          {/* Form */}
+          <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
+            <div className="px-5 py-4 border-b border-border bg-muted/30">
+              <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('apply.step', 'خطوة')} {step} / 3
+              </p>
             </div>
 
-            {/* Step 1: Personal Info */}
-            {step === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t('apply.fullName', 'الاسم الكامل')}</label>
-                  <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t('apply.fullNamePlaceholder', 'أدخل اسمك الكامل')} dir={dir} />
+            <div className="p-5 space-y-5">
+              {/* Step 1 */}
+              {step === 1 && (
+                <div className="space-y-4 animate-fade-in">
+                  <FieldGroup label={t('apply.fullName', 'الاسم الكامل')}>
+                    <Input
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      placeholder={t('apply.fullNamePlaceholder', 'أدخل اسمك الكامل')}
+                      dir={dir}
+                      className="h-11"
+                    />
+                  </FieldGroup>
+                  <FieldGroup label={t('apply.phone', 'رقم الهاتف / واتساب')}>
+                    <Input
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      placeholder="05X-XXXXXXX"
+                      dir="ltr"
+                      type="tel"
+                      className="h-11"
+                    />
+                  </FieldGroup>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t('apply.phone', 'رقم الهاتف / واتساب')}</label>
-                  <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" />
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Background */}
-            {step === 2 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t('apply.passportType', 'نوع جواز السفر')}</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {PASSPORT_TYPES.map(pt => (
-                      <Button key={pt.value} type="button" variant={passportType === pt.value ? 'default' : 'outline'} size="sm" className="w-full justify-start" onClick={() => setPassportType(pt.value)}>
-                        {pt.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">{t('apply.englishUnits', 'عدد وحدات الإنجليزي')}</label>
-                    <Input type="number" min="1" max="5" value={englishUnits} onChange={e => setEnglishUnits(e.target.value)} placeholder="3-5" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">{t('apply.mathUnits', 'عدد وحدات الرياضيات')}</label>
-                    <Input type="number" min="1" max="5" value={mathUnits} onChange={e => setMathUnits(e.target.value)} placeholder="3-5" dir="ltr" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t('apply.educationLevel', 'المستوى التعليمي')}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {EDUCATION_LEVELS.map(lvl => (
-                      <Button key={lvl.value} type="button" variant={educationLevel === lvl.value ? 'default' : 'outline'} size="sm" className="w-full text-xs" onClick={() => setEducationLevel(lvl.value)}>
-                        {lvl.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: German Level */}
-            {step === 3 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t('apply.germanLevel', 'مستوى اللغة الألمانية')}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {GERMAN_LEVELS.map(lvl => (
-                      <Button key={lvl.value} type="button" variant={germanLevel === lvl.value ? 'default' : 'outline'} size="sm" className="w-full" onClick={() => setGermanLevel(lvl.value)}>
-                        {lvl.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div className="flex gap-3">
-              {step > 1 && (
-                <Button variant="outline" className="flex-1" onClick={() => setStep(s => s - 1)}>
-                  <BackIcon className="h-4 w-4" />
-                  {t('apply.back', 'رجوع')}
-                </Button>
               )}
-              {step < 3 ? (
-                <Button className="flex-1" onClick={() => setStep(s => s + 1)} disabled={!canGoNext()}>
-                  {t('apply.next', 'التالي')}
-                  <NextIcon className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button className="flex-1" onClick={handleSubmit} disabled={loading || !canGoNext()}>
-                  {loading ? '...' : t('apply.submit', 'أرسل بياناتي')}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Trust Badges */}
-        <div className="grid grid-cols-3 gap-3 w-full">
-          {[
-            { icon: GraduationCap, label: t('apply.trustBadge1', 'استشارة مجانية') },
-            { icon: Shield, label: t('apply.trustBadge2', 'مدارس معتمدة') },
-            { icon: Headphones, label: t('apply.trustBadge3', 'متابعة حتى التسجيل') },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className={`flex flex-col items-center gap-1 text-center p-3 rounded-xl border text-xs text-muted-foreground ${cardClass || 'bg-card'}`}>
-              <Icon className="h-5 w-5 text-primary" />
-              <span>{label}</span>
+              {/* Step 2 */}
+              {step === 2 && (
+                <div className="space-y-4 animate-fade-in">
+                  <FieldGroup label={t('apply.passportType', 'نوع جواز السفر')}>
+                    <div className="grid grid-cols-1 gap-2">
+                      {PASSPORT_TYPES.map(pt => (
+                        <button
+                          key={pt.value}
+                          type="button"
+                          onClick={() => setPassportType(pt.value)}
+                          className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                            passportType === pt.value
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                              : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                          }`}
+                        >
+                          {isAr ? pt.label : pt.labelEn}
+                        </button>
+                      ))}
+                    </div>
+                  </FieldGroup>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FieldGroup label={t('apply.englishUnits', 'وحدات الإنجليزي')}>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={englishUnits}
+                        onChange={e => setEnglishUnits(e.target.value)}
+                        placeholder="3-5"
+                        dir="ltr"
+                        className="h-11"
+                      />
+                    </FieldGroup>
+                    <FieldGroup label={t('apply.mathUnits', 'وحدات الرياضيات')}>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={mathUnits}
+                        onChange={e => setMathUnits(e.target.value)}
+                        placeholder="3-5"
+                        dir="ltr"
+                        className="h-11"
+                      />
+                    </FieldGroup>
+                  </div>
+                  <FieldGroup label={t('apply.educationLevel', 'المستوى التعليمي')}>
+                    <div className="grid grid-cols-3 gap-2">
+                      {EDUCATION_LEVELS.map(lvl => (
+                        <button
+                          key={lvl.value}
+                          type="button"
+                          onClick={() => setEducationLevel(lvl.value)}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
+                            educationLevel === lvl.value
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                              : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                          }`}
+                        >
+                          {isAr ? lvl.label : lvl.labelEn}
+                        </button>
+                      ))}
+                    </div>
+                  </FieldGroup>
+                </div>
+              )}
+
+              {/* Step 3 */}
+              {step === 3 && (
+                <div className="space-y-4 animate-fade-in">
+                  <FieldGroup label={t('apply.germanLevel', 'مستوى اللغة الألمانية')}>
+                    <div className="grid grid-cols-3 gap-2">
+                      {GERMAN_LEVELS.map(lvl => (
+                        <button
+                          key={lvl.value}
+                          type="button"
+                          onClick={() => setGermanLevel(lvl.value)}
+                          className={`px-3 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                            germanLevel === lvl.value
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                              : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                          }`}
+                        >
+                          {isAr ? lvl.label : lvl.labelEn}
+                        </button>
+                      ))}
+                    </div>
+                  </FieldGroup>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex gap-3 pt-2">
+                {step > 1 && (
+                  <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => setStep(s => s - 1)}>
+                    <BackIcon className="h-4 w-4" />
+                    {t('apply.back', 'رجوع')}
+                  </Button>
+                )}
+                {step < 3 ? (
+                  <Button
+                    className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
+                    onClick={() => setStep(s => s + 1)}
+                    disabled={!canGoNext()}
+                  >
+                    {t('apply.next', 'التالي')}
+                    <NextIcon className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
+                    onClick={handleSubmit}
+                    disabled={loading || !canGoNext()}
+                  >
+                    {loading ? '...' : t('apply.submit', 'أرسل بياناتي')}
+                  </Button>
+                )}
+              </div>
             </div>
-          ))}
-        </div>
-      </main>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="grid grid-cols-3 gap-2.5 w-full">
+            {[
+              { icon: GraduationCap, label: t('apply.trustBadge1', 'استشارة مجانية') },
+              { icon: Shield, label: t('apply.trustBadge2', 'مدارس معتمدة') },
+              { icon: Headphones, label: t('apply.trustBadge3', 'متابعة حتى التسجيل') },
+            ].map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center gap-1.5 text-center p-3 rounded-xl border border-border bg-card text-xs text-muted-foreground"
+              >
+                <Icon className="h-5 w-5 text-accent" />
+                <span className="leading-tight">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer text */}
+          <p className="text-[11px] text-muted-foreground/60 text-center pb-4">
+            Darb Study International © {new Date().getFullYear()}
+          </p>
+        </main>
+      </div>
     </div>
   );
 };
 
-const TopBar = () => (
-  <header className="flex items-center justify-center py-4 px-4 border-b bg-card/80 backdrop-blur-sm">
+const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-semibold text-foreground/80">{label}</label>
+    {children}
+  </div>
+);
+
+const ApplyTopBar = () => (
+  <header className="flex items-center justify-center py-3 px-4 border-b border-border bg-card/80 backdrop-blur-md">
     <img
       src="/lovable-uploads/fc80f423-4215-4afe-ab5f-60a784436ae5.png"
       alt="Darb Study"
-      className="h-10 object-contain"
+      className="h-9 object-contain"
     />
   </header>
 );
