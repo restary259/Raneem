@@ -15,8 +15,23 @@ serve(async (req) => {
   try {
     const { email, password } = await req.json();
 
+    // Input validation
     if (!email || !password) {
       return new Response(JSON.stringify({ error: "البريد وكلمة المرور مطلوبان" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof email !== "string" || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof password !== "string" || password.length > 128) {
+      return new Response(JSON.stringify({ error: "Invalid password" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

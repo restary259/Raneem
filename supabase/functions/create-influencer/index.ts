@@ -58,8 +58,23 @@ serve(async (req) => {
     const body = await req.json();
     const { email, full_name } = body;
 
+    // Input validation
     if (!email || !full_name) {
       return new Response(JSON.stringify({ error: "Email and full_name required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof email !== "string" || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof full_name !== "string" || full_name.trim().length === 0 || full_name.length > 100) {
+      return new Response(JSON.stringify({ error: "Full name must be 1-100 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -91,11 +106,12 @@ serve(async (req) => {
       role: "influencer",
     });
 
-    // Create profile
+    // Create profile with must_change_password flag
     await supabaseAdmin.from("profiles").upsert({
       id: userId,
       email,
       full_name,
+      must_change_password: true,
     });
 
     // Update invite record if exists
@@ -103,6 +119,26 @@ serve(async (req) => {
       .from("influencer_invites")
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
+
+    // Send credentials via email (never expose in response)
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          email_type: "team_credentials",
+          user_email: email,
+          user_name: full_name,
+          temp_password: tempPassword,
+        }),
+      });
+    } catch (emailErr) {
+      console.error("Failed to send credentials email:", emailErr);
+    }
 
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
@@ -117,8 +153,7 @@ serve(async (req) => {
         success: true,
         user_id: userId,
         email,
-        temp_password: tempPassword,
-        message: "Influencer account created. Share the password with the influencer.",
+        message: "Influencer account created. Credentials sent via email.",
       }),
       {
         status: 200,

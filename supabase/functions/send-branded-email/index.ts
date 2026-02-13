@@ -393,6 +393,46 @@ serve(async (req) => {
         textContent = `رابط تسجيل الدخول السريع: ${magic_link_url}`;
         break;
 
+      case 'team_credentials':
+        subject = 'بيانات حسابك الجديد - درب للدراسة | Your New Account Credentials';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">🔑 مرحباً بك في فريق درب للدراسة!</div>
+          
+          <div class="message-text">
+            مرحباً <strong>${user_name || 'عزيزي العضو'}</strong>,
+          </div>
+          
+          <div class="message-text">
+            تم إنشاء حسابك في منصة درب للدراسة. استخدم البيانات التالية لتسجيل الدخول:
+          </div>
+          
+          <div class="features-list">
+            <h3>🔐 بيانات تسجيل الدخول:</h3>
+            <ul>
+              <li><strong>البريد الإلكتروني:</strong> ${user_email}</li>
+              <li><strong>كلمة المرور المؤقتة:</strong> ${requestBody.temp_password || '—'}</li>
+            </ul>
+          </div>
+          
+          <div class="security-notice">
+            <strong>⚠️ مهم جداً:</strong>
+            <ul style="margin-top: 10px; padding-right: 20px;">
+              <li>يجب تغيير كلمة المرور فور تسجيل الدخول الأول</li>
+              <li>لا تشارك هذه البيانات مع أي شخص</li>
+              <li>احذف هذا البريد بعد تسجيل الدخول بنجاح</li>
+            </ul>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <div class="message-text" style="text-align: center;">
+            مع أطيب التحيات،<br>
+            <strong>فريق درب للدراسة</strong> 🛡️
+          </div>
+        `, true);
+        textContent = `بيانات حسابك: البريد: ${user_email} | كلمة المرور المؤقتة: ${requestBody.temp_password || '—'} — يرجى تغييرها فوراً`;
+        break;
+
       default:
         subject = 'رسالة من درب للدراسة | Message from Darb Study';
         htmlContent = baseTemplate(`
