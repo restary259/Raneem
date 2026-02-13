@@ -3,10 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, Download, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -42,6 +44,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
+  const isMobile = useIsMobile();
 
   const statusKeys = ['eligible', 'ineligible', 'converted', 'paid', 'nurtured'];
 
@@ -94,70 +97,121 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
           <Download className="h-4 w-4 me-2" />{t('admin.students.exportCSV')}
         </Button>
       </div>
-      <div className="bg-background rounded-xl border shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredStudents.map((s: any) => {
-              const progress = getChecklistProgress(s.id);
-              const isEditing = editingId === s.id;
-              const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
-              return (
-                <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium">{s.full_name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
-                  <td className="px-4 py-3">
-                    {isEditing ? (
+
+      {isMobile ? (
+        <div className="space-y-3">
+          {filteredStudents.map((s: any) => {
+            const progress = getChecklistProgress(s.id);
+            const isEditing = editingId === s.id;
+            const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
+            return (
+              <Card key={s.id} className="overflow-hidden">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm break-all">{s.full_name}</span>
+                    <Badge variant="secondary">{String(t(`admin.students.statuses.${s.student_status}`, { defaultValue: s.student_status }))}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground break-all">{s.email}</p>
+                  <div className="flex items-center gap-2">
+                    <Progress value={progress} className="h-2 flex-1" />
+                    <span className="text-xs text-muted-foreground">{progress}%</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span>{assignedInfluencer?.full_name || '—'}</span>
+                    <span>{s.created_at?.split('T')[0]}</span>
+                  </div>
+                  {isEditing ? (
+                    <div className="space-y-2 pt-2 border-t">
                       <Select value={editStatus} onValueChange={setEditStatus}>
-                        <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full h-10"><SelectValue /></SelectTrigger>
                         <SelectContent>{statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.students.statuses.${k}`, { defaultValue: k }))}</SelectItem>)}</SelectContent>
                       </Select>
-                    ) : (
-                      <Badge variant="secondary">{String(t(`admin.students.statuses.${s.student_status}`, { defaultValue: s.student_status }))}</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3"><div className="flex items-center gap-2"><Progress value={progress} className="h-2 w-20" /><span className="text-xs text-muted-foreground">{progress}%</span></div></td>
-                  <td className="px-4 py-3">
-                    {isEditing ? (
                       <Select value={editInfluencer} onValueChange={setEditInfluencer}>
-                        <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full h-10"><SelectValue /></SelectTrigger>
                         <SelectContent><SelectItem value="none">{t('admin.students.none')}</SelectItem>{influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}</SelectContent>
                       </Select>
-                    ) : (<span className="text-muted-foreground text-xs">{assignedInfluencer?.full_name || '—'}</span>)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{s.created_at?.split('T')[0]}</td>
-                  <td className="px-4 py-3">
-                    {isEditing ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 text-green-600" /></Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setEditingId(null)}><X className="h-4 w-4 text-red-600" /></Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 me-1" />{t('admin.students.updateSuccess', 'حفظ')}</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
                       </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.students.noStudents')}</p>}
-      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button size="sm" variant="outline" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+          {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.students.noStudents')}</p>}
+        </div>
+      ) : (
+        <div className="bg-background rounded-xl border shadow-sm overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map((s: any) => {
+                const progress = getChecklistProgress(s.id);
+                const isEditing = editingId === s.id;
+                const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
+                return (
+                  <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-3 font-medium">{s.full_name}</td>
+                    <td className="px-4 py-3 text-muted-foreground break-all">{s.email}</td>
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <Select value={editStatus} onValueChange={setEditStatus}>
+                          <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>{statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.students.statuses.${k}`, { defaultValue: k }))}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge variant="secondary">{String(t(`admin.students.statuses.${s.student_status}`, { defaultValue: s.student_status }))}</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3"><div className="flex items-center gap-2"><Progress value={progress} className="h-2 w-20" /><span className="text-xs text-muted-foreground">{progress}%</span></div></td>
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <Select value={editInfluencer} onValueChange={setEditInfluencer}>
+                          <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">{t('admin.students.none')}</SelectItem>{influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : (<span className="text-muted-foreground text-xs">{assignedInfluencer?.full_name || '—'}</span>)}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{s.created_at?.split('T')[0]}</td>
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setEditingId(null)}><X className="h-4 w-4 text-red-600" /></Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => startEdit(s)}><Edit2 className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filteredStudents.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.students.noStudents')}</p>}
+        </div>
+      )}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
