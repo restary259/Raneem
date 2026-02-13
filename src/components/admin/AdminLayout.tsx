@@ -18,12 +18,15 @@ interface AdminLayoutProps {
 
 const tabDefs = [
   { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
+  { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
+  { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
   { id: 'students', labelKey: 'admin.tabs.students', icon: Users },
   { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: UserCheck },
   { id: 'checklist', labelKey: 'admin.tabs.checklist', icon: ClipboardCheck },
   { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
   { id: 'referrals', labelKey: 'admin.tabs.referrals', icon: Share2 },
   { id: 'payouts', labelKey: 'admin.tabs.payouts', icon: Wallet },
+  { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: LayoutDashboard },
   { id: 'security', labelKey: 'admin.tabs.security', icon: Shield },
   { id: 'audit', labelKey: 'admin.tabs.audit', icon: ScrollText },
 ];

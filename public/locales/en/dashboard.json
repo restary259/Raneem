@@ -227,12 +227,15 @@
     "signOut": "Sign Out",
     "tabs": {
       "overview": "Overview",
+      "leads": "Leads",
+      "cases": "Student Cases",
       "students": "Student Management",
       "influencers": "Agents",
       "checklist": "Checklist",
       "contacts": "Messages",
       "referrals": "Referrals",
       "payouts": "Rewards & Payouts",
+      "analytics": "Analytics",
       "security": "Security",
       "audit": "Activity Log"
     },

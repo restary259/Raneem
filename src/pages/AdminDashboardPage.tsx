@@ -13,6 +13,9 @@ import SecurityPanel from '@/components/admin/SecurityPanel';
 import AuditLog from '@/components/admin/AuditLog';
 import ReferralManagement from '@/components/admin/ReferralManagement';
 import PayoutsManagement from '@/components/admin/PayoutsManagement';
+import LeadsManagement from '@/components/admin/LeadsManagement';
+import CasesManagement from '@/components/admin/CasesManagement';
+import KPIAnalytics from '@/components/admin/KPIAnalytics';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -29,6 +32,10 @@ const AdminDashboardPage = () => {
   const [contacts, setContacts] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
+  const [lawyers, setLawyers] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,7 +71,7 @@ const AdminDashboardPage = () => {
   }, [navigate, toast]);
 
   const fetchAllData = async () => {
-    const [p, s, pay, con, audit, logins, items, checklists, inv, roles] = await Promise.all([
+    const [p, s, pay, con, audit, logins, items, checklists, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes] = await Promise.all([
       (supabase as any).from('profiles').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('services').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('payments').select('*').order('created_at', { ascending: false }),
@@ -75,6 +82,10 @@ const AdminDashboardPage = () => {
       (supabase as any).from('student_checklist').select('*'),
       (supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('user_roles').select('*').eq('role', 'influencer'),
+      (supabase as any).from('leads').select('*').order('created_at', { ascending: false }),
+      (supabase as any).from('student_cases').select('*').order('created_at', { ascending: false }),
+      (supabase as any).from('user_roles').select('*').eq('role', 'lawyer'),
+      (supabase as any).from('commissions').select('*'),
     ]);
 
     if (p.data) setStudents(p.data);
@@ -86,6 +97,9 @@ const AdminDashboardPage = () => {
     if (items.data) setChecklistItems(items.data);
     if (checklists.data) setStudentChecklists(checklists.data);
     if (inv.data) setInvites(inv.data);
+    if (leadsRes.data) setLeads(leadsRes.data);
+    if (casesRes.data) setCases(casesRes.data);
+    if (commissionsRes.data) setCommissions(commissionsRes.data);
 
     // Get influencer profiles
     if (roles.data) {
@@ -96,6 +110,18 @@ const AdminDashboardPage = () => {
           .select('*')
           .in('id', influencerIds);
         if (infProfiles) setInfluencers(infProfiles);
+      }
+    }
+
+    // Get lawyer profiles
+    if (lawyerRoles.data) {
+      const lawyerIds = lawyerRoles.data.map((r: any) => r.user_id);
+      if (lawyerIds.length > 0) {
+        const { data: lawyerProfiles } = await (supabase as any)
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', lawyerIds);
+        if (lawyerProfiles) setLawyers(lawyerProfiles);
       }
     }
   };
@@ -134,6 +160,10 @@ const AdminDashboardPage = () => {
             totalInfluencers={influencers.length}
           />
         );
+      case 'leads':
+        return <LeadsManagement leads={leads} lawyers={lawyers} onRefresh={fetchAllData} />;
+      case 'cases':
+        return <CasesManagement cases={cases} leads={leads.map(l => ({ id: l.id, full_name: l.full_name, phone: l.phone }))} lawyers={lawyers} onRefresh={fetchAllData} />;
       case 'students':
         return (
           <StudentManagement
@@ -161,6 +191,8 @@ const AdminDashboardPage = () => {
         return <ReferralManagement onRefresh={fetchAllData} />;
       case 'payouts':
         return <PayoutsManagement onRefresh={fetchAllData} />;
+      case 'analytics':
+        return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
       case 'security':
         return <SecurityPanel loginAttempts={loginAttempts} />;
       case 'audit':
