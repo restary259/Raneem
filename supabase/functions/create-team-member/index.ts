@@ -58,8 +58,23 @@ serve(async (req) => {
     const body = await req.json();
     const { email, full_name, role } = body;
 
+    // Input validation
     if (!email || !full_name || !role) {
       return new Response(JSON.stringify({ error: "Email, full_name, and role required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof email !== "string" || email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof full_name !== "string" || full_name.trim().length === 0 || full_name.length > 100) {
+      return new Response(JSON.stringify({ error: "Full name must be 1-100 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -112,6 +127,27 @@ serve(async (req) => {
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
 
+    // Send credentials via email (never expose in response)
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          email_type: "team_credentials",
+          user_email: email,
+          user_name: full_name,
+          temp_password: tempPassword,
+        }),
+      });
+    } catch (emailErr) {
+      console.error("Failed to send credentials email:", emailErr);
+      // Account is created but email failed — admin should be notified
+    }
+
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: adminId,
@@ -125,9 +161,8 @@ serve(async (req) => {
         success: true,
         user_id: userId,
         email,
-        temp_password: tempPassword,
         role,
-        message: `${role} account created. Share the password with the team member.`,
+        message: `${role} account created. Credentials sent to ${email}.`,
       }),
       {
         status: 200,
