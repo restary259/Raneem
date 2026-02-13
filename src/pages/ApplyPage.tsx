@@ -372,13 +372,7 @@ const FieldGroup = ({ label, children }: { label: string; children: React.ReactN
 );
 
 const ApplyTopBar = () => (
-  <header className="flex items-center justify-center py-3 px-4 border-b border-border bg-card/80 backdrop-blur-md">
-    <img
-      src="/lovable-uploads/darb-chat-logo.png"
-      alt="Darb Study"
-      className="h-10 object-contain"
-    />
-  </header>
+  <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
 );
 
 export default ApplyPage;
