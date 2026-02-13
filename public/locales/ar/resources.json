@@ -175,6 +175,8 @@
       "moveUp": "نقل للأعلى",
       "moveDown": "نقل للأسفل",
       "downloadPDF": "تحميل PDF",
+      "downloadPNG": "تحميل كصورة PNG",
+      "downloadJPG": "تحميل كصورة JPG",
       "saveDraft": "حفظ المسودة",
       "loadDraft": "تحميل المسودة",
       "clearAll": "مسح الكل"
