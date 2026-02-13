@@ -10,7 +10,6 @@ export const useSessionTimeout = () => {
 
   const logout = useCallback(async () => {
     clearChatHistory();
-    // Clear any cached sensitive data
     try {
       const cacheNames = await caches.keys();
       for (const name of cacheNames) {
@@ -28,10 +27,19 @@ export const useSessionTimeout = () => {
   }, [logout]);
 
   useEffect(() => {
-    // Only activate if user is logged in
     const checkAndStart = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
+
+      // Only activate timeout for admin users
+      const { data: roles } = await (supabase as any)
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin');
+
+      const isAdmin = roles && roles.length > 0;
+      if (!isAdmin) return; // Non-admin users get permanent sessions
 
       resetTimer();
       const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
@@ -49,7 +57,8 @@ export const useSessionTimeout = () => {
       if (event === 'SIGNED_OUT') {
         if (timerRef.current) clearTimeout(timerRef.current);
       } else if (event === 'SIGNED_IN') {
-        resetTimer();
+        // Re-check on sign in (will only start timer if admin)
+        checkAndStart();
       }
     });
 

@@ -50,6 +50,7 @@ const sidebarGroups = [
     label: 'أدوات',
     items: [
       { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
+      { id: 'notifications', labelKey: 'admin.tabs.notifications', icon: Mail },
       { id: 'security', labelKey: 'admin.tabs.security', icon: Shield },
       { id: 'audit', labelKey: 'admin.tabs.audit', icon: ScrollText },
     ],

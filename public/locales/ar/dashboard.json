@@ -238,7 +238,8 @@
       "payouts": "المكافآت والصرف",
       "analytics": "التحليلات",
       "security": "الأمان",
-      "audit": "سجل النشاط"
+      "audit": "سجل النشاط",
+      "notifications": "الإشعارات"
     },
     "overview": {
       "totalStudents": "إجمالي الطلاب",

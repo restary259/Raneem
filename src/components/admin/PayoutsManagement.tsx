@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import PasswordVerifyDialog from './PasswordVerifyDialog';
 
 const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { toast } = useToast();
@@ -15,6 +16,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const [rewards, setRewards] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
   const [filter, setFilter] = useState('all');
+  const [pendingPayId, setPendingPayId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const fetchRewards = async () => {
@@ -58,7 +60,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const ActionButtons = ({ reward }: { reward: any }) => {
     if (reward.status === 'paid' || reward.status === 'cancelled') return null;
     return (<div className="flex gap-2">
-      <Button size="sm" variant="default" className="min-h-[44px] sm:min-h-0" onClick={() => updateRewardStatus(reward.id, 'paid')}>{t('admin.payouts.pay')}</Button>
+      <Button size="sm" variant="default" className="min-h-[44px] sm:min-h-0" onClick={() => setPendingPayId(reward.id)}>{t('admin.payouts.pay')}</Button>
       <Button size="sm" variant="destructive" className="min-h-[44px] sm:min-h-0" onClick={() => updateRewardStatus(reward.id, 'cancelled')}>{t('admin.payouts.cancel')}</Button>
     </div>);
   };
@@ -111,6 +113,13 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
         </div></CardContent></Card>
       )}
+      <PasswordVerifyDialog
+        open={!!pendingPayId}
+        onOpenChange={(open) => { if (!open) setPendingPayId(null); }}
+        onVerified={() => { if (pendingPayId) updateRewardStatus(pendingPayId, 'paid'); setPendingPayId(null); }}
+        title="تأكيد الدفع"
+        description="أدخل كلمة المرور لتأكيد عملية الدفع."
+      />
     </div>
   );
 };
