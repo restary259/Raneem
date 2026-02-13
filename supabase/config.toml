@@ -1,6 +1,9 @@
 
 project_id = "mzbadxfvxioedzdjxamc"
 
+[functions.uniplaces-proxy]
+verify_jwt = false
+
 [functions.send-email]
 verify_jwt = false
 [functions.ai-chat]

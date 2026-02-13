@@ -40,6 +40,12 @@ const BottomNav = () => {
       ariaLabel: t('bottomNav.advisorAria')
     },
     {
+      name: t('housing.title', 'Housing'),
+      href: '/housing',
+      icon: Home,
+      ariaLabel: t('housing.title', 'Student Housing')
+    },
+    {
       name: t('bottomNav.account'),
       href: '/student-auth',
       icon: User,
