@@ -1,193 +1,132 @@
 
-## DSOS (Darb Study Operating System) -- Implementation Plan
+## Global UI Refinement + Structural Enhancements + Financial Visuals
 
-This is a significant evolution of the existing Darb platform. The good news is that **much of the foundation already exists** -- authentication, role-based access (admin/influencer/student), referrals, documents, checklists, payments, and rewards are all built. The plan below focuses on what needs to be **added or modified** to match the DSOS specification.
+This is a comprehensive UI/UX overhaul across all four dashboards (Admin, Lawyer, Student, Influencer) covering visual theme, delete functionality, sidebar restructuring, and financial presentation improvements.
 
-### What Already Exists (No Changes Needed)
+---
 
-- 4-role system (Admin, Influencer, Student) with `user_roles` table and `has_role()` function
-- Student dashboard with checklist tracker, document uploads, referral form, rewards panel
-- Admin dashboard with student management, influencer management, referral tracking, payouts
-- Influencer dashboard with assigned students, earnings, payout requests
-- Mobile-first responsive design, RTL/LTR support, PWA configuration
-- Secure auth with rate limiting, session timeouts, server-side admin verification
+### Phase 1: Global Theme Update
 
-### Phase 1: Database -- New Tables (Leads + StudentCases + Commissions)
+**1.1 Background and Color Palette**
+- Change all dashboard backgrounds from `bg-muted/30` and `bg-gray-50` to `bg-[#F8FAFC]` (Ghost White) across:
+  - `AdminLayout.tsx` (main container)
+  - `LawyerDashboardPage.tsx`
+  - `InfluencerDashboardPage.tsx`
+  - `StudentDashboardPage.tsx`
+- Soften the admin/lawyer sidebar from `bg-[hsl(215,50%,23%)]` to a deep charcoal `bg-[#1E293B]` (Slate 800)
+- Active sidebar items get a brand accent glow: `bg-accent/20 text-white shadow-[0_0_12px_rgba(234,88,12,0.3)]` (orange glow)
 
-**New table: `leads`**
+**1.2 Border Radius**
+- Update the Card component (`src/components/ui/card.tsx`) border-radius from `rounded-lg` to `rounded-2xl` (16px)
+- Update the Button component (`src/components/ui/button.tsx`) from `rounded-md` to `rounded-xl` (12px)
+- Update the Input component (`src/components/ui/input.tsx`) from `rounded-md` to `rounded-xl`
+- Update the Select trigger similarly
+- Update CSS variable `--radius` from `0.5rem` to `0.75rem` in `base.css`
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| full_name | text | required |
-| phone | text | required |
-| city | text | nullable |
-| age | integer | nullable |
-| education_level | text | nullable |
-| german_level | text | nullable |
-| budget_range | text | nullable |
-| preferred_city | text | nullable |
-| accommodation | boolean | default false |
-| source_type | text | 'influencer' / 'referral' / 'organic' |
-| source_id | uuid | nullable, links to influencer or referrer |
-| eligibility_score | integer | nullable |
-| status | text | 'new' / 'eligible' / 'not_eligible' / 'assigned' |
-| created_at | timestamptz | default now() |
+**1.3 Typography**
+- Add `'IBM Plex Sans Arabic'` as the primary font in `base.css` body and in `tailwind.config.ts` fontFamily
+- Load the font via a Google Fonts import in `index.html`
 
-RLS: Admin full access. Influencers can view leads where `source_id = auth.uid()`.
+**1.4 Icons**
+- All icons are already using Lucide consistently -- no changes needed here. Verified across all dashboard components.
 
-**New table: `student_cases`**
+---
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| lead_id | uuid | FK to leads |
-| assigned_lawyer_id | uuid | nullable, FK concept (stored as uuid) |
-| student_profile_id | uuid | nullable, links to profiles after signup |
-| selected_city | text | nullable |
-| selected_school | text | nullable |
-| accommodation_status | text | nullable |
-| service_fee | numeric | default 0 |
-| influencer_commission | numeric | default 0 |
-| lawyer_commission | numeric | default 0 |
-| referral_discount | numeric | default 0 |
-| school_commission | numeric | default 0 |
-| translation_fee | numeric | default 0 |
-| case_status | text | 'assigned' / 'contacted' / 'appointment' / 'closed' / 'paid' / 'registration_submitted' / 'visa_stage' / 'completed' |
-| notes | text | nullable |
-| created_at | timestamptz | default now() |
-| updated_at | timestamptz | default now() |
+### Phase 2: Delete Functionality + Sidebar Cleanup
 
-RLS: Admin full access. Lawyers can view/update cases assigned to them (limited columns). Students can view own case (no financial fields exposed via frontend).
+**2.1 Delete with Confirmation**
+Add delete capability to the following management views with a shared confirmation dialog pattern ("Are you sure? This action cannot be undone."):
 
-**New table: `case_payments`**
+- **LeadsManagement.tsx**: Add a `Trash2` icon button on each lead card. On confirm, delete from `leads` table.
+- **CasesManagement.tsx**: Add a `Trash2` icon in the collapsed card header. On confirm, delete the case and related `case_payments` and `commissions`.
+- **StudentManagement.tsx**: Add a `Trash2` icon in the actions column. On confirm, delete profile.
+- **ContactsManager.tsx**: Add delete button per contact row.
+- **ChecklistManagement.tsx**: Add delete button per checklist item.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| case_id | uuid | FK to student_cases |
-| payment_type | text | 'service_fee' / 'school_payment' / 'translation' |
-| amount | numeric | default 0 |
-| paid_status | text | 'pending' / 'paid' |
-| paid_date | timestamptz | nullable |
-| created_at | timestamptz | default now() |
-
-RLS: Admin full access. Students can view own case payments.
-
-**New table: `commissions`**
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| case_id | uuid | FK to student_cases |
-| influencer_amount | numeric | default 0 |
-| lawyer_amount | numeric | default 0 |
-| status | text | 'pending' / 'approved' / 'paid' |
-| created_at | timestamptz | default now() |
-| updated_at | timestamptz | default now() |
-
-RLS: Admin full access.
-
-**Add 'lawyer' to the `app_role` enum:**
-
-```sql
-ALTER TYPE public.app_role ADD VALUE 'lawyer';
+Each uses a shared `AlertDialog` confirmation modal:
+```
+"Are you sure? This action cannot be undone."
+[Cancel] [Delete]
 ```
 
-### Phase 2: Admin Dashboard Enhancements
+**2.2 Admin Sidebar Restructuring**
+Reorganize `AdminLayout.tsx` tabs into grouped categories:
 
-**New admin tabs added to `AdminLayout.tsx`:**
-- **Leads** tab -- view/manage all leads as mobile-friendly stacked cards
-- **Cases** tab -- view/manage student cases with expandable financial breakdown
-
-**File: `src/components/admin/LeadsManagement.tsx` (new)**
-- Displays leads as vertical cards (not tables) on mobile
-- Each card shows: Name, Phone (click-to-call `tel:` link), City, German Level, Budget, Source Badge, Eligibility Score, Status Badge
-- Action buttons: "Mark Eligible", "Mark Not Eligible", "Assign Lawyer"
-- "Mark Eligible" auto-creates a `student_cases` record
-- Search and filter by status
-
-**File: `src/components/admin/CasesManagement.tsx` (new)**
-- Each case as a collapsible card
-- Collapsed: Student Name, Assigned Lawyer, City + School, Case Status, Payment Status
-- Expanded: Full financial breakdown (service fee, commissions, discount, net profit auto-calculated)
-- Admin can edit all financial fields
-- Status dropdown for case progression
-- When admin confirms "Paid": creates commission records, updates influencer earnings
-
-### Phase 3: Lawyer Dashboard
-
-**File: `src/pages/LawyerDashboardPage.tsx` (new)**
-- Auth check: must have `lawyer` role
-- Shows only cases assigned to this lawyer
-- Each case card: Name, Phone (call button), Preferred City, Selected School, Case Status dropdown
-- Status options: Contacted, Appointment, Closed, Lost, Paid
-- "Paid" status sends notification to admin (toast + audit log entry) -- does NOT auto-trigger commissions
-- Can add translation service, upload documents, add internal notes
-- CANNOT see: school commission, influencer commission, net profit
-
-**Route added in `App.tsx`:**
 ```
-/lawyer-dashboard -> LawyerDashboardPage
+Dashboard
+  - Overview
+  - Analytics
+
+Students
+  - Leads (Potential Clients)
+  - Cases (Student Files)
+  - Students
+  - Checklist
+
+Team
+  - Influencers (Agents)
+  - Referrals
+
+Finance
+  - Payouts
+
+Tools
+  - Contacts (Messages)
+  - Security
+  - Audit Log
 ```
 
-### Phase 4: Student Dashboard Enhancements
+Implementation: Add section headers in the sidebar nav with small uppercase labels and a thin divider between groups.
 
-**Updated `DashboardMainContent.tsx`:**
-- New "My Application" tab showing:
-  - Selected City, Selected School, Accommodation status
-  - Progress bar based on `case_status`
-- Enhanced "Payments" tab showing case-specific payments (service fee, school, translation) with status badges
-- Existing "Documents", "Checklist", "Referrals" tabs remain unchanged
-- Student dashboard only activates after payment confirmed (check `case_status`)
+---
 
-### Phase 5: Influencer Dashboard Enhancements
+### Phase 3: Dashboard and Financial Visuals
 
-**Updated `InfluencerDashboardPage.tsx`:**
-- Top summary cards: Total Leads, Eligible, Closed, Paid, Total Earnings, Pending Earnings
-- Student list shows: Name, Status, Commission Status (no phone numbers, no internal notes)
-- Commission only becomes "Approved" when admin confirms payment
+**3.1 Stats Cards (AdminOverview.tsx)**
+- Reduce card padding from `p-5` to `p-4`
+- When a value is `0`, show a subtle "Getting Started" tip instead of a large "0" (e.g., "Add your first lead to get started" in muted text)
+- Reduce the large `text-2xl` number to `text-xl` for a more compact feel
 
-### Phase 6: KPI Analytics (Admin Only)
+**3.2 Profit Analysis (KPIAnalytics.tsx)**
+- Add a hero "Net Profit" card at the top with a distinct gradient background (green if positive, red if negative)
+- Color-code revenue cards with green text/accent and expense cards with red text/accent
+- Show Revenue, Expenses, and Net Profit as three distinct visual blocks before the detailed breakdowns
 
-**File: `src/components/admin/KPIAnalytics.tsx` (new)**
-- New admin tab "Analytics"
-- Lawyer metrics: Close Rate %, Revenue Generated
-- Influencer metrics: Lead Quality %, Paid Conversion %, Cost per Paid Student
-- Business metrics: Net Profit per Student, Total Monthly Profit
+**3.3 Cases Financial Breakdown (CasesManagement.tsx)**
+- In the expanded view, color-code revenue items (service fee, school commission) in green and cost items (influencer/lawyer commission, discount, translation) in red
+- Make the "Net Profit" row more prominent with a larger font and colored background
 
-### Technical Notes
+**3.4 Add Lead Modal (LeadsManagement.tsx)**
+- Convert from single-column to two-column layout on screens wider than mobile (`grid grid-cols-1 sm:grid-cols-2 gap-3`)
+- Set modal max-width to `max-w-lg` to give more room
 
-- All new components use vertical card layouts (no wide tables on mobile)
-- Click-to-call buttons use `<a href="tel:...">` for WhatsApp-style UX
-- Financial fields hidden from non-admin roles at the **frontend level** (lawyers and students never receive this data)
-- RLS policies enforce server-side data access restrictions
-- Existing tables (profiles, referrals, rewards, documents, checklist) remain unchanged
-- The `Lawyer` role is essentially the "Closer" mentioned in the spec -- same concept, professional terminology
-- All new UI follows existing design patterns (Card components, Badge, Progress, same color scheme)
-- RTL/LTR support maintained via existing `useDirection` hook
+---
 
-### File Summary
+### Technical File Summary
 
-| Action | File |
-|--------|------|
-| Migration | New tables: leads, student_cases, case_payments, commissions; add 'lawyer' to app_role enum |
-| New | `src/components/admin/LeadsManagement.tsx` |
-| New | `src/components/admin/CasesManagement.tsx` |
-| New | `src/components/admin/KPIAnalytics.tsx` |
-| New | `src/pages/LawyerDashboardPage.tsx` |
-| Edit | `src/components/admin/AdminLayout.tsx` -- add Leads, Cases, Analytics tabs |
-| Edit | `src/pages/AdminDashboardPage.tsx` -- wire new tabs |
-| Edit | `src/components/dashboard/DashboardMainContent.tsx` -- add "My Application" tab |
-| Edit | `src/pages/InfluencerDashboardPage.tsx` -- enhanced stats from leads/cases |
-| Edit | `src/App.tsx` -- add `/lawyer-dashboard` route |
+| Action | File | Changes |
+|--------|------|---------|
+| Edit | `index.html` | Add IBM Plex Sans Arabic Google Font link |
+| Edit | `src/styles/base.css` | Update `--radius`, add IBM Plex Sans Arabic to font-family |
+| Edit | `tailwind.config.ts` | Update fontFamily to include IBM Plex Sans Arabic |
+| Edit | `src/components/ui/card.tsx` | `rounded-lg` to `rounded-2xl` |
+| Edit | `src/components/ui/button.tsx` | `rounded-md` to `rounded-xl` |
+| Edit | `src/components/ui/input.tsx` | `rounded-md` to `rounded-xl` |
+| Edit | `src/components/admin/AdminLayout.tsx` | Sidebar color, active state glow, grouped sections, background color |
+| Edit | `src/components/admin/AdminOverview.tsx` | Compact stats, zero-state tips |
+| Edit | `src/components/admin/LeadsManagement.tsx` | Delete button, confirmation dialog, two-column modal |
+| Edit | `src/components/admin/CasesManagement.tsx` | Delete button, confirmation dialog, color-coded financials |
+| Edit | `src/components/admin/KPIAnalytics.tsx` | Hero net profit card, color-coded revenue/expenses |
+| Edit | `src/components/admin/StudentManagement.tsx` | Delete button with confirmation |
+| Edit | `src/pages/LawyerDashboardPage.tsx` | Background color, sidebar color update |
+| Edit | `src/pages/InfluencerDashboardPage.tsx` | Background color, header color update |
+| Edit | `src/pages/StudentDashboardPage.tsx` | Background color |
+| Edit | `src/components/dashboard/DashboardHeader.tsx` | Background update |
+| Edit | `src/components/dashboard/DashboardSidebar.tsx` | Active state styling |
 
 ### Implementation Order
-
-1. Database migration (tables + RLS + enum)
-2. Admin Leads Management
-3. Admin Cases Management (with auto-create on eligible)
-4. Lawyer Dashboard
-5. Student dashboard enhancements
-6. Influencer dashboard enhancements
-7. KPI Analytics
+1. Global theme (fonts, colors, border-radius, backgrounds)
+2. Delete functionality with confirmation dialogs
+3. Sidebar grouping
+4. Financial visual improvements
+5. Stats cards zero-state and compact layout
