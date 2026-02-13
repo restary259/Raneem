@@ -1,190 +1,199 @@
 
 
-# Security Fixes + Performance Optimization Plan
+# Uniplaces Housing Search Integration Plan
 
 ## Overview
 
-This plan addresses three categories: RLS policy gaps, leaked password protection, and Lighthouse performance improvements.
+Integrate the Uniplaces Open API to provide student accommodation search and booking capabilities. This adds a new "Housing" section where students can browse available apartments, filter by city/dates/budget, view details, and initiate bookings via Uniplaces.
 
 ---
 
-## Part 1: Database Security (RLS Policies)
+## Architecture
 
-### A. login_attempts -- Allow Edge Function Inserts
+The integration follows a secure proxy pattern:
 
-**Problem:** The `login_attempts` table has no INSERT policy. The `auth-guard` edge function uses the service role key to insert, which bypasses RLS entirely. This actually works today -- service role bypasses all RLS. No policy change is strictly needed, but we should formalize this.
+```text
+Browser --> Edge Function (uniplaces-proxy) --> Uniplaces Staging API
+                                                 (x-api-key header)
+```
 
-**Action:** No migration needed. The service role key already bypasses RLS. The current design is correct -- only the `auth-guard` edge function (using service role) writes to this table. Adding an anon/authenticated INSERT policy would be a security regression.
+All API calls go through a backend function that holds the API key as a secret. The frontend never touches the key.
 
-**Status:** Already secure. No change required.
+---
 
-### B. contact_submissions -- Allow Anonymous Inserts
+## Phase 1: Backend (Edge Function + Secret)
 
-**Problem:** No INSERT policy exists. The `send-email` edge function uses service role to insert contact submissions, so it works. But to be explicit and clean:
+### A. Store API Key
 
-**Action:** No migration needed. The `send-email` edge function uses service role key, which bypasses RLS. The contact form is already rate-limited (3/hour per IP) with honeypot protection. Adding an anon INSERT policy would be less secure than the current approach (edge function with validation).
+Request the `UNIPLACES_API_KEY` secret from the user via the secrets tool.
 
-**Status:** Already secure. No change required.
+### B. Create `supabase/functions/uniplaces-proxy/index.ts`
 
-### C. Push Notification Function -- Fix User ID Validation
+A single edge function that proxies all Uniplaces endpoints:
 
-**Problem (CRITICAL):** The `push-notify` edge function allows subscribing/unsubscribing ANY user_id without verifying the caller matches. This is an actual vulnerability.
+- **GET /cities** -- Fetches available cities
+- **GET /cities/{city}/offers** -- Search listings with filters (move-in, move-out, limit, page, budget, rent type)
+- **GET /offers/{offerId}** -- Get full offer details (photos, pricing, availability rules, cancellation policy)
+- **POST /calculate-pricing** -- Initiate booking (returns redirect URL to Uniplaces checkout)
 
-**Action:** Update `supabase/functions/push-notify/index.ts` to:
-1. Extract JWT from Authorization header
-2. Validate the authenticated user matches the `user_id` parameter for subscribe/unsubscribe actions
-3. For "send" action, verify admin role
+The function will:
+1. Accept `action` + parameters in the request body
+2. Forward to the Uniplaces staging API at `https://api-export.staging-uniplaces.com`
+3. Attach the `x-api-key` header from the secret
+4. Return the JSON response
 
-### D. Admin Storage Access
+CORS headers included. `verify_jwt = false` in config.toml (public search, no auth needed for browsing).
 
-**Action:** Add a database migration with storage policies allowing admins to SELECT (and optionally DELETE) files in the `student-documents` bucket.
+### C. Register in `supabase/config.toml`
 
-```sql
-CREATE POLICY "Admins can view all student documents"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'student-documents' AND public.has_role(auth.uid(), 'admin'));
+```toml
+[functions.uniplaces-proxy]
+verify_jwt = false
 ```
 
 ---
 
-## Part 2: Leaked Password Protection
+## Phase 2: Frontend -- New Housing Page
 
-**Problem:** The Supabase linter confirms leaked password protection is disabled.
+### A. Create `src/pages/HousingPage.tsx`
 
-**Action:** Use the Lovable Cloud auth configuration tool to enable leaked password protection. This is a backend setting, not a code change. Once enabled, signup/login will reject passwords found in known breach databases.
+A new page at route `/housing` with:
+
+1. **Hero Section** -- "Find Your Student Housing in Europe" with city selector
+2. **Search Filters Sidebar/Bar** -- Move-in date, move-out date, budget range, rent type (entire/private/shared)
+3. **Listing Grid** -- Cards showing property photo, title, price, location
+4. **Pagination** -- Load more / page navigation (API limit: 50 per page)
+
+### B. Create Housing Components
+
+| Component | Purpose |
+|-----------|---------|
+| `src/components/housing/HousingHero.tsx` | Hero with city dropdown |
+| `src/components/housing/HousingFilters.tsx` | Date pickers, budget slider, rent type toggle |
+| `src/components/housing/HousingCard.tsx` | Property listing card with image, title, price, badges |
+| `src/components/housing/HousingDetailModal.tsx` | Full offer details: photos carousel, availability, cancellation policy, booking CTA |
+| `src/components/housing/HousingGrid.tsx` | Grid layout with loading skeletons |
+| `src/components/housing/BookingButton.tsx` | Calls calculate-pricing and redirects to Uniplaces checkout |
+
+### C. Image Rendering
+
+Construct image URLs using the staging CDN pattern:
+```
+https://cdn-static.staging-uniplaces.com/property-photos/{hash}/{size}.jpg
+```
+Use `medium` for cards, `x-large` for detail modal.
+
+### D. Data Mapping (from API response)
+
+| UI Element | JSON Path |
+|------------|-----------|
+| Title | `attributes.accommodation_offer.title` |
+| Price | `attributes.accommodation_offer.price.amount` (divide by 100 for EUR) |
+| Photos | `attributes.accommodation_offer.photos[].hash` |
+| City | from the search context |
+| Rent Type | `attributes.accommodation_offer.rent_type` |
+
+### E. Booking Flow
+
+1. User clicks "Book Now" on a listing
+2. Frontend calls the edge function with `action: "calculate-pricing"` + offer_id, move-in, move-out, guests
+3. Edge function calls `POST /v1/calculate-pricing`
+4. Returns a redirect URL
+5. Frontend opens the Uniplaces checkout in a new tab
 
 ---
 
-## Part 3: Performance Optimizations
+## Phase 3: Translations
 
-### A. Eliminate Redirect Chain
+Add keys to both `public/locales/en/common.json` and `public/locales/ar/common.json`:
 
-**Current:** The SPA redirect logic in `App.tsx` (lines 57-65) reads `sessionStorage.redirectPath` and navigates. This is necessary for SPA routing on static hosts and is not a true redirect chain -- it's a client-side navigation. The `vercel.json` and `public/404.html` handle this correctly.
-
-**Action:** No change needed. The current implementation is the standard SPA fallback pattern.
-
-### B. Improve LCP (Largest Contentful Paint)
-
-**Current state:**
-- Hero poster is already preloaded: `<link rel="preload" as="image" href="/lovable-uploads/hero-poster.webp">` (good)
-- Hero video has poster attribute set (good)
-- Font is preloaded (good)
-
-**Action:** Add `fetchpriority="high"` to the hero poster preload link in `index.html`.
-
-### C. Reduce Render-Blocking Resources (~160ms savings)
-
-**Problem:** Two Google Fonts CSS files are render-blocking.
-
-**Action:**
-1. Change the Noto Sans font `<link>` to use `media="print" onload="this.media='all'"` pattern for non-critical font
-2. Keep Tajawal (primary font) preloaded but ensure `display=swap` is in the URL (already present)
-
-### D. Optimize JavaScript Chunking (~117 KiB unused JS savings)
-
-**Current chunks:** vendor-react, vendor-supabase, vendor-charts
-
-**Action:** Add more granular manual chunks in `vite.config.ts`:
-```typescript
-manualChunks: {
-  'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-  'vendor-supabase': ['@supabase/supabase-js'],
-  'vendor-charts': ['recharts'],
-  'vendor-i18n': ['i18next', 'react-i18next', 'i18next-http-backend'],
-  'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-  'vendor-date': ['date-fns'],
+```json
+{
+  "housing": {
+    "title": "Student Housing",
+    "heroTitle": "Find Your Student Accommodation",
+    "heroSubtitle": "Browse verified apartments and rooms near your university",
+    "filterMoveIn": "Move-in Date",
+    "filterMoveOut": "Move-out Date",
+    "filterBudget": "Budget",
+    "filterRentType": "Room Type",
+    "entirePlace": "Entire Place",
+    "privateBedroom": "Private Bedroom",
+    "sharedBedroom": "Shared Bedroom",
+    "perMonth": "/month",
+    "bookNow": "Book Now",
+    "viewDetails": "View Details",
+    "noResults": "No listings found for your criteria",
+    "loading": "Loading listings...",
+    "cancellationPolicy": "Cancellation Policy",
+    "availability": "Availability",
+    "poweredBy": "Powered by Uniplaces"
+  }
 }
 ```
 
-Also ensure these are not eagerly imported:
-- `mapbox-gl` -- only used on Locations page (already lazy-loaded via page)
-- `@react-three/fiber` -- verify it's only loaded where needed
+---
 
-### E. Reduce Unused CSS (~14 KiB savings)
+## Phase 4: Route Registration
 
-**Action:** Tailwind CSS purging is already configured by default in Vite + Tailwind. The savings come from:
-1. Removing the PWA loading screen inline styles from `index.html` (move to a small external CSS or reduce)
-2. Ensure `tailwind.config.ts` content paths are correct
-
-No major action needed -- Tailwind already purges unused classes in production builds.
-
-### F. Improve Caching Headers (~5 MB savings)
-
-**Current `_headers`:**
-- `/*` has `Cache-Control: no-store` (too aggressive for all routes)
-- `/assets/*` has `immutable` (good)
-- `/lovable-uploads/*` has `immutable` (good)
-
-**Action:** Update `public/_headers`:
-- Keep `no-store` only for `/index.html`
-- Add caching for font files: `/fonts/*` with `public, max-age=31536000, immutable`
-- Remove the global `no-store` and replace with a more targeted approach
-
-```
-/*
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: upgrade-insecure-requests
-
-/index.html
-  Cache-Control: no-store
-
-/manifest.json
-  Cache-Control: public, max-age=86400
-  Access-Control-Allow-Origin: *
-  Content-Type: application/manifest+json
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/lovable-uploads/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/locales/*
-  Cache-Control: public, max-age=3600
+Add to `App.tsx`:
+```typescript
+const HousingPage = lazy(() => import('./pages/HousingPage'));
+// ...
+<Route path="/housing" element={<HousingPage />} />
 ```
 
-### G. Remove Debug Logging from Production
-
-**Action:** 
-1. Gate `AuthDebugPanel` behind `import.meta.env.DEV`
-2. Remove or gate console.log statements in `Contact.tsx` behind dev check
-
-### H. Move Exchange Rate API Key to Edge Function
-
-**Action:** Create a new edge function `get-exchange-rate` that proxies the API call with the key stored as a secret. Update `useCurrencyComparator.ts` to call the edge function instead.
+Add a "Housing" link to the navigation (DesktopNav + MobileNav + BottomNav) -- placed AFTER existing items to preserve nav order as per custom rules.
 
 ---
 
-## Files to Modify
+## Phase 5: Webhook Handling (Future / Phase 2)
 
-| File | Change |
+The PDF describes webhook setup for booking lifecycle tracking (requested, awaiting, accepted, paid, confirmed, rejected, etc.). This would require:
+
+- A webhook receiver edge function
+- A `bookings` database table to store booking states
+- Dashboard integration to show booking status
+
+This is deferred to a future phase since the initial integration focuses on search and booking initiation. The booking lifecycle is managed by Uniplaces itself.
+
+---
+
+## Important Notes
+
+- **Staging API hours**: 06:30-20:30 Portugal Time, Mon-Fri only. Outside these hours the API returns errors. The UI should handle this gracefully with an informational message.
+- **Price format**: API returns amounts in cents (e.g., 46000 = 460.00 EUR). Frontend must divide by 100.
+- **Contract types**: fortnightly, monthly, daily/nightly -- display appropriately.
+- **Navigation order**: The Housing link will be added after existing nav items, preserving current order.
+
+---
+
+## Files to Create/Modify
+
+| File | Action |
 |------|--------|
-| `supabase/functions/push-notify/index.ts` | Add JWT validation and user_id match check |
-| `index.html` | Add `fetchpriority="high"` to preload; defer non-critical font |
-| `vite.config.ts` | Add more granular manual chunks |
-| `public/_headers` | Remove global `no-store`, add `/locales/*` caching |
-| `src/pages/StudentAuthPage.tsx` | Gate `AuthDebugPanel` behind DEV check |
-| `src/components/landing/Contact.tsx` | Remove production console.log statements |
-| `supabase/functions/get-exchange-rate/index.ts` | NEW -- proxy exchange rate API |
-| `src/components/calculator/currency-comparator/useCurrencyComparator.ts` | Call edge function instead of direct API |
-
-**Database migration:**
-- Add admin storage policy for `student-documents` bucket
-
-**Backend config:**
-- Enable leaked password protection via auth settings
+| `supabase/functions/uniplaces-proxy/index.ts` | NEW -- API proxy |
+| `supabase/config.toml` | Add function config |
+| `src/pages/HousingPage.tsx` | NEW -- main page |
+| `src/components/housing/HousingHero.tsx` | NEW |
+| `src/components/housing/HousingFilters.tsx` | NEW |
+| `src/components/housing/HousingCard.tsx` | NEW |
+| `src/components/housing/HousingDetailModal.tsx` | NEW |
+| `src/components/housing/HousingGrid.tsx` | NEW |
+| `src/components/housing/BookingButton.tsx` | NEW |
+| `src/App.tsx` | Add `/housing` route |
+| `src/components/landing/DesktopNav.tsx` | Add Housing nav link |
+| `src/components/landing/MobileNav.tsx` | Add Housing nav link |
+| `src/components/common/BottomNav.tsx` | Add Housing nav link |
+| `public/locales/en/common.json` | Add housing keys |
+| `public/locales/ar/common.json` | Add housing keys |
 
 ---
 
 ## What Will NOT Change
 
-- Navigation order, logo, student portal button
+- Navigation order of existing items, logo, student portal button
 - Brand colors and design language
-- Existing RLS policies (they are correct)
-- login_attempts / contact_submissions INSERT approach (service role is correct)
-- SPA redirect pattern (standard and necessary)
+- Existing pages and components
+- Database schema (no new tables in Phase 1)
 
