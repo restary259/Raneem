@@ -1,90 +1,88 @@
 
 
-## CV Builder Fix, Image Export, Bottom Nav Update, and Platform-Wide Verification
+## DSOS Ultimate Security Hardening Plan
 
-This plan covers the CV builder print/export improvements, adding screenshot/image download, replacing the Housing tab with Apply in the mobile bottom nav, and a systematic English/LTR verification pass across all dashboards.
+This plan addresses all actionable security findings from the scan and implements the comprehensive security measures you outlined. Changes are organized by priority.
 
 ---
 
-### 1. CV Builder -- Remove Lovable Branding from Print/Export
+### Phase 1: Fix Active Security Findings (Critical)
 
-**Problem**: When printing, the Lovable badge (injected globally) may appear in the PDF output.
+#### 1A. Remove Temp Password Exposure from API Responses
+**Problem**: `create-team-member` and `create-influencer` edge functions return plaintext temp passwords in the API response body. These are visible in browser DevTools.
 
-**Fix**:
-- Update `src/styles/cv-print.css` to explicitly hide the Lovable badge element during print:
-  - Add rules targeting `[data-lovable-badge]`, `#lovable-badge`, and any iframe/div with Lovable branding classes using `display: none !important` inside the `@media print` block.
-- Also hide `BottomNav`, `ChatWidget`, `PWAInstaller`, `CookieBanner` in print via selectors.
+**Fix**: Instead of returning the password in the response, send it to the new team member via email using the existing `send-branded-email` function or built-in Supabase email. The admin UI will show a success message without the password.
 
-### 2. CV Builder -- Optimize PDF/Print Margins
+**Files**:
+- `supabase/functions/create-team-member/index.ts` -- remove `temp_password` from response, send password via email to the new user
+- `supabase/functions/create-influencer/index.ts` -- same fix, also add `must_change_password: true` to profile (currently missing)
 
-**Fix in `src/styles/cv-print.css`**:
-- Change `@page` margin from `15mm` to `10mm 15mm` (tighter top/bottom, comfortable sides) for better A4 fit.
-- Add `overflow: visible` to `#cv-preview` so content is never clipped.
-- Ensure the preview container has no max-height in print mode.
-- Add `page-break-inside: avoid` to individual CV entry blocks (education, experience items).
+#### 1B. Fix "RLS Policy Always True" on contact_submissions
+**Problem**: The `Anyone can submit contact form` INSERT policy uses `WITH CHECK (true)`, flagged by the linter.
 
-### 3. CV Builder -- Add Screenshot and Image Download Options
+**Fix**: This is intentional for public contact forms, but we should tighten it by restricting which columns can be set. Since the `send-email` edge function uses service role to insert, we can safely remove the public INSERT policy and rely entirely on the edge function (which already validates and sanitizes input).
 
-**Changes to `src/components/lebenslauf/useLebenslauf.ts`**:
-- Add `handleDownloadImage` function using the Canvas API:
-  - Use `html2canvas` approach via a simple DOM-to-canvas utility (we'll implement a lightweight version using the built-in browser APIs or add a small helper).
-  - Since we can't install new npm packages easily, we'll use the browser's native `window.print()` for PDF and implement image capture using a canvas-based approach with `document.querySelector('#cv-preview')`.
+**Migration**: Drop the `Anyone can submit contact form` policy.
 
-**Alternative approach (more reliable)**: Use the browser's built-in `Selection` and `Range` API with `document.execCommand('copy')` -- but for image download, we'll implement a canvas rendering approach:
+#### 1C. Address profiles/leads exposure warnings
+**Problem**: Scanner flags that profiles and leads tables lack explicit "deny anonymous" policies. While RLS is enabled and all existing policies require `auth.uid()`, adding explicit denial is defense-in-depth.
 
-- Create a utility function `captureElementAsImage(elementId: string, format: 'png' | 'jpeg')` in `src/utils/captureUtils.ts`:
-  - Clone the target element
-  - Use `XMLSerializer` to convert to SVG foreignObject
-  - Draw on canvas
-  - Export as blob and trigger download
+**Fix**: These tables already have RLS enabled with policies that all check `auth.uid()` or `has_role()`. Anonymous users cannot match any policy. This is already secure by default (RLS denies when no policy matches). We will mark these findings as acknowledged with justification rather than adding redundant policies.
 
-**Changes to `src/components/lebenslauf/LebenslaufBuilder.tsx`**:
-- Add two new toolbar buttons: "Download as Image (PNG)" and "Download as JPG"
-- Wire them to the new capture utility
+---
 
-**Changes to `useLebenslauf.ts`**:
-- Add `handleDownloadPNG` and `handleDownloadJPG` functions
-- Return them from the hook
+### Phase 2: Security Headers and CSP Enhancement
 
-**Translations**: Add keys `downloadPNG` and `downloadJPG` to both `en/resources.json` and `ar/resources.json` under `lebenslaufBuilder.actions`.
+#### 2A. Strengthen Content-Security-Policy
+**Current**: `Content-Security-Policy: upgrade-insecure-requests` (minimal)
 
-### 4. Mobile Bottom Nav -- Replace Housing with Apply
+**Fix**: Update `public/_headers` with a more comprehensive CSP:
+- Add `default-src 'self'`
+- Add `script-src 'self'` (with necessary hashes/nonces for inline scripts)
+- Add `style-src 'self' 'unsafe-inline' fonts.googleapis.com`
+- Add `font-src fonts.gstatic.com`
+- Add `img-src 'self' data: blob: *.supabase.co`
+- Add `connect-src 'self' *.supabase.co`
+- Add `frame-ancestors 'none'` (replaces X-Frame-Options)
 
-**File: `src/components/common/BottomNav.tsx`**:
-- Replace the Housing nav item with Apply:
-  - Change `name` from `t('housing.title', 'Housing')` to `t('bottomNav.apply', 'Apply')`
-  - Change `href` from `/housing` to `/apply`
-  - Change `icon` from `Home` to a relevant icon like `FileText` or `Send` from lucide-react
-  - Update `ariaLabel`
+Note: CSP will need testing to ensure no legitimate resources are blocked.
 
-**Translations**: Add `bottomNav.apply` and `bottomNav.applyAria` to both `en/common.json` and `ar/common.json`.
+---
 
-### 5. English/LTR Verification and Fixes
+### Phase 3: PWA and Cache Security
 
-This is a systematic pass through the codebase to verify all components render correctly in English/LTR mode. Based on code review, the following areas need attention:
+#### 3A. Clear sensitive data from service worker caches on logout
+**Status**: Already implemented -- the service worker handles `CLEAR_CACHES_ON_LOGOUT` messages and the `useSessionTimeout` hook clears caches. This is verified and working.
 
-**Contact form (`src/components/landing/Contact.tsx`)**:
-- The form container has `text-right` hardcoded -- should be `text-right` only in RTL. Change to use dynamic direction class.
+#### 3B. Prevent caching of sensitive dashboard routes
+**Status**: Already implemented -- the service worker uses network-only for navigation requests and never caches Supabase API calls. Verified and working.
 
-**Dashboard components**:
-- Verify all dashboard pages (Admin, Lawyer, Student, Influencer) use `useDirection()` hook and apply `dir` attribute.
-- Check that status badges, timers, and card layouts don't break with longer English text.
+---
 
-**Forms and validation**:
-- Ensure all form validation messages are translated and positioned correctly in LTR.
-- Check that required field markers and error messages align properly.
+### Phase 4: Input Validation Hardening
 
-### 6. Platform-Wide Functional Verification
+#### 4A. Email validation in edge functions
+**Current**: `auth-guard` accepts any email string without validation.
 
-This phase involves testing (not code changes) across:
-- Admin dashboard: leads, cases, team management, export, eligibility override
-- Lawyer dashboard: case cards with eligibility display
-- Student dashboard: application tracking, document uploads
-- Influencer dashboard: lead cards, eligibility badges, 20-day timer
-- Referral system: tracking, rewards
-- All forms: apply, contact, partnership registration
+**Fix**: Add email format validation in `auth-guard/index.ts` before attempting login:
+```typescript
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  return new Response(JSON.stringify({ error: "Invalid email" }), { status: 400 });
+}
+```
 
-Any bugs found during testing will be fixed inline.
+#### 4B. Input length limits in team creation functions
+Add explicit length limits for `email` (max 255), `full_name` (max 100), and `role` validation in both `create-team-member` and `create-influencer`.
+
+---
+
+### Phase 5: Resolve Remaining Scan Findings
+
+After implementing the above, update the security findings:
+- **Delete** `temp_password_in_response` finding (fixed)
+- **Ignore** `profiles_table_public_exposure` and `leads_table_sensitive_exposure` with justification (RLS deny-by-default already protects)
+- **Ignore** `user_roles_partial_public_access` with justification (needed for public referral link validation)
+- **Ignore** `SUPA_rls_policy_always_true` for checklist_items SELECT (intentional public read for authenticated users)
 
 ---
 
@@ -92,21 +90,16 @@ Any bugs found during testing will be fixed inline.
 
 | Action | File | Changes |
 |--------|------|---------|
-| Edit | `src/styles/cv-print.css` | Hide Lovable badge, optimize margins, prevent content clipping |
-| Create | `src/utils/captureUtils.ts` | Canvas-based element-to-image capture utility |
-| Edit | `src/components/lebenslauf/useLebenslauf.ts` | Add image download handlers |
-| Edit | `src/components/lebenslauf/LebenslaufBuilder.tsx` | Add PNG/JPG download buttons |
-| Edit | `src/components/common/BottomNav.tsx` | Replace Housing with Apply |
-| Edit | `src/components/landing/Contact.tsx` | Fix hardcoded text-right for LTR support |
-| Edit | `public/locales/en/resources.json` | Add downloadPNG/downloadJPG translation keys |
-| Edit | `public/locales/ar/resources.json` | Add downloadPNG/downloadJPG translation keys |
-| Edit | `public/locales/en/common.json` | Add bottomNav.apply key |
-| Edit | `public/locales/ar/common.json` | Add bottomNav.apply key |
+| Edit | `supabase/functions/create-team-member/index.ts` | Remove temp_password from response, send via email, add input validation |
+| Edit | `supabase/functions/create-influencer/index.ts` | Remove temp_password from response, add must_change_password, send via email, add input validation |
+| Edit | `supabase/functions/auth-guard/index.ts` | Add email format validation and input length limits |
+| Edit | `public/_headers` | Strengthen CSP headers |
+| Migration | Drop `Anyone can submit contact form` INSERT policy | Tighten contact_submissions access |
+| Security findings | Update/ignore justified findings | Clean up scan results |
 
 ### Implementation Order
-1. CV print CSS fixes (branding removal + margin optimization)
-2. Image capture utility + CV builder download buttons
-3. Bottom nav update (Housing to Apply)
-4. Contact form LTR fix
-5. End-to-end testing across all dashboards in English mode
+1. Edge function fixes (temp password removal + input validation)
+2. Database migration (contact_submissions policy)
+3. Security headers update
+4. Security findings cleanup and re-scan
 
