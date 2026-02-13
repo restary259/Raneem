@@ -36,7 +36,7 @@ const sidebarGroups = [
   {
     label: 'الفريق',
     items: [
-      { id: 'influencers', labelKey: 'admin.tabs.team', icon: UserCheck },
+      { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: UserCheck },
       { id: 'referrals', labelKey: 'admin.tabs.referrals', icon: Share2 },
     ],
   },
