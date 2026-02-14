@@ -31,8 +31,8 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:border-accent/30 group" onClick={() => onMajorClick(major)}>
-      <CardContent className="p-4 sm:p-6">
+    <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:border-accent/30 group overflow-hidden" onClick={() => onMajorClick(major)}>
+      <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
