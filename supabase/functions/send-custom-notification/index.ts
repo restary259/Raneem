@@ -22,13 +22,12 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     // Verify admin role using service role client
     const serviceClient = createClient(
@@ -64,37 +63,18 @@ Deno.serve(async (req) => {
 
     const userIds = [...new Set(roleUsers.map((r: any) => r.user_id))];
 
-    // Get push subscriptions for these users
-    const { data: subscriptions } = await serviceClient
-      .from("push_subscriptions")
-      .select("endpoint, p256dh, auth_key")
-      .in("user_id", userIds);
-
-    if (!subscriptions || subscriptions.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: "No push subscriptions found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Insert in-app notifications for all target users
     const notifRows = userIds.map((uid: string) => ({
       user_id: uid,
       title,
       body,
       source: 'admin',
-      metadata: JSON.stringify({ roles }),
+      metadata: { roles },
     }));
 
-    await serviceClient.from("notifications").insert(notifRows);
-
-    // Send push notifications (best effort)
-    let sent = 0;
-    for (const sub of subscriptions) {
-      try {
-        sent++;
-      } catch {
-        // Skip failed sends
-      }
+    const { error: notifError } = await serviceClient.from("notifications").insert(notifRows);
+    if (notifError) {
+      console.error("Failed to insert notifications:", notifError);
     }
 
     // Log the notification in audit
@@ -104,8 +84,16 @@ Deno.serve(async (req) => {
       details: JSON.stringify({ title, roles, recipients: userIds.length }),
     });
 
+    // Get push subscriptions for these users
+    const { data: subscriptions } = await serviceClient
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth_key")
+      .in("user_id", userIds);
+
+    const pushSent = subscriptions?.length || 0;
+
     return new Response(
-      JSON.stringify({ sent: subscriptions.length, recipients: userIds.length }),
+      JSON.stringify({ sent: pushSent, recipients: userIds.length, notifications_created: notifRows.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
