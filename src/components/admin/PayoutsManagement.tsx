@@ -1,125 +1,317 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import PasswordVerifyDialog from './PasswordVerifyDialog';
+import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
+import LinkedStudentsModal from './LinkedStudentsModal';
 
 const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
-  const [rewards, setRewards] = useState<any[]>([]);
+  const isMobile = useIsMobile();
+  const [requests, setRequests] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
   const [filter, setFilter] = useState('all');
-  const [pendingPayId, setPendingPayId] = useState<string | null>(null);
-  const isMobile = useIsMobile();
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const fetchRewards = async () => {
-    const { data } = await (supabase as any).from('rewards').select('*').order('created_at', { ascending: false });
+  // Modals
+  const [approveTarget, setApproveTarget] = useState<any>(null);
+  const [rejectTarget, setRejectTarget] = useState<any>(null);
+  const [payTarget, setPayTarget] = useState<any>(null);
+  const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
+
+  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
+
+  const fetchRequests = async () => {
+    const { data } = await (supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false });
     if (data) {
-      setRewards(data);
-      // Fetch profiles for all unique user_ids
-      const userIds = [...new Set(data.map((r: any) => r.user_id))];
+      setRequests(data);
+      const userIds = [...new Set(data.map((r: any) => r.requestor_id))];
       if (userIds.length > 0) {
-        const { data: profilesData } = await (supabase as any)
-          .from('profiles')
-          .select('id, full_name, email')
-          .in('id', userIds);
-        if (profilesData) {
-          const map: Record<string, { full_name: string; email: string }> = {};
-          profilesData.forEach((p: any) => { map[p.id] = { full_name: p.full_name, email: p.email }; });
+        const { data: profs } = await (supabase as any).from('profiles').select('id, full_name, email').in('id', userIds);
+        if (profs) {
+          const map: Record<string, any> = {};
+          profs.forEach((p: any) => { map[p.id] = { full_name: p.full_name, email: p.email }; });
           setProfiles(map);
         }
       }
     }
   };
-  useEffect(() => { fetchRewards(); }, []);
 
-  const updateRewardStatus = async (id: string, newStatus: string) => {
-    const updateData: any = { status: newStatus };
-    if (newStatus === 'paid') updateData.paid_at = new Date().toISOString();
-    const { error } = await (supabase as any).from('rewards').update(updateData).eq('id', id);
-    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
-    toast({ title: t('admin.payouts.statusUpdated') }); fetchRewards(); onRefresh?.();
+  useEffect(() => { fetchRequests(); }, []);
+
+  const filtered = useMemo(() => {
+    let res = requests;
+    if (filter !== 'all') res = res.filter(r => r.status === filter);
+    if (roleFilter !== 'all') res = res.filter(r => r.requestor_role === roleFilter);
+    return res;
+  }, [requests, filter, roleFilter]);
+
+  // KPIs
+  const pendingInfluencer = requests.filter(r => r.requestor_role === 'influencer' && (r.status === 'pending' || r.status === 'approved')).reduce((s, r) => s + Number(r.amount), 0);
+  const pendingStudent = requests.filter(r => r.requestor_role === 'student' && (r.status === 'pending' || r.status === 'approved')).reduce((s, r) => s + Number(r.amount), 0);
+  const totalPaid = requests.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount), 0);
+  const totalRejected = requests.filter(r => r.status === 'rejected').reduce((s, r) => s + Number(r.amount), 0);
+
+  const getName = (id: string) => profiles[id]?.full_name || t('admin.payouts.unknownRequester');
+  const getEmail = (id: string) => profiles[id]?.email || '';
+
+  const handleApprove = async (notes: string) => {
+    if (!approveTarget) return;
+    await (supabase as any).from('payout_requests').update({ status: 'approved', admin_notes: notes || null, approved_at: new Date().toISOString() }).eq('id', approveTarget.id);
+    toast({ title: t('admin.payouts.statusUpdated') });
+    setApproveTarget(null);
+    fetchRequests();
+    onRefresh?.();
   };
 
-  const totalPending = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + Number(r.amount || 0), 0);
-  const totalPaid = rewards.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount || 0), 0);
-  const filtered = filter === 'all' ? rewards : rewards.filter(r => r.status === filter);
-  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
-  const statusKeys = ['pending', 'approved', 'paid', 'cancelled'];
+  const handleReject = async (reason: string) => {
+    if (!rejectTarget) return;
+    await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', rejectTarget.id);
+    toast({ title: t('admin.payouts.statusUpdated') });
+    setRejectTarget(null);
+    fetchRequests();
+    onRefresh?.();
+  };
 
-  const getRequesterName = (userId: string) => profiles[userId]?.full_name || t('admin.payouts.unknownRequester');
-  const getRequesterEmail = (userId: string) => profiles[userId]?.email || '';
+  const handleMarkPaid = async (paymentMethod: string, transactionRef: string, notes: string) => {
+    if (!payTarget) return;
+    // Update request
+    await (supabase as any).from('payout_requests').update({
+      status: 'paid', payment_method: paymentMethod, transaction_ref: transactionRef,
+      admin_notes: notes || payTarget.admin_notes, paid_at: new Date().toISOString()
+    }).eq('id', payTarget.id);
+    // Update linked rewards
+    if (payTarget.linked_reward_ids?.length) {
+      for (const rid of payTarget.linked_reward_ids) {
+        await (supabase as any).from('rewards').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', rid);
+      }
+    }
+    // Insert transaction log
+    await (supabase as any).from('transaction_log').insert({
+      type: payTarget.requestor_role === 'influencer' ? 'influencer_payout' : 'student_cashback',
+      payout_request_id: payTarget.id,
+      amount: payTarget.amount,
+      payment_method: paymentMethod,
+      transaction_ref: transactionRef,
+      notes
+    });
+    toast({ title: t('admin.payouts.statusUpdated') });
+    setPayTarget(null);
+    fetchRequests();
+    onRefresh?.();
+  };
 
-  const ActionButtons = ({ reward }: { reward: any }) => {
-    if (reward.status === 'paid' || reward.status === 'cancelled') return null;
-    return (<div className="flex gap-2">
-      <Button size="sm" variant="default" className="min-h-[44px] sm:min-h-0" onClick={() => setPendingPayId(reward.id)}>{t('admin.payouts.pay')}</Button>
-      <Button size="sm" variant="destructive" className="min-h-[44px] sm:min-h-0" onClick={() => updateRewardStatus(reward.id, 'cancelled')}>{t('admin.payouts.cancel')}</Button>
-    </div>);
+  const bulkAction = async (action: 'approved' | 'rejected') => {
+    const ids = [...selected];
+    if (!ids.length) return;
+    for (const id of ids) {
+      await (supabase as any).from('payout_requests').update({ status: action, ...(action === 'approved' ? { approved_at: new Date().toISOString() } : {}) }).eq('id', id);
+    }
+    setSelected(new Set());
+    toast({ title: t('admin.payouts.statusUpdated') });
+    fetchRequests();
+    onRefresh?.();
+  };
+
+  const exportCSV = () => {
+    const headers = ['Request ID', 'Requestor', 'Role', 'Linked Students', 'Amount', 'Status', 'Request Date', 'Approval Date', 'Payment Method', 'Notes'];
+    const rows = filtered.map(r => [
+      r.id.slice(0, 8), getName(r.requestor_id), r.requestor_role,
+      (r.linked_student_names || []).join('; '), r.amount, r.status,
+      new Date(r.requested_at).toLocaleDateString(locale),
+      r.approved_at ? new Date(r.approved_at).toLocaleDateString(locale) : '',
+      r.payment_method || '', r.admin_notes || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `payouts-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const toggleSelect = (id: string) => {
+    const s = new Set(selected);
+    s.has(id) ? s.delete(id) : s.add(id);
+    setSelected(s);
+  };
+
+  const toggleAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map(r => r.id)));
+  };
+
+  const statusColor = (s: string) => {
+    if (s === 'paid') return 'default';
+    if (s === 'rejected') return 'destructive';
+    return 'secondary';
+  };
+
+  const StatusBadge = ({ status }: { status: string }) => (
+    <Badge variant={statusColor(status) as any}>{String(t(`admin.payouts.statuses.${status}`, { defaultValue: status }))}</Badge>
+  );
+
+  const RoleBadge = ({ role }: { role: string }) => (
+    <Badge variant="outline" className="text-xs">{role === 'influencer' ? t('admin.referralsMgmt.agent') : t('admin.referralsMgmt.student')}</Badge>
+  );
+
+  const ActionButtons = ({ req }: { req: any }) => {
+    if (req.status === 'paid' || req.status === 'rejected') return null;
+    return (
+      <div className="flex gap-1.5 flex-wrap">
+        {req.status === 'pending' && <Button size="sm" variant="outline" onClick={() => setApproveTarget(req)}><CheckCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.approveBtn', 'Approve')}</Button>}
+        {req.status === 'pending' && <Button size="sm" variant="destructive" onClick={() => setRejectTarget(req)}><XCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.rejectBtn', 'Reject')}</Button>}
+        {req.status === 'approved' && <Button size="sm" onClick={() => setPayTarget(req)}><DollarSign className="h-3.5 w-3.5 me-1" />{t('admin.payouts.pay')}</Button>}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card><CardContent className="p-5 flex items-center gap-4"><div className="p-3 rounded-xl bg-amber-500"><DollarSign className="h-6 w-6 text-white" /></div><div><p className="text-sm text-muted-foreground">{t('admin.payouts.pendingPayout')}</p><p className="text-2xl font-bold">{totalPending.toLocaleString()} ₪</p></div></CardContent></Card>
-        <Card><CardContent className="p-5 flex items-center gap-4"><div className="p-3 rounded-xl bg-emerald-600"><DollarSign className="h-6 w-6 text-white" /></div><div><p className="text-sm text-muted-foreground">{t('admin.payouts.totalPaid')}</p><p className="text-2xl font-bold">{totalPaid.toLocaleString()} ₪</p></div></CardContent></Card>
+      {/* KPI Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500"><Clock className="h-5 w-5 text-white" /></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.pendingInfluencer', 'Agent Pending')}</p><p className="text-xl font-bold">{pendingInfluencer.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500"><Clock className="h-5 w-5 text-white" /></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.pendingStudent', 'Student Pending')}</p><p className="text-xl font-bold">{pendingStudent.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-emerald-600"><CheckCircle className="h-5 w-5 text-white" /></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalPaid')}</p><p className="text-xl font-bold">{totalPaid.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-destructive"><XCircle className="h-5 w-5 text-white" /></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalRejected', 'Rejected')}</p><p className="text-xl font-bold">{totalRejected.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
       </div>
-      <Select value={filter} onValueChange={setFilter}>
-        <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">{t('admin.payouts.all')} ({rewards.length})</SelectItem>
-          {statusKeys.map(s => <SelectItem key={s} value={s}>{String(t(`admin.payouts.statuses.${s}`, { defaultValue: s }))} ({rewards.filter(r => r.status === s).length})</SelectItem>)}
-        </SelectContent>
-      </Select>
+
+      {/* Filters + Actions */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('admin.payouts.all')} ({requests.length})</SelectItem>
+            {['pending', 'approved', 'paid', 'rejected'].map(s => (
+              <SelectItem key={s} value={s}>{String(t(`admin.payouts.statuses.${s}`, { defaultValue: s }))} ({requests.filter(r => r.status === s).length})</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('admin.payouts.allRoles', 'All Roles')}</SelectItem>
+            <SelectItem value="influencer">{t('admin.referralsMgmt.agent')}</SelectItem>
+            <SelectItem value="student">{t('admin.referralsMgmt.student')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex-1" />
+        {selected.size > 0 && (
+          <>
+            <Button size="sm" variant="outline" onClick={() => bulkAction('approved')}>{t('admin.payouts.bulkApprove', 'Bulk Approve')} ({selected.size})</Button>
+            <Button size="sm" variant="destructive" onClick={() => bulkAction('rejected')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
+          </>
+        )}
+        <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportCSV', 'Export CSV')}</Button>
+      </div>
+
+      {/* Table / Cards */}
       {isMobile ? (
         <div className="space-y-3">
-          {filtered.map(r => (<Card key={r.id} className="overflow-hidden"><CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2"><span className="font-semibold text-base">{Number(r.amount).toLocaleString()} ₪</span><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></div>
-            <div>
-              <p className="text-sm font-medium">{getRequesterName(r.user_id)}</p>
-              <p className="text-xs text-muted-foreground">{getRequesterEmail(r.user_id)}</p>
-            </div>
-            <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</span><ActionButtons reward={r} /></div>
-          </CardContent></Card>))}
+          {filtered.map(r => (
+            <Card key={r.id} className="overflow-hidden">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">{getName(r.requestor_id)}</p>
+                    <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RoleBadge role={r.requestor_role} />
+                    <StatusBadge status={r.status} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-bold text-lg">{Number(r.amount).toLocaleString()} ₪</span>
+                  <span className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</span>
+                </div>
+                {r.linked_student_names?.length > 0 && (
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setStudentsModal(r.linked_student_names)}>
+                    <Users className="h-3.5 w-3.5 me-1" />{r.linked_student_names.length} {t('admin.payouts.linkedStudents', 'students')}
+                  </Button>
+                )}
+                <ActionButtons req={r} />
+              </CardContent>
+            </Card>
+          ))}
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
         </div>
       ) : (
-        <Card><CardContent className="p-0"><div className="overflow-x-auto">
-          <table className="w-full text-sm"><thead><tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.requester', 'الطالب')}</th>
-            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.amount')}</th>
-            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.status')}</th>
-            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.requestDate')}</th>
-            <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.action')}</th>
-          </tr></thead><tbody>{filtered.map(r => (
-            <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-              <td className="px-4 py-3">
-                <p className="font-medium">{getRequesterName(r.user_id)}</p>
-                <p className="text-xs text-muted-foreground">{getRequesterEmail(r.user_id)}</p>
-              </td>
-              <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
-              <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
-              <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString(locale)}</td>
-              <td className="px-4 py-3"><ActionButtons reward={r} /></td>
-            </tr>
-          ))}</tbody></table>
-          {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
-        </div></CardContent></Card>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-3 py-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.requester')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.role', 'Role')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.linkedStudents', 'Students')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.amount')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.status')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.requestDate')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.paymentMethodCol', 'Method')}</th>
+                    <th className="px-3 py-3 text-start font-semibold">{t('admin.payouts.action')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(r => (
+                    <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
+                      <td className="px-3 py-3"><Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleSelect(r.id)} /></td>
+                      <td className="px-3 py-3">
+                        <p className="font-medium">{getName(r.requestor_id)}</p>
+                        <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                      </td>
+                      <td className="px-3 py-3"><RoleBadge role={r.requestor_role} /></td>
+                      <td className="px-3 py-3">
+                        {r.linked_student_names?.length > 0 ? (
+                          <Button variant="ghost" size="sm" className="text-xs h-auto p-1" onClick={() => setStudentsModal(r.linked_student_names)}>
+                            <Users className="h-3.5 w-3.5 me-1" />{r.linked_student_names.length}
+                          </Button>
+                        ) : '—'}
+                      </td>
+                      <td className="px-3 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                      <td className="px-3 py-3"><StatusBadge status={r.status} /></td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
+                      <td className="px-3 py-3 text-xs">{r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—'}</td>
+                      <td className="px-3 py-3"><ActionButtons req={r} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
+            </div>
+          </CardContent>
+        </Card>
       )}
-      <PasswordVerifyDialog
-        open={!!pendingPayId}
-        onOpenChange={(open) => { if (!open) setPendingPayId(null); }}
-        onVerified={() => { if (pendingPayId) updateRewardStatus(pendingPayId, 'paid'); setPendingPayId(null); }}
-        title={t('admin.payouts.confirmPayTitle')}
-        description={t('admin.payouts.confirmPayDesc')}
-      />
+
+      {/* Modals */}
+      <ApproveModal open={!!approveTarget} onOpenChange={o => { if (!o) setApproveTarget(null); }} onConfirm={handleApprove} amount={approveTarget?.amount} />
+      <RejectModal open={!!rejectTarget} onOpenChange={o => { if (!o) setRejectTarget(null); }} onConfirm={handleReject} />
+      <MarkPaidModal open={!!payTarget} onOpenChange={o => { if (!o) setPayTarget(null); }} onConfirm={handleMarkPaid} amount={payTarget?.amount} />
+      <LinkedStudentsModal open={!!studentsModal} onOpenChange={o => { if (!o) setStudentsModal(null); }} studentNames={studentsModal || []} />
     </div>
   );
 };

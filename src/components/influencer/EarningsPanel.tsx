@@ -2,143 +2,194 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Gift, Clock } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Send, Users, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-interface EarningsPanelProps {
-  userId: string;
-}
+interface EarningsPanelProps { userId: string; }
 
 const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
+  const isMobile = useIsMobile();
   const [rewards, setRewards] = useState<any[]>([]);
+  const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
+  const [minThreshold, setMinThreshold] = useState(100);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestNotes, setRequestNotes] = useState('');
+  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
-  const fetchRewards = async () => {
-    const { data } = await (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-    if (data) setRewards(data);
+  const LOCK_DAYS = 20;
+
+  const fetchData = async () => {
+    const [rewardsRes, requestsRes, configRes] = await Promise.all([
+      (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
+      (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single()
+    ]);
+    if (rewardsRes.data) setRewards(rewardsRes.data);
+    if (requestsRes.data) setPayoutRequests(requestsRes.data);
+    if (configRes.data) setMinThreshold(configRes.data.weight);
   };
 
-  useEffect(() => { fetchRewards(); }, [userId]);
+  useEffect(() => { fetchData(); }, [userId]);
 
-  const totalEarned = rewards.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const pendingAmount = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const paidAmount = rewards.filter(r => r.status === 'paid').reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalEarned = rewards.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const paidAmount = rewards.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount || 0), 0);
 
-  // 20-day timer logic
-  const getDaysRemaining = (reward: any) => {
-    if (!reward.paid_at && !reward.payout_requested_at) return null;
-    const referenceDate = reward.paid_at || reward.created_at;
-    const daysSince = Math.floor((Date.now() - new Date(referenceDate).getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, 20 - daysSince);
-  };
+  // Available = pending rewards that passed 20-day lock and not already in a payout request
+  const requestedRewardIds = new Set(payoutRequests.filter(p => p.status !== 'rejected').flatMap((p: any) => p.linked_reward_ids || []));
+  const eligibleRewards = rewards.filter(r => {
+    if (r.status !== 'pending') return false;
+    if (requestedRewardIds.has(r.id)) return false;
+    const days = Math.floor((Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24));
+    return days >= LOCK_DAYS;
+  });
+  const availableAmount = eligibleRewards.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const canRequest = availableAmount >= minThreshold;
 
-  const canRequestPayout = () => {
-    const pendingRewards = rewards.filter(r => r.status === 'pending');
-    if (!pendingRewards.length) return false;
-    // Check all have passed 20-day timer
-    return pendingRewards.every(r => {
-      const remaining = getDaysRemaining(r);
-      return remaining === null || remaining <= 0;
+  const submitPayoutRequest = async () => {
+    if (!canRequest) return;
+    // Get linked student names from referrals
+    const referralIds = eligibleRewards.map(r => r.referral_id).filter(Boolean);
+    let studentNames: string[] = [];
+    if (referralIds.length > 0) {
+      const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
+      if (data) studentNames = data.map((r: any) => r.referred_name);
+    }
+    await (supabase as any).from('payout_requests').insert({
+      requestor_id: userId,
+      requestor_role: 'influencer',
+      linked_reward_ids: eligibleRewards.map(r => r.id),
+      linked_student_names: studentNames,
+      amount: availableAmount,
+      admin_notes: requestNotes || null
     });
-  };
-
-  const requestPayout = async () => {
-    const pendingRewards = rewards.filter(r => r.status === 'pending');
-    if (!pendingRewards.length) {
-      toast({ title: t('influencer.earnings.noPending') });
-      return;
-    }
-    if (!canRequestPayout()) {
-      toast({ title: t('influencer.earnings.waitingPeriod'), variant: 'destructive' });
-      return;
-    }
-    for (const r of pendingRewards) {
+    // Mark rewards as approved (in request)
+    for (const r of eligibleRewards) {
       await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
     }
-    toast({ title: t('influencer.earnings.payoutSuccess') });
-    fetchRewards();
+    toast({ title: t('influencer.earnings.payoutSuccess', 'Payout request submitted!') });
+    setShowRequestModal(false);
+    setRequestNotes('');
+    fetchData();
   };
 
-  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
+  const cancelRequest = async (reqId: string) => {
+    const req = payoutRequests.find(r => r.id === reqId);
+    if (!req || req.status !== 'pending') return;
+    await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: 'Cancelled by user' }).eq('id', reqId);
+    // Revert rewards back to pending
+    if (req.linked_reward_ids?.length) {
+      for (const rid of req.linked_reward_ids) {
+        await (supabase as any).from('rewards').update({ status: 'pending', payout_requested_at: null }).eq('id', rid);
+      }
+    }
+    toast({ title: t('influencer.earnings.requestCancelled', 'Request cancelled') });
+    fetchData();
+  };
+
+  const statusColor = (s: string) => s === 'paid' ? 'default' : s === 'rejected' ? 'destructive' : 'secondary';
 
   return (
     <div className="space-y-6">
+      {/* KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-emerald-600"><DollarSign className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.totalEarnings')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString()} ₪</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-amber-500"><Gift className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.pending')}</p><p className="text-2xl font-bold">{pendingAmount.toLocaleString()} ₪</p></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-600"><DollarSign className="h-6 w-6 text-white" /></div>
-            <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString()} ₪</p></div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-5 flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-emerald-600"><DollarSign className="h-6 w-6 text-white" /></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.totalEarnings')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="p-5 flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-amber-500"><Clock className="h-6 w-6 text-white" /></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="p-5 flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-[hsl(var(--primary))]"><CheckCircle className="h-6 w-6 text-white" /></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString()} ₪</p></div>
+        </CardContent></Card>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Button onClick={requestPayout} disabled={!canRequestPayout()}>
-          {t('influencer.earnings.requestPayout')}
+      {/* Request Payout */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={() => setShowRequestModal(true)} disabled={!canRequest} className="w-full sm:w-auto">
+          <Send className="h-4 w-4 me-2" />{t('influencer.earnings.requestPayout')}
         </Button>
-        {!canRequestPayout() && rewards.some(r => r.status === 'pending') && (
-          <div className="flex items-center gap-1 text-sm text-amber-600">
-            <Clock className="h-4 w-4" />
-            <span>{t('influencer.earnings.waitingPeriod')}</span>
-          </div>
+        {!canRequest && availableAmount > 0 && availableAmount < minThreshold && (
+          <Badge variant="secondary" className="text-xs">🔒 {t('influencer.earnings.minThreshold', { amount: minThreshold })}</Badge>
         )}
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="text-lg">{t('influencer.earnings.earningsHistory')}</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          {rewards.length === 0 ? (
-            <p className="p-6 text-center text-muted-foreground">{t('influencer.earnings.noEarnings')}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
+      {/* Payout Requests Table */}
+      {payoutRequests.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">{t('influencer.earnings.payoutRequests', 'Payout Requests')}</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            {isMobile ? (
+              <div className="space-y-3 p-4">
+                {payoutRequests.map(r => (
+                  <div key={r.id} className="p-3 rounded-lg border space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">{Number(r.amount).toLocaleString()} ₪</span>
+                      <Badge variant={statusColor(r.status) as any}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</p>
+                    {r.status === 'pending' && <Button size="sm" variant="ghost" onClick={() => cancelRequest(r.id)}><XCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.cancel')}</Button>}
+                    {r.status === 'rejected' && r.reject_reason && <p className="text-xs text-destructive">{r.reject_reason}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.amount')}</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.status')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.timer')}</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.date')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rewards.map(r => {
-                    const daysLeft = getDaysRemaining(r);
-                    return (
+                    <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.actions', 'Actions')}</th>
+                  </tr></thead>
+                  <tbody>
+                    {payoutRequests.map(r => (
                       <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
-                        <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
+                        <td className="px-4 py-3"><Badge variant={statusColor(r.status) as any}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
+                        <td className="px-4 py-3 text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
                         <td className="px-4 py-3">
-                          {r.status === 'pending' && daysLeft !== null && daysLeft > 0 ? (
-                            <span className="text-amber-600 text-xs flex items-center gap-1"><Clock className="h-3 w-3" />{daysLeft} {t('influencer.earnings.days')}</span>
-                          ) : r.status === 'pending' ? (
-                            <span className="text-emerald-600 text-xs">{t('influencer.earnings.ready')}</span>
-                          ) : '—'}
+                          {r.status === 'pending' && <Button size="sm" variant="ghost" onClick={() => cancelRequest(r.id)}><XCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.cancel')}</Button>}
+                          {r.status === 'rejected' && r.reject_reason && <span className="text-xs text-destructive">{r.reject_reason}</span>}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Request Payout Modal */}
+      <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>{t('influencer.earnings.requestPayout')}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm">{t('influencer.earnings.linkedRewards', 'Eligible rewards')}: <strong>{eligibleRewards.length}</strong></p>
+            <p className="text-sm">{t('influencer.earnings.totalAmount', 'Total amount')}: <strong>{availableAmount.toLocaleString()} ₪</strong></p>
+            <div>
+              <Label>{t('admin.payouts.notesOptional', 'Notes (optional)')}</Label>
+              <Textarea value={requestNotes} onChange={e => setRequestNotes(e.target.value)} className="mt-1" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRequestModal(false)}>{t('admin.shared.cancelBtn', 'Cancel')}</Button>
+            <Button onClick={submitPayoutRequest}>{t('influencer.earnings.confirm', 'Confirm')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
