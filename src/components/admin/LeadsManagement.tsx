@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { exportXLSX, exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle, FileSpreadsheet, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Lead {
@@ -266,8 +267,20 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />{t('admin.leads.exportCSV')}</Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
+            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, hk.date];
+            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
+            exportXLSX({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Leads' });
+          }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
+            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, hk.date];
+            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
+            exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Leads' });
+          }}><FileText className="h-4 w-4 me-1" />PDF</Button>
           <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />{t('admin.leads.addLead')}</Button>
         </div>
       </div>

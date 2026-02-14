@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { exportXLSX, exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet, Users, Download,
-  ArrowUpRight, ArrowDownRight, Search, Filter
+  ArrowUpRight, ArrowDownRight, Search, Filter, FileSpreadsheet, FileText
 } from 'lucide-react';
 
 interface MoneyDashboardProps {
@@ -266,9 +267,23 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <Button size="sm" variant="outline" onClick={exportCSV}>
-          <Download className="h-4 w-4 me-1" />{t('money.export')}
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 me-1" />CSV</Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
+            const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
+            const totalIn = filtered.filter(r => r.direction === 'in').reduce((s,r) => s + r.amount, 0);
+            const totalOut = filtered.filter(r => r.direction === 'out').reduce((s,r) => s + r.amount, 0);
+            exportXLSX({ headers, rows, fileName: `money-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Financial Report', summaryRows: [['Total Revenue', '', totalIn, '', '', ''], ['Total Expenses', '', totalOut, '', '', ''], ['Net', '', totalIn - totalOut, '', '', '']] });
+          }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
+            const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
+            const totalIn = filtered.filter(r => r.direction === 'in').reduce((s,r) => s + r.amount, 0);
+            const totalOut = filtered.filter(r => r.direction === 'out').reduce((s,r) => s + r.amount, 0);
+            exportPDF({ headers, rows, fileName: `money-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Financial Report', summaryRows: [['Total Revenue', '', totalIn, '', '', ''], ['Total Expenses', '', totalOut, '', '', ''], ['Net', '', totalIn - totalOut, '', '', '']] });
+          }}><FileText className="h-4 w-4 me-1" />PDF</Button>
+        </div>
       </div>
 
       {/* Transaction Table / Cards */}

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { exportXLSX, exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, DollarSign, Save, Trash2, Download, Clock } from 'lucide-react';
+import { ChevronDown, DollarSign, Save, Trash2, Download, Clock, FileSpreadsheet, FileText } from 'lucide-react';
 import PasswordVerifyDialog from './PasswordVerifyDialog';
 
 interface StudentCase {
@@ -153,9 +154,23 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{t('cases.studentFiles', { count: cases.length })}</p>
-        <Button variant="outline" size="sm" onClick={() => setShowExportVerify(true)}><Download className="h-4 w-4 me-1" />{t('cases.exportCSV')}</Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setShowExportVerify(true)}><Download className="h-4 w-4 me-1" />CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            const headers = [t('admin.students.name'), t('cases.teamMemberLabel'), t('lawyer.cityLabel'), t('lawyer.schoolLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.teamMemberComm'), t('cases.referralDiscount'), t('cases.schoolComm'), t('cases.translationFee'), t('cases.netProfit'), t('admin.referralsMgmt.date')];
+            const rows = cases.map(c => [getLeadName(c.lead_id), getTeamMemberName(c.assigned_lawyer_id), c.selected_city || '', c.selected_school || '', t(`cases.statuses.${c.case_status}`, c.case_status), c.service_fee, c.influencer_commission, c.lawyer_commission, c.referral_discount, c.school_commission, c.translation_fee, getNetProfit(c), new Date(c.created_at).toLocaleDateString()]);
+            const totalRow = ['TOTAL', '', '', '', '', cases.reduce((s,c) => s + c.service_fee, 0), cases.reduce((s,c) => s + c.influencer_commission, 0), cases.reduce((s,c) => s + c.lawyer_commission, 0), cases.reduce((s,c) => s + c.referral_discount, 0), cases.reduce((s,c) => s + c.school_commission, 0), cases.reduce((s,c) => s + c.translation_fee, 0), cases.reduce((s,c) => s + getNetProfit(c), 0), ''];
+            exportXLSX({ headers, rows, fileName: `cases-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Cases', summaryRows: [totalRow] });
+          }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            const headers = [t('admin.students.name'), t('cases.teamMemberLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.teamMemberComm'), t('cases.netProfit')];
+            const rows = cases.map(c => [getLeadName(c.lead_id), getTeamMemberName(c.assigned_lawyer_id), t(`cases.statuses.${c.case_status}`, c.case_status), c.service_fee, c.influencer_commission, c.lawyer_commission, getNetProfit(c)]);
+            const totalRow = ['TOTAL', '', '', cases.reduce((s,c) => s + c.service_fee, 0), cases.reduce((s,c) => s + c.influencer_commission, 0), cases.reduce((s,c) => s + c.lawyer_commission, 0), cases.reduce((s,c) => s + getNetProfit(c), 0)];
+            exportPDF({ headers, rows, fileName: `cases-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Cases', summaryRows: [totalRow] });
+          }}><FileText className="h-4 w-4 me-1" />PDF</Button>
+        </div>
       </div>
       <PasswordVerifyDialog
         open={showExportVerify}
