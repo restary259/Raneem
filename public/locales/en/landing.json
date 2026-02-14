@@ -71,8 +71,10 @@
     "title": "Top Global Universities"
   },
   "apply": {
-    "heroTitle": "Your Dream of Studying in Germany Starts Here 🇩🇪",
-    "heroSubtitle": "You're not alone — the Darb team is with you every step of the way. Tell us about yourself and we'll be in touch soon",
+    "heroTitle": "Take the First Step Toward Your Future in Germany 🇩🇪",
+    "heroSubtitle": "You're not alone — the Darb team guides you from application to arrival. Share your details and we'll reach out shortly",
+    "preferredMajor": "Preferred Major (optional)",
+    "selectMajor": "Select a major...",
     "step": "Step",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Enter your full name",

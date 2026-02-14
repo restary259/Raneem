@@ -166,14 +166,10 @@ const ApplyPage: React.FC = () => {
           {/* Hero */}
           <section className="text-center space-y-2 animate-fade-in">
             <h1 className="text-xl md:text-2xl font-bold leading-tight">
-              {isAr
-                ? t('apply.heroTitle', 'اتخذ الخطوة الأولى نحو مستقبلك في ألمانيا 🇩🇪')
-                : t('apply.heroTitle', 'Take the First Step Toward Your Future in Germany 🇩🇪')}
+              {t('apply.heroTitle')}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {isAr
-                ? t('apply.heroSubtitle', 'لست وحدك — فريق درب يرافقك من التقديم حتى الوصول. شاركنا بياناتك وسنتواصل معك قريباً')
-                : t('apply.heroSubtitle', "You're not alone — the Darb team guides you from application to arrival. Share your details and we'll reach out shortly")}
+              {t('apply.heroSubtitle')}
             </p>
           </section>
 
@@ -302,10 +298,10 @@ const ApplyPage: React.FC = () => {
                       ))}
                     </div>
                   </FieldGroup>
-                  <FieldGroup label={isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)'}>
+                  <FieldGroup label={t('apply.preferredMajor', isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)')}>
                     <Select value={preferredMajor} onValueChange={setPreferredMajor} dir={dir}>
                       <SelectTrigger className="h-11">
-                        <SelectValue placeholder={isAr ? 'اختر التخصص...' : 'Select a major...'} />
+                        <SelectValue placeholder={t('apply.selectMajor', isAr ? 'اختر التخصص...' : 'Select a major...')} />
                       </SelectTrigger>
                       <SelectContent>
                         {majorsData.map(cat => (

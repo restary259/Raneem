@@ -78,8 +78,12 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
     setShowRequestModal(false);
     setRequestNotes('');
     fetchData();
-    // Redirect to WhatsApp for follow-up
-    window.open('https://api.whatsapp.com/message/IVC4VCAEJ6TBD1', '_blank');
+    // Redirect to WhatsApp for follow-up (with fallback for popup blockers)
+    const whatsappUrl = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+    const win = window.open(whatsappUrl, '_blank');
+    if (!win || win.closed) {
+      window.location.href = whatsappUrl;
+    }
   };
 
   const cancelRequest = async (reqId: string) => {
