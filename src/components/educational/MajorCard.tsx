@@ -22,10 +22,15 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const catTitle = lang === 'en' ? (major.categoryTitleEN || major.categoryTitle) : major.categoryTitle;
 
   const highlightText = (text: string, query: string) => {
-    if (!query?.trim()) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
-    return parts.map((part, index) => regex.test(part) ? <mark key={index} className="bg-orange-200 text-orange-800 rounded px-1">{part}</mark> : part);
+    if (!text || !query?.trim()) return text || '';
+    try {
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      const parts = text.split(regex).filter(Boolean);
+      return parts.map((part, index) => regex.test(part) ? <mark key={index} className="bg-orange-200 text-orange-800 rounded px-1">{part}</mark> : part);
+    } catch {
+      return text;
+    }
   };
 
   const Arrow = isRtl ? ArrowLeft : ArrowRight;

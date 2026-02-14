@@ -1,16 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronDown } from 'lucide-react';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useDirection } from '@/hooks/useDirection';
 
 const MobileNav = () => {
   const { t } = useTranslation();
   const { dir, sheetSide, textAlign } = useDirection();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <Sheet>
@@ -20,7 +22,7 @@ const MobileNav = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side={sheetSide} className="w-72" dir={dir}>
-        <nav className="flex flex-col gap-3 mt-6">
+        <nav className="flex flex-col gap-3 mt-6 overflow-y-auto max-h-[calc(100dvh-4rem)]">
           <div className="flex justify-center mb-3">
             <LanguageSwitcher />
           </div>
@@ -67,34 +69,39 @@ const MobileNav = () => {
             {t('nav.contact')}
           </Link>
           
-           {/* More section */}
-           <div className="border-t pt-3 mt-3">
-             <p className={`text-xs font-semibold text-gray-500 mb-2 ${textAlign}`}>{t('nav.more')}</p>
-             <Link 
-               to="/educational-destinations" 
-               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
-             >
-               {t('nav.educationalDestinations')}
-             </Link>
-             <Link 
-               to="/partnership" 
-               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
-             >
-               {t('nav.partnership')}
-             </Link>
-             <Link 
-               to="/broadcast" 
-               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-2 py-2`}
-             >
-               {t('nav.broadcast')}
-             </Link>
-             <Link 
-               to="/housing" 
-               className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block mb-3 py-2`}
-             >
-               {t('housing.title', 'Student Housing')}
-             </Link>
-           </div>
+          {/* More section as collapsible accordion */}
+          <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="border-t pt-3 mt-3">
+            <CollapsibleTrigger className={`flex items-center justify-between w-full py-2 ${textAlign}`}>
+              <span className="text-xs font-semibold text-gray-500">{t('nav.more')}</span>
+              <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
+              <Link 
+                to="/educational-destinations" 
+                className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
+              >
+                {t('nav.educationalDestinations')}
+              </Link>
+              <Link 
+                to="/partnership" 
+                className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
+              >
+                {t('nav.partnership')}
+              </Link>
+              <Link 
+                to="/broadcast" 
+                className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
+              >
+                {t('nav.broadcast')}
+              </Link>
+              <Link 
+                to="/housing" 
+                className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
+              >
+                {t('housing.title', 'Student Housing')}
+              </Link>
+            </CollapsibleContent>
+          </Collapsible>
           
           <Link 
             to="/student-auth" 
