@@ -2,51 +2,39 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
-import { Cookie, X } from 'lucide-react';
+import { Cookie } from 'lucide-react';
 
-const COOKIE_KEY = 'darb_cookie_consent';
-
-const getCookie = (name: string): string => {
-  return document.cookie.split('; ').reduce((r, v) => {
-    const [k, ...rest] = v.split('=');
-    return k === name ? decodeURIComponent(rest.join('=')) : r;
-  }, '');
-};
-
-const setCookie = (name: string, value: string, days: number) => {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-};
+const COOKIE_STORAGE_KEY = 'darb_cookie_consent';
 
 const CookieBanner = () => {
-  const [consent, setConsent] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [visible, setVisible] = useState(false);
   const { dir } = useDirection();
   const { i18n } = useTranslation();
   const isAr = i18n.language === 'ar';
 
   useEffect(() => {
-    const c = getCookie(COOKIE_KEY);
-    setConsent(c || null);
-    setLoaded(true);
+    // Use localStorage for persistence (survives session, not affected by login/logout)
+    const stored = localStorage.getItem(COOKIE_STORAGE_KEY);
+    if (!stored) {
+      // Small delay to avoid blocking initial render and interfering with other UI
+      const timer = setTimeout(() => setVisible(true), 1500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
-  const acceptAll = () => {
-    setCookie(COOKIE_KEY, 'all', 365);
-    setConsent('all');
+  const accept = (level: string) => {
+    localStorage.setItem(COOKIE_STORAGE_KEY, level);
+    setVisible(false);
   };
 
-  const acceptNecessary = () => {
-    setCookie(COOKIE_KEY, 'necessary', 365);
-    setConsent('necessary');
-  };
-
-  if (!loaded || consent) return null;
+  if (!visible) return null;
 
   return (
     <div
-      className="fixed bottom-20 md:bottom-6 inset-x-4 md:inset-x-8 z-[60] rounded-xl p-4 shadow-xl bg-card border border-border text-card-foreground text-sm animate-in slide-in-from-bottom-4"
+      className="fixed bottom-20 md:bottom-6 inset-x-4 md:inset-x-8 z-[55] rounded-xl p-4 shadow-xl bg-card border border-border text-card-foreground text-sm animate-in slide-in-from-bottom-4"
       dir={dir}
+      role="dialog"
+      aria-label="Cookie consent"
     >
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -64,13 +52,13 @@ const CookieBanner = () => {
         </div>
         <div className="flex gap-2 shrink-0">
           <button
-            onClick={acceptNecessary}
+            onClick={() => accept('necessary')}
             className="px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
           >
             {isAr ? 'الضرورية فقط' : 'Only necessary'}
           </button>
           <button
-            onClick={acceptAll}
+            onClick={() => accept('all')}
             className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
           >
             {isAr ? 'قبول الكل' : 'Accept all'}

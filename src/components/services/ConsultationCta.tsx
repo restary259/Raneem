@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -14,36 +13,53 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 
 const ConsultationCta = () => {
-    const { t } = useTranslation('services');
+    const { t, i18n } = useTranslation('services');
     const { dir } = useDirection();
-    const { toast } = useToast()
+    const { toast } = useToast();
+    const isAr = i18n.language === 'ar';
 
-    const serviceOptions = t('consultationCta.serviceOptions', { returnObjects: true }) as string[];
+    const educationOptions = isAr
+      ? ['بجروت / ثانوية', 'بكالوريوس', 'ماجستير']
+      : ['Bagrut / High School', 'Bachelor', 'Master'];
+
+    const majorOptions = isAr
+      ? ['طب', 'هندسة', 'إدارة أعمال', 'علوم الحاسب', 'صيدلة', 'أخرى']
+      : ['Medicine', 'Engineering', 'Business', 'Computer Science', 'Pharmacy', 'Other'];
 
     const formSchema = z.object({
       name: z.string().min(2, { message: t('consultationCta.validation.nameMin') }),
-      email: z.string().email({ message: t('consultationCta.validation.emailInvalid') }),
-      country: z.string().min(2, { message: t('consultationCta.validation.countryMin') }),
-      serviceType: z.string({ required_error: t('consultationCta.validation.serviceRequired') }),
+      phone: z.string().min(9, { message: isAr ? 'رقم الهاتف مطلوب' : 'Phone number is required' }),
+      city: z.string().min(2, { message: isAr ? 'المدينة مطلوبة' : 'City is required' }),
+      interestedMajor: z.string({ required_error: isAr ? 'اختر التخصص' : 'Select a major' }),
+      educationLevel: z.string({ required_error: isAr ? 'المستوى التعليمي مطلوب' : 'Education level required' }),
+      stillInSchool: z.enum(["yes", "no"], { required_error: isAr ? 'مطلوب' : 'Required' }),
+      englishUnits: z.string().optional(),
+      mathUnits: z.string().optional(),
     });
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: { name: "", email: "", country: "" },
+        defaultValues: { name: "", phone: "", city: "", englishUnits: "", mathUnits: "" },
     });
 
     const { mutate, isPending } = useMutation({
         mutationFn: async (values: z.infer<typeof formSchema>) => {
-          const result = await supabase.functions.invoke('send-email', {
-            body: { form_source: 'Consultation CTA Form', ...values },
-          });
-          if (result.error) throw new Error(`Function error: ${result.error.message}`);
-          if (result.data?.error) throw new Error(result.data.error);
-          if (!result.data?.success) throw new Error('Email sending failed');
-          return result.data;
+          // Create lead via RPC
+          const { error } = await supabase.rpc('insert_lead_from_apply', {
+            p_full_name: values.name,
+            p_phone: values.phone,
+            p_city: values.city,
+            p_education_level: values.educationLevel === 'بجروت / ثانوية' || values.educationLevel === 'Bagrut / High School' ? 'bagrut' : values.educationLevel.toLowerCase(),
+            p_english_units: values.englishUnits ? parseInt(values.englishUnits) : null,
+            p_math_units: values.mathUnits ? parseInt(values.mathUnits) : null,
+            p_source_type: 'services_form',
+          } as any);
+          if (error) throw error;
+          return { success: true };
         },
         onSuccess: () => {
           toast({ title: t('consultationCta.successTitle'), description: t('consultationCta.successDesc') });
@@ -63,32 +79,68 @@ const ConsultationCta = () => {
             <div className="container mx-auto px-4">
                 <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
                     <div className="animate-fade-in">
-                        <h2 className="text-3xl md:text-4xl font-bold font-cairo text-primary">{t('consultationCta.title')}</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-primary">{t('consultationCta.title')}</h2>
                         <p className="mt-4 text-lg text-muted-foreground">{t('consultationCta.subtitle')}</p>
                     </div>
                     <div className="animate-fade-in animation-delay-300">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-card p-8 rounded-lg shadow-lg border">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-card p-6 md:p-8 rounded-lg shadow-lg border">
                                 <FormField control={form.control} name="name" render={({ field }) => (
-                                    <FormItem><FormLabel>{t('consultationCta.fullName')}</FormLabel><FormControl><Input placeholder={t('consultationCta.namePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>{isAr ? 'الاسم الكامل' : 'Full Name'}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
-                                <FormField control={form.control} name="email" render={({ field }) => (
-                                    <FormItem><FormLabel>{t('consultationCta.email')}</FormLabel><FormControl><Input type="email" placeholder="example@email.com" {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormField control={form.control} name="phone" render={({ field }) => (
+                                    <FormItem><FormLabel>{isAr ? 'رقم الهاتف' : 'Phone Number'}</FormLabel><FormControl><Input type="tel" dir="ltr" placeholder="05X-XXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
-                                <FormField control={form.control} name="country" render={({ field }) => (
-                                    <FormItem><FormLabel>{t('consultationCta.country')}</FormLabel><FormControl><Input placeholder={t('consultationCta.countryPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="serviceType" render={({ field }) => (
-                                    <FormItem><FormLabel>{t('consultationCta.serviceType')}</FormLabel>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <FormField control={form.control} name="city" render={({ field }) => (
+                                      <FormItem><FormLabel>{isAr ? 'المدينة' : 'City'}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                  )} />
+                                  <FormField control={form.control} name="interestedMajor" render={({ field }) => (
+                                      <FormItem><FormLabel>{isAr ? 'التخصص المهتم به' : 'Interested Major'}</FormLabel>
+                                      <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
+                                          <FormControl><SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger></FormControl>
+                                          <SelectContent>{majorOptions.map(option => (
+                                              <SelectItem key={option} value={option}>{option}</SelectItem>
+                                          ))}</SelectContent>
+                                      </Select><FormMessage /></FormItem>
+                                  )} />
+                                </div>
+                                <FormField control={form.control} name="educationLevel" render={({ field }) => (
+                                    <FormItem><FormLabel>{isAr ? 'المستوى التعليمي' : 'Education Level'}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder={t('consultationCta.servicePlaceholder')} /></SelectTrigger></FormControl>
-                                        <SelectContent>{Array.isArray(serviceOptions) && serviceOptions.map(option => (
+                                        <FormControl><SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger></FormControl>
+                                        <SelectContent>{educationOptions.map(option => (
                                             <SelectItem key={option} value={option}>{option}</SelectItem>
                                         ))}</SelectContent>
                                     </Select><FormMessage /></FormItem>
                                 )} />
-                                <Button type="submit" variant="accent" size="lg" className="w-full font-cairo font-bold" disabled={isPending}>
-                                    {isPending ? t('consultationCta.submitting') : t('consultationCta.submit')}
+                                <FormField control={form.control} name="stillInSchool" render={({ field }) => (
+                                    <FormItem className="space-y-2"><FormLabel>{isAr ? 'ما زلت في المدرسة؟' : 'Still in School?'}</FormLabel>
+                                      <FormControl>
+                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
+                                          <FormItem className="flex items-center space-x-2 space-x-reverse">
+                                            <FormControl><RadioGroupItem value="yes" /></FormControl>
+                                            <FormLabel>{isAr ? 'نعم' : 'Yes'}</FormLabel>
+                                          </FormItem>
+                                          <FormItem className="flex items-center space-x-2 space-x-reverse">
+                                            <FormControl><RadioGroupItem value="no" /></FormControl>
+                                            <FormLabel>{isAr ? 'لا' : 'No'}</FormLabel>
+                                          </FormItem>
+                                        </RadioGroup>
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <div className="grid grid-cols-2 gap-4">
+                                  <FormField control={form.control} name="englishUnits" render={({ field }) => (
+                                      <FormItem><FormLabel>{isAr ? 'وحدات الإنجليزي' : 'English Units'}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
+                                  )} />
+                                  <FormField control={form.control} name="mathUnits" render={({ field }) => (
+                                      <FormItem><FormLabel>{isAr ? 'وحدات الرياضيات' : 'Math Units'}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
+                                  )} />
+                                </div>
+                                <Button type="submit" variant="accent" size="lg" className="w-full font-bold" disabled={isPending}>
+                                    {isPending ? (isAr ? 'جار الإرسال...' : 'Sending...') : (isAr ? 'أرسل بياناتي' : 'Submit My Details')}
                                 </Button>
                             </form>
                         </Form>

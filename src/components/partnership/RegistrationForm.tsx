@@ -8,7 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -30,9 +30,10 @@ const RegistrationForm = () => {
     phone: z.string().min(9, { message: t('registrationForm.validation.phoneMin') }),
     preferredContact: z.string({ required_error: t('registrationForm.validation.contactRequired') }),
     aboutYou: z.string().optional(),
+    instagramLink: z.string().optional(),
+    socialLinks: z.string().optional(),
     previousExperience: z.enum(["yes", "no"], { required_error: t('registrationForm.validation.experienceRequired') }),
     whyDarb: z.string().min(10, { message: t('registrationForm.validation.whyDarbMin') }),
-    attachment: z.instanceof(FileList).optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,14 +44,14 @@ const RegistrationForm = () => {
       countryCity: "",
       phone: "",
       aboutYou: "",
+      instagramLink: "",
+      socialLinks: "",
       whyDarb: "",
     },
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (values: Omit<z.infer<typeof formSchema>, 'attachment'>) => {
-        console.log('🚀 Submitting partnership form:', values);
-        
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
         const result = await supabase.functions.invoke('send-email', {
             body: {
                 form_source: 'Partnership Registration Form',
@@ -58,41 +59,22 @@ const RegistrationForm = () => {
             },
         });
 
-        console.log('📧 Email function result:', result);
-
-        if (result.error) {
-            console.error('❌ Supabase function error:', result.error);
-            throw new Error(`Function error: ${result.error.message}`);
-        }
-
-        if (result.data?.error) {
-            console.error('❌ Email function returned error:', result.data.error);
-            throw new Error(result.data.error);
-        }
-
-        if (!result.data?.success) {
-            console.error('❌ Email function failed without specific error');
-            throw new Error('Email sending failed');
-        }
-
-        console.log('✅ Email sent successfully:', result.data);
+        if (result.error) throw new Error(`Function error: ${result.error.message}`);
+        if (result.data?.error) throw new Error(result.data.error);
+        if (!result.data?.success) throw new Error('Email sending failed');
         return result.data;
     },
-    onSuccess: (data) => {
-        console.log('✅ Partnership form submitted successfully:', data);
+    onSuccess: () => {
         toast.success(t('registrationForm.toasts.success'));
         form.reset();
     },
     onError: (error) => {
-        console.error('❌ Partnership form submission failed:', error);
         toast.error(t('registrationForm.toasts.error', { error: error.message }));
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('📝 Partnership form submitted with values:', values);
-    const { attachment, ...otherValues } = values;
-    mutate(otherValues);
+    mutate(values);
   }
 
   return (
@@ -131,6 +113,25 @@ const RegistrationForm = () => {
                         </SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
+
+                {/* Social media links instead of file upload */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="instagramLink" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{formContent.instagramLink || 'Instagram'}</FormLabel>
+                      <FormControl><Input placeholder="@username" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="socialLinks" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{formContent.socialLinks || 'Social Media Links'}</FormLabel>
+                      <FormControl><Input placeholder="TikTok, YouTube, etc." {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
                 <FormField control={form.control} name="aboutYou" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.aboutYou}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -154,20 +155,6 @@ const RegistrationForm = () => {
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                 <FormField
-                  control={form.control}
-                  name="attachment"
-                  render={({ field: { onChange, value, ...rest } }) => (
-                    <FormItem>
-                      <FormLabel>{formContent.attachment}</FormLabel>
-                      <FormControl>
-                        <Input type="file" onChange={e => onChange(e.target.files)} {...rest} disabled />
-                      </FormControl>
-                      <FormDescription>{t('registrationForm.fileUploadDisabled')}</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
                   {isPending ? t('registrationForm.submitting') : formContent.submit}
                 </Button>

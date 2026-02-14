@@ -25,9 +25,9 @@
   "testimonials": {
     "title": "Success Stories",
     "items": [
-      { "quote": "Thanks to Darb, I was accepted at a prestigious university in Germany without any stress!", "name": "Ahmad", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=1" },
-      { "quote": "Excellent experience! They helped me every step of the way to reach my dream university in Romania. Thank you so much!", "name": "Sara", "location": "Israel", "avatar": "https://i.pravatar.cc/150?img=4" },
-      { "quote": "The team was very supportive throughout the process. I highly recommend them!", "name": "Fatima", "location": "Romania", "avatar": "https://i.pravatar.cc/150?img=2" },
+      { "quote": "Thanks to Darb, I was accepted at a prestigious university in Germany without any stress!", "name": "Mohammad Sammar", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=1" },
+      { "quote": "Excellent experience! They helped me every step of the way to reach my dream university. Thank you so much!", "name": "Mohammad Abu Al-Hija", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=4" },
+      { "quote": "The team was very supportive throughout the process. I highly recommend them!", "name": "Yazan Dawahde", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=2" },
       { "quote": "Their guidance for the visa application was invaluable. I couldn't have done it without them.", "name": "Youssef", "location": "Jordan", "avatar": "https://i.pravatar.cc/150?img=3" }
     ]
   },
@@ -71,8 +71,8 @@
     "title": "Top Global Universities"
   },
   "apply": {
-    "heroTitle": "Start Your Journey to Study in Germany 🇩🇪",
-    "heroSubtitle": "Fill in your details and we'll contact you soon",
+    "heroTitle": "Your Dream of Studying in Germany Starts Here 🇩🇪",
+    "heroSubtitle": "You're not alone — the Darb team is with you every step of the way. Tell us about yourself and we'll be in touch soon",
     "step": "Step",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Enter your full name",

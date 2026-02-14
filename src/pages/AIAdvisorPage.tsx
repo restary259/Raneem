@@ -1,7 +1,6 @@
 
 import React from 'react';
 import Header from '@/components/landing/Header';
-import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot, User, Loader2, Trash2, WifiOff, GraduationCap, FileText, Globe, Home as HomeIcon } from 'lucide-react';
@@ -35,21 +34,21 @@ const AIAdvisorPage = () => {
   } = useAIChat(true);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir={dir}>
+    <div className="h-screen flex flex-col bg-background overflow-hidden" dir={dir}>
       <SEOHead title={t('seo.advisorTitle')} description={t('seo.advisorDesc')} />
       <Header />
 
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
         {!isOnline && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-amber-700 text-sm">
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-amber-700 text-sm flex-shrink-0">
             <WifiOff className="h-4 w-4 shrink-0" />
             <span>{t('chat.offlineBanner')}</span>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-0">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-8">
+            <div className="flex flex-col items-center justify-center py-8 md:py-12 space-y-6 md:space-y-8">
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center mx-auto shadow-lg">
                   <Bot className="h-8 w-8 text-white" />
@@ -134,7 +133,8 @@ const AIAdvisorPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t bg-background p-3 md:p-4 sticky bottom-0 pb-20 md:pb-4">
+        {/* Sticky input bar - close to bottom like ChatGPT */}
+        <div className="border-t bg-background p-3 md:p-4 flex-shrink-0 pb-safe">
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
             className="flex gap-2 max-w-2xl mx-auto"
@@ -158,8 +158,6 @@ const AIAdvisorPage = () => {
           </form>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
