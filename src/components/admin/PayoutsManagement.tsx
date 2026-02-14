@@ -67,7 +67,12 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   const handleApprove = async (notes: string) => {
     if (!approveTarget) return;
-    await (supabase as any).from('payout_requests').update({ status: 'approved', admin_notes: notes || null, approved_at: new Date().toISOString() }).eq('id', approveTarget.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    await (supabase as any).from('payout_requests').update({
+      status: 'approved', admin_notes: notes || null,
+      approved_at: new Date().toISOString(),
+      approved_by: session?.user?.id || null,
+    }).eq('id', approveTarget.id);
     toast({ title: t('admin.payouts.statusUpdated') });
     setApproveTarget(null);
     fetchRequests();
@@ -85,10 +90,13 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   const handleMarkPaid = async (paymentMethod: string, transactionRef: string, notes: string) => {
     if (!payTarget) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const adminId = session?.user?.id || null;
     // Update request
     await (supabase as any).from('payout_requests').update({
       status: 'paid', payment_method: paymentMethod, transaction_ref: transactionRef,
-      admin_notes: notes || payTarget.admin_notes, paid_at: new Date().toISOString()
+      admin_notes: notes || payTarget.admin_notes, paid_at: new Date().toISOString(),
+      paid_by: adminId,
     }).eq('id', payTarget.id);
     // Update linked rewards
     if (payTarget.linked_reward_ids?.length) {
@@ -103,7 +111,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       amount: payTarget.amount,
       payment_method: paymentMethod,
       transaction_ref: transactionRef,
-      notes
+      notes,
+      approved_by: adminId,
     });
     toast({ title: t('admin.payouts.statusUpdated') });
     setPayTarget(null);
@@ -114,8 +123,13 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const bulkAction = async (action: 'approved' | 'rejected') => {
     const ids = [...selected];
     if (!ids.length) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const adminId = session?.user?.id || null;
     for (const id of ids) {
-      await (supabase as any).from('payout_requests').update({ status: action, ...(action === 'approved' ? { approved_at: new Date().toISOString() } : {}) }).eq('id', id);
+      await (supabase as any).from('payout_requests').update({
+        status: action,
+        ...(action === 'approved' ? { approved_at: new Date().toISOString(), approved_by: adminId } : {}),
+      }).eq('id', id);
     }
     setSelected(new Set());
     toast({ title: t('admin.payouts.statusUpdated') });
