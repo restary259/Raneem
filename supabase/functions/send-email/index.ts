@@ -121,26 +121,6 @@ serve(async (req) => {
       });
     }
 
-    // Optionally send email via Resend if configured
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    if (RESEND_API_KEY) {
-      try {
-        const { Resend } = await import('npm:resend@2.0.0');
-        const resend = new Resend(RESEND_API_KEY);
-        await resend.emails.send({
-          from: 'Darb Study <onboarding@resend.dev>',
-          to: ['darbsocial27@gmail.com'],
-          subject: `New Contact - ${form_source}`,
-          html: `<h2>رسالة جديدة من ${name}</h2>
-            <p><strong>البريد:</strong> ${email}</p>
-            <p><strong>واتساب:</strong> ${whatsapp || 'غير محدد'}</p>
-            <p><strong>الخدمة:</strong> ${service || 'غير محدد'}</p>
-            <p><strong>الرسالة:</strong> ${message || 'لا يوجد'}</p>`,
-        });
-      } catch (emailErr) {
-        console.warn('Email sending failed (non-critical):', emailErr);
-      }
-    }
 
     return new Response(JSON.stringify({ 
       success: true, 

@@ -89,7 +89,7 @@ const StudentAuthPage = () => {
 
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
-      toast({ variant: 'destructive', title: 'كلمة مرور ضعيفة', description: 'يجب أن تحتوي على 8 أحرف على الأقل' });
+      toast({ variant: 'destructive', title: 'كلمة مرور ضعيفة', description: 'يجب أن تحتوي على 10 أحرف على الأقل مع حرف كبير وصغير ورقم' });
       return;
     }
     setChangingPassword(true);
@@ -244,7 +244,7 @@ const StudentAuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
+                    minLength={10}
                   />
                   <Button
                     type="button"

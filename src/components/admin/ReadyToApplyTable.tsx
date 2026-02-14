@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText, Eye, Save, UserPlus, Loader2 } from 'lucide-react';
+import { Download, FileText, Eye, Save, UserPlus, Loader2, Copy, Check } from 'lucide-react';
 
 interface ReadyCase {
   id: string;
@@ -54,6 +54,8 @@ const ReadyToApplyTable: React.FC = () => {
   const [editValues, setEditValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [createdTempPassword, setCreatedTempPassword] = useState('');
+  const [copiedPassword, setCopiedPassword] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -167,12 +169,10 @@ const ReadyToApplyTable: React.FC = () => {
     }
 
     setCreatingAccount(true);
+    setCreatedTempPassword('');
+    setCopiedPassword(false);
     try {
-      // Save profile first
       await saveProfile();
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
 
       const res = await supabase.functions.invoke('create-student-account', {
         body: { case_id: editCase.id, email, full_name: fullName },
@@ -182,17 +182,21 @@ const ReadyToApplyTable: React.FC = () => {
       const result = res.data;
       if (result?.error) throw new Error(result.error);
 
-      if (result?.email_sent === false) {
-        toast({ variant: 'destructive', title: 'Account created, but email failed', description: 'Share credentials manually with the student.' });
-      } else {
-        toast({ title: t('admin.ready.accountCreated'), description: t('admin.ready.accountCreatedDesc') });
-      }
-      setEditCase(null);
+      setCreatedTempPassword(result?.temp_password || '');
+      toast({ title: t('admin.ready.accountCreated'), description: 'شارك البيانات يدوياً مع الطالب' });
       fetchData();
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('common.error'), description: err.message });
     } finally {
       setCreatingAccount(false);
+    }
+  };
+
+  const copyTempPassword = () => {
+    if (createdTempPassword) {
+      navigator.clipboard.writeText(createdTempPassword);
+      setCopiedPassword(true);
+      setTimeout(() => setCopiedPassword(false), 2000);
     }
   };
 
@@ -369,13 +373,33 @@ const ReadyToApplyTable: React.FC = () => {
             <Button onClick={saveProfile} disabled={saving}>
               <Save className="h-4 w-4 me-1" />{saving ? t('common.loading') : t('admin.ready.saveProfile')}
             </Button>
-            {!editCase?.student_profile_id && (
+            {createdTempPassword && (
+              <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 mt-2">
+                <p className="text-sm font-semibold text-amber-800">✅ تم إنشاء الحساب بنجاح</p>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">البريد الإلكتروني:</p>
+                  <p className="text-sm font-mono bg-background border rounded px-2 py-1">{editValues.student_email}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">كلمة المرور المؤقتة:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-sm font-mono bg-background border rounded px-2 py-1 select-all">{createdTempPassword}</code>
+                    <Button size="sm" variant="outline" onClick={copyTempPassword}>
+                      {copiedPassword ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-700 font-medium">⚠️ شارك هذه البيانات يدوياً مع الطالب (واتساب، رسالة مباشرة، إلخ)</p>
+                <p className="text-xs text-muted-foreground">سيُطلب منه تغيير كلمة المرور عند أول تسجيل دخول.</p>
+              </div>
+            )}
+            {!editCase?.student_profile_id && !createdTempPassword && (
               <Button variant="secondary" onClick={createStudentAccount} disabled={creatingAccount || !editValues.student_email}>
                 {creatingAccount ? <Loader2 className="h-4 w-4 me-1 animate-spin" /> : <UserPlus className="h-4 w-4 me-1" />}
                 {t('admin.ready.createAccount')}
               </Button>
             )}
-            {editCase?.student_profile_id && (
+            {editCase?.student_profile_id && !createdTempPassword && (
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 self-center px-3 py-1.5">
                 {t('admin.ready.accountActive')}
               </Badge>
