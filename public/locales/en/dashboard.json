@@ -771,7 +771,12 @@
       "referral": "Referral",
       "organic": "Organic",
       "contact_form": "Contact Form"
-    }
+    },
+    "majorsTab": "Majors",
+    "searchMajors": "Search majors…",
+    "completeProfile": "Complete Profile",
+    "showCalendar": "Show Calendar",
+    "hideCalendar": "Hide Calendar"
   },
   "influencerDash": {
     "title": "Agent Dashboard",

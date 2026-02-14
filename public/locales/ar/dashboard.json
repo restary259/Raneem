@@ -771,7 +771,12 @@
       "referral": "إحالة",
       "organic": "عضوي",
       "contact_form": "نموذج التواصل"
-    }
+    },
+    "majorsTab": "التخصصات",
+    "searchMajors": "ابحث عن تخصص…",
+    "completeProfile": "إكمال الملف",
+    "showCalendar": "عرض التقويم",
+    "hideCalendar": "إخفاء التقويم"
   },
   "influencerDash": {
     "title": "لوحة تحكم الوكيل",
