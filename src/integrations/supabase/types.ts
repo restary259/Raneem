@@ -411,6 +411,7 @@ export type Database = {
           passport_type: string | null
           phone: string
           preferred_city: string | null
+          preferred_major: string | null
           ref_code: string | null
           service_requested: string | null
           source_id: string | null
@@ -442,6 +443,7 @@ export type Database = {
           passport_type?: string | null
           phone: string
           preferred_city?: string | null
+          preferred_major?: string | null
           ref_code?: string | null
           service_requested?: string | null
           source_id?: string | null
@@ -473,6 +475,7 @@ export type Database = {
           passport_type?: string | null
           phone?: string
           preferred_city?: string | null
+          preferred_major?: string | null
           ref_code?: string | null
           service_requested?: string | null
           source_id?: string | null
@@ -1157,6 +1160,27 @@ export type Database = {
               p_passport_type?: string
               p_phone: string
               p_preferred_city?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_companion_name?: string
+              p_companion_phone?: string
+              p_education_level?: string
+              p_english_units?: number
+              p_full_name: string
+              p_german_level?: string
+              p_math_units?: number
+              p_passport_type?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_preferred_major?: string
               p_source_id?: string
               p_source_type?: string
             }

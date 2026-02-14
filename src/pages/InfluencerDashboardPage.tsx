@@ -9,24 +9,23 @@ import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
-import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock, XCircle } from 'lucide-react';
+import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
-import MediaHub from '@/components/influencer/MediaHub';
+
 import ReferralLink from '@/components/influencer/ReferralLink';
 import NotificationBell from '@/components/common/NotificationBell';
 
-type TabId = 'overview' | 'students' | 'earnings' | 'media' | 'referral-link';
+type TabId = 'overview' | 'students' | 'earnings' | 'referral-link';
 
 const TAB_ICONS: Record<TabId, React.ComponentType<{ className?: string }>> = {
   overview: TrendingUp,
   students: Users,
   earnings: DollarSign,
-  media: Image,
   'referral-link': Link,
 };
 
-const TAB_IDS: TabId[] = ['overview', 'students', 'earnings', 'media', 'referral-link'];
+const TAB_IDS: TabId[] = ['overview', 'students', 'earnings', 'referral-link'];
 
 const STATUS_COLORS: Record<string, string> = {
   new: 'hsl(220, 70%, 55%)',
@@ -346,7 +345,7 @@ const InfluencerDashboardPage = () => {
           </div>
         )}
         {activeTab === 'earnings' && user && <EarningsPanel userId={user.id} />}
-        {activeTab === 'media' && <MediaHub />}
+        
         {activeTab === 'referral-link' && user && <ReferralLink userId={user.id} />}
       </main>
     </div>

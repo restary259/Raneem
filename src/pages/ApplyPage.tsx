@@ -6,9 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
+import { majorsData } from '@/data/majorsData';
 
 const PASSPORT_TYPES = [
   { value: 'israeli_blue', label: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
@@ -48,6 +50,7 @@ const ApplyPage: React.FC = () => {
   const [englishUnits, setEnglishUnits] = useState('');
   const [mathUnits, setMathUnits] = useState('');
   const [educationLevel, setEducationLevel] = useState('');
+  const [preferredMajor, setPreferredMajor] = useState('');
 
   // Step 3
   const [germanLevel, setGermanLevel] = useState('');
@@ -99,6 +102,7 @@ const ApplyPage: React.FC = () => {
         p_german_level: germanLevel || null,
         p_source_type: sourceType,
         p_source_id: sourceId,
+        p_preferred_major: preferredMajor || null,
       };
       if (hasCompanion && companionName.trim() && companionPhone.trim()) {
         rpcParams.p_companion_name = companionName.trim();
@@ -162,10 +166,14 @@ const ApplyPage: React.FC = () => {
           {/* Hero */}
           <section className="text-center space-y-2 animate-fade-in">
             <h1 className="text-xl md:text-2xl font-bold leading-tight">
-              {t('apply.heroTitle', 'ابدأ رحلتك للدراسة في ألمانيا 🇩🇪')}
+              {isAr
+                ? t('apply.heroTitle', 'اتخذ الخطوة الأولى نحو مستقبلك في ألمانيا 🇩🇪')
+                : t('apply.heroTitle', 'Take the First Step Toward Your Future in Germany 🇩🇪')}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {t('apply.heroSubtitle', 'املأ البيانات وسنتواصل معك قريباً')}
+              {isAr
+                ? t('apply.heroSubtitle', 'لست وحدك — فريق درب يرافقك من التقديم حتى الوصول. شاركنا بياناتك وسنتواصل معك قريباً')
+                : t('apply.heroSubtitle', "You're not alone — the Darb team guides you from application to arrival. Share your details and we'll reach out shortly")}
             </p>
           </section>
 
@@ -293,6 +301,25 @@ const ApplyPage: React.FC = () => {
                         </button>
                       ))}
                     </div>
+                  </FieldGroup>
+                  <FieldGroup label={isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)'}>
+                    <Select value={preferredMajor} onValueChange={setPreferredMajor} dir={dir}>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder={isAr ? 'اختر التخصص...' : 'Select a major...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {majorsData.map(cat => (
+                          <SelectGroup key={cat.id}>
+                            <SelectLabel>{isAr ? cat.title : cat.titleEN}</SelectLabel>
+                            {cat.subMajors.map(sub => (
+                              <SelectItem key={sub.id} value={sub.id}>
+                                {isAr ? sub.nameAR : sub.nameEN}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FieldGroup>
                 </div>
               )}
