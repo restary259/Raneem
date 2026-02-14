@@ -22,7 +22,34 @@
       "serviceOptions": [ "التقديم الجامعي", "الترجمة والتوثيق", "دورات اللغة", "التأشيرات والإقامة", "خدمات السكن", "الاستقبال والمتابعة", "الاستشارات الشخصية", "استشارة عامة" ],
       "message": "رسالة إضافية (اختياري)",
       "messagePlaceholder": "اكتب رسالتك هنا...",
-      "submit": "أرسل الآن"
+      "submit": "أرسل الآن",
+      "fullName": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "phonePlaceholder": "مع رمز الدولة",
+      "interestedMajor": "التخصص المهتم به",
+      "majorPlaceholder": "اختر تخصصاً",
+      "city": "المدينة",
+      "cityPlaceholder": "مدينتك",
+      "educationLevel": "المستوى التعليمي الحالي",
+      "educationPlaceholder": "اختر المستوى",
+      "stillInSchool": "ما زلت في المدرسة؟",
+      "selectPlaceholder": "اختر",
+      "englishUnits": "وحدات الإنجليزي",
+      "mathUnits": "وحدات الرياضيات",
+      "majorOptions": {
+        "engineering": "هندسة",
+        "business": "إدارة أعمال",
+        "medicine": "طب",
+        "humanities": "علوم إنسانية",
+        "natural-sciences": "علوم طبيعية"
+      },
+      "educationOptions": {
+        "highschool": "ثانوية",
+        "bagrut": "بجروت",
+        "bachelor": "بكالوريوس",
+        "master": "ماجستير"
+      },
+      "yesNo": { "yes": "نعم", "no": "لا" }
     },
     "toast": {
       "successTitle": "تم إرسال رسالتك بنجاح!",
@@ -30,6 +57,11 @@
     },
     "follow": "تابعنا",
     "mapTitle": "موقعنا على الخريطة",
-    "mapSubtitle": "استكشف مواقع مكاتبنا حول العالم."
+    "mapSubtitle": "استكشف مواقع مكاتبنا حول العالم.",
+    "validation": {
+      "cityRequired": "المدينة مطلوبة",
+      "educationRequired": "المستوى التعليمي مطلوب",
+      "stillInSchoolRequired": "يرجى الاختيار"
+    }
   }
 }

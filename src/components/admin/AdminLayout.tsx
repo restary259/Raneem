@@ -18,14 +18,14 @@ interface AdminLayoutProps {
 
 const sidebarGroups = [
   {
-    label: 'لوحة التحكم',
+    labelKey: 'admin.groups.dashboard',
     items: [
       { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
       { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: BarChart3 },
     ],
   },
   {
-    label: 'الطلاب',
+    labelKey: 'admin.groups.students',
     items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
       { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
@@ -34,20 +34,20 @@ const sidebarGroups = [
     ],
   },
   {
-    label: 'الفريق',
+    labelKey: 'admin.groups.team',
     items: [
       { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: UserCheck },
       { id: 'referrals', labelKey: 'admin.tabs.referrals', icon: Share2 },
     ],
   },
   {
-    label: 'المالية',
+    labelKey: 'admin.groups.finance',
     items: [
       { id: 'payouts', labelKey: 'admin.tabs.payouts', icon: Wallet },
     ],
   },
   {
-    label: 'أدوات',
+    labelKey: 'admin.groups.tools',
     items: [
       { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
       { id: 'notifications', labelKey: 'admin.tabs.notifications', icon: Mail },
@@ -86,7 +86,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
         <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
           {sidebarGroups.map((group, gi) => (
             <div key={gi}>
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold px-4 mb-1">{group.label}</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold px-4 mb-1">{t(group.labelKey)}</p>
               <div className="space-y-0.5">
                 {group.items.map((tab) => {
                   const Icon = tab.icon;

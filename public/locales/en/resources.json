@@ -83,7 +83,8 @@
     "totalFee": "Total Cost"
   },
   "gpaCalculator": {
-    "title": "GPA Calculator (German System)",
+    "title": "Bagrut Calculator",
+    "titleDesc": "Calculate your Bagrut average and its German system equivalent",
     "description": "Enter your grades and credit hours for each subject to calculate your GPA and its German system equivalent.",
     "subject": "Subject",
     "units": "Credits",
@@ -95,6 +96,13 @@
     "germanGrade": "Your German system grade is: <1>{{germanGrade}}</1>",
     "errorMinSubjects": "Please enter at least one subject with its credits and grade.",
     "errorZeroUnits": "Total credits cannot be zero.",
+    "errorUnitsRange": "Number of units must be between 1 and 5",
+    "errorGradeRange": "Grade must be between 0 and 100",
+    "warningBelowPass": "⚠️ Your average ({{avg}}) is below the minimum passing grade ({{min}}). Your certificate may not be accepted for studying in Germany.",
+    "formulaTitle": "📐 Modified Bavarian Formula:",
+    "formulaExplanation": "Where 100 is the highest possible grade and 56 is the minimum passing grade for the Israeli Bagrut.",
+    "formulaScale": "The result ranges from 1.0 (excellent) to 4.0 (passing). Grades below 56 are generally not accepted.",
+    "tooltipText": "Units (יחידות לימוד): Number of Bagrut units from 1 to 5",
     "subjects": {
       "arabic": "Arabic",
       "hebrew": "Hebrew",

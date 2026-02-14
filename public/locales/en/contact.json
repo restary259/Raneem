@@ -21,7 +21,34 @@
       "serviceOptions": ["University Application", "Translation & Authentication", "Language Courses", "Visas & Residence", "Housing Services", "Reception & Follow-up", "Personal Consultations", "General Inquiry"],
       "message": "Additional Message (optional)",
       "messagePlaceholder": "Write your message here...",
-      "submit": "Send Now"
+      "submit": "Send Now",
+      "fullName": "Full Name",
+      "phone": "Phone Number",
+      "phonePlaceholder": "With country code",
+      "interestedMajor": "Interested Major",
+      "majorPlaceholder": "Select a major",
+      "city": "City",
+      "cityPlaceholder": "Your city",
+      "educationLevel": "Current Education Level",
+      "educationPlaceholder": "Select level",
+      "stillInSchool": "Still in School?",
+      "selectPlaceholder": "Select",
+      "englishUnits": "English Units",
+      "mathUnits": "Math Units",
+      "majorOptions": {
+        "engineering": "Engineering",
+        "business": "Business",
+        "medicine": "Medicine",
+        "humanities": "Humanities",
+        "natural-sciences": "Natural Sciences"
+      },
+      "educationOptions": {
+        "highschool": "High School",
+        "bagrut": "Bagrut",
+        "bachelor": "Bachelor's Degree",
+        "master": "Master's Degree"
+      },
+      "yesNo": { "yes": "Yes", "no": "No" }
     },
     "toast": {
       "successTitle": "Your message was sent successfully!",
@@ -29,6 +56,11 @@
     },
     "follow": "Follow Us",
     "mapTitle": "Our Location on the Map",
-    "mapSubtitle": "Explore our office locations around the world."
+    "mapSubtitle": "Explore our office locations around the world.",
+    "validation": {
+      "cityRequired": "City is required",
+      "educationRequired": "Education level is required",
+      "stillInSchoolRequired": "Please select if you're still in school"
+    }
   }
 }

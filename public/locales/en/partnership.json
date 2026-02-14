@@ -124,5 +124,42 @@
       { "icon": "CalendarClock", "title": "Monthly Cycle", "description": "At the end of each month, the spreadsheet is closed and a new one opens for the next month. All data remains visible for history and transparency." },
       { "icon": "Wallet", "title": "Commission & Payment", "description": "Commission is paid 20 days after student payment. The 20-day period is mandatory to protect against cancellations or refunds. This rule is clear and binding." }
     ]
+  },
+  "successStories": {
+    "badge": "Success Stories",
+    "title": "Our Partners' Success Stories",
+    "subtitle": "Real results from our trusted agents across the region",
+    "acceptedStudents": "Accepted Students",
+    "totalCommission": "Total Commission",
+    "currency": "SAR",
+    "stories": [
+      {
+        "name": "Ahmad Mohammed",
+        "role": "Agent in Riyadh",
+        "students": 12,
+        "commission": "15,000",
+        "story": "I started working with Darb 6 months ago and achieved great success. The support is excellent and commissions are rewarding."
+      },
+      {
+        "name": "Fatima Al-Ali",
+        "role": "Agent in Jeddah",
+        "students": 8,
+        "commission": "9,600",
+        "story": "An amazing experience with Darb. Students are satisfied with the services and the process is easy and profitable."
+      },
+      {
+        "name": "Abdullah Al-Salem",
+        "role": "Agent in Dammam",
+        "students": 15,
+        "commission": "22,500",
+        "story": "The best partnership in international education. The team is professional and results are guaranteed."
+      }
+    ],
+    "stats": {
+      "activeAgents": "Active Agents",
+      "acceptedStudentsTotal": "Accepted Students",
+      "commissionsPaid": "Commissions Paid",
+      "satisfactionRate": "Agent Satisfaction"
+    }
   }
 }
