@@ -433,19 +433,96 @@ serve(async (req) => {
         textContent = `بيانات حسابك: البريد: ${user_email} | كلمة المرور المؤقتة: ${requestBody.temp_password || '—'} — يرجى تغييرها فوراً`;
         break;
 
+      case 'welcome':
+        subject = 'مرحباً بك في درب للدراسة! | Welcome to Darb Study!';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">مرحباً بك في عائلة درب! 🎉</div>
+          <div class="message-text">مرحباً <strong>${user_name || 'عزيزي الطالب'}</strong>,</div>
+          <div class="message-text">تم إنشاء حسابك بنجاح في منصة درب للدراسة. يمكنك الآن الوصول إلى لوحة التحكم الخاصة بك ومتابعة رحلتك التعليمية.</div>
+          <div class="features-list">
+            <h3>🌟 ابدأ بالخطوات التالية:</h3>
+            <ul>
+              <li>أكمل ملفك الشخصي</li>
+              <li>ارفع المستندات المطلوبة</li>
+              <li>تابع قائمة المتطلبات</li>
+            </ul>
+          </div>
+          <div class="divider"></div>
+          <div class="message-text" style="text-align: center;"><strong>فريق درب للدراسة</strong> 🌟</div>
+        `);
+        textContent = `مرحباً بك في درب للدراسة! تم إنشاء حسابك بنجاح.`;
+        break;
+
+      case 'status_change':
+        const newStatus = requestBody.new_status || 'updated';
+        const oldStatus = requestBody.old_status || '';
+        subject = 'تحديث حالة طلبك - درب للدراسة | Application Status Update';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">📋 تحديث حالة الطلب</div>
+          <div class="message-text">مرحباً <strong>${user_name || 'عزيزي الطالب'}</strong>,</div>
+          <div class="message-text">تم تحديث حالة طلبك من <strong>${oldStatus}</strong> إلى <strong>${newStatus}</strong>.</div>
+          <div class="cta-container">
+            <a href="https://darb-agency.lovable.app/student-auth" class="button">📊 عرض لوحة التحكم</a>
+          </div>
+          <div class="divider"></div>
+          <div class="message-text" style="text-align: center;"><strong>فريق درب للدراسة</strong></div>
+        `);
+        textContent = `تم تحديث حالة طلبك إلى: ${newStatus}`;
+        break;
+
+      case 'referral_accepted':
+        const referredName = requestBody.referred_name || 'صديقك';
+        subject = 'تم قبول إحالتك! 🎉 | Referral Accepted!';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">🎉 تم قبول إحالتك!</div>
+          <div class="message-text">مرحباً <strong>${user_name || 'عزيزي المستخدم'}</strong>,</div>
+          <div class="message-text">يسعدنا إبلاغك أن إحالتك لـ <strong>${referredName}</strong> تم قبولها بنجاح!</div>
+          <div class="features-list">
+            <h3>🏆 مكافآتك:</h3>
+            <ul>
+              <li>تتم مراجعة مكافأتك وستُضاف لحسابك</li>
+              <li>يمكنك متابعة حالة المكافآت من لوحة التحكم</li>
+            </ul>
+          </div>
+          <div class="divider"></div>
+          <div class="message-text" style="text-align: center;"><strong>فريق درب للدراسة</strong> 🌟</div>
+        `);
+        textContent = `تم قبول إحالتك لـ ${referredName}!`;
+        break;
+
+      case 'weekly_digest':
+        const d = requestBody.digest_data || {};
+        subject = 'التقرير الأسبوعي - درب للدراسة | Weekly Digest';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">📊 التقرير الأسبوعي</div>
+          <div class="message-text">مرحباً <strong>${user_name || 'مدير'}</strong>,</div>
+          <div class="message-text">إليك ملخص أداء الأسبوع:</div>
+          <div class="features-list">
+            <h3>📈 إحصائيات الأسبوع:</h3>
+            <ul>
+              <li>عملاء جدد: ${d.newLeads || 0}</li>
+              <li>ملفات جديدة: ${d.newCases || 0}</li>
+              <li>طلاب جدد: ${d.newStudents || 0}</li>
+              <li>إحالات جديدة: ${d.newReferrals || 0}</li>
+              <li>إيرادات: ${d.weekRevenue || 0} €</li>
+              <li>مدفوعات: ${d.paidCount || 0}</li>
+            </ul>
+          </div>
+          <div class="cta-container">
+            <a href="https://darb-agency.lovable.app/admin" class="button">📊 عرض لوحة الإدارة</a>
+          </div>
+          <div class="divider"></div>
+          <div class="message-text" style="text-align: center;"><strong>فريق درب للدراسة</strong></div>
+        `, true);
+        textContent = `التقرير الأسبوعي: ${d.newLeads || 0} عملاء, ${d.weekRevenue || 0}€ إيرادات`;
+        break;
+
       default:
         subject = 'رسالة من درب للدراسة | Message from Darb Study';
         htmlContent = baseTemplate(`
           <div class="welcome-title">مرحباً ${user_name || 'عزيزي المستخدم'}! 👋</div>
-          
-          <div class="message-text">
-            شكراً لك على استخدام خدمات درب للدراسة المتميزة.
-          </div>
-          
-          <div class="message-text">
-            نحن هنا لمساعدتك في كل خطوة من رحلتك التعليمية نحو النجاح والتميز.
-          </div>
-          
+          <div class="message-text">شكراً لك على استخدام خدمات درب للدراسة المتميزة.</div>
+          <div class="message-text">نحن هنا لمساعدتك في كل خطوة من رحلتك التعليمية نحو النجاح والتميز.</div>
           <div class="features-list">
             <h3>🎯 خدماتنا المتميزة:</h3>
             <ul>
@@ -455,13 +532,8 @@ serve(async (req) => {
               <li>دعم مستمر طوال رحلتك الدراسية</li>
             </ul>
           </div>
-          
           <div class="divider"></div>
-          
-          <div class="message-text" style="text-align: center;">
-            مع أطيب التحيات،<br>
-            <strong>فريق درب للدراسة</strong> 🌟
-          </div>
+          <div class="message-text" style="text-align: center;">مع أطيب التحيات،<br><strong>فريق درب للدراسة</strong> 🌟</div>
         `);
         textContent = `رسالة من درب للدراسة`;
     }

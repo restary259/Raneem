@@ -1,10 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { TrendingUp, Users, BarChart3, CalendarIcon, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { cn } from '@/lib/utils';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, AreaChart, Area, Legend,
 } from 'recharts';
 
@@ -16,23 +20,47 @@ interface KPIAnalyticsProps {
   commissions: any[];
 }
 
+function downloadCSV(rows: Record<string, any>[], filename: string) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${filename}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, influencers, commissions }) => {
   const { t } = useTranslation('dashboard');
+  const [startDate, setStartDate] = useState<Date>(startOfMonth(subMonths(new Date(), 5)));
+  const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
 
-  const paidCases = cases.filter(c => c.case_status === 'paid' || c.case_status === 'completed');
+  // Filter cases and leads by date range
+  const filteredCases = useMemo(() => cases.filter(c => {
+    const d = new Date(c.paid_at || c.created_at);
+    return isWithinInterval(d, { start: startDate, end: endDate });
+  }), [cases, startDate, endDate]);
+
+  const filteredLeads = useMemo(() => leads.filter(l => {
+    const d = new Date(l.created_at);
+    return isWithinInterval(d, { start: startDate, end: endDate });
+  }), [leads, startDate, endDate]);
+
+  const paidCases = filteredCases.filter(c => c.case_status === 'paid' || c.case_status === 'completed');
   const totalRevenue = paidCases.reduce((sum, c) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
   const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0) + (Number(c.translation_fee) || 0), 0);
   const totalProfit = totalRevenue - totalCosts;
   const avgProfitPerStudent = paidCases.length > 0 ? Math.round(totalProfit / paidCases.length) : 0;
 
-  // Monthly revenue trend (last 6 months)
+  // Monthly revenue trend
   const monthlyRevenue = useMemo(() => {
     const months: Record<string, { revenue: number; costs: number; profit: number }> = {};
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = d.toISOString().slice(0, 7);
+    const cur = new Date(startDate);
+    while (cur <= endDate) {
+      const key = format(cur, 'yyyy-MM');
       months[key] = { revenue: 0, costs: 0, profit: 0 };
+      cur.setMonth(cur.getMonth() + 1);
     }
     paidCases.forEach(c => {
       const month = (c.paid_at || c.created_at)?.slice(0, 7);
@@ -44,55 +72,84 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
         months[month].profit += rev - cost;
       }
     });
-    return Object.entries(months).map(([month, data]) => ({
-      month: month.slice(5),
-      ...data,
-    }));
-  }, [paidCases]);
+    return Object.entries(months).map(([month, data]) => ({ month: month.slice(5), ...data }));
+  }, [paidCases, startDate, endDate]);
 
   // Conversion funnel data
   const funnelData = useMemo(() => {
     const stages = [
-      { key: 'new', count: leads.filter(l => l.status === 'new').length },
-      { key: 'eligible', count: leads.filter(l => l.status === 'eligible' || (l.eligibility_score ?? 0) >= 50).length },
-      { key: 'assigned', count: cases.filter(c => c.case_status === 'assigned').length },
-      { key: 'contacted', count: cases.filter(c => c.case_status === 'contacted').length },
-      { key: 'appointment', count: cases.filter(c => c.case_status === 'appointment').length },
-      { key: 'paid', count: cases.filter(c => c.case_status === 'paid').length },
-      { key: 'ready_to_apply', count: cases.filter(c => c.case_status === 'ready_to_apply').length },
-      { key: 'completed', count: cases.filter(c => c.case_status === 'completed' || c.case_status === 'settled').length },
+      { key: 'new', count: filteredLeads.filter(l => l.status === 'new').length },
+      { key: 'eligible', count: filteredLeads.filter(l => l.status === 'eligible' || (l.eligibility_score ?? 0) >= 50).length },
+      { key: 'assigned', count: filteredCases.filter(c => c.case_status === 'assigned').length },
+      { key: 'contacted', count: filteredCases.filter(c => c.case_status === 'contacted').length },
+      { key: 'appointment', count: filteredCases.filter(c => c.case_status === 'appointment').length },
+      { key: 'paid', count: filteredCases.filter(c => c.case_status === 'paid').length },
+      { key: 'ready_to_apply', count: filteredCases.filter(c => c.case_status === 'ready_to_apply').length },
+      { key: 'completed', count: filteredCases.filter(c => c.case_status === 'completed' || c.case_status === 'settled').length },
     ];
     return stages.map(s => ({ name: t(`funnel.${s.key}`, s.key), count: s.count }));
-  }, [leads, cases, t]);
+  }, [filteredLeads, filteredCases, t]);
 
   // Agent comparison
   const agentData = useMemo(() => {
     return influencers.map(inf => {
-      const infLeads = leads.filter(l => l.source_id === inf.id);
-      const infCases = cases.filter(c => {
+      const infLeads = filteredLeads.filter(l => l.source_id === inf.id);
+      const infCases = filteredCases.filter(c => {
         const lead = leads.find(l => l.id === c.lead_id);
         return lead?.source_id === inf.id;
       });
       const paid = infCases.filter(c => c.case_status === 'paid' || c.case_status === 'completed').length;
       return { name: inf.full_name?.split(' ')[0] || '?', leads: infLeads.length, paid };
     }).filter(a => a.leads > 0).slice(0, 8);
-  }, [influencers, leads, cases]);
+  }, [influencers, filteredLeads, filteredCases, leads]);
 
   // Lawyer performance
   const lawyerData = useMemo(() => {
     return lawyers.map(lawyer => {
-      const lc = cases.filter(c => c.assigned_lawyer_id === lawyer.id);
+      const lc = filteredCases.filter(c => c.assigned_lawyer_id === lawyer.id);
       const closed = lc.filter(c => ['paid', 'completed', 'closed'].includes(c.case_status)).length;
       const closeRate = lc.length > 0 ? Math.round((closed / lc.length) * 100) : 0;
       const revenue = closed > 0 ? lc.filter(c => ['paid', 'completed'].includes(c.case_status)).reduce((s, c) => s + (Number(c.service_fee) || 0), 0) : 0;
       return { ...lawyer, total: lc.length, closed, closeRate, revenue };
     });
-  }, [lawyers, cases]);
+  }, [lawyers, filteredCases]);
 
   const FUNNEL_COLORS = ['hsl(220, 70%, 55%)', 'hsl(200, 65%, 50%)', 'hsl(180, 60%, 45%)', 'hsl(160, 55%, 45%)', 'hsl(140, 50%, 45%)', 'hsl(120, 55%, 40%)', 'hsl(90, 50%, 45%)', 'hsl(60, 60%, 45%)'];
 
+  // Export handlers
+  const exportRevenue = () => downloadCSV(monthlyRevenue.map(m => ({ Month: m.month, Revenue: m.revenue, Costs: m.costs, Profit: m.profit })), 'revenue-report');
+  const exportLeads = () => downloadCSV(filteredLeads.map(l => ({ Name: l.full_name, Phone: l.phone, Status: l.status, Score: l.eligibility_score, Source: l.source_type, Date: l.created_at?.slice(0, 10) })), 'leads-report');
+  const exportCases = () => downloadCSV(filteredCases.map(c => ({ CaseID: c.id?.slice(0, 8), Status: c.case_status, ServiceFee: c.service_fee, SchoolComm: c.school_commission, Created: c.created_at?.slice(0, 10) })), 'cases-report');
+
+  const DatePicker = ({ date, onSelect, label }: { date: Date; onSelect: (d: Date) => void; label: string }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal h-9", !date && "text-muted-foreground")}>
+          <CalendarIcon className="h-3.5 w-3.5 me-2" />
+          {format(date, 'dd/MM/yyyy')}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={date} onSelect={(d) => d && onSelect(d)} initialFocus className={cn("p-3 pointer-events-auto")} />
+      </PopoverContent>
+    </Popover>
+  );
+
   return (
     <div className="space-y-6">
+      {/* Date Range Filter + Export */}
+      <div className="flex flex-wrap items-center gap-2">
+        <DatePicker date={startDate} onSelect={setStartDate} label="From" />
+        <span className="text-muted-foreground text-sm">→</span>
+        <DatePicker date={endDate} onSelect={setEndDate} label="To" />
+        <div className="flex-1" />
+        <div className="flex gap-1">
+          <Button variant="outline" size="sm" onClick={exportRevenue}><Download className="h-3.5 w-3.5 me-1" />{t('kpi.exportRevenue', { defaultValue: 'Revenue' })}</Button>
+          <Button variant="outline" size="sm" onClick={exportLeads}><Download className="h-3.5 w-3.5 me-1" />{t('kpi.exportLeads', { defaultValue: 'Leads' })}</Button>
+          <Button variant="outline" size="sm" onClick={exportCases}><Download className="h-3.5 w-3.5 me-1" />{t('kpi.exportCases', { defaultValue: 'Cases' })}</Button>
+        </div>
+      </div>
+
       {/* Top KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className={`${totalProfit >= 0 ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'}`}>
@@ -127,7 +184,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            {t('kpi.revenueTrend', { defaultValue: 'Revenue Trend (6 months)' })}
+            {t('kpi.revenueTrend', { defaultValue: 'Revenue Trend' })}
           </CardTitle>
         </CardHeader>
         <CardContent>
