@@ -48,6 +48,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.3.0",
+    "exceljs": "^4.4.0",
     "i18next": "^25.2.1",
     "i18next-http-backend": "^3.0.2",
     "input-otp": "^1.2.4",
@@ -69,7 +70,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
