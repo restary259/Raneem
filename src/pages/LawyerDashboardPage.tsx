@@ -14,19 +14,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger
-} from '@/components/ui/sidebar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, FileText, Bot, Settings, Menu, Bell
+  Home, Calendar, FileText, Bot, GraduationCap, Eye, EyeOff
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 import NotificationBell from '@/components/common/NotificationBell';
+import AIChatPopup from '@/components/chat/AIChatPopup';
 import { differenceInHours, isToday } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { majorsData } from '@/data/majorsData';
 
 const STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled'] as const;
 
@@ -52,7 +51,9 @@ const NEON_BORDER: Record<string, string> = {
   settled: 'shadow-[0_0_8px_rgba(20,184,166,0.3)]',
 };
 
-type SidebarTab = 'leads' | 'appointments' | 'notes' | 'ai' | 'settings';
+const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
+
+type SidebarTab = 'leads' | 'appointments' | 'majors' | 'ai';
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -65,10 +66,16 @@ const TeamDashboardPage = () => {
   const [editValues, setEditValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>('leads');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [profileCase, setProfileCase] = useState<any | null>(null);
+  const [profileValues, setProfileValues] = useState<Record<string, any>>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [majorSearch, setMajorSearch] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -101,7 +108,7 @@ const TeamDashboardPage = () => {
       setCases(casesData);
       const leadIds = [...new Set(casesData.map((c: any) => c.lead_id))];
       if (leadIds.length > 0) {
-        const { data: leadsData } = await (supabase as any).from('leads').select('id, full_name, phone, eligibility_score, eligibility_reason, source_type, passport_type, english_units, math_units, last_contacted, created_at').in('id', leadIds);
+        const { data: leadsData } = await (supabase as any).from('leads').select('id, full_name, phone, email, eligibility_score, eligibility_reason, source_type, passport_type, english_units, math_units, last_contacted, created_at').in('id', leadIds);
         if (leadsData) setLeads(leadsData);
       }
     }
@@ -175,6 +182,55 @@ const TeamDashboardPage = () => {
     if (user) await fetchCases(user.id);
   };
 
+  // Profile completion modal
+  const openProfileModal = (c: any) => {
+    const lead = getLeadInfo(c.lead_id);
+    setProfileCase(c);
+    setProfileValues({
+      student_full_name: c.student_full_name || lead.full_name || '',
+      student_email: c.student_email || (lead as any).email || '',
+      student_phone: c.student_phone || lead.phone || '',
+      student_address: c.student_address || '',
+      student_age: c.student_age || '',
+      language_proficiency: c.language_proficiency || '',
+      intensive_course: c.intensive_course || '',
+      passport_number: c.passport_number || '',
+      nationality: c.nationality || '',
+      country_of_birth: c.country_of_birth || '',
+      selected_city: c.selected_city || '',
+      selected_school: c.selected_school || '',
+      accommodation_status: c.accommodation_status || '',
+    });
+  };
+
+  const saveProfileCompletion = async () => {
+    if (!profileCase) return;
+    setSavingProfile(true);
+    const { error } = await (supabase as any).from('student_cases').update({
+      student_full_name: profileValues.student_full_name || null,
+      student_email: profileValues.student_email || null,
+      student_phone: profileValues.student_phone || null,
+      student_address: profileValues.student_address || null,
+      student_age: profileValues.student_age ? Number(profileValues.student_age) : null,
+      language_proficiency: profileValues.language_proficiency || null,
+      intensive_course: profileValues.intensive_course || null,
+      passport_number: profileValues.passport_number || null,
+      nationality: profileValues.nationality || null,
+      country_of_birth: profileValues.country_of_birth || null,
+      selected_city: profileValues.selected_city || null,
+      selected_school: profileValues.selected_school || null,
+      accommodation_status: profileValues.accommodation_status || null,
+    }).eq('id', profileCase.id);
+    setSavingProfile(false);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    } else {
+      toast({ title: t('lawyer.saved') });
+      setProfileCase(null);
+      if (user) await fetchCases(user.id);
+    }
+  };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
   if (isLoading) {
@@ -188,8 +244,21 @@ const TeamDashboardPage = () => {
   const sidebarItems = [
     { id: 'leads' as SidebarTab, label: t('lawyer.assignedCases'), icon: Home },
     { id: 'appointments' as SidebarTab, label: t('admin.appointments.title'), icon: Calendar },
+    { id: 'majors' as SidebarTab, label: t('lawyer.majorsTab', 'Majors'), icon: GraduationCap },
     { id: 'ai' as SidebarTab, label: 'AI Agent', icon: Bot },
   ];
+
+  // Filtered majors for quick access
+  const filteredMajors = useMemo(() => {
+    if (!majorSearch.trim()) return majorsData;
+    const q = majorSearch.toLowerCase();
+    return majorsData.map(cat => ({
+      ...cat,
+      subMajors: cat.subMajors.filter(s =>
+        s.nameEN.toLowerCase().includes(q) || s.nameAR.includes(q)
+      ),
+    })).filter(cat => cat.subMajors.length > 0);
+  }, [majorSearch]);
 
   const renderLeadCards = () => (
     <div className="space-y-4">
@@ -253,6 +322,9 @@ const TeamDashboardPage = () => {
                         <CheckCircle className="h-3 w-3 me-1" />{t('lawyer.markContacted')}
                       </Button>
                     )}
+                    <Button size="sm" variant="outline" className="h-7 text-xs active:scale-95" onClick={() => openProfileModal(c)}>
+                      <FileText className="h-3 w-3 me-1" />{t('lawyer.completeProfile', 'Complete Profile')}
+                    </Button>
                     {!['paid', 'settled', 'completed'].includes(c.case_status) && (
                       <Button size="sm" variant="outline" className="h-7 text-xs active:scale-95" onClick={() => startEdit(c)}>
                         {t('common.edit')}
@@ -312,6 +384,7 @@ const TeamDashboardPage = () => {
 
   const renderCalendarSidebar = () => (
     <div className="space-y-4">
+      {/* Today's appointments always visible */}
       {todayAppointments.length > 0 && (
         <Card className="border-purple-200">
           <CardContent className="p-4">
@@ -333,21 +406,74 @@ const TeamDashboardPage = () => {
           </CardContent>
         </Card>
       )}
-      {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
+
+      {/* Calendar toggle button */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full gap-2 active:scale-95"
+        onClick={() => setShowCalendar(!showCalendar)}
+      >
+        {showCalendar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        {showCalendar ? t('lawyer.hideCalendar', 'Hide Calendar') : t('lawyer.showCalendar', 'Show Calendar')}
+      </Button>
+
+      {/* Calendar - hidden by default */}
+      {showCalendar && user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
+    </div>
+  );
+
+  const renderMajorsTab = () => (
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <h2 className="font-bold text-base flex items-center gap-2">
+        <GraduationCap className="h-4 w-4" />
+        {t('lawyer.majorsTab', 'Majors Quick Reference')}
+      </h2>
+      <Input
+        placeholder={t('lawyer.searchMajors', 'Search majors…')}
+        value={majorSearch}
+        onChange={e => setMajorSearch(e.target.value)}
+        className="max-w-sm"
+      />
+      <div className="space-y-3">
+        {filteredMajors.map(cat => (
+          <Collapsible key={cat.id}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardContent className="p-3 cursor-pointer hover:bg-muted/30 transition-colors flex items-center justify-between active:scale-[0.98]">
+                  <span className="font-semibold text-sm">{i18n.language === 'ar' ? cat.title : cat.titleEN}</span>
+                  <Badge variant="secondary" className="text-[10px]">{cat.subMajors.length}</Badge>
+                </CardContent>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-3 pb-3 space-y-2">
+                  {cat.subMajors.map(sub => (
+                    <div key={sub.id} className="p-2 bg-muted/20 rounded-lg">
+                      <p className="font-medium text-sm">{i18n.language === 'ar' ? sub.nameAR : sub.nameEN}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{i18n.language === 'ar' ? sub.description : sub.descriptionEN}</p>
+                      {sub.durationEN && <p className="text-xs text-muted-foreground mt-0.5">⏱ {i18n.language === 'ar' ? sub.duration : sub.durationEN}</p>}
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        ))}
+        {filteredMajors.length === 0 && <p className="text-center text-muted-foreground py-8">{t('common.noResults', 'No results')}</p>}
+      </div>
     </div>
   );
 
   // Mobile bottom nav
   const mobileBottomNav = (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1E293B] border-t border-white/10 flex items-center justify-around py-2 lg:hidden">
-      {[
-        { id: 'leads' as SidebarTab, icon: Home, label: t('lawyer.assignedCases') },
-        { id: 'appointments' as SidebarTab, icon: Calendar, label: t('admin.appointments.title') },
-        { id: 'ai' as SidebarTab, icon: Bot, label: 'AI' },
-      ].map(item => (
+      {sidebarItems.map(item => (
         <button
           key={item.id}
-          onClick={() => item.id === 'ai' ? navigate('/ai-advisor') : setActiveTab(item.id)}
+          onClick={() => {
+            if (item.id === 'ai') { setShowAI(true); }
+            else { setActiveTab(item.id); }
+          }}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all ${
             activeTab === item.id ? 'text-primary' : 'text-white/60'
           }`}
@@ -373,9 +499,6 @@ const TeamDashboardPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 active:scale-95" onClick={() => navigate('/ai-advisor')}>
-                <Bot className="h-4 w-4" />
-              </Button>
               <div className="[&_button]:text-white/70 [&_button]:hover:text-white [&_button]:hover:bg-white/10">
                 <NotificationBell />
               </div>
@@ -395,15 +518,20 @@ const TeamDashboardPage = () => {
         <aside className="hidden lg:flex flex-col w-56 bg-[#1E293B] text-white shrink-0 border-e border-white/10">
           <nav className="flex-1 p-3 space-y-1">
             {sidebarItems.map(item => {
-              const isActive = activeTab === item.id;
+              const isActive = activeTab === item.id && item.id !== 'ai';
               return (
                 <button
                   key={item.id}
-                  onClick={() => item.id === 'ai' ? navigate('/ai-advisor') : setActiveTab(item.id)}
+                  onClick={() => {
+                    if (item.id === 'ai') { setShowAI(!showAI); }
+                    else { setActiveTab(item.id); }
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 ${
                     isActive
                       ? 'bg-primary/20 text-white border-s-2 border-primary shadow-[0_0_12px_rgba(234,88,12,0.3)]'
-                      : 'text-white/70 hover:bg-white/8 hover:text-white'
+                      : item.id === 'ai' && showAI
+                        ? 'bg-blue-500/20 text-white'
+                        : 'text-white/70 hover:bg-white/8 hover:text-white'
                   }`}
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
@@ -461,9 +589,100 @@ const TeamDashboardPage = () => {
                 {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
               </div>
             )}
+            {activeTab === 'majors' && renderMajorsTab()}
           </main>
         </div>
       </div>
+
+      {/* AI Agent Sidebar Popup */}
+      {showAI && (
+        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[380px] shadow-2xl animate-in slide-in-from-right duration-200">
+          <div className="h-full">
+            <AIChatPopup onClose={() => setShowAI(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Backdrop for AI popup */}
+      {showAI && (
+        <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setShowAI(false)} />
+      )}
+
+      {/* Profile Completion Modal */}
+      <Dialog open={!!profileCase} onOpenChange={(open) => !open && setProfileCase(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('lawyer.completeProfile', 'Complete Student Profile')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div>
+              <Label>{t('admin.ready.fullName')}</Label>
+              <Input value={profileValues.student_full_name || ''} onChange={e => setProfileValues(v => ({ ...v, student_full_name: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.email')}</Label>
+              <Input type="email" value={profileValues.student_email || ''} onChange={e => setProfileValues(v => ({ ...v, student_email: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.phone')}</Label>
+              <Input value={profileValues.student_phone || ''} onChange={e => setProfileValues(v => ({ ...v, student_phone: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.age')}</Label>
+              <Input type="number" value={profileValues.student_age || ''} onChange={e => setProfileValues(v => ({ ...v, student_age: e.target.value }))} />
+            </div>
+            <div className="md:col-span-2">
+              <Label>{t('admin.ready.address')}</Label>
+              <Input value={profileValues.student_address || ''} onChange={e => setProfileValues(v => ({ ...v, student_address: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.passportNumber')}</Label>
+              <Input value={profileValues.passport_number || ''} onChange={e => setProfileValues(v => ({ ...v, passport_number: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.nationality')}</Label>
+              <Input value={profileValues.nationality || ''} onChange={e => setProfileValues(v => ({ ...v, nationality: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.countryOfBirth')}</Label>
+              <Input value={profileValues.country_of_birth || ''} onChange={e => setProfileValues(v => ({ ...v, country_of_birth: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.languageProficiency')}</Label>
+              <Input value={profileValues.language_proficiency || ''} onChange={e => setProfileValues(v => ({ ...v, language_proficiency: e.target.value }))} placeholder="e.g. German B1, English C1" />
+            </div>
+            <div>
+              <Label>{t('admin.ready.destinationCity')}</Label>
+              <Input value={profileValues.selected_city || ''} onChange={e => setProfileValues(v => ({ ...v, selected_city: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.schoolLabel')}</Label>
+              <Input value={profileValues.selected_school || ''} onChange={e => setProfileValues(v => ({ ...v, selected_school: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.intensiveCourse')}</Label>
+              <Input value={profileValues.intensive_course || ''} onChange={e => setProfileValues(v => ({ ...v, intensive_course: e.target.value }))} />
+            </div>
+            <div>
+              <Label>{t('admin.ready.accommodationType')}</Label>
+              <Select value={profileValues.accommodation_status || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, accommodation_status: v }))}>
+                <SelectTrigger><SelectValue placeholder={t('admin.ready.selectAccommodation')} /></SelectTrigger>
+                <SelectContent>
+                  {ACCOMMODATION_OPTIONS.map(o => (
+                    <SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <Button variant="outline" onClick={() => setProfileCase(null)}>{t('common.cancel')}</Button>
+            <Button onClick={saveProfileCompletion} disabled={savingProfile}>
+              <Save className="h-4 w-4 me-1" />{savingProfile ? t('common.loading') : t('common.save')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile Bottom Nav */}
       {isMobile && mobileBottomNav}
