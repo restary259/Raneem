@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -11,38 +11,43 @@ interface ExportOptions {
   summaryRows?: (string | number)[][];
 }
 
-export function exportXLSX({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
-  const wb = XLSX.utils.book_new();
-  const data: (string | number)[][] = [];
+export async function exportXLSX({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Data');
 
   if (title) {
-    data.push([title]);
-    data.push([]); // blank row
+    ws.addRow([title]);
+    ws.addRow([]);
   }
 
-  data.push(headers);
-  data.push(...rows);
+  const headerRow = ws.addRow(headers);
+  headerRow.font = { bold: true };
+
+  rows.forEach(r => ws.addRow(r));
 
   if (summaryRows?.length) {
-    data.push([]); // blank separator
-    data.push(...summaryRows);
+    ws.addRow([]);
+    summaryRows.forEach(r => ws.addRow(r));
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
-
-  // Column widths based on content
-  const colWidths = headers.map((h, i) => {
+  // Auto-size columns
+  ws.columns = headers.map((h, i) => {
     const maxLen = Math.max(
       h.length,
       ...rows.map(r => String(r[i] ?? '').length),
       ...(summaryRows || []).map(r => String(r[i] ?? '').length)
     );
-    return { wch: Math.min(maxLen + 4, 40) };
+    return { width: Math.min(maxLen + 4, 40) };
   });
-  ws['!cols'] = colWidths;
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Data');
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${fileName}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export function exportPDF({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
