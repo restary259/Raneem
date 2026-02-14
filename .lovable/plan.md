@@ -1,162 +1,97 @@
 
+# Phase 9: Team Dashboard Overhaul
 
-# Phase 8: Rewards & Payouts System Overhaul
-
-This phase rebuilds the rewards and payouts system into a comprehensive, auditable financial management module -- covering influencer payouts, student cashback, payout request workflows, transaction logging, and admin export capabilities.
+This phase replaces all "Lawyer" references with "Team Member", redesigns the dashboard with a premium sidebar-based layout, adds an AI Agent sidebar link, and improves mobile responsiveness with card-based layouts.
 
 ---
 
-## Current State Assessment
+## Current State
 
-The existing system has basic building blocks:
-- `rewards` table with `status` (pending/approved/paid/cancelled), `amount`, `user_id`, `referral_id`
-- `PayoutsManagement` admin component (simple approve/pay/cancel)
-- `EarningsPanel` for influencers (20-day lock timer, request payout)
-- `RewardsPanel` for students (similar 20-day lock, milestones)
-- `ReferralManagement` creates reward records when referral status hits "paid"
-
-**What's missing per the blueprint:**
-- No `payout_requests` entity (grouped requests with linked students)
-- No transaction log / audit trail for payments
-- No payment method tracking
-- No reject-with-reason flow
-- No minimum payout threshold (configurable)
-- No admin side-panel quick stats or advanced filters
-- No CSV export for payouts
-- No "linked students" clickable views
-- No bulk approve/reject
-- Student cashback not linked to case payments
+- The route `/lawyer-dashboard` renders `LawyerDashboardPage.tsx` which checks for the `lawyer` role
+- `AppointmentCalendar.tsx` uses `lawyer_id` column from the `appointments` table
+- Translation keys use `lawyer.*` namespace in both EN and AR `dashboard.json`
+- Admin components (`CasesManagement`, `KPIAnalytics`, `ReadyToApplyTable`, `AdminOverview`) reference "lawyer" in props, labels, and variable names
+- The `team` section in translations already uses "Lawyer" for the role label
+- Database column `assigned_lawyer_id` in `student_cases` and `lawyer_id` in `appointments` remain unchanged (renaming DB columns is high-risk; we alias in the UI instead)
 
 ---
 
 ## Implementation Plan
 
-### 8A. Database: `payout_requests` Table
+### 9A. Rename All "Lawyer" References in Translation Files
 
-New table to group reward payouts into formal requests:
+**EN `dashboard.json`:**
+- Rename `lawyer` key to `teamDash` (keeping same structure)
+- Change `"title": "Lawyer Dashboard"` to `"title": "Team Dashboard"`
+- Change `"unauthorizedDesc"` to `"This page is for team members only."`
+- In `cases` section: `"lawyerLabel"` becomes `"teamMemberLabel"`, `"lawyerComm"` becomes `"teamMemberComm"`
+- In `team` section: `"roleLawyer"` becomes `"roleTeamMember"`, value `"Lawyer"` becomes `"Team Member"`, `"lawyerRole"` becomes `"teamMemberRole"`
+- In `kpi` section: `"lawyerPerformance"` becomes `"teamPerformance"`
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| requestor_id | uuid NOT NULL | The user requesting payout |
-| requestor_role | text NOT NULL | 'influencer' or 'student' |
-| linked_reward_ids | uuid[] NOT NULL | Array of reward IDs in this request |
-| linked_student_names | text[] | Student names for display |
-| amount | numeric NOT NULL | Total amount |
-| status | text NOT NULL DEFAULT 'pending' | pending / approved / rejected / paid |
-| payment_method | text | bank_transfer / paypal / cash |
-| transaction_ref | text | Reference number after payment |
-| reject_reason | text | Required when rejected |
-| admin_notes | text | Optional notes |
-| approved_by | uuid | Admin who approved |
-| paid_by | uuid | Admin who marked paid |
-| requested_at | timestamptz DEFAULT now() | |
-| approved_at | timestamptz | |
-| paid_at | timestamptz | |
+**AR `dashboard.json`:**
+- Same structural changes, translating "محامي" to "عضو فريق" throughout
 
-RLS: Users SELECT own requests; Admins full access.
+### 9B. Redesign LawyerDashboardPage (rename to TeamDashboardPage)
 
-### 8B. Database: `transaction_log` Table
+Complete rebuild of `src/pages/LawyerDashboardPage.tsx` (file stays same path for now, component renamed internally):
 
-Immutable audit log for all financial actions:
+**Desktop Layout:**
+- **Sticky Header**: Logo, dashboard name ("Team Dashboard"), user info, notification bell, AI Agent quick-access button, sign out
+- **Left Sidebar** (collapsible, 64px collapsed / 240px expanded):
+  - Items: Home/My Leads, Appointments, Notes/History, AI Agent (links to `/ai-advisor`), Settings
+  - Neon-style highlight on active item (border-left accent glow, subtle gradient hover)
+  - Uses the Shadcn Sidebar component pattern
+- **KPI Strip** below header: Active Leads, Today's Appointments, Paid This Month, SLA Warnings (same data, refined styling with blueprint colors)
+- **Main Body** (70/30 split preserved):
+  - Left (70%): Lead cards with neon-outline styling, stage badges, quick actions (Call, Set Appointment, Mark Contacted, Add Note, Edit), collapsible notes panel
+  - Right (30%): Mini calendar (month/week toggle), upcoming appointments list, personal analytics (conversion rate, weekly appointments, total activated students)
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| type | text NOT NULL | 'influencer_payout' / 'student_cashback' / 'commission' |
-| payout_request_id | uuid | Link to payout_requests |
-| related_student_ids | uuid[] | |
-| amount | numeric NOT NULL | |
-| approved_by | uuid | Staff who approved |
-| payment_method | text | |
-| transaction_ref | text | |
-| notes | text | |
-| created_at | timestamptz DEFAULT now() | |
+**Mobile Layout:**
+- Sidebar collapses to bottom navigation bar (5 icons: Home, Appointments, AI, Notifications, Profile)
+- KPI strip becomes horizontally scrollable single row
+- Lead cards stack vertically (no table)
+- Calendar becomes compact scrollable list
+- All tap targets minimum 44px
 
-RLS: Admin SELECT only. No user mutations.
+**Visual Enhancements:**
+- Lead cards: subtle neon border glow based on status color
+- Stage badges: color-coded with blueprint palette
+- Appointment buttons: hover glow effect (`shadow-[0_0_12px_rgba(color)]`)
+- Calendar events: color-coded dots by status
+- `active:scale-95` on all interactive elements
 
-### 8C. Add `min_payout_threshold` to `eligibility_config`
+### 9C. Update AppointmentCalendar Component
 
-Insert a configurable row: field_name = 'min_payout_threshold', weight = 100 (meaning 100 NIS minimum). Admin can change via existing EligibilityConfig UI.
+- Rename internal references from "lawyer" to "team member" in comments/variables
+- Keep `lawyer_id` DB column usage (no schema change) but alias in UI
+- Add drag-and-drop date selection for setting appointments (enhanced UX)
+- Add conflict detection: warn if appointment overlaps existing one
 
-### 8D. Revamped Influencer EarningsPanel
+### 9D. Update Admin Components
 
-Complete overhaul of `src/components/influencer/EarningsPanel.tsx`:
+**Files affected:**
+- `CasesManagement.tsx`: Change `assigned_lawyer_id` display label from "Lawyer" to "Team Member", update prop name `lawyers` display
+- `KPIAnalytics.tsx`: Rename `lawyerData` variable display section from "Lawyer Performance" to "Team Performance"
+- `ReadyToApplyTable.tsx`: Update "lawyer" references in UI labels
+- `AdminOverview.tsx`: Update prop references in display
+- `AdminLayout.tsx` / sidebar: Ensure "Team" section label is consistent
 
-- **Top KPI Strip** (3 cards): Total Earned (green), Available for Payout (yellow), Paid (blue) -- using the blueprint color scheme (#1D4ED8, #10B981, #F59E0B)
-- **Request Payout Button**: Opens a modal showing auto-populated linked students, total amount, optional notes, and confirm/cancel. Checks:
-  - Minimum payout threshold from `eligibility_config`
-  - Only fully paid student leads count (20-day lock)
-- **Payout Requests Table** with columns: Request ID (short), Date, Linked Students, Amount, Status (color-coded badges), Cancel action (if pending)
-- Clicking "Linked Students" shows a mini-profile popover
-- Mobile: card layout instead of table
+### 9E. Add Route Alias
 
-### 8E. Revamped Student RewardsPanel
+- Keep `/lawyer-dashboard` working (backward compat) but add `/team-dashboard` as primary route
+- Update navigation links across the app to use `/team-dashboard`
 
-Similar overhaul of `src/components/dashboard/RewardsPanel.tsx`:
+### 9F. Student Activation Flow
 
-- Same KPI strip design
-- Request Payout with modal (same flow)
-- Payout Requests table with linked referrals
-- Milestones section preserved
-- Mobile card layout
+- Add "Activate Student" button in the lead card (visible when case status reaches `paid`)
+- On click: creates student portal account (uses existing `create-team-member` edge function pattern) and sends welcome email
+- Only admin or team members with explicit permission can deactivate
 
-### 8F. Revamped Admin PayoutsManagement
+### 9G. Notification Enhancements
 
-Complete rebuild of `src/components/admin/PayoutsManagement.tsx`:
-
-- **Top KPI Strip** (4 cards):
-  - Pending influencer payouts (yellow)
-  - Pending student cashback (yellow)
-  - Total paid (green)
-  - Total rejected (red)
-- **Side Panel** (collapsible on mobile):
-  - Quick Stats: pending count, total amount, requests by role
-  - Filters: date range, status, role (influencer/student)
-- **Main Table** columns:
-  - Requestor Name / Role (badge: Influencer or Student)
-  - Request ID (short)
-  - Linked Students (clickable, opens modal)
-  - Amount
-  - Status (color-coded: pending=yellow, approved=blue, paid=green, rejected=red)
-  - Request Date
-  - Approval Date
-  - Payment Method
-  - Notes
-  - Actions: Approve / Reject / Mark Paid
-- **Approve Modal**: Optional note, confirm button
-- **Reject Modal**: Mandatory reason, confirm button
-- **Mark Paid Modal**: Payment method select (Bank/PayPal/Cash), Transaction ID input, optional notes. Creates `transaction_log` entry, sends notification
-- **Bulk Actions**: Checkbox selection with "Bulk Approve" and "Bulk Reject"
-- **CSV Export**: All columns with conditional status formatting
-- Mobile: card layout with sticky action buttons
-
-### 8G. Linked Students Modal
-
-New component `src/components/admin/LinkedStudentsModal.tsx`:
-- Shows mini-profile for each linked student
-- Fields: Name, course/school, city, payment status, referral source
-- Clickable "View Full Profile" link
-
-### 8H. Notifications Integration
-
-When payout requests change status:
-- Request created: notify admin
-- Approved: notify requestor
-- Rejected: notify requestor with reason
-- Paid: notify requestor with payment details
-
-Uses existing `notifications` table and `NotificationBell` system.
-
-### 8I. Translation Keys
-
-Add comprehensive keys to both `en/dashboard.json` and `ar/dashboard.json` for:
-- Payout request modal labels
-- Transaction log labels
-- Status names
-- KPI card labels
-- Export button labels
-- Modal confirmation text
+- New lead assigned: notification to team member (already exists via admin actions)
+- Upcoming appointment reminder: check appointments within 1 hour
+- Payment confirmation: notify team member when case payment is marked
 
 ---
 
@@ -164,25 +99,22 @@ Add comprehensive keys to both `en/dashboard.json` and `ar/dashboard.json` for:
 
 | File | Action |
 |------|--------|
-| DB Migration | Create `payout_requests`, `transaction_log` tables + RLS + realtime |
-| DB Migration | Insert `min_payout_threshold` config row |
-| `src/components/influencer/EarningsPanel.tsx` | Full rewrite with blueprint design |
-| `src/components/dashboard/RewardsPanel.tsx` | Full rewrite with blueprint design |
-| `src/components/admin/PayoutsManagement.tsx` | Full rewrite with KPIs, filters, bulk actions, CSV export |
-| `src/components/admin/LinkedStudentsModal.tsx` | New component |
-| `src/components/admin/PayoutActionModals.tsx` | New component (approve/reject/mark-paid modals) |
-| `public/locales/en/dashboard.json` | Add payout/transaction keys |
-| `public/locales/ar/dashboard.json` | Add payout/transaction keys |
+| `src/pages/LawyerDashboardPage.tsx` | Full rewrite with sidebar layout, renamed component |
+| `src/components/lawyer/AppointmentCalendar.tsx` | UI label updates, conflict detection |
+| `src/components/admin/CasesManagement.tsx` | Rename "Lawyer" labels to "Team Member" |
+| `src/components/admin/KPIAnalytics.tsx` | Rename "Lawyer Performance" section |
+| `src/components/admin/ReadyToApplyTable.tsx` | Rename "Lawyer" labels |
+| `src/components/admin/AdminOverview.tsx` | Update prop display labels |
+| `src/App.tsx` | Add `/team-dashboard` route alias |
+| `public/locales/en/dashboard.json` | Rename `lawyer` to `teamDash`, update all "Lawyer" strings |
+| `public/locales/ar/dashboard.json` | Same rename, Arabic equivalents |
 
 ## Implementation Order
 
-1. Create `payout_requests` and `transaction_log` tables with RLS
-2. Insert min payout threshold config
-3. Build `LinkedStudentsModal` and `PayoutActionModals` components
-4. Rebuild `PayoutsManagement` (admin side)
-5. Rebuild `EarningsPanel` (influencer side)
-6. Rebuild `RewardsPanel` (student side)
-7. Add notification triggers for payout status changes
-8. Add translation keys
-9. Test end-to-end flow
-
+1. Update translation keys in both EN and AR files
+2. Add `/team-dashboard` route in `App.tsx`
+3. Rebuild `LawyerDashboardPage.tsx` with new sidebar layout and premium styling
+4. Update `AppointmentCalendar.tsx` labels and add conflict check
+5. Update admin components (`CasesManagement`, `KPIAnalytics`, `ReadyToApplyTable`, `AdminOverview`)
+6. Add student activation button in lead cards
+7. Test end-to-end on desktop and mobile viewports
