@@ -243,6 +243,7 @@
       "contacts": "Messages",
       "referrals": "Referrals",
       "payouts": "Rewards & Payouts",
+      "money": "Money Dashboard",
       "analytics": "Analytics",
       "ready": "Ready to Apply",
       "eligibility": "Eligibility Engine",
@@ -751,7 +752,9 @@
       "activeLeads": "Active Leads",
       "todayAppts": "Today's Appointments",
       "paidThisMonth": "Paid This Month",
-      "slaWarnings": "SLA Warnings"
+      "slaWarnings": "SLA Warnings",
+      "myEarnings": "My Earnings",
+      "totalRevenue": "Total Revenue"
     },
     "statuses": {
       "assigned": "Assigned",
@@ -923,5 +926,38 @@
     "daysAgo": "{{count}}d ago",
     "statusChanged": "Application Status Updated",
     "statusChangedBody": "Your application status changed to: {{status}}"
+  },
+  "money": {
+    "totalRevenueNIS": "Revenue (NIS)",
+    "totalRevenueEUR": "Revenue (EUR)",
+    "totalExpenses": "Total Expenses",
+    "netProfit": "Net Profit",
+    "pendingPayouts": "Pending Payouts",
+    "totalPaidOut": "Total Paid Out",
+    "students": "students",
+    "schoolCommissions": "School Commissions",
+    "student": "Student Name",
+    "revenueType": "Revenue Type",
+    "amount": "Amount",
+    "currency": "Currency",
+    "status": "Status",
+    "date": "Date",
+    "searchStudent": "Search by student name...",
+    "export": "Export CSV",
+    "noTransactions": "No transactions yet",
+    "types": {
+      "service_fee": "Service Fee",
+      "school_commission": "School Commission",
+      "influencer_payout": "Agent Payout",
+      "team_member_comm": "Team Member Commission",
+      "referral_cashback": "Referral Cashback",
+      "translation_fee": "Translation Fee"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "paid": "Paid",
+      "completed": "Completed"
+    }
   }
 }

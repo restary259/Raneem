@@ -243,6 +243,7 @@
       "contacts": "رسائل التواصل",
       "referrals": "الإحالات",
       "payouts": "المكافآت والصرف",
+      "money": "لوحة الأموال",
       "analytics": "التحليلات",
       "ready": "جاهزون للتقديم",
       "eligibility": "محرك الأهلية",
@@ -751,7 +752,9 @@
       "activeLeads": "ملفات نشطة",
       "todayAppts": "مواعيد اليوم",
       "paidThisMonth": "مدفوع هذا الشهر",
-      "slaWarnings": "تحذيرات SLA"
+      "slaWarnings": "تحذيرات SLA",
+      "myEarnings": "أرباحي",
+      "totalRevenue": "إجمالي الإيرادات"
     },
     "statuses": {
       "assigned": "معيّن",
@@ -923,5 +926,38 @@
     "daysAgo": "منذ {{count}} ي",
     "statusChanged": "تم تحديث حالة الطلب",
     "statusChangedBody": "تم تغيير حالة طلبك إلى: {{status}}"
+  },
+  "money": {
+    "totalRevenueNIS": "الإيرادات (شيكل)",
+    "totalRevenueEUR": "الإيرادات (يورو)",
+    "totalExpenses": "إجمالي المصروفات",
+    "netProfit": "صافي الربح",
+    "pendingPayouts": "مدفوعات معلقة",
+    "totalPaidOut": "إجمالي المدفوع",
+    "students": "طلاب",
+    "schoolCommissions": "عمولات المدارس",
+    "student": "اسم الطالب",
+    "revenueType": "نوع الإيراد",
+    "amount": "المبلغ",
+    "currency": "العملة",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "searchStudent": "بحث باسم الطالب...",
+    "export": "تصدير CSV",
+    "noTransactions": "لا توجد معاملات بعد",
+    "types": {
+      "service_fee": "رسوم الخدمة",
+      "school_commission": "عمولة المدرسة",
+      "influencer_payout": "دفع الوكيل",
+      "team_member_comm": "عمولة عضو الفريق",
+      "referral_cashback": "استرداد الإحالة",
+      "translation_fee": "رسوم الترجمة"
+    },
+    "statuses": {
+      "pending": "معلق",
+      "approved": "معتمد",
+      "paid": "مدفوع",
+      "completed": "مكتمل"
+    }
   }
 }

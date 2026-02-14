@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import {
   Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, FileText, Bot, GraduationCap, Eye, EyeOff
+  Home, Calendar, FileText, Bot, GraduationCap, Eye, EyeOff, DollarSign, TrendingUp
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 import NotificationBell from '@/components/common/NotificationBell';
@@ -136,7 +136,9 @@ const TeamDashboardPage = () => {
       if (lead?.last_contacted) return false;
       return differenceInHours(new Date(), new Date(c.created_at)) > 24;
     }).length;
-    return { activeLeads, todayAppts, paidThisMonth, slaWarnings };
+    const totalEarnings = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
+    const totalServiceFees = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
+    return { activeLeads, todayAppts, paidThisMonth, slaWarnings, totalEarnings, totalServiceFees };
   }, [cases, leads, appointments]);
 
   const todayAppointments = useMemo(() =>
@@ -546,7 +548,7 @@ const TeamDashboardPage = () => {
         <div className="flex-1 overflow-auto pb-20 lg:pb-0">
           {/* KPI Strip */}
           <div className="px-4 py-4">
-            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${isMobile ? 'overflow-x-auto' : ''}`}>
+            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 ${isMobile ? 'overflow-x-auto' : ''}`}>
               <Card><CardContent className="p-3 text-center">
                 <Users className="h-4 w-4 mx-auto mb-1 text-blue-600" />
                 <p className="text-xs text-muted-foreground">{t('lawyer.kpi.activeLeads')}</p>
@@ -567,6 +569,20 @@ const TeamDashboardPage = () => {
                   <AlertTriangle className={`h-4 w-4 mx-auto mb-1 ${kpis.slaWarnings > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
                   <p className="text-xs text-muted-foreground">{t('lawyer.kpi.slaWarnings')}</p>
                   <p className={`text-xl font-bold ${kpis.slaWarnings > 0 ? 'text-destructive' : ''}`}>{kpis.slaWarnings}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-emerald-200 bg-emerald-50/50">
+                <CardContent className="p-3 text-center">
+                  <DollarSign className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
+                  <p className="text-xs text-muted-foreground">{t('lawyer.kpi.myEarnings', 'My Earnings')}</p>
+                  <p className="text-xl font-bold text-emerald-700">{kpis.totalEarnings.toLocaleString()} ₪</p>
+                </CardContent>
+              </Card>
+              <Card className="border-blue-200 bg-blue-50/50">
+                <CardContent className="p-3 text-center">
+                  <TrendingUp className="h-4 w-4 mx-auto mb-1 text-blue-600" />
+                  <p className="text-xs text-muted-foreground">{t('lawyer.kpi.totalRevenue', 'Total Revenue')}</p>
+                  <p className="text-xl font-bold text-blue-700">{kpis.totalServiceFees.toLocaleString()} ₪</p>
                 </CardContent>
               </Card>
             </div>
