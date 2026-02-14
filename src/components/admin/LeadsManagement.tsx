@@ -280,19 +280,20 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/30">
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.city', 'City')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.englishCol', 'English')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
-                  </tr>
-                </thead>
+                 <thead>
+                   <tr className="border-b bg-muted/30">
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.city', 'City')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.interestedMajor', 'Interested Major')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.englishCol', 'English')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
+                     <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
+                   </tr>
+                 </thead>
                 <tbody>
                   {filtered.map(lead => {
                     const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
@@ -309,6 +310,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                           </div>
                         </td>
                         <td className="p-3 text-muted-foreground">{lead.city || '—'}</td>
+                        <td className="p-3 text-muted-foreground">{lead.study_destination || lead.preferred_city || '—'}</td>
                         <td className="p-3">
                           <a href={`tel:${lead.phone}`} className="text-primary hover:underline flex items-center gap-1">
                             <Phone className="h-3 w-3" />{lead.phone}
