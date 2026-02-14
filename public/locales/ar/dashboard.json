@@ -716,6 +716,7 @@
     "assignedStudents": "الطلاب المعينين",
     "avgProgress": "متوسط التقدم",
     "tabs": {
+      "overview": "نظرة عامة",
       "students": "الطلاب",
       "earnings": "الأرباح",
       "media": "المحتوى",

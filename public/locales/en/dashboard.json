@@ -716,6 +716,7 @@
     "assignedStudents": "Assigned Students",
     "avgProgress": "Avg Progress",
     "tabs": {
+      "overview": "Overview",
       "students": "Students",
       "earnings": "Earnings",
       "media": "Content",
