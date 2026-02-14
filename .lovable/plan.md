@@ -1,111 +1,115 @@
 
-## Header Navigation Failure and Mobile UI Stability Fix
 
-This plan addresses 7 critical issues: missing Home button, broken "Who We Are" dropdown, AI Advisor scroll issues, sidebar scroll, Majors page problems, dark mode removal, and full regression cleanup.
+## Global Hero and Navigation Visual Consistency Fix
+
+This plan creates a unified `PageHero` component and standardizes all hero sections across the platform for consistent spacing, contrast, and brand alignment.
 
 ---
 
-### Phase 1: Home Button -- Diagnosis and Fix
+### Audit Summary: Current Hero Inconsistencies
 
-**Root Cause Found**: The Home button IS present in `DesktopNav.tsx` (line 147-153). The issue is the `overflow-hidden` class on the navigation container in `Header.tsx` (line 38). When the viewport shrinks or zoom increases, the rightmost nav items (including Home, which is last in the RTL list) get clipped by `overflow-hidden`.
+| Page | Component | Background | Text Color | Top Padding | Issues |
+|------|-----------|------------|------------|-------------|--------|
+| Home | `Hero.tsx` | Video + primary/85 overlay | White | Full viewport | OK (unique layout) |
+| Services | `ServicesHero.tsx` | `from-primary to-background` gradient | `primary-foreground` | `py-12 sm:py-20 md:py-32` | Gradient fades to light bg, text stays light = poor contrast at bottom |
+| Contact | `ContactHero.tsx` | `from-primary/90 to-background` | `primary-foreground` | `py-12 sm:py-20 md:py-32` | Same fade-to-light contrast issue |
+| About (old) | `AboutIntro.tsx` | `bg-secondary` (light gray) | `text-primary` (dark) | `py-12 md:py-24` | OK contrast but different style |
+| Who We Are | Inline in page | Image + `bg-black/60` | White | `py-24 md:py-36` | Good contrast, different spacing |
+| Partnership | `PartnershipHero.tsx` | Image + `bg-black/60` | White | `py-20 md:py-40` | Good contrast, different spacing |
+| Majors | `HeroSection.tsx` | `from-orange-50 to-background` | `text-foreground` (dark) | `py-8 md:py-12` | Very small padding, feels cramped |
+| Housing | `HousingHero.tsx` | `from-orange-500 to-yellow-500` | White | `py-16` | OK but unique style |
+| Partners | Inline in page | `from-primary/5 to-background` | `text-foreground` | `py-8 sm:py-12 md:py-20` | Very light bg, adequate contrast |
+| Resources | Inline in page | `from-primary/10 via-accent/5` | `text-foreground` | `py-12 md:py-20` | OK |
+| Broadcast | `HeroVideo.tsx` | Video + gradient overlay | White | Full height `60-70vh` | OK (unique layout) |
+| Apply | Inline | None (plain bg) | Standard | `py-6 md:py-10` | Minimal, OK for form page |
 
-**Fix**:
-- File: `src/components/landing/Header.tsx` (line 38)
-  - Change `overflow-hidden` to `overflow-visible` on the desktop nav container, and use `flex-shrink` with `min-w-0` to let the nav compress without clipping items
-- File: `src/components/landing/DesktopNav.tsx` (line 60)
-  - Remove `overflow-x-auto` from NavigationMenuList and use `flex-wrap` or ensure items don't get clipped
+---
 
-### Phase 2: "Who We Are" Dropdown Not Opening
+### Phase 1: Create Reusable `PageHero` Component
 
-**Root Cause Found**: The console shows a `validateDOMNesting` error -- `<a>` cannot appear inside `<a>`. In `DesktopNav.tsx`, navigation links wrap `<Link>` (which renders `<a>`) inside `<NavigationMenuLink>` (which also renders `<a>`). This causes the Radix navigation menu to malfunction.
+Create `src/components/common/PageHero.tsx` with three background variants:
 
-**Fix**:
-- File: `src/components/landing/DesktopNav.tsx`
-  - For all plain links (Home, Services, Majors, etc.), use `NavigationMenuLink asChild` with `Link` inside -- matching the pattern already used in `ListItem.tsx`
-  - This eliminates the nested `<a>` tags and restores proper Radix state management for dropdowns
+- **`gradient`** (default): Uses the brand primary-to-primary/80 gradient with guaranteed dark background and white text
+- **`light`**: Light neutral background (`bg-secondary`) with dark text
+- **`image`**: Background image with dark overlay ensuring white text readability
 
-### Phase 3: AI Advisor Mobile Scroll Fix
+Props:
+- `title: string`
+- `subtitle?: string`
+- `variant?: 'gradient' | 'light' | 'image'`
+- `imageUrl?: string` (for image variant)
+- `badge?: string` (optional top badge)
+- `children?: ReactNode` (for custom content like buttons or selects)
 
-**Current State**: The page uses `h-screen overflow-hidden` on the outer div, but the chat container uses `overflow-y-auto` correctly. The issue is the hard `h-screen` which doesn't account for mobile browser chrome (address bar).
+Standardized spacing: `pt-16 pb-12 sm:pt-20 sm:pb-16 md:pt-28 md:pb-20` -- ensures consistent top padding that accounts for the sticky 56px/64px navbar without content touching it.
 
-**Fix**:
-- File: `src/pages/AIAdvisorPage.tsx`
-  - Replace `h-screen` with `h-[100dvh]` (dynamic viewport height) to handle mobile browser chrome
-  - Ensure `-webkit-overflow-scrolling: touch` is applied to the scrollable chat area
+Contrast rules enforced in the component:
+- `gradient` and `image` variants: always use `text-white` with dark overlay
+- `light` variant: always use `text-foreground` on light bg
+- No semi-transparent text on gradient edges
 
-### Phase 4: Mobile Sidebar Scrollability
+### Phase 2: Replace Individual Hero Components
 
-**Current State**: The MobileNav Sheet already uses `SheetContent` which has built-in scroll. The issue may be content overflow within the sheet.
+**Files to modify** (replace custom hero with `PageHero`):
 
-**Fix**:
-- File: `src/components/landing/MobileNav.tsx`
-  - Add `overflow-y-auto max-h-[calc(100vh-4rem)]` to the inner `<nav>` element
-  - Convert the "More" section into an accordion/collapsible using the existing `Collapsible` component for cleaner UX with smooth animation
+1. **`src/components/services/ServicesHero.tsx`** -- Replace gradient-to-background (contrast issue) with `PageHero variant="gradient"`
+2. **`src/components/landing/ContactHero.tsx`** -- Replace gradient-to-background with `PageHero variant="gradient"`
+3. **`src/components/about/AboutIntro.tsx`** -- Replace with `PageHero variant="light"`
+4. **`src/components/educational/HeroSection.tsx`** -- Replace with `PageHero variant="light"` with badge
+5. **`src/pages/WhoWeArePage.tsx`** (inline hero) -- Replace with `PageHero variant="image"`
+6. **`src/pages/PartnersPage.tsx`** (inline hero) -- Replace with `PageHero variant="light"` with badge
+7. **`src/pages/ResourcesPage.tsx`** (inline hero) -- Replace with `PageHero variant="light"`
+8. **`src/components/partnership/PartnershipHero.tsx`** -- Replace with `PageHero variant="image"` with CTA button as children
 
-### Phase 5: Majors Page Cleanup
+**NOT changed** (unique layouts that require custom structure):
+- `Hero.tsx` (landing page) -- Full viewport video hero, unique
+- `HeroVideo.tsx` (broadcast) -- Full-height video player, unique
+- `HousingHero.tsx` -- Has interactive city selector, keep as custom but fix spacing
+- `ApplyPage.tsx` -- Minimal form page, not a traditional hero
 
-**Issue 1 -- Orange square with broken text**: This is likely a rendering artifact from the search highlight function or a missing translation. The `highlightText` function in `MajorCard.tsx` uses regex splitting which can produce empty fragments.
+### Phase 3: Fix Navbar Contrast
 
-**Fix**:
-- File: `src/components/educational/MajorCard.tsx`
-  - Add safety check in `highlightText` to filter out empty parts
-  - Ensure all text sources have fallback values
+The navbar is already solid white with dark text (`bg-white border-b`), which is correct. No transparent-over-hero mode needed since the header is sticky and always solid.
 
-**Issue 2 -- "Choose Your Major" button**: This is the CTA in `CTASection.tsx` or `HeroSection.tsx`. Need to verify the click handler and route.
+Verify:
+- All nav link text uses `text-gray-700` (already does)
+- Hover states use `text-orange-500` (already does)
+- No opacity on nav links (confirmed clean)
 
-**Fix**:
-- File: `src/components/educational/CTASection.tsx`
-  - Verify the button links to `/apply` or scrolls to the majors grid
-  - Ensure proper `Link` or `onClick` handler is wired
+### Phase 4: Fix Housing Hero Spacing
 
-### Phase 6: Remove Dark Mode Completely
+Update `HousingHero.tsx` to use consistent top padding matching the new standard: `pt-16 pb-12 sm:pt-20 sm:pb-16` instead of the current flat `py-16`.
 
-**Scope**: Dark mode is used in 2 files (hook + LanguageSwitcher) and referenced with `dark:` classes in 7 files. The `.dark` CSS block is in `base.css`.
+### Phase 5: Mobile Validation
 
-**Files to modify**:
-
-1. `src/hooks/useDarkMode.ts` -- DELETE this file entirely
-2. `src/components/common/LanguageSwitcher.tsx` -- Remove dark mode toggle button, remove `useDarkMode` import, keep only the language toggle
-3. `src/styles/base.css` -- Remove the entire `.dark { ... }` CSS variable block (lines 38-66)
-4. `src/pages/BroadcastPage.tsx` -- Remove `dark:bg-gray-950` and `dark:bg-muted/20` classes
-5. `src/pages/ApplyPage.tsx` -- Remove `dark:bg-green-900/30` class
-6. `src/components/broadcast/SubmitVideo.tsx` -- Remove `dark:bg-muted/20` class
-7. `src/components/calculator/currency-comparator/BestResultCard.tsx` -- Remove all `dark:` classes
-8. `src/components/calculator/currency-comparator/ResultsTable.tsx` -- Remove `dark:bg-green-900/20` class
-9. `src/components/ui/alert.tsx` -- Remove `dark:border-destructive` class
-10. Clear `darb_theme` from localStorage on app init to clean up stale preference
-
-### Phase 7: Regression Cleanup
-
-- Fix the nested `<a>` DOM warning in DesktopNav (covered in Phase 2)
-- Ensure Header works at 80%-200% zoom by testing flex behavior
-- Verify no `display:none` is applied to nav items (session replay showed this happening)
-- Confirm all routes still work after changes
+The `PageHero` component will include:
+- Responsive font sizes via Tailwind (`text-2xl sm:text-3xl md:text-4xl lg:text-5xl`)
+- Container padding (`px-4 sm:px-6`)
+- Max-width on subtitle text (`max-w-3xl mx-auto`)
+- No horizontal overflow
 
 ---
 
 ### Technical File Summary
 
-| Phase | File | Action |
-|-------|------|--------|
-| 1 | `src/components/landing/Header.tsx` | Fix overflow-hidden clipping nav items |
-| 1 | `src/components/landing/DesktopNav.tsx` | Fix overflow-x-auto clipping |
-| 2 | `src/components/landing/DesktopNav.tsx` | Fix nested `<a>` tags with `asChild` pattern |
-| 3 | `src/pages/AIAdvisorPage.tsx` | Use `100dvh`, add touch scroll |
-| 4 | `src/components/landing/MobileNav.tsx` | Add scroll + collapsible "More" section |
-| 5 | `src/components/educational/MajorCard.tsx` | Fix highlight function edge cases |
-| 5 | `src/components/educational/CTASection.tsx` | Verify CTA button handler |
-| 6 | `src/hooks/useDarkMode.ts` | Delete file |
-| 6 | `src/components/common/LanguageSwitcher.tsx` | Remove dark toggle, keep language only |
-| 6 | `src/styles/base.css` | Remove `.dark` CSS block |
-| 6 | 5 component files | Remove `dark:` Tailwind classes |
-| 7 | Cross-cutting | Regression verification |
+| File | Action |
+|------|--------|
+| `src/components/common/PageHero.tsx` | **CREATE** -- Reusable hero with 3 variants |
+| `src/components/services/ServicesHero.tsx` | Replace with PageHero (fixes contrast) |
+| `src/components/landing/ContactHero.tsx` | Replace with PageHero (fixes contrast) |
+| `src/components/about/AboutIntro.tsx` | Replace with PageHero variant="light" |
+| `src/components/educational/HeroSection.tsx` | Replace with PageHero + badge (fixes cramped spacing) |
+| `src/components/partnership/PartnershipHero.tsx` | Replace with PageHero variant="image" + CTA children |
+| `src/pages/WhoWeArePage.tsx` | Replace inline hero with PageHero variant="image" |
+| `src/pages/PartnersPage.tsx` | Replace inline hero with PageHero variant="light" |
+| `src/pages/ResourcesPage.tsx` | Replace inline hero with PageHero variant="light" |
+| `src/components/housing/HousingHero.tsx` | Fix top padding consistency |
 
 ### Implementation Order
-1. Phase 2 first (fixes the DOM nesting error which cascades to Phase 1)
-2. Phase 1 (header overflow fix)
-3. Phase 6 (dark mode removal -- clean sweep)
-4. Phase 3 (AI Advisor scroll)
-5. Phase 4 (Mobile sidebar)
-6. Phase 5 (Majors page)
-7. Phase 7 (verification)
+
+1. Create `PageHero` component
+2. Replace all simple hero sections (Services, Contact, About, Educational, Resources, Partners)
+3. Replace image-based heroes (Partnership, WhoWeAre)
+4. Fix Housing hero spacing
+5. Visual verification across all pages
+
