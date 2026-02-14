@@ -114,22 +114,8 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); setLoading(false); return; }
 
     if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
-      await (supabase as any).from('commissions').insert({
-        case_id: caseId, influencer_amount: Number(editValues.influencer_commission) || 0,
-        lawyer_amount: Number(editValues.lawyer_commission) || 0, status: 'approved',
-      });
-
-      const lead = leads.find(l => l.id === originalCase?.lead_id);
-      if (lead?.source_type === 'influencer' && lead?.source_id) {
-        await (supabase as any).from('rewards').insert({
-          user_id: lead.source_id,
-          amount: Number(editValues.influencer_commission) || 0,
-          status: 'pending',
-        });
-        toast({ title: t('cases.commissionsCreated'), description: t('cases.commissionsCreatedDesc') });
-      } else {
-        toast({ title: t('cases.commissionsOnly'), description: t('cases.commissionsOnlyDesc') });
-      }
+      // Commissions and rewards are now auto-created by DB trigger (auto_split_payment)
+      toast({ title: t('cases.commissionsCreated'), description: t('cases.commissionsCreatedDesc') });
     }
 
     setLoading(false); setEditingCase(null);

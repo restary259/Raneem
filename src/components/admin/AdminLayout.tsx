@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet, BarChart3, CheckCircle, Settings
+  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet, BarChart3, CheckCircle, Settings, DollarSign
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +45,7 @@ const sidebarGroups = [
   {
     labelKey: 'admin.groups.finance',
     items: [
+      { id: 'money', labelKey: 'admin.tabs.money', icon: DollarSign },
       { id: 'payouts', labelKey: 'admin.tabs.payouts', icon: Wallet },
     ],
   },

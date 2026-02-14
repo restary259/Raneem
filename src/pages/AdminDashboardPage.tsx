@@ -19,6 +19,7 @@ import KPIAnalytics from '@/components/admin/KPIAnalytics';
 import CustomNotifications from '@/components/admin/CustomNotifications';
 import ReadyToApplyTable from '@/components/admin/ReadyToApplyTable';
 import EligibilityConfig from '@/components/admin/EligibilityConfig';
+import MoneyDashboard from '@/components/admin/MoneyDashboard';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -212,6 +213,8 @@ const AdminDashboardPage = () => {
         return <PayoutsManagement onRefresh={fetchAllData} />;
       case 'analytics':
         return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
+      case 'money':
+        return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} />;
       case 'ready':
         return <ReadyToApplyTable />;
       case 'eligibility':
