@@ -23,6 +23,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({
     first_name: '', surname: '', email: '', phone: '', country: '', city: '', dob: '', gender: '', german_level: '',
+    education_level: '', passport_type: '', english_units: '', math_units: '',
   });
 
   const updateField = (field: string, value: string) => {
@@ -52,9 +53,12 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
     }
     setIsLoading(true);
     try {
+      const fullName = `${form.first_name} ${form.surname}`.trim();
+      
+      // 1. Insert referral
       const { error } = await (supabase as any).from('referrals').insert({
         referrer_id: userId, referrer_type: 'student',
-        referred_name: `${form.first_name} ${form.surname}`.trim(),
+        referred_name: fullName,
         referred_email: form.email, referred_phone: form.phone,
         referred_country: form.country || null, referred_city: form.city || null,
         referred_dob: form.dob || null, referred_gender: form.gender || null,
@@ -62,8 +66,27 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
         is_family: isFamily, status: 'pending', terms_accepted_at: new Date().toISOString(),
       });
       if (error) throw error;
+
+      // 2. Auto-create lead via RPC
+      try {
+        await (supabase as any).rpc('insert_lead_from_apply', {
+          p_full_name: fullName,
+          p_phone: form.phone,
+          p_city: form.city || null,
+          p_education_level: form.education_level || null,
+          p_german_level: form.german_level || null,
+          p_passport_type: form.passport_type || null,
+          p_english_units: form.english_units ? parseInt(form.english_units) : null,
+          p_math_units: form.math_units ? parseInt(form.math_units) : null,
+          p_source_type: 'referral',
+          p_source_id: userId,
+        });
+      } catch (leadErr) {
+        console.warn('Auto-lead creation failed (non-blocking):', leadErr);
+      }
+
       toast({ title: t('referrals.success') });
-      setForm({ first_name: '', surname: '', email: '', phone: '', country: '', city: '', dob: '', gender: '', german_level: '' });
+      setForm({ first_name: '', surname: '', email: '', phone: '', country: '', city: '', dob: '', gender: '', german_level: '', education_level: '', passport_type: '', english_units: '', math_units: '' });
       setIsFamily(false);
       setTermsAccepted(false);
     } catch (err: any) {
@@ -132,7 +155,41 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 md:col-span-2">
+
+            {/* Eligibility fields */}
+            <div className="space-y-2">
+              <Label>{t('referrals.educationLevel', { defaultValue: 'المستوى التعليمي' })}</Label>
+              <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
+                <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel', { defaultValue: 'اختر' })} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bagrut">{t('referrals.bagrut', { defaultValue: 'بجروت' })}</SelectItem>
+                  <SelectItem value="diploma">{t('referrals.diploma', { defaultValue: 'دبلوم' })}</SelectItem>
+                  <SelectItem value="bachelor">{t('referrals.bachelor', { defaultValue: 'بكالوريوس' })}</SelectItem>
+                  <SelectItem value="master">{t('referrals.master', { defaultValue: 'ماجستير' })}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('referrals.passportType', { defaultValue: 'نوع جواز السفر' })}</Label>
+              <Select value={form.passport_type} onValueChange={v => updateField('passport_type', v)}>
+                <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel', { defaultValue: 'اختر' })} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="israeli_blue">{t('referrals.israeliBlue', { defaultValue: 'إسرائيلي أزرق' })}</SelectItem>
+                  <SelectItem value="israeli_red">{t('referrals.israeliRed', { defaultValue: 'إسرائيلي أحمر' })}</SelectItem>
+                  <SelectItem value="other">{t('referrals.otherPassport', { defaultValue: 'آخر' })}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('referrals.englishUnits', { defaultValue: 'وحدات الإنجليزي' })}</Label>
+              <Input type="number" min="0" max="5" value={form.english_units} onChange={e => updateField('english_units', e.target.value)} placeholder="3-5" />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('referrals.mathUnits', { defaultValue: 'وحدات الرياضيات' })}</Label>
+              <Input type="number" min="0" max="5" value={form.math_units} onChange={e => updateField('math_units', e.target.value)} placeholder="3-5" />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
               <Label htmlFor="ref_german">{t('referrals.germanLevel')}</Label>
               <Select value={form.german_level} onValueChange={v => updateField('german_level', v)}>
                 <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel')} /></SelectTrigger>

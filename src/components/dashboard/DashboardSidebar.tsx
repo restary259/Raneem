@@ -29,7 +29,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
 
   return (
     <div className="lg:w-64">
-      <Card>
+      <Card className="lg:bg-[#1E293B] lg:text-white lg:border-0">
         <CardContent className="p-0">
           <nav className="space-y-1">
             {tabs.map((tab) => {
@@ -38,13 +38,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-muted transition-colors rounded-xl ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-start transition-colors rounded-xl ${
                     activeTab === tab.id
-                      ? 'bg-accent/10 text-accent border-s-4 border-accent font-semibold'
-                      : 'text-muted-foreground'
+                      ? 'bg-accent/20 lg:text-white text-accent border-s-4 border-accent font-semibold lg:shadow-[0_0_12px_rgba(234,88,12,0.3)]'
+                      : 'text-muted-foreground lg:text-white/70 hover:bg-muted lg:hover:bg-white/10 lg:hover:text-white'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5 shrink-0" />
                   {t(tab.labelKey)}
                 </button>
               );

@@ -39,10 +39,27 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   const pendingAmount = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const paidAmount = rewards.filter(r => r.status === 'paid').reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
+  // 20-day payout lock logic
+  const LOCK_DAYS = 20;
+  const now = new Date();
+  const pendingRewards = rewards.filter(r => r.status === 'pending');
+  const allUnlocked = pendingRewards.length > 0 && pendingRewards.every(r => {
+    const created = new Date(r.created_at);
+    const diffDays = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= LOCK_DAYS;
+  });
+  const nextUnlockDate = pendingRewards.length > 0
+    ? pendingRewards.reduce((latest, r) => {
+        const unlock = new Date(new Date(r.created_at).getTime() + LOCK_DAYS * 24 * 60 * 60 * 1000);
+        return unlock > latest ? unlock : latest;
+      }, new Date(0))
+    : null;
+  const daysUntilUnlock = nextUnlockDate ? Math.max(0, Math.ceil((nextUnlockDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+  const canRequestPayout = pendingRewards.length > 0 && allUnlocked;
+
   const requestPayout = async () => {
-    const pendingRewards = rewards.filter(r => r.status === 'pending');
-    if (!pendingRewards.length) {
-      toast({ title: t('rewards.noPendingRewards') });
+    if (!canRequestPayout) {
+      toast({ title: t('rewards.payoutLocked', { defaultValue: `يمكنك طلب الدفع بعد ${daysUntilUnlock} يوم` }) });
       return;
     }
     for (const r of pendingRewards) {
@@ -79,9 +96,16 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
         </Card>
       </div>
 
-      <Button onClick={requestPayout} className="w-full sm:w-auto">
-        {t('rewards.requestPayout')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={requestPayout} className="w-full sm:w-auto" disabled={!canRequestPayout}>
+          {t('rewards.requestPayout')}
+        </Button>
+        {!canRequestPayout && pendingRewards.length > 0 && daysUntilUnlock > 0 && (
+          <Badge variant="secondary" className="text-xs">
+            🔒 {t('rewards.lockRemaining', { defaultValue: `${daysUntilUnlock} يوم متبقي` })}
+          </Badge>
+        )}
+      </div>
 
       {milestones.length > 0 && (
         <Card>
