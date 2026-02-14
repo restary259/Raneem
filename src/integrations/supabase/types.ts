@@ -900,18 +900,28 @@ export type Database = {
           accommodation_status: string | null
           assigned_lawyer_id: string | null
           case_status: string
+          country_of_birth: string | null
           created_at: string
           id: string
           influencer_commission: number
+          intensive_course: string | null
+          language_proficiency: string | null
           lawyer_commission: number
           lead_id: string
+          nationality: string | null
           notes: string | null
           paid_at: string | null
+          passport_number: string | null
           referral_discount: number
           school_commission: number
           selected_city: string | null
           selected_school: string | null
           service_fee: number
+          student_address: string | null
+          student_age: number | null
+          student_email: string | null
+          student_full_name: string | null
+          student_phone: string | null
           student_profile_id: string | null
           translation_fee: number
           updated_at: string
@@ -920,18 +930,28 @@ export type Database = {
           accommodation_status?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
+          country_of_birth?: string | null
           created_at?: string
           id?: string
           influencer_commission?: number
+          intensive_course?: string | null
+          language_proficiency?: string | null
           lawyer_commission?: number
           lead_id: string
+          nationality?: string | null
           notes?: string | null
           paid_at?: string | null
+          passport_number?: string | null
           referral_discount?: number
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
           service_fee?: number
+          student_address?: string | null
+          student_age?: number | null
+          student_email?: string | null
+          student_full_name?: string | null
+          student_phone?: string | null
           student_profile_id?: string | null
           translation_fee?: number
           updated_at?: string
@@ -940,18 +960,28 @@ export type Database = {
           accommodation_status?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
+          country_of_birth?: string | null
           created_at?: string
           id?: string
           influencer_commission?: number
+          intensive_course?: string | null
+          language_proficiency?: string | null
           lawyer_commission?: number
           lead_id?: string
+          nationality?: string | null
           notes?: string | null
           paid_at?: string | null
+          passport_number?: string | null
           referral_discount?: number
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
           service_fee?: number
+          student_address?: string | null
+          student_age?: number | null
+          student_email?: string | null
+          student_full_name?: string | null
+          student_phone?: string | null
           student_profile_id?: string | null
           translation_fee?: number
           updated_at?: string
