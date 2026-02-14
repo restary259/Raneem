@@ -1,218 +1,225 @@
 
 
-## Phase 2: Admin Dashboard Overhaul
+## Phase 4: Student Dashboard Overhaul
 
-This phase transforms the Admin Dashboard from a flat list-based view into a high-signal command center with funnel visualization, paginated data, multi-filters, a "Ready to Apply" table, and a configurable eligibility engine panel.
-
----
-
-### 2A. Paginated Data Loading
-
-**Problem**: `AdminDashboardPage.tsx` fetches ALL leads, cases, profiles, payments, contacts, etc. in one `Promise.all` on load (lines 76-92). This will not scale past 1000 rows (Supabase default limit) and causes slow initial loads.
-
-**Solution**:
-
-1. **Keep aggregate stats as full queries** (counts are fine -- they're lightweight).
-2. **Paginate leads and cases** inside their respective management components rather than the parent page.
-3. Move data fetching for leads/cases OUT of `AdminDashboardPage` and INTO `LeadsManagement` and `CasesManagement` directly. Each component will manage its own pagination state.
-4. Add a `useAdminLeads(page, filters)` hook pattern:
-   - Fetch 50 rows per page
-   - Return `{ data, totalCount, isLoading, fetchMore }`
-   - "Load More" button at bottom of list
-5. For overview stats, use `.select('id', { count: 'exact', head: true })` queries to get counts without loading all rows.
-
-**Files to modify**:
-- `src/pages/AdminDashboardPage.tsx` -- Remove leads/cases from bulk fetch; pass only aggregate counts to Overview
-- `src/components/admin/LeadsManagement.tsx` -- Add internal paginated fetch with "Load More"
-- `src/components/admin/CasesManagement.tsx` -- Same pattern
+This phase fixes all hardcoded strings in MyApplicationTab, upgrades the progress tracker to the full 10-stage funnel, adds ref_code display, upcoming appointment details, and connects document status to the checklist.
 
 ---
 
-### 2B. Enhanced Admin Overview with Sparklines
+### 4A. Fix MyApplicationTab i18n (Replace all `isAr` ternaries)
 
-**Current state**: `AdminOverview.tsx` shows 11 stat cards in a grid. No charts, no trends.
+**Current problem**: `MyApplicationTab.tsx` uses `isAr ? 'Arabic' : 'English'` ternaries for ALL strings (~20 instances) instead of `t()` keys.
 
-**Changes**:
+**Changes to `MyApplicationTab.tsx`**:
+- Remove `const isAr = i18n.language === 'ar';` pattern
+- Replace every ternary with `t()` calls using new keys under `application.*`
 
-1. **Redesign KPI Row** to 6 high-signal cards (2 rows of 3 on desktop, stack on mobile):
-   - New Leads Today (count of leads created today)
-   - Eligible Leads (count + percentage)
-   - Conversion Rate (paid cases / total leads)
-   - Revenue This Month (sum of service_fee + school_commission for paid cases this month)
-   - Housing Commission Expected (sum of school_commission for ready_to_apply cases)
-   - Influencer ROI (revenue from influencer leads / influencer payouts)
-
-2. **Add sparkline mini-charts** using recharts (already installed) inside each card showing 7-day trend. Data comes from grouping leads/cases by `created_at` date.
-
-3. **Remove zero-tip hints** -- they add clutter. Show "0" with muted styling instead.
-
-4. **Add a "Quick Funnel Summary"** strip below KPIs showing stage counts in a horizontal bar.
-
-**Files to create**:
-- `src/components/admin/SparklineCard.tsx` -- Reusable stat card with embedded mini line chart
-
-**Files to modify**:
-- `src/components/admin/AdminOverview.tsx` -- Full redesign with new layout and sparklines
+Strings to replace:
+| Current pattern | New key |
+|----------------|---------|
+| `isAr ? 'جار التحميل...' : 'Loading...'` | `t('application.loading')` |
+| `isAr ? 'لا يوجد ملف تقديم بعد' : 'No application found yet'` | `t('application.noApplication')` |
+| `isAr ? 'سيظهر ملفك هنا بعد تسجيلك لدينا' : 'Your application will appear...'` | `t('application.noApplicationDesc')` |
+| `isAr ? 'تقدم الطلب' : 'Application Progress'` | `t('application.progress')` |
+| `isAr ? 'المدينة' : 'City'` | `t('application.city')` |
+| `isAr ? 'المدرسة' : 'School'` | `t('application.school')` |
+| `isAr ? 'السكن' : 'Accommodation'` | `t('application.accommodation')` |
+| `isAr ? 'لم يُحدد' : 'Not set'` | `t('application.notSet')` |
+| `isAr ? 'المدفوعات' : 'Payments'` | `t('application.payments')` |
+| Payment type labels (service_fee, school_payment, translation) | `t('application.paymentTypes.service_fee')` etc. |
+| `isAr ? 'مدفوع' : 'Paid'` / `isAr ? 'معلق' : 'Pending'` | `t('application.paid')` / `t('application.pending')` |
+| CASE_STEPS labels | Use `t('application.steps.assigned')` etc. |
 
 ---
 
-### 2C. Funnel Visualization Component
+### 4B. Upgrade to 10-Stage Progress Bar
 
-**New component**: `src/components/admin/FunnelVisualization.tsx`
+**Current state**: `CASE_STEPS` array has 8 stages with hardcoded Arabic/English labels.
 
-A horizontal pipeline showing the 10 funnel stages with animated counts:
+**New approach**: Replace with the full 10-stage funnel aligned with the system:
 
 ```text
-[Lead Submitted] -> [Scored] -> [Assigned] -> [Contacted] -> [Appointment] -> [Paid] -> [Ready] -> [Applied] -> [Visa] -> [Settled]
-     42               38          30            25             18             12         8           5           3          1
+assigned -> contacted -> appointment -> paid -> ready_to_apply -> registration_submitted -> visa_stage -> settled -> completed
 ```
 
-**Implementation details**:
+Remove `closed` (not a student-visible stage). The progress bar will show 9 student-facing stages.
 
-1. Map leads by `status` and cases by `case_status` into the 10 stages
-2. Each stage is a rounded pill/box with:
-   - Stage name (translated via `t()`)
-   - Count
-   - Color gradient (cool blue on left to warm green on right)
-   - Connecting arrows between stages
-3. Click a stage to filter -- emits an `onStageClick(stage)` callback that sets a filter in LeadsManagement
-4. Responsive: horizontal scroll on mobile, wraps on tablet, full row on desktop
-5. Animated number transitions using CSS transitions on count changes
+Each step label comes from `t('application.steps.VALUE')` translation keys.
 
-**Files to create**:
-- `src/components/admin/FunnelVisualization.tsx`
-
-**Files to modify**:
-- `src/components/admin/AdminOverview.tsx` -- Embed FunnelVisualization below KPI cards
-- `public/locales/en/dashboard.json` -- Add `funnel.*` translation keys for all 10 stages
-- `public/locales/ar/dashboard.json` -- Same
+**Visual upgrade**: Replace the simple `<Progress>` bar with a timeline-style stepper:
+- Horizontal on desktop, vertical on mobile
+- Each step shows a circle (filled if completed, outlined if future, highlighted if current)
+- Current step has a pulsing animation
+- Step labels below each circle
+- Color progression: completed steps in green, current in primary/blue, future in gray
 
 ---
 
-### 2D. "Ready to Apply" Table
+### 4C. Enhanced Application View with Ref Code
 
-**New component**: `src/components/admin/ReadyToApplyTable.tsx`
+**Add ref_code display**: Fetch the linked lead's `ref_code` via the `student_cases.lead_id` foreign key.
 
-A dedicated admin tab (added to sidebar under "Students" group) showing cases where `case_status = 'ready_to_apply'`.
+**Query change**: Update the fetch query to join with leads:
+```
+.select('*, leads!student_cases_lead_id_fkey(ref_code, full_name, eligibility_score)')
+```
 
-**Features**:
-1. Table with columns: Ref Code | Student Name | City | School | Course | Accommodation | Assigned Staff | Payment Date
-2. Checkbox selection per row for bulk actions
-3. "Select All" header checkbox
-4. "Export for School" button -- generates CSV (XLSX in Phase 6) with selected rows
-5. Filter by city (dropdown) and school (dropdown) at the top
-6. Sort by payment date (default: newest first)
+Wait -- there's no explicit FK constraint named that way. Instead, fetch the lead separately using `studentCase.lead_id`.
 
-**Integration**:
-- Add `{ id: 'ready', labelKey: 'admin.tabs.ready', icon: CheckCircle }` to the Students group in `AdminLayout.tsx` sidebar
-- Add `case 'ready':` to `renderContent()` in `AdminDashboardPage.tsx`
-- Fetch data internally (self-contained component with own query)
-
-**Files to create**:
-- `src/components/admin/ReadyToApplyTable.tsx`
-
-**Files to modify**:
-- `src/components/admin/AdminLayout.tsx` -- Add sidebar item
-- `src/pages/AdminDashboardPage.tsx` -- Add case in renderContent
-- `public/locales/en/dashboard.json` -- Add `admin.tabs.ready` and table column keys
-- `public/locales/ar/dashboard.json` -- Same
+**New UI element**: A prominent badge/card at the top showing:
+- Ref code (e.g., "DARB-1042") in a large monospace font
+- Eligibility score badge
+- Case creation date
 
 ---
 
-### 2E. Multi-Filter System for Leads
+### 4D. Upcoming Appointment Details
 
-**Current state**: `LeadsManagement.tsx` has search (name/phone) and status filter only.
+**Add appointment section**: Query the `appointments` table for appointments linked to the student's case.
 
-**Add these filters** (horizontally arranged filter bar, collapsible on mobile):
+```typescript
+const { data: appointments } = await supabase
+  .from('appointments')
+  .select('*')
+  .eq('case_id', caseData.id)
+  .gte('scheduled_at', new Date().toISOString())
+  .order('scheduled_at', { ascending: true })
+  .limit(3);
+```
 
-1. **City filter** -- `<Select>` populated from distinct `preferred_city` values in leads
-2. **School filter** -- `<Select>` populated from distinct `selected_school` in linked cases
-3. **Assigned Staff filter** -- `<Select>` from lawyers list
-4. **Influencer Source filter** -- `<Select>` from influencers list (only show leads where `source_type = 'influencer'`)
-5. **Date range** -- "This Week" / "This Month" / "All Time" quick filters
-6. **Companion filter** -- "Has Companion" toggle to find group applications
+**Note**: Students currently cannot SELECT from `appointments` table (RLS only allows lawyers and admins). We need a new RLS policy so students can view appointments linked to their case.
 
-All filters combine with AND logic. Show active filter count badge. "Clear All" button.
-
-**Files to modify**:
-- `src/components/admin/LeadsManagement.tsx` -- Add filter bar, update filtering logic
-- `public/locales/en/dashboard.json` -- Add filter label keys
-- `public/locales/ar/dashboard.json` -- Same
+**New UI card**: "Upcoming Appointments" section showing:
+- Date and time
+- Duration
+- Location (if set)
+- Staff name (from case's assigned_lawyer_id profile)
+- Status badge
 
 ---
 
-### 2F. Eligibility Config Panel
+### 4E. Database Migration: Student Appointment Visibility
 
-**New component**: `src/components/admin/EligibilityConfig.tsx`
+Add RLS policy on `appointments` table so students can view appointments for their cases:
 
-An admin-only settings panel for managing the eligibility scoring engine.
-
-**Features**:
-
-1. **Weights Table**: Lists all rows from `eligibility_config` table
-   - Columns: Field Name (label) | Weight (editable number input) | Active (toggle switch)
-   - Total weight shown at bottom (should sum to 100)
-   - Warning badge if total != 100
-
-2. **Thresholds Section**: Reads from `eligibility_thresholds` table
-   - "Eligible minimum" (default 70) -- editable
-   - "Review minimum" (default 40) -- editable
-   - Visual preview: color-coded bar showing the three zones
-
-3. **Save button**: Updates all weights and thresholds in one batch
-   - Logs change to `admin_audit_log`
-   - Shows success toast
-
-4. **"Reset to Defaults" button**: Restores original weights with confirmation dialog
-
-**Integration**:
-- Add `{ id: 'eligibility', labelKey: 'admin.tabs.eligibility', icon: Settings }` to the Tools group in `AdminLayout.tsx` sidebar
-- Add `case 'eligibility':` to `renderContent()` in `AdminDashboardPage.tsx`
-
-**Files to create**:
-- `src/components/admin/EligibilityConfig.tsx`
-
-**Files to modify**:
-- `src/components/admin/AdminLayout.tsx` -- Add sidebar item
-- `src/pages/AdminDashboardPage.tsx` -- Add case in renderContent
-- `public/locales/en/dashboard.json` -- Add eligibility config keys
-- `public/locales/ar/dashboard.json` -- Same
+```sql
+CREATE POLICY "Students can view appointments for their cases"
+  ON public.appointments
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM student_cases sc
+      WHERE sc.id = appointments.case_id
+      AND sc.student_profile_id = auth.uid()
+    )
+  );
+```
 
 ---
 
 ### Translation Keys to Add
 
-**English (`dashboard.json`)**:
-- `funnel.leadSubmitted`, `funnel.scored`, `funnel.assigned`, `funnel.contacted`, `funnel.appointment`, `funnel.paid`, `funnel.readyToApply`, `funnel.applicationSubmitted`, `funnel.visaStage`, `funnel.settled`
-- `admin.tabs.ready`, `admin.tabs.eligibility`
-- `admin.ready.*` (table headers, export button, select all, no results)
-- `admin.eligibility.*` (weights, thresholds, save, reset, total, warning)
-- `admin.filters.*` (city, school, staff, source, dateRange, companion, clearAll, activeFilters)
-- `admin.overview.newLeadsToday`, `admin.overview.conversionRate`, `admin.overview.housingCommission`, `admin.overview.influencerROI`
+**English (`dashboard.json`)** -- new `application` section:
 
-**Arabic (`dashboard.json`)**: Mirror of all above keys.
+```json
+"application": {
+  "loading": "Loading...",
+  "noApplication": "No application found yet",
+  "noApplicationDesc": "Your application will appear here after registration",
+  "progress": "Application Progress",
+  "city": "City",
+  "school": "School",
+  "accommodation": "Accommodation",
+  "notSet": "Not set",
+  "payments": "Payments",
+  "paid": "Paid",
+  "pending": "Pending",
+  "refCode": "Reference Code",
+  "score": "Eligibility Score",
+  "createdAt": "Application Date",
+  "upcomingAppointments": "Upcoming Appointments",
+  "noAppointments": "No upcoming appointments",
+  "duration": "{{minutes}} min",
+  "withStaff": "with {{name}}",
+  "paymentTypes": {
+    "service_fee": "Service Fee",
+    "school_payment": "School Payment",
+    "translation": "Translation"
+  },
+  "steps": {
+    "assigned": "Assigned",
+    "contacted": "Contacted",
+    "appointment": "Appointment",
+    "paid": "Paid",
+    "ready_to_apply": "Ready to Apply",
+    "registration_submitted": "Registration Submitted",
+    "visa_stage": "Visa Stage",
+    "settled": "Settled",
+    "completed": "Completed"
+  }
+}
+```
+
+**Arabic (`dashboard.json`)** -- mirror:
+
+```json
+"application": {
+  "loading": "جار التحميل...",
+  "noApplication": "لا يوجد ملف تقديم بعد",
+  "noApplicationDesc": "سيظهر ملفك هنا بعد تسجيلك لدينا",
+  "progress": "تقدم الطلب",
+  "city": "المدينة",
+  "school": "المدرسة",
+  "accommodation": "السكن",
+  "notSet": "لم يُحدد",
+  "payments": "المدفوعات",
+  "paid": "مدفوع",
+  "pending": "معلق",
+  "refCode": "رمز المرجع",
+  "score": "درجة الأهلية",
+  "createdAt": "تاريخ التقديم",
+  "upcomingAppointments": "المواعيد القادمة",
+  "noAppointments": "لا توجد مواعيد قادمة",
+  "duration": "{{minutes}} دقيقة",
+  "withStaff": "مع {{name}}",
+  "paymentTypes": {
+    "service_fee": "رسوم الخدمة",
+    "school_payment": "دفعة المدرسة",
+    "translation": "ترجمة"
+  },
+  "steps": {
+    "assigned": "معيّن",
+    "contacted": "تم التواصل",
+    "appointment": "موعد",
+    "paid": "مدفوع",
+    "ready_to_apply": "جاهز للتقديم",
+    "registration_submitted": "تم تقديم التسجيل",
+    "visa_stage": "مرحلة الفيزا",
+    "settled": "تم الاستقرار",
+    "completed": "مكتمل"
+  }
+}
+```
 
 ---
 
-### Implementation Order
+### Technical File Summary
 
-1. Add all new translation keys to both locale files
-2. Create `SparklineCard.tsx` and redesign `AdminOverview.tsx`
-3. Create `FunnelVisualization.tsx` and embed in Overview
-4. Refactor `LeadsManagement.tsx` with pagination + multi-filters
-5. Refactor `CasesManagement.tsx` with pagination
-6. Create `ReadyToApplyTable.tsx` + wire into AdminLayout/AdminDashboardPage
-7. Create `EligibilityConfig.tsx` + wire into AdminLayout/AdminDashboardPage
-8. Update `AdminDashboardPage.tsx` to remove bulk data fetching for leads/cases
+| File | Action |
+|------|--------|
+| `public/locales/en/dashboard.json` | Add `application.*` section (~25 keys) |
+| `public/locales/ar/dashboard.json` | Add `application.*` section (~25 keys) |
+| `src/components/dashboard/MyApplicationTab.tsx` | Full rewrite: remove all `isAr` ternaries, use `t()`, add 10-stage timeline stepper, add ref_code card, add appointments section |
+| DB Migration | Add RLS policy for students to view their case appointments |
 
 ---
 
-### Design Principles Applied
+### Design Notes
 
-- Light theme only, high contrast, no decorative gradients on dashboard cards
-- 8px spacing grid, rounded-xl corners consistent with existing components
-- Status colors only: Green (Paid/Settled), Yellow (Pending), Red (Overdue/Not eligible)
-- Mobile-first: cards stack vertically, filter bar collapses
-- No unnecessary toggles or duplicate actions
-- Every label uses `t()` keys -- zero hardcoded strings
+- Timeline stepper uses the existing brand colors: green for completed, primary blue for current, gray for future
+- Ref code displayed in a monospace font with a subtle copy button
+- Appointment cards match the existing Card component style with rounded-2xl
+- Mobile-first: timeline goes vertical on small screens
+- All spacing follows the 8px grid
+- No decorative gradients -- clean, high-contrast cards only
 
