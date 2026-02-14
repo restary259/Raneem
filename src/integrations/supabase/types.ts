@@ -593,6 +593,63 @@ export type Database = {
           },
         ]
       }
+      payout_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          id: string
+          linked_reward_ids: string[]
+          linked_student_names: string[] | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_method: string | null
+          reject_reason: string | null
+          requested_at: string
+          requestor_id: string
+          requestor_role: string
+          status: string
+          transaction_ref: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          linked_reward_ids?: string[]
+          linked_student_names?: string[] | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          reject_reason?: string | null
+          requested_at?: string
+          requestor_id: string
+          requestor_role?: string
+          status?: string
+          transaction_ref?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          linked_reward_ids?: string[]
+          linked_student_names?: string[] | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          reject_reason?: string | null
+          requested_at?: string
+          requestor_id?: string
+          requestor_role?: string
+          status?: string
+          transaction_ref?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -940,6 +997,53 @@ export type Database = {
             columns: ["checklist_item_id"]
             isOneToOne: false
             referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_log: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          payout_request_id: string | null
+          related_student_ids: string[] | null
+          transaction_ref: string | null
+          type: string
+        }
+        Insert: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payout_request_id?: string | null
+          related_student_ids?: string[] | null
+          transaction_ref?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payout_request_id?: string | null
+          related_student_ids?: string[] | null
+          transaction_ref?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_log_payout_request_id_fkey"
+            columns: ["payout_request_id"]
+            isOneToOne: false
+            referencedRelation: "payout_requests"
             referencedColumns: ["id"]
           },
         ]
