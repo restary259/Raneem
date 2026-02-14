@@ -21,7 +21,7 @@ const CustomNotifications: React.FC = () => {
   const { toast } = useToast();
 
   const roleLabels: Record<string, string> = {
-    lawyer: t('admin.notifications.lawyers'),
+    lawyer: t('admin.notifications.teamMembers'),
     user: t('admin.notifications.students'),
     influencer: t('admin.notifications.agents'),
   };

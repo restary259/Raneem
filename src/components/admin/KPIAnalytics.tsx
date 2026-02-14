@@ -103,8 +103,8 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
     }).filter(a => a.leads > 0).slice(0, 8);
   }, [influencers, filteredLeads, filteredCases, leads]);
 
-  // Lawyer performance
-  const lawyerData = useMemo(() => {
+  // Team member performance
+  const teamMemberData = useMemo(() => {
     return lawyers.map(lawyer => {
       const lc = filteredCases.filter(c => c.assigned_lawyer_id === lawyer.id);
       const closed = lc.filter(c => ['paid', 'completed', 'closed'].includes(c.case_status)).length;
@@ -251,12 +251,12 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
         </Card>
       )}
 
-      {/* Lawyer Performance Cards */}
-      {lawyerData.length > 0 && (
+      {/* Team Member Performance Cards */}
+      {teamMemberData.length > 0 && (
         <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><Users className="h-5 w-5" />{t('kpi.lawyerPerformance')}</h2>
+          <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><Users className="h-5 w-5" />{t('kpi.teamPerformance')}</h2>
           <div className="grid gap-3">
-            {lawyerData.map(l => (
+            {teamMemberData.map(l => (
               <Card key={l.id}><CardContent className="p-4">
                 <h3 className="font-semibold mb-2">{l.full_name}</h3>
                 <div className="grid grid-cols-3 gap-2 text-sm">

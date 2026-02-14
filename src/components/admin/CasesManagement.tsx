@@ -65,7 +65,7 @@ const FINANCIAL_FIELDS = ['service_fee', 'influencer_commission', 'lawyer_commis
 const FINANCIAL_FIELD_KEYS: Record<string, string> = {
   service_fee: 'cases.serviceFee',
   influencer_commission: 'cases.agentComm',
-  lawyer_commission: 'cases.lawyerComm',
+  lawyer_commission: 'cases.teamMemberComm',
   referral_discount: 'cases.referralDiscount',
   school_commission: 'cases.schoolComm',
   translation_fee: 'cases.translationFee',
@@ -81,7 +81,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const { t } = useTranslation('dashboard');
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || t('lawyer.unknown');
-  const getLawyerName = (lawyerId: string | null) => lawyerId ? lawyers.find(l => l.id === lawyerId)?.full_name || t('cases.notAssigned') : t('cases.notAssigned');
+  const getTeamMemberName = (lawyerId: string | null) => lawyerId ? lawyers.find(l => l.id === lawyerId)?.full_name || t('cases.notAssigned') : t('cases.notAssigned');
 
   const startEdit = (c: StudentCase) => {
     setEditingCase(c.id);
@@ -149,9 +149,9 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const getNetProfit = (c: StudentCase) => c.service_fee + c.school_commission - c.influencer_commission - c.lawyer_commission - c.referral_discount - c.translation_fee;
 
   const exportCSV = () => {
-    const headers = [t('admin.students.name'), t('cases.lawyerLabel'), t('lawyer.cityLabel'), t('lawyer.schoolLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.lawyerComm'), t('cases.netProfit'), t('admin.referralsMgmt.date')];
+    const headers = [t('admin.students.name'), t('cases.teamMemberLabel'), t('lawyer.cityLabel'), t('lawyer.schoolLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.teamMemberComm'), t('cases.netProfit'), t('admin.referralsMgmt.date')];
     const rows = cases.map(c => [
-      getLeadName(c.lead_id), getLawyerName(c.assigned_lawyer_id), c.selected_city || '', c.selected_school || '',
+      getLeadName(c.lead_id), getTeamMemberName(c.assigned_lawyer_id), c.selected_city || '', c.selected_school || '',
       t(`cases.statuses.${c.case_status}`, c.case_status),
       c.service_fee, c.influencer_commission, c.lawyer_commission, getNetProfit(c),
       new Date(c.created_at).toLocaleDateString(),
@@ -206,7 +206,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                           );
                         })()}
                       </div>
-                      <p className="text-xs text-muted-foreground">{t('cases.lawyerLabel')} {getLawyerName(c.assigned_lawyer_id)}</p>
+                      <p className="text-xs text-muted-foreground">{t('cases.teamMemberLabel')} {getTeamMemberName(c.assigned_lawyer_id)}</p>
                       {c.selected_city && <p className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</p>}
                     </div>
                     <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{c.service_fee} €</span></div>
                         <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">{c.influencer_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.lawyerComm')}</span><span className="font-semibold text-red-700">{c.lawyer_commission} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.teamMemberComm')}</span><span className="font-semibold text-red-700">{c.lawyer_commission} €</span></div>
                         <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">{c.referral_discount} €</span></div>
                         <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{c.school_commission} €</span></div>
                         <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">{c.translation_fee} €</span></div>
