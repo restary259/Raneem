@@ -22,7 +22,7 @@ const OfficeLocations = () => {
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-5 w-5 text-accent" />
-              <span>+972 52-940-2168</span>
+              <span>+972 524061225</span>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-accent" />

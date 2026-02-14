@@ -154,4 +154,14 @@
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .pl-safe { padding-left: env(safe-area-inset-left); }
   .pr-safe { padding-right: env(safe-area-inset-right); }
+
+  /* Active press states */
+  button:not(:disabled),
+  a:not(:disabled) {
+    @apply transition-transform duration-100;
+  }
+  button:not(:disabled):active,
+  a:not(:disabled):active {
+    transform: scale(0.95);
+  }
 }

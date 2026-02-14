@@ -100,4 +100,12 @@
   [dir="ltr"] .text-start {
     text-align: left;
   }
+
+  /* Checkbox/Toggle shrink fix */
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="checkbox"],
+  [role="switch"] {
+    flex-shrink: 0;
+  }
 }
