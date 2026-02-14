@@ -673,6 +673,17 @@
     "paidNotice": "تم إرسال إشعار للإدارة لتأكيد الدفع. لن يتم تفعيل العمولات حتى التأكيد.",
     "website": "الموقع",
     "signOut": "خروج",
+    "quickCall": "اتصال",
+    "markContacted": "تم التواصل",
+    "contactLogged": "تم تسجيل التواصل",
+    "slaBreached": "تجاوز 24 ساعة",
+    "todaySchedule": "جدول اليوم",
+    "kpi": {
+      "activeLeads": "ملفات نشطة",
+      "todayAppts": "مواعيد اليوم",
+      "paidThisMonth": "مدفوع هذا الشهر",
+      "slaWarnings": "تحذيرات SLA"
+    },
     "statuses": {
       "assigned": "معيّن",
       "contacted": "تم التواصل",

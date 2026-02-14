@@ -673,6 +673,17 @@
     "paidNotice": "A notification has been sent to admin to confirm payment. Commissions will not be activated until confirmed.",
     "website": "Website",
     "signOut": "Sign Out",
+    "quickCall": "Call",
+    "markContacted": "Mark Contacted",
+    "contactLogged": "Contact logged",
+    "slaBreached": "SLA 24h",
+    "todaySchedule": "Today's Schedule",
+    "kpi": {
+      "activeLeads": "Active Leads",
+      "todayAppts": "Today's Appointments",
+      "paidThisMonth": "Paid This Month",
+      "slaWarnings": "SLA Warnings"
+    },
     "statuses": {
       "assigned": "Assigned",
       "contacted": "Contacted",
