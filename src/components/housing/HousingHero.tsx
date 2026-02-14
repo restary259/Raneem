@@ -54,7 +54,7 @@ const HousingHero: React.FC<HousingHeroProps> = ({ onCitySelect }) => {
   };
 
   return (
-    <section className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white py-16 px-4">
+    <section className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white pt-16 pb-12 sm:pt-20 sm:pb-16 px-4">
       <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
           {t('housing.heroTitle', 'Find Your Student Accommodation')}

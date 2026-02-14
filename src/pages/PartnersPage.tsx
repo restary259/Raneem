@@ -5,9 +5,9 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import EnhancedPartnersPage from '@/components/partners/EnhancedPartnersPage';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { MapPin, Users, GraduationCap, Award } from 'lucide-react';
 import SEOHead from '@/components/common/SEOHead';
+import PageHero from '@/components/common/PageHero';
 
 const PartnersPage = () => {
   const { t } = useTranslation(['partners', 'common']);
@@ -45,18 +45,11 @@ const PartnersPage = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="py-8 sm:py-12 md:py-20 bg-gradient-to-b from-primary/5 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4">
-              شركاؤنا حول العالم
-            </Badge>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-              {t('partnersPage.heroTitle')}
-            </h1>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        variant="light"
+        title={t('partnersPage.heroTitle')}
+        badge="شركاؤنا حول العالم"
+      />
 
       {/* Stats Section */}
       <section className="py-8 sm:py-12 bg-white">

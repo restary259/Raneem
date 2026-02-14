@@ -6,6 +6,7 @@ import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandsha
 import { Button } from "@/components/ui/button";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import SEOHead from "@/components/common/SEOHead";
+import PageHero from "@/components/common/PageHero";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 
@@ -30,17 +31,12 @@ const WhoWeArePage = () => {
             <SEOHead title={t('seo.whoWeAreTitle', { ns: 'common' })} description={t('seo.whoWeAreDesc', { ns: 'common' })} />
             <Header />
             <main className="flex-grow">
-                <section className="relative bg-background py-24 md:py-36 text-center text-white">
-                    <div className="absolute inset-0 bg-black/60 z-0">
-                        <img src="https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80" alt={t('whoWeAre.heroAlt')} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="container mx-auto px-4 relative z-10 animate-fade-in">
-                        <h1 className="text-4xl md:text-6xl font-bold drop-shadow-lg mb-4">{t('whoWeAre.heroTitle')}</h1>
-                        <p className="max-w-3xl mx-auto text-lg md:text-xl text-white/90 drop-shadow-md">
-                            {t('whoWeAre.heroSubtitle')}
-                        </p>
-                    </div>
-                </section>
+                <PageHero
+                    variant="image"
+                    imageUrl="https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80"
+                    title={t('whoWeAre.heroTitle')}
+                    subtitle={t('whoWeAre.heroSubtitle')}
+                />
 
                 <section className="py-16 md:py-24 bg-secondary/20">
                     <div className="container mx-auto px-4">
