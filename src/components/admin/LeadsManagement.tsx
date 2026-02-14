@@ -120,7 +120,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     const { data: cases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
     if (cases?.[0]) { await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', cases[0].id); }
     setLoading(false);
-    toast({ title: t('admin.leads.lawyerAssigned') });
+    toast({ title: t('admin.leads.teamMemberAssigned') });
     setAssignModal(null); setSelectedLawyer(''); onRefresh();
   };
 
@@ -249,7 +249,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                 )}
                 {lead.status === 'eligible' && (
                   <Button size="sm" variant="outline" onClick={() => setAssignModal({ leadId: lead.id, leadName: lead.full_name })} disabled={loading}>
-                    <Gavel className="h-3.5 w-3.5 me-1" />{t('admin.leads.assignLawyer')}
+                    <Gavel className="h-3.5 w-3.5 me-1" />{t('admin.leads.assignTeamMember')}
                   </Button>
                 )}
               </CardContent>
@@ -314,15 +314,15 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         </DialogContent>
       </Dialog>
 
-      {/* Assign Lawyer Modal */}
+      {/* Assign Team Member Modal */}
       <Dialog open={!!assignModal} onOpenChange={() => setAssignModal(null)}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>{t('admin.leads.assignLawyerTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('admin.leads.assignTeamMemberTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
           <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
-            <SelectTrigger><SelectValue placeholder={t('admin.leads.selectLawyer')} /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
             <SelectContent>
               {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
-              {lawyers.length === 0 && <SelectItem value="none" disabled>{t('admin.leads.noLawyers')}</SelectItem>}
+              {lawyers.length === 0 && <SelectItem value="none" disabled>{t('admin.leads.noTeamMembers')}</SelectItem>}
             </SelectContent>
           </Select>
           <DialogFooter>

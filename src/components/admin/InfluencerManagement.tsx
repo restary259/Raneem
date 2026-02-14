@@ -98,7 +98,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="influencer">{t('team.roleInfluencer')}</SelectItem>
-                    <SelectItem value="lawyer">{t('team.roleLawyer')}</SelectItem>
+                    <SelectItem value="lawyer">{t('team.roleTeamMember')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -128,7 +128,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold text-sm break-all">{inf.full_name}</span>
-                  <Badge variant="outline">{inf._role === 'lawyer' ? t('team.lawyerRole') : t('team.agent')}</Badge>
+                  <Badge variant="outline">{inf._role === 'lawyer' ? t('team.teamMemberRole') : t('team.agent')}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground break-all">{inf.email}</p>
                 <div className="flex items-center justify-between gap-2">
@@ -159,7 +159,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
                 <tr key={inf.id} className="border-b hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{inf.full_name}</td>
                   <td className="px-4 py-3 text-muted-foreground break-all">{inf.email}</td>
-                  <td className="px-4 py-3"><Badge variant="outline">{inf._role === 'lawyer' ? t('team.lawyerRole') : t('team.agent')}</Badge></td>
+                  <td className="px-4 py-3"><Badge variant="outline">{inf._role === 'lawyer' ? t('team.teamMemberRole') : t('team.agent')}</Badge></td>
                   <td className="px-4 py-3"><Badge variant="secondary">{inf._role === 'influencer' ? getStudentCount(inf.id) : '—'}</Badge></td>
                   <td className="px-4 py-3"><Badge variant={inf.student_status === 'inactive' ? 'destructive' : 'default'}>{inf.student_status === 'inactive' ? t('team.inactive') : t('team.active')}</Badge></td>
                   <td className="px-4 py-3"><ActionButtons member={inf} /></td>

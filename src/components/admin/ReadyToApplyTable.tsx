@@ -57,18 +57,18 @@ const ReadyToApplyTable: React.FC = () => {
       setCases([]);
     }
 
-    const { data: lawyerRoles } = await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer');
-    if (lawyerRoles && lawyerRoles.length > 0) {
+    const { data: teamRoles } = await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer');
+    if (teamRoles && teamRoles.length > 0) {
       const { data: profiles } = await (supabase as any)
         .from('profiles')
         .select('id, full_name')
-        .in('id', lawyerRoles.map((r: any) => r.user_id));
+        .in('id', teamRoles.map((r: any) => r.user_id));
       if (profiles) setLawyers(profiles);
     }
     setLoading(false);
   };
 
-  const getLawyerName = (id: string | null) => id ? lawyers.find(l => l.id === id)?.full_name || '—' : '—';
+  const getTeamMemberName = (id: string | null) => id ? lawyers.find(l => l.id === id)?.full_name || '—' : '—';
 
   const cities = [...new Set(cases.map(c => c.selected_city).filter(Boolean))] as string[];
 
@@ -86,7 +86,7 @@ const ReadyToApplyTable: React.FC = () => {
     const headers = [t('admin.ready.refCode'), t('admin.ready.name'), t('admin.ready.city'), t('admin.ready.school'), t('admin.ready.accommodation'), t('admin.ready.staff'), t('admin.ready.paymentDate')];
     const csvRows = rows.map(r => [
       r.ref_code || '', r.lead_name, r.selected_city || '', r.selected_school || '',
-      r.accommodation_status || '', getLawyerName(r.assigned_lawyer_id),
+      r.accommodation_status || '', getTeamMemberName(r.assigned_lawyer_id),
       r.paid_at ? new Date(r.paid_at).toLocaleDateString(locale) : '',
     ]);
     const csv = [headers.join(','), ...csvRows.map(r => r.join(','))].join('\n');
@@ -159,7 +159,7 @@ const ReadyToApplyTable: React.FC = () => {
                       <td className="p-3">{c.selected_city || '—'}</td>
                       <td className="p-3">{c.selected_school || '—'}</td>
                       <td className="p-3">{c.accommodation_status || '—'}</td>
-                      <td className="p-3">{getLawyerName(c.assigned_lawyer_id)}</td>
+                      <td className="p-3">{getTeamMemberName(c.assigned_lawyer_id)}</td>
                       <td className="p-3">{c.paid_at ? new Date(c.paid_at).toLocaleDateString() : '—'}</td>
                     </tr>
                   ))}
