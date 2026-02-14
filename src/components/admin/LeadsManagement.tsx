@@ -66,7 +66,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [overrideModal, setOverrideModal] = useState<Lead | null>(null);
   const [overrideScore, setOverrideScore] = useState('');
   const [overrideStatus, setOverrideStatus] = useState('');
-  const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '' });
+  const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '' });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -86,12 +86,16 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       german_level: newLead.german_level || null, budget_range: newLead.budget_range || null,
       preferred_city: newLead.preferred_city || null, accommodation: newLead.accommodation,
       source_type: newLead.source_type, eligibility_score: newLead.eligibility_score ? parseInt(newLead.eligibility_score) : null,
+      passport_type: newLead.passport_type || null,
+      english_units: newLead.english_units ? parseInt(newLead.english_units) : null,
+      math_units: newLead.math_units ? parseInt(newLead.math_units) : null,
+      email: newLead.email || null,
     });
     setLoading(false);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
     toast({ title: t('admin.leads.added') });
     setShowAddModal(false);
-    setNewLead({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '' });
+    setNewLead({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '' });
     onRefresh();
   };
 
@@ -425,12 +429,61 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{t('admin.leads.addLeadTitle')}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2"><Label>{t('admin.leads.fullName')}</Label><Input value={newLead.full_name} onChange={e => setNewLead(p => ({ ...p, full_name: e.target.value }))} /></div>
-            <div><Label>{t('admin.leads.phone')}</Label><Input value={newLead.phone} onChange={e => setNewLead(p => ({ ...p, phone: e.target.value }))} /></div>
+            <div className="sm:col-span-2"><Label>{t('admin.leads.fullName')} *</Label><Input value={newLead.full_name} onChange={e => setNewLead(p => ({ ...p, full_name: e.target.value }))} /></div>
+            <div><Label>{t('admin.leads.phone')} *</Label><Input value={newLead.phone} onChange={e => setNewLead(p => ({ ...p, phone: e.target.value }))} /></div>
+            <div><Label>{t('admin.leads.email', 'Email')}</Label><Input type="email" value={newLead.email} onChange={e => setNewLead(p => ({ ...p, email: e.target.value }))} /></div>
             <div><Label>{t('admin.leads.city')}</Label><Input value={newLead.city} onChange={e => setNewLead(p => ({ ...p, city: e.target.value }))} /></div>
             <div><Label>{t('admin.leads.age')}</Label><Input type="number" value={newLead.age} onChange={e => setNewLead(p => ({ ...p, age: e.target.value }))} /></div>
-            <div><Label>{t('admin.leads.germanLevel')}</Label><Input value={newLead.german_level} onChange={e => setNewLead(p => ({ ...p, german_level: e.target.value }))} /></div>
-            <div className="sm:col-span-2"><Label>{t('admin.leads.eligibilityScore')}</Label><Input type="number" value={newLead.eligibility_score} onChange={e => setNewLead(p => ({ ...p, eligibility_score: e.target.value }))} /></div>
+            <div>
+              <Label>{t('admin.leads.passportType', 'Passport Type')}</Label>
+              <Select value={newLead.passport_type} onValueChange={v => setNewLead(p => ({ ...p, passport_type: v }))}>
+                <SelectTrigger><SelectValue placeholder={t('admin.leads.selectPassport', 'Select')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="israeli_blue">{t('admin.leads.israeliBlue', 'Israeli Blue')}</SelectItem>
+                  <SelectItem value="israeli_red">{t('admin.leads.israeliRed', 'Israeli Red')}</SelectItem>
+                  <SelectItem value="other">{t('admin.leads.otherPassport', 'Other')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t('admin.leads.educationLevel', 'Education Level')}</Label>
+              <Select value={newLead.education_level} onValueChange={v => setNewLead(p => ({ ...p, education_level: v }))}>
+                <SelectTrigger><SelectValue placeholder={t('admin.leads.selectEducation', 'Select')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bagrut">{t('admin.leads.bagrut', 'Bagrut')}</SelectItem>
+                  <SelectItem value="bachelor">{t('admin.leads.bachelor', 'Bachelor')}</SelectItem>
+                  <SelectItem value="master">{t('admin.leads.master', 'Master')}</SelectItem>
+                  <SelectItem value="other">{t('admin.leads.otherEducation', 'Other')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>{t('admin.leads.englishCol', 'English Units')}</Label><Input type="number" min="0" max="5" value={newLead.english_units} onChange={e => setNewLead(p => ({ ...p, english_units: e.target.value }))} /></div>
+            <div><Label>{t('admin.leads.mathCol', 'Math Units')}</Label><Input type="number" min="0" max="5" value={newLead.math_units} onChange={e => setNewLead(p => ({ ...p, math_units: e.target.value }))} /></div>
+            <div>
+              <Label>{t('admin.leads.germanLevel')}</Label>
+              <Select value={newLead.german_level} onValueChange={v => setNewLead(p => ({ ...p, german_level: v }))}>
+                <SelectTrigger><SelectValue placeholder={t('admin.leads.selectGerman', 'Select')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('admin.leads.germanNone', 'None')}</SelectItem>
+                  <SelectItem value="beginner">{t('admin.leads.germanBeginner', 'Beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('admin.leads.germanIntermediate', 'Intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('admin.leads.germanAdvanced', 'Advanced')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>{t('admin.leads.preferredCity', 'Preferred City')}</Label><Input value={newLead.preferred_city} onChange={e => setNewLead(p => ({ ...p, preferred_city: e.target.value }))} /></div>
+            <div className="sm:col-span-2">
+              <Label>{t('admin.leads.source', 'Source')}</Label>
+              <Select value={newLead.source_type} onValueChange={v => setNewLead(p => ({ ...p, source_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="organic">{t('lawyer.sources.organic', 'Organic')}</SelectItem>
+                  <SelectItem value="referral">{t('lawyer.sources.referral', 'Referral')}</SelectItem>
+                  <SelectItem value="influencer">{t('lawyer.sources.influencer', 'Influencer')}</SelectItem>
+                  <SelectItem value="contact_form">{t('lawyer.sources.contact_form', 'Contact Form')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={handleAddLead} disabled={loading}>{loading ? t('admin.leads.adding') : t('admin.leads.add')}</Button>
