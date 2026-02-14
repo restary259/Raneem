@@ -187,6 +187,8 @@ const AdminDashboardPage = () => {
             influencers={influencers}
             checklistItems={checklistItems}
             studentChecklists={studentChecklists}
+            lawyers={lawyers}
+            cases={cases.map(c => ({ lead_id: c.lead_id, assigned_lawyer_id: c.assigned_lawyer_id, student_profile_id: c.student_profile_id }))}
             onRefresh={fetchAllData}
           />
         );
@@ -205,7 +207,7 @@ const AdminDashboardPage = () => {
       case 'contacts':
         return <ContactsManager contacts={contacts} onRefresh={fetchAllData} />;
       case 'referrals':
-        return <ReferralManagement onRefresh={fetchAllData} />;
+        return <ReferralManagement onRefresh={fetchAllData} profiles={[...students, ...influencers].map(p => ({ id: p.id, full_name: p.full_name }))} />;
       case 'payouts':
         return <PayoutsManagement onRefresh={fetchAllData} />;
       case 'analytics':

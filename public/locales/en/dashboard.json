@@ -384,8 +384,10 @@
     },
     "referralsMgmt": {
       "all": "All",
-      "name": "Name",
-      "type": "Type",
+      "name": "Student Name",
+      "referredBy": "Referred By",
+      "type": "Referral Type",
+      "familyType": "Family",
       "email": "Email",
       "family": "Family",
       "status": "Status",
@@ -393,7 +395,9 @@
       "agent": "Agent",
       "student": "Student",
       "statusUpdated": "Status updated",
-      "noReferrals": "No referrals"
+      "noReferrals": "No referrals",
+      "deleted": "Referral deleted",
+      "deleteDesc": "This will permanently delete this referral and any associated reward records. This action cannot be undone."
     },
     "payouts": {
       "pendingPayout": "Pending / Awaiting Payout",
@@ -473,7 +477,10 @@
       "deleted": "Deleted"
     },
     "leads": {
-      "searchPlaceholder": "Search by name or phone...",
+      "searchPlaceholder": "Search by name, phone or email...",
+      "source": "Source",
+      "englishCol": "English",
+      "mathCol": "Math",
       "all": "All",
       "new": "New",
       "eligible": "Eligible",

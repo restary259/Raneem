@@ -10,13 +10,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, MapPin, GraduationCap, DollarSign, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Lead {
   id: string;
   full_name: string;
   phone: string;
+  email?: string | null;
   city: string | null;
   age: number | null;
   education_level: string | null;
@@ -33,6 +35,8 @@ interface Lead {
   math_units: number | null;
   status: string;
   created_at: string;
+  ref_code?: string | null;
+  study_destination?: string | null;
 }
 
 interface LeadsManagementProps {
@@ -51,8 +55,10 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 
 
 const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh }) => {
   const { t, i18n } = useTranslation('dashboard');
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterSource, setFilterSource] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignModal, setAssignModal] = useState<{ leadId: string; leadName: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -65,9 +71,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const { toast } = useToast();
 
   const filtered = leads.filter(l => {
-    const matchSearch = l.full_name.toLowerCase().includes(search.toLowerCase()) || l.phone.includes(search);
+    const matchSearch = l.full_name.toLowerCase().includes(search.toLowerCase()) || l.phone.includes(search) || (l.email?.toLowerCase().includes(search.toLowerCase()));
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchSource = filterSource === 'all' || l.source_type === filterSource;
+    return matchSearch && matchStatus && matchSource;
   });
 
   const handleAddLead = async () => {
@@ -107,7 +114,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    // Clean up related records first to avoid FK constraint violations
     const { data: relatedCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', deleteId);
     if (relatedCases?.length) {
       for (const c of relatedCases) {
@@ -131,7 +137,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     if (existingCases?.[0]) {
       await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', existingCases[0].id);
     } else {
-      // Create case if none exists
       const lead = leads.find(l => l.id === assignModal.leadId);
       await (supabase as any).from('student_cases').insert({
         lead_id: assignModal.leadId,
@@ -140,7 +145,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
       });
     }
-    // Audit log
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       await (supabase as any).from('admin_audit_log').insert({
@@ -201,12 +205,45 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   };
 
   const statusKeys = ['new', 'eligible', 'not_eligible', 'assigned'] as const;
+  const sourceTypes = [...new Set(leads.map(l => l.source_type))];
+  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
+
+  const getSourceLabel = (source: string) => String(t(`lawyer.sources.${source}`, { defaultValue: source }));
+  const getInfluencerName = (lead: Lead) => {
+    if (lead.source_type === 'influencer' && lead.source_id) {
+      return influencers.find(i => i.id === lead.source_id)?.full_name || null;
+    }
+    return null;
+  };
+
+  const renderActions = (lead: Lead) => (
+    <div className="flex items-center gap-1 flex-wrap">
+      {lead.status === 'new' && (
+        <>
+          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => markEligible(lead)} disabled={loading}><UserCheck className="h-3 w-3 me-1" />{t('admin.leads.markEligible')}</Button>
+          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => markNotEligible(lead.id)} disabled={loading}><UserX className="h-3 w-3 me-1" />{t('admin.leads.markNotEligible')}</Button>
+        </>
+      )}
+      {lead.status === 'eligible' && (
+        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAssignModal({ leadId: lead.id, leadName: lead.full_name })} disabled={loading}>
+          <Gavel className="h-3 w-3 me-1" />{t('admin.leads.assignTeamMember')}
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setOverrideModal(lead); setOverrideScore(String(lead.eligibility_score ?? 0)); setOverrideStatus(lead.status); }}>
+        <Edit className="h-3.5 w-3.5" />
+      </Button>
+      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(lead.id)}>
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex gap-2 flex-1 w-full sm:w-auto">
-          <div className="relative flex-1">
+        <div className="flex gap-2 flex-1 w-full sm:w-auto flex-wrap">
+          <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder={t('admin.leads.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} className="ps-9" />
           </div>
@@ -217,6 +254,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               {statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.leads.${k === 'not_eligible' ? 'notEligible' : k}`))}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={filterSource} onValueChange={setFilterSource}>
+            <SelectTrigger className="w-32"><SelectValue placeholder={t('admin.leads.source', 'Source')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.leads.all')}</SelectItem>
+              {sourceTypes.map(s => <SelectItem key={s} value={s}>{getSourceLabel(s)}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />{t('admin.leads.exportCSV')}</Button>
@@ -224,72 +268,120 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         </div>
       </div>
 
-      <div className="grid gap-3">
-        {filtered.map(lead => {
-          const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
-          const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
-          const sourceLabel = String(t(`lawyer.sources.${lead.source_type}`, { defaultValue: lead.source_type }));
-          const score = lead.eligibility_score ?? 0;
-          const isEligible = score >= 50;
-          return (
-            <Card key={lead.id} className="shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-bold text-base">{lead.full_name}</h3>
-                    <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-sm text-primary hover:underline mt-1">
-                      <Phone className="h-3.5 w-3.5" />{lead.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={variant}>{statusLabel}</Badge>
-                    <Badge variant="outline" className="text-xs">{sourceLabel}</Badge>
-                    {lead.source_type === 'influencer' && lead.source_id && (() => {
-                      const inf = influencers.find(i => i.id === lead.source_id);
-                      return inf ? <Badge variant="secondary" className="text-xs">{t('admin.leads.via', { name: inf.full_name })}</Badge> : null;
-                    })()}
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(lead.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+      <p className="text-sm text-muted-foreground">{filtered.length} {t('admin.leads.all').toLowerCase()}</p>
 
-                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                  {lead.city && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{lead.city}</span>}
-                  {lead.german_level && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{lead.german_level}</span>}
-                  {lead.passport_type && <span>{t('admin.leads.passport')} {lead.passport_type}</span>}
-                  {lead.english_units != null && <span>{t('admin.leads.englishUnits', { count: lead.english_units })}</span>}
-                  {lead.math_units != null && <span>{t('admin.leads.mathUnits', { count: lead.math_units })}</span>}
-                </div>
-
-                <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
-                  {isEligible ? (
-                    <><CheckCircle className="h-4 w-4 shrink-0" /><span>{t('admin.leads.eligibleLabel', { score })}</span></>
-                  ) : (
-                    <><XCircle className="h-4 w-4 shrink-0" /><span>{t('admin.leads.ineligibleLabel', { reason: lead.eligibility_reason || t('admin.leads.ineligibleDefault'), score })}</span></>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-5 px-1 ms-auto text-xs" onClick={() => { setOverrideModal(lead); setOverrideScore(String(score)); setOverrideStatus(lead.status); }}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                </div>
-
-                {lead.status === 'new' && (
-                  <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="default" onClick={() => markEligible(lead)} disabled={loading}><UserCheck className="h-3.5 w-3.5 me-1" />{t('admin.leads.markEligible')}</Button>
-                    <Button size="sm" variant="destructive" onClick={() => markNotEligible(lead.id)} disabled={loading}><UserX className="h-3.5 w-3.5 me-1" />{t('admin.leads.markNotEligible')}</Button>
+      {/* Desktop Table */}
+      {!isMobile ? (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.city', 'City')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.englishCol', 'English')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
+                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(lead => {
+                    const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
+                    const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
+                    const score = lead.eligibility_score ?? 0;
+                    const isEligible = score >= 50;
+                    const infName = getInfluencerName(lead);
+                    return (
+                      <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="p-3">
+                          <div>
+                            <span className="font-medium">{lead.full_name}</span>
+                            {lead.ref_code && <span className="block text-[10px] font-mono text-muted-foreground">{lead.ref_code}</span>}
+                          </div>
+                        </td>
+                        <td className="p-3 text-muted-foreground">{lead.city || '—'}</td>
+                        <td className="p-3">
+                          <a href={`tel:${lead.phone}`} className="text-primary hover:underline flex items-center gap-1">
+                            <Phone className="h-3 w-3" />{lead.phone}
+                          </a>
+                        </td>
+                        <td className="p-3 text-center">{lead.english_units ?? '—'}</td>
+                        <td className="p-3 text-center">{lead.math_units ?? '—'}</td>
+                        <td className="p-3">
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold ${isEligible ? 'text-emerald-700' : 'text-red-600'}`}>
+                            {isEligible ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                            {score}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="space-y-0.5">
+                            <Badge variant="outline" className="text-[10px]">{getSourceLabel(lead.source_type)}</Badge>
+                            {infName && <span className="block text-[10px] text-muted-foreground">{t('admin.leads.via', { name: infName })}</span>}
+                          </div>
+                        </td>
+                        <td className="p-3"><Badge variant={variant}>{statusLabel}</Badge></td>
+                        <td className="p-3">{renderActions(lead)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Mobile Cards */
+        <div className="grid gap-3">
+          {filtered.map(lead => {
+            const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
+            const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
+            const score = lead.eligibility_score ?? 0;
+            const isEligible = score >= 50;
+            const infName = getInfluencerName(lead);
+            return (
+              <Card key={lead.id} className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-bold text-base">{lead.full_name}</h3>
+                      {lead.ref_code && <span className="text-[10px] font-mono text-muted-foreground">{lead.ref_code}</span>}
+                      <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-sm text-primary hover:underline mt-1">
+                        <Phone className="h-3.5 w-3.5" />{lead.phone}
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <Badge variant={variant}>{statusLabel}</Badge>
+                      <Badge variant="outline" className="text-xs">{getSourceLabel(lead.source_type)}</Badge>
+                    </div>
                   </div>
-                )}
-                {lead.status === 'eligible' && (
-                  <Button size="sm" variant="outline" onClick={() => setAssignModal({ leadId: lead.id, leadName: lead.full_name })} disabled={loading}>
-                    <Gavel className="h-3.5 w-3.5 me-1" />{t('admin.leads.assignTeamMember')}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-        {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
-      </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                    {lead.city && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{lead.city}</span>}
+                    {lead.german_level && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{lead.german_level}</span>}
+                    {lead.english_units != null && <span>{t('admin.leads.englishUnits', { count: lead.english_units })}</span>}
+                    {lead.math_units != null && <span>{t('admin.leads.mathUnits', { count: lead.math_units })}</span>}
+                    {infName && <span className="col-span-2 text-xs">{t('admin.leads.via', { name: infName })}</span>}
+                  </div>
+
+                  <div className={`flex items-center gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
+                    {isEligible ? <CheckCircle className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
+                    <span>{score} pts</span>
+                  </div>
+
+                  {renderActions(lead)}
+                </CardContent>
+              </Card>
+            );
+          })}
+          {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
+        </div>
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

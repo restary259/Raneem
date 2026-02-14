@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, Download, Edit2, Check, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-interface Student { id: string; created_at: string; full_name: string; email: string; student_status: string; influencer_id: string | null; }
+interface Student { id: string; created_at: string; full_name: string; email: string; student_status: string; influencer_id: string | null; city?: string | null; university_name?: string | null; }
 interface Influencer { id: string; full_name: string; }
 interface ChecklistItem { id: string; item_name: string; }
 interface StudentChecklist { id: string; student_id: string; checklist_item_id: string; is_completed: boolean; }
@@ -22,6 +22,8 @@ interface StudentManagementProps {
   influencers: Influencer[];
   checklistItems: ChecklistItem[];
   studentChecklists: StudentChecklist[];
+  lawyers?: { id: string; full_name: string }[];
+  cases?: { lead_id: string; assigned_lawyer_id: string | null; student_profile_id: string | null }[];
   onRefresh: () => void;
 }
 
@@ -35,9 +37,11 @@ const downloadCSV = (rows: any[], fileName = "export.csv") => {
   window.URL.revokeObjectURL(url);
 };
 
-const StudentManagement: React.FC<StudentManagementProps> = ({ students, influencers, checklistItems, studentChecklists, onRefresh }) => {
+const StudentManagement: React.FC<StudentManagementProps> = ({ students, influencers, checklistItems, studentChecklists, lawyers = [], cases = [], onRefresh }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [agentFilter, setAgentFilter] = useState('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState('');
   const [editInfluencer, setEditInfluencer] = useState('');
@@ -47,6 +51,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
   const isMobile = useIsMobile();
 
   const statusKeys = ['eligible', 'ineligible', 'converted', 'paid', 'nurtured'];
+  const cities = [...new Set(students.map(s => s.city).filter(Boolean))] as string[];
 
   const getChecklistProgress = (studentId: string) => {
     const total = checklistItems.length;
@@ -54,10 +59,18 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
     return Math.round((studentChecklists.filter(sc => sc.student_id === studentId && sc.is_completed).length / total) * 100);
   };
 
+  const getTeamMemberName = (studentId: string) => {
+    const sc = cases.find(c => c.student_profile_id === studentId);
+    if (!sc?.assigned_lawyer_id) return null;
+    return lawyers.find(l => l.id === sc.assigned_lawyer_id)?.full_name || null;
+  };
+
   const filteredStudents = students.filter(s => {
     const matchSearch = !search || s.full_name?.toLowerCase().includes(search.toLowerCase()) || s.email?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || s.student_status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchCity = cityFilter === 'all' || s.city === cityFilter;
+    const matchAgent = agentFilter === 'all' || s.influencer_id === agentFilter || (agentFilter === 'none' && !s.influencer_id);
+    return matchSearch && matchStatus && matchCity && matchAgent;
   });
 
   const handleSave = async (studentId: string) => {
@@ -87,12 +100,31 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
           <Input className="ps-10" placeholder={t('admin.students.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue placeholder={t('admin.students.statusFilter')} /></SelectTrigger>
+          <SelectTrigger className="w-32"><SelectValue placeholder={t('admin.students.statusFilter')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.students.all')}</SelectItem>
             {statusKeys.map(k => <SelectItem key={k} value={k}>{String(t(`admin.students.statuses.${k}`, { defaultValue: k }))}</SelectItem>)}
           </SelectContent>
         </Select>
+        {cities.length > 0 && (
+          <Select value={cityFilter} onValueChange={setCityFilter}>
+            <SelectTrigger className="w-32"><SelectValue placeholder={t('admin.leads.city', 'City')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.students.all')}</SelectItem>
+              {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {influencers.length > 0 && (
+          <Select value={agentFilter} onValueChange={setAgentFilter}>
+            <SelectTrigger className="w-36"><SelectValue placeholder={t('admin.students.agent', 'Agent')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.students.all')}</SelectItem>
+              <SelectItem value="none">{t('admin.students.none')}</SelectItem>
+              {influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant="outline" size="sm" onClick={() => downloadCSV(filteredStudents, 'students.csv')}>
           <Download className="h-4 w-4 me-2" />{t('admin.students.exportCSV')}
         </Button>
@@ -104,6 +136,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
             const progress = getChecklistProgress(s.id);
             const isEditing = editingId === s.id;
             const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
+            const teamMember = getTeamMemberName(s.id);
             return (
               <Card key={s.id} className="overflow-hidden">
                 <CardContent className="p-4 space-y-3">
@@ -112,12 +145,14 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                     <Badge variant="secondary">{String(t(`admin.students.statuses.${s.student_status}`, { defaultValue: s.student_status }))}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground break-all">{s.email}</p>
+                  {s.city && <p className="text-xs text-muted-foreground">{s.city}</p>}
                   <div className="flex items-center gap-2">
                     <Progress value={progress} className="h-2 flex-1" />
                     <span className="text-xs text-muted-foreground">{progress}%</span>
                   </div>
                   <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                     <span>{assignedInfluencer?.full_name || '—'}</span>
+                    {teamMember && <Badge variant="outline" className="text-[10px]">{teamMember}</Badge>}
                     <span>{s.created_at?.split('T')[0]}</span>
                   </div>
                   {isEditing ? (
@@ -131,7 +166,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                         <SelectContent><SelectItem value="none">{t('admin.students.none')}</SelectItem>{influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name}</SelectItem>)}</SelectContent>
                       </Select>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 me-1" />{t('admin.students.updateSuccess', 'حفظ')}</Button>
+                        <Button size="sm" onClick={() => handleSave(s.id)}><Check className="h-4 w-4 me-1" />{t('common.save', 'Save')}</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
                       </div>
                     </div>
@@ -154,9 +189,11 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.leads.city', 'City')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
+                <th className="px-4 py-3 text-start font-semibold">{t('admin.ready.staff', 'Team Member')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
                 <th className="px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
               </tr>
@@ -166,10 +203,12 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                 const progress = getChecklistProgress(s.id);
                 const isEditing = editingId === s.id;
                 const assignedInfluencer = influencers.find(i => i.id === s.influencer_id);
+                const teamMember = getTeamMemberName(s.id);
                 return (
                   <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium">{s.full_name}</td>
                     <td className="px-4 py-3 text-muted-foreground break-all">{s.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.city || '—'}</td>
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <Select value={editStatus} onValueChange={setEditStatus}>
@@ -189,6 +228,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
                         </Select>
                       ) : (<span className="text-muted-foreground text-xs">{assignedInfluencer?.full_name || '—'}</span>)}
                     </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{teamMember || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{s.created_at?.split('T')[0]}</td>
                     <td className="px-4 py-3">
                       {isEditing ? (

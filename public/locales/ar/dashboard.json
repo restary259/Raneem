@@ -384,8 +384,10 @@
     },
     "referralsMgmt": {
       "all": "الكل",
-      "name": "الاسم",
-      "type": "النوع",
+      "name": "اسم الطالب",
+      "referredBy": "أحيل بواسطة",
+      "type": "نوع الإحالة",
+      "familyType": "عائلة",
       "email": "البريد",
       "family": "عائلة",
       "status": "الحالة",
@@ -393,7 +395,9 @@
       "agent": "وكيل",
       "student": "طالب",
       "statusUpdated": "تم تحديث الحالة",
-      "noReferrals": "لا توجد إحالات"
+      "noReferrals": "لا توجد إحالات",
+      "deleted": "تم حذف الإحالة",
+      "deleteDesc": "سيتم حذف هذه الإحالة وأي سجلات مكافآت مرتبطة نهائياً. لا يمكن التراجع."
     },
     "payouts": {
       "pendingPayout": "معلّق / بانتظار الصرف",
@@ -473,7 +477,10 @@
       "deleted": "تم الحذف"
     },
     "leads": {
-      "searchPlaceholder": "بحث بالاسم أو الهاتف...",
+      "searchPlaceholder": "بحث بالاسم أو الهاتف أو البريد...",
+      "source": "المصدر",
+      "englishCol": "إنجليزي",
+      "mathCol": "رياضيات",
       "all": "الكل",
       "new": "جديد",
       "eligible": "مؤهل",
