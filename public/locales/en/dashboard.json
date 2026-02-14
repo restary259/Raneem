@@ -244,6 +244,8 @@
       "referrals": "Referrals",
       "payouts": "Rewards & Payouts",
       "analytics": "Analytics",
+      "ready": "Ready to Apply",
+      "eligibility": "Eligibility Engine",
       "security": "Security",
       "audit": "Activity Log",
       "notifications": "Notifications"
@@ -264,21 +266,45 @@
       "topLawyer": "Top Lawyer",
       "topAgent": "Top Agent",
       "of": "of",
-      "zeroTips": {
-        "totalStudents": "Add your first student to get started",
-        "totalPayments": "No payments recorded yet",
-        "newContacts": "No new messages",
-        "agents": "Add your first agent to get started",
-        "uploadedDocs": "No documents uploaded yet",
-        "activeServices": "No active services currently",
-        "newStudentsThisMonth": "No new students this month",
-        "eligiblePct": "No data",
-        "closedPct": "No files yet",
-        "revenue": "No revenue yet",
-        "pendingPayouts": "No pending payouts",
-        "topLawyer": "No data yet",
-        "topInfluencer": "No data yet"
-      }
+      "newLeadsToday": "New Leads Today",
+      "conversionRate": "Conversion Rate",
+      "revenueThisMonth": "Revenue This Month",
+      "housingCommission": "Housing Commission",
+      "influencerROI": "Influencer ROI",
+      "totalLabel": "total",
+      "converted": "converted",
+      "funnelTitle": "Funnel Pipeline"
+    },
+    "ready": {
+      "refCode": "Ref Code",
+      "name": "Student Name",
+      "city": "City",
+      "school": "School",
+      "accommodation": "Accommodation",
+      "staff": "Assigned Staff",
+      "paymentDate": "Payment Date",
+      "filterCity": "Filter by city",
+      "count": "{{count}} students ready",
+      "exportForSchool": "Export for School",
+      "noResults": "No students ready to apply yet"
+    },
+    "eligibility": {
+      "weightsTitle": "Scoring Weights",
+      "thresholdsTitle": "Score Thresholds",
+      "total": "Total Weight",
+      "weightWarning": "Weights should total 100",
+      "eligibleMin": "Eligible Minimum",
+      "reviewMin": "Review Minimum",
+      "notEligible": "Not Eligible",
+      "review": "Needs Review",
+      "eligible": "Eligible",
+      "save": "Save Configuration",
+      "saved": "Configuration saved",
+      "reset": "Reset to Defaults",
+      "resetTitle": "Reset Eligibility Weights?",
+      "resetDesc": "This will restore all weights and thresholds to their default values.",
+      "resetConfirm": "Reset",
+      "resetDone": "Weights reset to defaults"
     },
     "students": {
       "searchPlaceholder": "Search by name or email...",
@@ -596,6 +622,18 @@
     "add": "Add",
     "search": "Search",
     "noData": "No data"
+  },
+  "funnel": {
+    "new": "Lead Submitted",
+    "eligible": "Scored",
+    "assigned": "Assigned",
+    "contacted": "Contacted",
+    "appointment": "Appointment",
+    "paid": "Paid",
+    "ready_to_apply": "Ready",
+    "registration_submitted": "Applied",
+    "visa_stage": "Visa",
+    "settled": "Settled"
   },
   "kpi": {
     "netProfit": "Total Net Profit",

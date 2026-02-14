@@ -17,6 +17,8 @@ import LeadsManagement from '@/components/admin/LeadsManagement';
 import CasesManagement from '@/components/admin/CasesManagement';
 import KPIAnalytics from '@/components/admin/KPIAnalytics';
 import CustomNotifications from '@/components/admin/CustomNotifications';
+import ReadyToApplyTable from '@/components/admin/ReadyToApplyTable';
+import EligibilityConfig from '@/components/admin/EligibilityConfig';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -150,6 +152,10 @@ const AdminDashboardPage = () => {
   const totalPayments = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
   const newContacts = contacts.filter((c: any) => c.status === 'new').length;
 
+  const handleStageClick = (stage: string) => {
+    setActiveTab('leads');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -167,6 +173,7 @@ const AdminDashboardPage = () => {
             rewards={rewards}
             lawyers={lawyers}
             influencers={influencers}
+            onStageClick={handleStageClick}
           />
         );
       case 'leads':
@@ -203,6 +210,10 @@ const AdminDashboardPage = () => {
         return <PayoutsManagement onRefresh={fetchAllData} />;
       case 'analytics':
         return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
+      case 'ready':
+        return <ReadyToApplyTable />;
+      case 'eligibility':
+        return <EligibilityConfig />;
       case 'security':
         return <SecurityPanel loginAttempts={loginAttempts} />;
       case 'notifications':

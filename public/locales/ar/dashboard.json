@@ -244,6 +244,8 @@
       "referrals": "الإحالات",
       "payouts": "المكافآت والصرف",
       "analytics": "التحليلات",
+      "ready": "جاهزون للتقديم",
+      "eligibility": "محرك الأهلية",
       "security": "الأمان",
       "audit": "سجل النشاط",
       "notifications": "الإشعارات"
@@ -264,21 +266,45 @@
       "topLawyer": "أفضل محامي",
       "topAgent": "أفضل وكيل",
       "of": "من",
-      "zeroTips": {
-        "totalStudents": "أضف أول طالب للبدء",
-        "totalPayments": "لم يتم تسجيل مدفوعات بعد",
-        "newContacts": "لا توجد رسائل جديدة",
-        "agents": "أضف أول وكيل للبدء",
-        "uploadedDocs": "لم يتم رفع مستندات بعد",
-        "activeServices": "لا خدمات نشطة حالياً",
-        "newStudentsThisMonth": "لا طلاب جدد هذا الشهر",
-        "eligiblePct": "لا يوجد بيانات",
-        "closedPct": "لا يوجد ملفات بعد",
-        "revenue": "لا إيرادات بعد",
-        "pendingPayouts": "لا مدفوعات معلقة",
-        "topLawyer": "لا بيانات بعد",
-        "topInfluencer": "لا بيانات بعد"
-      }
+      "newLeadsToday": "عملاء جدد اليوم",
+      "conversionRate": "معدل التحويل",
+      "revenueThisMonth": "إيرادات هذا الشهر",
+      "housingCommission": "عمولة السكن",
+      "influencerROI": "عائد الوكلاء",
+      "totalLabel": "إجمالي",
+      "converted": "محوّل",
+      "funnelTitle": "خط الأنابيب"
+    },
+    "ready": {
+      "refCode": "رمز المرجع",
+      "name": "اسم الطالب",
+      "city": "المدينة",
+      "school": "المدرسة",
+      "accommodation": "السكن",
+      "staff": "الموظف المعين",
+      "paymentDate": "تاريخ الدفع",
+      "filterCity": "تصفية حسب المدينة",
+      "count": "{{count}} طالب جاهز",
+      "exportForSchool": "تصدير للمدرسة",
+      "noResults": "لا يوجد طلاب جاهزون للتقديم بعد"
+    },
+    "eligibility": {
+      "weightsTitle": "أوزان التقييم",
+      "thresholdsTitle": "حدود النقاط",
+      "total": "الوزن الإجمالي",
+      "weightWarning": "يجب أن يكون الإجمالي 100",
+      "eligibleMin": "الحد الأدنى للأهلية",
+      "reviewMin": "الحد الأدنى للمراجعة",
+      "notEligible": "غير مؤهل",
+      "review": "يحتاج مراجعة",
+      "eligible": "مؤهل",
+      "save": "حفظ الإعدادات",
+      "saved": "تم حفظ الإعدادات",
+      "reset": "إعادة التعيين",
+      "resetTitle": "إعادة تعيين أوزان الأهلية؟",
+      "resetDesc": "سيتم استعادة جميع الأوزان والحدود إلى قيمها الافتراضية.",
+      "resetConfirm": "إعادة تعيين",
+      "resetDone": "تم إعادة تعيين الأوزان"
     },
     "students": {
       "searchPlaceholder": "بحث بالاسم أو البريد...",
@@ -596,6 +622,18 @@
     "add": "إضافة",
     "search": "بحث",
     "noData": "لا توجد بيانات"
+  },
+  "funnel": {
+    "new": "عميل جديد",
+    "eligible": "تم التقييم",
+    "assigned": "معيّن",
+    "contacted": "تم التواصل",
+    "appointment": "موعد",
+    "paid": "مدفوع",
+    "ready_to_apply": "جاهز",
+    "registration_submitted": "تم التقديم",
+    "visa_stage": "الفيزا",
+    "settled": "مستقر"
   },
   "kpi": {
     "netProfit": "صافي الربح الإجمالي",
