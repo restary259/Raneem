@@ -127,35 +127,12 @@ serve(async (req) => {
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
 
-    // Send credentials via email
-    let email_sent = false;
-    try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      const emailResp = await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          email_type: "team_credentials",
-          user_email: email,
-          user_name: full_name,
-          temp_password: tempPassword,
-        }),
-      });
-      const emailResult = await emailResp.json();
-      email_sent = emailResp.ok && emailResult?.success === true;
-    } catch (emailErr) {
-      console.error("Failed to send credentials email:", emailErr);
-    }
-
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: adminId,
       action: `create_${role}`,
       target_id: userId,
-      details: `Created ${role} account for ${email} (email_sent: ${email_sent})`,
+      details: `Created ${role} account for ${email}`,
     });
 
     return new Response(
@@ -164,10 +141,8 @@ serve(async (req) => {
         user_id: userId,
         email,
         role,
-        email_sent,
-        message: email_sent
-          ? `${role} account created. Credentials sent to ${email}.`
-          : `${role} account created, but email delivery failed.`,
+        temp_password: tempPassword,
+        message: `${role} account created. Share credentials manually.`,
       }),
       {
         status: 200,

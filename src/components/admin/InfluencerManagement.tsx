@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Loader2, UserX, RotateCcw, Trash2 } from 'lucide-react';
+import { UserPlus, Loader2, UserX, RotateCcw, Trash2, Copy, Check } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 
@@ -31,9 +31,11 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
     ...lawyers.map(l => ({ ...l, _role: 'lawyer' })),
   ];
 
+  const [copied, setCopied] = useState(false);
+
   const handleCreate = async () => {
     if (!name || !email) return;
-    setIsCreating(true); setCreatedPassword('');
+    setIsCreating(true); setCreatedPassword(''); setCopied(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
@@ -44,15 +46,19 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
-      setCreatedPassword('sent_via_email');
-      if (result.email_sent === false) {
-        toast({ variant: 'destructive', title: 'Account created, but email failed', description: 'Share credentials manually with the team member.' });
-      } else {
-        toast({ title: t('admin.influencers.createSuccess') });
-      }
+      setCreatedPassword(result.temp_password || '');
+      toast({ title: t('admin.influencers.createSuccess') });
       onRefresh();
     } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
     finally { setIsCreating(false); }
+  };
+
+  const copyPassword = () => {
+    if (createdPassword) {
+      navigator.clipboard.writeText(createdPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const getStudentCount = (influencerId: string) => students.filter(s => s.influencer_id === influencerId).length;
@@ -110,10 +116,23 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <div><Label>{t('admin.influencers.fullName')}</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder={t('team.namePlaceholder')} /></div>
               <div><Label>{t('admin.influencers.email')}</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
               {createdPassword && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                  <p className="text-sm font-semibold text-green-800">{t('admin.influencers.accountCreated')}</p>
-                  <p className="text-xs text-green-700">{t('team.emailSent', { email })}</p>
-                  <p className="text-xs text-green-600">{t('team.passwordChangeNote')}</p>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-semibold text-amber-800">✅ تم إنشاء الحساب بنجاح</p>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">البريد الإلكتروني:</p>
+                    <p className="text-sm font-mono bg-background border rounded px-2 py-1">{email}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">كلمة المرور المؤقتة:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm font-mono bg-background border rounded px-2 py-1 select-all">{createdPassword}</code>
+                      <Button size="sm" variant="outline" onClick={copyPassword}>
+                        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-amber-700 font-medium">⚠️ شارك هذه البيانات يدوياً مع العضو (واتساب، رسالة مباشرة، إلخ)</p>
+                  <p className="text-xs text-muted-foreground">سيُطلب منه تغيير كلمة المرور عند أول تسجيل دخول.</p>
                 </div>
               )}
               {!createdPassword && (

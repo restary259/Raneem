@@ -7,7 +7,7 @@ interface PasswordStrengthProps {
 }
 
 const RULES = [
-  { label: '8 أحرف على الأقل', test: (p: string) => p.length >= 8 },
+  { label: '10 أحرف على الأقل', test: (p: string) => p.length >= 10 },
   { label: 'حرف كبير (A-Z)', test: (p: string) => /[A-Z]/.test(p) },
   { label: 'حرف صغير (a-z)', test: (p: string) => /[a-z]/.test(p) },
   { label: 'رقم (0-9)', test: (p: string) => /[0-9]/.test(p) },

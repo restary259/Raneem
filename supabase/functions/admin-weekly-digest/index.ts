@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const weekAgoISO = weekAgo.toISOString();
 
-    // Gather KPIs for the week
     const [leadsRes, casesRes, profilesRes, referralsRes] = await Promise.all([
       serviceClient.from("leads").select("id, status, created_at").gte("created_at", weekAgoISO),
       serviceClient.from("student_cases").select("id, case_status, service_fee, school_commission, created_at, paid_at").gte("created_at", weekAgoISO),
@@ -35,7 +34,7 @@ Deno.serve(async (req) => {
     const paidCases = casesRes.data?.filter(c => c.case_status === "paid" || c.case_status === "completed") || [];
     const weekRevenue = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
 
-    // Get admin emails
+    // Get admin user IDs
     const { data: adminRoles } = await serviceClient
       .from("user_roles")
       .select("user_id")
@@ -47,55 +46,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminIds = adminRoles.map(r => r.user_id);
-    const { data: adminProfiles } = await serviceClient
-      .from("profiles")
-      .select("id, email, full_name")
-      .in("id", adminIds);
-
-    if (!adminProfiles || adminProfiles.length === 0) {
-      return new Response(JSON.stringify({ message: "No admin profiles found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Send digest email to each admin via send-branded-email
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    let sent = 0;
-
-    for (const admin of adminProfiles) {
-      if (!admin.email) continue;
-
-      try {
-        await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({
-            email_type: "weekly_digest",
-            user_email: admin.email,
-            user_name: admin.full_name,
-            digest_data: {
-              newLeads,
-              newCases,
-              newStudents,
-              newReferrals,
-              weekRevenue,
-              paidCount: paidCases.length,
-            },
-          }),
-        });
-        sent++;
-      } catch {
-        // Skip failed sends
-      }
-
-      // Also create in-app notification
+    // Create in-app notification for each admin
+    for (const role of adminRoles) {
       await serviceClient.from("notifications").insert({
-        user_id: admin.id,
+        user_id: role.user_id,
         title: "Weekly Digest",
         body: `This week: ${newLeads} new leads, ${newStudents} new students, ${paidCases.length} paid, ${weekRevenue}€ revenue.`,
         source: "system",
@@ -103,7 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, sent, kpis: { newLeads, newCases, newStudents, newReferrals, weekRevenue } }), {
+    return new Response(JSON.stringify({ success: true, kpis: { newLeads, newCases, newStudents, newReferrals, weekRevenue } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
