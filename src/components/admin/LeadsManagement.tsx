@@ -107,6 +107,16 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    // Clean up related records first to avoid FK constraint violations
+    const { data: relatedCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', deleteId);
+    if (relatedCases?.length) {
+      for (const c of relatedCases) {
+        await (supabase as any).from('appointments').delete().eq('case_id', c.id);
+        await (supabase as any).from('case_payments').delete().eq('case_id', c.id);
+        await (supabase as any).from('commissions').delete().eq('case_id', c.id);
+      }
+      await (supabase as any).from('student_cases').delete().eq('lead_id', deleteId);
+    }
     const { error } = await (supabase as any).from('leads').delete().eq('id', deleteId);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
     else { toast({ title: t('admin.leads.deleted') }); onRefresh(); }
@@ -117,8 +127,30 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     if (!assignModal || !selectedLawyer) return;
     setLoading(true);
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
-    const { data: cases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
-    if (cases?.[0]) { await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', cases[0].id); }
+    const { data: existingCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
+    if (existingCases?.[0]) {
+      await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', existingCases[0].id);
+    } else {
+      // Create case if none exists
+      const lead = leads.find(l => l.id === assignModal.leadId);
+      await (supabase as any).from('student_cases').insert({
+        lead_id: assignModal.leadId,
+        assigned_lawyer_id: selectedLawyer,
+        selected_city: lead?.preferred_city || null,
+        accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
+      });
+    }
+    // Audit log
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await (supabase as any).from('admin_audit_log').insert({
+        admin_id: session.user.id,
+        action: 'assign_team_member',
+        target_id: assignModal.leadId,
+        target_table: 'leads',
+        details: `Assigned team member ${lawyers.find(l => l.id === selectedLawyer)?.full_name || selectedLawyer} to ${assignModal.leadName}`,
+      });
+    }
     setLoading(false);
     toast({ title: t('admin.leads.teamMemberAssigned') });
     setAssignModal(null); setSelectedLawyer(''); onRefresh();
