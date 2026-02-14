@@ -1,7 +1,6 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -10,21 +9,31 @@ import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
-import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock, XCircle, AlertTriangle } from 'lucide-react';
+import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock, XCircle } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import MediaHub from '@/components/influencer/MediaHub';
 import ReferralLink from '@/components/influencer/ReferralLink';
 
-type TabId = 'students' | 'earnings' | 'media' | 'referral-link';
+type TabId = 'overview' | 'students' | 'earnings' | 'media' | 'referral-link';
 
 const TAB_ICONS: Record<TabId, React.ComponentType<{ className?: string }>> = {
+  overview: TrendingUp,
   students: Users,
   earnings: DollarSign,
   media: Image,
   'referral-link': Link,
 };
 
-const TAB_IDS: TabId[] = ['students', 'earnings', 'media', 'referral-link'];
+const TAB_IDS: TabId[] = ['overview', 'students', 'earnings', 'media', 'referral-link'];
+
+const STATUS_COLORS: Record<string, string> = {
+  new: 'hsl(220, 70%, 55%)',
+  eligible: 'hsl(160, 60%, 45%)',
+  not_eligible: 'hsl(0, 65%, 55%)',
+  assigned: 'hsl(270, 55%, 55%)',
+  contacted: 'hsl(40, 70%, 50%)',
+};
 
 const InfluencerDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -34,7 +43,7 @@ const InfluencerDashboardPage = () => {
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [studentChecklists, setStudentChecklists] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('students');
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
@@ -83,6 +92,24 @@ const InfluencerDashboardPage = () => {
     return Math.round((studentChecklists.filter(sc => sc.student_id === studentId && sc.is_completed).length / total) * 100);
   };
 
+  const totalLeads = leads.length;
+  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
+  const paidStudents = students.filter(s => s.student_status === 'paid').length;
+  const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
+  const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
+  const conversionRate = totalLeads > 0 ? Math.round((paidStudents / totalLeads) * 100) : 0;
+
+  // Lead status breakdown for pie chart
+  const statusBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {};
+    leads.forEach(l => { counts[l.status] = (counts[l.status] || 0) + 1; });
+    return Object.entries(counts).map(([status, count]) => ({
+      name: t(`influencerDash.leadStatuses.${status}`, status),
+      value: count,
+      color: STATUS_COLORS[status] || 'hsl(210, 10%, 60%)',
+    }));
+  }, [leads, t]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -90,12 +117,6 @@ const InfluencerDashboardPage = () => {
       </div>
     );
   }
-
-  const totalLeads = leads.length;
-  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
-  const paidStudents = students.filter(s => s.student_status === 'paid').length;
-  const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
-  const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]" dir={dir}>
@@ -122,40 +143,6 @@ const InfluencerDashboardPage = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card><CardContent className="p-4 text-center">
-            <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.totalClients')}</p>
-            <p className="text-xl font-bold">{totalLeads}</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <Target className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.eligible')}</p>
-            <p className="text-xl font-bold">{eligibleLeads}</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <CheckCircle className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.converted')}</p>
-            <p className="text-xl font-bold">{totalConverted}</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <CreditCard className="h-5 w-5 mx-auto mb-1 text-green-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.paid')}</p>
-            <p className="text-xl font-bold">{paidStudents}</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <DollarSign className="h-5 w-5 mx-auto mb-1 text-amber-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.assignedStudents')}</p>
-            <p className="text-xl font-bold">{students.length}</p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 text-center">
-            <ClipboardCheck className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-            <p className="text-xs text-muted-foreground">{t('influencerDash.avgProgress')}</p>
-            <p className="text-xl font-bold">{avgProgress}%</p>
-          </CardContent></Card>
-        </div>
-
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap border-b pb-2">
           {TAB_IDS.map(tabId => {
@@ -177,7 +164,103 @@ const InfluencerDashboardPage = () => {
           })}
         </div>
 
-        {/* Tab content */}
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* KPI Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <Card><CardContent className="p-4 text-center">
+                <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.totalClients')}</p>
+                <p className="text-xl font-bold">{totalLeads}</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <Target className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.eligible')}</p>
+                <p className="text-xl font-bold">{eligibleLeads}</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <CheckCircle className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.converted')}</p>
+                <p className="text-xl font-bold">{totalConverted}</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <CreditCard className="h-5 w-5 mx-auto mb-1 text-green-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.paid')}</p>
+                <p className="text-xl font-bold">{paidStudents}</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <TrendingUp className="h-5 w-5 mx-auto mb-1 text-amber-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.convRate', { defaultValue: 'Conversion' })}</p>
+                <p className="text-xl font-bold">{conversionRate}%</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-4 text-center">
+                <ClipboardCheck className="h-5 w-5 mx-auto mb-1 text-orange-600" />
+                <p className="text-xs text-muted-foreground">{t('influencerDash.avgProgress')}</p>
+                <p className="text-xl font-bold">{avgProgress}%</p>
+              </CardContent></Card>
+            </div>
+
+            {/* Pipeline & Stats Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Lead Pipeline Pie Chart */}
+              {statusBreakdown.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{t('influencerDash.leadPipeline', { defaultValue: 'Lead Pipeline' })}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie data={statusBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={2}>
+                          {statusBreakdown.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-wrap justify-center gap-3 mt-2">
+                      {statusBreakdown.map((entry, i) => (
+                        <div key={i} className="flex items-center gap-1 text-xs">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                          <span>{entry.name}: {entry.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Conversion Funnel Mini */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">{t('influencerDash.conversionFunnel', { defaultValue: 'Conversion Funnel' })}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {[
+                    { label: t('influencerDash.totalClients'), value: totalLeads, pct: 100, color: 'bg-blue-500' },
+                    { label: t('influencerDash.eligible'), value: eligibleLeads, pct: totalLeads > 0 ? Math.round((eligibleLeads / totalLeads) * 100) : 0, color: 'bg-emerald-500' },
+                    { label: t('influencerDash.converted'), value: totalConverted, pct: totalLeads > 0 ? Math.round((totalConverted / totalLeads) * 100) : 0, color: 'bg-purple-500' },
+                    { label: t('influencerDash.paid'), value: paidStudents, pct: totalLeads > 0 ? Math.round((paidStudents / totalLeads) * 100) : 0, color: 'bg-green-500' },
+                  ].map((stage, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">{stage.label}</span>
+                        <span className="font-medium">{stage.value} ({stage.pct}%)</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className={`h-full ${stage.color} rounded-full transition-all duration-500`} style={{ width: `${stage.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Students Tab */}
         {activeTab === 'students' && (
           <div className="space-y-3">
             {leads.length > 0 && (
