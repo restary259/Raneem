@@ -1,135 +1,159 @@
 
 
-## DSOS Ultimate Setup Blueprint -- Gap Analysis and Implementation Plan
+## PWA Finishing Touches -- Comprehensive Implementation Plan
 
-After a thorough code review, here is what already exists, what needs fixing, and what needs to be built.
-
----
-
-### Already Implemented (No Changes Needed)
-
-- Role-based access (Admin, Lawyer, Influencer, Student) with `user_roles` table and `has_role()` function
-- Session timeout (30 min inactivity) via `useSessionTimeout` hook
-- Token-based auth with auto-refresh
-- Apply page: 3-step form with eligibility scoring, dark mode, pulse success animation, "Explore Website" CTA
-- Influencer referral link attribution (`?ref=UUID`)
-- Leads management: eligibility override, assign lawyer, export CSV
-- Cases management: status machine, financial fields, net profit, 20-day timer badge, auto-create rewards on "paid"
-- Payouts: requester name/email display, approve/cancel actions
-- Influencer dashboard: students, leads with eligibility, earnings with 20-day timer, payout request, referral link, media hub
-- Lawyer dashboard: assigned cases only, status updates, city/school assignment, commission view (only their own)
-- Student dashboard: checklist, documents, services, referrals, rewards, profile
-- Admin dashboard: overview, leads, cases, students, influencers, checklist, contacts, referrals, payouts, analytics, security, audit
-- RLS policies on all tables
-- CSP headers, HTTPS enforcement
-- Password reset flow, forced password change on first login
-- Secure team creation (credentials sent via email, not in API response)
-- PWA with cache clearing on logout
-- RTL/LTR support with `useDirection` hook
-- CV builder with print/PNG/JPG export (no Lovable branding)
-
-### Gaps to Fill
+This plan addresses all the items in the checklist, organized by priority and grouped for efficient implementation.
 
 ---
 
-### 1. Session Timeout -- Admin Only
+### Phase 1: Critical Fixes (Header, Auth, Student Dashboard Mobile)
 
-**Problem**: `useSessionTimeout` runs for ALL roles (including students, lawyers, influencers who should have permanent sessions per the blueprint).
+**1.1 Header Logo Stability**
+- File: `src/components/landing/Header.tsx`
+- Add `whitespace-nowrap flex-shrink-0` to the logo container
+- Add `overflow-hidden flex-shrink min-w-0` to the nav container so links compress before the logo breaks
 
-**Fix**: Update `useSessionTimeout` to only activate for admin users by checking `user_roles` before starting the timer.
+**1.2 Auth Page Password Toggle (RTL/LTR)**
+- File: `src/pages/StudentAuthPage.tsx`
+- The eye icon is currently hardcoded to `absolute left-0` (line 253). Change to use directional classes: `absolute start-auto end-0` (or use `ltr:right-0 rtl:left-0`) so it sits correctly in both Arabic and English
 
-**File**: `src/hooks/useSessionTimeout.ts`
-- After getting the session, query `user_roles` for the admin role
-- Only start the inactivity timer if the user is an admin
-- Non-admin users keep permanent sessions (token auto-refresh handles this)
+**1.3 Student Dashboard Mobile Header**
+- File: `src/components/dashboard/DashboardHeader.tsx`
+- Replace full text buttons ("Log Out", "Go to Home Page") with icon-only buttons on mobile using responsive classes
+- Add `whitespace-nowrap` to the dashboard title and user name
+- Use `flex-row items-center justify-between` with proper gap management
+- Reduce title font size on small screens: `text-lg sm:text-2xl`
 
-### 2. Custom Admin Notifications (Push to Specific Roles)
+---
 
-**Problem**: No UI for the admin to compose and send custom push notifications to selected roles.
+### Phase 2: Student Dashboard Enhancements
 
-**Files**:
-- Create `src/components/admin/CustomNotifications.tsx`:
-  - Form with: message title, message body, role selector (checkboxes: Lawyer, Student, Influencer, All), send now or schedule
-  - On send, call an edge function that queries `push_subscriptions` joined with `user_roles` to filter by selected roles, then sends via web push
-- Create `supabase/functions/send-custom-notification/index.ts`:
-  - Accept `{ title, body, roles: string[] }` from admin
-  - Query push_subscriptions for users matching the selected roles
-  - Send web push to each endpoint
-- Update `src/components/admin/AdminLayout.tsx`: Add "Notifications" tab under "Tools" group
-- Update `src/pages/AdminDashboardPage.tsx`: Add the new tab case
+**2.1 My Application (طلبي) -- Automated Visibility**
+- File: `src/components/dashboard/MyApplicationTab.tsx`
+- Currently queries by `student_profile_id`. This already works when admin links a case to a student profile. No logic change needed for the base case.
+- Enhancement: Show a timeline-style progress tracker instead of just a progress bar. Add milestone markers for each step with dates when available.
 
-### 3. Admin Overview KPI Enhancements
+**2.2 Referral System -- Auto-Lead Generation**
+- File: `src/components/dashboard/ReferralForm.tsx`
+- After inserting into `referrals` table, also call the `insert_lead_from_apply` RPC to create a lead automatically with the referral data (name, phone, german_level)
+- Add eligibility-relevant fields to the form: education_level (bagrut/diploma), passport_type, english_units, math_units
+- These map to the same eligibility scoring the Apply page uses
 
-**Problem**: Overview is missing key KPIs from the blueprint: eligible %, closed %, revenue, pending payments, top lawyer/influencer.
+**2.3 Referral Rewards -- 20-Day Payout Lock**
+- File: `src/components/dashboard/RewardsPanel.tsx`
+- Add the same 20-day timer logic from the influencer panel: if `reward.status === 'pending'` and `created_at` is less than 20 days ago, show a countdown badge and disable the "Request Payout" button with a message explaining the lock period
 
-**File**: `src/components/admin/AdminOverview.tsx`
-- Accept additional props: `leads`, `cases`, `payments`, `commissions`
-- Add computed KPIs:
-  - Eligible %: `leads.filter(eligible).length / leads.length * 100`
-  - Closed %: `cases.filter(paid/completed).length / cases.length * 100`
-  - Revenue: sum of service_fee + school_commission from paid cases
-  - Pending payments: count of pending rewards
-  - Top lawyer: lawyer with most closed cases
-  - Top influencer: influencer with most referred leads
+**2.4 Student Dashboard UI -- Admin Color Alignment**
+- File: `src/pages/StudentDashboardPage.tsx`
+- Background is already `bg-[#F8FAFC]` (matching admin). Confirm card classes use `rounded-xl shadow-sm border border-slate-200`.
+- File: `src/components/dashboard/DashboardSidebar.tsx`
+- Update sidebar styling to match admin's navy sidebar aesthetic with `bg-[#1E293B] text-white` on desktop
+- File: `src/components/dashboard/DashboardHeader.tsx`
+- Match admin header style: `bg-[#1E293B] text-white` with logo
 
-**File**: `src/pages/AdminDashboardPage.tsx`
-- Pass `leads`, `cases`, `payments`, `commissions` to `AdminOverview`
+---
 
-### 4. Student Dashboard -- Hide "Add Service" (Lawyer-Only Assignment)
+### Phase 3: Lawyer/Team Portal Upgrades
 
-**Problem**: Per the blueprint, students should NOT be able to add services themselves; only lawyers assign services. The student dashboard currently has `ServicesOverview` which may allow adding.
+**3.1 Lawyer Dashboard -- Commission Tracking**
+- File: `src/pages/LawyerDashboardPage.tsx`
+- Add a "Rewards" summary card showing total earned commissions from closed cases
+- Sum `lawyer_commission` from cases where `case_status` is 'paid' or 'closed'
 
-**File**: `src/components/dashboard/ServicesOverview.tsx`
-- Review and ensure it's read-only for students (no "Add Service" button)
-- Services should only show what the lawyer has assigned via the case
+**3.2 Lawyer Dashboard -- Call Logs and Notes**
+- Already has notes per case (editable textarea in the collapsible panel). This is functional.
 
-### 5. Referral Discount Logic (Family vs Friend)
+**3.3 Lawyer Dashboard -- Document Upload**
+- Currently no document upload for lawyers. Add a file upload button in the case collapsible that uploads to the `student-documents` bucket and creates a `documents` record linked to the student.
+- Requires a new RLS policy: lawyers can insert documents for students in their assigned cases.
 
-**Problem**: The referral form exists but the discount logic (family = 1,000 NIS discount, friend = 500 NIS reward) may not be fully wired to the cases/payments system.
+**3.4 Team Calendar (New Feature)**
+- This is a significant new feature. Create a basic appointments system:
+  - New database table: `appointments` (id, case_id, lawyer_id, student_name, scheduled_at, location, notes, created_at)
+  - New component: `src/components/lawyer/AppointmentCalendar.tsx` with month/week view using a simple grid
+  - Add modal for creating appointments with student selector
+  - Auto-update case status to 'appointment' when a meeting is logged
 
-**File**: `src/components/admin/CasesManagement.tsx`
-- When creating/editing a case, if the lead has a referral, auto-suggest the referral_discount based on `is_family` flag from the `referrals` table
+---
 
-### 6. Missing Apply Page Fields Cleanup
+### Phase 4: Admin Dashboard Enhancements
 
-**Problem**: Blueprint says to remove budget_range, preferred_city, accommodation from the apply form (assigned later by lawyer). The current apply page already does NOT collect these -- confirmed clean.
+**4.1 "Ready for Germany" Queue**
+- File: `src/pages/AdminDashboardPage.tsx`
+- Add a new tab "Ready" that filters student_cases where `case_status` is 'paid' or 'completed' and all required documents are uploaded
+- Show a summary card with student name, school, city, and document status
 
-**No changes needed.**
+**4.2 Commission Approval Section**
+- Already exists in `PayoutsManagement.tsx` with approve/cancel buttons. Verified functional.
 
-### 7. Password Verification for Critical Admin Actions
+**4.3 Mobile Checkbox/Toggle Fix**
+- File: `src/styles/layouts.css`
+- Add global rule: checkboxes and toggle inputs get `flex-shrink-0` and fixed dimensions `w-5 h-5`
 
-**Problem**: Blueprint requires password re-verification for payment approval, exports, and financial adjustments. Currently no such verification exists.
+---
 
-**File**: Create `src/components/admin/PasswordVerifyDialog.tsx`
-- Modal that prompts the admin to re-enter their password
-- Validates via `supabase.auth.signInWithPassword` (same email, entered password)
-- Wraps critical actions: payout approval, CSV export of financials
+### Phase 5: Contact Info, CV Builder, and Global Polish
 
-**Files to update**: `PayoutsManagement.tsx` (wrap "Pay" action), `CasesManagement.tsx` (wrap CSV export)
+**5.1 Update Phone Number**
+- File: `src/components/landing/OfficeLocations.tsx`
+- Change phone from `+972 52-940-2168` to `+972 524061225`
+
+**5.2 Update Working Hours**
+- File: `public/locales/ar/common.json` and `public/locales/en/common.json`
+- Update the `officeLocations.hours` value to "10:00 AM - 7:00 PM"
+
+**5.3 CV Builder Cleanup**
+- File: `src/components/lebenslauf/LebenslaufBuilder.tsx`
+- Remove PNG and JPG download buttons (keep PDF only)
+- Remove photo upload option from `CVForm.tsx` if present
+- Ensure no "Made with Lovable" watermark in print CSS
+
+**5.4 Active States on Buttons**
+- File: `src/styles/base.css`
+- Add global: `button, a { @apply active:scale-95 transition-transform; }`
+
+**5.5 Empty States**
+- Audit all list components for proper empty state icons/messages. Most already have them (ServicesOverview, MyApplicationTab, RewardsPanel). Verify and add where missing.
+
+---
+
+### Phase 6: Email Branding
+
+**6.1 Sender Identity and Template**
+- File: `supabase/functions/send-branded-email/index.ts`
+- Update sender name to "وكالة درب | Darb Agency"
+- Ensure HTML template includes the Darb logo at the top
+- Verify dynamic variables are properly mapped to prevent empty emails
 
 ---
 
 ### Technical File Summary
 
-| Action | File | Changes |
-|--------|------|---------|
-| Edit | `src/hooks/useSessionTimeout.ts` | Only activate for admin role users |
-| Create | `src/components/admin/CustomNotifications.tsx` | Admin notification composer UI |
-| Create | `supabase/functions/send-custom-notification/index.ts` | Edge function to send push to selected roles |
-| Edit | `src/components/admin/AdminLayout.tsx` | Add Notifications tab |
-| Edit | `src/pages/AdminDashboardPage.tsx` | Add notifications tab case + pass extra data to overview |
-| Edit | `src/components/admin/AdminOverview.tsx` | Add KPI cards (eligible%, closed%, revenue, top performers) |
-| Edit | `src/components/dashboard/ServicesOverview.tsx` | Ensure read-only for students |
-| Create | `src/components/admin/PasswordVerifyDialog.tsx` | Re-authentication modal for critical actions |
-| Edit | `src/components/admin/PayoutsManagement.tsx` | Wrap payout approval with password verification |
-| Edit | `src/components/admin/CasesManagement.tsx` | Wrap financial exports with password verification |
-| Edit | `supabase/config.toml` | Add send-custom-notification function config |
+| Priority | File | Changes |
+|----------|------|---------|
+| P1 | `src/components/landing/Header.tsx` | Logo flex-shrink-0, nav overflow-hidden |
+| P1 | `src/pages/StudentAuthPage.tsx` | RTL-aware password toggle position |
+| P1 | `src/components/dashboard/DashboardHeader.tsx` | Mobile icon-only buttons, whitespace-nowrap |
+| P2 | `src/components/dashboard/ReferralForm.tsx` | Add eligibility fields, auto-create lead |
+| P2 | `src/components/dashboard/RewardsPanel.tsx` | 20-day payout lock timer for students |
+| P2 | `src/components/dashboard/DashboardSidebar.tsx` | Admin-style navy sidebar |
+| P2 | `src/pages/StudentDashboardPage.tsx` | Header restyling to match admin |
+| P3 | `src/pages/LawyerDashboardPage.tsx` | Commission summary, document upload |
+| P3 | New: `src/components/lawyer/AppointmentCalendar.tsx` | Calendar view for appointments |
+| P3 | DB migration | Create `appointments` table with RLS |
+| P4 | `src/pages/AdminDashboardPage.tsx` | "Ready for Germany" tab |
+| P4 | `src/styles/layouts.css` | Checkbox flex-shrink-0 fix |
+| P5 | `src/components/landing/OfficeLocations.tsx` | Phone number update |
+| P5 | `public/locales/*/common.json` | Working hours update |
+| P5 | `src/components/lebenslauf/LebenslaufBuilder.tsx` | Remove PNG/JPG, PDF only |
+| P5 | `src/styles/base.css` | active:scale-95 on interactive elements |
+| P6 | `supabase/functions/send-branded-email/index.ts` | Sender name + template fix |
 
 ### Implementation Order
-1. Session timeout fix (admin-only) -- quick, high-impact security fix
-2. Admin Overview KPI enhancements -- improves dashboard value
-3. Student ServicesOverview read-only enforcement
-4. Password verification dialog for critical actions
-5. Custom notifications system (UI + edge function)
-6. End-to-end testing of all dashboards and flows
+1. Header, auth, and student mobile header fixes (quick wins)
+2. Student dashboard enhancements (referral auto-lead, payout lock, UI alignment)
+3. Lawyer portal upgrades (commissions, documents, calendar)
+4. Admin "Ready for Germany" tab
+5. Contact info, CV builder, global polish
+6. Email branding
 
