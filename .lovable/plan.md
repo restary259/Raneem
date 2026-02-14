@@ -1,152 +1,74 @@
-# Remove Resend -- Restore Built-in Email System
 
-## Current State
+# Multi-Feature Update: Apply Page Major Field, Influencer Fixes, Funnel, Payout WhatsApp, and Hero Text
 
-Resend is used in **5 edge functions**:
+## 1. Add "Preferred Major" Field to Apply Page
 
-- `send-branded-email/index.ts` -- Main 620-line Resend email function (credentials, digest, status updates, etc.)
-- `send_welcome_email/index.ts` -- Simple Resend welcome email
-- `send-email/index.ts` -- Contact form handler with optional Resend notification
-- `send-event-email/index.ts` -- Calls `send-branded-email` for status/welcome/referral events
-- `admin-weekly-digest/index.ts` -- Calls `send-branded-email` for weekly reports
+**Database change:** Add a `preferred_major` column to the `leads` table (text, nullable).
 
-Account creation functions (`create-influencer`, `create-team-member`, `create-student-account`) call `send-branded-email` to deliver temp passwords.
+**RPC update:** Update the `insert_lead_from_apply` database function (the 5-parameter companion version) to accept `p_preferred_major text DEFAULT NULL` and store it.
 
-## What Changes
+**UI change in `ApplyPage.tsx`:**
+- Add a new state variable `preferredMajor`
+- In Step 2 (educational background), add a grouped Select dropdown populated from `majorsData` categories and sub-majors
+- Show category headers with sub-major options (bilingual AR/EN)
+- Pass `p_preferred_major` to the RPC call
 
-### 1. Rewrite `send-branded-email` -- Remove Resend, use Supabase built-in SMTP
+## 2. Verify Influencer Referral Link Auto-Attribution
 
-Replace the entire Resend-based function with one that uses `supabase.auth.admin.generateLink()` to create invite/recovery links and sends them via the built-in auth email system. For credential emails specifically, we will display the temporary password directly in the admin UI (since built-in SMTP cannot send custom content with temp passwords).
+The existing code already handles this correctly:
+- Each influencer's unique link is `?ref={userId}` (in `ReferralLink.tsx`)
+- `ApplyPage.tsx` checks `?ref=` param, verifies the user has the `influencer` role, and sets `sourceType = 'influencer'` and `sourceId = ref`
+- The RPC stores `source_type` and `source_id` on the lead
 
-**New approach for each email type:**
+No changes needed here -- this already works. The lead will be attributed to the influencer automatically.
 
-- `team_credentials` / `student_credentials` -- No longer sent via this function. Temp password shown in admin UI for manual sharing.
-- `signup_confirmation` / `password_reset` / `magic_link` -- Handled natively by the built-in auth system (already works without Resend).
-- `welcome` / `status_change` / `referral_accepted` / `weekly_digest` -- Converted to in-app notifications only (already created in the notifications table).
+## 3. Remove "Media" Tab from Influencer Dashboard
 
-### 2. Rewrite `send_welcome_email` -- Remove Resend
+**File: `InfluencerDashboardPage.tsx`**
+- Remove `'media'` from `TAB_IDS` array
+- Remove `media: Image` from `TAB_ICONS`
+- Remove the `MediaHub` import and render line
+- Keep `MediaHub` component file intact (no deletion) in case it's needed later
 
-Replace with a simple function that creates an in-app notification instead of sending email.
+## 4. Payout Request Redirects to WhatsApp
 
-### 3. Clean `send-email` -- Remove Resend block
+**File: `EarningsPanel.tsx`**
+- After submitting a payout request (in `submitPayoutRequest`), redirect the user to `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1` using `window.open()`
+- Remove the in-app payout request modal entirely, replacing the "Request Payout" button with a direct WhatsApp redirect
+- Or keep the modal for confirmation but after submission, open the WhatsApp link
 
-Remove the optional Resend email notification (lines 124-143). Contact form submissions are already saved to the database, which is sufficient.
+Chosen approach: Keep the confirmation modal, but after successful submission, open the WhatsApp link automatically so the influencer can follow up.
 
-### 4. Update `send-event-email` -- In-app notifications only
+## 5. Update Apply Page Hero Text
 
-Remove the call to `send-branded-email`. Keep only the in-app notification insert (already in the function).
+**File: `ApplyPage.tsx`**
+- Replace the hero title from "Your Dream of Studying in Germany Starts Here" to a more professional, value-driven message
+- Update both AR and EN inline fallbacks:
+  - EN: "Take the First Step Toward Your Future in Germany" with subtitle "You are not alone -- the Darb team guides you from application to arrival. Share your details and we will reach out shortly."
+  - AR: Equivalent professional Arabic translation
 
-### 5. Update `admin-weekly-digest` -- In-app notifications only
+## 6. Test Admin Funnel Visualization
 
-Remove the call to `send-branded-email`. Keep only the in-app notification insert (already in the function).
+The funnel in `FunnelVisualization.tsx` and `AdminOverview.tsx` already:
+- Counts leads by `status` field and cases by `case_status` field
+- Maps to the 10-stage pipeline: New -> Eligible -> Assigned -> Contacted -> Appointment -> Paid -> Ready to Apply -> Registration Submitted -> Visa Stage -> Settled
 
-### 6. Update account creation functions -- Show temp password in admin UI
-
-Modify `create-influencer`, `create-team-member`, and `create-student-account` to:
-
-- Remove the `send-branded-email` fetch call entirely
-- Return `temp_password` in the response so the admin can see and share it
-- Keep the `must_change_password: true` flow
-
-### 7. Update admin UI -- Display temp password after account creation
-
-Modify `InfluencerManagement.tsx` and `ReadyToApplyTable.tsx` to:
-
-- Show the temporary password in a copyable box after account creation
-- Add a "Copy Password" button
-- Show clear instructions: "Share these credentials with the user manually"
-
-### 8. Strengthen password requirements
-
-Update `PasswordStrength.tsx`:
-
-- Minimum 10 characters (up from 8)
-- Require uppercase, lowercase, number (special character optional but recommended)
-
-### 9. Delete `RESEND_API_KEY` secret
-
-No longer needed after removing all Resend references.
+This logic is correct and matches the DSOS funnel. No code changes needed -- it already makes sense structurally.
 
 ---
 
 ## Technical Details
 
+| File | Action |
+|------|--------|
+| Database migration | Add `preferred_major TEXT` column to `leads` table |
+| Database migration | Update `insert_lead_from_apply` RPC (companion version) to accept `p_preferred_major` |
+| `src/pages/ApplyPage.tsx` | Add major selector in Step 2, update hero text, pass major to RPC |
+| `src/pages/InfluencerDashboardPage.tsx` | Remove `media` tab from tabs array and rendering |
+| `src/components/influencer/EarningsPanel.tsx` | Open WhatsApp link after payout request submission |
 
-| File                                                 | Action                                                                 |
-| ---------------------------------------------------- | ---------------------------------------------------------------------- |
-| `supabase/functions/send-branded-email/index.ts`     | Rewrite: remove Resend, become a thin in-app notification creator only |
-| `supabase/functions/send_welcome_email/index.ts`     | Rewrite: remove Resend, insert in-app notification                     |
-| `supabase/functions/send-email/index.ts`             | Remove Resend import and optional email block (lines 124-143)          |
-| `supabase/functions/send-event-email/index.ts`       | Remove `send-branded-email` fetch call, keep in-app notification       |
-| `supabase/functions/admin-weekly-digest/index.ts`    | Remove `send-branded-email` fetch call, keep in-app notification       |
-| `supabase/functions/create-influencer/index.ts`      | Remove email fetch, return `temp_password` in response                 |
-| `supabase/functions/create-team-member/index.ts`     | Remove email fetch, return `temp_password` in response                 |
-| `supabase/functions/create-student-account/index.ts` | Remove email fetch, return `temp_password` in response                 |
-| `src/components/admin/InfluencerManagement.tsx`      | Show temp password in UI with copy button after creation               |
-| `src/components/admin/ReadyToApplyTable.tsx`         | Show temp password in UI with copy button after creation               |
-| `src/components/auth/PasswordStrength.tsx`           | Increase minimum to 10 characters                                      |
-| `src/pages/StudentAuthPage.tsx`                      | Update password validation minimum to 10                               |
-| Backend secret                                       | Remove `RESEND_API_KEY`                                                |
-
-
-### What continues to work without Resend
-
-- **Password reset emails** -- Built-in auth system handles these natively
-- **Email confirmation** -- Built-in auth system handles this natively
-- **In-app notifications** -- Already stored in `notifications` table, displayed via `NotificationBell`
-- **Forced password change on first login** -- `must_change_password` flag + modal in `StudentAuthPage`
-
-### What changes for the admin
-
-- After creating an account, the admin sees the temp password on screen and copies it to share manually (via WhatsApp, direct message, etc.)
-- No more silent email failures -- the admin always has the credentials visible  🔐 SPECIAL SECURITY NOTE — TEAM MEMBERS & INFLUENCERS
-  For any account created for:
-  - Team members
-  - Influencers
-  - Admins
-  - Staff
-  - Partners
-  The following rule must apply strictly:
-  The moment they log in using:
-  - Their email
-  - Their temporary password
-  They must be **immediately forced** to create a new secure password before accessing the dashboard.
-  This must happen:
-  - Before dashboard renders
-  - Before any protected page loads
-  - Before session grants role-based permissions
-  There must be:
-  - No bypass
-  - No skip option
-  - No “remind me later”
-  - No direct URL access workaround
-  ---
-  ## 🔒 Enforcement Logic
-  System must:
-  1. Mark account as `requires_password_reset = true` upon creation.
-  2. On login:
-    - Check this flag.
-  3. If true:
-    - Redirect instantly to `/set-new-password`.
-  4. Block all other routes until password is successfully updated.
-  5. After successful update:
-    - Set `requires_password_reset = false`
-    - Grant normal dashboard access
-    - Preserve session without forcing re-login
-  ---
-  ## 🛡 Security Standard
-  New password must meet strength requirements:
-  - Minimum 10–12 characters
-  - Uppercase
-  - Lowercase
-  - Number
-  - (Optional: special character)
-  No weak passwords allowed.
-  ---
-  ## 🎯 Purpose
-  This ensures:
-  - No shared temporary passwords
-  - No credential leakage risk
-  - No influencer accessing dashboard with insecure password
-  - Clean security baseline from first login
-  This applies to **all privileged accounts**, not just students.
+## Unchanged Files
+- `FunnelVisualization.tsx` -- Already correct
+- `AdminOverview.tsx` -- Already correct
+- `ReferralLink.tsx` -- Already provides unique per-influencer links
+- `MediaHub.tsx` -- File kept, just not rendered in influencer dashboard
