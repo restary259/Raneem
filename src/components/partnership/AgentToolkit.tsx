@@ -6,6 +6,11 @@ import { Paperclip, Presentation, HelpCircle } from 'lucide-react';
 const AgentToolkit = () => {
   const { t } = useTranslation('partnership');
 
+  const handleRequestAccess = () => {
+    const el = document.getElementById('register');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="py-12 md:py-24 bg-primary/5">
       <div className="container mx-auto px-4">
@@ -27,7 +32,9 @@ const AgentToolkit = () => {
             </div>
           </div>
           <div className="mt-10">
-            <Button size="lg" variant="outline">{t('agentToolkit.button')}</Button>
+            <Button size="lg" variant="outline" onClick={handleRequestAccess}>
+              {t('agentToolkit.button')}
+            </Button>
           </div>
         </div>
       </div>

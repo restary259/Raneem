@@ -46,6 +46,8 @@
     "previousExperience": "Do you have prior experience in student services or sales?",
     "experienceOptions": { "yes": "Yes", "no": "No" },
     "whyDarb": "What makes you interested in representing Darb?",
+    "instagramLink": "Instagram Link",
+    "socialLinks": "Other Social Media Links",
     "attachment": "Upload Optional Attachment (CV / License / ID)",
     "submit": "Submit Your Application Now",
     "submitting": "Sending... ⏳",

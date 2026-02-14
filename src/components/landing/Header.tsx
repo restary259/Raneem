@@ -16,36 +16,42 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo Side */}
-          <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex items-center gap-2 whitespace-nowrap">
+          <div className="flex items-center flex-shrink-0 min-w-0">
+            <Link to="/" className="flex items-center gap-2 whitespace-nowrap flex-shrink-0">
               <img 
                 src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
                 alt={t('loader.brand')} 
                 className="h-8 md:h-10 w-auto object-contain flex-shrink-0"
+                style={{ minWidth: '2rem' }}
                 fetchPriority="high"
               />
-              <span className="font-bold text-lg md:text-xl text-gray-900 hidden sm:block flex-shrink-0">{t('loader.brand')}</span>
+              <span 
+                className="font-bold text-gray-900 hidden sm:block flex-shrink-0 whitespace-nowrap"
+                style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+              >
+                {t('loader.brand')}
+              </span>
             </Link>
           </div>
 
           {/* Center: Desktop Navigation */}
-          <div className="hidden md:block flex-1 mx-6 overflow-hidden min-w-0">
+          <div className="hidden md:block flex-1 mx-4 lg:mx-6 overflow-hidden min-w-0">
             <DesktopNav />
           </div>
 
           {/* Right Side: Language Switcher + Student Login */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <LanguageSwitcher />
             <Link 
               to="/student-auth" 
-              className="bg-orange-500 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium hover:bg-orange-600 transition-colors text-sm md:text-base whitespace-nowrap"
+              className="bg-orange-500 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium hover:bg-orange-600 transition-colors text-sm md:text-base whitespace-nowrap flex-shrink-0"
             >
               {t('nav.studentLogin')}
             </Link>
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden flex-shrink-0">
             <MobileNav />
           </div>
         </div>
