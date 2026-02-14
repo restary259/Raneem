@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogOut, ArrowLeftCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
+import NotificationBell from '@/components/common/NotificationBell';
 
 interface DashboardHeaderProps {
   fullName: string;
@@ -50,6 +51,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ fullName }) => {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <NotificationBell />
             <Button
               variant="ghost"
               size="sm"

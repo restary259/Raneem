@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
+import NotificationBell from '@/components/common/NotificationBell';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -136,6 +137,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
           </div>
           <div className="flex items-center gap-2">
             {userEmail && <Badge variant="secondary" className="hidden sm:inline-flex">{userEmail}</Badge>}
+            <div className="[&_button]:text-muted-foreground [&_button]:hover:text-foreground [&_button]:hover:bg-muted/50">
+              <NotificationBell />
+            </div>
             <Button variant="ghost" size="sm" className="lg:hidden h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={() => navigate('/')}>
               <ArrowLeftCircle className="h-5 w-5" />
             </Button>

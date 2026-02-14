@@ -14,6 +14,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import MediaHub from '@/components/influencer/MediaHub';
 import ReferralLink from '@/components/influencer/ReferralLink';
+import NotificationBell from '@/components/common/NotificationBell';
 
 type TabId = 'overview' | 'students' | 'earnings' | 'media' | 'referral-link';
 
@@ -131,6 +132,7 @@ const InfluencerDashboardPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={() => navigate('/')}>
                 <ArrowLeftCircle className="h-4 w-4 me-2" />{t('lawyer.website')}
               </Button>

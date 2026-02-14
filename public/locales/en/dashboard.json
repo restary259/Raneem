@@ -836,7 +836,18 @@
       "registration_submitted": "Registration Submitted",
       "visa_stage": "Visa Stage",
       "settled": "Settled",
-      "completed": "Completed"
+     "completed": "Completed"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications yet",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "statusChanged": "Application Status Updated",
+    "statusChangedBody": "Your application status changed to: {{status}}"
   }
 }

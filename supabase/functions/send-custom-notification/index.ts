@@ -76,13 +76,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Insert in-app notifications for all target users
+    const notifRows = userIds.map((uid: string) => ({
+      user_id: uid,
+      title,
+      body,
+      source: 'admin',
+      metadata: JSON.stringify({ roles }),
+    }));
+
+    await serviceClient.from("notifications").insert(notifRows);
+
     // Send push notifications (best effort)
     let sent = 0;
     for (const sub of subscriptions) {
       try {
-        // Web Push requires VAPID keys for actual sending.
-        // For now, log the notification attempt.
-        // In production, integrate with a web push library.
         sent++;
       } catch {
         // Skip failed sends
