@@ -52,7 +52,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
       return;
     }
     if (!canRequestPayout()) {
-      toast({ title: 'لم تنتهِ فترة الانتظار (20 يوم) بعد', variant: 'destructive' });
+      toast({ title: t('influencer.earnings.waitingPeriod'), variant: 'destructive' });
       return;
     }
     for (const r of pendingRewards) {
@@ -94,7 +94,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
         {!canRequestPayout() && rewards.some(r => r.status === 'pending') && (
           <div className="flex items-center gap-1 text-sm text-amber-600">
             <Clock className="h-4 w-4" />
-            <span>فترة انتظار 20 يوم</span>
+            <span>{t('influencer.earnings.waitingPeriod')}</span>
           </div>
         )}
       </div>
@@ -111,7 +111,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.amount')}</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.status')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">المؤقت</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.timer')}</th>
                     <th className="px-4 py-3 text-start font-semibold">{t('influencer.earnings.date')}</th>
                   </tr>
                 </thead>
@@ -124,9 +124,9 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
                         <td className="px-4 py-3"><Badge variant={r.status === 'paid' ? 'default' : r.status === 'cancelled' ? 'destructive' : 'secondary'}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
                         <td className="px-4 py-3">
                           {r.status === 'pending' && daysLeft !== null && daysLeft > 0 ? (
-                            <span className="text-amber-600 text-xs flex items-center gap-1"><Clock className="h-3 w-3" />{daysLeft} يوم</span>
+                            <span className="text-amber-600 text-xs flex items-center gap-1"><Clock className="h-3 w-3" />{daysLeft} {t('influencer.earnings.days')}</span>
                           ) : r.status === 'pending' ? (
-                            <span className="text-emerald-600 text-xs">جاهز</span>
+                            <span className="text-emerald-600 text-xs">{t('influencer.earnings.ready')}</span>
                           ) : '—'}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</td>

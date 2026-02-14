@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PasswordVerifyDialogProps {
   open: boolean;
@@ -17,19 +18,23 @@ interface PasswordVerifyDialogProps {
 
 const PasswordVerifyDialog: React.FC<PasswordVerifyDialogProps> = ({
   open, onOpenChange, onVerified,
-  title = 'تأكيد الهوية',
-  description = 'أدخل كلمة المرور للمتابعة مع هذا الإجراء الحساس.'
+  title: titleProp,
+  description: descProp,
 }) => {
+  const { t } = useTranslation('dashboard');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const dialogTitle = titleProp || t('admin.passwordVerify.title');
+  const dialogDesc = descProp || t('admin.passwordVerify.description');
 
   const handleVerify = async () => {
     if (!password.trim()) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error('لم يتم العثور على المستخدم');
+      if (!user?.email) throw new Error(t('admin.passwordVerify.userNotFound'));
 
       const { error } = await supabase.auth.signInWithPassword({
         email: user.email,
@@ -37,7 +42,7 @@ const PasswordVerifyDialog: React.FC<PasswordVerifyDialogProps> = ({
       });
 
       if (error) {
-        toast({ variant: 'destructive', title: 'فشل التحقق', description: 'كلمة المرور غير صحيحة' });
+        toast({ variant: 'destructive', title: t('admin.passwordVerify.verifyFailed'), description: t('admin.passwordVerify.wrongPassword') });
         setLoading(false);
         return;
       }
@@ -46,7 +51,7 @@ const PasswordVerifyDialog: React.FC<PasswordVerifyDialogProps> = ({
       onOpenChange(false);
       onVerified();
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'خطأ', description: err.message });
+      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
     } finally {
       setLoading(false);
     }
@@ -58,28 +63,28 @@ const PasswordVerifyDialog: React.FC<PasswordVerifyDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-amber-500" />
-            {title}
+            {dialogTitle}
           </DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription>{dialogDesc}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label htmlFor="verify-password">كلمة المرور</Label>
+            <Label htmlFor="verify-password">{t('admin.passwordVerify.password')}</Label>
             <Input
               id="verify-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
-              placeholder="أدخل كلمة المرور"
+              placeholder={t('admin.passwordVerify.placeholder')}
               autoFocus
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('admin.passwordVerify.cancel')}</Button>
           <Button onClick={handleVerify} disabled={loading || !password.trim()}>
-            {loading ? 'جاري التحقق...' : 'تأكيد'}
+            {loading ? t('admin.passwordVerify.verifying') : t('admin.passwordVerify.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

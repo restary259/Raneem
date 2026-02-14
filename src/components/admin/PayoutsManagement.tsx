@@ -54,7 +54,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const statusKeys = ['pending', 'approved', 'paid', 'cancelled'];
 
-  const getRequesterName = (userId: string) => profiles[userId]?.full_name || 'غير معروف';
+  const getRequesterName = (userId: string) => profiles[userId]?.full_name || t('admin.payouts.unknownRequester');
   const getRequesterEmail = (userId: string) => profiles[userId]?.email || '';
 
   const ActionButtons = ({ reward }: { reward: any }) => {
@@ -117,8 +117,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         open={!!pendingPayId}
         onOpenChange={(open) => { if (!open) setPendingPayId(null); }}
         onVerified={() => { if (pendingPayId) updateRewardStatus(pendingPayId, 'paid'); setPendingPayId(null); }}
-        title="تأكيد الدفع"
-        description="أدخل كلمة المرور لتأكيد عملية الدفع."
+        title={t('admin.payouts.confirmPayTitle')}
+        description={t('admin.payouts.confirmPayDesc')}
       />
     </div>
   );
