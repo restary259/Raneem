@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet, BarChart3
+  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet, BarChart3, CheckCircle, Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,7 @@ const sidebarGroups = [
     items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
       { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
+      { id: 'ready', labelKey: 'admin.tabs.ready', icon: CheckCircle },
       { id: 'students', labelKey: 'admin.tabs.students', icon: Users },
       { id: 'checklist', labelKey: 'admin.tabs.checklist', icon: ClipboardCheck },
     ],
@@ -51,6 +52,7 @@ const sidebarGroups = [
     items: [
       { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
       { id: 'notifications', labelKey: 'admin.tabs.notifications', icon: Mail },
+      { id: 'eligibility', labelKey: 'admin.tabs.eligibility', icon: Settings },
       { id: 'security', labelKey: 'admin.tabs.security', icon: Shield },
       { id: 'audit', labelKey: 'admin.tabs.audit', icon: ScrollText },
     ],
