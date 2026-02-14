@@ -68,6 +68,56 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          lawyer_id: string
+          location: string | null
+          notes: string | null
+          scheduled_at: string
+          status: string
+          student_name: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          lawyer_id: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at: string
+          status?: string
+          student_name: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          lawyer_id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string
+          status?: string
+          student_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "student_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_payments: {
         Row: {
           amount: number

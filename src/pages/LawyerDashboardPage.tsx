@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase, CheckCircle, XCircle } from 'lucide-react';
+import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 
 const CASE_STATUSES = [
   { value: 'assigned', label: 'معيّن' },
@@ -256,6 +257,9 @@ const LawyerDashboardPage = () => {
           );
         })}
         {cases.length === 0 && <p className="text-center text-muted-foreground py-8">لا يوجد ملفات معينة لك حالياً</p>}
+
+        {/* Appointment Calendar */}
+        {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
       </main>
     </div>
   );

@@ -44,26 +44,27 @@ const SearchAndFilter = ({
               dir={dir}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <div className="relative min-w-0">
-              <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 text-sm md:text-base px-3 md:px-4 py-2 border-2 border-gray-200 hover:border-orange-500 transition-colors" aria-expanded={showFilters} aria-haspopup="true">
-                <Filter className="h-4 w-4" />
-                {t('educational.filterByCategory')}
-                <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          <div className="flex items-center justify-between gap-2">
+            <div className="relative min-w-0 flex-shrink-0">
+              <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base px-2.5 sm:px-3 md:px-4 py-2 border-2 border-gray-200 hover:border-orange-500 transition-colors whitespace-nowrap" aria-expanded={showFilters} aria-haspopup="true">
+                <Filter className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{t('educational.filterByCategory')}</span>
+                <span className="sm:hidden">{t('educational.filterByCategory').split(' ')[0]}</span>
+                <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </Button>
               {showFilters && (
                 <>
-                  <div className="fixed inset-0 z-30 md:hidden" onClick={() => setShowFilters(false)} aria-hidden="true" />
-                  <div className="filter-dropdown absolute top-full mt-2 left-0 right-0 md:right-auto md:w-96 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                    <div className="p-4 space-y-2">
-                      <Button variant={selectedCategory === null ? "default" : "outline"} onClick={() => { setSelectedCategory(null); setShowFilters(false); }} className={`w-full justify-between text-sm ${selectedCategory === null ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}>
-                        <span>{t('educational.allMajors')}</span>
-                        <Badge variant="secondary" className="mr-2">{Object.values(categoryMajorCounts).reduce((sum, count) => sum + count, 0)}</Badge>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowFilters(false)} aria-hidden="true" />
+                  <div className="filter-dropdown absolute top-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto w-[calc(100vw-2rem)] sm:w-80 md:w-96" style={{ [isRtl ? 'right' : 'left']: 0 }}>
+                    <div className="p-3 space-y-1.5">
+                      <Button variant={selectedCategory === null ? "default" : "outline"} onClick={() => { setSelectedCategory(null); setShowFilters(false); }} className={`w-full justify-between text-xs sm:text-sm overflow-hidden ${selectedCategory === null ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}>
+                        <span className="truncate">{t('educational.allMajors')}</span>
+                        <Badge variant="secondary" className="ms-2 flex-shrink-0">{Object.values(categoryMajorCounts).reduce((sum, count) => sum + count, 0)}</Badge>
                       </Button>
                       {majorsData.map((category) => (
-                        <Button key={category.id} variant={selectedCategory === category.id ? "default" : "outline"} onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }} className={`w-full justify-between text-sm ${selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}>
-                          <span>{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
-                          <Badge variant="secondary" className="mr-2">{categoryMajorCounts[category.id] || 0}</Badge>
+                        <Button key={category.id} variant={selectedCategory === category.id ? "default" : "outline"} onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }} className={`w-full justify-between text-xs sm:text-sm overflow-hidden ${selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}>
+                          <span className="truncate">{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
+                          <Badge variant="secondary" className="ms-2 flex-shrink-0">{categoryMajorCounts[category.id] || 0}</Badge>
                         </Button>
                       ))}
                     </div>
@@ -71,7 +72,7 @@ const SearchAndFilter = ({
                 </>
               )}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">
+            <div className="text-xs md:text-sm text-gray-600 text-end flex-shrink-0">
               {searchQuery || selectedCategory
                 ? t('educational.foundResults', { count: filteredMajorsCount })
                 : t('educational.availableMajors', { count: allMajorsCount })
