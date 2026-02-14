@@ -42,8 +42,8 @@ interface CasesManagementProps {
   onRefresh: () => void;
 }
 
-const CASE_STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'registration_submitted', 'visa_stage', 'completed'] as const;
-const CASE_STATUS_ORDER: Record<string, number> = { assigned: 0, contacted: 1, appointment: 2, closed: 3, paid: 4, registration_submitted: 5, visa_stage: 6, completed: 7 };
+const CASE_STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled', 'completed'] as const;
+const CASE_STATUS_ORDER: Record<string, number> = { assigned: 0, contacted: 1, appointment: 2, closed: 3, paid: 4, ready_to_apply: 5, registration_submitted: 6, visa_stage: 7, settled: 8, completed: 9 };
 
 const getValidStatuses = (currentStatus: string) => {
   const currentOrder = CASE_STATUS_ORDER[currentStatus] ?? 0;

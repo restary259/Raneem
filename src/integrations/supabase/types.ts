@@ -304,6 +304,60 @@ export type Database = {
           },
         ]
       }
+      eligibility_config: {
+        Row: {
+          created_at: string
+          field_name: string
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          field_name: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          field_name?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      eligibility_thresholds: {
+        Row: {
+          eligible_min: number
+          id: string
+          review_min: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          eligible_min?: number
+          id?: string
+          review_min?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          eligible_min?: number
+          id?: string
+          review_min?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       influencer_invites: {
         Row: {
           created_at: string
@@ -338,8 +392,10 @@ export type Database = {
         Row: {
           accommodation: boolean
           age: number | null
+          arab48_flag: boolean
           budget_range: string | null
           city: string | null
+          companion_lead_id: string | null
           created_at: string
           education_level: string | null
           eligibility_reason: string | null
@@ -349,22 +405,28 @@ export type Database = {
           full_name: string
           german_level: string | null
           id: string
+          last_contacted: string | null
           math_units: number | null
           notes: string | null
           passport_type: string | null
           phone: string
           preferred_city: string | null
+          ref_code: string | null
           service_requested: string | null
           source_id: string | null
           source_type: string
           status: string
+          student_portal_created: boolean
           study_destination: string | null
+          visa_history: string | null
         }
         Insert: {
           accommodation?: boolean
           age?: number | null
+          arab48_flag?: boolean
           budget_range?: string | null
           city?: string | null
+          companion_lead_id?: string | null
           created_at?: string
           education_level?: string | null
           eligibility_reason?: string | null
@@ -374,22 +436,28 @@ export type Database = {
           full_name: string
           german_level?: string | null
           id?: string
+          last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
           passport_type?: string | null
           phone: string
           preferred_city?: string | null
+          ref_code?: string | null
           service_requested?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
+          student_portal_created?: boolean
           study_destination?: string | null
+          visa_history?: string | null
         }
         Update: {
           accommodation?: boolean
           age?: number | null
+          arab48_flag?: boolean
           budget_range?: string | null
           city?: string | null
+          companion_lead_id?: string | null
           created_at?: string
           education_level?: string | null
           eligibility_reason?: string | null
@@ -399,18 +467,30 @@ export type Database = {
           full_name?: string
           german_level?: string | null
           id?: string
+          last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
           passport_type?: string | null
           phone?: string
           preferred_city?: string | null
+          ref_code?: string | null
           service_requested?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
+          student_portal_created?: boolean
           study_destination?: string | null
+          visa_history?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_companion_lead_id_fkey"
+            columns: ["companion_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_attempts: {
         Row: {
@@ -882,6 +962,26 @@ export type Database = {
               p_accommodation?: boolean
               p_budget_range?: string
               p_city?: string
+              p_education_level?: string
+              p_english_units?: number
+              p_full_name: string
+              p_german_level?: string
+              p_math_units?: number
+              p_passport_type?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_companion_name?: string
+              p_companion_phone?: string
               p_education_level?: string
               p_english_units?: number
               p_full_name: string

@@ -641,7 +641,12 @@
       "appointment": "موعد",
       "closed": "مغلق",
       "lost": "خسارة",
-      "paid": "مدفوع"
+      "paid": "مدفوع",
+      "ready_to_apply": "جاهز للتقديم",
+      "registration_submitted": "تم تقديم التسجيل",
+      "visa_stage": "مرحلة الفيزا",
+      "settled": "مستقر",
+      "completed": "مكتمل"
     },
     "sources": {
       "influencer": "وكيل",
@@ -709,8 +714,10 @@
       "appointment": "موعد",
       "closed": "مغلق",
       "paid": "مدفوع",
+      "ready_to_apply": "جاهز للتقديم",
       "registration_submitted": "تم تقديم التسجيل",
       "visa_stage": "مرحلة الفيزا",
+      "settled": "مستقر",
       "completed": "مكتمل"
     }
   },
