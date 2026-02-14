@@ -26,8 +26,8 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
   const handleDelete = async () => {
     if (!deleteId) return;
     const { error } = await (supabase as any).from('contact_submissions').delete().eq('id', deleteId);
-    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); }
-    else { toast({ title: 'تم الحذف' }); onRefresh(); }
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
+    else { toast({ title: t('admin.shared.deleted') }); onRefresh(); }
     setDeleteId(null);
   };
 
@@ -74,12 +74,12 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
+            <AlertDialogTitle>{t('admin.shared.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('admin.shared.deleteDesc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+            <AlertDialogCancel>{t('admin.shared.cancelBtn')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('admin.shared.deleteBtn')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
