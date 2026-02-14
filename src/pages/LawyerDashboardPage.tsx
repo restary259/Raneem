@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
+import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,14 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 
-const CASE_STATUSES = [
-  { value: 'assigned', label: 'معيّن' },
-  { value: 'contacted', label: 'تم التواصل' },
-  { value: 'appointment', label: 'موعد' },
-  { value: 'closed', label: 'مغلق' },
-  { value: 'lost', label: 'خسارة' },
-  { value: 'paid', label: 'مدفوع' },
-];
+const STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'lost', 'paid'] as const;
 
 const STATUS_COLORS: Record<string, string> = {
   assigned: 'bg-blue-100 text-blue-800',
@@ -34,12 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
 };
 
-const SOURCE_MAP: Record<string, string> = {
-  influencer: 'وكيل',
-  referral: 'إحالة',
-  organic: 'عضوي',
-  contact_form: 'نموذج التواصل',
-};
+const SOURCE_KEYS = ['influencer', 'referral', 'organic', 'contact_form'] as const;
 
 const LawyerDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,6 +42,7 @@ const LawyerDashboardPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
+  const { t } = useTranslation('dashboard');
 
   useEffect(() => {
     const init = async () => {
@@ -63,7 +53,7 @@ const LawyerDashboardPage = () => {
       const { data: roles } = await (supabase as any)
         .from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'lawyer');
       if (!roles?.length) {
-        toast({ variant: 'destructive', title: 'غير مصرح', description: 'هذه الصفحة للمحامين فقط.' });
+        toast({ variant: 'destructive', title: t('lawyer.unauthorized'), description: t('lawyer.unauthorizedDesc') });
         navigate('/'); return;
       }
 
@@ -89,7 +79,7 @@ const LawyerDashboardPage = () => {
     }
   };
 
-  const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: 'غير معروف', phone: '' };
+  const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' };
 
   const startEdit = (c: any) => {
     setEditingCase(c.id);
@@ -106,22 +96,21 @@ const LawyerDashboardPage = () => {
       selected_school: editValues.selected_school || null,
     };
 
-    // Set paid_at when marking as paid
     if (editValues.case_status === 'paid' && prevCase?.case_status !== 'paid') {
       updateData.paid_at = new Date().toISOString();
     }
 
     const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
 
-    if (error) { toast({ variant: 'destructive', title: 'خطأ', description: error.message }); setSaving(false); return; }
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); setSaving(false); return; }
 
     if (editValues.case_status === 'paid' && prevCase?.case_status !== 'paid') {
-      toast({ title: 'تنبيه', description: 'تم إرسال إشعار للإدارة لتأكيد الدفع. لن يتم تفعيل العمولات حتى التأكيد.' });
+      toast({ title: t('common.error'), description: t('lawyer.paidNotice') });
     }
 
     setSaving(false);
     setEditingCase(null);
-    toast({ title: 'تم الحفظ' });
+    toast({ title: t('lawyer.saved') });
     if (user) await fetchCases(user.id);
   };
 
@@ -143,7 +132,7 @@ const LawyerDashboardPage = () => {
             <div className="flex items-center gap-3">
               <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-9 h-9 object-contain" />
               <div>
-                <h1 className="text-lg font-bold">لوحة المحامي</h1>
+                <h1 className="text-lg font-bold">{t('lawyer.title')}</h1>
                 <p className="text-xs text-white/70">{profile?.full_name || user?.email}</p>
               </div>
             </div>
@@ -162,24 +151,24 @@ const LawyerDashboardPage = () => {
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <div className="grid grid-cols-3 gap-3">
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">إجمالي</p>
+            <p className="text-xs text-muted-foreground">{t('lawyer.total')}</p>
             <p className="text-xl font-bold">{cases.length}</p>
           </CardContent></Card>
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">مغلق</p>
+            <p className="text-xs text-muted-foreground">{t('lawyer.closed')}</p>
             <p className="text-xl font-bold text-emerald-600">{cases.filter(c => ['paid', 'closed'].includes(c.case_status)).length}</p>
           </CardContent></Card>
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">قيد العمل</p>
+            <p className="text-xs text-muted-foreground">{t('lawyer.inProgress')}</p>
             <p className="text-xl font-bold text-blue-600">{cases.filter(c => ['assigned', 'contacted', 'appointment'].includes(c.case_status)).length}</p>
           </CardContent></Card>
         </div>
 
-        <h2 className="font-bold text-base flex items-center gap-2"><Briefcase className="h-4 w-4" />الملفات المعينة</h2>
+        <h2 className="font-bold text-base flex items-center gap-2"><Briefcase className="h-4 w-4" />{t('lawyer.assignedCases')}</h2>
         {cases.map(c => {
           const lead = getLeadInfo(c.lead_id);
           const isEditing = editingCase === c.id;
-          const statusLabel = CASE_STATUSES.find(s => s.value === c.case_status)?.label || c.case_status;
+          const statusLabel = t(`lawyer.statuses.${c.case_status}`, c.case_status);
           const statusColor = STATUS_COLORS[c.case_status] || 'bg-gray-100 text-gray-800';
           const score = (lead as any).eligibility_score ?? null;
           const isEligible = score !== null && score >= 50;
@@ -199,11 +188,11 @@ const LawyerDashboardPage = () => {
                         )}
                         <div className="flex items-center gap-2 mt-1">
                           {c.selected_city && <span className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</span>}
-                          {(lead as any).source_type && <Badge variant="outline" className="text-[10px]">{SOURCE_MAP[(lead as any).source_type] || (lead as any).source_type}</Badge>}
+                          {(lead as any).source_type && <Badge variant="outline" className="text-[10px]">{String(t(`lawyer.sources.${(lead as any).source_type}`, { defaultValue: (lead as any).source_type }))}</Badge>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}>{String(statusLabel)}</span>
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
@@ -211,13 +200,12 @@ const LawyerDashboardPage = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="px-4 pb-4 border-t pt-3 space-y-3">
-                    {/* Eligibility info */}
                     {score !== null && (
                       <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
                         {isEligible ? (
-                          <><CheckCircle className="h-4 w-4 shrink-0" /><span>مؤهل ({score} نقطة)</span></>
+                          <><CheckCircle className="h-4 w-4 shrink-0" /><span>{t('lawyer.eligible', { score })}</span></>
                         ) : (
-                          <><XCircle className="h-4 w-4 shrink-0" /><span>{(lead as any).eligibility_reason || 'غير مؤهل'} ({score} نقطة)</span></>
+                          <><XCircle className="h-4 w-4 shrink-0" /><span>{(lead as any).eligibility_reason || t('lawyer.ineligible', { score })}</span></>
                         )}
                       </div>
                     )}
@@ -226,27 +214,27 @@ const LawyerDashboardPage = () => {
                       <>
                         {c.notes && <p className="text-sm text-muted-foreground bg-muted/30 p-2 rounded">{c.notes}</p>}
                         <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="p-2 bg-muted/30 rounded"><span className="text-xs text-muted-foreground">رسوم الخدمة</span><p className="font-semibold">{c.service_fee} €</p></div>
-                          <div className="p-2 bg-muted/30 rounded"><span className="text-xs text-muted-foreground">عمولتك</span><p className="font-semibold">{c.lawyer_commission} €</p></div>
+                          <div className="p-2 bg-muted/30 rounded"><span className="text-xs text-muted-foreground">{t('lawyer.serviceFee')}</span><p className="font-semibold">{c.service_fee} €</p></div>
+                          <div className="p-2 bg-muted/30 rounded"><span className="text-xs text-muted-foreground">{t('lawyer.yourCommission')}</span><p className="font-semibold">{c.lawyer_commission} €</p></div>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => startEdit(c)}>تعديل الحالة</Button>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(c)}>{t('common.edit')}</Button>
                       </>
                     ) : (
                       <div className="space-y-3">
-                        <div><Label className="text-xs">حالة الملف</Label>
+                        <div><Label className="text-xs">{t('lawyer.caseStatus')}</Label>
                           <Select value={editValues.case_status} onValueChange={v => setEditValues(ev => ({ ...ev, case_status: v }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>{CASE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                            <SelectContent>{STATUS_KEYS.map(s => <SelectItem key={s} value={s}>{t(`lawyer.statuses.${s}`)}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div><Label className="text-xs">المدينة</Label><Input value={editValues.selected_city} onChange={e => setEditValues(v => ({ ...v, selected_city: e.target.value }))} /></div>
-                          <div><Label className="text-xs">المدرسة</Label><Input value={editValues.selected_school} onChange={e => setEditValues(v => ({ ...v, selected_school: e.target.value }))} /></div>
+                          <div><Label className="text-xs">{t('lawyer.cityLabel')}</Label><Input value={editValues.selected_city} onChange={e => setEditValues(v => ({ ...v, selected_city: e.target.value }))} /></div>
+                          <div><Label className="text-xs">{t('lawyer.schoolLabel')}</Label><Input value={editValues.selected_school} onChange={e => setEditValues(v => ({ ...v, selected_school: e.target.value }))} /></div>
                         </div>
-                        <div><Label className="text-xs">ملاحظات</Label><Textarea value={editValues.notes} onChange={e => setEditValues(v => ({ ...v, notes: e.target.value }))} rows={2} /></div>
+                        <div><Label className="text-xs">{t('lawyer.notesLabel')}</Label><Textarea value={editValues.notes} onChange={e => setEditValues(v => ({ ...v, notes: e.target.value }))} rows={2} /></div>
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={() => saveCase(c.id)} disabled={saving}><Save className="h-3.5 w-3.5 me-1" />{saving ? 'جاري...' : 'حفظ'}</Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditingCase(null)}>إلغاء</Button>
+                          <Button size="sm" onClick={() => saveCase(c.id)} disabled={saving}><Save className="h-3.5 w-3.5 me-1" />{saving ? t('common.loading') : t('common.save')}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingCase(null)}>{t('common.cancel')}</Button>
                         </div>
                       </div>
                     )}
@@ -256,9 +244,8 @@ const LawyerDashboardPage = () => {
             </Collapsible>
           );
         })}
-        {cases.length === 0 && <p className="text-center text-muted-foreground py-8">لا يوجد ملفات معينة لك حالياً</p>}
+        {cases.length === 0 && <p className="text-center text-muted-foreground py-8">{t('lawyer.noCases')}</p>}
 
-        {/* Appointment Calendar */}
         {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
       </main>
     </div>
