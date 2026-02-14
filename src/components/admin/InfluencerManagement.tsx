@@ -45,7 +45,12 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
       setCreatedPassword('sent_via_email');
-      toast({ title: t('admin.influencers.createSuccess') }); onRefresh();
+      if (result.email_sent === false) {
+        toast({ variant: 'destructive', title: 'Account created, but email failed', description: 'Share credentials manually with the team member.' });
+      } else {
+        toast({ title: t('admin.influencers.createSuccess') });
+      }
+      onRefresh();
     } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
     finally { setIsCreating(false); }
   };

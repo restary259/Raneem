@@ -433,6 +433,44 @@ serve(async (req) => {
         textContent = `بيانات حسابك: البريد: ${user_email} | كلمة المرور المؤقتة: ${requestBody.temp_password || '—'} — يرجى تغييرها فوراً`;
         break;
 
+      case 'student_credentials':
+        subject = 'بيانات حسابك الطلابي - درب للدراسة | Your Student Portal Credentials';
+        htmlContent = baseTemplate(`
+          <div class="welcome-title">🎓 مرحباً بك في بوابة الطالب!</div>
+          <div class="message-text">مرحباً <strong>${user_name || 'عزيزي الطالب'}</strong>,</div>
+          <div class="message-text">تم إنشاء حسابك في بوابة الطالب الخاصة بمنصة درب للدراسة. استخدم البيانات التالية لتسجيل الدخول:</div>
+          <div class="features-list">
+            <h3>🔐 بيانات تسجيل الدخول:</h3>
+            <ul>
+              <li><strong>البريد الإلكتروني:</strong> ${user_email}</li>
+              <li><strong>كلمة المرور المؤقتة:</strong> ${requestBody.temp_password || '—'}</li>
+            </ul>
+          </div>
+          <div class="cta-container">
+            <a href="https://darb-agency.lovable.app/student-auth" class="button">🚀 تسجيل الدخول إلى بوابة الطالب</a>
+          </div>
+          <div class="features-list">
+            <h3>🌟 ما يمكنك فعله في بوابة الطالب:</h3>
+            <ul>
+              <li>رفع المستندات المطلوبة</li>
+              <li>متابعة حالة طلبك خطوة بخطوة</li>
+              <li>التواصل مع فريق الدعم</li>
+              <li>تتبع قائمة المتطلبات</li>
+            </ul>
+          </div>
+          <div class="security-notice">
+            <strong>⚠️ مهم جداً:</strong>
+            <ul style="margin-top: 10px; padding-right: 20px;">
+              <li>يجب تغيير كلمة المرور فور تسجيل الدخول الأول</li>
+              <li>لا تشارك هذه البيانات مع أي شخص</li>
+            </ul>
+          </div>
+          <div class="divider"></div>
+          <div class="message-text" style="text-align: center;">مع أطيب التحيات،<br><strong>فريق درب للدراسة</strong> 🛡️</div>
+        `, true);
+        textContent = `بيانات حسابك الطلابي: البريد: ${user_email} | كلمة المرور المؤقتة: ${requestBody.temp_password || '—'}`;
+        break;
+
       case 'welcome':
         subject = 'مرحباً بك في درب للدراسة! | Welcome to Darb Study!';
         htmlContent = baseTemplate(`

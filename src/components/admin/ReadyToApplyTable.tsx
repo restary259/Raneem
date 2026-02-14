@@ -182,7 +182,11 @@ const ReadyToApplyTable: React.FC = () => {
       const result = res.data;
       if (result?.error) throw new Error(result.error);
 
-      toast({ title: t('admin.ready.accountCreated'), description: t('admin.ready.accountCreatedDesc') });
+      if (result?.email_sent === false) {
+        toast({ variant: 'destructive', title: 'Account created, but email failed', description: 'Share credentials manually with the student.' });
+      } else {
+        toast({ title: t('admin.ready.accountCreated'), description: t('admin.ready.accountCreatedDesc') });
+      }
       setEditCase(null);
       fetchData();
     } catch (err: any) {
