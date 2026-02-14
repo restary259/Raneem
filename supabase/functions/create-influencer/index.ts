@@ -32,16 +32,15 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const adminId = claimsData.claims.sub;
+    const adminId = userData.user.id;
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -120,10 +119,11 @@ serve(async (req) => {
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
 
-    // Send credentials via email (never expose in response)
+    // Send credentials via email
+    let email_sent = false;
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
+      const emailResp = await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,6 +136,8 @@ serve(async (req) => {
           temp_password: tempPassword,
         }),
       });
+      const emailResult = await emailResp.json();
+      email_sent = emailResp.ok && emailResult?.success === true;
     } catch (emailErr) {
       console.error("Failed to send credentials email:", emailErr);
     }
@@ -145,7 +147,7 @@ serve(async (req) => {
       admin_id: adminId,
       action: "create_influencer",
       target_id: userId,
-      details: `Created influencer account for ${email}`,
+      details: `Created influencer account for ${email} (email_sent: ${email_sent})`,
     });
 
     return new Response(
@@ -153,7 +155,10 @@ serve(async (req) => {
         success: true,
         user_id: userId,
         email,
-        message: "Influencer account created. Credentials sent via email.",
+        email_sent,
+        message: email_sent
+          ? "Influencer account created. Credentials sent via email."
+          : "Influencer account created, but email delivery failed.",
       }),
       {
         status: 200,

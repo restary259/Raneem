@@ -135,9 +135,10 @@ serve(async (req) => {
     }).eq("id", case_id);
 
     // Send credentials via email
+    let email_sent = false;
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
+      const emailResp = await fetch(`${supabaseUrl}/functions/v1/send-branded-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,6 +151,8 @@ serve(async (req) => {
           temp_password: tempPassword,
         }),
       });
+      const emailResult = await emailResp.json();
+      email_sent = emailResp.ok && emailResult?.success === true;
     } catch (emailErr) {
       console.error("Failed to send credentials email:", emailErr);
     }
@@ -160,7 +163,7 @@ serve(async (req) => {
       action: "create_student_account",
       target_id: userId,
       target_table: "profiles",
-      details: `Created student account for ${email} (case: ${case_id})`,
+      details: `Created student account for ${email} (case: ${case_id}, email_sent: ${email_sent})`,
     });
 
     return new Response(
@@ -168,7 +171,10 @@ serve(async (req) => {
         success: true,
         user_id: userId,
         email,
-        message: `Student account created. Credentials sent to ${email}.`,
+        email_sent,
+        message: email_sent
+          ? `Student account created. Credentials sent to ${email}.`
+          : `Student account created, but email delivery failed.`,
       }),
       {
         status: 200,
