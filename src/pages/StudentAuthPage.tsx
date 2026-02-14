@@ -286,7 +286,7 @@ const StudentAuthPage = () => {
           </CardContent>
         </Card>
 
-        {import.meta.env.DEV && <AuthDebugPanel />}
+        {import.meta.env.DEV && window.location.hostname === 'localhost' && <AuthDebugPanel />}
         <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
         {/* Forced Password Change Modal */}
