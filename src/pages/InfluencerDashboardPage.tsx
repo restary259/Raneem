@@ -8,28 +8,23 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
+import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
 import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Image, Link, Target, CheckCircle, CreditCard, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import MediaHub from '@/components/influencer/MediaHub';
 import ReferralLink from '@/components/influencer/ReferralLink';
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  eligible: { label: 'مؤهل', color: 'bg-emerald-100 text-emerald-800' },
-  ineligible: { label: 'غير مؤهل', color: 'bg-red-100 text-red-800' },
-  converted: { label: 'محوّل', color: 'bg-blue-100 text-blue-800' },
-  paid: { label: 'مدفوع', color: 'bg-green-100 text-green-800' },
-  nurtured: { label: 'متابَع', color: 'bg-purple-100 text-purple-800' },
-};
-
 type TabId = 'students' | 'earnings' | 'media' | 'referral-link';
 
-const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: 'students', label: 'الطلاب', icon: Users },
-  { id: 'earnings', label: 'الأرباح', icon: DollarSign },
-  { id: 'media', label: 'المحتوى', icon: Image },
-  { id: 'referral-link', label: 'رابط الإحالة', icon: Link },
-];
+const TAB_ICONS: Record<TabId, React.ComponentType<{ className?: string }>> = {
+  students: Users,
+  earnings: DollarSign,
+  media: Image,
+  'referral-link': Link,
+};
+
+const TAB_IDS: TabId[] = ['students', 'earnings', 'media', 'referral-link'];
 
 const InfluencerDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -43,6 +38,7 @@ const InfluencerDashboardPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
+  const { t } = useTranslation('dashboard');
 
   useEffect(() => {
     const init = async () => {
@@ -53,7 +49,7 @@ const InfluencerDashboardPage = () => {
       const { data: roles } = await (supabase as any)
         .from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'influencer');
       if (!roles?.length) {
-        toast({ variant: 'destructive', title: 'غير مصرح', description: 'هذه الصفحة للوكلاء فقط.' });
+        toast({ variant: 'destructive', title: t('influencerDash.unauthorized'), description: t('influencerDash.unauthorizedDesc') });
         navigate('/'); return;
       }
 
@@ -97,8 +93,6 @@ const InfluencerDashboardPage = () => {
 
   const totalLeads = leads.length;
   const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
-  const notEligibleLeads = leads.filter(l => l.status === 'not_eligible').length;
-  const closedLeads = leads.filter(l => l.status === 'assigned').length;
   const paidStudents = students.filter(s => s.student_status === 'paid').length;
   const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
   const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
@@ -111,16 +105,16 @@ const InfluencerDashboardPage = () => {
             <div className="flex items-center gap-4">
               <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-10 h-10 object-contain" />
               <div>
-                <h1 className="text-xl font-bold">لوحة تحكم الوكيل</h1>
-                <p className="text-sm text-white/70">مرحباً، {profile?.full_name || user?.email}</p>
+                <h1 className="text-xl font-bold">{t('influencerDash.title')}</h1>
+                <p className="text-sm text-white/70">{t('influencerDash.welcome', { name: profile?.full_name || user?.email })}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={() => navigate('/')}>
-                <ArrowLeftCircle className="h-4 w-4 me-2" />الموقع
+                <ArrowLeftCircle className="h-4 w-4 me-2" />{t('lawyer.website')}
               </Button>
               <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 me-2" />خروج
+                <LogOut className="h-4 w-4 me-2" />{t('lawyer.signOut')}
               </Button>
             </div>
           </div>
@@ -132,52 +126,52 @@ const InfluencerDashboardPage = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card><CardContent className="p-4 text-center">
             <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-            <p className="text-xs text-muted-foreground">إجمالي العملاء</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.totalClients')}</p>
             <p className="text-xl font-bold">{totalLeads}</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
             <Target className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
-            <p className="text-xs text-muted-foreground">مؤهل</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.eligible')}</p>
             <p className="text-xl font-bold">{eligibleLeads}</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
             <CheckCircle className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-            <p className="text-xs text-muted-foreground">محوّل</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.converted')}</p>
             <p className="text-xl font-bold">{totalConverted}</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
             <CreditCard className="h-5 w-5 mx-auto mb-1 text-green-600" />
-            <p className="text-xs text-muted-foreground">مدفوع</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.paid')}</p>
             <p className="text-xl font-bold">{paidStudents}</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
             <DollarSign className="h-5 w-5 mx-auto mb-1 text-amber-600" />
-            <p className="text-xs text-muted-foreground">الطلاب المعينين</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.assignedStudents')}</p>
             <p className="text-xl font-bold">{students.length}</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
             <ClipboardCheck className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-            <p className="text-xs text-muted-foreground">متوسط التقدم</p>
+            <p className="text-xs text-muted-foreground">{t('influencerDash.avgProgress')}</p>
             <p className="text-xl font-bold">{avgProgress}%</p>
           </CardContent></Card>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap border-b pb-2">
-          {TABS.map(tab => {
-            const Icon = tab.icon;
+          {TAB_IDS.map(tabId => {
+            const Icon = TAB_ICONS[tabId];
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                key={tabId}
+                onClick={() => setActiveTab(tabId)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab.id
+                  activeTab === tabId
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {tab.label}
+                {t(`influencerDash.tabs.${tabId === 'referral-link' ? 'referralLink' : tabId}`)}
               </button>
             );
           })}
@@ -188,17 +182,19 @@ const InfluencerDashboardPage = () => {
           <div className="space-y-3">
             {leads.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm text-muted-foreground">العملاء المحالين</h3>
+                <h3 className="font-semibold text-sm text-muted-foreground">{t('influencerDash.referredClients')}</h3>
                 {leads.map(lead => {
                   const score = lead.eligibility_score ?? 0;
                   const isEligible = score >= 50;
-                  const statusMap: Record<string, { label: string; color: string }> = {
-                    new: { label: 'جديد', color: 'bg-blue-100 text-blue-800' },
-                    eligible: { label: 'مؤهل', color: 'bg-emerald-100 text-emerald-800' },
-                    not_eligible: { label: 'غير مؤهل', color: 'bg-red-100 text-red-800' },
-                    assigned: { label: 'معيّن', color: 'bg-purple-100 text-purple-800' },
+                  const st = {
+                    label: t(`influencerDash.leadStatuses.${lead.status}`, lead.status),
+                    color: ({
+                      new: 'bg-blue-100 text-blue-800',
+                      eligible: 'bg-emerald-100 text-emerald-800',
+                      not_eligible: 'bg-red-100 text-red-800',
+                      assigned: 'bg-purple-100 text-purple-800',
+                    } as Record<string, string>)[lead.status] || 'bg-blue-100 text-blue-800',
                   };
-                  const st = statusMap[lead.status] || statusMap.new;
                   return (
                     <Card key={lead.id}>
                       <CardContent className="p-4 space-y-2">
@@ -208,16 +204,15 @@ const InfluencerDashboardPage = () => {
                             <p className="text-xs text-muted-foreground">{lead.city || '—'} • {lead.german_level || '—'}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{st.label}</span>
-                            <Badge variant="outline" className="text-xs">{score} نقطة</Badge>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{String(st.label)}</span>
+                            <Badge variant="outline" className="text-xs">{score} pts</Badge>
                           </div>
                         </div>
-                        {/* Eligibility display */}
                         <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
                           {isEligible ? (
-                            <><CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>مؤهل للتقديم</span></>
+                            <><CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{t('influencerDash.eligibleForApply')}</span></>
                           ) : (
-                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{lead.eligibility_reason || 'لم يستوفِ الشروط'}</span></>
+                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{lead.eligibility_reason || t('influencerDash.notMeetReqs')}</span></>
                           )}
                         </div>
                       </CardContent>
@@ -229,16 +224,25 @@ const InfluencerDashboardPage = () => {
 
             {students.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm text-muted-foreground">الطلاب المسجلين</h3>
+                <h3 className="font-semibold text-sm text-muted-foreground">{t('influencerDash.enrolledStudents')}</h3>
                 {students.map(s => {
                   const progress = getProgress(s.id);
-                  const statusInfo = STATUS_LABELS[s.student_status] || STATUS_LABELS.eligible;
+                  const statusKey = s.student_status || 'eligible';
+                  const statusColors: Record<string, string> = {
+                    eligible: 'bg-emerald-100 text-emerald-800',
+                    ineligible: 'bg-red-100 text-red-800',
+                    converted: 'bg-blue-100 text-blue-800',
+                    paid: 'bg-green-100 text-green-800',
+                    nurtured: 'bg-purple-100 text-purple-800',
+                  };
                   return (
                     <Card key={s.id}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <p className="font-medium text-sm">{s.full_name}</p>
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[statusKey] || statusColors.eligible}`}>
+                            {String(t(`admin.students.statuses.${statusKey}`, { defaultValue: statusKey }))}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Progress value={progress} className="h-2 flex-1" />
@@ -252,7 +256,7 @@ const InfluencerDashboardPage = () => {
             )}
 
             {leads.length === 0 && students.length === 0 && (
-              <p className="p-8 text-center text-muted-foreground">لا يوجد طلاب معينين لك حالياً</p>
+              <p className="p-8 text-center text-muted-foreground">{t('influencerDash.noStudents')}</p>
             )}
           </div>
         )}
