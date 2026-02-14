@@ -310,5 +310,20 @@
     "locationsDesc": "Discover Darb's office locations and where we operate around the world.",
     "whoWeAreTitle": "Who We Are — Darb",
     "whoWeAreDesc": "Learn about Darb's story, team, values, and what sets us apart in education consulting."
-  }
+  },
+  "pwa": {
+    "installNow": "Install App",
+    "iosTitle": "Install Darb on iOS",
+    "iosDesc": "Follow these simple steps to add Darb to your home screen",
+    "iosStep1Title": "Tap Share",
+    "iosStep1Desc": "Open this page in Safari and tap the",
+    "iosStep2Title": "Tap Add to Home Screen",
+    "iosStep2Desc": "Scroll down and select 'Add to Home Screen'",
+    "iosStep3Title": "Tap Add",
+    "iosStep3Desc": "Confirm by tapping 'Add' in the top right",
+    "understood": "Got it",
+    "notificationTitle": "Stay Updated",
+    "notificationDesc": "Get notifications about your applications, deadlines, and important updates.",
+    "notificationEnable": "Enable Notifications",
+    "notificationSkip": "Skip for Now"
 }

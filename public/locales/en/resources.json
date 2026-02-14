@@ -111,6 +111,13 @@
   "lebenslaufBuilder": {
     "title": "CV Builder (Lebenslauf)",
     "description": "Create a professional CV that meets German university requirements and download it as PDF.",
+    "faqTitle": "About This CV Builder",
+    "faqQ1": "Why Lebenslauf?",
+    "faqA1": "German universities and employers require the Lebenslauf (CV) format. It's a standardized document that meets all formal requirements for German applications.",
+    "faqQ2": "Which format should I choose?",
+    "faqA2": "The German Standard format is most widely accepted. Choose Academic for research-focused positions and Europass for international applications.",
+    "faqQ3": "Can I download this as PDF?",
+    "faqA3": "Yes! Click 'Download PDF' to get a clean, professional PDF ready for applications. No watermarks or branding — just your CV.",
     "chooseTemplate": "Choose Template",
     "contentLanguage": "Content Language",
     "german": "German",

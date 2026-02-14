@@ -12,6 +12,16 @@ const LebenslaufBuilder: React.FC = () => {
 
   return (
     <div className="lebenslauf-builder">
+      {/* FAQ-Style Description */}
+      <div className="mb-8 p-6 bg-accent/5 border border-accent/20 rounded-lg">
+        <h3 className="text-lg font-semibold mb-3">{t('lebenslaufBuilder.faqTitle')}</h3>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p><strong>{t('lebenslaufBuilder.faqQ1')}</strong> {t('lebenslaufBuilder.faqA1')}</p>
+          <p><strong>{t('lebenslaufBuilder.faqQ2')}</strong> {t('lebenslaufBuilder.faqA2')}</p>
+          <p><strong>{t('lebenslaufBuilder.faqQ3')}</strong> {t('lebenslaufBuilder.faqA3')}</p>
+        </div>
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 mb-6 print:hidden">
         <Button onClick={handlePrint} className="gap-2"><Download className="h-4 w-4" />{t('lebenslaufBuilder.actions.downloadPDF')}</Button>
