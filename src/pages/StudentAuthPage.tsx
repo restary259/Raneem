@@ -244,7 +244,7 @@ const StudentAuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={10}
+                    minLength={isLogin ? 1 : 10}
                   />
                   <Button
                     type="button"
