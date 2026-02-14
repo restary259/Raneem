@@ -1,92 +1,113 @@
 
 
-## Global Hero and Navigation Visual Consistency Fix
+## Global Language Toggle Consistency Fix
 
-This plan creates a unified `PageHero` component and standardizes all hero sections across the platform for consistent spacing, contrast, and brand alignment.
-
----
-
-### Audit Summary: Current Hero Inconsistencies
-
-| Page | Component | Background | Text Color | Top Padding | Issues |
-|------|-----------|------------|------------|-------------|--------|
-| Home | `Hero.tsx` | Video + primary/85 overlay | White | Full viewport | OK (unique layout) |
-| Services | `ServicesHero.tsx` | `from-primary to-background` gradient | `primary-foreground` | `py-12 sm:py-20 md:py-32` | Gradient fades to light bg, text stays light = poor contrast at bottom |
-| Contact | `ContactHero.tsx` | `from-primary/90 to-background` | `primary-foreground` | `py-12 sm:py-20 md:py-32` | Same fade-to-light contrast issue |
-| About (old) | `AboutIntro.tsx` | `bg-secondary` (light gray) | `text-primary` (dark) | `py-12 md:py-24` | OK contrast but different style |
-| Who We Are | Inline in page | Image + `bg-black/60` | White | `py-24 md:py-36` | Good contrast, different spacing |
-| Partnership | `PartnershipHero.tsx` | Image + `bg-black/60` | White | `py-20 md:py-40` | Good contrast, different spacing |
-| Majors | `HeroSection.tsx` | `from-orange-50 to-background` | `text-foreground` (dark) | `py-8 md:py-12` | Very small padding, feels cramped |
-| Housing | `HousingHero.tsx` | `from-orange-500 to-yellow-500` | White | `py-16` | OK but unique style |
-| Partners | Inline in page | `from-primary/5 to-background` | `text-foreground` | `py-8 sm:py-12 md:py-20` | Very light bg, adequate contrast |
-| Resources | Inline in page | `from-primary/10 via-accent/5` | `text-foreground` | `py-12 md:py-20` | OK |
-| Broadcast | `HeroVideo.tsx` | Video + gradient overlay | White | Full height `60-70vh` | OK (unique layout) |
-| Apply | Inline | None (plain bg) | Standard | `py-6 md:py-10` | Minimal, OK for form page |
+This plan ensures zero mixed-language UI by replacing all hardcoded Arabic and English strings with i18n translation keys, and adding missing translation entries to both locale files.
 
 ---
 
-### Phase 1: Create Reusable `PageHero` Component
+### Current System Assessment
 
-Create `src/components/common/PageHero.tsx` with three background variants:
+The project uses `i18next` with `react-i18next` and `i18next-http-backend`. Translation files are loaded from `/locales/{lng}/{ns}.json` with 10 namespaces. The `useDirection` hook handles RTL/LTR, and language persists in `localStorage`. The core i18n architecture is solid. The problem is **incomplete adoption**: many components still have hardcoded Arabic or English strings instead of using `t()` calls.
 
-- **`gradient`** (default): Uses the brand primary-to-primary/80 gradient with guaranteed dark background and white text
-- **`light`**: Light neutral background (`bg-secondary`) with dark text
-- **`image`**: Background image with dark overlay ensuring white text readability
+---
 
-Props:
-- `title: string`
-- `subtitle?: string`
-- `variant?: 'gradient' | 'light' | 'image'`
-- `imageUrl?: string` (for image variant)
-- `badge?: string` (optional top badge)
-- `children?: ReactNode` (for custom content like buttons or selects)
+### Severity Categories
 
-Standardized spacing: `pt-16 pb-12 sm:pt-20 sm:pb-16 md:pt-28 md:pb-20` -- ensures consistent top padding that accounts for the sticky 56px/64px navbar without content touching it.
+**Category A -- Components with ALL strings hardcoded (no i18n at all):**
 
-Contrast rules enforced in the component:
-- `gradient` and `image` variants: always use `text-white` with dark overlay
-- `light` variant: always use `text-foreground` on light bg
-- No semi-transparent text on gradient edges
+| File | Language | Issue |
+|------|----------|-------|
+| `src/pages/ResetPasswordPage.tsx` | Arabic only | All labels, toasts, buttons hardcoded in Arabic |
+| `src/pages/LawyerDashboardPage.tsx` | Arabic only | All labels, statuses, headings hardcoded in Arabic |
+| `src/components/admin/KPIAnalytics.tsx` | Arabic only | All metric labels hardcoded in Arabic |
+| `src/components/calculator/GpaCalculator.tsx` | Arabic only | Title, description, validation errors, formula explanation all hardcoded |
+| `src/components/educational/CategoryFilter.tsx` | Arabic only | Heading and "All Majors" button hardcoded |
+| `src/components/dashboard/DashboardErrorBoundary.tsx` | Arabic only | Error messages hardcoded |
+| `src/pages/StudentDashboardPage.tsx` | Arabic only | Error messages and retry button hardcoded |
+| `src/components/admin/CasesManagement.tsx` | Arabic only | Export dialog text hardcoded |
+| `src/components/partnership/SuccessStories.tsx` | Arabic only | All stories and labels hardcoded |
 
-### Phase 2: Replace Individual Hero Components
+**Category B -- Components using inline ternary (`isAr ? ... : ...`) instead of `t()` keys:**
 
-**Files to modify** (replace custom hero with `PageHero`):
+| File | Issue |
+|------|-------|
+| `src/components/services/ConsultationCta.tsx` | All form labels use `isAr ? 'Arabic' : 'English'` pattern |
+| `src/components/landing/Contact.tsx` | Form labels hardcoded in English only, validation messages mixed |
 
-1. **`src/components/services/ServicesHero.tsx`** -- Replace gradient-to-background (contrast issue) with `PageHero variant="gradient"`
-2. **`src/components/landing/ContactHero.tsx`** -- Replace gradient-to-background with `PageHero variant="gradient"`
-3. **`src/components/about/AboutIntro.tsx`** -- Replace with `PageHero variant="light"`
-4. **`src/components/educational/HeroSection.tsx`** -- Replace with `PageHero variant="light"` with badge
-5. **`src/pages/WhoWeArePage.tsx`** (inline hero) -- Replace with `PageHero variant="image"`
-6. **`src/pages/PartnersPage.tsx`** (inline hero) -- Replace with `PageHero variant="light"` with badge
-7. **`src/pages/ResourcesPage.tsx`** (inline hero) -- Replace with `PageHero variant="light"`
-8. **`src/components/partnership/PartnershipHero.tsx`** -- Replace with `PageHero variant="image"` with CTA button as children
+**Category C -- Partial hardcoding (uses `t()` for some strings but not all):**
 
-**NOT changed** (unique layouts that require custom structure):
-- `Hero.tsx` (landing page) -- Full viewport video hero, unique
-- `HeroVideo.tsx` (broadcast) -- Full-height video player, unique
-- `HousingHero.tsx` -- Has interactive city selector, keep as custom but fix spacing
-- `ApplyPage.tsx` -- Minimal form page, not a traditional hero
+| File | Hardcoded Strings |
+|------|-------------------|
+| `src/components/admin/AdminLayout.tsx` | Sidebar group labels (`لوحة التحكم`, `الطلاب`, `الفريق`, `المالية`, `أدوات`) |
+| `src/components/admin/InfluencerManagement.tsx` | Section heading `إدارة الفريق` |
+| `src/pages/InfluencerDashboardPage.tsx` | Tab labels, metric labels hardcoded in Arabic |
+| `src/components/partners/components/UniversityCarousel.tsx` | Button text `زيارة الموقع` |
+| `src/pages/PartnersPage.tsx` | Inline Arabic paragraph text |
 
-### Phase 3: Fix Navbar Contrast
+---
 
-The navbar is already solid white with dark text (`bg-white border-b`), which is correct. No transparent-over-hero mode needed since the header is sticky and always solid.
+### Implementation Plan
 
-Verify:
-- All nav link text uses `text-gray-700` (already does)
-- Hover states use `text-orange-500` (already does)
-- No opacity on nav links (confirmed clean)
+#### Step 1: Add Missing Translation Keys
 
-### Phase 4: Fix Housing Hero Spacing
+Add all missing keys to both `en` and `ar` locale files across the following namespaces:
 
-Update `HousingHero.tsx` to use consistent top padding matching the new standard: `pt-16 pb-12 sm:pt-20 sm:pb-16` instead of the current flat `py-16`.
+**`common.json`** -- Add keys for:
+- Reset password page (title, labels, validation, toasts, button states)
+- Dashboard error messages
+- Generic form labels (Full Name, Phone, City, etc.)
+- Generic actions (Save, Cancel, Edit, Delete, Retry)
+- Yes/No, Submitting/Sending states
 
-### Phase 5: Mobile Validation
+**`dashboard.json`** -- Add keys for:
+- Admin sidebar group labels (dashboard, students, team, finance, tools)
+- KPI metric labels (net profit, revenue, expenses, profit per student, close rate, etc.)
+- Lawyer dashboard (title, case statuses, field labels, source types)
+- Influencer dashboard (tab labels, metric labels)
+- Case management export dialog
+- Student dashboard error states
 
-The `PageHero` component will include:
-- Responsive font sizes via Tailwind (`text-2xl sm:text-3xl md:text-4xl lg:text-5xl`)
-- Container padding (`px-4 sm:px-6`)
-- Max-width on subtitle text (`max-w-3xl mx-auto`)
-- No horizontal overflow
+**`resources.json`** -- Add keys for:
+- GPA Calculator title, description, validation errors, formula explanation
+- All tooltip text
+
+**`partners.json`** -- Add keys for:
+- University "Visit Website" button
+- Partners page inline subtitle text
+
+**`partnership.json`** -- Add keys for:
+- Success stories content (names, stories, labels)
+
+**`services.json`** -- Add keys for:
+- All ConsultationCta form labels, placeholders, options, button text
+
+**`contact.json`** -- Add keys for:
+- All form labels, placeholders, select options, validation messages
+
+#### Step 2: Refactor Components to Use `t()` Keys
+
+For each file in Category A/B/C above:
+1. Import `useTranslation` (if not already imported)
+2. Replace every hardcoded string with the corresponding `t('key')` call
+3. Replace all `isAr ? ... : ...` ternary patterns with `t()` calls
+4. Replace hardcoded select option arrays with translation-driven arrays
+
+#### Step 3: Fix Admin Sidebar Group Labels
+
+In `AdminLayout.tsx`, change the hardcoded `label` strings in `sidebarGroups` to use translation keys (e.g., `labelKey: 'admin.groups.dashboard'`) and resolve them via `t()` in the render.
+
+#### Step 4: Fix CategoryFilter
+
+Replace hardcoded Arabic heading and button text with `t()` keys from an appropriate namespace (likely `common` or a new `educational` namespace using the existing majors data bilingual structure).
+
+#### Step 5: Fix ConsultationCta Pattern
+
+Replace all inline ternary translations with proper `t()` calls. Move select options to the translation files as arrays or use stable value keys with translated display labels.
+
+#### Step 6: Fix Contact Form
+
+Replace all English-only form labels ("Full Name", "Phone Number", etc.) and select option text with `t()` calls from the `contact` namespace.
 
 ---
 
@@ -94,22 +115,41 @@ The `PageHero` component will include:
 
 | File | Action |
 |------|--------|
-| `src/components/common/PageHero.tsx` | **CREATE** -- Reusable hero with 3 variants |
-| `src/components/services/ServicesHero.tsx` | Replace with PageHero (fixes contrast) |
-| `src/components/landing/ContactHero.tsx` | Replace with PageHero (fixes contrast) |
-| `src/components/about/AboutIntro.tsx` | Replace with PageHero variant="light" |
-| `src/components/educational/HeroSection.tsx` | Replace with PageHero + badge (fixes cramped spacing) |
-| `src/components/partnership/PartnershipHero.tsx` | Replace with PageHero variant="image" + CTA children |
-| `src/pages/WhoWeArePage.tsx` | Replace inline hero with PageHero variant="image" |
-| `src/pages/PartnersPage.tsx` | Replace inline hero with PageHero variant="light" |
-| `src/pages/ResourcesPage.tsx` | Replace inline hero with PageHero variant="light" |
-| `src/components/housing/HousingHero.tsx` | Fix top padding consistency |
+| `public/locales/en/common.json` | Add ~30 missing keys |
+| `public/locales/ar/common.json` | Add ~30 missing keys |
+| `public/locales/en/dashboard.json` | Add ~50 missing keys (admin, lawyer, influencer, KPI) |
+| `public/locales/ar/dashboard.json` | Add ~50 missing keys |
+| `public/locales/en/resources.json` | Add ~15 missing keys (GPA calculator) |
+| `public/locales/ar/resources.json` | Add ~15 missing keys |
+| `public/locales/en/contact.json` | Add ~20 missing keys (form fields) |
+| `public/locales/ar/contact.json` | Add ~20 missing keys |
+| `public/locales/en/services.json` | Add ~15 missing keys (consultation form) |
+| `public/locales/ar/services.json` | Add ~15 missing keys |
+| `public/locales/en/partners.json` | Add ~5 missing keys |
+| `public/locales/ar/partners.json` | Add ~5 missing keys |
+| `public/locales/en/partnership.json` | Add ~10 missing keys (success stories) |
+| `public/locales/ar/partnership.json` | Add ~10 missing keys |
+| `src/pages/ResetPasswordPage.tsx` | Replace all hardcoded Arabic with `t()` |
+| `src/pages/LawyerDashboardPage.tsx` | Replace all hardcoded Arabic with `t()` |
+| `src/pages/InfluencerDashboardPage.tsx` | Replace hardcoded tab/metric labels with `t()` |
+| `src/pages/StudentDashboardPage.tsx` | Replace hardcoded error text with `t()` |
+| `src/components/admin/KPIAnalytics.tsx` | Replace all hardcoded Arabic with `t()` |
+| `src/components/admin/AdminLayout.tsx` | Replace sidebar group labels with `t()` |
+| `src/components/admin/InfluencerManagement.tsx` | Replace heading with `t()` |
+| `src/components/admin/CasesManagement.tsx` | Replace dialog text with `t()` |
+| `src/components/calculator/GpaCalculator.tsx` | Replace all hardcoded text with `t()` |
+| `src/components/educational/CategoryFilter.tsx` | Replace heading/button with `t()` |
+| `src/components/services/ConsultationCta.tsx` | Replace ternaries with `t()` |
+| `src/components/landing/Contact.tsx` | Replace English labels with `t()` |
+| `src/components/partners/components/UniversityCarousel.tsx` | Replace button text with `t()` |
+| `src/components/partnership/SuccessStories.tsx` | Replace stories with `t()` |
+| `src/components/dashboard/DashboardErrorBoundary.tsx` | Replace error text with `t()` |
 
 ### Implementation Order
 
-1. Create `PageHero` component
-2. Replace all simple hero sections (Services, Contact, About, Educational, Resources, Partners)
-3. Replace image-based heroes (Partnership, WhoWeAre)
-4. Fix Housing hero spacing
-5. Visual verification across all pages
+1. Add all missing keys to locale JSON files (both `en` and `ar`)
+2. Refactor Category A files (fully hardcoded -- highest impact)
+3. Refactor Category B files (ternary pattern)
+4. Refactor Category C files (partial hardcoding)
+5. Verify by switching language on every affected page
 
