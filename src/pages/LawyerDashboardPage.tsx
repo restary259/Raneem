@@ -19,6 +19,7 @@ import {
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
+import NotificationBell from '@/components/common/NotificationBell';
 import { differenceInHours, isToday } from 'date-fns';
 
 const STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled'] as const;
@@ -190,6 +191,7 @@ const LawyerDashboardPage = () => {
               </div>
             </div>
             <div className="flex gap-1">
+              <NotificationBell />
               <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={() => navigate('/')}>
                 <ArrowLeftCircle className="h-4 w-4" />
               </Button>

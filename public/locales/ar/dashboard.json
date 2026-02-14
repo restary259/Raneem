@@ -836,7 +836,18 @@
       "registration_submitted": "تم تقديم التسجيل",
       "visa_stage": "مرحلة الفيزا",
       "settled": "تم الاستقرار",
-      "completed": "مكتمل"
+     "completed": "مكتمل"
     }
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "noNotifications": "لا توجد إشعارات بعد",
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} د",
+    "hoursAgo": "منذ {{count}} س",
+    "daysAgo": "منذ {{count}} ي",
+    "statusChanged": "تم تحديث حالة الطلب",
+    "statusChangedBody": "تم تغيير حالة طلبك إلى: {{status}}"
   }
 }
