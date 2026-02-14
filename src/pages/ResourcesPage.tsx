@@ -6,6 +6,7 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
+import PageHero from '@/components/common/PageHero';
 import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
@@ -78,18 +79,11 @@ const ResourcesPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-primary/10 via-accent/5 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              {t('resourcesPage.title')}
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              {t('resourcesPage.subtitle')}
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        variant="light"
+        title={t('resourcesPage.title')}
+        subtitle={t('resourcesPage.subtitle')}
+      />
 
       <ToolsSection tools={tools} />
       <GuidesSection />
