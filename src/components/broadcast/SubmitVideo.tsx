@@ -45,7 +45,7 @@ const SubmitVideo: React.FC = () => {
     };
 
     return (
-        <section className="py-12 md:py-24 bg-muted/50 dark:bg-muted/20">
+        <section className="py-12 md:py-24 bg-muted/50">
             <div className="container">
                 <Card className="max-w-2xl mx-auto">
                     <CardHeader className="text-center">

@@ -36,7 +36,7 @@ const BroadcastPage = () => {
   }
 
   return (
-    <div dir={dir} className="bg-background dark:bg-gray-950">
+    <div dir={dir} className="bg-background">
       <SEOHead title={t('seo.broadcastTitle', { ns: 'common' })} description={t('seo.broadcastDesc', { ns: 'common' })} />
       <Header />
       <main>
@@ -63,7 +63,7 @@ const BroadcastPage = () => {
         <SubmitVideo />
 
       </main>
-      <footer className="py-8 text-center text-muted-foreground bg-muted/50 dark:bg-muted/20">
+      <footer className="py-8 text-center text-muted-foreground bg-muted/50">
         <div className="container">
           <p>{t('broadcastPage.footer')}</p>
         </div>

@@ -32,7 +32,7 @@ export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => 
           </TableHeader>
           <TableBody>
             {results.map((result, index) => (
-              <TableRow key={index} className={index === 0 ? "bg-green-100/50 dark:bg-green-900/20" : ""}>
+              <TableRow key={index} className={index === 0 ? "bg-green-100/50" : ""}>
                 <TableCell className="font-bold">
                     <div>{result.service}</div>
                     <div className="text-xs text-muted-foreground">{t('currencyComparator.receivingBank')}: {result.bank}</div>

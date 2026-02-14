@@ -35,7 +35,7 @@ const Header = () => {
           </div>
 
           {/* Center: Desktop Navigation */}
-          <div className="hidden md:block flex-1 mx-4 lg:mx-6 overflow-hidden min-w-0">
+          <div className="hidden md:block flex-1 mx-4 lg:mx-6 min-w-0">
             <DesktopNav />
           </div>
 

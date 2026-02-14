@@ -16,14 +16,14 @@ export const BestResultCard = ({ bestResult, form, targetCountry }: BestResultCa
   const targetCurrency = countries[targetCountry].currency;
 
   return (
-    <Card className="bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800">
+    <Card className="bg-green-50 border border-green-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-300">
+        <CardTitle className="flex items-center gap-2 text-green-800">
           <TrendingUp />
           {t('currencyComparator.bestRecommendation')}
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-sm sm:text-base text-green-900 dark:text-green-200" dir="rtl">
+      <CardContent className="text-sm sm:text-base text-green-900" dir="rtl">
         <Trans
           i18nKey="currencyComparator.bestRecommendationText"
           values={{

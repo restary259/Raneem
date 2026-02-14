@@ -34,7 +34,7 @@ const AIAdvisorPage = () => {
   } = useAIChat(true);
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden" dir={dir}>
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden" dir={dir}>
       <SEOHead title={t('seo.advisorTitle')} description={t('seo.advisorDesc')} />
       <Header />
 
@@ -46,7 +46,7 @@ const AIAdvisorPage = () => {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 md:py-12 space-y-6 md:space-y-8">
               <div className="text-center space-y-3">
