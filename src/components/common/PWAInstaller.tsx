@@ -20,11 +20,20 @@ const PWAInstaller = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     const standalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     if (standalone || isInWebAppiOS) { setIsInstalled(true); return; }
+
+    const savedNotificationState = localStorage.getItem('pwa-notifications-disabled');
+    if (savedNotificationState) {
+      setShowNotificationPrompt(false);
+    } else if ('Notification' in window && Notification.permission === 'default') {
+      setShowNotificationPrompt(true);
+    }
 
     const handlePrompt = (e: Event) => {
       e.preventDefault();
@@ -54,6 +63,31 @@ const PWAInstaller = () => {
 
   const dismiss = () => { setShowPrompt(false); sessionStorage.setItem('pwa-install-dismissed', 'true'); };
 
+  const handleEnableNotifications = async () => {
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          setNotificationsEnabled(true);
+          localStorage.setItem('pwa-notifications-enabled', 'true');
+          setShowNotificationPrompt(false);
+        } else {
+          localStorage.setItem('pwa-notifications-disabled', 'true');
+          setShowNotificationPrompt(false);
+        }
+      } catch (error) {
+        console.error('Notification permission error:', error);
+        localStorage.setItem('pwa-notifications-disabled', 'true');
+        setShowNotificationPrompt(false);
+      }
+    }
+  };
+
+  const dismissNotificationPrompt = () => {
+    localStorage.setItem('pwa-notifications-disabled', 'true');
+    setShowNotificationPrompt(false);
+  };
+
   if (isInstalled || sessionStorage.getItem('pwa-install-dismissed') || !showPrompt) return null;
 
   return (
@@ -71,28 +105,42 @@ const PWAInstaller = () => {
       </div>
 
       <Dialog open={showIOSModal} onOpenChange={setShowIOSModal}>
-        <DialogContent className="max-w-sm" dir={dir}>
-          <DialogHeader>
-            <DialogTitle className="text-center">{t('pwa.iosTitle')}</DialogTitle>
-            <DialogDescription className="text-center">{t('pwa.iosDesc')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">1</div>
-              <div><p className="font-medium">{t('pwa.iosStep1Title')}</p><p className="text-sm text-muted-foreground flex items-center gap-1">{t('pwa.iosStep1Desc')} <Share className="h-4 w-4 inline" /></p></div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">2</div>
-              <div><p className="font-medium">{t('pwa.iosStep2Title')}</p><p className="text-sm text-muted-foreground">{t('pwa.iosStep2Desc')}</p></div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">3</div>
-              <div><p className="font-medium">{t('pwa.iosStep3Title')}</p><p className="text-sm text-muted-foreground">{t('pwa.iosStep3Desc')}</p></div>
-            </div>
-          </div>
-          <Button onClick={() => { setShowIOSModal(false); dismiss(); }} className="w-full bg-accent hover:bg-accent/90">{t('pwa.understood')}</Button>
-        </DialogContent>
-      </Dialog>
+       <DialogContent className="max-w-sm" dir={dir}>
+           <DialogHeader>
+             <DialogTitle className="text-center">{t('pwa.iosTitle')}</DialogTitle>
+             <DialogDescription className="text-center">{t('pwa.iosDesc')}</DialogDescription>
+           </DialogHeader>
+           <div className="space-y-4 py-4">
+             <div className="flex items-start gap-3">
+               <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">1</div>
+               <div><p className="font-medium">{t('pwa.iosStep1Title')}</p><p className="text-sm text-muted-foreground flex items-center gap-1">{t('pwa.iosStep1Desc')} <Share className="h-4 w-4 inline" /></p></div>
+             </div>
+             <div className="flex items-start gap-3">
+               <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">2</div>
+               <div><p className="font-medium">{t('pwa.iosStep2Title')}</p><p className="text-sm text-muted-foreground">{t('pwa.iosStep2Desc')}</p></div>
+             </div>
+             <div className="flex items-start gap-3">
+               <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 font-bold text-accent">3</div>
+               <div><p className="font-medium">{t('pwa.iosStep3Title')}</p><p className="text-sm text-muted-foreground">{t('pwa.iosStep3Desc')}</p></div>
+             </div>
+           </div>
+           <Button onClick={() => { setShowIOSModal(false); dismiss(); }} className="w-full bg-accent hover:bg-accent/90">{t('pwa.understood')}</Button>
+         </DialogContent>
+       </Dialog>
+
+       {/* Notification Opt-in Prompt */}
+       <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
+         <DialogContent className="max-w-sm" dir={dir}>
+           <DialogHeader>
+             <DialogTitle className="text-center">{t('pwa.notificationTitle')}</DialogTitle>
+             <DialogDescription className="text-center">{t('pwa.notificationDesc')}</DialogDescription>
+           </DialogHeader>
+           <div className="flex gap-3">
+             <Button variant="outline" onClick={dismissNotificationPrompt} className="flex-1">{t('pwa.notificationSkip')}</Button>
+             <Button onClick={handleEnableNotifications} className="flex-1 bg-accent hover:bg-accent/90">{t('pwa.notificationEnable')}</Button>
+           </div>
+         </DialogContent>
+       </Dialog>
     </>
   );
 };

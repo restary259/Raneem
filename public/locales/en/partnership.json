@@ -120,7 +120,7 @@
       { "icon": "Palette", "title": "Content Freedom", "description": "Choose your style, method, and the platform that suits you. Create promotional content freely to match your audience." },
       { "icon": "MousePointerClick", "title": "Student Registration", "description": "Students click your special link and fill out the form. Each student is automatically linked to your name." },
       { "icon": "Table2", "title": "Data Transparency", "description": "A shared spreadsheet is created for each partner. You can see student names, their status, and progress. The spreadsheet is read-only — transparent and reliable." },
-      { "icon": "BarChart3", "title": "Track Student Status", "description": "Each student is categorized: qualified, unqualified, contacted, in progress, paid, transferred." },
+      { "icon": "Activity", "title": "Track Student Status", "description": "Each student is categorized: qualified, unqualified, contacted, in progress, paid, transferred." },
       { "icon": "CalendarClock", "title": "Monthly Cycle", "description": "At the end of each month, the spreadsheet is closed and a new one opens for the next month. All data remains visible for history and transparency." },
       { "icon": "Wallet", "title": "Commission & Payment", "description": "Commission is paid 20 days after student payment. The 20-day period is mandatory to protect against cancellations or refunds. This rule is clear and binding." }
     ]

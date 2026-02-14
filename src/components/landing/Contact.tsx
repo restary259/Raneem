@@ -21,20 +21,21 @@ import { supabase } from "@/integrations/supabase/client";
 const Contact = () => {
   const { t } = useTranslation(['contact', 'common']);
   const { dir } = useDirection();
-  const serviceOptions = t('contact.form.serviceOptions', { returnObjects: true, ns: 'contact' }) as string[];
 
   const formSchema = z.object({
-    name: z.string().min(2, { message: t('contact.validation.nameMin', { ns: 'common' }) }),
-    email: z.string().email({ message: t('contact.validation.emailInvalid', { ns: 'common' }) }),
-    whatsapp: z.string().min(9, { message: t('contact.validation.whatsappMin', { ns: 'common' }) }),
-    studyDestination: z.string({ required_error: t('contact.validation.destinationRequired', { ns: 'common' }) }),
-    service: z.string({ required_error: t('contact.validation.serviceRequired', { ns: 'common' }) }),
-    message: z.string().optional(),
+    name: z.string().trim().min(2, { message: t('contact.validation.nameMin', { ns: 'common' }) }),
+    phone: z.string().trim().min(9, { message: t('contact.validation.whatsappMin', { ns: 'common' }) }),
+    interestedMajor: z.string({ required_error: t('contact.validation.destinationRequired', { ns: 'common' }) }),
+    city: z.string().trim().min(2, { message: "City is required" }),
+    educationLevel: z.string({ required_error: "Education level is required" }),
+    stillInSchool: z.string({ required_error: "Please select if you're still in school" }),
+    englishUnits: z.coerce.number().int().min(0).max(5),
+    mathUnits: z.coerce.number().int().min(0).max(5),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", whatsapp: "", message: "" },
+    defaultValues: { name: "", phone: "", interestedMajor: "", city: "", educationLevel: "", stillInSchool: "", englishUnits: 0, mathUnits: 0 },
   });
 
   const [honeypot, setHoneypot] = useState('');
@@ -44,13 +45,17 @@ const Contact = () => {
       // Honeypot check — silently succeed if filled
       if (honeypot) return { success: true };
 
-      const { error } = await supabase.rpc('upsert_lead_from_contact', {
+      const { error } = await supabase.rpc('insert_lead_from_apply', {
         p_full_name: values.name,
-        p_email: values.email,
-        p_phone: values.whatsapp,
-        p_study_destination: values.studyDestination,
-        p_service_requested: values.service,
-        p_notes: values.message || '',
+        p_phone: values.phone,
+        p_city: values.city,
+        p_education_level: values.educationLevel,
+        p_german_level: 'beginner',
+        p_preferred_city: values.city,
+        p_accommodation: false,
+        p_source_type: 'contact_form',
+        p_english_units: values.englishUnits,
+        p_math_units: values.mathUnits,
       });
 
       if (error) throw new Error(error.message);
@@ -84,35 +89,45 @@ const Contact = () => {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem><FormLabel>{t('contact.form.name')}</FormLabel><FormControl><Input placeholder={t('contact.form.namePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem><FormLabel>{t('contact.form.email')}</FormLabel><FormControl><Input placeholder={t('contact.form.emailPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField control={form.control} name="whatsapp" render={({ field }) => (
-                    <FormItem><FormLabel>{t('contact.form.whatsapp')}</FormLabel><FormControl><Input placeholder={t('contact.form.whatsappPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                </div>
+                   <FormField control={form.control} name="name" render={({ field }) => (
+                     <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="phone" render={({ field }) => (
+                     <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="With country code" {...field} /></FormControl><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="interestedMajor" render={({ field }) => (
+                     <FormItem><FormLabel>Interested Major</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
+                       <FormControl><SelectTrigger><SelectValue placeholder="Select a major" /></SelectTrigger></FormControl>
+                       <SelectContent><SelectItem value="engineering">Engineering</SelectItem><SelectItem value="business">Business</SelectItem><SelectItem value="medicine">Medicine</SelectItem><SelectItem value="humanities">Humanities</SelectItem><SelectItem value="natural-sciences">Natural Sciences</SelectItem></SelectContent>
+                     </Select><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="city" render={({ field }) => (
+                     <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Your city" {...field} /></FormControl><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="educationLevel" render={({ field }) => (
+                     <FormItem><FormLabel>Current Education Level</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
+                       <FormControl><SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger></FormControl>
+                       <SelectContent><SelectItem value="highschool">High School</SelectItem><SelectItem value="bagrut">Bagrut</SelectItem><SelectItem value="bachelor">Bachelor's Degree</SelectItem><SelectItem value="master">Master's Degree</SelectItem></SelectContent>
+                     </Select><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="stillInSchool" render={({ field }) => (
+                     <FormItem><FormLabel>Still in School?</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
+                       <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                       <SelectContent><SelectItem value="yes">Yes</SelectItem><SelectItem value="no">No</SelectItem></SelectContent>
+                     </Select><FormMessage /></FormItem>
+                   )} />
+                 </div>
                  <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                    <FormField control={form.control} name="studyDestination" render={({ field }) => (
-                        <FormItem><FormLabel>{t('contact.form.destination')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
-                            <FormControl><SelectTrigger><SelectValue placeholder={t('contact.form.destinationPlaceholder')} /></SelectTrigger></FormControl>
-                            <SelectContent><SelectItem value="germany">{t('contact.form.destinationOptions.germany')}</SelectItem></SelectContent>
-                        </Select><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="service" render={({ field }) => (
-                        <FormItem><FormLabel>{t('contact.form.service')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
-                            <FormControl><SelectTrigger><SelectValue placeholder={t('contact.form.servicePlaceholder')} /></SelectTrigger></FormControl>
-                            <SelectContent>{serviceOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                        </Select><FormMessage /></FormItem>
-                    )} />
-                </div>
-                <FormField control={form.control} name="message" render={({ field }) => (
-                  <FormItem><FormLabel>{t('contact.form.message')}</FormLabel><FormControl><Textarea placeholder={t('contact.form.messagePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
+                   <FormField control={form.control} name="englishUnits" render={({ field }) => (
+                     <FormItem><FormLabel>English Units</FormLabel><FormControl><Input type="number" placeholder="0-5" min="0" max="5" {...field} /></FormControl><FormMessage /></FormItem>
+                   )} />
+                   <FormField control={form.control} name="mathUnits" render={({ field }) => (
+                     <FormItem><FormLabel>Math Units</FormLabel><FormControl><Input type="number" placeholder="0-5" min="0" max="5" {...field} /></FormControl><FormMessage /></FormItem>
+                   )} />
+                 </div>
                 {/* Honeypot anti-spam - invisible to humans */}
                 <input
                   type="text"
