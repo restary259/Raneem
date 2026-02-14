@@ -17,26 +17,20 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 
 const ConsultationCta = () => {
-    const { t, i18n } = useTranslation('services');
+    const { t } = useTranslation('services');
     const { dir } = useDirection();
     const { toast } = useToast();
-    const isAr = i18n.language === 'ar';
 
-    const educationOptions = isAr
-      ? ['بجروت / ثانوية', 'بكالوريوس', 'ماجستير']
-      : ['Bagrut / High School', 'Bachelor', 'Master'];
-
-    const majorOptions = isAr
-      ? ['طب', 'هندسة', 'إدارة أعمال', 'علوم الحاسب', 'صيدلة', 'أخرى']
-      : ['Medicine', 'Engineering', 'Business', 'Computer Science', 'Pharmacy', 'Other'];
+    const majorOptions = t('consultationCta.majorOptions', { returnObjects: true }) as string[];
+    const educationOptions = t('consultationCta.educationOptions', { returnObjects: true }) as string[];
 
     const formSchema = z.object({
       name: z.string().min(2, { message: t('consultationCta.validation.nameMin') }),
-      phone: z.string().min(9, { message: isAr ? 'رقم الهاتف مطلوب' : 'Phone number is required' }),
-      city: z.string().min(2, { message: isAr ? 'المدينة مطلوبة' : 'City is required' }),
-      interestedMajor: z.string({ required_error: isAr ? 'اختر التخصص' : 'Select a major' }),
-      educationLevel: z.string({ required_error: isAr ? 'المستوى التعليمي مطلوب' : 'Education level required' }),
-      stillInSchool: z.enum(["yes", "no"], { required_error: isAr ? 'مطلوب' : 'Required' }),
+      phone: z.string().min(9, { message: t('consultationCta.validation.phoneRequired') }),
+      city: z.string().min(2, { message: t('consultationCta.validation.cityRequired') }),
+      interestedMajor: z.string({ required_error: t('consultationCta.validation.majorRequired') }),
+      educationLevel: z.string({ required_error: t('consultationCta.validation.educationRequired') }),
+      stillInSchool: z.enum(["yes", "no"], { required_error: t('consultationCta.validation.stillInSchoolRequired') }),
       englishUnits: z.string().optional(),
       mathUnits: z.string().optional(),
     });
@@ -48,12 +42,11 @@ const ConsultationCta = () => {
 
     const { mutate, isPending } = useMutation({
         mutationFn: async (values: z.infer<typeof formSchema>) => {
-          // Create lead via RPC
           const { error } = await supabase.rpc('insert_lead_from_apply', {
             p_full_name: values.name,
             p_phone: values.phone,
             p_city: values.city,
-            p_education_level: values.educationLevel === 'بجروت / ثانوية' || values.educationLevel === 'Bagrut / High School' ? 'bagrut' : values.educationLevel.toLowerCase(),
+            p_education_level: values.educationLevel === educationOptions[0] ? 'bagrut' : values.educationLevel.toLowerCase(),
             p_english_units: values.englishUnits ? parseInt(values.englishUnits) : null,
             p_math_units: values.mathUnits ? parseInt(values.mathUnits) : null,
             p_source_type: 'services_form',
@@ -61,18 +54,11 @@ const ConsultationCta = () => {
           if (error) throw error;
           return { success: true };
         },
-        onSuccess: () => {
-          toast({ title: t('consultationCta.successTitle'), description: t('consultationCta.successDesc') });
-          form.reset();
-        },
-        onError: (error) => {
-          toast({ variant: "destructive", title: t('consultationCta.errorTitle'), description: error.message });
-        },
+        onSuccess: () => { toast({ title: t('consultationCta.successTitle'), description: t('consultationCta.successDesc') }); form.reset(); },
+        onError: (error) => { toast({ variant: "destructive", title: t('consultationCta.errorTitle'), description: error.message }); },
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        mutate(values);
-    }
+    function onSubmit(values: z.infer<typeof formSchema>) { mutate(values); }
 
     return (
         <section className="py-12 md:py-24">
@@ -86,45 +72,41 @@ const ConsultationCta = () => {
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-card p-6 md:p-8 rounded-lg shadow-lg border">
                                 <FormField control={form.control} name="name" render={({ field }) => (
-                                    <FormItem><FormLabel>{isAr ? 'الاسم الكامل' : 'Full Name'}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>{t('consultationCta.fullName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                                 <FormField control={form.control} name="phone" render={({ field }) => (
-                                    <FormItem><FormLabel>{isAr ? 'رقم الهاتف' : 'Phone Number'}</FormLabel><FormControl><Input type="tel" dir="ltr" placeholder="05X-XXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>{t('consultationCta.phone')}</FormLabel><FormControl><Input type="tel" dir="ltr" placeholder="05X-XXXXXXX" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                                 <div className="grid grid-cols-2 gap-4">
                                   <FormField control={form.control} name="city" render={({ field }) => (
-                                      <FormItem><FormLabel>{isAr ? 'المدينة' : 'City'}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                      <FormItem><FormLabel>{t('consultationCta.city')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                   )} />
                                   <FormField control={form.control} name="interestedMajor" render={({ field }) => (
-                                      <FormItem><FormLabel>{isAr ? 'التخصص المهتم به' : 'Interested Major'}</FormLabel>
+                                      <FormItem><FormLabel>{t('consultationCta.interestedMajor')}</FormLabel>
                                       <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
-                                          <FormControl><SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger></FormControl>
-                                          <SelectContent>{majorOptions.map(option => (
-                                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                                          ))}</SelectContent>
+                                          <FormControl><SelectTrigger><SelectValue placeholder={t('consultationCta.selectPlaceholder')} /></SelectTrigger></FormControl>
+                                          <SelectContent>{majorOptions.map(option => (<SelectItem key={option} value={option}>{option}</SelectItem>))}</SelectContent>
                                       </Select><FormMessage /></FormItem>
                                   )} />
                                 </div>
                                 <FormField control={form.control} name="educationLevel" render={({ field }) => (
-                                    <FormItem><FormLabel>{isAr ? 'المستوى التعليمي' : 'Education Level'}</FormLabel>
+                                    <FormItem><FormLabel>{t('consultationCta.educationLevel')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} dir={dir}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger></FormControl>
-                                        <SelectContent>{educationOptions.map(option => (
-                                            <SelectItem key={option} value={option}>{option}</SelectItem>
-                                        ))}</SelectContent>
+                                        <FormControl><SelectTrigger><SelectValue placeholder={t('consultationCta.selectPlaceholder')} /></SelectTrigger></FormControl>
+                                        <SelectContent>{educationOptions.map(option => (<SelectItem key={option} value={option}>{option}</SelectItem>))}</SelectContent>
                                     </Select><FormMessage /></FormItem>
                                 )} />
                                 <FormField control={form.control} name="stillInSchool" render={({ field }) => (
-                                    <FormItem className="space-y-2"><FormLabel>{isAr ? 'ما زلت في المدرسة؟' : 'Still in School?'}</FormLabel>
+                                    <FormItem className="space-y-2"><FormLabel>{t('consultationCta.stillInSchool')}</FormLabel>
                                       <FormControl>
                                         <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
                                           <FormItem className="flex items-center space-x-2 space-x-reverse">
                                             <FormControl><RadioGroupItem value="yes" /></FormControl>
-                                            <FormLabel>{isAr ? 'نعم' : 'Yes'}</FormLabel>
+                                            <FormLabel>{t('form.yes', { ns: 'common' })}</FormLabel>
                                           </FormItem>
                                           <FormItem className="flex items-center space-x-2 space-x-reverse">
                                             <FormControl><RadioGroupItem value="no" /></FormControl>
-                                            <FormLabel>{isAr ? 'لا' : 'No'}</FormLabel>
+                                            <FormLabel>{t('form.no', { ns: 'common' })}</FormLabel>
                                           </FormItem>
                                         </RadioGroup>
                                       </FormControl>
@@ -133,14 +115,14 @@ const ConsultationCta = () => {
                                 )} />
                                 <div className="grid grid-cols-2 gap-4">
                                   <FormField control={form.control} name="englishUnits" render={({ field }) => (
-                                      <FormItem><FormLabel>{isAr ? 'وحدات الإنجليزي' : 'English Units'}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
+                                      <FormItem><FormLabel>{t('consultationCta.englishUnits')}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
                                   )} />
                                   <FormField control={form.control} name="mathUnits" render={({ field }) => (
-                                      <FormItem><FormLabel>{isAr ? 'وحدات الرياضيات' : 'Math Units'}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
+                                      <FormItem><FormLabel>{t('consultationCta.mathUnits')}</FormLabel><FormControl><Input type="number" min="1" max="5" dir="ltr" placeholder="3-5" {...field} /></FormControl><FormMessage /></FormItem>
                                   )} />
                                 </div>
                                 <Button type="submit" variant="accent" size="lg" className="w-full font-bold" disabled={isPending}>
-                                    {isPending ? (isAr ? 'جار الإرسال...' : 'Sending...') : (isAr ? 'أرسل بياناتي' : 'Submit My Details')}
+                                    {isPending ? t('consultationCta.submitting') : t('consultationCta.submit')}
                                 </Button>
                             </form>
                         </Form>

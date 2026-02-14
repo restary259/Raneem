@@ -326,4 +326,54 @@
     "notificationDesc": "Get notifications about your applications, deadlines, and important updates.",
     "notificationEnable": "Enable Notifications",
     "notificationSkip": "Skip for Now"
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "submit": "Update Password",
+    "updating": "Updating...",
+    "mismatch": "Passwords do not match",
+    "tooShort": "Password must be at least 6 characters",
+    "success": "Updated Successfully",
+    "successDesc": "Your password has been updated successfully. You can now sign in.",
+    "invalidLink": "Invalid Link",
+    "invalidLinkDesc": "The password reset link is invalid or expired.",
+    "error": "Error"
+  },
+  "dashboardError": {
+    "title": "Dashboard Error",
+    "message": "An error occurred while loading the dashboard. Please try again.",
+    "technicalDetails": "Technical Error Details",
+    "errorLabel": "Error:",
+    "detailsLabel": "Details:",
+    "retry": "Try Again"
+  },
+  "studentDashboard": {
+    "loadError": "Error loading dashboard",
+    "dataError": "Error loading data: {{message}}",
+    "loadingUser": "Loading user data...",
+    "retryBtn": "Try Again"
+  },
+  "form": {
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "city": "City",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "edit": "Edit Status",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "partners": {
+    "visitWebsite": "Visit Website",
+    "comingSoon": "Coming soon: universities for this country",
+    "universities": "Universities",
+    "keyFacts": "Key Facts:"
+  }
 }
