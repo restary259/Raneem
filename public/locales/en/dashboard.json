@@ -801,5 +801,41 @@
     "accepted": "Accepted",
     "pending": "Pending",
     "inviteDeleted": "Invitation deleted"
+  },
+  "application": {
+    "loading": "Loading...",
+    "noApplication": "No application found yet",
+    "noApplicationDesc": "Your application will appear here after registration",
+    "progress": "Application Progress",
+    "city": "City",
+    "school": "School",
+    "accommodation": "Accommodation",
+    "notSet": "Not set",
+    "payments": "Payments",
+    "paid": "Paid",
+    "pending": "Pending",
+    "refCode": "Reference Code",
+    "score": "Eligibility Score",
+    "createdAt": "Application Date",
+    "upcomingAppointments": "Upcoming Appointments",
+    "noAppointments": "No upcoming appointments",
+    "duration": "{{minutes}} min",
+    "withStaff": "with {{name}}",
+    "paymentTypes": {
+      "service_fee": "Service Fee",
+      "school_payment": "School Payment",
+      "translation": "Translation"
+    },
+    "steps": {
+      "assigned": "Assigned",
+      "contacted": "Contacted",
+      "appointment": "Appointment",
+      "paid": "Paid",
+      "ready_to_apply": "Ready to Apply",
+      "registration_submitted": "Registration Submitted",
+      "visa_stage": "Visa Stage",
+      "settled": "Settled",
+      "completed": "Completed"
+    }
   }
 }

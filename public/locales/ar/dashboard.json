@@ -801,5 +801,41 @@
     "accepted": "مقبول",
     "pending": "معلّق",
     "inviteDeleted": "تم حذف الدعوة"
+  },
+  "application": {
+    "loading": "جار التحميل...",
+    "noApplication": "لا يوجد ملف تقديم بعد",
+    "noApplicationDesc": "سيظهر ملفك هنا بعد تسجيلك لدينا",
+    "progress": "تقدم الطلب",
+    "city": "المدينة",
+    "school": "المدرسة",
+    "accommodation": "السكن",
+    "notSet": "لم يُحدد",
+    "payments": "المدفوعات",
+    "paid": "مدفوع",
+    "pending": "معلق",
+    "refCode": "رمز المرجع",
+    "score": "درجة الأهلية",
+    "createdAt": "تاريخ التقديم",
+    "upcomingAppointments": "المواعيد القادمة",
+    "noAppointments": "لا توجد مواعيد قادمة",
+    "duration": "{{minutes}} دقيقة",
+    "withStaff": "مع {{name}}",
+    "paymentTypes": {
+      "service_fee": "رسوم الخدمة",
+      "school_payment": "دفعة المدرسة",
+      "translation": "ترجمة"
+    },
+    "steps": {
+      "assigned": "معيّن",
+      "contacted": "تم التواصل",
+      "appointment": "موعد",
+      "paid": "مدفوع",
+      "ready_to_apply": "جاهز للتقديم",
+      "registration_submitted": "تم تقديم التسجيل",
+      "visa_stage": "مرحلة الفيزا",
+      "settled": "تم الاستقرار",
+      "completed": "مكتمل"
+    }
   }
 }
