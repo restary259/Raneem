@@ -8,9 +8,9 @@ const Hero = () => {
   const { t } = useTranslation(['landing', 'common']);
 
   const stats = [
-    { value: 47, label: t('hero.stats.satisfiedStudents') },
-    { value: 16, label: t('hero.stats.educationalPartners') },
-    { value: 5, label: t('hero.stats.countriesWorldwide') }
+    { value: 16, label: t('hero.stats.satisfiedStudents') },
+    { value: 6, label: t('hero.stats.educationalPartners') },
+    { value: 2, label: t('hero.stats.countriesWorldwide') }
   ];
 
   return (

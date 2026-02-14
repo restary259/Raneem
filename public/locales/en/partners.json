@@ -21,17 +21,17 @@
     },
     "stats": {
       "trustedPartners": {
-        "number": "16+",
+        "number": "6+",
         "label": "Trusted Partners",
         "description": "Universities and educational institutions"
       },
       "countries": {
-        "number": "5+",
+        "number": "2+",
         "label": "Countries",
         "description": "Around the world"
       },
       "students": {
-        "number": "47+",
+        "number": "16+",
         "label": "Students",
         "description": "Successfully admitted"
       },

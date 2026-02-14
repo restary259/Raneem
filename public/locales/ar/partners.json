@@ -21,17 +21,17 @@
     },
     "stats": {
       "trustedPartners": {
-        "number": "16+",
+        "number": "6+",
         "label": "شريك موثوق",
         "description": "جامعات ومؤسسات تعليمية"
       },
       "countries": {
-        "number": "5+",
+        "number": "2+",
         "label": "دولة",
         "description": "في جميع أنحاء العالم"
       },
       "students": {
-        "number": "47+",
+        "number": "16+",
         "label": "طالب",
         "description": "تم قبولهم بنجاح"
       },

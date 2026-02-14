@@ -6,9 +6,9 @@ const AboutCustom = () => {
   const { t } = useTranslation('landing');
   
   const stats = [
-    { value: "47", label: t('aboutStats.satisfiedStudents'), suffix: "+" },
-    { value: "16", label: t('aboutStats.partners'), suffix: "+" },
-    { value: "5", label: t('aboutStats.countries'), suffix: "+" },
+    { value: "16", label: t('aboutStats.satisfiedStudents'), suffix: "+" },
+    { value: "6", label: t('aboutStats.partners'), suffix: "+" },
+    { value: "2", label: t('aboutStats.countries'), suffix: "+" },
     { value: "98", label: t('aboutStats.successRate'), suffix: "%" }
   ];
 
