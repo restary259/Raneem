@@ -641,7 +641,12 @@
       "appointment": "Appointment",
       "closed": "Closed",
       "lost": "Lost",
-      "paid": "Paid"
+      "paid": "Paid",
+      "ready_to_apply": "Ready to Apply",
+      "registration_submitted": "Registration Submitted",
+      "visa_stage": "Visa Stage",
+      "settled": "Settled",
+      "completed": "Completed"
     },
     "sources": {
       "influencer": "Agent",
@@ -709,8 +714,10 @@
       "appointment": "Appointment",
       "closed": "Closed",
       "paid": "Paid",
+      "ready_to_apply": "Ready to Apply",
       "registration_submitted": "Registration Submitted",
       "visa_stage": "Visa Stage",
+      "settled": "Settled",
       "completed": "Completed"
     }
   },

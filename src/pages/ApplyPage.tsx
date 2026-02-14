@@ -52,6 +52,11 @@ const ApplyPage: React.FC = () => {
   // Step 3
   const [germanLevel, setGermanLevel] = useState('');
 
+  // Companion (friend/family)
+  const [hasCompanion, setHasCompanion] = useState(false);
+  const [companionName, setCompanionName] = useState('');
+  const [companionPhone, setCompanionPhone] = useState('');
+
   // Referral
   const [sourceType, setSourceType] = useState('organic');
   const [sourceId, setSourceId] = useState<string | null>(null);
@@ -84,7 +89,7 @@ const ApplyPage: React.FC = () => {
     if (loading) return;
     setLoading(true);
     try {
-      const { error } = await supabase.rpc('insert_lead_from_apply', {
+      const rpcParams: Record<string, any> = {
         p_full_name: fullName.trim(),
         p_phone: phone.trim(),
         p_passport_type: passportType || null,
@@ -94,7 +99,12 @@ const ApplyPage: React.FC = () => {
         p_german_level: germanLevel || null,
         p_source_type: sourceType,
         p_source_id: sourceId,
-      } as any);
+      };
+      if (hasCompanion && companionName.trim() && companionPhone.trim()) {
+        rpcParams.p_companion_name = companionName.trim();
+        rpcParams.p_companion_phone = companionPhone.trim();
+      }
+      const { error } = await supabase.rpc('insert_lead_from_apply', rpcParams as any);
       if (error) throw error;
       setSubmitted(true);
     } catch {
@@ -308,6 +318,48 @@ const ApplyPage: React.FC = () => {
                       ))}
                     </div>
                   </FieldGroup>
+
+                  {/* Companion toggle */}
+                  <div className="pt-2 border-t border-border">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={hasCompanion}
+                        onChange={e => setHasCompanion(e.target.checked)}
+                        className="w-4 h-4 rounded border-border accent-primary"
+                      />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                        {t('apply.companionToggle', 'هل تقدم مع صديق أو فرد من العائلة؟')}
+                      </span>
+                    </label>
+                  </div>
+
+                  {hasCompanion && (
+                    <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+                      <p className="text-xs font-semibold text-foreground/70">
+                        {t('apply.companionInfo', 'بيانات الشخص المرافق')}
+                      </p>
+                      <FieldGroup label={t('apply.companionName', 'اسم المرافق')}>
+                        <Input
+                          value={companionName}
+                          onChange={e => setCompanionName(e.target.value)}
+                          placeholder={t('apply.companionNamePlaceholder', 'الاسم الكامل للمرافق')}
+                          dir={dir}
+                          className="h-11"
+                        />
+                      </FieldGroup>
+                      <FieldGroup label={t('apply.companionPhone', 'هاتف المرافق')}>
+                        <Input
+                          value={companionPhone}
+                          onChange={e => setCompanionPhone(e.target.value)}
+                          placeholder="05X-XXXXXXX"
+                          dir="ltr"
+                          type="tel"
+                          className="h-11"
+                        />
+                      </FieldGroup>
+                    </div>
+                  )}
                 </div>
               )}
 
