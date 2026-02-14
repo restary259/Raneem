@@ -1,159 +1,111 @@
 
+## Header Navigation Failure and Mobile UI Stability Fix
 
-## PWA Finishing Touches -- Comprehensive Implementation Plan
-
-This plan addresses all the items in the checklist, organized by priority and grouped for efficient implementation.
-
----
-
-### Phase 1: Critical Fixes (Header, Auth, Student Dashboard Mobile)
-
-**1.1 Header Logo Stability**
-- File: `src/components/landing/Header.tsx`
-- Add `whitespace-nowrap flex-shrink-0` to the logo container
-- Add `overflow-hidden flex-shrink min-w-0` to the nav container so links compress before the logo breaks
-
-**1.2 Auth Page Password Toggle (RTL/LTR)**
-- File: `src/pages/StudentAuthPage.tsx`
-- The eye icon is currently hardcoded to `absolute left-0` (line 253). Change to use directional classes: `absolute start-auto end-0` (or use `ltr:right-0 rtl:left-0`) so it sits correctly in both Arabic and English
-
-**1.3 Student Dashboard Mobile Header**
-- File: `src/components/dashboard/DashboardHeader.tsx`
-- Replace full text buttons ("Log Out", "Go to Home Page") with icon-only buttons on mobile using responsive classes
-- Add `whitespace-nowrap` to the dashboard title and user name
-- Use `flex-row items-center justify-between` with proper gap management
-- Reduce title font size on small screens: `text-lg sm:text-2xl`
+This plan addresses 7 critical issues: missing Home button, broken "Who We Are" dropdown, AI Advisor scroll issues, sidebar scroll, Majors page problems, dark mode removal, and full regression cleanup.
 
 ---
 
-### Phase 2: Student Dashboard Enhancements
+### Phase 1: Home Button -- Diagnosis and Fix
 
-**2.1 My Application (طلبي) -- Automated Visibility**
-- File: `src/components/dashboard/MyApplicationTab.tsx`
-- Currently queries by `student_profile_id`. This already works when admin links a case to a student profile. No logic change needed for the base case.
-- Enhancement: Show a timeline-style progress tracker instead of just a progress bar. Add milestone markers for each step with dates when available.
+**Root Cause Found**: The Home button IS present in `DesktopNav.tsx` (line 147-153). The issue is the `overflow-hidden` class on the navigation container in `Header.tsx` (line 38). When the viewport shrinks or zoom increases, the rightmost nav items (including Home, which is last in the RTL list) get clipped by `overflow-hidden`.
 
-**2.2 Referral System -- Auto-Lead Generation**
-- File: `src/components/dashboard/ReferralForm.tsx`
-- After inserting into `referrals` table, also call the `insert_lead_from_apply` RPC to create a lead automatically with the referral data (name, phone, german_level)
-- Add eligibility-relevant fields to the form: education_level (bagrut/diploma), passport_type, english_units, math_units
-- These map to the same eligibility scoring the Apply page uses
+**Fix**:
+- File: `src/components/landing/Header.tsx` (line 38)
+  - Change `overflow-hidden` to `overflow-visible` on the desktop nav container, and use `flex-shrink` with `min-w-0` to let the nav compress without clipping items
+- File: `src/components/landing/DesktopNav.tsx` (line 60)
+  - Remove `overflow-x-auto` from NavigationMenuList and use `flex-wrap` or ensure items don't get clipped
 
-**2.3 Referral Rewards -- 20-Day Payout Lock**
-- File: `src/components/dashboard/RewardsPanel.tsx`
-- Add the same 20-day timer logic from the influencer panel: if `reward.status === 'pending'` and `created_at` is less than 20 days ago, show a countdown badge and disable the "Request Payout" button with a message explaining the lock period
+### Phase 2: "Who We Are" Dropdown Not Opening
 
-**2.4 Student Dashboard UI -- Admin Color Alignment**
-- File: `src/pages/StudentDashboardPage.tsx`
-- Background is already `bg-[#F8FAFC]` (matching admin). Confirm card classes use `rounded-xl shadow-sm border border-slate-200`.
-- File: `src/components/dashboard/DashboardSidebar.tsx`
-- Update sidebar styling to match admin's navy sidebar aesthetic with `bg-[#1E293B] text-white` on desktop
-- File: `src/components/dashboard/DashboardHeader.tsx`
-- Match admin header style: `bg-[#1E293B] text-white` with logo
+**Root Cause Found**: The console shows a `validateDOMNesting` error -- `<a>` cannot appear inside `<a>`. In `DesktopNav.tsx`, navigation links wrap `<Link>` (which renders `<a>`) inside `<NavigationMenuLink>` (which also renders `<a>`). This causes the Radix navigation menu to malfunction.
 
----
+**Fix**:
+- File: `src/components/landing/DesktopNav.tsx`
+  - For all plain links (Home, Services, Majors, etc.), use `NavigationMenuLink asChild` with `Link` inside -- matching the pattern already used in `ListItem.tsx`
+  - This eliminates the nested `<a>` tags and restores proper Radix state management for dropdowns
 
-### Phase 3: Lawyer/Team Portal Upgrades
+### Phase 3: AI Advisor Mobile Scroll Fix
 
-**3.1 Lawyer Dashboard -- Commission Tracking**
-- File: `src/pages/LawyerDashboardPage.tsx`
-- Add a "Rewards" summary card showing total earned commissions from closed cases
-- Sum `lawyer_commission` from cases where `case_status` is 'paid' or 'closed'
+**Current State**: The page uses `h-screen overflow-hidden` on the outer div, but the chat container uses `overflow-y-auto` correctly. The issue is the hard `h-screen` which doesn't account for mobile browser chrome (address bar).
 
-**3.2 Lawyer Dashboard -- Call Logs and Notes**
-- Already has notes per case (editable textarea in the collapsible panel). This is functional.
+**Fix**:
+- File: `src/pages/AIAdvisorPage.tsx`
+  - Replace `h-screen` with `h-[100dvh]` (dynamic viewport height) to handle mobile browser chrome
+  - Ensure `-webkit-overflow-scrolling: touch` is applied to the scrollable chat area
 
-**3.3 Lawyer Dashboard -- Document Upload**
-- Currently no document upload for lawyers. Add a file upload button in the case collapsible that uploads to the `student-documents` bucket and creates a `documents` record linked to the student.
-- Requires a new RLS policy: lawyers can insert documents for students in their assigned cases.
+### Phase 4: Mobile Sidebar Scrollability
 
-**3.4 Team Calendar (New Feature)**
-- This is a significant new feature. Create a basic appointments system:
-  - New database table: `appointments` (id, case_id, lawyer_id, student_name, scheduled_at, location, notes, created_at)
-  - New component: `src/components/lawyer/AppointmentCalendar.tsx` with month/week view using a simple grid
-  - Add modal for creating appointments with student selector
-  - Auto-update case status to 'appointment' when a meeting is logged
+**Current State**: The MobileNav Sheet already uses `SheetContent` which has built-in scroll. The issue may be content overflow within the sheet.
 
----
+**Fix**:
+- File: `src/components/landing/MobileNav.tsx`
+  - Add `overflow-y-auto max-h-[calc(100vh-4rem)]` to the inner `<nav>` element
+  - Convert the "More" section into an accordion/collapsible using the existing `Collapsible` component for cleaner UX with smooth animation
 
-### Phase 4: Admin Dashboard Enhancements
+### Phase 5: Majors Page Cleanup
 
-**4.1 "Ready for Germany" Queue**
-- File: `src/pages/AdminDashboardPage.tsx`
-- Add a new tab "Ready" that filters student_cases where `case_status` is 'paid' or 'completed' and all required documents are uploaded
-- Show a summary card with student name, school, city, and document status
+**Issue 1 -- Orange square with broken text**: This is likely a rendering artifact from the search highlight function or a missing translation. The `highlightText` function in `MajorCard.tsx` uses regex splitting which can produce empty fragments.
 
-**4.2 Commission Approval Section**
-- Already exists in `PayoutsManagement.tsx` with approve/cancel buttons. Verified functional.
+**Fix**:
+- File: `src/components/educational/MajorCard.tsx`
+  - Add safety check in `highlightText` to filter out empty parts
+  - Ensure all text sources have fallback values
 
-**4.3 Mobile Checkbox/Toggle Fix**
-- File: `src/styles/layouts.css`
-- Add global rule: checkboxes and toggle inputs get `flex-shrink-0` and fixed dimensions `w-5 h-5`
+**Issue 2 -- "Choose Your Major" button**: This is the CTA in `CTASection.tsx` or `HeroSection.tsx`. Need to verify the click handler and route.
 
----
+**Fix**:
+- File: `src/components/educational/CTASection.tsx`
+  - Verify the button links to `/apply` or scrolls to the majors grid
+  - Ensure proper `Link` or `onClick` handler is wired
 
-### Phase 5: Contact Info, CV Builder, and Global Polish
+### Phase 6: Remove Dark Mode Completely
 
-**5.1 Update Phone Number**
-- File: `src/components/landing/OfficeLocations.tsx`
-- Change phone from `+972 52-940-2168` to `+972 524061225`
+**Scope**: Dark mode is used in 2 files (hook + LanguageSwitcher) and referenced with `dark:` classes in 7 files. The `.dark` CSS block is in `base.css`.
 
-**5.2 Update Working Hours**
-- File: `public/locales/ar/common.json` and `public/locales/en/common.json`
-- Update the `officeLocations.hours` value to "10:00 AM - 7:00 PM"
+**Files to modify**:
 
-**5.3 CV Builder Cleanup**
-- File: `src/components/lebenslauf/LebenslaufBuilder.tsx`
-- Remove PNG and JPG download buttons (keep PDF only)
-- Remove photo upload option from `CVForm.tsx` if present
-- Ensure no "Made with Lovable" watermark in print CSS
+1. `src/hooks/useDarkMode.ts` -- DELETE this file entirely
+2. `src/components/common/LanguageSwitcher.tsx` -- Remove dark mode toggle button, remove `useDarkMode` import, keep only the language toggle
+3. `src/styles/base.css` -- Remove the entire `.dark { ... }` CSS variable block (lines 38-66)
+4. `src/pages/BroadcastPage.tsx` -- Remove `dark:bg-gray-950` and `dark:bg-muted/20` classes
+5. `src/pages/ApplyPage.tsx` -- Remove `dark:bg-green-900/30` class
+6. `src/components/broadcast/SubmitVideo.tsx` -- Remove `dark:bg-muted/20` class
+7. `src/components/calculator/currency-comparator/BestResultCard.tsx` -- Remove all `dark:` classes
+8. `src/components/calculator/currency-comparator/ResultsTable.tsx` -- Remove `dark:bg-green-900/20` class
+9. `src/components/ui/alert.tsx` -- Remove `dark:border-destructive` class
+10. Clear `darb_theme` from localStorage on app init to clean up stale preference
 
-**5.4 Active States on Buttons**
-- File: `src/styles/base.css`
-- Add global: `button, a { @apply active:scale-95 transition-transform; }`
+### Phase 7: Regression Cleanup
 
-**5.5 Empty States**
-- Audit all list components for proper empty state icons/messages. Most already have them (ServicesOverview, MyApplicationTab, RewardsPanel). Verify and add where missing.
-
----
-
-### Phase 6: Email Branding
-
-**6.1 Sender Identity and Template**
-- File: `supabase/functions/send-branded-email/index.ts`
-- Update sender name to "وكالة درب | Darb Agency"
-- Ensure HTML template includes the Darb logo at the top
-- Verify dynamic variables are properly mapped to prevent empty emails
+- Fix the nested `<a>` DOM warning in DesktopNav (covered in Phase 2)
+- Ensure Header works at 80%-200% zoom by testing flex behavior
+- Verify no `display:none` is applied to nav items (session replay showed this happening)
+- Confirm all routes still work after changes
 
 ---
 
 ### Technical File Summary
 
-| Priority | File | Changes |
-|----------|------|---------|
-| P1 | `src/components/landing/Header.tsx` | Logo flex-shrink-0, nav overflow-hidden |
-| P1 | `src/pages/StudentAuthPage.tsx` | RTL-aware password toggle position |
-| P1 | `src/components/dashboard/DashboardHeader.tsx` | Mobile icon-only buttons, whitespace-nowrap |
-| P2 | `src/components/dashboard/ReferralForm.tsx` | Add eligibility fields, auto-create lead |
-| P2 | `src/components/dashboard/RewardsPanel.tsx` | 20-day payout lock timer for students |
-| P2 | `src/components/dashboard/DashboardSidebar.tsx` | Admin-style navy sidebar |
-| P2 | `src/pages/StudentDashboardPage.tsx` | Header restyling to match admin |
-| P3 | `src/pages/LawyerDashboardPage.tsx` | Commission summary, document upload |
-| P3 | New: `src/components/lawyer/AppointmentCalendar.tsx` | Calendar view for appointments |
-| P3 | DB migration | Create `appointments` table with RLS |
-| P4 | `src/pages/AdminDashboardPage.tsx` | "Ready for Germany" tab |
-| P4 | `src/styles/layouts.css` | Checkbox flex-shrink-0 fix |
-| P5 | `src/components/landing/OfficeLocations.tsx` | Phone number update |
-| P5 | `public/locales/*/common.json` | Working hours update |
-| P5 | `src/components/lebenslauf/LebenslaufBuilder.tsx` | Remove PNG/JPG, PDF only |
-| P5 | `src/styles/base.css` | active:scale-95 on interactive elements |
-| P6 | `supabase/functions/send-branded-email/index.ts` | Sender name + template fix |
+| Phase | File | Action |
+|-------|------|--------|
+| 1 | `src/components/landing/Header.tsx` | Fix overflow-hidden clipping nav items |
+| 1 | `src/components/landing/DesktopNav.tsx` | Fix overflow-x-auto clipping |
+| 2 | `src/components/landing/DesktopNav.tsx` | Fix nested `<a>` tags with `asChild` pattern |
+| 3 | `src/pages/AIAdvisorPage.tsx` | Use `100dvh`, add touch scroll |
+| 4 | `src/components/landing/MobileNav.tsx` | Add scroll + collapsible "More" section |
+| 5 | `src/components/educational/MajorCard.tsx` | Fix highlight function edge cases |
+| 5 | `src/components/educational/CTASection.tsx` | Verify CTA button handler |
+| 6 | `src/hooks/useDarkMode.ts` | Delete file |
+| 6 | `src/components/common/LanguageSwitcher.tsx` | Remove dark toggle, keep language only |
+| 6 | `src/styles/base.css` | Remove `.dark` CSS block |
+| 6 | 5 component files | Remove `dark:` Tailwind classes |
+| 7 | Cross-cutting | Regression verification |
 
 ### Implementation Order
-1. Header, auth, and student mobile header fixes (quick wins)
-2. Student dashboard enhancements (referral auto-lead, payout lock, UI alignment)
-3. Lawyer portal upgrades (commissions, documents, calendar)
-4. Admin "Ready for Germany" tab
-5. Contact info, CV builder, global polish
-6. Email branding
-
+1. Phase 2 first (fixes the DOM nesting error which cascades to Phase 1)
+2. Phase 1 (header overflow fix)
+3. Phase 6 (dark mode removal -- clean sweep)
+4. Phase 3 (AI Advisor scroll)
+5. Phase 4 (Mobile sidebar)
+6. Phase 5 (Majors page)
+7. Phase 7 (verification)
