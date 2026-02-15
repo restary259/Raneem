@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle, FileSpreadsheet, FileText } from 'lucide-react';
+import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle, FileSpreadsheet, FileText, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Lead {
@@ -508,16 +508,24 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       <Dialog open={!!assignModal} onOpenChange={() => setAssignModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{t('admin.leads.assignTeamMemberTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
-          <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
-            <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
-            <SelectContent>
-              {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
-              {lawyers.length === 0 && <SelectItem value="none" disabled>{t('admin.leads.noTeamMembers')}</SelectItem>}
-            </SelectContent>
-          </Select>
-          <DialogFooter>
-            <Button onClick={assignLawyer} disabled={loading || !selectedLawyer}>{loading ? t('admin.leads.assigning') : t('admin.leads.assign')}</Button>
-          </DialogFooter>
+          {lawyers.length === 0 ? (
+            <div className="py-6 text-center space-y-2">
+              <Users className="h-8 w-8 mx-auto text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{t('admin.leads.noTeamMembers', { defaultValue: 'No team members found. Add team members first from the Team tab.' })}</p>
+            </div>
+          ) : (
+            <>
+              <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
+                <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
+                <SelectContent>
+                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <DialogFooter>
+                <Button onClick={assignLawyer} disabled={loading || !selectedLawyer}>{loading ? t('admin.leads.assigning') : t('admin.leads.assign')}</Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

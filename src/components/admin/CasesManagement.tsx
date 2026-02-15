@@ -43,8 +43,14 @@ interface CasesManagementProps {
   onRefresh: () => void;
 }
 
-const CASE_STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled', 'completed'] as const;
-const CASE_STATUS_ORDER: Record<string, number> = { assigned: 0, contacted: 1, appointment: 2, closed: 3, paid: 4, ready_to_apply: 5, registration_submitted: 6, visa_stage: 7, settled: 8, completed: 9 };
+// Simplified 6-stage funnel: assigned → contacted → paid → ready_to_apply → visa_stage → completed
+// Legacy statuses (appointment, closed, registration_submitted, settled) map to nearest equivalent
+const CASE_STATUS_KEYS = ['assigned', 'contacted', 'paid', 'ready_to_apply', 'visa_stage', 'completed'] as const;
+const CASE_STATUS_ORDER: Record<string, number> = {
+  assigned: 0, contacted: 1, paid: 2, ready_to_apply: 3, visa_stage: 4, completed: 5,
+  // Legacy mappings for backward compatibility
+  appointment: 1, closed: 5, registration_submitted: 3, settled: 5,
+};
 
 const getValidStatuses = (currentStatus: string) => {
   const currentOrder = CASE_STATUS_ORDER[currentStatus] ?? 0;
@@ -54,12 +60,15 @@ const getValidStatuses = (currentStatus: string) => {
 const STATUS_COLORS: Record<string, string> = {
   assigned: 'bg-blue-100 text-blue-800',
   contacted: 'bg-yellow-100 text-yellow-800',
-  appointment: 'bg-purple-100 text-purple-800',
-  closed: 'bg-gray-100 text-gray-800',
   paid: 'bg-green-100 text-green-800',
-  registration_submitted: 'bg-indigo-100 text-indigo-800',
+  ready_to_apply: 'bg-indigo-100 text-indigo-800',
   visa_stage: 'bg-orange-100 text-orange-800',
   completed: 'bg-emerald-100 text-emerald-800',
+  // Legacy colors for existing data display
+  appointment: 'bg-yellow-100 text-yellow-800',
+  closed: 'bg-gray-100 text-gray-800',
+  registration_submitted: 'bg-indigo-100 text-indigo-800',
+  settled: 'bg-emerald-100 text-emerald-800',
 };
 
 const FINANCIAL_FIELDS = ['service_fee', 'influencer_commission', 'lawyer_commission', 'referral_discount', 'school_commission', 'translation_fee'] as const;
