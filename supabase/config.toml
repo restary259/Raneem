@@ -22,3 +22,13 @@ verify_jwt = false
 verify_jwt = false
 [functions.send-custom-notification]
 verify_jwt = false
+[functions.create-student-account]
+verify_jwt = false
+[functions.send-branded-email]
+verify_jwt = false
+[functions.send-event-email]
+verify_jwt = false
+[functions.send_welcome_email]
+verify_jwt = false
+[functions.admin-weekly-digest]
+verify_jwt = false
