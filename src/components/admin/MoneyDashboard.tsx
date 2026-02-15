@@ -314,12 +314,12 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <table className="min-w-full table-auto text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.student')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.revenueType')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.amount')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.currency')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.status')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('money.date')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[140px]">{t('money.student')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[130px]">{t('money.revenueType')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('money.amount')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[80px]">{t('money.currency')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[90px]">{t('money.status')}</th>
+                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('money.date')}</th>
                   </tr>
                 </thead>
                 <tbody>
