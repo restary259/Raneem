@@ -186,7 +186,7 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
         </div>
       ) : (
         <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="min-w-full table-auto text-sm">
             <thead><tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.name')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>

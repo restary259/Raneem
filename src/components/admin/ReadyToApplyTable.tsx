@@ -245,7 +245,7 @@ const ReadyToApplyTable: React.FC = () => {
         </div>
       ) : (
         <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-full table-auto text-sm">
                 <thead>
                   <tr className="border-b bg-muted/30">
                     <th className="p-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>

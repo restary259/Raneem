@@ -280,7 +280,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         </div>
       ) : (
         <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-full table-auto text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-3 py-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>

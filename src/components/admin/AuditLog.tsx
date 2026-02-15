@@ -87,7 +87,7 @@ const AuditLog: React.FC<AuditLogProps> = ({ logs }) => {
     <div className="space-y-3">
       <FilterBar />
       <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto max-h-[600px] overflow-y-auto">
-        <table className="w-full text-sm">
+        <table className="min-w-full table-auto text-sm">
           <thead className="sticky top-0 z-10">
             <tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-start font-semibold">{t('admin.audit.action')}</th>

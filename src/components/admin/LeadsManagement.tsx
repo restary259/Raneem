@@ -290,7 +290,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       {/* Desktop Table */}
       {!isMobile ? (
         <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-full table-auto text-sm">
                  <thead>
                    <tr className="border-b bg-muted/30">
                      <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
