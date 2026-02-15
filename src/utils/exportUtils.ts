@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { registerArabicFont, processArabicText } from './arabicFontLoader';
 
 interface ExportOptions {
   headers: string[];
@@ -50,12 +51,14 @@ export async function exportXLSX({ headers, rows, fileName, title, summaryRows }
   URL.revokeObjectURL(url);
 }
 
-export function exportPDF({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
+export async function exportPDF({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
   const doc = new jsPDF({ orientation: rows[0]?.length > 6 ? 'landscape' : 'portrait' });
+
+  // Register Arabic font
+  await registerArabicFont(doc);
 
   if (title) {
     doc.setFontSize(16);
-    // Replace "Darb Study" with "Darb Study International" in title
     const displayTitle = title.replace(/Darb Study(?! International)/g, 'Darb Study International');
     doc.text(displayTitle, 14, 20);
   }
@@ -77,19 +80,20 @@ export function exportPDF({ headers, rows, fileName, title, summaryRows }: Expor
       cellPadding: 3,
       lineWidth: 0.1,
       lineColor: [200, 200, 200],
+      font: 'Amiri',
     },
     headStyles: {
       fillColor: [30, 58, 95],
       textColor: 255,
       fontStyle: 'bold',
       fontSize: 9,
+      font: 'Amiri',
     },
     alternateRowStyles: {
       fillColor: [245, 247, 250],
     },
     margin: { top: 10, left: 10, right: 10 },
     didDrawPage: (data) => {
-      // Footer with date
       const pageHeight = doc.internal.pageSize.height;
       doc.setFontSize(7);
       doc.setTextColor(150);
