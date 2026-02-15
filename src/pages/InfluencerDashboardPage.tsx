@@ -279,24 +279,28 @@ const InfluencerDashboardPage = () => {
                       assigned: 'bg-purple-100 text-purple-800',
                     } as Record<string, string>)[lead.status] || 'bg-blue-100 text-blue-800',
                   };
+                  // Anonymize: show initials + city instead of full name
+                  const initials = lead.full_name
+                    ? lead.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
+                    : '—';
+                  const anonymizedName = lead.city ? `${initials} — ${lead.city}` : initials;
+
                   return (
                     <Card key={lead.id}>
                       <CardContent className="p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm">{lead.full_name}</p>
-                            <p className="text-xs text-muted-foreground">{lead.city || '—'} • {lead.german_level || '—'}</p>
+                            <p className="font-medium text-sm">{anonymizedName}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{String(st.label)}</span>
-                            <Badge variant="outline" className="text-xs">{score} pts</Badge>
                           </div>
                         </div>
                         <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
                           {isEligible ? (
                             <><CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{t('influencerDash.eligibleForApply')}</span></>
                           ) : (
-                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{lead.eligibility_reason || t('influencerDash.notMeetReqs')}</span></>
+                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{t('influencerDash.notMeetReqs')}</span></>
                           )}
                         </div>
                       </CardContent>

@@ -75,14 +75,18 @@ const App = () => {
 
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
+  // Detect influencer apply flow to hide chrome
+  const searchParams = new URLSearchParams(location.search);
+  const isInfluencerApply = location.pathname === '/apply' && searchParams.has('ref');
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
           <Toaster />
           <Sonner />
-          <OfflineIndicator />
-          <InAppBrowserBanner />
+          {!isInfluencerApply && <OfflineIndicator />}
+          {!isInfluencerApply && <InAppBrowserBanner />}
           <Suspense fallback={<div />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -114,9 +118,9 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <ChatWidget />
-          <PWAInstaller />
-          <CookieBanner />
+          {!isInfluencerApply && <ChatWidget />}
+          {!isInfluencerApply && <PWAInstaller />}
+          {!isInfluencerApply && <CookieBanner />}
           <BottomNav />
         </div>
       </TooltipProvider>
