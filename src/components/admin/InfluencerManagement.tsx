@@ -168,8 +168,9 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
           {allTeamMembers.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('team.noMembers')}</p>}
         </div>
       ) : (
-        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-          <table className="min-w-full table-auto text-sm">
+        <Card className="w-full overflow-hidden">
+          <div className="w-full overflow-x-auto">
+           <table className="min-w-full table-auto text-sm">
             <thead><tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-start font-semibold">{t('team.name')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('team.email')}</th>
@@ -192,7 +193,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
             </tbody>
           </table>
           {allTeamMembers.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('team.noMembers')}</p>}
-        </div>
+          </div>
+        </Card>
       )}
 
       {invites.length > 0 && (

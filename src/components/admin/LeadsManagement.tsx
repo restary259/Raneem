@@ -289,7 +289,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
       {/* Desktop Table */}
       {!isMobile ? (
-        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
+        <Card className="w-full overflow-hidden">
+          <div className="w-full overflow-x-auto">
               <table className="min-w-full table-auto text-sm">
                  <thead>
                    <tr className="border-b bg-muted/30">
@@ -349,7 +350,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                 </tbody>
               </table>
               {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
-        </div>
+          </div>
+        </Card>
       ) : (
         /* Mobile Cards */
         <div className="grid gap-3">
