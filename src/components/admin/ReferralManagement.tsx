@@ -187,17 +187,17 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
       ) : (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-           <table className="min-w-full table-auto text-sm">
+           <table className="w-full table-fixed text-sm">
             <thead><tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[120px]">{t('admin.referralsMgmt.name')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[120px]">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[90px]">{t('admin.referralsMgmt.type')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[130px]">{t('referrals.phone', 'Phone')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[140px]">{t('admin.referralsMgmt.email')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[70px]">{t('admin.referralsMgmt.family')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('admin.referralsMgmt.status')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('admin.referralsMgmt.date')}</th>
-              <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[80px]">{t('admin.payouts.action', 'Action')}</th>
+              <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.name')}</th>
+              <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>
+              <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.type')}</th>
+              <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('referrals.phone', 'Phone')}</th>
+              <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.email')}</th>
+              <th className="w-[7%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.family')}</th>
+              <th className="w-[11%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.status')}</th>
+              <th className="w-[8%] px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.date')}</th>
+              <th className="w-[6%] px-4 py-3 text-start font-semibold">{t('admin.payouts.action', 'Action')}</th>
             </tr></thead>
             <tbody>{filtered.map(r => (
               <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">

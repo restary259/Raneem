@@ -246,18 +246,18 @@ const ReadyToApplyTable: React.FC = () => {
       ) : (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-              <table className="min-w-full table-auto text-sm">
+              <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="border-b bg-muted/30">
-                    <th className="p-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.refCode')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.name')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.city')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.school')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.accommodation')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.staff')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.account')}</th>
-                    <th className="p-3 text-start font-medium text-muted-foreground">{t('admin.ready.actions')}</th>
+                    <th className="w-[4%] p-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>
+                    <th className="w-[10%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.refCode')}</th>
+                    <th className="w-[18%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.name')}</th>
+                    <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.city')}</th>
+                    <th className="w-[14%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.school')}</th>
+                    <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.accommodation')}</th>
+                    <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.staff')}</th>
+                    <th className="w-[10%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.account')}</th>
+                    <th className="w-[8%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

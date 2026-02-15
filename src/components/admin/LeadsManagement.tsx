@@ -291,19 +291,19 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       {!isMobile ? (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-              <table className="min-w-full table-auto text-sm">
+              <table className="w-full table-fixed text-sm">
                  <thead>
                    <tr className="border-b bg-muted/30">
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[140px]">{t('admin.leads.fullName', 'Name')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[100px]">{t('admin.leads.city', 'City')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[140px]">{t('admin.leads.interestedMajor', 'Interested Major')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[130px]">{t('admin.leads.phone', 'Phone')}</th>
-                     <th className="px-4 py-3 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[70px]">{t('admin.leads.englishCol', 'English')}</th>
-                     <th className="px-4 py-3 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[70px]">{t('admin.leads.mathCol', 'Math')}</th>
-                     <th className="px-4 py-3 text-center font-medium text-muted-foreground whitespace-nowrap min-w-[70px]">{t('admin.leads.score', 'Score')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[100px]">{t('admin.leads.source', 'Source')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[100px]">{t('admin.leads.status', 'Status')}</th>
-                     <th className="px-4 py-3 text-start font-medium text-muted-foreground whitespace-nowrap min-w-[180px]">{t('admin.students.actions', 'Actions')}</th>
+                     <th className="w-[15%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
+                     <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.city', 'City')}</th>
+                     <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.interestedMajor', 'Interested Major')}</th>
+                     <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
+                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.englishCol', 'English')}</th>
+                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
+                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
+                     <th className="w-[8%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
+                     <th className="w-[8%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
+                     <th className="w-[12%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
                    </tr>
                  </thead>
                 <tbody>

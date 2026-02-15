@@ -281,18 +281,18 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       ) : (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-              <table className="min-w-full table-auto text-sm">
+              <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[140px]">{t('admin.payouts.requester')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[80px]">{t('admin.payouts.role', 'Role')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('admin.payouts.linkedStudents', 'Students')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('admin.payouts.amount')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[90px]">{t('admin.payouts.status')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[120px]">{t('admin.payouts.requestDate')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[100px]">{t('admin.payouts.paymentMethodCol', 'Method')}</th>
-                    <th className="px-4 py-3 text-start font-semibold whitespace-nowrap min-w-[140px]">{t('admin.payouts.action')}</th>
+                    <th className="w-[4%] px-4 py-3 text-start"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></th>
+                    <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('admin.payouts.requester')}</th>
+                    <th className="w-[8%] px-4 py-3 text-start font-semibold">{t('admin.payouts.role', 'Role')}</th>
+                    <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.payouts.linkedStudents', 'Students')}</th>
+                    <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.payouts.amount')}</th>
+                    <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.payouts.status')}</th>
+                    <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('admin.payouts.requestDate')}</th>
+                    <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('admin.payouts.paymentMethodCol', 'Method')}</th>
+                    <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('admin.payouts.action')}</th>
                   </tr>
                 </thead>
                 <tbody>

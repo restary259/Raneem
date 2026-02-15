@@ -185,18 +185,18 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, influen
       ) : (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-           <table className="min-w-full table-auto text-sm">
+           <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.leads.city', 'City')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.ready.staff', 'Team Member')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
+                <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('admin.students.name')}</th>
+                <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('admin.students.email')}</th>
+                <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.leads.city', 'City')}</th>
+                <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.students.status')}</th>
+                <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('admin.students.progress')}</th>
+                <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('admin.students.agent')}</th>
+                <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('admin.ready.staff', 'Team Member')}</th>
+                <th className="w-[8%] px-4 py-3 text-start font-semibold">{t('admin.students.registration')}</th>
+                <th className="w-[8%] px-4 py-3 text-start font-semibold">{t('admin.students.actions')}</th>
               </tr>
             </thead>
             <tbody>

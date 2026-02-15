@@ -88,13 +88,13 @@ const AuditLog: React.FC<AuditLogProps> = ({ logs }) => {
       <FilterBar />
       <Card className="w-full overflow-hidden max-h-[600px] overflow-y-auto">
         <div className="w-full overflow-x-auto">
-        <table className="min-w-full table-auto text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead className="sticky top-0 z-10">
             <tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.audit.action')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.audit.details')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.audit.table')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('admin.audit.date')}</th>
+              <th className="w-[20%] px-4 py-3 text-start font-semibold">{t('admin.audit.action')}</th>
+              <th className="w-[40%] px-4 py-3 text-start font-semibold">{t('admin.audit.details')}</th>
+              <th className="w-[15%] px-4 py-3 text-start font-semibold">{t('admin.audit.table')}</th>
+              <th className="w-[25%] px-4 py-3 text-start font-semibold">{t('admin.audit.date')}</th>
             </tr>
           </thead>
           <tbody>
