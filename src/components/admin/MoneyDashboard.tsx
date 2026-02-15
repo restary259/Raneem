@@ -309,9 +309,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('money.noTransactions')}</p>}
         </div>
       ) : (
-        <Card className="w-full">
-          <CardContent className="p-0">
-            <div className="w-full overflow-x-auto border rounded-lg">
+        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
@@ -348,9 +346,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                 </tbody>
               </table>
               {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('money.noTransactions')}</p>}
-            </div>
-          </CardContent>
-        </Card>
+        </div>
       )}
     </div>
   );

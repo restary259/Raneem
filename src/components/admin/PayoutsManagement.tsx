@@ -279,9 +279,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
         </div>
       ) : (
-        <Card className="w-full">
-          <CardContent className="p-0">
-            <div className="w-full overflow-x-auto border rounded-lg">
+        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
@@ -322,9 +320,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                 </tbody>
               </table>
               {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.payouts.noRewards')}</p>}
-            </div>
-          </CardContent>
-        </Card>
+        </div>
       )}
 
       {/* Modals */}
