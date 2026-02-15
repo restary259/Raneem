@@ -185,8 +185,8 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.referralsMgmt.noReferrals')}</p>}
         </div>
       ) : (
-        <Card><CardContent className="p-0"><div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <Card className="w-full"><CardContent className="p-0"><div className="overflow-x-auto w-full">
+          <table className="min-w-full text-sm">
             <thead><tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.name')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>
