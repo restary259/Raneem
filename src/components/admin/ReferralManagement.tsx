@@ -155,6 +155,7 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.name')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.type')}</th>
+              <th className="px-4 py-3 text-start font-semibold">{t('referrals.phone', 'Phone')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.email')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.family')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.status')}</th>
@@ -166,6 +167,7 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
                 <td className="px-4 py-3 font-medium">{r.referred_name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{getReferrerName(r)}</td>
                 <td className="px-4 py-3"><Badge variant="outline">{getReferralTypeLabel(r)}</Badge></td>
+                <td className="px-4 py-3 text-muted-foreground">{r.referred_phone || '—'}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.referred_email || '—'}</td>
                 <td className="px-4 py-3">{r.is_family ? '✅' : '—'}</td>
                 <td className="px-4 py-3"><StatusSelect referral={r} /></td>

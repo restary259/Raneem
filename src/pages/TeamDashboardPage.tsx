@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import {
   Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
@@ -72,6 +73,7 @@ const TeamDashboardPage = () => {
   const [profileValues, setProfileValues] = useState<Record<string, any>>({});
   const [savingProfile, setSavingProfile] = useState(false);
   const [majorSearch, setMajorSearch] = useState('');
+  const [readyConfirm, setReadyConfirm] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
@@ -151,6 +153,16 @@ const TeamDashboardPage = () => {
   };
 
   const saveCase = async (caseId: string) => {
+    // Double confirmation for ready_to_apply
+    const prevCase = cases.find(c => c.id === caseId);
+    if (editValues.case_status === 'ready_to_apply' && prevCase?.case_status !== 'ready_to_apply') {
+      setReadyConfirm(caseId);
+      return;
+    }
+    await doSaveCase(caseId);
+  };
+
+  const doSaveCase = async (caseId: string) => {
     setSaving(true);
     const prevCase = cases.find(c => c.id === caseId);
     const updateData: any = {
@@ -699,6 +711,26 @@ const TeamDashboardPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Ready to Apply Confirmation Dialog */}
+      <AlertDialog open={!!readyConfirm} onOpenChange={(open) => !open && setReadyConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('lawyer.statuses.ready_to_apply')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {i18n.language === 'ar' 
+                ? 'هل أنت متأكد أن جميع المعلومات صحيحة وكاملة؟ سيتم تغيير الحالة إلى "جاهز للتقديم".'
+                : 'Are you sure all information is correct and complete? The status will be changed to "Ready to Apply".'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (readyConfirm) { doSaveCase(readyConfirm); setReadyConfirm(null); } }}>
+              {t('common.save')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Mobile Bottom Nav */}
       {isMobile && mobileBottomNav}

@@ -273,13 +273,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
             const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, hk.date];
             const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
-            exportXLSX({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Leads' });
+            exportXLSX({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
           }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
           <Button variant="outline" size="sm" onClick={() => {
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
             const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, hk.date];
             const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
-            exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Leads' });
+            exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
           }}><FileText className="h-4 w-4 me-1" />PDF</Button>
           <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />{t('admin.leads.addLead')}</Button>
         </div>

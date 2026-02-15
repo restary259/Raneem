@@ -39,7 +39,7 @@ const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage')
 const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
 const LebenslaufBuilderPage = lazy(() => import('./pages/LebenslaufBuilderPage'));
 const HousingPage = lazy(() => import('./pages/HousingPage'));
-const LawyerDashboardPage = lazy(() => import('./pages/LawyerDashboardPage'));
+const TeamDashboardPage = lazy(() => import('./pages/TeamDashboardPage'));
 const ApplyPage = lazy(() => import('./pages/ApplyPage'));
 
 const queryClient = new QueryClient();
@@ -105,8 +105,8 @@ const App = () => {
               <Route path="/student-dashboard" element={<StudentDashboardPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
-              <Route path="/lawyer-dashboard" element={<LawyerDashboardPage />} />
-              <Route path="/team-dashboard" element={<LawyerDashboardPage />} />
+              <Route path="/lawyer-dashboard" element={<TeamDashboardPage />} />
+              <Route path="/team-dashboard" element={<TeamDashboardPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/quiz" element={<QuizPage />} />
               <Route path="/ai-advisor" element={<AIAdvisorPage />} />
