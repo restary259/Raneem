@@ -249,7 +249,8 @@
       "eligibility": "محرك الأهلية",
       "security": "الأمان",
       "audit": "سجل النشاط",
-      "notifications": "الإشعارات"
+      "notifications": "الإشعارات",
+      "masterServices": "كتالوج الخدمات"
     },
     "overview": {
       "totalStudents": "إجمالي الطلاب",

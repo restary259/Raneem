@@ -20,6 +20,7 @@ import CustomNotifications from '@/components/admin/CustomNotifications';
 import ReadyToApplyTable from '@/components/admin/ReadyToApplyTable';
 import EligibilityConfig from '@/components/admin/EligibilityConfig';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
+import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -215,6 +216,8 @@ const AdminDashboardPage = () => {
         return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
       case 'money':
         return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} />;
+      case 'master-services':
+        return <MasterServicesManagement />;
       case 'ready':
         return <ReadyToApplyTable />;
       case 'eligibility':

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { exportXLSX, exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, DollarSign, Save, Trash2, Download, Clock, FileSpreadsheet, FileText } from 'lucide-react';
+import { ChevronDown, DollarSign, Save, Trash2, Download, Clock, FileSpreadsheet, FileText, Package, Plus } from 'lucide-react';
 import PasswordVerifyDialog from './PasswordVerifyDialog';
 
 interface StudentCase {
@@ -87,8 +89,32 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showExportVerify, setShowExportVerify] = useState(false);
+  const [masterServices, setMasterServices] = useState<any[]>([]);
+  const [attachModal, setAttachModal] = useState<string | null>(null); // case id
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [caseSnapshots, setCaseSnapshots] = useState<Record<string, any[]>>({});
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
+
+  // Fetch master services and snapshots
+  useEffect(() => {
+    const fetchMeta = async () => {
+      const [msRes, snapRes] = await Promise.all([
+        (supabase as any).from('master_services').select('*').eq('is_active', true).order('sort_order'),
+        (supabase as any).from('case_service_snapshots').select('*'),
+      ]);
+      if (msRes.data) setMasterServices(msRes.data);
+      if (snapRes.data) {
+        const grouped: Record<string, any[]> = {};
+        snapRes.data.forEach((s: any) => {
+          if (!grouped[s.case_id]) grouped[s.case_id] = [];
+          grouped[s.case_id].push(s);
+        });
+        setCaseSnapshots(grouped);
+      }
+    };
+    fetchMeta();
+  }, [cases]);
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || t('lawyer.unknown');
   const getTeamMemberName = (lawyerId: string | null) => lawyerId ? lawyers.find(l => l.id === lawyerId)?.full_name || t('cases.notAssigned') : t('cases.notAssigned');
@@ -102,6 +128,61 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
       selected_city: c.selected_city || '', selected_school: c.selected_school || '',
       case_status: c.case_status, notes: c.notes || '',
     });
+  };
+
+  const attachServices = async () => {
+    if (!attachModal || selectedServiceIds.length === 0) return;
+    setLoading(true);
+    const snapshots = selectedServiceIds.map(sid => {
+      const ms = masterServices.find(m => m.id === sid);
+      if (!ms) return null;
+      return {
+        case_id: attachModal,
+        master_service_id: ms.id,
+        service_name: ms.service_name,
+        sale_price: ms.sale_price,
+        currency: ms.currency,
+        team_commission_type: ms.team_commission_type,
+        team_commission_value: ms.team_commission_value,
+        influencer_commission_type: ms.influencer_commission_type,
+        influencer_commission_value: ms.influencer_commission_value,
+        refundable: ms.refundable,
+        payment_status: 'pending',
+      };
+    }).filter(Boolean);
+
+    const { error } = await (supabase as any).from('case_service_snapshots').insert(snapshots);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    } else {
+      // Auto-update case totals from snapshots
+      const totalSalePrice = snapshots.reduce((s, sn: any) => s + (sn?.sale_price || 0), 0);
+      const totalTeamComm = snapshots.reduce((s, sn: any) => {
+        if (sn?.team_commission_type === 'percentage') return s + (sn.sale_price * sn.team_commission_value / 100);
+        return s + (sn?.team_commission_value || 0);
+      }, 0);
+      const totalInflComm = snapshots.reduce((s, sn: any) => {
+        if (sn?.influencer_commission_type === 'percentage') return s + (sn.sale_price * sn.influencer_commission_value / 100);
+        if (sn?.influencer_commission_type === 'none') return s;
+        return s + (sn?.influencer_commission_value || 0);
+      }, 0);
+
+      // Add to existing case values
+      const existingCase = cases.find(c => c.id === attachModal);
+      if (existingCase) {
+        await (supabase as any).from('student_cases').update({
+          service_fee: existingCase.service_fee + totalSalePrice,
+          lawyer_commission: existingCase.lawyer_commission + totalTeamComm,
+          influencer_commission: existingCase.influencer_commission + totalInflComm,
+        }).eq('id', attachModal);
+      }
+
+      toast({ title: 'Services attached', description: `${snapshots.length} services added with pricing snapshot locked.` });
+      onRefresh();
+    }
+    setLoading(false);
+    setAttachModal(null);
+    setSelectedServiceIds([]);
   };
 
   const saveCase = async (caseId: string) => {
@@ -247,7 +328,27 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                         <span className="flex items-center gap-1"><DollarSign className="h-4 w-4" />{t('cases.netProfit')}</span>
                         <span className={getNetProfit(c) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(c)} €</span>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => startEdit(c)}>{t('cases.editBtn')}</Button>
+                      {/* Attached Services Snapshots */}
+                      {(caseSnapshots[c.id] || []).length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" />Attached Services</p>
+                          {(caseSnapshots[c.id] || []).map((snap: any) => (
+                            <div key={snap.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
+                              <span>{snap.service_name}</span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={snap.payment_status === 'paid' ? 'default' : 'outline'} className="text-[10px]">{snap.payment_status}</Badge>
+                                <span className="font-medium">{snap.sale_price} {snap.currency}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => startEdit(c)}>{t('cases.editBtn')}</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setAttachModal(c.id); setSelectedServiceIds([]); }}>
+                          <Plus className="h-3.5 w-3.5 me-1" />Attach Services
+                        </Button>
+                      </div>
                     </>
                   ) : (
                     <div className="space-y-3">
@@ -296,6 +397,51 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Attach Services Modal */}
+      <Dialog open={!!attachModal} onOpenChange={() => setAttachModal(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Attach Services</DialogTitle></DialogHeader>
+          {masterServices.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No services configured. Add services in the Service Catalog tab first.</p>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Select services to attach. Pricing will be locked at current rates.</p>
+              {masterServices.map(ms => {
+                const isChecked = selectedServiceIds.includes(ms.id);
+                const alreadyAttached = (caseSnapshots[attachModal || ''] || []).some((s: any) => s.master_service_id === ms.id);
+                return (
+                  <label key={ms.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'} ${alreadyAttached ? 'opacity-50' : ''}`}>
+                    <Checkbox
+                      checked={isChecked}
+                      disabled={alreadyAttached}
+                      onCheckedChange={(checked) => {
+                        setSelectedServiceIds(prev =>
+                          checked ? [...prev, ms.id] : prev.filter(id => id !== ms.id)
+                        );
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{ms.service_name}</p>
+                      <p className="text-xs text-muted-foreground">{ms.sale_price} {ms.currency}{alreadyAttached ? ' (already attached)' : ''}</p>
+                    </div>
+                  </label>
+                );
+              })}
+              {selectedServiceIds.length > 0 && (
+                <div className="pt-2 border-t text-sm">
+                  <p className="font-medium">Total: {selectedServiceIds.reduce((s, id) => s + (masterServices.find(m => m.id === id)?.sale_price || 0), 0)} {masterServices[0]?.currency || 'ILS'}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={attachServices} disabled={loading || selectedServiceIds.length === 0}>
+              {loading ? 'Attaching...' : `Attach ${selectedServiceIds.length} Service${selectedServiceIds.length !== 1 ? 's' : ''}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

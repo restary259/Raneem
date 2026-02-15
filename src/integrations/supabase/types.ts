@@ -156,6 +156,69 @@ export type Database = {
           },
         ]
       }
+      case_service_snapshots: {
+        Row: {
+          case_id: string
+          created_at: string
+          currency: string
+          id: string
+          influencer_commission_type: string
+          influencer_commission_value: number
+          master_service_id: string
+          payment_status: string
+          refundable: boolean
+          sale_price: number
+          service_name: string
+          team_commission_type: string
+          team_commission_value: number
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          influencer_commission_type?: string
+          influencer_commission_value?: number
+          master_service_id: string
+          payment_status?: string
+          refundable?: boolean
+          sale_price?: number
+          service_name: string
+          team_commission_type?: string
+          team_commission_value?: number
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          influencer_commission_type?: string
+          influencer_commission_value?: number
+          master_service_id?: string
+          payment_status?: string
+          refundable?: boolean
+          sale_price?: number
+          service_name?: string
+          team_commission_type?: string
+          team_commission_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_service_snapshots_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "student_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_service_snapshots_master_service_id_fkey"
+            columns: ["master_service_id"]
+            isOneToOne: false
+            referencedRelation: "master_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           created_at: string
@@ -516,6 +579,63 @@ export type Database = {
           id?: string
           ip_address?: string | null
           success?: boolean
+        }
+        Relationships: []
+      }
+      master_services: {
+        Row: {
+          commission_eligible: boolean
+          created_at: string
+          currency: string
+          id: string
+          influencer_commission_type: string
+          influencer_commission_value: number
+          internal_cost: number | null
+          is_active: boolean
+          refundable: boolean
+          requires_document_upload: boolean
+          sale_price: number
+          service_name: string
+          sort_order: number
+          team_commission_type: string
+          team_commission_value: number
+          updated_at: string
+        }
+        Insert: {
+          commission_eligible?: boolean
+          created_at?: string
+          currency?: string
+          id?: string
+          influencer_commission_type?: string
+          influencer_commission_value?: number
+          internal_cost?: number | null
+          is_active?: boolean
+          refundable?: boolean
+          requires_document_upload?: boolean
+          sale_price?: number
+          service_name: string
+          sort_order?: number
+          team_commission_type?: string
+          team_commission_value?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_eligible?: boolean
+          created_at?: string
+          currency?: string
+          id?: string
+          influencer_commission_type?: string
+          influencer_commission_value?: number
+          internal_cost?: number | null
+          is_active?: boolean
+          refundable?: boolean
+          requires_document_upload?: boolean
+          sale_price?: number
+          service_name?: string
+          sort_order?: number
+          team_commission_type?: string
+          team_commission_value?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -916,6 +1036,7 @@ export type Database = {
           paid_at: string | null
           passport_number: string | null
           referral_discount: number
+          refund_status: string | null
           school_commission: number
           selected_city: string | null
           selected_school: string | null
@@ -946,6 +1067,7 @@ export type Database = {
           paid_at?: string | null
           passport_number?: string | null
           referral_discount?: number
+          refund_status?: string | null
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
@@ -976,6 +1098,7 @@ export type Database = {
           paid_at?: string | null
           passport_number?: string | null
           referral_discount?: number
+          refund_status?: string | null
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
@@ -1039,6 +1162,8 @@ export type Database = {
           amount: number
           approved_by: string | null
           created_at: string
+          currency: string | null
+          exchange_rate: number | null
           id: string
           notes: string | null
           payment_method: string | null
@@ -1051,6 +1176,8 @@ export type Database = {
           amount?: number
           approved_by?: string | null
           created_at?: string
+          currency?: string | null
+          exchange_rate?: number | null
           id?: string
           notes?: string | null
           payment_method?: string | null
@@ -1063,6 +1190,8 @@ export type Database = {
           amount?: number
           approved_by?: string | null
           created_at?: string
+          currency?: string | null
+          exchange_rate?: number | null
           id?: string
           notes?: string | null
           payment_method?: string | null

@@ -249,7 +249,8 @@
       "eligibility": "Eligibility Engine",
       "security": "Security",
       "audit": "Activity Log",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "masterServices": "Service Catalog"
     },
     "overview": {
       "totalStudents": "Total Students",
