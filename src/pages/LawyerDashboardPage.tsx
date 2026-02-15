@@ -233,24 +233,7 @@ const TeamDashboardPage = () => {
     }
   };
 
-  const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const sidebarItems = [
-    { id: 'leads' as SidebarTab, label: t('lawyer.assignedCases'), icon: Home },
-    { id: 'appointments' as SidebarTab, label: t('admin.appointments.title'), icon: Calendar },
-    { id: 'majors' as SidebarTab, label: t('lawyer.majorsTab', 'Majors'), icon: GraduationCap },
-    { id: 'ai' as SidebarTab, label: 'AI Agent', icon: Bot },
-  ];
-
-  // Filtered majors for quick access
+  // Filtered majors for quick access (must be before any early returns to follow React hooks rules)
   const filteredMajors = useMemo(() => {
     if (!majorSearch.trim()) return majorsData;
     const q = majorSearch.toLowerCase();
@@ -261,6 +244,23 @@ const TeamDashboardPage = () => {
       ),
     })).filter(cat => cat.subMajors.length > 0);
   }, [majorSearch]);
+
+  const sidebarItems = [
+    { id: 'leads' as SidebarTab, label: t('lawyer.assignedCases'), icon: Home },
+    { id: 'appointments' as SidebarTab, label: t('admin.appointments.title'), icon: Calendar },
+    { id: 'majors' as SidebarTab, label: t('lawyer.majorsTab', 'Majors'), icon: GraduationCap },
+    { id: 'ai' as SidebarTab, label: 'AI Agent', icon: Bot },
+  ];
+
+  const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const renderLeadCards = () => (
     <div className="space-y-4">
