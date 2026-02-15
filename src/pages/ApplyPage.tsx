@@ -55,10 +55,16 @@ const ApplyPage: React.FC = () => {
   // Step 3
   const [germanLevel, setGermanLevel] = useState('');
 
-  // Companion (friend/family)
+  // Companion (friend/family) - FULL form (Stage 4.4)
   const [hasCompanion, setHasCompanion] = useState(false);
   const [companionName, setCompanionName] = useState('');
   const [companionPhone, setCompanionPhone] = useState('');
+  const [companionPassport, setCompanionPassport] = useState('');
+  const [companionEnglish, setCompanionEnglish] = useState('');
+  const [companionMath, setCompanionMath] = useState('');
+  const [companionEducation, setCompanionEducation] = useState('');
+  const [companionGerman, setCompanionGerman] = useState('');
+  const [companionMajor, setCompanionMajor] = useState('');
 
   // Referral
   const [sourceType, setSourceType] = useState('organic');
@@ -110,6 +116,25 @@ const ApplyPage: React.FC = () => {
       }
       const { error } = await supabase.rpc('insert_lead_from_apply', rpcParams as any);
       if (error) throw error;
+
+      // If companion has full eligibility data, submit a separate lead for them
+      if (hasCompanion && companionName.trim() && companionPhone.trim()) {
+        const companionParams: Record<string, any> = {
+          p_full_name: companionName.trim(),
+          p_phone: companionPhone.trim(),
+          p_passport_type: companionPassport || null,
+          p_english_units: companionEnglish ? parseInt(companionEnglish) : null,
+          p_math_units: companionMath ? parseInt(companionMath) : null,
+          p_education_level: companionEducation || null,
+          p_german_level: companionGerman || null,
+          p_source_type: sourceType,
+          p_source_id: sourceId,
+          p_preferred_major: companionMajor || null,
+        };
+        // Submit companion as separate lead with their own eligibility scoring
+        await supabase.rpc('insert_lead_from_apply', companionParams as any);
+      }
+
       setSubmitted(true);
     } catch {
       toast({ title: t('apply.error', 'حدث خطأ، حاول مرة أخرى'), variant: 'destructive' });
@@ -358,10 +383,12 @@ const ApplyPage: React.FC = () => {
                   </div>
 
                   {hasCompanion && (
-                    <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+                    <div className="space-y-4 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
                       <p className="text-xs font-semibold text-foreground/70">
                         {t('apply.companionInfo', 'بيانات الشخص المرافق')}
                       </p>
+                      
+                      {/* Basic info */}
                       <FieldGroup label={t('apply.companionName', 'اسم المرافق')}>
                         <Input
                           value={companionName}
@@ -380,6 +407,103 @@ const ApplyPage: React.FC = () => {
                           type="tel"
                           className="h-11"
                         />
+                      </FieldGroup>
+
+                      {/* Full eligibility fields for companion (Stage 4.4) */}
+                      <FieldGroup label={t('apply.passportType', 'نوع جواز السفر')}>
+                        <div className="grid grid-cols-1 gap-2">
+                          {PASSPORT_TYPES.map(pt => (
+                            <button
+                              key={pt.value}
+                              type="button"
+                              onClick={() => setCompanionPassport(pt.value)}
+                              className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                                companionPassport === pt.value
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                  : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                              }`}
+                            >
+                              {isAr ? pt.label : pt.labelEn}
+                            </button>
+                          ))}
+                        </div>
+                      </FieldGroup>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <FieldGroup label={t('apply.englishUnits', 'وحدات الإنجليزي')}>
+                          <Input
+                            type="number" min="1" max="5"
+                            value={companionEnglish}
+                            onChange={e => setCompanionEnglish(e.target.value)}
+                            placeholder="3-5" dir="ltr" className="h-11"
+                          />
+                        </FieldGroup>
+                        <FieldGroup label={t('apply.mathUnits', 'وحدات الرياضيات')}>
+                          <Input
+                            type="number" min="1" max="5"
+                            value={companionMath}
+                            onChange={e => setCompanionMath(e.target.value)}
+                            placeholder="3-5" dir="ltr" className="h-11"
+                          />
+                        </FieldGroup>
+                      </div>
+
+                      <FieldGroup label={t('apply.educationLevel', 'المستوى التعليمي')}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {EDUCATION_LEVELS.map(lvl => (
+                            <button
+                              key={lvl.value}
+                              type="button"
+                              onClick={() => setCompanionEducation(lvl.value)}
+                              className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
+                                companionEducation === lvl.value
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                  : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                              }`}
+                            >
+                              {isAr ? lvl.label : lvl.labelEn}
+                            </button>
+                          ))}
+                        </div>
+                      </FieldGroup>
+
+                      <FieldGroup label={t('apply.germanLevel', 'مستوى اللغة الألمانية')}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {GERMAN_LEVELS.map(lvl => (
+                            <button
+                              key={lvl.value}
+                              type="button"
+                              onClick={() => setCompanionGerman(lvl.value)}
+                              className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                                companionGerman === lvl.value
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                  : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
+                              }`}
+                            >
+                              {isAr ? lvl.label : lvl.labelEn}
+                            </button>
+                          ))}
+                        </div>
+                      </FieldGroup>
+
+                      <FieldGroup label={t('apply.preferredMajor', isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)')}>
+                        <Select value={companionMajor} onValueChange={setCompanionMajor} dir={dir}>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder={t('apply.selectMajor', isAr ? 'اختر التخصص...' : 'Select a major...')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {majorsData.map(cat => (
+                              <SelectGroup key={cat.id}>
+                                <SelectLabel>{isAr ? cat.title : cat.titleEN}</SelectLabel>
+                                {cat.subMajors.map(sub => (
+                                  <SelectItem key={sub.id} value={sub.id}>
+                                    {isAr ? sub.nameAR : sub.nameEN}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FieldGroup>
                     </div>
                   )}

@@ -47,6 +47,42 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
   const updateStatus = async (id: string, newStatus: string, referral: any) => {
     const { error } = await (supabase as any).from('referrals').update({ status: newStatus }).eq('id', id);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
+
+    // Auto-generate case from referral when enrolled (Stage 4.2)
+    if (newStatus === 'enrolled' && referral.referred_phone) {
+      try {
+        // Find matching lead by phone
+        const { data: matchedLead } = await (supabase as any)
+          .from('leads')
+          .select('id, full_name, phone, city, eligibility_score, eligibility_reason, source_type, source_id')
+          .eq('phone', referral.referred_phone)
+          .maybeSingle();
+
+        if (matchedLead) {
+          // Check if a case already exists for this lead
+          const { data: existingCase } = await (supabase as any)
+            .from('student_cases')
+            .select('id')
+            .eq('lead_id', matchedLead.id)
+            .maybeSingle();
+
+          if (!existingCase) {
+            await (supabase as any).from('student_cases').insert({
+              lead_id: matchedLead.id,
+              student_full_name: matchedLead.full_name,
+              student_phone: matchedLead.phone,
+              selected_city: matchedLead.city || null,
+              case_status: 'assigned',
+              notes: `Auto-created from referral enrollment (${referral.referred_name})`,
+            });
+            toast({ title: 'Case auto-created for enrolled referral' });
+          }
+        }
+      } catch (e) {
+        console.warn('Auto-case creation failed:', e);
+      }
+    }
+
     if (newStatus === 'paid') {
       const amount = referral.referrer_type === 'influencer' ? 2000 : 500;
       await (supabase as any).from('rewards').insert({ user_id: referral.referrer_id, referral_id: id, amount, currency: 'ILS', status: 'pending' });
