@@ -149,7 +149,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
             </Button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-auto min-w-0 w-full">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-hidden min-w-0">{children}</main>
       </div>
     </div>
   );
