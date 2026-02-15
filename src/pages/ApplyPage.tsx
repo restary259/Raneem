@@ -89,9 +89,30 @@ const ApplyPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Phone validation: Israeli format (05XXXXXXXX or +9725XXXXXXXX)
+  const isValidPhone = (p: string) => {
+    const cleaned = p.replace(/[\s\-()]/g, '');
+    return /^05\d{8}$/.test(cleaned) || /^\+9725\d{8}$/.test(cleaned);
+  };
+  const [phoneError, setPhoneError] = useState('');
+
   const canGoNext = () => {
-    if (step === 1) return fullName.trim().length > 0 && phone.trim().length > 0;
+    if (step === 1) {
+      if (!fullName.trim()) return false;
+      if (!phone.trim()) return false;
+      if (!isValidPhone(phone)) return false;
+      return true;
+    }
     return true;
+  };
+
+  const handlePhoneChange = (val: string) => {
+    setPhone(val);
+    if (val.trim() && !isValidPhone(val)) {
+      setPhoneError(isAr ? 'رقم هاتف غير صالح (مثال: 0501234567)' : 'Invalid phone number (e.g. 0501234567)');
+    } else {
+      setPhoneError('');
+    }
   };
 
   const handleSubmit = async () => {
@@ -248,12 +269,13 @@ const ApplyPage: React.FC = () => {
                   <FieldGroup label={t('apply.phone', 'رقم الهاتف / واتساب')}>
                     <Input
                       value={phone}
-                      onChange={e => setPhone(e.target.value)}
+                      onChange={e => handlePhoneChange(e.target.value)}
                       placeholder="05X-XXXXXXX"
                       dir="ltr"
                       type="tel"
-                      className="h-11"
+                      className={`h-11 ${phoneError ? 'border-red-500' : ''}`}
                     />
+                    {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
                   </FieldGroup>
                 </div>
               )}
