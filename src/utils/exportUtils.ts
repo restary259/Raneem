@@ -55,7 +55,9 @@ export function exportPDF({ headers, rows, fileName, title, summaryRows }: Expor
 
   if (title) {
     doc.setFontSize(16);
-    doc.text(title, 14, 20);
+    // Replace "Darb Study" with "Darb Study International" in title
+    const displayTitle = title.replace(/Darb Study(?! International)/g, 'Darb Study International');
+    doc.text(displayTitle, 14, 20);
   }
 
   const startY = title ? 28 : 14;

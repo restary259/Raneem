@@ -51,7 +51,7 @@ const StudentAuthPage = () => {
     if (roles?.some((r: any) => r.role === 'admin')) {
       navigate('/admin');
     } else if (roles?.some((r: any) => r.role === 'lawyer')) {
-      navigate('/lawyer-dashboard');
+      navigate('/team-dashboard');
     } else if (roles?.some((r: any) => r.role === 'influencer')) {
       navigate('/influencer-dashboard');
     } else {

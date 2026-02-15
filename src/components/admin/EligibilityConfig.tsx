@@ -160,7 +160,7 @@ const EligibilityConfig: React.FC = () => {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || totalWeight !== 100}>
           <Save className="h-4 w-4 me-1" />{saving ? t('common.loading') : t('admin.eligibility.save')}
         </Button>
         <Button variant="outline" onClick={() => setShowReset(true)}>

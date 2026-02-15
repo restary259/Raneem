@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter } from 'lucide-react';
+import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
@@ -239,6 +240,11 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           </>
         )}
         <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportCSV', 'Export CSV')}</Button>
+        <Button size="sm" variant="outline" onClick={() => {
+          const headers = [t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'), t('admin.payouts.paymentMethodCol')];
+          const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString()} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
+          exportPDF({ headers, rows: pdfRows, fileName: `payouts-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Payouts' });
+        }}><FileText className="h-4 w-4 me-1" />PDF</Button>
       </div>
 
       {/* Table / Cards */}
