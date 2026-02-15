@@ -1,179 +1,61 @@
-# Fix Admin Dashboard Tables -- Full Width Container Layout
+
+# Fix Admin Dashboard: Contain Tables Within Viewport
 
 ## Problem
-
-Tables and content sections across the admin dashboard are not stretching to full width on desktop. The content appears constrained and cut off, leaving unused whitespace on larger screens.
-
-## Root Cause
-
-The `AdminLayout.tsx` main content area uses basic padding but lacks a proper full-width container strategy. Individual tab components wrap tables in Cards that don't enforce `w-full` consistently, and some tables use `w-full` without `min-w-full` causing them to shrink.
+Tables are bleeding out of the viewport, pushing the page width beyond the sidebar. The root cause is two-fold:
+1. The `<main>` tag in `AdminLayout.tsx` uses `overflow-x-auto`, which allows the entire content area to expand horizontally instead of constraining it
+2. Tables use `min-w-full`, which forces them to be at least as wide as their parent -- preventing them from shrinking when the viewport is smaller
 
 ## Solution
 
-Apply a consistent full-width container pattern across all admin dashboard tab components:
+### 1. Fix AdminLayout.tsx (the parent -- most critical fix)
 
-1. **AdminLayout.tsx** -- Ensure the main content area stretches fully with `w-full` on the children wrapper
-2. **All table-based components** -- Ensure desktop tables use `min-w-full` so they never shrink below their natural width, and their parent containers use `w-full`
-
-## Files to Modify
-
-
-| File                                          | Change                                                           |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| `src/components/admin/AdminLayout.tsx`        | Add `w-full` to the `<main>` tag to ensure children stretch      |
-| `src/components/admin/LeadsManagement.tsx`    | Change table from `w-full` to `min-w-full` for the desktop table |
-| `src/components/admin/PayoutsManagement.tsx`  | Same: table `min-w-full`                                         |
-| `src/components/admin/ReferralManagement.tsx` | Same: table `min-w-full`                                         |
-| `src/components/admin/MoneyDashboard.tsx`     | Same: table `min-w-full`                                         |
-| `src/components/admin/StudentManagement.tsx`  | Same: table `min-w-full`                                         |
-| `src/components/admin/AuditLog.tsx`           | Same: table already uses `min-w-full` -- verify consistent       |
-| `src/components/admin/KPIAnalytics.tsx`       | Ensure chart containers use `w-full`                             |
-
-
-## Technical Details
-
-For each desktop table component, the pattern will be:
-
-```text
-<Card className="w-full">          <!-- card stretches full -->
-  <CardContent className="p-0">
-    <div className="overflow-x-auto w-full">
-      <table className="min-w-full text-sm">  <!-- table never shrinks -->
-        ...
-      </table>
-    </div>
-  </CardContent>
-</Card>
-```
-
-The `AdminLayout.tsx` main tag will change from:
-
-```text
-<main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-auto min-w-0">
-```
-
-to:
-
+Change `<main>` from:
 ```text
 <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-auto min-w-0 w-full">
 ```
-
-This ensures the entire content area and all nested tables stretch to fill the available space after the sidebar.          🛡️ SAFEGUARD — RESPONSIVE & MOBILE PROTECTION
-
-## Objective
-
-While fixing the Admin Dashboard tables to stretch full width on desktop, ensure the layout remains fully responsive and adaptive across tablet and mobile devices.
-
----
-
-## ⚠️ Critical Requirement
-
-The desktop full-width fix **must NOT break**:
-
-- Mobile layout
-- Tablet responsiveness
-- Horizontal scrolling behavior
-- Card stacking behavior
-- Sidebar collapse behavior
-
-All changes must follow a responsive-first approach.
-
----
-
-## 📱 Responsive Safeguards
-
-### 1️⃣ Preserve Mobile Adaptation
-
-- Do NOT force fixed widths.
-- Do NOT remove responsive breakpoints.
-- Do NOT apply global `min-w-full` to containers that affect mobile stacking.
-- Only apply `min-w-full` to desktop tables inside `overflow-x-auto`.
-
-Use Tailwind responsive utilities properly:
-
-```
-<div className="overflow-x-auto w-full">
-  <table className="min-w-full text-sm">
-
+to:
+```text
+<main className="flex-1 p-4 md:p-6 lg:p-8 overflow-hidden min-w-0">
 ```
 
-Ensure mobile behavior still allows:
+Key changes:
+- `overflow-x-auto` changed to `overflow-hidden` -- prevents the main area from scrolling; scrolling will happen inside each table card instead
+- Removed `w-full` -- `flex-1` already handles width distribution
+- Kept `min-w-0` -- this is the critical Flexbox fix that allows the flex child to shrink below its content size
 
-- Horizontal scroll on small screens.
-- No layout breaking.
-- No content overflow outside viewport.
+### 2. Fix all table components (the children)
 
----
+For every table component, apply this consistent pattern:
 
-### 2️⃣ Maintain Proper Breakpoints
+```text
+<div className="w-full overflow-x-auto border rounded-lg">
+  <table className="w-full text-sm">
+```
 
-Test and verify behavior at:
+Changes per file:
+- Remove `min-w-full` from all `<table>` elements -- replace with `w-full`
+- Add `border rounded-lg` to the overflow wrapper for a clean contained look
+- Keep `overflow-x-auto` on the wrapper so horizontal scroll happens inside the card only
 
-- 320px (small mobile)
-- 375px (standard mobile)
-- 768px (tablet)
-- 1024px (small desktop)
-- 1440px+ (large desktop)
+### Files to modify
 
-The layout must:
+| File | Change |
+|------|--------|
+| `AdminLayout.tsx` | `overflow-x-auto` to `overflow-hidden`, remove extra `w-full` |
+| `LeadsManagement.tsx` | Table: `min-w-full` to `w-full`, wrapper: add `border rounded-lg` |
+| `PayoutsManagement.tsx` | Same pattern |
+| `ReferralManagement.tsx` | Same pattern |
+| `MoneyDashboard.tsx` | Same pattern |
+| `StudentManagement.tsx` | Same pattern |
+| `AuditLog.tsx` | Same pattern |
 
-- Stack properly on mobile.
-- Not create double horizontal scrollbars.
-- Not cut off table headers.
-- Not overflow outside the viewport.
+### RTL Compatibility
+- `overflow-x-auto` works correctly with RTL -- scrollbar direction follows the document direction
+- No special RTL handling needed since the layout uses `dir={dir}` on the root container
+- `text-start` classes (already in use) automatically adapt to RTL
 
----
-
-### 3️⃣ Sidebar Behavior
-
-After adding `w-full` to `<main>`, verify:
-
-- Sidebar still collapses correctly.
-- Content does not overlap sidebar.
-- No horizontal shift when toggling sidebar.
-
----
-
-### 4️⃣ Chart & KPI Components
-
-For KPIAnalytics:
-
-- Charts must use `w-full`.
-- Must resize dynamically.
-- No fixed pixel widths.
-- No overflow on smaller screens.
-
----
-
-### 5️⃣ Do NOT Remove Mobile-Specific Layout Logic
-
-If any component uses:
-
-- `hidden md:block`
-- `block md:hidden`
-- Responsive grid layouts
-- Stacked mobile card versions of tables
-
-These must remain intact.
-
----
-
-## 🧪 Validation Checklist Before Completion
-
-Lovable must verify:
-
-✅ Desktop tables stretch full width  
-✅ No whitespace gaps on large screens  
-✅ Mobile layout still stacks correctly  
-✅ Tables scroll horizontally on mobile  
-✅ No content overflow  
-✅ No layout shift when resizing browser  
-✅ No console errors  
-✅ No UI regression
-
----
-
-## 📌 Final Instruction
-
-The fix must improve desktop usability **without sacrificing responsive integrity**.  
-If any responsive regression is detected, it must be corrected before final delivery.
+### Mobile Safety
+- Mobile views use card-based layouts (not tables), so these changes only affect desktop
+- The `overflow-x-auto` on table wrappers ensures that if columns overflow on tablet, users get a horizontal scrollbar inside the card -- not on the whole page
+- No `hidden md:block` or responsive conditionals are being removed
