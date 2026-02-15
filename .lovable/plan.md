@@ -1,66 +1,53 @@
 
-# Standardize All Admin Dashboard Tables with Contained Borders
 
-## Problem
-Tables across admin dashboard tabs have inconsistent wrapper patterns. Some have double borders (Card border + inner div border), some have no Card wrapper, and some lack the `border rounded-lg` styling. This makes some tables (like Payouts) look like floating headers without a proper container.
+## Fix: Table Columns Not Distributing Width Across Full Card
 
-## Solution
-Standardize ALL admin table wrappers to use ONE consistent pattern -- a clean `div` with `bg-background rounded-xl border shadow-sm` wrapping the table, with `overflow-x-auto` for horizontal scroll containment. No double-nesting inside Card components (which adds a second border).
+### Problem
+All 8 admin dashboard tables currently use `table-auto` which sizes columns based on content. When data is sparse (many "-" values or short text), columns collapse to minimum width and leave empty space on the right side of the card. The table technically has `min-w-full` but columns don't stretch to fill the available width.
 
-### Target Pattern (matches the "good" Leads look from screenshot 2):
-```text
-<div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-  <table className="w-full text-sm">
-    <thead>
-      <tr className="border-b bg-muted/50">...</tr>
-    </thead>
-    <tbody>...</tbody>
-  </table>
-</div>
+### Root Cause
+`table-auto` + `min-w-full` = table is at least as wide as container, but columns only take the space their content needs. Extra space is not distributed.
+
+### Solution
+Switch all 8 tables from `table-auto` to `table-fixed w-full` and add percentage-based widths to `<th>` elements so columns distribute evenly across the full card width.
+
+### Files to Modify
+
+**1. LeadsManagement.tsx (10 columns)**
+- Change `<table className="min-w-full table-auto text-sm">` to `<table className="w-full table-fixed text-sm">`
+- Add percentage widths to `<th>`: Name 15%, City 10%, Major 13%, Phone 13%, English 7%, Math 7%, Score 7%, Source 8%, Status 8%, Actions 12%
+
+**2. PayoutsManagement.tsx (9 columns)**
+- Same `table-fixed w-full` change
+- Widths: Checkbox 4%, Requester 16%, Role 8%, Students 10%, Amount 10%, Status 10%, Date 14%, Method 12%, Actions 16%
+
+**3. ReferralManagement.tsx**
+- Same pattern with appropriate column width percentages
+
+**4. MoneyDashboard.tsx**
+- Same pattern with appropriate column width percentages
+
+**5. StudentManagement.tsx**
+- Same pattern with appropriate column width percentages
+
+**6. AuditLog.tsx**
+- Same pattern with appropriate column width percentages
+
+**7. InfluencerManagement.tsx**
+- Same pattern with appropriate column width percentages
+
+**8. ReadyToApplyTable.tsx**
+- Same pattern with appropriate column width percentages
+
+### Technical Details
+
+The key CSS change on every `<table>`:
+```
+Before: className="min-w-full table-auto text-sm"
+After:  className="w-full table-fixed text-sm"
 ```
 
-## Files to Modify
+And on each `<th>`, add a `w-[X%]` class so widths total ~100%. This forces the browser to distribute column widths proportionally regardless of content, eliminating the "squished left, empty right" problem.
 
-| File | Current Pattern | Fix |
-|------|----------------|-----|
-| `PayoutsManagement.tsx` | `Card > CardContent p-0 > div.border.rounded-lg > table` | Remove Card/CardContent wrapper, use single `div.bg-background.rounded-xl.border.shadow-sm` |
-| `LeadsManagement.tsx` | `Card > CardContent p-0 > div.border.rounded-lg > table` | Same fix |
-| `ReferralManagement.tsx` | `Card > CardContent p-0 > div.border.rounded-lg > table` | Same fix |
-| `MoneyDashboard.tsx` | `Card > CardContent p-0 > div.border.rounded-lg > table` | Same fix |
-| `StudentManagement.tsx` | `div.bg-background.rounded-xl.border.shadow-sm` | Already correct -- no change needed |
-| `AuditLog.tsx` | `div.bg-background.rounded-xl.border.shadow-sm` | Already correct -- no change needed |
-| `InfluencerManagement.tsx` | `div.bg-background.rounded-xl.border.shadow-sm` (missing `w-full`) | Add `w-full` |
-| `ReadyToApplyTable.tsx` | `Card > CardContent p-0 > div.overflow-x-auto` (no border on inner div) | Remove Card/CardContent, use standard `div.bg-background.rounded-xl.border.shadow-sm` |
-| `SecurityPanel.tsx` | Inside Card with CardContent (has padding) | Already contained inside a Card with header -- keep as-is since it's a different layout |
+`table-fixed` tells the browser: "Use the widths I set on the first row, ignore content width." Combined with `w-full`, the table always fills the card edge-to-edge with evenly distributed columns.
 
-## Technical Details
-
-### Changes for PayoutsManagement.tsx (lines ~282-284)
-Replace:
-```text
-<Card className="w-full">
-  <CardContent className="p-0">
-    <div className="w-full overflow-x-auto border rounded-lg">
-      <table className="w-full text-sm">
-```
-With:
-```text
-<div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-  <table className="w-full text-sm">
-```
-And close the `</div>` instead of `</div></CardContent></Card>`.
-
-### Same transformation for:
-- LeadsManagement.tsx (lines ~292-295)
-- ReferralManagement.tsx (line ~188)
-- MoneyDashboard.tsx (lines ~312-314)
-- ReadyToApplyTable.tsx (lines ~247-249)
-
-### InfluencerManagement.tsx (line ~171)
-Add `w-full` to existing div class.
-
-### No changes needed for:
-- StudentManagement.tsx (already correct pattern)
-- AuditLog.tsx (already correct pattern)
-- SecurityPanel.tsx (different layout with CardHeader)
-- CasesManagement.tsx (uses collapsible cards, not tables)
