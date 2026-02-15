@@ -170,14 +170,14 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       ) : (
         <Card className="w-full overflow-hidden">
           <div className="w-full overflow-x-auto">
-           <table className="min-w-full table-auto text-sm">
+           <table className="w-full table-fixed text-sm">
             <thead><tr className="border-b bg-muted/50">
-              <th className="px-4 py-3 text-start font-semibold">{t('team.name')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('team.email')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('team.role')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('team.students')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('team.status')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('team.action')}</th>
+              <th className="w-[20%] px-4 py-3 text-start font-semibold">{t('team.name')}</th>
+              <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('team.email')}</th>
+              <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('team.role')}</th>
+              <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('team.students')}</th>
+              <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('team.status')}</th>
+              <th className="w-[20%] px-4 py-3 text-start font-semibold">{t('team.action')}</th>
             </tr></thead>
             <tbody>
               {allTeamMembers.map(inf => (
