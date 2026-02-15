@@ -244,7 +244,8 @@ const ReadyToApplyTable: React.FC = () => {
           <p>{t('admin.ready.noResults')}</p>
         </div>
       ) : (
-        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
+        <Card className="w-full overflow-hidden">
+          <div className="w-full overflow-x-auto">
               <table className="min-w-full table-auto text-sm">
                 <thead>
                   <tr className="border-b bg-muted/30">
@@ -294,7 +295,8 @@ const ReadyToApplyTable: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-        </div>
+          </div>
+        </Card>
       )}
 
       {/* Profile Edit Modal */}

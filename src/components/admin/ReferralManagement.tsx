@@ -185,8 +185,9 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.referralsMgmt.noReferrals')}</p>}
         </div>
       ) : (
-        <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto">
-          <table className="min-w-full table-auto text-sm">
+        <Card className="w-full overflow-hidden">
+          <div className="w-full overflow-x-auto">
+           <table className="min-w-full table-auto text-sm">
             <thead><tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.name')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('admin.referralsMgmt.referredBy', 'Referred By')}</th>
@@ -217,7 +218,8 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
             ))}</tbody>
           </table>
           {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.referralsMgmt.noReferrals')}</p>}
-        </div>
+          </div>
+        </Card>
       )}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

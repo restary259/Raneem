@@ -86,7 +86,8 @@ const AuditLog: React.FC<AuditLogProps> = ({ logs }) => {
   return (
     <div className="space-y-3">
       <FilterBar />
-      <div className="bg-background rounded-xl border shadow-sm w-full overflow-x-auto max-h-[600px] overflow-y-auto">
+      <Card className="w-full overflow-hidden max-h-[600px] overflow-y-auto">
+        <div className="w-full overflow-x-auto">
         <table className="min-w-full table-auto text-sm">
           <thead className="sticky top-0 z-10">
             <tr className="border-b bg-muted/50">
@@ -108,7 +109,8 @@ const AuditLog: React.FC<AuditLogProps> = ({ logs }) => {
           </tbody>
         </table>
         {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('admin.audit.noLogs')}</p>}
-      </div>
+        </div>
+      </Card>
     </div>
   );
 };
