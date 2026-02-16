@@ -34,7 +34,7 @@ import { STATUS_COLORS as IMPORTED_STATUS_COLORS, resolveStatus, CaseStatus } fr
 import { canTransition } from '@/lib/caseTransitions';
 
 const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
-const LANGUAGE_SCHOOLS = ['Goethe-Institut', 'Humboldt-Institut', 'DID Deutsch-Institut', 'Carl Duisberg'];
+const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
 
 type TabId = 'cases' | 'appointments' | 'analytics' | 'earnings';
 
@@ -69,14 +69,14 @@ function getNeonBorder(status: string): string {
 type CaseFilterTab = 'all' | 'new' | 'contacted' | 'appointment_stage' | 'profile_filled' | 'submitted' | 'sla';
 const CASE_FILTER_TABS: CaseFilterTab[] = ['all', 'new', 'contacted', 'appointment_stage', 'profile_filled', 'submitted', 'sla'];
 
-const FILTER_LABELS: Record<CaseFilterTab, string> = {
-  all: 'الكل',
-  new: 'جديد',
-  contacted: 'تم التواصل',
-  appointment_stage: 'مرحلة الموعد',
-  profile_filled: 'ملفات مكتملة',
-  submitted: 'تم الإرسال للمسؤول',
-  sla: 'تنبيه SLA',
+const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
+  all: { ar: 'الكل', en: 'All' },
+  new: { ar: 'جديد', en: 'New' },
+  contacted: { ar: 'تم التواصل', en: 'Contacted' },
+  appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
+  profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
+  submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted' },
+  sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
 };
 
 function matchesFilter(status: string, filter: CaseFilterTab): boolean {
@@ -352,6 +352,9 @@ const TeamDashboardPage = () => {
     let targetStatus = c.case_status;
     if (canTransition(c.case_status, CaseStatus.PAID)) {
       targetStatus = CaseStatus.PAID;
+    } else if (['profile_filled', 'services_filled'].includes(c.case_status)) {
+      // Fallback: force transition for team workflow (teams skip services_filled)
+      targetStatus = CaseStatus.PAID;
     } else if (canTransition(c.case_status, CaseStatus.READY_TO_APPLY)) {
       targetStatus = CaseStatus.READY_TO_APPLY;
     }
@@ -612,7 +615,7 @@ const TeamDashboardPage = () => {
                           active ? 'bg-primary text-primary-foreground border-primary' : `bg-muted text-muted-foreground hover:bg-muted/80 ${NEON_BORDERS[f] || 'border-transparent'}`
                         } ${f === 'sla' && count > 0 && !active ? 'border-destructive/50 text-destructive' : ''}`}
                       >
-                        {FILTER_LABELS[f]}
+                        {isAr ? FILTER_LABELS[f].ar : FILTER_LABELS[f].en}
                         {count > 0 && <span className="ms-1">({count})</span>}
                       </button>
                     );
@@ -923,16 +926,6 @@ const TeamDashboardPage = () => {
                     <SelectTrigger><SelectValue placeholder={t('admin.ready.selectAccommodation')} /></SelectTrigger>
                     <SelectContent>
                       {ACCOMMODATION_OPTIONS.map(o => (<SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
-                  <Select value={profileValues.gender || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, gender: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر الجنس' : 'Select gender'} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
-                      <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
