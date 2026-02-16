@@ -829,16 +829,43 @@
     "avgProgress": "Avg Progress",
     "tabs": {
       "overview": "Overview",
+      "analytics": "Analytics",
       "students": "Students",
       "earnings": "Earnings",
       "media": "Content",
-      "referralLink": "Referral Link"
+      "referralLink": "My Link"
     },
     "referredClients": "Referred Clients",
     "enrolledStudents": "Enrolled Students",
     "noStudents": "No students assigned to you currently",
     "eligibleForApply": "Eligible for application",
     "notMeetReqs": "Did not meet requirements",
+    "kpi": {
+      "totalSubmissions": "Total Submissions",
+      "eligible": "Eligible",
+      "ineligible": "Ineligible",
+      "convertedPaid": "Converted (Paid)",
+      "conversionFunnel": "Conversion Funnel",
+      "funnelSubmitted": "Submitted",
+      "funnelEligible": "Eligible",
+      "funnelPaid": "Paid"
+    },
+    "studentFilters": {
+      "all": "All",
+      "eligible": "Eligible",
+      "ineligible": "Ineligible",
+      "paid": "Paid"
+    },
+    "studentCard": {
+      "payment": "Payment:",
+      "paid": "✅ Paid",
+      "notPaid": "⏳ Not paid",
+      "readyPayout": "✅ Ready to request payout",
+      "daysLeft": "{{count}} days left",
+      "statusEligible": "Eligible",
+      "statusIneligible": "Ineligible",
+      "statusPaid": "Paid"
+    },
     "leadStatuses": {
       "new": "New",
       "eligible": "Eligible",
