@@ -19,11 +19,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import {
   Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, FileText, Bot, GraduationCap, Eye, EyeOff, DollarSign, TrendingUp
+  Home, Calendar, FileText, GraduationCap, Eye, EyeOff, DollarSign, TrendingUp
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 import NotificationBell from '@/components/common/NotificationBell';
-import AIChatPopup from '@/components/chat/AIChatPopup';
+
 import { differenceInHours, isToday } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { majorsData } from '@/data/majorsData';
@@ -56,7 +56,7 @@ const NEON_BORDER: Record<string, string> = {
 
 const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
 
-type SidebarTab = 'leads' | 'appointments' | 'majors' | 'ai';
+type SidebarTab = 'leads' | 'appointments' | 'majors';
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -70,7 +70,7 @@ const TeamDashboardPage = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>('leads');
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showAI, setShowAI] = useState(false);
+  
   const [profileCase, setProfileCase] = useState<any | null>(null);
   const [profileValues, setProfileValues] = useState<Record<string, any>>({});
   const [savingProfile, setSavingProfile] = useState(false);
@@ -263,7 +263,6 @@ const TeamDashboardPage = () => {
     { id: 'leads' as SidebarTab, label: t('lawyer.assignedCases'), icon: Home },
     { id: 'appointments' as SidebarTab, label: t('admin.appointments.title'), icon: Calendar },
     { id: 'majors' as SidebarTab, label: t('lawyer.majorsTab', 'Majors'), icon: GraduationCap },
-    { id: 'ai' as SidebarTab, label: 'AI Agent', icon: Bot },
   ];
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
@@ -486,10 +485,7 @@ const TeamDashboardPage = () => {
       {sidebarItems.map(item => (
         <button
           key={item.id}
-          onClick={() => {
-            if (item.id === 'ai') { setShowAI(true); }
-            else { setActiveTab(item.id); }
-          }}
+          onClick={() => setActiveTab(item.id)}
           className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all ${
             activeTab === item.id ? 'text-primary' : 'text-white/60'
           }`}
@@ -534,20 +530,15 @@ const TeamDashboardPage = () => {
         <aside className="hidden lg:flex flex-col w-56 bg-[#1E293B] text-white shrink-0 border-e border-white/10">
           <nav className="flex-1 p-3 space-y-1">
             {sidebarItems.map(item => {
-              const isActive = activeTab === item.id && item.id !== 'ai';
+              const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    if (item.id === 'ai') { setShowAI(!showAI); }
-                    else { setActiveTab(item.id); }
-                  }}
+                  onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 ${
                     isActive
                       ? 'bg-primary/20 text-white border-s-2 border-primary shadow-[0_0_12px_rgba(234,88,12,0.3)]'
-                      : item.id === 'ai' && showAI
-                        ? 'bg-blue-500/20 text-white'
-                        : 'text-white/70 hover:bg-white/8 hover:text-white'
+                      : 'text-white/70 hover:bg-white/8 hover:text-white'
                   }`}
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
@@ -624,19 +615,6 @@ const TeamDashboardPage = () => {
         </div>
       </div>
 
-      {/* AI Agent Sidebar Popup */}
-      {showAI && (
-        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[380px] shadow-2xl animate-in slide-in-from-right duration-200">
-          <div className="h-full">
-            <AIChatPopup onClose={() => setShowAI(false)} />
-          </div>
-        </div>
-      )}
-
-      {/* Backdrop for AI popup */}
-      {showAI && (
-        <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setShowAI(false)} />
-      )}
 
       {/* Profile Completion Modal */}
       <Dialog open={!!profileCase} onOpenChange={(open) => !open && setProfileCase(null)}>
