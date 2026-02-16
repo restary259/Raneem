@@ -7,12 +7,12 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AdminOverview from '@/components/admin/AdminOverview';
 import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import LeadsManagement from '@/components/admin/LeadsManagement';
-import CasesManagement from '@/components/admin/CasesManagement';
+
 import StudentCasesManagement from '@/components/admin/StudentCasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
 import InfluencerManagement from '@/components/admin/InfluencerManagement';
-import PartnersManagement from '@/components/admin/PartnersManagement';
+import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
@@ -182,8 +182,6 @@ const AdminDashboardPage = () => {
         );
       case 'leads':
         return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
-      case 'cases':
-        return <CasesManagement cases={cases} leads={leads.map(l => ({ id: l.id, full_name: l.full_name, phone: l.phone, source_type: l.source_type, source_id: l.source_id }))} lawyers={lawyers} onRefresh={fetchAllData} />;
       case 'student-cases':
         return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
       case 'team-members':
@@ -208,14 +206,12 @@ const AdminDashboardPage = () => {
             filterRole="influencer"
           />
         );
-      case 'partners':
+      case 'students':
         return (
-          <PartnersManagement
-            influencers={influencers}
-            invites={invites}
+          <StudentProfilesManagement
             students={students}
-            lawyers={lawyers}
-            profiles={[...students, ...influencers].map(p => ({ id: p.id, full_name: p.full_name }))}
+            influencers={influencers}
+            leads={leads}
             onRefresh={fetchAllData}
           />
         );

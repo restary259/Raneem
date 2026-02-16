@@ -32,7 +32,6 @@ const sidebarGroups = [
     items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
       { id: 'student-cases', labelKey: 'admin.tabs.studentCases', icon: Briefcase },
-      { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
     ],
   },
   {
@@ -40,7 +39,7 @@ const sidebarGroups = [
     items: [
       { id: 'team-members', labelKey: 'admin.tabs.teamMembers', icon: UserCheck },
       { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: Users },
-      { id: 'partners', labelKey: 'admin.tabs.partners', icon: GraduationCap },
+      { id: 'students', labelKey: 'admin.tabs.students', icon: GraduationCap },
     ],
   },
   {

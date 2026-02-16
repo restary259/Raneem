@@ -234,7 +234,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         </>
       )}
       {/* Allow assigning any lead regardless of status */}
-      {(lead.status === 'new' || lead.status === 'eligible') && (
+      {lead.status !== 'not_eligible' && (
         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAssignModal({ leadId: lead.id, leadName: lead.full_name })} disabled={loading}>
           <Gavel className="h-3 w-3 me-1" />{t('admin.leads.assignTeamMember')}
         </Button>
