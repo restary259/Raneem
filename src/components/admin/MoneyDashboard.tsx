@@ -12,6 +12,7 @@ import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
   ArrowUpRight, ArrowDownRight, Search, FileText
 } from 'lucide-react';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 interface MoneyDashboardProps {
   cases: any[];
