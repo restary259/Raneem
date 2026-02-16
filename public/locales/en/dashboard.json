@@ -808,7 +808,7 @@
       "influencer": "Agent",
       "referral": "Referral",
       "organic": "Organic",
-      "contact_form": "Contact Form"
+      "contact_form": "Contact Form",
       "friend": "Friend",
       "family": "Family",
       "self": "Self"
@@ -836,6 +836,9 @@
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",
     "completeProfile": "Complete Profile",
+    "completeProfileDesc": "Fill in the student profile details below.",
+    "readyConfirmDesc": "Are you sure all information is correct and complete? The status will be changed to \"Ready to Apply\".",
+    "units": "units",
     "showCalendar": "Show Calendar",
     "hideCalendar": "Hide Calendar"
   },
