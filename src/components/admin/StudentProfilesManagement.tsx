@@ -208,6 +208,33 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
                 </div>
               </div>
 
+              {/* Legal / Visa Section */}
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-sm mb-3">{t('profile.legalSection', 'Legal / Visa Information')}</h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">{t('profile.gender', 'Gender')}</p>
+                    <p className="font-medium">{selectedStudent.gender || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">{t('profile.eyeColor', 'Eye Color')}</p>
+                    <p className="font-medium">{selectedStudent.eye_color || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">{t('profile.hasChangedLegalName', 'Changed Legal Name')}</p>
+                    <p className="font-medium">{selectedStudent.has_changed_legal_name ? `Yes — ${selectedStudent.previous_legal_name || ''}` : 'No'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">{t('profile.hasCriminalRecord', 'Criminal Record')}</p>
+                    <p className="font-medium">{selectedStudent.has_criminal_record ? `Yes — ${selectedStudent.criminal_record_details || ''}` : 'No'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">{t('profile.hasDualCitizenship', 'Dual Citizenship')}</p>
+                    <p className="font-medium">{selectedStudent.has_dual_citizenship ? `Yes — ${selectedStudent.second_passport_country || ''}` : 'No'}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Documents */}
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">

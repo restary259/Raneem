@@ -924,8 +924,14 @@ export type Database = {
           consent_version: string | null
           country: string | null
           created_at: string
+          criminal_record_details: string | null
           email: string
+          eye_color: string | null
           full_name: string
+          gender: string | null
+          has_changed_legal_name: boolean
+          has_criminal_record: boolean
+          has_dual_citizenship: boolean
           iban: string | null
           iban_confirmed_at: string | null
           id: string
@@ -934,6 +940,8 @@ export type Database = {
           must_change_password: boolean
           notes: string | null
           phone_number: string | null
+          previous_legal_name: string | null
+          second_passport_country: string | null
           student_status: string
           university_name: string | null
           updated_at: string
@@ -949,8 +957,14 @@ export type Database = {
           consent_version?: string | null
           country?: string | null
           created_at?: string
+          criminal_record_details?: string | null
           email?: string
+          eye_color?: string | null
           full_name?: string
+          gender?: string | null
+          has_changed_legal_name?: boolean
+          has_criminal_record?: boolean
+          has_dual_citizenship?: boolean
           iban?: string | null
           iban_confirmed_at?: string | null
           id: string
@@ -959,6 +973,8 @@ export type Database = {
           must_change_password?: boolean
           notes?: string | null
           phone_number?: string | null
+          previous_legal_name?: string | null
+          second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string
@@ -974,8 +990,14 @@ export type Database = {
           consent_version?: string | null
           country?: string | null
           created_at?: string
+          criminal_record_details?: string | null
           email?: string
+          eye_color?: string | null
           full_name?: string
+          gender?: string | null
+          has_changed_legal_name?: boolean
+          has_criminal_record?: boolean
+          has_dual_citizenship?: boolean
           iban?: string | null
           iban_confirmed_at?: string | null
           id?: string
@@ -984,6 +1006,8 @@ export type Database = {
           must_change_password?: boolean
           notes?: string | null
           phone_number?: string | null
+          previous_legal_name?: string | null
+          second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string

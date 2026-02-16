@@ -15,6 +15,14 @@ export interface Profile {
   student_status?: StudentStatus;
   influencer_id?: string;
   notes?: string;
+  gender?: string;
+  eye_color?: string;
+  has_changed_legal_name?: boolean;
+  previous_legal_name?: string;
+  has_criminal_record?: boolean;
+  criminal_record_details?: string;
+  has_dual_citizenship?: boolean;
+  second_passport_country?: string;
   created_at?: string;
   updated_at?: string;
 }
