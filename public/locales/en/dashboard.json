@@ -243,6 +243,7 @@
       "students": "Students",
       "partners": "Partners",
       "influencers": "Agents",
+      "teamMembers": "Team Members",
       "checklist": "Checklist",
       "contacts": "Messages",
       "referrals": "Referrals",
@@ -258,6 +259,25 @@
       "majors": "Majors",
       "settings": "Settings",
       "securityAudit": "Security & Audit"
+    },
+    "analytics": {
+      "totalRevenue": "Total Revenue",
+      "revenueThisMonth": "Revenue This Month",
+      "paidThisMonth": "Paid This Month",
+      "conversionRate": "Conversion Rate",
+      "teamCommissions": "Team Commissions",
+      "slaWarnings": "SLA Warnings",
+      "monthlyBreakdown": "Monthly Breakdown",
+      "revenue": "Revenue",
+      "teamComm": "Team Commission",
+      "infComm": "Agent Commission",
+      "teamPerformance": "Team Performance",
+      "influencerPerformance": "Agent Performance",
+      "name": "Name",
+      "assigned": "Assigned",
+      "paid": "Paid",
+      "commission": "Commission",
+      "leadsGenerated": "Leads Generated"
     },
     "overview": {
       "totalStudents": "Total Students",

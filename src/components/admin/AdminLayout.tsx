@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, ClipboardCheck, Mail, Shield, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings
+  LayoutDashboard, Users, ClipboardCheck, Mail, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -19,9 +19,15 @@ interface AdminLayoutProps {
 
 const sidebarGroups = [
   {
-    labelKey: 'admin.groups.pipeline',
+    labelKey: 'admin.groups.dashboard',
     items: [
       { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
+      { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: ClipboardCheck },
+    ],
+  },
+  {
+    labelKey: 'admin.groups.pipeline',
+    items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
       { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
     ],
@@ -29,23 +35,23 @@ const sidebarGroups = [
   {
     labelKey: 'admin.groups.people',
     items: [
-      { id: 'students', labelKey: 'admin.tabs.students', icon: GraduationCap },
-      { id: 'partners', labelKey: 'admin.tabs.partners', icon: UserCheck },
+      { id: 'team-members', labelKey: 'admin.tabs.teamMembers', icon: UserCheck },
+      { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: Users },
+      { id: 'partners', labelKey: 'admin.tabs.partners', icon: GraduationCap },
     ],
   },
   {
     labelKey: 'admin.groups.finance',
     items: [
-      { id: 'master-services', labelKey: 'admin.tabs.masterServices', icon: Package },
       { id: 'money', labelKey: 'admin.tabs.money', icon: Wallet },
+      { id: 'master-services', labelKey: 'admin.tabs.masterServices', icon: Package },
     ],
   },
   {
     labelKey: 'admin.groups.system',
     items: [
-      { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
       { id: 'settings', labelKey: 'admin.tabs.settings', icon: Settings },
-      { id: 'security-audit', labelKey: 'admin.tabs.securityAudit', icon: Shield },
+      { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
     ],
   },
 ];

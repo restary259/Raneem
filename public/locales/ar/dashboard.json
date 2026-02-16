@@ -243,6 +243,7 @@
       "students": "الطلاب",
       "partners": "الشركاء",
       "influencers": "الوكلاء",
+      "teamMembers": "أعضاء الفريق",
       "checklist": "قائمة المتطلبات",
       "contacts": "رسائل التواصل",
       "referrals": "الإحالات",
@@ -258,6 +259,25 @@
       "majors": "التخصصات",
       "settings": "الإعدادات",
       "securityAudit": "الأمان والسجل"
+    },
+    "analytics": {
+      "totalRevenue": "إجمالي الإيرادات",
+      "revenueThisMonth": "إيرادات هذا الشهر",
+      "paidThisMonth": "مدفوع هذا الشهر",
+      "conversionRate": "معدل التحويل",
+      "teamCommissions": "عمولات الفريق",
+      "slaWarnings": "تنبيهات SLA",
+      "monthlyBreakdown": "التحليل الشهري",
+      "revenue": "الإيرادات",
+      "teamComm": "عمولة الفريق",
+      "infComm": "عمولة الوكيل",
+      "teamPerformance": "أداء الفريق",
+      "influencerPerformance": "أداء الوكلاء",
+      "name": "الاسم",
+      "assigned": "معيّن",
+      "paid": "مدفوع",
+      "commission": "العمولة",
+      "leadsGenerated": "عملاء محتملون"
     },
     "overview": {
       "totalStudents": "إجمالي الطلاب",
