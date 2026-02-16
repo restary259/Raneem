@@ -1,128 +1,172 @@
 
 
-# Deterministic Case Status Machine + Auto-Advancing Workflow
+# Admin Dashboard Ultimate Overhaul Plan
 
-## Overview
-
-Implement a strict finite-state machine for case statuses that replaces free-form dropdowns with guided "Next Step" actions. Statuses auto-advance when conditions are met (e.g., appointment attended, profile saved, payment recorded). This eliminates manual status management and ensures data integrity across all dashboards.
-
-## New Status Flow (13 stages)
-
-```text
-NEW --> ELIGIBLE --> ASSIGNED --> CONTACTED --> APPT_SCHEDULED --> APPT_WAITING (loop)
-                                                    |
-                                              APPT_COMPLETED --> PROFILE_FILLED --> SERVICES_FILLED
-                                                                                        |
-                                                                   PAID --> READY_TO_APPLY --> VISA_STAGE --> COMPLETED
-```
-
-Key rules:
-- Forward-only transitions (no backward jumps from UI)
-- Auto-advance on events (appointment attended, profile saved, services attached, payment recorded)
-- Admin override with audit reason for exceptional rollbacks
+This is a large overhaul broken into 7 stages. Each stage addresses specific problems you identified.
 
 ---
 
-## Files to Create
+## Stage 1: Remove Messages/Contacts Tab + Fix Sidebar Structure
 
-### 1. `src/lib/caseStatus.ts` -- Status enum
-Define the canonical `CaseStatus` enum with all 13 stages, plus display labels and color mappings.
+**Problem:** The "Contacts" tab has no real use -- messages go nowhere and you never receive anything useful from it.
 
-### 2. `src/lib/caseTransitions.ts` -- Transition rules
-- `ALLOWED_TRANSITIONS` map defining which statuses can follow which
-- `canTransition(current, next)` validator function
-- `getNextSteps(current)` helper returning allowed next statuses
-- Legacy status mapping (old statuses like `appointment`, `settled` mapped to nearest new equivalent)
+**Solution:**
+- Remove the "Contacts" tab from the sidebar entirely
+- Consolidate sidebar into 4 groups instead of 5:
+  - **Dashboard**: Overview, Analytics
+  - **Pipeline**: Lead Cases, Student Cases (NEW separate tab)
+  - **People**: Team Members, Agents (Influencers), Partners
+  - **Finance**: Money Dashboard, Payouts, Master Services
+  - **System**: Settings (Eligibility, Notifications, Security, Audit)
+- Remove the duplicate "team-members" and "influencers" tabs that both render the same `InfluencerManagement` component -- split them into dedicated views
 
-### 3. `src/components/admin/NextStepButton.tsx` -- UI component
-- Renders a primary "Mark as [next status]" button
-- If multiple next states allowed, shows a small dropdown
-- Calls Supabase update with transition validation
-- Shows toast on success/failure
-- Disabled state with tooltip when no transitions available
-
----
-
-## Files to Modify
-
-### 4. `src/pages/TeamDashboardPage.tsx`
-- **Replace** the free-form status `<Select>` dropdown (line 374-377) with `<NextStepButton>`
-- **Auto-advance on "Mark Contacted"**: already does this (line 207), keep it
-- **Auto-advance on appointment attended**: when marking an appointment as attended in the calendar, also update case status to `appointment_completed` if transition is valid
-- **Add progress indicator**: replace status badge with a compact horizontal step indicator showing current position in the 13-stage funnel
-- **Profile modal save**: after saving profile fields, auto-advance to `profile_filled` if all required fields are present
-
-### 5. `src/components/admin/CasesManagement.tsx`
-- **Replace** status dropdown (lines 377-381) with `<NextStepButton>`
-- **Make financial fields read-only** (lines 383-389): display them as text, not inputs. Financials are calculated from attached service snapshots only
-- **Remove** manual number inputs for `service_fee`, `influencer_commission`, `lawyer_commission`, etc. from the edit form
-- **Auto-advance on "Attach Services"**: after attaching services, auto-set status to `services_filled` if transition valid
-- **Auto-advance on payment**: when status moves to `paid`, auto-set `paid_at` (already happens) and show "Submit for Ready to Apply" as the next step
-- **Add "Ready to Apply" filter toggle**: a button/chip at the top to filter cases where `case_status === 'ready_to_apply'` (replaces the old separate ReadyToApplyTable tab)
-
-### 6. `src/components/lawyer/AppointmentCalendar.tsx`
-- When an appointment status is changed to "completed"/"attended", trigger auto-advance of the linked case to `appointment_completed` (using `canTransition` check)
-
-### 7. `src/components/admin/StudentManagement.tsx`
-- Add inline gating: show completion indicators for profile fields and services
-- "Submit for Ready to Apply" button disabled until `profileComplete && servicesAttached && caseStatus === 'paid'`
-- Tooltip explaining missing prerequisites when button is disabled
-
-### 8. `src/components/admin/FunnelVisualization.tsx`
-- Update funnel stages to include the new 13-stage model
-- Group stages into visual phases for the funnel chart: Intake (new, eligible), Assignment (assigned, contacted), Appointment (scheduled, waiting, completed), Preparation (profile, services), Payment (paid), Application (ready, visa, completed)
+**Files changed:**
+- `src/components/admin/AdminLayout.tsx` -- restructure sidebar groups
+- `src/pages/AdminDashboardPage.tsx` -- remove contacts state/fetching, add student-cases tab routing
 
 ---
 
-## Auto-Advance Logic Summary
+## Stage 2: Commission Field on Team Member / Agent Creation
 
-| Event | Triggers Status Change To |
-|-------|--------------------------|
-| Admin assigns case | `assigned` |
-| Team clicks "Mark Contacted" | `contacted` |
-| Team creates appointment for case | `appointment_scheduled` |
-| Appointment marked attended | `appointment_completed` |
-| Profile modal saved (all fields filled) | `profile_filled` |
-| Services attached to case | `services_filled` |
-| Payment recorded | `paid` |
-| Team clicks "Submit for Ready" | `ready_to_apply` |
-| Admin advances to visa | `visa_stage` |
-| Admin marks complete | `completed` |
+**Problem:** When adding an agent or team member, you cannot set their commission at the same time.
 
-Each auto-advance checks `canTransition()` before updating -- if the case is already past that stage, no change occurs.
+**Solution:**
+- Add a `commission_amount` number input field to the create dialog in `InfluencerManagement.tsx`
+- Pass the commission value to the `create-team-member` edge function
+- Update the edge function to accept `commission_amount` and save it to the `profiles` table on creation
+- Show commission column in the team members and agents table
+
+**Files changed:**
+- `src/components/admin/InfluencerManagement.tsx` -- add commission input to dialog, show commission column in table
+- `supabase/functions/create-team-member/index.ts` -- accept and store `commission_amount`
+
+---
+
+## Stage 3: Fix Lead Cases -- Correct Columns, Source Badges, Assign Member
+
+**Problem:** Lead cases show city instead of interested major, columns don't match Apply Page data, assign member dropdown is empty, and source/discount logic is missing.
+
+**Solution:**
+- **Columns update**: Show Full Name, Phone, Education Level, Interested Major (preferred_major), Passport Type, English Units, Math Units, Score, Source Badge, Status, Actions
+- **Source badge**: Show "Website", "Agent: [Name]", "Friend Referral", "Family Referral" with clear badge styling
+- **Discount auto-apply**: When source is family, auto-set referral_discount on case creation. When friend/stranger, set 500 shekel discount. When influencer, show agent name and their commission will auto-deduct
+- **Fix assign member dropdown**: The lawyers array is populated from `user_roles` where `role = 'lawyer'`, but the query only fetches `id, full_name, commission_amount`. Make sure this data loads correctly and the dropdown shows all team members (both lawyers and influencers if needed)
+- **Allow assignment regardless of score**: Remove the restriction that only "eligible" leads can be assigned -- any lead can be assigned to a team member
+- **Remove CSV/XLSX export buttons**, keep only PDF
+
+**Files changed:**
+- `src/components/admin/LeadsManagement.tsx` -- rewrite columns, fix assign dropdown, add source badges, remove CSV/XLSX exports
+- `src/pages/AdminDashboardPage.tsx` -- ensure lawyers query fetches `email` too for display
+
+---
+
+## Stage 4: New Student Cases Tab with Profile/Services/Money Sub-tabs
+
+**Problem:** No separate "Student Cases" tab exists. You need to see students who are "ready to apply" so you can register them at language school, track payments, and bulk export PDF intake forms.
+
+**Solution:**
+- Create a new `StudentCasesManagement.tsx` component
+- Shows cases that have progressed past `profile_filled` stage (ready for registration)
+- **Filters**: Status (Ready to Apply, Waiting Payment, Submitted, Paid), Source, Assigned Team Member
+- **When clicking a student case**, show sub-tabs:
+  - **Profile**: Personal info, emergency contacts, passport, address
+  - **Services**: Services assigned by team member (read-only for admin)
+  - **Money**: Auto-calculated breakdown -- service fees, referral discount, agent commission, school commission, net profit
+  - **Notes**: Internal notes
+- **Bulk PDF Export**: Tailored for language school intake -- includes Full Name, Email, Phone, Emergency Contact, Passport, Full Address, Course, Payment Status. Generalized for any school. Supports bulk export by month
+- **Remove all download options except PDF**
+- When admin marks case as PAID, it triggers commission snapshots and updates across all dashboards
+
+**Files changed:**
+- New: `src/components/admin/StudentCasesManagement.tsx`
+- `src/pages/AdminDashboardPage.tsx` -- add routing for student-cases tab
+- `src/components/admin/AdminLayout.tsx` -- add Student Cases to Pipeline group
+
+---
+
+## Stage 5: Fix People Tab -- Team Members, Agents, Partners
+
+**Problem:** Team members table columns don't make sense, no commission display, partners not ranked, naming inconsistencies (lawyer vs team member).
+
+**Solution:**
+- **Team Members tab**: Separate component showing only team members (role = lawyer). Columns: Name, Email, Commission (amount in shekel), Assigned Cases, Paid Students, Earnings, Status, Actions
+- **Agents tab**: Separate component showing only influencers. Columns: Name, Email, Commission per Student, Total Leads, Converted Students, Total Earnings, Status, Actions
+- **Partners tab**: Rank by performance (highest referrals first). Columns: Name, Total Referrals, Converted, Earnings, Rank
+- All naming updated from "lawyer" to "team member" in all visible UI text
+- Commission amount is displayed and editable inline
+
+**Files changed:**
+- `src/components/admin/InfluencerManagement.tsx` -- split into two separate views or add role filter
+- `src/components/admin/PartnersManagement.tsx` -- add ranking logic, update columns
+
+---
+
+## Stage 6: Money Dashboard Auto-Calculation + Funnel Fix
+
+**Problem:** Money uses euro signs instead of shekel, not all calculations are automatic, funnel stages don't match current flow.
+
+**Solution:**
+- **Currency fix**: Replace all `€` with `₪` in AdminOverview and CasesManagement financial displays
+- **Auto-calculation**: All money is derived from case data -- service fees from master services, agent commission from profile.commission_amount, team member commission from profile.commission_amount, referral discount based on source type (family = custom, friend/stranger = 500 shekel)
+- **Funnel update**: Ensure FunnelVisualization stages match the actual status flow and counts are correct
+- **Remove CSV/XLSX from CasesManagement and MoneyDashboard**, keep only PDF
+
+**Files changed:**
+- `src/components/admin/AdminOverview.tsx` -- fix currency from `€` to `₪`
+- `src/components/admin/CasesManagement.tsx` -- fix currency, remove CSV/XLSX buttons
+- `src/components/admin/MoneyDashboard.tsx` -- fix currency, remove CSV/XLSX buttons
+- `src/components/admin/FunnelVisualization.tsx` -- verify stages match
+
+---
+
+## Stage 7: Translations, Cleanup, and Edge Cases
+
+**Solution:**
+- Add all new translation keys to `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json`
+- Remove hardcoded Arabic text in `InfluencerManagement.tsx` creation dialog
+- Verify RTL alignment for new components
+- Ensure real-time subscriptions cover all new tabs
+- Remove unused imports and dead code
+
+**Files changed:**
+- `public/locales/en/dashboard.json`
+- `public/locales/ar/dashboard.json`
+- Various cleanup across all modified files
 
 ---
 
 ## Technical Details
 
-### Transition Validation Pattern
-```text
-// Used in every status update handler:
-1. Get current case status from state/DB
-2. Call canTransition(current, targetStatus)
-3. If false: show toast "Cannot skip to [status]" and abort
-4. If true: update DB, show success toast, trigger refetch
-```
+### Database Changes
+- No schema changes needed -- `commission_amount` already exists on `profiles` table
+- The `create-team-member` edge function just needs to accept and pass through the `commission_amount` value
 
-### NextStepButton Component API
-```text
-Props:
-  - caseId: string
-  - currentStatus: CaseStatus
-  - onStatusUpdated: (newStatus) => void
+### Discount Logic (Auto-Applied on Case Creation)
+When a lead is marked eligible and a case is created:
+- If `source_type = 'referral'` and lead has `is_family = true` -> apply family discount (configurable)
+- If `source_type = 'referral'` and not family -> apply 500 shekel discount
+- If `source_type = 'influencer'` -> commission_amount from influencer profile is attached to case
 
-Renders:
-  - Primary button: "Mark as [first allowed next status]"
-  - Optional dropdown: additional allowed transitions
-  - Disabled state when currentStatus === 'completed'
-```
+### Currency Standardization
+- All financial displays will use `₪` (Israeli Shekel)
+- School commissions from Europe remain in `€` where appropriate but clearly labeled
 
-### Financial Fields (Read-Only)
-In CasesManagement edit mode, financial fields will display as styled text boxes (not inputs). The values are auto-calculated from `case_service_snapshots`. The only way to change financials is to attach/remove services.
+### Bulk PDF for Language Schools
+Fields included:
+- Full Name, Email, Phone Number
+- Emergency Contact Name + Phone
+- Passport Number, Nationality
+- Full Address
+- Course/Program Selected
+- Payment Status
+- Date of Application
 
-### No Database Changes Required
-All 13 statuses are stored as plain strings in the existing `case_status` text column. No schema migration needed. The state machine is enforced purely in the frontend (with a recommendation to mirror server-side later).
-
-### Localization
-Add status labels for the 5 new statuses (`appointment_scheduled`, `appointment_waiting`, `appointment_completed`, `profile_filled`, `services_filled`) to both `en/dashboard.json` and `ar/dashboard.json`.
+### Weaknesses & Items Needing Future Attention
+1. **Referral discount rules**: Currently hardcoded (500 shekel for friends). Should be configurable in Settings
+2. **Appointment reminder system**: No automated reminders before appointments
+3. **SLA threshold configuration**: Currently hardcoded at 24h/48h. Should be configurable
+4. **Student account auto-linking**: When a student creates their account, the system should match by phone/email to link existing lead/case data -- this requires a trigger or edge function enhancement
+5. **Document sharing permissions**: Students upload documents but there is no explicit "share with admin" toggle yet
+6. **Payment verification integration**: Currently admin manually marks PAID -- no payment gateway integration
+7. **Team member reassignment mid-funnel**: Commission attribution when a case is reassigned needs clear rules (currently goes to latest assignee)
 
