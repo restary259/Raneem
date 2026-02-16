@@ -81,6 +81,7 @@ const InfluencerDashboardPage = () => {
   useRealtimeSubscription('student_cases', fetchData, !!user);
   useRealtimeSubscription('rewards', fetchData, !!user);
   useRealtimeSubscription('payout_requests', fetchData, !!user);
+  useRealtimeSubscription('commissions', fetchData, !!user);
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
@@ -132,16 +133,19 @@ const InfluencerDashboardPage = () => {
     <div className="min-h-screen bg-background pb-20" dir={dir}>
       {/* Header */}
       <header className="bg-[hsl(222,47%,17%)] text-white">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-9 h-9 object-contain" />
-              <div>
-                <h1 className="text-base font-bold">{t('influencerDash.title')}</h1>
-                <p className="text-xs text-white/60">{profile?.full_name || user?.email}</p>
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-8 h-8 object-contain shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-bold leading-tight truncate">
+                  <span className="hidden sm:inline">{t('influencerDash.title')}</span>
+                  <span className="sm:hidden">{isAr ? 'مرحبًا' : 'Hi'}, {profile?.full_name?.split(' ')[0] || ''} 👋</span>
+                </h1>
+                <p className="hidden sm:block text-xs text-white/60 truncate">{profile?.full_name || user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <NotificationBell />
               <Button variant="ghost" size="icon" className="text-white/60 hover:text-white hover:bg-white/10 h-9 w-9" onClick={() => navigate('/')}>
                 <ArrowLeftCircle className="h-4 w-4" />
@@ -155,7 +159,7 @@ const InfluencerDashboardPage = () => {
       </header>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 py-5 space-y-5">
+      <main className="max-w-7xl mx-auto px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <div className="space-y-5">

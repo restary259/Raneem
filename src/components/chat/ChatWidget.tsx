@@ -11,9 +11,12 @@ const ChatWidget = () => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
 
-  // Hide chat widget on /apply page
-  if (typeof window !== 'undefined' && window.location.pathname === '/apply') {
-    return null;
+  // Hide chat widget on distraction-free routes
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path === '/apply' || path === '/influencer-dashboard') {
+      return null;
+    }
   }
 
   const toggleChat = () => {
