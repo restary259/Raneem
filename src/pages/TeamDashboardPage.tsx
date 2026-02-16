@@ -481,19 +481,27 @@ const TeamDashboardPage = () => {
 
   // Mobile bottom nav
   const mobileBottomNav = (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1E293B] border-t border-white/10 flex items-center justify-around py-2 lg:hidden">
-      {sidebarItems.map(item => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all ${
-            activeTab === item.id ? 'text-primary' : 'text-white/60'
-          }`}
-        >
-          <item.icon className="h-5 w-5" />
-          <span className="text-[10px]">{item.label}</span>
-        </button>
-      ))}
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 lg:hidden"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+    >
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {sidebarItems.map(item => {
+          const active = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all active:scale-95 ${
+                active ? 'text-orange-500' : 'text-gray-600'
+              }`}
+            >
+              <item.icon className={`h-5 w-5 ${active ? 'stroke-2' : 'stroke-[1.5]'}`} />
+              <span className={`text-[10px] font-medium ${active ? 'text-orange-500' : 'text-gray-600'}`}>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 
@@ -606,7 +614,7 @@ const TeamDashboardPage = () => {
               </div>
             )}
             {activeTab === 'appointments' && (
-              <div className="max-w-2xl mx-auto">
+              <div className="w-full">
                 {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
               </div>
             )}
