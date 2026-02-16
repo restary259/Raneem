@@ -38,6 +38,7 @@ interface Lead {
   created_at: string;
   ref_code?: string | null;
   study_destination?: string | null;
+  preferred_major?: string | null;
 }
 
 interface LeadsManagementProps {
@@ -67,7 +68,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [overrideModal, setOverrideModal] = useState<Lead | null>(null);
   const [overrideScore, setOverrideScore] = useState('');
   const [overrideStatus, setOverrideStatus] = useState('');
-  const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '' });
+  const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '', preferred_major: '' });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -91,12 +92,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       english_units: newLead.english_units ? parseInt(newLead.english_units) : null,
       math_units: newLead.math_units ? parseInt(newLead.math_units) : null,
       email: newLead.email || null,
+      preferred_major: newLead.preferred_major || null,
     });
     setLoading(false);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
     toast({ title: t('admin.leads.added') });
     setShowAddModal(false);
-    setNewLead({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '' });
+    setNewLead({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '', preferred_major: '' });
     onRefresh();
   };
 
@@ -195,12 +197,12 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
   const exportCSV = () => {
     const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
-    const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, hk.date];
+    const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
     const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
     const rows = filtered.map(l => [
       l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '',
       l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type,
-      new Date(l.created_at).toLocaleDateString(locale),
+      l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale),
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -278,8 +280,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
           <Button variant="outline" size="sm" onClick={() => {
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
-            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, hk.date];
-            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
+            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
+            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale)]);
             exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
           }}><FileText className="h-4 w-4 me-1" />PDF</Button>
           <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />{t('admin.leads.addLead')}</Button>
@@ -486,7 +488,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               </Select>
             </div>
             <div><Label>{t('admin.leads.preferredCity', 'Preferred City')}</Label><Input value={newLead.preferred_city} onChange={e => setNewLead(p => ({ ...p, preferred_city: e.target.value }))} /></div>
-            <div className="sm:col-span-2">
+            <div><Label>{t('admin.leads.interestedMajor', 'Preferred Major')}</Label><Input value={newLead.preferred_major} onChange={e => setNewLead(p => ({ ...p, preferred_major: e.target.value }))} placeholder={t('admin.leads.majorPlaceholder', 'e.g. Computer Science')} /></div>
+            <div>
               <Label>{t('admin.leads.source', 'Source')}</Label>
               <Select value={newLead.source_type} onValueChange={v => setNewLead(p => ({ ...p, source_type: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
