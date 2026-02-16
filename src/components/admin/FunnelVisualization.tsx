@@ -13,12 +13,10 @@ const FUNNEL_STAGES = [
   { key: 'eligible', source: 'lead', colorClass: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
   { key: 'assigned', source: 'both', colorClass: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
   { key: 'contacted', source: 'case', colorClass: 'bg-violet-100 text-violet-800 border-violet-200' },
-  { key: 'appointment', source: 'case', colorClass: 'bg-purple-100 text-purple-800 border-purple-200' },
   { key: 'paid', source: 'case', colorClass: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   { key: 'ready_to_apply', source: 'case', colorClass: 'bg-green-100 text-green-800 border-green-200' },
-  { key: 'registration_submitted', source: 'case', colorClass: 'bg-teal-100 text-teal-800 border-teal-200' },
   { key: 'visa_stage', source: 'case', colorClass: 'bg-amber-100 text-amber-800 border-amber-200' },
-  { key: 'settled', source: 'case', colorClass: 'bg-lime-100 text-lime-800 border-lime-200' },
+  { key: 'completed', source: 'case', colorClass: 'bg-lime-100 text-lime-800 border-lime-200' },
 ];
 
 const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ leadCounts, caseCounts, onStageClick }) => {

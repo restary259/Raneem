@@ -6,22 +6,14 @@ import { User } from '@supabase/supabase-js';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminOverview from '@/components/admin/AdminOverview';
 import StudentManagement from '@/components/admin/StudentManagement';
-import InfluencerManagement from '@/components/admin/InfluencerManagement';
-import ChecklistManagement from '@/components/admin/ChecklistManagement';
 import ContactsManager from '@/components/admin/ContactsManager';
-import SecurityPanel from '@/components/admin/SecurityPanel';
-import AuditLog from '@/components/admin/AuditLog';
-import ReferralManagement from '@/components/admin/ReferralManagement';
-import PayoutsManagement from '@/components/admin/PayoutsManagement';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import CasesManagement from '@/components/admin/CasesManagement';
-import KPIAnalytics from '@/components/admin/KPIAnalytics';
-import CustomNotifications from '@/components/admin/CustomNotifications';
-import ReadyToApplyTable from '@/components/admin/ReadyToApplyTable';
-import EligibilityConfig from '@/components/admin/EligibilityConfig';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
-import MajorsManagement from '@/components/admin/MajorsManagement';
+import PartnersManagement from '@/components/admin/PartnersManagement';
+import SettingsPanel from '@/components/admin/SettingsPanel';
+import SecurityAuditPanel from '@/components/admin/SecurityAuditPanel';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -110,7 +102,6 @@ const AdminDashboardPage = () => {
     if (commissionsRes.data) setCommissions(commissionsRes.data);
     if (rewardsRes.data) setRewards(rewardsRes.data);
 
-    // Get influencer profiles
     if (roles.data) {
       const influencerIds = roles.data.map((r: any) => r.user_id);
       if (influencerIds.length > 0) {
@@ -122,7 +113,6 @@ const AdminDashboardPage = () => {
       }
     }
 
-    // Get lawyer profiles
     if (lawyerRoles.data) {
       const lawyerIds = lawyerRoles.data.map((r: any) => r.user_id);
       if (lawyerIds.length > 0) {
@@ -195,42 +185,27 @@ const AdminDashboardPage = () => {
             onRefresh={fetchAllData}
           />
         );
-      case 'influencers':
+      case 'partners':
         return (
-          <InfluencerManagement
+          <PartnersManagement
             influencers={influencers}
             invites={invites}
             students={students}
             lawyers={lawyers}
+            profiles={[...students, ...influencers].map(p => ({ id: p.id, full_name: p.full_name }))}
             onRefresh={fetchAllData}
           />
         );
-      case 'checklist':
-        return <ChecklistManagement items={checklistItems} onRefresh={fetchAllData} />;
       case 'contacts':
         return <ContactsManager contacts={contacts} onRefresh={fetchAllData} />;
-      case 'referrals':
-        return <ReferralManagement onRefresh={fetchAllData} profiles={[...students, ...influencers].map(p => ({ id: p.id, full_name: p.full_name }))} />;
-      case 'payouts':
-        return <PayoutsManagement onRefresh={fetchAllData} />;
-      case 'analytics':
-        return <KPIAnalytics cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} commissions={commissions} />;
       case 'money':
         return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} />;
       case 'master-services':
         return <MasterServicesManagement />;
-      case 'majors':
-        return <MajorsManagement />;
-      case 'ready':
-        return <ReadyToApplyTable />;
-      case 'eligibility':
-        return <EligibilityConfig />;
-      case 'security':
-        return <SecurityPanel loginAttempts={loginAttempts} />;
-      case 'notifications':
-        return <CustomNotifications />;
-      case 'audit':
-        return <AuditLog logs={auditLogs} />;
+      case 'settings':
+        return <SettingsPanel />;
+      case 'security-audit':
+        return <SecurityAuditPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
       default:
         return null;
     }

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, UserCheck, ClipboardCheck, Mail, Shield, ScrollText, LogOut, ArrowLeftCircle, Share2, Wallet, BarChart3, CheckCircle, Settings, DollarSign, Package, GraduationCap
+  LayoutDashboard, Users, ClipboardCheck, Mail, Shield, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -19,51 +19,37 @@ interface AdminLayoutProps {
 
 const sidebarGroups = [
   {
-    labelKey: 'admin.groups.dashboard',
+    labelKey: 'admin.groups.pipeline',
     items: [
       { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
-      { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: BarChart3 },
-    ],
-  },
-  {
-    labelKey: 'admin.groups.students',
-    items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
       { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
-      { id: 'ready', labelKey: 'admin.tabs.ready', icon: CheckCircle },
-      { id: 'students', labelKey: 'admin.tabs.students', icon: Users },
-      { id: 'checklist', labelKey: 'admin.tabs.checklist', icon: ClipboardCheck },
     ],
   },
   {
-    labelKey: 'admin.groups.team',
+    labelKey: 'admin.groups.people',
     items: [
-      { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: UserCheck },
-      { id: 'referrals', labelKey: 'admin.tabs.referrals', icon: Share2 },
+      { id: 'students', labelKey: 'admin.tabs.students', icon: GraduationCap },
+      { id: 'partners', labelKey: 'admin.tabs.partners', icon: UserCheck },
     ],
   },
   {
     labelKey: 'admin.groups.finance',
     items: [
       { id: 'master-services', labelKey: 'admin.tabs.masterServices', icon: Package },
-      { id: 'money', labelKey: 'admin.tabs.money', icon: DollarSign },
-      { id: 'payouts', labelKey: 'admin.tabs.payouts', icon: Wallet },
+      { id: 'money', labelKey: 'admin.tabs.money', icon: Wallet },
     ],
   },
   {
-    labelKey: 'admin.groups.tools',
+    labelKey: 'admin.groups.system',
     items: [
-      { id: 'majors', labelKey: 'admin.tabs.majors', icon: GraduationCap },
       { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
-      { id: 'notifications', labelKey: 'admin.tabs.notifications', icon: Mail },
-      { id: 'eligibility', labelKey: 'admin.tabs.eligibility', icon: Settings },
-      { id: 'security', labelKey: 'admin.tabs.security', icon: Shield },
-      { id: 'audit', labelKey: 'admin.tabs.audit', icon: ScrollText },
+      { id: 'settings', labelKey: 'admin.tabs.settings', icon: Settings },
+      { id: 'security-audit', labelKey: 'admin.tabs.securityAudit', icon: Shield },
     ],
   },
 ];
 
-// Flat list for mobile dropdown
 const allTabs = sidebarGroups.flatMap(g => g.items);
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabChange, userEmail }) => {

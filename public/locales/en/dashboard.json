@@ -228,30 +228,36 @@
     "signOut": "Sign Out",
     "groups": {
       "dashboard": "Dashboard",
+      "pipeline": "Pipeline",
+      "people": "People",
       "students": "Students",
       "team": "Team",
       "finance": "Finance",
+      "system": "System",
       "tools": "Tools"
     },
     "tabs": {
       "overview": "Overview",
       "leads": "Leads",
       "cases": "Student Cases",
-      "students": "Student Management",
+      "students": "Students",
+      "partners": "Partners",
       "influencers": "Agents",
       "checklist": "Checklist",
       "contacts": "Messages",
       "referrals": "Referrals",
       "payouts": "Rewards & Payouts",
-      "money": "Money Dashboard",
+      "money": "Money",
       "analytics": "Analytics",
       "ready": "Ready to Apply",
       "eligibility": "Eligibility Engine",
       "security": "Security",
       "audit": "Activity Log",
       "notifications": "Notifications",
-      "masterServices": "Service Catalog",
-      "majors": "Majors"
+      "masterServices": "Services",
+      "majors": "Majors",
+      "settings": "Settings",
+      "securityAudit": "Security & Audit"
     },
     "overview": {
       "totalStudents": "Total Students",
@@ -719,12 +725,10 @@
     "eligible": "Scored",
     "assigned": "Assigned",
     "contacted": "Contacted",
-    "appointment": "Appointment",
     "paid": "Paid",
     "ready_to_apply": "Ready",
-    "registration_submitted": "Applied",
     "visa_stage": "Visa",
-    "settled": "Settled"
+    "completed": "Completed"
   },
   "kpi": {
     "netProfit": "Total Net Profit",
