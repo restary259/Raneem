@@ -127,6 +127,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         await (supabase as any).from('appointments').delete().eq('case_id', c.id);
         await (supabase as any).from('case_payments').delete().eq('case_id', c.id);
         await (supabase as any).from('commissions').delete().eq('case_id', c.id);
+        await (supabase as any).from('case_service_snapshots').delete().eq('case_id', c.id);
       }
       await (supabase as any).from('student_cases').delete().eq('lead_id', deleteId);
     }
