@@ -19,14 +19,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import {
   Phone, ChevronDown, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, FileText, GraduationCap, Eye, EyeOff, DollarSign, TrendingUp
+  Home, Calendar, FileText, Eye, EyeOff, DollarSign, TrendingUp, BarChart3
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
+import OverviewTab from '@/components/lawyer/OverviewTab';
 import NotificationBell from '@/components/common/NotificationBell';
 
 import { differenceInHours, isToday } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { majorsData } from '@/data/majorsData';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 // Simplified 6-stage funnel aligned with admin CasesManagement
 const STATUS_KEYS = ['assigned', 'contacted', 'paid', 'ready_to_apply', 'visa_stage', 'completed'] as const;
@@ -56,7 +57,7 @@ const NEON_BORDER: Record<string, string> = {
 
 const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
 
-type SidebarTab = 'leads' | 'appointments' | 'majors';
+type SidebarTab = 'leads' | 'appointments' | 'overview';
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -74,7 +75,18 @@ const TeamDashboardPage = () => {
   const [profileCase, setProfileCase] = useState<any | null>(null);
   const [profileValues, setProfileValues] = useState<Record<string, any>>({});
   const [savingProfile, setSavingProfile] = useState(false);
-  const [majorSearch, setMajorSearch] = useState('');
+  // Realtime subscriptions - refetch on changes
+  const refetchAll = React.useCallback(() => {
+    if (user) {
+      fetchCases(user.id);
+      fetchAppointments(user.id);
+    }
+  }, [user]);
+
+  useRealtimeSubscription('student_cases', refetchAll, !!user);
+  useRealtimeSubscription('appointments', refetchAll, !!user);
+  useRealtimeSubscription('leads', refetchAll, !!user);
+  useRealtimeSubscription('commissions', refetchAll, !!user);
   const [readyConfirm, setReadyConfirm] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -247,22 +259,10 @@ const TeamDashboardPage = () => {
     }
   };
 
-  // Filtered majors for quick access (must be before any early returns to follow React hooks rules)
-  const filteredMajors = useMemo(() => {
-    if (!majorSearch.trim()) return majorsData;
-    const q = majorSearch.toLowerCase();
-    return majorsData.map(cat => ({
-      ...cat,
-      subMajors: cat.subMajors.filter(s =>
-        s.nameEN.toLowerCase().includes(q) || s.nameAR.includes(q)
-      ),
-    })).filter(cat => cat.subMajors.length > 0);
-  }, [majorSearch]);
-
   const sidebarItems = [
     { id: 'leads' as SidebarTab, label: t('lawyer.assignedCases'), icon: Home },
     { id: 'appointments' as SidebarTab, label: t('admin.appointments.title'), icon: Calendar },
-    { id: 'majors' as SidebarTab, label: t('lawyer.majorsTab', 'Majors'), icon: GraduationCap },
+    { id: 'overview' as SidebarTab, label: t('lawyer.overviewTab', 'Overview'), icon: BarChart3 },
   ];
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
@@ -438,46 +438,6 @@ const TeamDashboardPage = () => {
     </div>
   );
 
-  const renderMajorsTab = () => (
-    <div className="space-y-4 max-w-3xl mx-auto">
-      <h2 className="font-bold text-base flex items-center gap-2">
-        <GraduationCap className="h-4 w-4" />
-        {t('lawyer.majorsTab', 'Majors Quick Reference')}
-      </h2>
-      <Input
-        placeholder={t('lawyer.searchMajors', 'Search majors…')}
-        value={majorSearch}
-        onChange={e => setMajorSearch(e.target.value)}
-        className="max-w-sm"
-      />
-      <div className="space-y-3">
-        {filteredMajors.map(cat => (
-          <Collapsible key={cat.id}>
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardContent className="p-3 cursor-pointer hover:bg-muted/30 transition-colors flex items-center justify-between active:scale-[0.98]">
-                  <span className="font-semibold text-sm">{i18n.language === 'ar' ? cat.title : cat.titleEN}</span>
-                  <Badge variant="secondary" className="text-[10px]">{cat.subMajors.length}</Badge>
-                </CardContent>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-3 pb-3 space-y-2">
-                  {cat.subMajors.map(sub => (
-                    <div key={sub.id} className="p-2 bg-muted/20 rounded-lg">
-                      <p className="font-medium text-sm">{i18n.language === 'ar' ? sub.nameAR : sub.nameEN}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{i18n.language === 'ar' ? sub.description : sub.descriptionEN}</p>
-                      {sub.durationEN && <p className="text-xs text-muted-foreground mt-0.5">⏱ {i18n.language === 'ar' ? sub.duration : sub.durationEN}</p>}
-                    </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        ))}
-        {filteredMajors.length === 0 && <p className="text-center text-muted-foreground py-8">{t('common.noResults', 'No results')}</p>}
-      </div>
-    </div>
-  );
 
   // Mobile bottom nav
   const mobileBottomNav = (
@@ -618,7 +578,7 @@ const TeamDashboardPage = () => {
                 {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
               </div>
             )}
-            {activeTab === 'majors' && renderMajorsTab()}
+            {activeTab === 'overview' && <OverviewTab cases={cases} leads={leads} appointments={appointments} />}
           </main>
         </div>
       </div>
