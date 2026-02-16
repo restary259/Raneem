@@ -8,11 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Clock, CheckCircle, Send, Users, XCircle, CreditCard, AlertTriangle } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Send, XCircle, CreditCard, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EarningsPanelProps { userId: string; }
+
+const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
 
 const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
   const { toast } = useToast();
@@ -22,12 +24,12 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
   const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
   const [minThreshold, setMinThreshold] = useState(100);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [showIbanModal, setShowIbanModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
   const [requestNotes, setRequestNotes] = useState('');
   const [profile, setProfile] = useState<any>(null);
-  const [ibanInput, setIbanInput] = useState('');
-  const [ibanConfirm, setIbanConfirm] = useState('');
   const [bankNameInput, setBankNameInput] = useState('');
+  const [branchInput, setBranchInput] = useState('');
+  const [accountNumberInput, setAccountNumberInput] = useState('');
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const isAr = i18n.language === 'ar';
 
@@ -38,7 +40,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
       (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
       (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single(),
-      (supabase as any).from('profiles').select('iban, bank_name, iban_confirmed_at').eq('id', userId).single(),
+      (supabase as any).from('profiles').select('iban, bank_name, iban_confirmed_at, bank_branch, bank_account_number').eq('id', userId).single(),
     ]);
     if (rewardsRes.data) setRewards(rewardsRes.data);
     if (requestsRes.data) setPayoutRequests(requestsRes.data);
@@ -59,35 +61,29 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
     return days >= LOCK_DAYS;
   });
   const availableAmount = eligibleRewards.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const hasIban = profile?.iban && profile?.bank_name && profile?.iban_confirmed_at;
-  const canRequest = availableAmount >= minThreshold && hasIban;
 
-  // IBAN validation (basic Israeli/German format)
-  const isValidIban = (iban: string) => {
-    const cleaned = iban.replace(/\s/g, '').toUpperCase();
-    // Israeli IBAN: IL + 2 check + 19 digits = 23 chars
-    // German IBAN: DE + 2 check + 18 digits = 22 chars
-    return /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(cleaned) && cleaned.length >= 15 && cleaned.length <= 34;
-  };
+  // Israeli bank validation: bank name + branch + account number
+  const hasBankDetails = profile?.bank_name && profile?.bank_branch && profile?.bank_account_number && profile?.iban_confirmed_at;
+  const canRequest = availableAmount >= minThreshold && hasBankDetails;
 
-  const saveIban = async () => {
-    const cleaned = ibanInput.replace(/\s/g, '').toUpperCase();
-    if (!isValidIban(cleaned)) {
-      toast({ variant: 'destructive', title: isAr ? 'رقم IBAN غير صالح' : 'Invalid IBAN format' });
-      return;
-    }
-    if (cleaned !== ibanConfirm.replace(/\s/g, '').toUpperCase()) {
-      toast({ variant: 'destructive', title: isAr ? 'أرقام IBAN غير متطابقة' : 'IBAN numbers do not match' });
-      return;
-    }
+  const saveBankDetails = async () => {
     if (!bankNameInput.trim()) {
       toast({ variant: 'destructive', title: isAr ? 'يرجى إدخال اسم البنك' : 'Please enter bank name' });
       return;
     }
+    if (!branchInput.trim() || !/^\d{2,4}$/.test(branchInput.trim())) {
+      toast({ variant: 'destructive', title: isAr ? 'رقم فرع غير صالح (2-4 أرقام)' : 'Invalid branch number (2-4 digits)' });
+      return;
+    }
+    if (!accountNumberInput.trim() || !/^\d{4,12}$/.test(accountNumberInput.trim())) {
+      toast({ variant: 'destructive', title: isAr ? 'رقم حساب غير صالح' : 'Invalid account number (4-12 digits)' });
+      return;
+    }
 
     const { error } = await (supabase as any).from('profiles').update({
-      iban: cleaned,
       bank_name: bankNameInput.trim(),
+      bank_branch: branchInput.trim(),
+      bank_account_number: accountNumberInput.trim(),
       iban_confirmed_at: new Date().toISOString(),
     }).eq('id', userId);
 
@@ -95,17 +91,17 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     } else {
       toast({ title: isAr ? 'تم حفظ بيانات البنك' : 'Bank details saved' });
-      setShowIbanModal(false);
+      setShowBankModal(false);
       fetchData();
     }
   };
 
   const handleRequestPayout = () => {
-    if (!hasIban) {
-      setIbanInput(profile?.iban || '');
-      setIbanConfirm('');
+    if (!hasBankDetails) {
       setBankNameInput(profile?.bank_name || '');
-      setShowIbanModal(true);
+      setBranchInput(profile?.bank_branch || '');
+      setAccountNumberInput(profile?.bank_account_number || '');
+      setShowBankModal(true);
       return;
     }
     setShowRequestModal(true);
@@ -126,7 +122,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
       linked_student_names: studentNames,
       amount: availableAmount,
       admin_notes: requestNotes || null,
-      payment_method: `IBAN: ${profile?.iban} / ${profile?.bank_name}`,
+      payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
     });
     for (const r of eligibleRewards) {
       await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
@@ -135,11 +131,9 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
     setShowRequestModal(false);
     setRequestNotes('');
     fetchData();
-    const whatsappUrl = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
-    const win = window.open(whatsappUrl, '_blank');
-    if (!win || win.closed) {
-      window.location.href = whatsappUrl;
-    }
+    // Redirect to WhatsApp
+    const win = window.open(WHATSAPP_URL, '_blank');
+    if (!win || win.closed) window.location.href = WHATSAPP_URL;
   };
 
   const cancelRequest = async (reqId: string) => {
@@ -175,23 +169,30 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
         </CardContent></Card>
       </div>
 
-      {/* IBAN Status Banner */}
-      {!hasIban && (
+      {/* Bank Details Status Banner */}
+      {!hasBankDetails && (
         <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium">{isAr ? 'يرجى إضافة بيانات البنك لطلب الدفع' : 'Add bank details to request payouts'}</p>
+            <p className="text-sm font-medium">{isAr ? 'يرجى إضافة بيانات الحساب البنكي الإسرائيلي لطلب الدفع' : 'Add your Israeli bank account details to request payouts'}</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => { setIbanInput(profile?.iban || ''); setIbanConfirm(''); setBankNameInput(profile?.bank_name || ''); setShowIbanModal(true); }}>
+          <Button size="sm" variant="outline" onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setShowBankModal(true); }}>
             <CreditCard className="h-4 w-4 me-1" />{isAr ? 'إضافة' : 'Add'}
           </Button>
         </div>
       )}
 
-      {/* Request Payout */}
+      {/* Action Buttons: Request Payout + WhatsApp Contact */}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={handleRequestPayout} disabled={availableAmount < minThreshold} className="w-full sm:w-auto">
           <Send className="h-4 w-4 me-2" />{t('influencer.earnings.requestPayout')}
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full sm:w-auto border-green-500 text-green-700 hover:bg-green-50"
+          onClick={() => { const win = window.open(WHATSAPP_URL, '_blank'); if (!win || win.closed) window.location.href = WHATSAPP_URL; }}
+        >
+          <MessageCircle className="h-4 w-4 me-2" />{isAr ? 'تواصل عبر واتساب' : 'Contact via WhatsApp'}
         </Button>
         {availableAmount > 0 && availableAmount < minThreshold && (
           <Badge variant="secondary" className="text-xs">🔒 {t('influencer.earnings.minThreshold', { amount: minThreshold })}</Badge>
@@ -255,7 +256,8 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
             <p className="text-sm">{t('influencer.earnings.totalAmount', 'Total amount')}: <strong>{availableAmount.toLocaleString()} ₪</strong></p>
             <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
               <p><strong>{isAr ? 'البنك:' : 'Bank:'}</strong> {profile?.bank_name}</p>
-              <p><strong>IBAN:</strong> {profile?.iban?.replace(/(.{4})/g, '$1 ')}</p>
+              <p><strong>{isAr ? 'فرع:' : 'Branch:'}</strong> {profile?.bank_branch}</p>
+              <p><strong>{isAr ? 'رقم حساب:' : 'Account:'}</strong> {profile?.bank_account_number}</p>
             </div>
             <div>
               <Label>{t('admin.payouts.notesOptional', 'Notes (optional)')}</Label>
@@ -269,29 +271,29 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
         </DialogContent>
       </Dialog>
 
-      {/* IBAN Entry Modal */}
-      <Dialog open={showIbanModal} onOpenChange={setShowIbanModal}>
+      {/* Israeli Bank Account Entry Modal */}
+      <Dialog open={showBankModal} onOpenChange={setShowBankModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{isAr ? 'بيانات الحساب البنكي' : 'Bank Account Details'}</DialogTitle>
+            <DialogTitle>{isAr ? 'بيانات الحساب البنكي الإسرائيلي' : 'Israeli Bank Account Details'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>{isAr ? 'اسم البنك' : 'Bank Name'}</Label>
-              <Input value={bankNameInput} onChange={e => setBankNameInput(e.target.value)} placeholder={isAr ? 'مثال: بنك هبوعليم' : 'e.g. Bank Hapoalim'} className="mt-1" />
+              <Input value={bankNameInput} onChange={e => setBankNameInput(e.target.value)} placeholder={isAr ? 'مثال: בנק הפועלים' : 'e.g. Bank Hapoalim'} className="mt-1" />
             </div>
             <div>
-              <Label>IBAN</Label>
-              <Input value={ibanInput} onChange={e => setIbanInput(e.target.value)} placeholder="IL00 0000 0000 0000 0000 000" dir="ltr" className="mt-1 font-mono" />
+              <Label>{isAr ? 'رقم الفرع' : 'Branch Number'}</Label>
+              <Input value={branchInput} onChange={e => setBranchInput(e.target.value)} placeholder={isAr ? 'مثال: 690' : 'e.g. 690'} dir="ltr" className="mt-1 font-mono" maxLength={4} />
             </div>
             <div>
-              <Label>{isAr ? 'تأكيد IBAN' : 'Confirm IBAN'}</Label>
-              <Input value={ibanConfirm} onChange={e => setIbanConfirm(e.target.value)} placeholder={isAr ? 'أعد إدخال IBAN' : 'Re-enter IBAN'} dir="ltr" className="mt-1 font-mono" />
+              <Label>{isAr ? 'رقم الحساب' : 'Account Number'}</Label>
+              <Input value={accountNumberInput} onChange={e => setAccountNumberInput(e.target.value)} placeholder={isAr ? 'مثال: 123456' : 'e.g. 123456'} dir="ltr" className="mt-1 font-mono" maxLength={12} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowIbanModal(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={saveIban}>{isAr ? 'حفظ' : 'Save'}</Button>
+            <Button variant="outline" onClick={() => setShowBankModal(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
+            <Button onClick={saveBankDetails}>{isAr ? 'حفظ' : 'Save'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

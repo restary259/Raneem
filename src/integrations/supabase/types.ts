@@ -465,6 +465,7 @@ export type Database = {
           eligibility_score: number | null
           email: string | null
           english_units: number | null
+          fraud_flags: string[] | null
           full_name: string
           german_level: string | null
           id: string
@@ -498,6 +499,7 @@ export type Database = {
           eligibility_score?: number | null
           email?: string | null
           english_units?: number | null
+          fraud_flags?: string[] | null
           full_name: string
           german_level?: string | null
           id?: string
@@ -531,6 +533,7 @@ export type Database = {
           eligibility_score?: number | null
           email?: string | null
           english_units?: number | null
+          fraud_flags?: string[] | null
           full_name?: string
           german_level?: string | null
           id?: string
@@ -778,6 +781,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bank_account_number: string | null
+          bank_branch: string | null
           bank_name: string | null
           city: string | null
           country: string | null
@@ -798,6 +803,8 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          bank_account_number?: string | null
+          bank_branch?: string | null
           bank_name?: string | null
           city?: string | null
           country?: string | null
@@ -818,6 +825,8 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          bank_account_number?: string | null
+          bank_branch?: string | null
           bank_name?: string | null
           city?: string | null
           country?: string | null
@@ -1038,6 +1047,8 @@ export type Database = {
           case_status: string
           country_of_birth: string | null
           created_at: string
+          fraud_flagged: boolean | null
+          fraud_notes: string | null
           id: string
           influencer_commission: number
           intensive_course: string | null
@@ -1070,6 +1081,8 @@ export type Database = {
           case_status?: string
           country_of_birth?: string | null
           created_at?: string
+          fraud_flagged?: boolean | null
+          fraud_notes?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
@@ -1102,6 +1115,8 @@ export type Database = {
           case_status?: string
           country_of_birth?: string | null
           created_at?: string
+          fraud_flagged?: boolean | null
+          fraud_notes?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
