@@ -1,11 +1,23 @@
 /* PWA standalone mode adjustments */
 @media all and (display-mode: standalone) {
-  html, body {
+  html {
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: contain;
     zoom: 1 !important;
     transform: none !important;
     width: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+    width: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
   }
 
   #root {
@@ -14,13 +26,7 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-  }
-
-  /* Safe area insets for notched devices */
-  body {
-    padding-top: env(safe-area-inset-top, 0);
-    padding-left: env(safe-area-inset-left, 0);
-    padding-right: env(safe-area-inset-right, 0);
+    overflow-y: auto;
   }
 
   /* Hide footer in PWA standalone mode on mobile */
