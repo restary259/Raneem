@@ -105,6 +105,9 @@ const TeamDashboardPage = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [paymentConfirm, setPaymentConfirm] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [rescheduleAppt, setRescheduleAppt] = useState<any | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -335,6 +338,31 @@ const TeamDashboardPage = () => {
     setDeleteConfirm(null);
   };
 
+  const handleDeleteAppointment = async (apptId: string) => {
+    const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
+    if (!error) {
+      toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' });
+      if (user) await fetchAppointments(user.id);
+    } else {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    }
+  };
+
+  const handleRescheduleAppointment = async () => {
+    if (!rescheduleAppt || !rescheduleDate || !rescheduleTime) return;
+    setSaving(true);
+    const newScheduledAt = new Date(`${rescheduleDate}T${rescheduleTime}:00`).toISOString();
+    const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', rescheduleAppt.id);
+    if (!error) {
+      toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
+      setRescheduleAppt(null);
+      if (user) await fetchAppointments(user.id);
+    } else {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    }
+    setSaving(false);
+  };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
   if (isLoading) {
@@ -345,7 +373,12 @@ const TeamDashboardPage = () => {
     );
   }
 
-  const todayAppointments = appointments.filter(a => isToday(new Date(a.scheduled_at)));
+  // Only show today's appointments that haven't ended yet
+  const todayAppointments = appointments.filter(a => {
+    if (!isToday(new Date(a.scheduled_at))) return false;
+    const end = new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000);
+    return end > new Date();
+  });
 
   // ── Render two action buttons per tab/status ──
   const renderCaseActions = (c: any, lead: any) => {
@@ -600,13 +633,24 @@ const TeamDashboardPage = () => {
                                   </p>
                                 </div>
                               </div>
-                              {/* Quick actions: Call, Go to Case */}
-                              <div className="flex gap-1 shrink-0">
+                              {/* Quick actions: Call, Reschedule, Delete, Go to Case */}
+                              <div className="flex gap-1 shrink-0 flex-wrap">
                                 {linkedLead?.phone && (
                                   <Button size="sm" variant="ghost" className="h-7 w-7 p-0" asChild>
                                     <a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" /></a>
                                   </Button>
                                 )}
+                                <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={() => {
+                                  setRescheduleAppt(appt);
+                                  const d = new Date(appt.scheduled_at);
+                                  setRescheduleDate(format(d, 'yyyy-MM-dd'));
+                                  setRescheduleTime(format(d, 'HH:mm'));
+                                }}>
+                                  {isAr ? 'إعادة جدولة' : 'Reschedule'}
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                                 {appt.case_id && (
                                   <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
                                     {isAr ? 'عرض' : 'Case'}
@@ -850,6 +894,31 @@ const TeamDashboardPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reschedule Dialog */}
+      <Dialog open={!!rescheduleAppt} onOpenChange={(open) => !open && setRescheduleAppt(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{isAr ? 'إعادة جدولة الموعد' : 'Reschedule Appointment'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">{isAr ? 'التاريخ الجديد' : 'New Date'}</Label>
+              <Input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">{isAr ? 'الوقت الجديد' : 'New Time'}</Label>
+              <Input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleAppt(null)}>{t('common.cancel')}</Button>
+            <Button onClick={handleRescheduleAppointment} disabled={saving || !rescheduleDate || !rescheduleTime}>
+              {saving ? t('common.loading') : (isAr ? 'حفظ' : 'Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile Bottom Nav */}
       {isMobile && (
