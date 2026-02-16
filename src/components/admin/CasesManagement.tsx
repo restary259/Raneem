@@ -16,6 +16,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, DollarSign, Save, Trash2, Download, Clock, FileSpreadsheet, FileText, Package, Plus } from 'lucide-react';
 import PasswordVerifyDialog from './PasswordVerifyDialog';
+import NextStepButton from './NextStepButton';
+import { STATUS_COLORS, resolveStatus, statusIndex } from '@/lib/caseStatus';
+import { canTransition } from '@/lib/caseTransitions';
 
 interface StudentCase {
   id: string;
@@ -46,33 +49,7 @@ interface CasesManagementProps {
   onRefresh: () => void;
 }
 
-// Simplified 6-stage funnel: assigned → contacted → paid → ready_to_apply → visa_stage → completed
-// Legacy statuses (appointment, closed, registration_submitted, settled) map to nearest equivalent
-const CASE_STATUS_KEYS = ['assigned', 'contacted', 'paid', 'ready_to_apply', 'visa_stage', 'completed'] as const;
-const CASE_STATUS_ORDER: Record<string, number> = {
-  assigned: 0, contacted: 1, paid: 2, ready_to_apply: 3, visa_stage: 4, completed: 5,
-  // Legacy mappings for backward compatibility
-  appointment: 1, closed: 5, registration_submitted: 3, settled: 5,
-};
-
-const getValidStatuses = (currentStatus: string) => {
-  const currentOrder = CASE_STATUS_ORDER[currentStatus] ?? 0;
-  return CASE_STATUS_KEYS.filter(s => (CASE_STATUS_ORDER[s] ?? 0) >= currentOrder - 1);
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  assigned: 'bg-blue-100 text-blue-800',
-  contacted: 'bg-yellow-100 text-yellow-800',
-  paid: 'bg-green-100 text-green-800',
-  ready_to_apply: 'bg-indigo-100 text-indigo-800',
-  visa_stage: 'bg-orange-100 text-orange-800',
-  completed: 'bg-emerald-100 text-emerald-800',
-  // Legacy colors for existing data display
-  appointment: 'bg-yellow-100 text-yellow-800',
-  closed: 'bg-gray-100 text-gray-800',
-  registration_submitted: 'bg-indigo-100 text-indigo-800',
-  settled: 'bg-emerald-100 text-emerald-800',
-};
+// Status colors and helpers now imported from @/lib/caseStatus
 
 const FINANCIAL_FIELDS = ['service_fee', 'influencer_commission', 'lawyer_commission', 'referral_discount', 'school_commission', 'translation_fee'] as const;
 const FINANCIAL_FIELD_KEYS: Record<string, string> = {
@@ -123,11 +100,8 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
   const startEdit = (c: StudentCase) => {
     setEditingCase(c.id);
     setEditValues({
-      service_fee: c.service_fee, influencer_commission: c.influencer_commission,
-      lawyer_commission: c.lawyer_commission, referral_discount: c.referral_discount,
-      school_commission: c.school_commission, translation_fee: c.translation_fee,
       selected_city: c.selected_city || '', selected_school: c.selected_school || '',
-      case_status: c.case_status, notes: c.notes || '',
+      notes: c.notes || '',
     });
   };
 
@@ -168,14 +142,19 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
         return s + (sn?.influencer_commission_value || 0);
       }, 0);
 
-      // Add to existing case values
+      // Add to existing case values + auto-advance to services_filled
       const existingCase = cases.find(c => c.id === attachModal);
       if (existingCase) {
-        await (supabase as any).from('student_cases').update({
+        const updateData: Record<string, any> = {
           service_fee: existingCase.service_fee + totalSalePrice,
           lawyer_commission: existingCase.lawyer_commission + totalTeamComm,
           influencer_commission: existingCase.influencer_commission + totalInflComm,
-        }).eq('id', attachModal);
+        };
+        // Auto-advance to services_filled if valid transition
+        if (canTransition(existingCase.case_status, 'services_filled')) {
+          updateData.case_status = 'services_filled';
+        }
+        await (supabase as any).from('student_cases').update(updateData).eq('id', attachModal);
       }
 
       toast({ title: 'Services attached', description: `${snapshots.length} services added with pricing snapshot locked.` });
@@ -188,27 +167,15 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
 
   const saveCase = async (caseId: string) => {
     setLoading(true);
-    const originalCase = cases.find(c => c.id === caseId);
     const updateData: any = {
-      service_fee: Number(editValues.service_fee) || 0, influencer_commission: Number(editValues.influencer_commission) || 0,
-      lawyer_commission: Number(editValues.lawyer_commission) || 0, referral_discount: Number(editValues.referral_discount) || 0,
-      school_commission: Number(editValues.school_commission) || 0, translation_fee: Number(editValues.translation_fee) || 0,
-      selected_city: editValues.selected_city || null, selected_school: editValues.selected_school || null,
-      case_status: editValues.case_status, notes: editValues.notes || null,
+      selected_city: editValues.selected_city || null,
+      selected_school: editValues.selected_school || null,
+      notes: editValues.notes || null,
     };
-
-    if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
-      updateData.paid_at = new Date().toISOString();
-    }
 
     const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
 
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); setLoading(false); return; }
-
-    if (editValues.case_status === 'paid' && originalCase?.case_status !== 'paid') {
-      // Commissions and rewards are now auto-created by DB trigger (auto_split_payment)
-      toast({ title: t('cases.commissionsCreated'), description: t('cases.commissionsCreatedDesc') });
-    }
 
     setLoading(false); setEditingCase(null);
     toast({ title: t('lawyer.saved') }); onRefresh();
@@ -319,9 +286,10 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                       <p className="text-xs text-muted-foreground">{t('cases.teamMemberLabel')} {getTeamMemberName(c.assigned_lawyer_id)}</p>
                       {c.selected_city && <p className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</p>}
                     </div>
-                    <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}>
+                      <NextStepButton caseId={c.id} currentStatus={c.case_status} onStatusUpdated={() => onRefresh()} />
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(c.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -374,17 +342,12 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                         <div><Label className="text-xs">{t('lawyer.cityLabel')}</Label><Input value={editValues.selected_city} onChange={e => setEditValues(v => ({ ...v, selected_city: e.target.value }))} /></div>
                         <div><Label className="text-xs">{t('lawyer.schoolLabel')}</Label><Input value={editValues.selected_school} onChange={e => setEditValues(v => ({ ...v, selected_school: e.target.value }))} /></div>
                       </div>
-                      <div><Label className="text-xs">{t('lawyer.caseStatus')}</Label>
-                        <Select value={editValues.case_status} onValueChange={v => setEditValues(ev => ({ ...ev, case_status: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{getValidStatuses(c.case_status).map(s => <SelectItem key={s} value={s}>{t(`cases.statuses.${s}`)}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
+                      {/* Financial fields are now READ-ONLY — calculated from service snapshots */}
                       <div className="grid grid-cols-2 gap-3">
                         {FINANCIAL_FIELDS.map(field => (
-                          <div key={field}>
-                            <Label className="text-xs">{t(FINANCIAL_FIELD_KEYS[field])}</Label>
-                            <Input type="number" value={editValues[field]} onChange={e => setEditValues(v => ({ ...v, [field]: e.target.value }))} />
+                          <div key={field} className="flex justify-between p-2 bg-muted/30 rounded border text-sm">
+                            <span className="text-xs text-muted-foreground">{t(FINANCIAL_FIELD_KEYS[field])}</span>
+                            <span className="font-semibold">{c[field as keyof StudentCase]} €</span>
                           </div>
                         ))}
                       </div>
