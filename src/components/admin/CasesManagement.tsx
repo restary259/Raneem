@@ -34,6 +34,7 @@ interface StudentCase {
   case_status: string;
   notes: string | null;
   paid_at: string | null;
+  assigned_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -274,10 +275,16 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
         const isEditing = editingCase === c.id;
         const statusLabel = t(`cases.statuses.${c.case_status}`, c.case_status);
         const statusColor = STATUS_COLORS[c.case_status] || 'bg-gray-100 text-gray-800';
+        
+        // SLA highlighting: red border if assigned 24h+ without progressing
+        const hoursSinceAssign = c.assigned_at && c.case_status === 'assigned'
+          ? (Date.now() - new Date(c.assigned_at).getTime()) / (1000 * 60 * 60) : 0;
+        const isSlaWarning = hoursSinceAssign >= 24 && hoursSinceAssign < 48;
+        const isSlaBreach = hoursSinceAssign >= 48;
 
         return (
           <Collapsible key={c.id}>
-            <Card className="shadow-sm">
+            <Card className={`shadow-sm ${isSlaBreach ? 'ring-2 ring-red-500 bg-red-50/30' : isSlaWarning ? 'ring-2 ring-amber-400 bg-amber-50/30' : ''}`}>
               <CollapsibleTrigger asChild>
                 <CardContent className="p-4 cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center justify-between">
@@ -297,6 +304,16 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                             </span>
                           );
                         })()}
+                        {isSlaBreach && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800">
+                            🚨 SLA {Math.floor(hoursSinceAssign)}h
+                          </span>
+                        )}
+                        {isSlaWarning && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                            ⏰ SLA {Math.floor(hoursSinceAssign)}h
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">{t('cases.teamMemberLabel')} {getTeamMemberName(c.assigned_lawyer_id)}</p>
                       {c.selected_city && <p className="text-xs text-muted-foreground">{c.selected_city} {c.selected_school ? `• ${c.selected_school}` : ''}</p>}

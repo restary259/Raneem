@@ -468,6 +468,7 @@ export type Database = {
           full_name: string
           german_level: string | null
           id: string
+          is_stale: boolean | null
           last_contacted: string | null
           math_units: number | null
           notes: string | null
@@ -500,6 +501,7 @@ export type Database = {
           full_name: string
           german_level?: string | null
           id?: string
+          is_stale?: boolean | null
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
@@ -532,6 +534,7 @@ export type Database = {
           full_name?: string
           german_level?: string | null
           id?: string
+          is_stale?: boolean | null
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
@@ -775,11 +778,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bank_name: string | null
           city: string | null
           country: string | null
           created_at: string
           email: string
           full_name: string
+          iban: string | null
+          iban_confirmed_at: string | null
           id: string
           influencer_id: string | null
           intake_month: string | null
@@ -792,11 +798,14 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          bank_name?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          iban?: string | null
+          iban_confirmed_at?: string | null
           id: string
           influencer_id?: string | null
           intake_month?: string | null
@@ -809,11 +818,14 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          bank_name?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          iban?: string | null
+          iban_confirmed_at?: string | null
           id?: string
           influencer_id?: string | null
           intake_month?: string | null
@@ -1021,6 +1033,7 @@ export type Database = {
       student_cases: {
         Row: {
           accommodation_status: string | null
+          assigned_at: string | null
           assigned_lawyer_id: string | null
           case_status: string
           country_of_birth: string | null
@@ -1052,6 +1065,7 @@ export type Database = {
         }
         Insert: {
           accommodation_status?: string | null
+          assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
           country_of_birth?: string | null
@@ -1083,6 +1097,7 @@ export type Database = {
         }
         Update: {
           accommodation_status?: string | null
+          assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
           country_of_birth?: string | null

@@ -208,20 +208,8 @@ const ApplyPage: React.FC = () => {
               {/* Expected contact time */}
               <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-2">
                 <p className="text-sm font-semibold text-foreground">
-                  {isAr ? '⏰ سنتواصل معك خلال 24 ساعة عبر واتساب' : '⏰ We will contact you within 24 hours via WhatsApp'}
+                  {isAr ? '📩 سنتواصل معك خلال 24 إلى 48 ساعة عبر واتساب' : '📩 We will contact you within 24 to 48 hours via WhatsApp'}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {isAr ? 'في حال لديك استفسار عاجل، تواصل معنا مباشرة:' : 'For urgent questions, reach us directly:'}
-                </p>
-                <a
-                  href="https://wa.me/972549110735"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-colors"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  {isAr ? 'واتساب درب' : 'WhatsApp Darb'}
-                </a>
               </div>
 
               {sourceId && (
