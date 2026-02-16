@@ -108,6 +108,8 @@ const TeamDashboardPage = () => {
   const [rescheduleAppt, setRescheduleAppt] = useState<any | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
+  const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
+  const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -296,22 +298,38 @@ const TeamDashboardPage = () => {
       return;
     }
 
-    // All fields filled — transition to profile_filled
-    if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
-      updateData.case_status = CaseStatus.PROFILE_FILLED;
-    }
+    // All fields filled — show confirmation dialog before moving
+    setPendingUpdateData(updateData);
+    setSavingProfile(false);
+    setCompleteFileConfirm(true);
+  };
 
-    const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', profileCase.id);
+  const confirmCompleteFile = async () => {
+    if (!profileCase || !pendingUpdateData) return;
+    setSavingProfile(true);
+    const finalData = { ...pendingUpdateData };
+    if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
+      finalData.case_status = CaseStatus.PROFILE_FILLED;
+    }
+    const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
     await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
     setSavingProfile(false);
+    setCompleteFileConfirm(false);
+    setPendingUpdateData(null);
     if (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } else {
-      toast({ title: t('lawyer.saved') });
+      toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
       setProfileCase(null);
       setCaseFilter('profile_filled');
       if (user) await fetchCases(user.id);
     }
+  };
+
+  const cancelCompleteFile = () => {
+    setCompleteFileConfirm(false);
+    setPendingUpdateData(null);
+    // Keep profile modal open so user can continue editing
   };
 
   const handleSubmitForApplication = (caseId: string) => {
@@ -921,6 +939,24 @@ const TeamDashboardPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Complete File Confirmation Dialog */}
+      <AlertDialog open={completeFileConfirm} onOpenChange={(open) => { if (!open) cancelCompleteFile(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isAr ? 'إكمال ملف الطالب' : 'Complete Student File'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isAr ? 'جميع الحقول مكتملة. هل تريد إكمال الملف ونقله إلى مرحلة "ملفات مكتملة"؟' : 'All fields are filled. Do you want to complete this file and move it to "Completed Files"?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelCompleteFile}>{isAr ? 'إغلاق' : 'Close'}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCompleteFile} disabled={savingProfile}>
+              {savingProfile ? t('common.loading') : (isAr ? 'نعم، إكمال الملف' : 'Yes, Complete File')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Payment Confirmation Dialog */}
       <AlertDialog open={!!paymentConfirm} onOpenChange={(open) => !open && setPaymentConfirm(null)}>
