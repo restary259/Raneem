@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { exportXLSX, exportPDF } from '@/utils/exportUtils';
+import { exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Download, Edit, CheckCircle, XCircle, FileSpreadsheet, FileText, Users } from 'lucide-react';
+import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Edit, CheckCircle, XCircle, FileText, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Lead {
@@ -194,23 +194,6 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     }
     setLoading(false);
     setOverrideModal(null);
-  };
-
-  const exportCSV = () => {
-    const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
-    const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
-    const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
-    const rows = filtered.map(l => [
-      l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '',
-      l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type,
-      l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale),
-    ]);
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'leads.csv'; a.click();
-    URL.revokeObjectURL(url);
   };
 
   const statusKeys = ['new', 'eligible', 'not_eligible', 'assigned'] as const;
@@ -507,7 +490,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       <Dialog open={!!assignModal} onOpenChange={() => setAssignModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{t('admin.leads.assignTeamMemberTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
-          {lawyers.length === 0 ? (
+          {lawyers.length === 0 && influencers.length === 0 ? (
             <div className="py-6 text-center space-y-2">
               <Users className="h-8 w-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{t('admin.leads.noTeamMembers', { defaultValue: 'No team members found. Add team members first from the Team tab.' })}</p>
@@ -517,7 +500,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
                 <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
                 <SelectContent>
-                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
+                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name} <span className="text-muted-foreground text-xs ms-1">({t('admin.tabs.teamMembers', 'Team')})</span></SelectItem>)}
+                  {influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name} <span className="text-muted-foreground text-xs ms-1">({t('admin.tabs.influencers', 'Agent')})</span></SelectItem>)}
                 </SelectContent>
               </Select>
               <DialogFooter>

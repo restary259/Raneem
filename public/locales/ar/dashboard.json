@@ -153,7 +153,28 @@
       "approved": "تمت الموافقة",
       "rejected": "تم الرفض",
       "received": "تم الاستلام"
-    }
+    },
+    "gender": "الجنس",
+    "selectGender": "اختر الجنس",
+    "genderMale": "ذكر",
+    "genderFemale": "أنثى",
+    "eyeColor": "لون العيون",
+    "selectEyeColor": "اختر لون العيون",
+    "eyeColors": {
+      "brown": "بني",
+      "blue": "أزرق",
+      "green": "أخضر",
+      "hazel": "عسلي",
+      "gray": "رمادي",
+      "other": "آخر"
+    },
+    "legalSection": "المعلومات القانونية / التأشيرة",
+    "hasChangedLegalName": "هل سبق أن غيّرت اسمك القانوني؟",
+    "previousLegalName": "الاسم القانوني السابق",
+    "hasCriminalRecord": "هل لديك سجل جنائي؟",
+    "criminalRecordDetails": "تفاصيل السجل الجنائي",
+    "hasDualCitizenship": "هل لديك جنسية مزدوجة؟",
+    "secondPassportCountry": "بلد جواز السفر الثاني"
   },
   "referrals": {
     "title": "إحالة صديق أو أحد أفراد العائلة",

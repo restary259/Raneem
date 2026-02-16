@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Save, X } from 'lucide-react';
@@ -17,6 +19,7 @@ interface StudentProfileProps {
 }
 
 const visaStatusKeys: VisaStatus[] = ['not_applied', 'applied', 'approved', 'rejected', 'received'];
+const eyeColorOptions = ['brown', 'blue', 'green', 'hazel', 'gray', 'other'];
 
 const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +41,14 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
           university_name: editedProfile.university_name,
           visa_status: editedProfile.visa_status,
           notes: editedProfile.notes,
+          gender: editedProfile.gender,
+          eye_color: editedProfile.eye_color,
+          has_changed_legal_name: editedProfile.has_changed_legal_name,
+          previous_legal_name: editedProfile.previous_legal_name,
+          has_criminal_record: editedProfile.has_criminal_record,
+          criminal_record_details: editedProfile.criminal_record_details,
+          has_dual_citizenship: editedProfile.has_dual_citizenship,
+          second_passport_country: editedProfile.second_passport_country,
         })
         .eq('id', userId);
 
@@ -65,6 +76,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
       <CardContent>
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Basic Info */}
             <div><Label>{t('profile.fullName')}</Label><Input value={editedProfile.full_name} onChange={e => setEditedProfile({ ...editedProfile, full_name: e.target.value })} disabled={!isEditing} required /></div>
             <div><Label>{t('profile.email')}</Label><Input value={editedProfile.email} disabled readOnly /></div>
             <div><Label>{t('profile.phone')}</Label><Input value={editedProfile.phone_number || ''} onChange={e => setEditedProfile({ ...editedProfile, phone_number: e.target.value })} disabled={!isEditing} /></div>
@@ -78,8 +90,63 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                 {visaStatusKeys.map(s => <option key={s} value={s}>{t(`profile.visaStatuses.${s}`)}</option>)}
               </select>
             </div>
-            <div className="md:col-span-2"><Label>{t('profile.notes')}</Label><Textarea value={editedProfile.notes || ''} onChange={e => setEditedProfile({ ...editedProfile, notes: e.target.value })} disabled={!isEditing} rows={3} /></div>
+
+            {/* Visa-Critical Fields */}
+            <div>
+              <Label>{t('profile.gender', 'Gender')}</Label>
+              <Select value={editedProfile.gender || ''} onValueChange={v => setEditedProfile({ ...editedProfile, gender: v })} disabled={!isEditing}>
+                <SelectTrigger><SelectValue placeholder={t('profile.selectGender', 'Select gender')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">{t('profile.genderMale', 'Male')}</SelectItem>
+                  <SelectItem value="female">{t('profile.genderFemale', 'Female')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t('profile.eyeColor', 'Eye Color')}</Label>
+              <Select value={editedProfile.eye_color || ''} onValueChange={v => setEditedProfile({ ...editedProfile, eye_color: v })} disabled={!isEditing}>
+                <SelectTrigger><SelectValue placeholder={t('profile.selectEyeColor', 'Select eye color')} /></SelectTrigger>
+                <SelectContent>
+                  {eyeColorOptions.map(c => <SelectItem key={c} value={c}>{t(`profile.eyeColors.${c}`, c.charAt(0).toUpperCase() + c.slice(1))}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {/* Conditional Legal Fields */}
+          <div className="mt-6 space-y-4 border-t pt-4">
+            <h3 className="font-semibold text-sm text-muted-foreground">{t('profile.legalSection', 'Legal / Visa Information')}</h3>
+            
+            <div className="flex items-center justify-between">
+              <Label>{t('profile.hasChangedLegalName', 'Have you ever changed your legal name?')}</Label>
+              <Switch checked={!!editedProfile.has_changed_legal_name} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_changed_legal_name: v, previous_legal_name: v ? editedProfile.previous_legal_name : '' })} disabled={!isEditing} />
+            </div>
+            {editedProfile.has_changed_legal_name && (
+              <div><Label>{t('profile.previousLegalName', 'Previous Legal Name')}</Label><Input value={editedProfile.previous_legal_name || ''} onChange={e => setEditedProfile({ ...editedProfile, previous_legal_name: e.target.value })} disabled={!isEditing} /></div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <Label>{t('profile.hasCriminalRecord', 'Do you have a criminal record?')}</Label>
+              <Switch checked={!!editedProfile.has_criminal_record} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_criminal_record: v, criminal_record_details: v ? editedProfile.criminal_record_details : '' })} disabled={!isEditing} />
+            </div>
+            {editedProfile.has_criminal_record && (
+              <div><Label>{t('profile.criminalRecordDetails', 'Criminal Record Details')}</Label><Textarea value={editedProfile.criminal_record_details || ''} onChange={e => setEditedProfile({ ...editedProfile, criminal_record_details: e.target.value })} disabled={!isEditing} rows={2} /></div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <Label>{t('profile.hasDualCitizenship', 'Do you have dual citizenship?')}</Label>
+              <Switch checked={!!editedProfile.has_dual_citizenship} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_dual_citizenship: v, second_passport_country: v ? editedProfile.second_passport_country : '' })} disabled={!isEditing} />
+            </div>
+            {editedProfile.has_dual_citizenship && (
+              <div><Label>{t('profile.secondPassportCountry', 'Second Passport Country')}</Label><Input value={editedProfile.second_passport_country || ''} onChange={e => setEditedProfile({ ...editedProfile, second_passport_country: e.target.value })} disabled={!isEditing} /></div>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <Label>{t('profile.notes')}</Label>
+            <Textarea value={editedProfile.notes || ''} onChange={e => setEditedProfile({ ...editedProfile, notes: e.target.value })} disabled={!isEditing} rows={3} />
+          </div>
+
           {isEditing && (
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => { setEditedProfile(profile); setIsEditing(false); }} disabled={isLoading}><X className="h-4 w-4" /> {t('profile.cancel')}</Button>

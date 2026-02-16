@@ -153,7 +153,28 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "received": "Received"
-    }
+    },
+    "gender": "Gender",
+    "selectGender": "Select gender",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "eyeColor": "Eye Color",
+    "selectEyeColor": "Select eye color",
+    "eyeColors": {
+      "brown": "Brown",
+      "blue": "Blue",
+      "green": "Green",
+      "hazel": "Hazel",
+      "gray": "Gray",
+      "other": "Other"
+    },
+    "legalSection": "Legal / Visa Information",
+    "hasChangedLegalName": "Have you ever changed your legal name?",
+    "previousLegalName": "Previous Legal Name",
+    "hasCriminalRecord": "Do you have a criminal record?",
+    "criminalRecordDetails": "Criminal Record Details",
+    "hasDualCitizenship": "Do you have dual citizenship?",
+    "secondPassportCountry": "Second Passport Country"
   },
   "referrals": {
     "title": "Refer a Friend or Family Member",

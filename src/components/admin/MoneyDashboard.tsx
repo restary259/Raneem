@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { exportXLSX, exportPDF } from '@/utils/exportUtils';
+import { exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  DollarSign, TrendingUp, TrendingDown, Wallet, Users, Download,
-  ArrowUpRight, ArrowDownRight, Search, Filter, FileSpreadsheet, FileText
+  DollarSign, TrendingUp, TrendingDown, Wallet,
+  ArrowUpRight, ArrowDownRight, Search, FileText
 } from 'lucide-react';
 
 interface MoneyDashboardProps {
@@ -152,18 +152,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         });
       }
     } catch {}
-  };
-
-  const exportCSV = () => {
-    auditFinancialExport('csv');
-    const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
-    const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `money-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
