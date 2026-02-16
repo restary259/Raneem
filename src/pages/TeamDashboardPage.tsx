@@ -243,7 +243,7 @@ const TeamDashboardPage = () => {
       selected_city: c.selected_city || '',
       selected_school: c.selected_school || '',
       accommodation_status: c.accommodation_status || '',
-      // Visa fields from student_cases
+      gender: c.gender || '',
       notes: c.notes || '',
     });
   };
@@ -265,6 +265,7 @@ const TeamDashboardPage = () => {
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
       accommodation_status: profileValues.accommodation_status || null,
+      gender: profileValues.gender || null,
       notes: profileValues.notes || null,
     };
 
@@ -308,7 +309,12 @@ const TeamDashboardPage = () => {
     if (!profileCase || !pendingUpdateData) return;
     setSavingProfile(true);
     const finalData = { ...pendingUpdateData };
+    // Always transition to profile_filled when user confirms completion
+    const appointmentStatuses = ['appointment_scheduled', 'appointment_waiting', 'appointment_completed', 'assigned', 'contacted'];
     if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
+      finalData.case_status = CaseStatus.PROFILE_FILLED;
+    } else if (appointmentStatuses.includes(profileCase.case_status)) {
+      // Fallback: force transition for appointment-stage cases
       finalData.case_status = CaseStatus.PROFILE_FILLED;
     }
     const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
@@ -917,6 +923,16 @@ const TeamDashboardPage = () => {
                     <SelectTrigger><SelectValue placeholder={t('admin.ready.selectAccommodation')} /></SelectTrigger>
                     <SelectContent>
                       {ACCOMMODATION_OPTIONS.map(o => (<SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
+                  <Select value={profileValues.gender || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, gender: v }))}>
+                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر الجنس' : 'Select gender'} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
+                      <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
