@@ -66,6 +66,18 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const getName = (id: string) => profiles[id]?.full_name || t('admin.payouts.unknownRequester');
   const getEmail = (id: string) => profiles[id]?.email || '';
 
+  const auditLog = async (action: string, targetId: string, details: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id, action, target_id: targetId,
+          target_table: 'payout_requests', details,
+        });
+      }
+    } catch {}
+  };
+
   const handleApprove = async (notes: string) => {
     if (!approveTarget) return;
     const { data: { session } } = await supabase.auth.getSession();
@@ -74,6 +86,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       approved_at: new Date().toISOString(),
       approved_by: session?.user?.id || null,
     }).eq('id', approveTarget.id);
+    auditLog('payout_approved', approveTarget.id, `Approved ${approveTarget.amount} NIS for ${getName(approveTarget.requestor_id)}`);
     toast({ title: t('admin.payouts.statusUpdated') });
     setApproveTarget(null);
     fetchRequests();
@@ -83,6 +96,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const handleReject = async (reason: string) => {
     if (!rejectTarget) return;
     await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', rejectTarget.id);
+    auditLog('payout_rejected', rejectTarget.id, `Rejected ${rejectTarget.amount} NIS for ${getName(rejectTarget.requestor_id)}: ${reason}`);
     toast({ title: t('admin.payouts.statusUpdated') });
     setRejectTarget(null);
     fetchRequests();
@@ -115,6 +129,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       notes,
       approved_by: adminId,
     });
+    // Audit log
+    auditLog('payout_paid', payTarget.id, `Paid ${payTarget.amount} NIS to ${getName(payTarget.requestor_id)} via ${paymentMethod}`);
     toast({ title: t('admin.payouts.statusUpdated') });
     setPayTarget(null);
     fetchRequests();

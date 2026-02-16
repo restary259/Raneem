@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { exportXLSX, exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -140,7 +141,21 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const typeLabel = (type: string) => t(`money.types.${type}`, type);
   const statusLabel = (status: string) => t(`money.statuses.${status}`, status);
 
+  const auditFinancialExport = async (format: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id, action: `financial_export_${format}`,
+          target_table: 'student_cases',
+          details: `Exported ${filtered.length} financial records as ${format}`,
+        });
+      }
+    } catch {}
+  };
+
   const exportCSV = () => {
+    auditFinancialExport('csv');
     const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
     const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -270,6 +285,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 me-1" />CSV</Button>
           <Button size="sm" variant="outline" onClick={() => {
+            auditFinancialExport('xlsx');
             const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
             const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
             const totalIn = filtered.filter(r => r.direction === 'in').reduce((s,r) => s + r.amount, 0);
@@ -277,6 +293,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
             exportXLSX({ headers, rows, fileName: `money-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Financial Report', summaryRows: [['Total Revenue', '', totalIn, '', '', ''], ['Total Expenses', '', totalOut, '', '', ''], ['Net', '', totalIn - totalOut, '', '', '']] });
           }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
           <Button size="sm" variant="outline" onClick={() => {
+            auditFinancialExport('pdf');
             const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
             const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
             const totalIn = filtered.filter(r => r.direction === 'in').reduce((s,r) => s + r.amount, 0);

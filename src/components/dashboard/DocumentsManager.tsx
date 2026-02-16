@@ -87,10 +87,26 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     }
   };
 
+  const logDocumentAccess = async (action: string, docName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id,
+          action: `document_${action}`,
+          target_id: userId,
+          target_table: 'documents',
+          details: `${action} document: ${docName}`,
+        });
+      }
+    } catch {}
+  };
+
   const handleDownload = async (doc: Document) => {
     try {
       const { data, error } = await supabase.storage.from('student-documents').download(doc.file_url);
       if (error) throw error;
+      logDocumentAccess('download', doc.file_name);
       const url = URL.createObjectURL(data);
       const link = window.document.createElement('a');
       link.href = url; link.download = doc.file_name;
