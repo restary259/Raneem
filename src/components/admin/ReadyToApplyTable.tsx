@@ -182,8 +182,8 @@ const ReadyToApplyTable: React.FC = () => {
       const result = res.data;
       if (result?.error) throw new Error(result.error);
 
-      setCreatedTempPassword('sent');
-      toast({ title: t('admin.ready.accountCreated'), description: 'تم إرسال بيانات الدخول عبر البريد الإلكتروني' });
+      setCreatedTempPassword(result.temp_password || 'sent');
+      toast({ title: t('admin.ready.accountCreated') });
       fetchData();
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('common.error'), description: err.message });
@@ -378,7 +378,17 @@ const ReadyToApplyTable: React.FC = () => {
                   <p className="text-xs text-muted-foreground mb-1">البريد الإلكتروني:</p>
                   <p className="text-sm font-mono bg-background border rounded px-2 py-1">{editValues.student_email}</p>
                 </div>
-                <p className="text-xs text-green-700 font-medium">📧 تم إرسال بيانات الدخول عبر البريد الإلكتروني للطالب.</p>
+                {createdTempPassword !== 'sent' && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">كلمة المرور المؤقتة:</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-mono bg-background border rounded px-2 py-1 flex-1">{createdTempPassword}</p>
+                      <Button size="sm" variant="outline" onClick={copyTempPassword} className="shrink-0">
+                        {copiedPassword ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">سيُطلب منه تغيير كلمة المرور عند أول تسجيل دخول.</p>
               </div>
             )}

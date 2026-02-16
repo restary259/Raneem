@@ -59,7 +59,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
-      setCreatedPassword('sent');
+      setCreatedPassword(result.temp_password || 'sent');
       toast({ title: t('admin.influencers.createSuccess') });
       onRefresh();
     } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
@@ -140,8 +140,18 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
                     <p className="text-xs text-muted-foreground mb-1">{t('admin.influencers.email')}:</p>
                     <p className="text-sm font-mono bg-background border rounded px-2 py-1">{email}</p>
                   </div>
-                  <p className="text-xs text-green-700 font-medium">📧 {t('team.credentialsSentViaEmail', { defaultValue: 'Login credentials have been sent to the member\'s email address.' })}</p>
-                  <p className="text-xs text-muted-foreground">{t('team.passwordChangeNote')}</p>
+                  {createdPassword !== 'sent' && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">{t('team.tempPassword', { defaultValue: 'Temporary Password' })}:</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-mono bg-background border rounded px-2 py-1 flex-1">{createdPassword}</p>
+                        <Button size="sm" variant="outline" onClick={copyPassword} className="shrink-0">
+                          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">{t('team.passwordChangeNote', { defaultValue: 'The member will be asked to change their password on first login.' })}</p>
                 </div>
               )}
               {!createdPassword && (
