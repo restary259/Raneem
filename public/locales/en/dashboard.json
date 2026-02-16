@@ -809,6 +809,29 @@
       "referral": "Referral",
       "organic": "Organic",
       "contact_form": "Contact Form"
+      "friend": "Friend",
+      "family": "Family",
+      "self": "Self"
+    },
+    "tabs": {
+      "cases": "Cases",
+      "appointments": "Appointments",
+      "analytics": "Analytics",
+      "earnings": "Earnings"
+    },
+    "filters": {
+      "all": "All",
+      "assigned": "New",
+      "contacted": "Contacted",
+      "appointment_scheduled": "Appt Booked",
+      "profile_filled": "Profile Done",
+      "paid": "Paid",
+      "sla": "SLA Alert"
+    },
+    "referralDiscount": "Referral Discount",
+    "analytics": {
+      "statusDistribution": "Status Distribution",
+      "slaAlerts": "SLA Alerts"
     },
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",

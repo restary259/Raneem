@@ -14,7 +14,7 @@ const ChatWidget = () => {
   // Hide chat widget on distraction-free routes
   if (typeof window !== 'undefined') {
     const path = window.location.pathname;
-    if (path === '/apply' || path === '/influencer-dashboard') {
+    if (path === '/apply' || path === '/influencer-dashboard' || path === '/team-dashboard') {
       return null;
     }
   }

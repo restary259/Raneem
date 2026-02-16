@@ -211,11 +211,25 @@ const ApplyPage: React.FC = () => {
                   {isAr ? `كود المصدر: ${sourceId.slice(0, 8)}...` : `Ref: ${sourceId.slice(0, 8)}...`}
                 </p>
               )}
-              <a href="/">
-                <Button className="h-12 px-8 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold mt-2">
-                  {t('apply.exploreWebsite', 'تصفّح موقعنا')}
+              <div className="flex flex-col gap-3">
+                <a href="/">
+                  <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold">
+                    {t('apply.exploreWebsite', 'تصفّح موقعنا')}
+                  </Button>
+                </a>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 rounded-xl border-green-500 text-green-700 hover:bg-green-50 text-base font-semibold"
+                  onClick={() => {
+                    const url = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+                    const win = window.open(url, '_blank');
+                    if (!win || win.closed) window.location.href = url;
+                  }}
+                >
+                  <MessageCircle className="h-5 w-5 me-2" />
+                  {isAr ? 'انضم لمجتمعنا على واتساب' : 'Join our WhatsApp Community'}
                 </Button>
-              </a>
+              </div>
             </div>
           </main>
         </div>
