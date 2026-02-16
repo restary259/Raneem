@@ -250,7 +250,8 @@
       "security": "الأمان",
       "audit": "سجل النشاط",
       "notifications": "الإشعارات",
-      "masterServices": "كتالوج الخدمات"
+      "masterServices": "كتالوج الخدمات",
+      "majors": "التخصصات"
     },
     "overview": {
       "totalStudents": "إجمالي الطلاب",
