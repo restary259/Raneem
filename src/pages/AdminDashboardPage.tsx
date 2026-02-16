@@ -21,6 +21,7 @@ import ReadyToApplyTable from '@/components/admin/ReadyToApplyTable';
 import EligibilityConfig from '@/components/admin/EligibilityConfig';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
+import MajorsManagement from '@/components/admin/MajorsManagement';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -218,6 +219,8 @@ const AdminDashboardPage = () => {
         return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} />;
       case 'master-services':
         return <MasterServicesManagement />;
+      case 'majors':
+        return <MajorsManagement />;
       case 'ready':
         return <ReadyToApplyTable />;
       case 'eligibility':

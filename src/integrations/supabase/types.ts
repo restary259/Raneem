@@ -588,6 +588,140 @@ export type Database = {
         }
         Relationships: []
       }
+      major_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title_ar: string
+          title_en: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      majors: {
+        Row: {
+          arab48_notes_ar: string | null
+          arab48_notes_en: string | null
+          career_opportunities_ar: string | null
+          career_opportunities_en: string | null
+          career_prospects_ar: string | null
+          career_prospects_en: string | null
+          category_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          detailed_description_ar: string | null
+          detailed_description_en: string | null
+          duration_ar: string | null
+          duration_en: string | null
+          id: string
+          is_active: boolean
+          language_requirements_ar: string | null
+          language_requirements_en: string | null
+          name_ar: string
+          name_de: string | null
+          name_en: string
+          required_background_ar: string | null
+          required_background_en: string | null
+          requirements_ar: string | null
+          requirements_en: string | null
+          sort_order: number
+          suitable_for_ar: string | null
+          suitable_for_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          arab48_notes_ar?: string | null
+          arab48_notes_en?: string | null
+          career_opportunities_ar?: string | null
+          career_opportunities_en?: string | null
+          career_prospects_ar?: string | null
+          career_prospects_en?: string | null
+          category_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          detailed_description_ar?: string | null
+          detailed_description_en?: string | null
+          duration_ar?: string | null
+          duration_en?: string | null
+          id?: string
+          is_active?: boolean
+          language_requirements_ar?: string | null
+          language_requirements_en?: string | null
+          name_ar: string
+          name_de?: string | null
+          name_en: string
+          required_background_ar?: string | null
+          required_background_en?: string | null
+          requirements_ar?: string | null
+          requirements_en?: string | null
+          sort_order?: number
+          suitable_for_ar?: string | null
+          suitable_for_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arab48_notes_ar?: string | null
+          arab48_notes_en?: string | null
+          career_opportunities_ar?: string | null
+          career_opportunities_en?: string | null
+          career_prospects_ar?: string | null
+          career_prospects_en?: string | null
+          category_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          detailed_description_ar?: string | null
+          detailed_description_en?: string | null
+          duration_ar?: string | null
+          duration_en?: string | null
+          id?: string
+          is_active?: boolean
+          language_requirements_ar?: string | null
+          language_requirements_en?: string | null
+          name_ar?: string
+          name_de?: string | null
+          name_en?: string
+          required_background_ar?: string | null
+          required_background_en?: string | null
+          requirements_ar?: string | null
+          requirements_en?: string | null
+          sort_order?: number
+          suitable_for_ar?: string | null
+          suitable_for_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "majors_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "major_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_services: {
         Row: {
           commission_eligible: boolean

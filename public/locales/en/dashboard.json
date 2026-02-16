@@ -250,7 +250,8 @@
       "security": "Security",
       "audit": "Activity Log",
       "notifications": "Notifications",
-      "masterServices": "Service Catalog"
+      "masterServices": "Service Catalog",
+      "majors": "Majors"
     },
     "overview": {
       "totalStudents": "Total Students",
