@@ -1,95 +1,131 @@
 
 
-# Google Calendar-Style Appointments + Clean Mobile Nav
+# Complete Dashboard Overhaul: Simplify, Consolidate, Clean Up
 
-## Overview
+## The Problem
 
-Two changes to the Team Dashboard:
-1. Redesign the Appointment Calendar to match Google Calendar's day view layout (hourly time grid, mini calendar sidebar, current time indicator)
-2. Restyle the mobile bottom navigation to match the app's clean white/orange design instead of the current dark navy bar
+The current admin dashboard has **18 separate tabs** spread across 5 groups. Many overlap in purpose, creating confusion and unnecessary navigation. The funnel visualization still references legacy statuses that were removed from the actual workflow. Financial data is scattered across multiple views.
 
----
+## New Simplified Structure
 
-## Change 1: Google Calendar-Style Appointment View
+### Admin Dashboard: 18 tabs reduced to 10
 
-### Current State
-The appointment tab shows a basic month grid with dots for appointments, and a list of appointments below. No hourly timeline view.
+Current 18 tabs grouped into a cleaner structure:
 
-### New Design
-A split layout inspired by Google Calendar:
-- **Left panel** (desktop): Mini month calendar for date picking + upcoming appointments list
-- **Right panel / main area**: Full day view with hourly time slots (1 AM - 11 PM), a red "current time" indicator line, and appointment blocks positioned at their scheduled times
-- **Header**: "Today" button, prev/next navigation arrows, selected date display, and Day/Week toggle (Day active, Week as future placeholder)
-- **Appointment blocks**: Colored cards spanning their duration on the time grid, showing student name, time, and location
-- **"+ Create" button**: Floating action button to add new appointments
-
-### Technical Approach
-- Rewrite `src/components/lawyer/AppointmentCalendar.tsx` completely
-- Keep existing data fetching and CRUD logic (Supabase queries unchanged)
-- Add hourly grid rendering with `eachHourOfInterval` from date-fns
-- Position appointments absolutely within the time grid based on their `scheduled_at` time and `duration_minutes`
-- Red current-time line positioned based on current hour/minute with a pulsing dot
-- Mini calendar stays as the existing month grid but smaller, in the sidebar
-- Responsive: on mobile, mini calendar collapses above the day view
-
----
-
-## Change 2: Clean Mobile Bottom Navigation
-
-### Current State (lines 483-498 of TeamDashboardPage)
+```text
+BEFORE (18 tabs):                    AFTER (10 tabs):
+-------------------------------      --------------------------
+Dashboard:                           Pipeline:
+  - Overview                           - Overview (merged with Analytics)
+  - Analytics                          - Leads
+Students:                              - Cases (merged with Ready)
+  - Leads                            People:
+  - Cases                              - Students (merged with Checklist)
+  - Ready                              - Partners (merged Influencers + Referrals)
+  - Students                         Finance:
+  - Checklist                          - Services (renamed Master Services)
+Team:                                  - Money (merged with Payouts)
+  - Influencers                      System:
+  - Referrals                          - Contacts
+Finance:                               - Settings (merged Eligibility + Notifications)
+  - Master Services                    - Security + Audit (merged)
+  - Money
+  - Payouts
+Tools:
+  - Majors
+  - Contacts
+  - Notifications
+  - Eligibility
+  - Security
+  - Audit
 ```
-bg-[#1E293B] border-t border-white/10
-```
-Dark navy bar with white/muted text -- feels heavy and inconsistent with the app's light theme.
 
-### New Design
-Match the main app's BottomNav pattern:
-```
-bg-white border-t border-gray-200
-```
-- White background with subtle gray border
-- Orange active state (text-orange-500) with gray inactive (text-gray-600)
-- Same rounded, touch-friendly layout as the public BottomNav
-- Safe area padding for iOS devices
+### What Gets Merged
 
----
+1. **Overview + Analytics** -- KPI cards, funnel, and charts all in one view
+2. **Cases + Ready to Apply** -- "Ready" is just a filtered view of cases; add a filter toggle instead of a separate tab
+3. **Students + Checklist** -- Checklist is per-student; embed it within student management
+4. **Influencers + Referrals** -- Both are partner/team management; combine into one "Partners" tab
+5. **Money + Payouts** -- Both are financial operations; payouts become a section within Money
+6. **Eligibility + Notifications** -- Low-traffic config screens; combine into a "Settings" tab
+7. **Security + Audit** -- Both are security/compliance; combine into one tab
+8. **Majors** -- Stays as is (recently built, self-contained)
 
-## Files to Modify
+### Funnel Visualization Fix
 
-### `src/components/lawyer/AppointmentCalendar.tsx` -- Full Rewrite
-- Google Calendar day view with hourly time grid
-- Mini calendar sidebar (reuse existing month logic)
-- Current time red line indicator
-- Appointment blocks positioned on the grid
-- "Today" button and date navigation header
-- Create appointment dialog (keep existing)
-- Delete appointment (keep existing)
+Update `FunnelVisualization.tsx` to remove legacy statuses (`appointment`, `registration_submitted`, `settled`) and align with the actual 6-stage funnel: new, eligible, assigned, contacted, paid, ready_to_apply, visa_stage, completed.
 
-### `src/pages/TeamDashboardPage.tsx` -- Minor Edit
-- Update mobile bottom nav styling (lines 483-498): change from dark navy to white/orange theme
-- Update the appointments tab section to give the calendar full width instead of `max-w-2xl`
+### Financial Simplification
 
----
+Currently, when attaching services to a case, the system:
+1. Creates snapshots from master services (correct)
+2. Adds snapshot totals to the case's `service_fee`, `lawyer_commission`, `influencer_commission` fields
+
+The case card in CasesManagement also allows **manual editing** of all 6 financial fields. This creates confusion because the manual values can diverge from the snapshot totals.
+
+**Fix:** Make the financial fields on the case **read-only summaries** calculated from attached snapshots. Remove manual financial input fields from the case edit form. The only way to change financials is to attach/remove services from the master services table.
+
+### Team Dashboard
+
+Already streamlined to 3 tabs -- no changes needed. The Team Dashboard is clean.
 
 ## Technical Details
 
-```text
-Hourly Grid Calculation:
-- Each hour slot = 60px height
-- Appointment top position = (hour * 60) + (minute * 1) px
-- Appointment height = duration_minutes * 1 px
-- Current time line = same formula with current time
-- Scroll container auto-scrolls to current hour on mount
+### Files to Modify
 
-Component Structure:
-AppointmentCalendar
-  +-- Header (Today btn, arrows, date, Day toggle)
-  +-- Body (flex row)
-  |   +-- Sidebar (mini month calendar + upcoming list)
-  |   +-- DayView (scroll container)
-  |       +-- TimeGutter (hour labels: 1 AM, 2 AM, ...)
-  |       +-- TimeGrid (horizontal lines + appointment blocks)
-  |       +-- CurrentTimeLine (red line + dot)
-  +-- CreateDialog (existing modal, unchanged logic)
-```
+**1. `src/components/admin/AdminLayout.tsx`**
+- Reduce sidebar groups from 5 to 4
+- Reduce total tabs from 18 to 10
+- Update tab IDs and icons
+
+**2. `src/pages/AdminDashboardPage.tsx`**
+- Remove imports for merged components
+- Update `renderContent()` switch statement
+- Remove redundant state variables
+
+**3. `src/components/admin/AdminOverview.tsx`**
+- Merge KPIAnalytics content into Overview (charts, conversion metrics)
+- Single unified dashboard view
+
+**4. `src/components/admin/FunnelVisualization.tsx`**
+- Remove legacy stages: `appointment`, `registration_submitted`, `settled`
+- Use clean 8-stage funnel: new, eligible, assigned, contacted, paid, ready_to_apply, visa_stage, completed
+
+**5. `src/components/admin/CasesManagement.tsx`**
+- Add a "Ready to Apply" filter toggle (replaces the separate ReadyToApplyTable tab)
+- Make financial fields read-only (calculated from snapshots)
+- Remove manual number inputs for service_fee, commissions, etc.
+
+**6. `src/components/admin/StudentManagement.tsx`**
+- Embed checklist progress per student (inline, not separate tab)
+
+**7. New: `src/components/admin/PartnersManagement.tsx`**
+- Combines InfluencerManagement + ReferralManagement into one tabbed view
+
+**8. `src/components/admin/MoneyDashboard.tsx`**
+- Add PayoutsManagement as a section/sub-tab within Money
+
+**9. New: `src/components/admin/SettingsPanel.tsx`**
+- Combines EligibilityConfig + CustomNotifications
+
+**10. New: `src/components/admin/SecurityAuditPanel.tsx`**
+- Combines SecurityPanel + AuditLog into one view with sub-tabs
+
+**11. Localization files**
+- Update `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json` with new tab labels
+
+### No Database Changes Required
+
+All changes are UI-only. The database schema, RLS policies, and edge functions remain unchanged. This is purely a frontend consolidation.
+
+### What Stays Unchanged
+
+- Team Dashboard (already clean with 3 tabs)
+- Student Dashboard
+- Influencer Dashboard
+- All Supabase tables, RLS policies, and triggers
+- Real-time subscriptions
+- Financial engine (auto_split_payment trigger)
+- SLA logic
+- Export functionality (CSV, XLSX, PDF)
 
