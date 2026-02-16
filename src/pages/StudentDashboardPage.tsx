@@ -11,6 +11,7 @@ import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 const StudentDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -163,15 +164,17 @@ const StudentDashboardPage = () => {
 
   return (
     <DashboardErrorBoundary>
-      <div className="min-h-screen bg-[#F8FAFC]">
-        <DashboardHeader fullName={profile.full_name} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-            <DashboardMainContent activeTab={activeTab} profile={profile} user={user} onProfileUpdate={fetchProfileSafely} />
+      <PullToRefresh onRefresh={async () => { if (user) await fetchProfileSafely(user.id); }}>
+        <div className="min-h-screen bg-[#F8FAFC]">
+          <DashboardHeader fullName={profile.full_name} />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+              <DashboardMainContent activeTab={activeTab} profile={profile} user={user} onProfileUpdate={fetchProfileSafely} />
+            </div>
           </div>
         </div>
-      </div>
+      </PullToRefresh>
     </DashboardErrorBoundary>
   );
 };

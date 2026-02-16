@@ -15,6 +15,7 @@ import InfluencerManagement from '@/components/admin/InfluencerManagement';
 import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -216,7 +217,9 @@ const AdminDashboardPage = () => {
 
   return (
     <AdminLayout activeTab={activeTab} onTabChange={setActiveTab} userEmail={user?.email}>
-      {renderContent()}
+      <PullToRefresh onRefresh={async () => { await fetchAllData(); }}>
+        {renderContent()}
+      </PullToRefresh>
     </AdminLayout>
   );
 };
