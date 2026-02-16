@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
@@ -10,6 +10,7 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const StudentDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -20,6 +21,16 @@ const StudentDashboardPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useTranslation('dashboard');
+
+  const refetchProfile = useCallback(() => {
+    if (user) fetchProfileSafely(user.id);
+  }, [user]);
+
+  // Real-time subscriptions for student data
+  useRealtimeSubscription('profiles', refetchProfile, !!user);
+  useRealtimeSubscription('student_cases', refetchProfile, !!user);
+  useRealtimeSubscription('notifications', refetchProfile, !!user);
+  useRealtimeSubscription('student_checklist', refetchProfile, !!user);
 
   useEffect(() => {
     const initializeDashboard = async () => {
