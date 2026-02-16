@@ -785,6 +785,8 @@ export type Database = {
           bank_branch: string | null
           bank_name: string | null
           city: string | null
+          consent_accepted_at: string | null
+          consent_version: string | null
           country: string | null
           created_at: string
           email: string
@@ -807,6 +809,8 @@ export type Database = {
           bank_branch?: string | null
           bank_name?: string | null
           city?: string | null
+          consent_accepted_at?: string | null
+          consent_version?: string | null
           country?: string | null
           created_at?: string
           email?: string
@@ -829,6 +833,8 @@ export type Database = {
           bank_branch?: string | null
           bank_name?: string | null
           city?: string | null
+          consent_accepted_at?: string | null
+          consent_version?: string | null
           country?: string | null
           created_at?: string
           email?: string

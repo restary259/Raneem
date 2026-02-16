@@ -10,6 +10,7 @@ import { User } from '@supabase/supabase-js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
+import { Checkbox } from '@/components/ui/checkbox';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +24,7 @@ const StudentAuthPage = () => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [country, setCountry] = useState('');
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -160,6 +162,16 @@ const StudentAuthPage = () => {
           return;
         }
 
+        if (!consentAccepted) {
+          toast({
+            variant: "destructive",
+            title: t('auth.consentRequired', 'Consent Required'),
+            description: t('auth.consentRequiredDesc', 'You must accept the terms and privacy policy to register.'),
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -265,6 +277,19 @@ const StudentAuthPage = () => {
                   </div>
                 )}
               </div>
+
+              {!isLogin && (
+                <div className="flex items-start gap-2 mt-2">
+                  <Checkbox
+                    id="consent"
+                    checked={consentAccepted}
+                    onCheckedChange={(checked) => setConsentAccepted(checked === true)}
+                  />
+                  <Label htmlFor="consent" className="text-xs leading-tight cursor-pointer">
+                    {t('auth.consentText', 'I agree to the Terms of Service and Privacy Policy. My data will be processed to provide educational consulting services.')}
+                  </Label>
+                </div>
+              )}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
