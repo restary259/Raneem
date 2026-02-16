@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import PullToRefresh from '@/components/common/PullToRefresh';
 import { User } from '@supabase/supabase-js';
 import { Users, TrendingUp, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle, LogOut, ArrowLeftCircle, BarChart3, Timer } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
@@ -196,6 +197,7 @@ const InfluencerDashboardPage = () => {
 
         {/* Students Tab */}
         {activeTab === 'students' && (
+          <PullToRefresh onRefresh={async () => { await fetchData(); }}>
           <div className="space-y-4">
             {/* Filters */}
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -270,6 +272,7 @@ const InfluencerDashboardPage = () => {
               </div>
             )}
           </div>
+          </PullToRefresh>
         )}
 
         {/* Earnings Tab */}

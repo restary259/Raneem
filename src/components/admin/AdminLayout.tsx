@@ -187,7 +187,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
         </header>
 
         {/* Main Content */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-auto min-w-0 ${isMobile ? 'pb-24' : ''}`}>{children}</main>
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 min-w-0 ${isMobile ? 'pb-24' : ''}`}>{children}</main>
 
         {/* Mobile Bottom Nav */}
         {isMobile && (

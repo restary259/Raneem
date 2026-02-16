@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Phone, MapPin, GraduationCap, Plus, Search, UserCheck, UserX, Gavel, Trash2, Edit, CheckCircle, XCircle, FileText, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
+import PullToRefresh from '@/components/common/PullToRefresh';
 interface Lead {
   id: string;
   full_name: string;
@@ -232,6 +232,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   );
 
   return (
+    <PullToRefresh onRefresh={async () => { onRefresh(); }} disabled={loading}>
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -512,6 +513,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         </DialogContent>
       </Dialog>
     </div>
+    </PullToRefresh>
   );
 };
 

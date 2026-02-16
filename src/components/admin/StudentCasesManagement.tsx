@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { exportPDF } from '@/utils/exportUtils';
 import { Search, FileText, User, Package, DollarSign, StickyNote, CheckCircle } from 'lucide-react';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 interface StudentCasesManagementProps {
   cases: any[];
@@ -81,6 +82,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   };
 
   return (
+    <PullToRefresh onRefresh={async () => { onRefresh(); }} disabled={loading}>
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-2 flex-1 w-full sm:w-auto flex-wrap">
@@ -239,6 +241,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
         </DialogContent>
       </Dialog>
     </div>
+    </PullToRefresh>
   );
 };
 

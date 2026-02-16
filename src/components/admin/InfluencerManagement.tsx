@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, Loader2, UserX, RotateCcw, Trash2, Copy, Check } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 interface InfluencerManagementProps {
   influencers: any[];
@@ -111,6 +112,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
   const pageTitle = filterRole === 'lawyer' ? t('admin.tabs.teamMembers') : filterRole === 'influencer' ? t('admin.tabs.influencers') : t('team.title');
 
   return (
+    <PullToRefresh onRefresh={async () => { onRefresh(); }} disabled={isCreating}>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">{pageTitle}</h2>
@@ -240,6 +242,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
         </Card>
       )}
     </div>
+    </PullToRefresh>
   );
 };
 

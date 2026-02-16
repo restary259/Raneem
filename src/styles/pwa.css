@@ -11,7 +11,6 @@
 
   body {
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: contain;
     width: 100% !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;

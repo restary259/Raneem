@@ -28,6 +28,7 @@ import NotificationBell from '@/components/common/NotificationBell';
 import { differenceInHours, isToday, format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 import NextStepButton from '@/components/admin/NextStepButton';
 import { STATUS_COLORS as IMPORTED_STATUS_COLORS, resolveStatus, CaseStatus } from '@/lib/caseStatus';
@@ -342,6 +343,7 @@ const TeamDashboardPage = () => {
           <main className="px-3 sm:px-4 py-3 space-y-3">
             {/* ===== CASES TAB ===== */}
             {activeTab === 'cases' && (
+              <PullToRefresh onRefresh={async () => { if (user) { await fetchCases(user.id); await fetchAppointments(user.id); } }} disabled={saving || savingProfile}>
               <>
                 {/* Filter chips */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -522,6 +524,7 @@ const TeamDashboardPage = () => {
                   {filteredCases.length === 0 && <p className="text-center text-muted-foreground py-8">{t('lawyer.noCases')}</p>}
                 </div>
               </>
+              </PullToRefresh>
             )}
 
             {/* ===== APPOINTMENTS TAB ===== */}

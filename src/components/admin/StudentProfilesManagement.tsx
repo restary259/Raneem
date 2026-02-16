@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Search, Download, Eye, FileText, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 interface StudentProfilesManagementProps {
   students: any[];
@@ -97,6 +98,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
   };
 
   return (
+    <PullToRefresh onRefresh={async () => { onRefresh(); }}>
     <div className="space-y-4">
       <div className="flex gap-3 items-center">
         <div className="relative flex-1 max-w-md">
@@ -268,6 +270,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
         </DialogContent>
       </Dialog>
     </div>
+    </PullToRefresh>
   );
 };
 
