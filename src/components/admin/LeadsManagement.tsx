@@ -140,7 +140,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
     const { data: existingCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer }).eq('id', existingCases[0].id);
+      await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer, assigned_at: new Date().toISOString() }).eq('id', existingCases[0].id);
     } else {
       const lead = leads.find(l => l.id === assignModal.leadId);
       await (supabase as any).from('student_cases').insert({
@@ -148,6 +148,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         assigned_lawyer_id: selectedLawyer,
         selected_city: lead?.preferred_city || null,
         accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
+        assigned_at: new Date().toISOString(),
       });
     }
     const { data: { session } } = await supabase.auth.getSession();
