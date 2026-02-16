@@ -314,20 +314,25 @@ const InfluencerDashboardPage = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm text-muted-foreground">{t('influencerDash.enrolledStudents')}</h3>
                 {students.map(s => {
-                  const progress = getProgress(s.id);
-                  const statusKey = s.student_status || 'eligible';
-                  const statusColors: Record<string, string> = {
-                    eligible: 'bg-emerald-100 text-emerald-800',
-                    ineligible: 'bg-red-100 text-red-800',
-                    converted: 'bg-blue-100 text-blue-800',
-                    paid: 'bg-green-100 text-green-800',
-                    nurtured: 'bg-purple-100 text-purple-800',
-                  };
-                  return (
-                    <Card key={s.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-medium text-sm">{s.full_name}</p>
+                   const progress = getProgress(s.id);
+                   const statusKey = s.student_status || 'eligible';
+                   const statusColors: Record<string, string> = {
+                     eligible: 'bg-emerald-100 text-emerald-800',
+                     ineligible: 'bg-red-100 text-red-800',
+                     converted: 'bg-blue-100 text-blue-800',
+                     paid: 'bg-green-100 text-green-800',
+                     nurtured: 'bg-purple-100 text-purple-800',
+                   };
+                   // Anonymize: show initials + city instead of full name (PII protection)
+                   const initials = s.full_name
+                     ? s.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
+                     : '—';
+                   const anonymizedName = s.city ? `${initials} — ${s.city}` : initials;
+                   return (
+                     <Card key={s.id}>
+                       <CardContent className="p-4">
+                         <div className="flex items-center justify-between mb-2">
+                           <p className="font-medium text-sm">{anonymizedName}</p>
                           <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[statusKey] || statusColors.eligible}`}>
                             {String(t(`admin.students.statuses.${statusKey}`, { defaultValue: statusKey }))}
                           </span>

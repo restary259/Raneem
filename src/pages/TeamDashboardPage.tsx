@@ -28,28 +28,30 @@ import { differenceInHours, isToday } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { majorsData } from '@/data/majorsData';
 
-const STATUS_KEYS = ['assigned', 'contacted', 'appointment', 'closed', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled'] as const;
+// Simplified 6-stage funnel aligned with admin CasesManagement
+const STATUS_KEYS = ['assigned', 'contacted', 'paid', 'ready_to_apply', 'visa_stage', 'completed'] as const;
 
 const STATUS_COLORS: Record<string, string> = {
   assigned: 'bg-blue-100 text-blue-800 border-blue-300',
   contacted: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  appointment: 'bg-purple-100 text-purple-800 border-purple-300',
-  closed: 'bg-gray-100 text-gray-800 border-gray-300',
-  lost: 'bg-red-100 text-red-800 border-red-300',
   paid: 'bg-green-100 text-green-800 border-green-300',
   ready_to_apply: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  registration_submitted: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   visa_stage: 'bg-orange-100 text-orange-800 border-orange-300',
+  completed: 'bg-teal-100 text-teal-800 border-teal-300',
+  // Legacy fallbacks for display
+  appointment: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  closed: 'bg-gray-100 text-gray-800 border-gray-300',
+  registration_submitted: 'bg-emerald-100 text-emerald-800 border-emerald-300',
   settled: 'bg-teal-100 text-teal-800 border-teal-300',
 };
 
 const NEON_BORDER: Record<string, string> = {
   assigned: 'shadow-[0_0_8px_rgba(59,130,246,0.3)]',
   contacted: 'shadow-[0_0_8px_rgba(234,179,8,0.3)]',
-  appointment: 'shadow-[0_0_8px_rgba(147,51,234,0.3)]',
   paid: 'shadow-[0_0_8px_rgba(34,197,94,0.3)]',
   ready_to_apply: 'shadow-[0_0_8px_rgba(16,185,129,0.3)]',
-  settled: 'shadow-[0_0_8px_rgba(20,184,166,0.3)]',
+  visa_stage: 'shadow-[0_0_8px_rgba(249,115,22,0.3)]',
+  completed: 'shadow-[0_0_8px_rgba(20,184,166,0.3)]',
 };
 
 const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];

@@ -267,7 +267,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-44"><SelectValue placeholder={t('money.revenueType')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('common.noData', 'All')}</SelectItem>
+            <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
             {['service_fee', 'school_commission', 'influencer_payout', 'team_member_comm', 'referral_cashback', 'translation_fee'].map(type => (
               <SelectItem key={type} value={type}>{typeLabel(type)}</SelectItem>
             ))}
@@ -276,7 +276,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('common.noData', 'All')}</SelectItem>
+            <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
             <SelectItem value="pending">{t('money.statuses.pending')}</SelectItem>
             <SelectItem value="paid">{t('money.statuses.paid')}</SelectItem>
           </SelectContent>

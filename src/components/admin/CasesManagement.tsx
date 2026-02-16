@@ -219,6 +219,7 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
     await (supabase as any).from('appointments').delete().eq('case_id', deleteId);
     await (supabase as any).from('case_payments').delete().eq('case_id', deleteId);
     await (supabase as any).from('commissions').delete().eq('case_id', deleteId);
+    await (supabase as any).from('case_service_snapshots').delete().eq('case_id', deleteId);
     const { error } = await (supabase as any).from('student_cases').delete().eq('id', deleteId);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
     else { toast({ title: t('common.delete') }); onRefresh(); }
