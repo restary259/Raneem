@@ -1,53 +1,57 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { User } from '@supabase/supabase-js';
-import { Users, TrendingUp, ClipboardCheck, LogOut, ArrowLeftCircle, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Users, TrendingUp, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle, LogOut, ArrowLeftCircle, BarChart3, Timer } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
-
 import ReferralLink from '@/components/influencer/ReferralLink';
 import NotificationBell from '@/components/common/NotificationBell';
 
-type TabId = 'overview' | 'students' | 'earnings' | 'referral-link';
+type TabId = 'analytics' | 'students' | 'earnings' | 'my-link';
 
-const TAB_ICONS: Record<TabId, React.ComponentType<{ className?: string }>> = {
-  overview: TrendingUp,
-  students: Users,
-  earnings: DollarSign,
-  'referral-link': Link,
-};
+const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
+  { id: 'analytics', icon: BarChart3, labelKey: 'analytics' },
+  { id: 'students', icon: Users, labelKey: 'students' },
+  { id: 'earnings', icon: DollarSign, labelKey: 'earnings' },
+  { id: 'my-link', icon: Link, labelKey: 'referralLink' },
+];
 
-const TAB_IDS: TabId[] = ['overview', 'students', 'earnings', 'referral-link'];
+const STUDENT_FILTERS = ['all', 'eligible', 'ineligible', 'paid'] as const;
+type StudentFilter = typeof STUDENT_FILTERS[number];
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'hsl(220, 70%, 55%)',
-  eligible: 'hsl(160, 60%, 45%)',
-  not_eligible: 'hsl(0, 65%, 55%)',
-  assigned: 'hsl(270, 55%, 55%)',
-  contacted: 'hsl(40, 70%, 50%)',
-};
+const LOCK_DAYS = 20;
 
 const InfluencerDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [students, setStudents] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
-  const [checklistItems, setChecklistItems] = useState<any[]>([]);
-  const [studentChecklists, setStudentChecklists] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('analytics');
+  const [studentFilter, setStudentFilter] = useState<StudentFilter>('all');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
+  const isAr = i18n.language === 'ar';
+
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    const [leadsRes, casesRes] = await Promise.all([
+      (supabase as any).from('leads').select('*').eq('source_id', user.id).order('created_at', { ascending: false }),
+      (supabase as any).from('student_cases').select('*, leads!inner(source_id)').eq('leads.source_id', user.id),
+    ]);
+    if (leadsRes.data) setLeads(leadsRes.data);
+    if (casesRes.data) setCases(casesRes.data);
+  }, [user]);
 
   useEffect(() => {
     const init = async () => {
@@ -64,301 +68,245 @@ const InfluencerDashboardPage = () => {
 
       const { data: prof } = await (supabase as any).from('profiles').select('*').eq('id', session.user.id).maybeSingle();
       if (prof) setProfile(prof);
-
-      const { data: myLeads } = await (supabase as any)
-        .from('leads').select('*').eq('source_id', session.user.id).order('created_at', { ascending: false });
-      if (myLeads) setLeads(myLeads);
-
-      const { data: assignedStudents } = await (supabase as any)
-        .from('profiles').select('*').eq('influencer_id', session.user.id).order('created_at', { ascending: false });
-      if (assignedStudents) setStudents(assignedStudents);
-
-      const [itemsRes, checklistsRes] = await Promise.all([
-        (supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true }),
-        (supabase as any).from('student_checklist').select('*'),
-      ]);
-      if (itemsRes.data) setChecklistItems(itemsRes.data);
-      if (checklistsRes.data) setStudentChecklists(checklistsRes.data);
       setIsLoading(false);
     };
     init();
-  }, [navigate, toast]);
+  }, [navigate, toast, t]);
+
+  // Fetch data once user is set
+  useEffect(() => { if (user) fetchData(); }, [user, fetchData]);
+
+  // Real-time subscriptions
+  useRealtimeSubscription('leads', fetchData, !!user);
+  useRealtimeSubscription('student_cases', fetchData, !!user);
+  useRealtimeSubscription('rewards', fetchData, !!user);
+  useRealtimeSubscription('payout_requests', fetchData, !!user);
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
-  const getProgress = (studentId: string) => {
-    const total = checklistItems.length;
-    if (!total) return 0;
-    return Math.round((studentChecklists.filter(sc => sc.student_id === studentId && sc.is_completed).length / total) * 100);
-  };
-
+  // Stats
   const totalLeads = leads.length;
   const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
-  const paidStudents = students.filter(s => s.student_status === 'paid').length;
-  const totalConverted = students.filter(s => s.student_status === 'converted' || s.student_status === 'paid').length;
-  const avgProgress = students.length > 0 ? Math.round(students.reduce((sum, s) => sum + getProgress(s.id), 0) / students.length) : 0;
-  const conversionRate = totalLeads > 0 ? Math.round((paidStudents / totalLeads) * 100) : 0;
+  const ineligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) < 50 && l.status !== 'new').length;
+  const paidCases = cases.filter(c => c.case_status === 'paid' || c.paid_at).length;
 
-  // Lead status breakdown for pie chart
-  const statusBreakdown = useMemo(() => {
-    const counts: Record<string, number> = {};
-    leads.forEach(l => { counts[l.status] = (counts[l.status] || 0) + 1; });
-    return Object.entries(counts).map(([status, count]) => ({
-      name: t(`influencerDash.leadStatuses.${status}`, status),
-      value: count,
-      color: STATUS_COLORS[status] || 'hsl(210, 10%, 60%)',
-    }));
-  }, [leads, t]);
+  // Funnel data for chart
+  const funnelData = useMemo(() => [
+    { name: isAr ? 'مقدَّم' : 'Submitted', value: totalLeads, fill: 'hsl(var(--primary))' },
+    { name: isAr ? 'مؤهل' : 'Eligible', value: eligibleLeads, fill: 'hsl(160, 60%, 45%)' },
+    { name: isAr ? 'مدفوع' : 'Paid', value: paidCases, fill: 'hsl(130, 60%, 40%)' },
+  ], [totalLeads, eligibleLeads, paidCases, isAr]);
+
+  // Filtered students
+  const filteredLeads = useMemo(() => {
+    if (studentFilter === 'all') return leads;
+    if (studentFilter === 'eligible') return leads.filter(l => (l.eligibility_score ?? 0) >= 50);
+    if (studentFilter === 'ineligible') return leads.filter(l => (l.eligibility_score ?? 0) < 50 && l.status !== 'new');
+    if (studentFilter === 'paid') {
+      const paidLeadIds = new Set(cases.filter(c => c.paid_at).map(c => c.lead_id));
+      return leads.filter(l => paidLeadIds.has(l.id));
+    }
+    return leads;
+  }, [leads, cases, studentFilter]);
+
+  // Get case for a lead
+  const getCaseForLead = (leadId: string) => cases.find(c => c.lead_id === leadId);
+
+  // 20-day timer
+  const getTimerInfo = (paidAt: string | null) => {
+    if (!paidAt) return null;
+    const elapsed = Math.floor((Date.now() - new Date(paidAt).getTime()) / (1000 * 60 * 60 * 24));
+    const remaining = LOCK_DAYS - elapsed;
+    return { elapsed, remaining, ready: remaining <= 0 };
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]" dir={dir}>
-      <header className="bg-[#1E293B] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-background pb-20" dir={dir}>
+      {/* Header */}
+      <header className="bg-[hsl(222,47%,17%)] text-white">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-10 h-10 object-contain" />
+            <div className="flex items-center gap-3">
+              <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-9 h-9 object-contain" />
               <div>
-                <h1 className="text-xl font-bold">{t('influencerDash.title')}</h1>
-                <p className="text-sm text-white/70">{t('influencerDash.welcome', { name: profile?.full_name || user?.email })}</p>
+                <h1 className="text-base font-bold">{t('influencerDash.title')}</h1>
+                <p className="text-xs text-white/60">{profile?.full_name || user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <NotificationBell />
-              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={() => navigate('/')}>
-                <ArrowLeftCircle className="h-4 w-4 me-2" />{t('lawyer.website')}
+              <Button variant="ghost" size="icon" className="text-white/60 hover:text-white hover:bg-white/10 h-9 w-9" onClick={() => navigate('/')}>
+                <ArrowLeftCircle className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 me-2" />{t('lawyer.signOut')}
+              <Button variant="ghost" size="icon" className="text-white/60 hover:text-white hover:bg-white/10 h-9 w-9" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Tabs */}
-        <div className="flex gap-2 flex-wrap border-b pb-2">
-          {TAB_IDS.map(tabId => {
-            const Icon = TAB_ICONS[tabId];
-            return (
-              <button
-                key={tabId}
-                onClick={() => setActiveTab(tabId)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tabId
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {t(`influencerDash.tabs.${tabId === 'referral-link' ? 'referralLink' : tabId}`)}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* KPI Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <Card><CardContent className="p-4 text-center">
-                <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.totalClients')}</p>
-                <p className="text-xl font-bold">{totalLeads}</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-4 text-center">
-                <Target className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.eligible')}</p>
-                <p className="text-xl font-bold">{eligibleLeads}</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-4 text-center">
-                <CheckCircle className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.converted')}</p>
-                <p className="text-xl font-bold">{totalConverted}</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-4 text-center">
-                <CreditCard className="h-5 w-5 mx-auto mb-1 text-green-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.paid')}</p>
-                <p className="text-xl font-bold">{paidStudents}</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-4 text-center">
-                <TrendingUp className="h-5 w-5 mx-auto mb-1 text-amber-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.convRate', { defaultValue: 'Conversion' })}</p>
-                <p className="text-xl font-bold">{conversionRate}%</p>
-              </CardContent></Card>
-              <Card><CardContent className="p-4 text-center">
-                <ClipboardCheck className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-                <p className="text-xs text-muted-foreground">{t('influencerDash.avgProgress')}</p>
-                <p className="text-xl font-bold">{avgProgress}%</p>
-              </CardContent></Card>
+      {/* Content */}
+      <main className="max-w-7xl mx-auto px-4 py-5 space-y-5">
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-5">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <KPICard icon={Users} label={isAr ? 'إجمالي التقديمات' : 'Total Submissions'} value={totalLeads} color="text-blue-600" />
+              <KPICard icon={Target} label={isAr ? 'مؤهل' : 'Eligible'} value={eligibleLeads} color="text-emerald-600" />
+              <KPICard icon={XCircle} label={isAr ? 'غير مؤهل' : 'Ineligible'} value={ineligibleLeads} color="text-red-500" />
+              <KPICard icon={CreditCard} label={isAr ? 'مدفوع (محوّل)' : 'Converted (Paid)'} value={paidCases} color="text-green-600" />
             </div>
 
-            {/* Pipeline & Stats Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Lead Pipeline Pie Chart */}
-              {statusBreakdown.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">{t('influencerDash.leadPipeline', { defaultValue: 'Lead Pipeline' })}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie data={statusBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40} paddingAngle={2}>
-                          {statusBreakdown.map((entry, i) => (
-                            <Cell key={i} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="flex flex-wrap justify-center gap-3 mt-2">
-                      {statusBreakdown.map((entry, i) => (
-                        <div key={i} className="flex items-center gap-1 text-xs">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                          <span>{entry.name}: {entry.value}</span>
-                        </div>
+            {/* Funnel Chart */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">{isAr ? 'مسار التحويل' : 'Conversion Funnel'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={funnelData} layout="vertical" margin={{ left: 0, right: 16 }}>
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
+                      {funnelData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Conversion Funnel Mini */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{t('influencerDash.conversionFunnel', { defaultValue: 'Conversion Funnel' })}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: t('influencerDash.totalClients'), value: totalLeads, pct: 100, color: 'bg-blue-500' },
-                    { label: t('influencerDash.eligible'), value: eligibleLeads, pct: totalLeads > 0 ? Math.round((eligibleLeads / totalLeads) * 100) : 0, color: 'bg-emerald-500' },
-                    { label: t('influencerDash.converted'), value: totalConverted, pct: totalLeads > 0 ? Math.round((totalConverted / totalLeads) * 100) : 0, color: 'bg-purple-500' },
-                    { label: t('influencerDash.paid'), value: paidStudents, pct: totalLeads > 0 ? Math.round((paidStudents / totalLeads) * 100) : 0, color: 'bg-green-500' },
-                  ].map((stage, i) => (
-                    <div key={i}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">{stage.label}</span>
-                        <span className="font-medium">{stage.value} ({stage.pct}%)</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full ${stage.color} rounded-full transition-all duration-500`} style={{ width: `${stage.pct}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Students Tab */}
         {activeTab === 'students' && (
-          <div className="space-y-3">
-            {leads.length > 0 && (
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {STUDENT_FILTERS.map(f => (
+                <button key={f} onClick={() => setStudentFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                    studentFilter === f ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}>
+                  {f === 'all' ? (isAr ? 'الكل' : 'All')
+                    : f === 'eligible' ? (isAr ? 'مؤهل' : 'Eligible')
+                    : f === 'ineligible' ? (isAr ? 'غير مؤهل' : 'Ineligible')
+                    : (isAr ? 'مدفوع' : 'Paid')}
+                </button>
+              ))}
+            </div>
+
+            {/* Student Cards */}
+            {filteredLeads.length === 0 ? (
+              <p className="p-8 text-center text-muted-foreground text-sm">{t('influencerDash.noStudents')}</p>
+            ) : (
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm text-muted-foreground">{t('influencerDash.referredClients')}</h3>
-                {leads.map(lead => {
+                {filteredLeads.map(lead => {
                   const score = lead.eligibility_score ?? 0;
                   const isEligible = score >= 50;
-                  const st = {
-                    label: t(`influencerDash.leadStatuses.${lead.status}`, lead.status),
-                    color: ({
-                      new: 'bg-blue-100 text-blue-800',
-                      eligible: 'bg-emerald-100 text-emerald-800',
-                      not_eligible: 'bg-red-100 text-red-800',
-                      assigned: 'bg-purple-100 text-purple-800',
-                    } as Record<string, string>)[lead.status] || 'bg-blue-100 text-blue-800',
-                  };
-                  // Anonymize: show initials + city instead of full name
+                  const linkedCase = getCaseForLead(lead.id);
+                  const isPaid = linkedCase?.paid_at != null;
+                  const timerInfo = isPaid ? getTimerInfo(linkedCase.paid_at) : null;
+
+                  // Anonymize
                   const initials = lead.full_name
                     ? lead.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
                     : '—';
-                  const anonymizedName = lead.city ? `${initials} — ${lead.city}` : initials;
 
                   return (
                     <Card key={lead.id}>
                       <CardContent className="p-4 space-y-2">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{anonymizedName}</p>
-                          </div>
+                          <p className="font-medium text-sm">{initials}</p>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>{String(st.label)}</span>
+                            {isPaid ? (
+                              <Badge variant="default" className="bg-green-600 text-xs">{isAr ? 'مدفوع' : 'Paid'}</Badge>
+                            ) : isEligible ? (
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs">{isAr ? 'مؤهل' : 'Eligible'}</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">{isAr ? 'غير مؤهل' : 'Ineligible'}</Badge>
+                            )}
                           </div>
                         </div>
-                        <div className={`flex items-start gap-2 p-2 rounded-lg text-xs ${isEligible ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
-                          {isEligible ? (
-                            <><CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{t('influencerDash.eligibleForApply')}</span></>
-                          ) : (
-                            <><XCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{t('influencerDash.notMeetReqs')}</span></>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
 
-            {students.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm text-muted-foreground">{t('influencerDash.enrolledStudents')}</h3>
-                {students.map(s => {
-                   const progress = getProgress(s.id);
-                   const statusKey = s.student_status || 'eligible';
-                   const statusColors: Record<string, string> = {
-                     eligible: 'bg-emerald-100 text-emerald-800',
-                     ineligible: 'bg-red-100 text-red-800',
-                     converted: 'bg-blue-100 text-blue-800',
-                     paid: 'bg-green-100 text-green-800',
-                     nurtured: 'bg-purple-100 text-purple-800',
-                   };
-                   // Anonymize: show initials + city instead of full name (PII protection)
-                   const initials = s.full_name
-                     ? s.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
-                     : '—';
-                   const anonymizedName = s.city ? `${initials} — ${s.city}` : initials;
-                   return (
-                     <Card key={s.id}>
-                       <CardContent className="p-4">
-                         <div className="flex items-center justify-between mb-2">
-                           <p className="font-medium text-sm">{anonymizedName}</p>
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusColors[statusKey] || statusColors.eligible}`}>
-                            {String(t(`admin.students.statuses.${statusKey}`, { defaultValue: statusKey }))}
+                        {/* Payment status row */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {isAr ? 'حالة الدفع:' : 'Payment:'} {isPaid ? (isAr ? '✅ مدفوع' : '✅ Paid') : (isAr ? '⏳ لم يدفع بعد' : '⏳ Not paid')}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Progress value={progress} className="h-2 flex-1" />
-                          <span className="text-xs text-muted-foreground">{progress}%</span>
-                        </div>
+
+                        {/* 20-day Timer */}
+                        {timerInfo && (
+                          <div className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
+                            timerInfo.ready ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-800'
+                          }`}>
+                            <Timer className="h-4 w-4 shrink-0" />
+                            {timerInfo.ready
+                              ? (isAr ? '✅ جاهز لطلب الدفع' : '✅ Ready to request payout')
+                              : (isAr ? `${timerInfo.remaining} يوم متبقي` : `${timerInfo.remaining} days left`)}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
                 })}
               </div>
-            )}
-
-            {leads.length === 0 && students.length === 0 && (
-              <p className="p-8 text-center text-muted-foreground">{t('influencerDash.noStudents')}</p>
             )}
           </div>
         )}
+
+        {/* Earnings Tab */}
         {activeTab === 'earnings' && user && <EarningsPanel userId={user.id} />}
-        
-        {activeTab === 'referral-link' && user && <ReferralLink userId={user.id} />}
+
+        {/* My Link Tab */}
+        {activeTab === 'my-link' && user && <ReferralLink userId={user.id} />}
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-50 safe-area-pb">
+        <div className="max-w-7xl mx-auto flex">
+          {TAB_CONFIG.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                }`}>
+                <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : ''}`} />
+                <span className="text-[10px] font-medium">{t(`influencerDash.tabs.${tab.labelKey}`)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
+
+/* --- Sub-components --- */
+
+const KPICard = ({ icon: Icon, label, value, color }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number; color: string }) => (
+  <Card>
+    <CardContent className="p-4 text-center">
+      <Icon className={`h-5 w-5 mx-auto mb-1 ${color}`} />
+      <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </CardContent>
+  </Card>
+);
 
 export default InfluencerDashboardPage;
