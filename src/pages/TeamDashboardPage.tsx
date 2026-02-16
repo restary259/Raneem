@@ -29,22 +29,14 @@ import { differenceInHours, isToday } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
-// Simplified 6-stage funnel aligned with admin CasesManagement
-const STATUS_KEYS = ['assigned', 'contacted', 'paid', 'ready_to_apply', 'visa_stage', 'completed'] as const;
+import NextStepButton from '@/components/admin/NextStepButton';
+import { STATUS_COLORS as IMPORTED_STATUS_COLORS, resolveStatus, CaseStatus } from '@/lib/caseStatus';
+import { canTransition } from '@/lib/caseTransitions';
 
-const STATUS_COLORS: Record<string, string> = {
-  assigned: 'bg-blue-100 text-blue-800 border-blue-300',
-  contacted: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  paid: 'bg-green-100 text-green-800 border-green-300',
-  ready_to_apply: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  visa_stage: 'bg-orange-100 text-orange-800 border-orange-300',
-  completed: 'bg-teal-100 text-teal-800 border-teal-300',
-  // Legacy fallbacks for display
-  appointment: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  closed: 'bg-gray-100 text-gray-800 border-gray-300',
-  registration_submitted: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  settled: 'bg-teal-100 text-teal-800 border-teal-300',
-};
+// Wrap imported colors to add border variant for team dashboard
+const STATUS_COLORS: Record<string, string> = Object.fromEntries(
+  Object.entries(IMPORTED_STATUS_COLORS).map(([k, v]) => [k, v + ' border-current/20'])
+);
 
 const NEON_BORDER: Record<string, string> = {
   assigned: 'shadow-[0_0_8px_rgba(59,130,246,0.3)]',
@@ -234,7 +226,7 @@ const TeamDashboardPage = () => {
   const saveProfileCompletion = async () => {
     if (!profileCase) return;
     setSavingProfile(true);
-    const { error } = await (supabase as any).from('student_cases').update({
+    const updateData: Record<string, any> = {
       student_full_name: profileValues.student_full_name || null,
       student_email: profileValues.student_email || null,
       student_phone: profileValues.student_phone || null,
@@ -248,7 +240,16 @@ const TeamDashboardPage = () => {
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
       accommodation_status: profileValues.accommodation_status || null,
-    }).eq('id', profileCase.id);
+    };
+
+    // Auto-advance to profile_filled if all key fields are present
+    const requiredProfileFields = ['student_full_name', 'student_email', 'student_phone', 'passport_number', 'nationality'];
+    const allFilled = requiredProfileFields.every(f => profileValues[f]?.trim());
+    if (allFilled && canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
+      updateData.case_status = CaseStatus.PROFILE_FILLED;
+    }
+
+    const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', profileCase.id);
     setSavingProfile(false);
     if (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
@@ -370,11 +371,11 @@ const TeamDashboardPage = () => {
                     </>
                   ) : (
                     <div className="space-y-3">
-                      <div><Label className="text-xs">{t('lawyer.caseStatus')}</Label>
-                        <Select value={editValues.case_status} onValueChange={v => setEditValues(ev => ({ ...ev, case_status: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{STATUS_KEYS.map(s => <SelectItem key={s} value={s}>{t(`lawyer.statuses.${s}`)}</SelectItem>)}</SelectContent>
-                        </Select>
+                      <div>
+                        <Label className="text-xs">{t('lawyer.caseStatus')}</Label>
+                        <div className="mt-1">
+                          <NextStepButton caseId={c.id} currentStatus={c.case_status} onStatusUpdated={() => { if (user) fetchCases(user.id); }} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div><Label className="text-xs">{t('lawyer.cityLabel')}</Label><Input value={editValues.selected_city} onChange={e => setEditValues(v => ({ ...v, selected_city: e.target.value }))} /></div>

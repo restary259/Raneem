@@ -150,8 +150,15 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
       setIsDialogOpen(false);
       setNewAppt({ case_id: '', student_name: '', scheduled_at: '', time: '10:00', duration_minutes: 30, location: '', notes: '' });
       await fetchAppointments();
+      // Auto-advance case to appointment_scheduled using FSM
       if (newAppt.case_id) {
-        await (supabase as any).from('student_cases').update({ case_status: 'appointment' }).eq('id', newAppt.case_id);
+        const { data: caseData } = await (supabase as any).from('student_cases').select('case_status').eq('id', newAppt.case_id).maybeSingle();
+        if (caseData) {
+          const { canTransition } = await import('@/lib/caseTransitions');
+          if (canTransition(caseData.case_status, 'appointment_scheduled')) {
+            await (supabase as any).from('student_cases').update({ case_status: 'appointment_scheduled' }).eq('id', newAppt.case_id);
+          }
+        }
       }
     }
     setSaving(false);
