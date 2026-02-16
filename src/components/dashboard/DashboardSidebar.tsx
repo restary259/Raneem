@@ -31,7 +31,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ activeTab, onTabCha
     <div className="lg:w-64">
       <Card className="lg:bg-[#1E293B] lg:text-white lg:border-0">
         <CardContent className="p-0">
-          <nav className="space-y-1">
+          <nav className="space-y-1 max-h-[60vh] overflow-y-auto lg:max-h-none lg:overflow-y-visible">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
