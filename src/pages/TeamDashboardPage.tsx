@@ -266,14 +266,42 @@ const TeamDashboardPage = () => {
       notes: profileValues.notes || null,
     };
 
-    const requiredProfileFields = ['student_full_name', 'student_email', 'student_phone', 'passport_number', 'nationality'];
-    const allFilled = requiredProfileFields.every(f => profileValues[f]?.toString().trim());
-    if (allFilled && canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
+    const requiredProfileFields = [
+      'student_full_name', 'student_email', 'student_phone', 'student_age', 'student_address',
+      'passport_number', 'nationality', 'country_of_birth', 'language_proficiency',
+      'gender', 'selected_city', 'selected_school', 'intensive_course', 'accommodation_status'
+    ];
+    const missingFields = requiredProfileFields.filter(f => !profileValues[f]?.toString().trim());
+    
+    if (missingFields.length > 0) {
+      const fieldLabels: Record<string, string> = {
+        student_full_name: isAr ? 'الاسم الكامل' : 'Full Name',
+        student_email: isAr ? 'البريد الإلكتروني' : 'Email',
+        student_phone: isAr ? 'الهاتف' : 'Phone',
+        student_age: isAr ? 'العمر' : 'Age',
+        student_address: isAr ? 'العنوان' : 'Address',
+        passport_number: isAr ? 'رقم الجواز' : 'Passport',
+        nationality: isAr ? 'الجنسية' : 'Nationality',
+        country_of_birth: isAr ? 'بلد الولادة' : 'Country of Birth',
+        language_proficiency: isAr ? 'مستوى اللغة' : 'Language Level',
+        gender: isAr ? 'الجنس' : 'Gender',
+        selected_city: isAr ? 'المدينة' : 'City',
+        selected_school: isAr ? 'المدرسة' : 'School',
+        intensive_course: isAr ? 'دورة مكثفة' : 'Intensive Course',
+        accommodation_status: isAr ? 'السكن' : 'Accommodation',
+      };
+      const missing = missingFields.map(f => fieldLabels[f] || f).join(', ');
+      toast({ variant: 'destructive', title: isAr ? 'حقول مفقودة' : 'Missing Fields', description: missing });
+      setSavingProfile(false);
+      return;
+    }
+
+    // All fields filled — transition to profile_filled
+    if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
       updateData.case_status = CaseStatus.PROFILE_FILLED;
     }
 
     const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', profileCase.id);
-    // Audit log
     await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
     setSavingProfile(false);
     if (error) {
@@ -281,6 +309,7 @@ const TeamDashboardPage = () => {
     } else {
       toast({ title: t('lawyer.saved') });
       setProfileCase(null);
+      setCaseFilter('profile_filled');
       if (user) await fetchCases(user.id);
     }
   };
@@ -419,13 +448,27 @@ const TeamDashboardPage = () => {
       );
     }
 
-    // Appointment stage: Call + Complete Profile
+    // Appointment stage: Call + Complete Profile + Reschedule + Delete
     if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) {
+      const linkedAppt = appointments.find(a => a.case_id === c.id);
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
           <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => openProfileModal(c)}>
             <FileText className="h-3.5 w-3.5" />{t('lawyer.completeProfile')}
+          </Button>
+          {linkedAppt && (
+            <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" onClick={() => {
+              setRescheduleAppt(linkedAppt);
+              const d = new Date(linkedAppt.scheduled_at);
+              setRescheduleDate(format(d, 'yyyy-MM-dd'));
+              setRescheduleTime(format(d, 'HH:mm'));
+            }}>
+              <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
+            </Button>
+          )}
+          <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
+            <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
           </Button>
         </div>
       );
@@ -510,6 +553,26 @@ const TeamDashboardPage = () => {
             {/* ===== CASES TAB ===== */}
             {activeTab === 'cases' && (
               <>
+                {/* Today's Appointments Summary */}
+                {todayAppointments.length > 0 && (
+                  <Card className="border-purple-200 bg-purple-50/50">
+                    <CardContent className="p-3">
+                      <h3 className="text-xs font-bold flex items-center gap-1.5 mb-2">
+                        <CalendarDays className="h-3.5 w-3.5 text-purple-600" />
+                        {isAr ? `مواعيد اليوم (${todayAppointments.length})` : `Today's Appointments (${todayAppointments.length})`}
+                      </h3>
+                      <div className="flex gap-2 overflow-x-auto">
+                        {todayAppointments.map(appt => (
+                          <div key={appt.id} className="shrink-0 flex items-center gap-2 px-2 py-1 bg-white rounded-lg border text-xs">
+                            <span className="font-medium">{appt.student_name}</span>
+                            <span className="text-muted-foreground">{format(new Date(appt.scheduled_at), 'HH:mm')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Filter chips with neon coding */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {CASE_FILTER_TABS.map(f => {

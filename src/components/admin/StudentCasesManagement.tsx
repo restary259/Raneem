@@ -32,6 +32,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCase, setSelectedCase] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editingMoney, setEditingMoney] = useState(false);
+  const [moneyValues, setMoneyValues] = useState<Record<string, number>>({});
 
   const studentCases = useMemo(() => {
     return cases
@@ -201,30 +203,86 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               </TabsContent>
 
               <TabsContent value="money" className="mt-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
-                    <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>
+                {!editingMoney ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
+                        <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
+                        <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} €</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
+                        <span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">-{selectedCase.influencer_commission} ₪</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
+                        <span>{t('cases.teamMemberComm')}</span><span className="font-semibold text-red-700">-{selectedCase.lawyer_commission} ₪</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
+                        <span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">-{selectedCase.referral_discount} ₪</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
+                        <span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">-{selectedCase.translation_fee} ₪</span>
+                      </div>
+                    </div>
+                    <div className={`mt-3 flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(selectedCase) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
+                      <span>{t('cases.netProfit')}</span>
+                      <span className={getNetProfit(selectedCase) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(selectedCase)} ₪</span>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => {
+                      setEditingMoney(true);
+                      setMoneyValues({
+                        service_fee: selectedCase.service_fee || 0,
+                        school_commission: selectedCase.school_commission || 0,
+                        influencer_commission: selectedCase.influencer_commission || 0,
+                        lawyer_commission: selectedCase.lawyer_commission || 0,
+                        referral_discount: selectedCase.referral_discount || 0,
+                        translation_fee: selectedCase.translation_fee || 0,
+                      });
+                    }}>
+                      <DollarSign className="h-3 w-3 me-1" />{t('studentCases.editFinancials', { defaultValue: 'Edit Financials' })}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    {[
+                      { key: 'service_fee', label: t('cases.serviceFee') },
+                      { key: 'school_commission', label: t('cases.schoolComm') },
+                      { key: 'influencer_commission', label: t('cases.agentComm') },
+                      { key: 'lawyer_commission', label: t('cases.teamMemberComm') },
+                      { key: 'referral_discount', label: t('cases.referralDiscount') },
+                      { key: 'translation_fee', label: t('cases.translationFee') },
+                    ].map(field => (
+                      <div key={field.key} className="flex items-center gap-2">
+                        <label className="text-sm w-40 shrink-0">{field.label}</label>
+                        <Input
+                          type="number"
+                          value={moneyValues[field.key] || 0}
+                          onChange={e => setMoneyValues(v => ({ ...v, [field.key]: Number(e.target.value) }))}
+                          className="w-32"
+                        />
+                      </div>
+                    ))}
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" disabled={loading} onClick={async () => {
+                        setLoading(true);
+                        const { error } = await (supabase as any).from('student_cases').update(moneyValues).eq('id', selectedCase.id);
+                        if (error) {
+                          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+                        } else {
+                          toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
+                          setSelectedCase({ ...selectedCase, ...moneyValues });
+                          setEditingMoney(false);
+                          onRefresh();
+                        }
+                        setLoading(false);
+                      }}>
+                        <CheckCircle className="h-3 w-3 me-1" />{t('common.save', { defaultValue: 'Save' })}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingMoney(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
+                    </div>
                   </div>
-                  <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
-                    <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} €</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
-                    <span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">-{selectedCase.influencer_commission} ₪</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
-                    <span>{t('cases.teamMemberComm')}</span><span className="font-semibold text-red-700">-{selectedCase.lawyer_commission} ₪</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
-                    <span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">-{selectedCase.referral_discount} ₪</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
-                    <span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">-{selectedCase.translation_fee} ₪</span>
-                  </div>
-                </div>
-                <div className={`mt-3 flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(selectedCase) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
-                  <span>{t('cases.netProfit')}</span>
-                  <span className={getNetProfit(selectedCase) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(selectedCase)} ₪</span>
-                </div>
+                )}
                 {selectedCase.lead?.source_type === 'influencer' && selectedCase.agent && (
                   <p className="text-xs text-muted-foreground mt-2">🤝 {t('studentCases.agentNote', { name: selectedCase.agent.full_name, amount: selectedCase.influencer_commission, defaultValue: 'Agent: {{name}} — Commission: {{amount}} ₪' })}</p>
                 )}
