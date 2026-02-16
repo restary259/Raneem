@@ -143,14 +143,21 @@ serve(async (req) => {
       details: `Created student account for ${email} (case: ${case_id})`,
     });
 
-    // Send password reset email so user can set their own password
+    // Send password reset email via Auth REST API (this actually delivers the email)
     try {
-      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-      });
-      if (resetError) {
-        console.error("Failed to send recovery email:", resetError.message);
+      const recoveryRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/auth/v1/recover`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+      if (!recoveryRes.ok) {
+        console.error("Failed to send recovery email:", await recoveryRes.text());
       }
     } catch (emailErr) {
       console.error("Recovery email error:", emailErr);
