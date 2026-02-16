@@ -1,81 +1,77 @@
 
-# Team Dashboard -- Critical Bug Fixes
 
-## Root Cause Analysis
+# Team Dashboard -- Verification Fixes
 
-### Bug 1: "Complete Profile" does NOT move case to next tab
-**Root cause identified:** The finite-state machine (FSM) in `caseTransitions.ts` only allows `appointment_completed -> profile_filled`. But most cases sit in `appointment_scheduled` or `appointment_waiting`, so `canTransition()` returns `false` and the status is never updated. The data saves silently but the case stays in the same tab.
+## Issues Found
 
-**Fix:** Update `ALLOWED_TRANSITIONS` to allow direct transitions from `appointment_scheduled` and `appointment_waiting` to `profile_filled` (completing the profile implicitly means the appointment stage is done).
+### 1. Wrong Language School Names (CRITICAL)
+**Line 37** has hardcoded wrong schools:
+```
+['Goethe-Institut', 'Humboldt-Institut', 'DID Deutsch-Institut', 'Carl Duisberg']
+```
+Must be changed to your actual 4 partners:
+```
+['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy']
+```
 
-### Bug 2: `gender` field is required but never saved
-**Root cause:** The `gender` field is listed in `requiredProfileFields` but is NOT included in the `updateData` object sent to the database. The `student_cases` table does not have `gender`, `height`, or `eye_color` columns.
+### 2. "Submit for Application" Does NOT Move Case Forward (CRITICAL)
+The `confirmPaymentAndSubmit` function tries `canTransition(profile_filled, PAID)` -- but the FSM requires `profile_filled -> services_filled -> paid`. Since teams skip `services_filled`, the transition always fails silently (status stays unchanged).
 
-**Fix:**
-1. Add a database migration to create `gender` column on `student_cases` (text, nullable).
-2. Include `gender` in the `updateData` object in `saveProfileCompletion`.
-3. Remove `gender` from the mandatory list OR keep it mandatory once the column exists (keep it -- user wants all fields mandatory).
+**Fix:** Update the FSM in `caseTransitions.ts` to allow `PROFILE_FILLED -> PAID` directly. Also add a fallback in `confirmPaymentAndSubmit` so that from `profile_filled` or `services_filled`, it forces the status to `paid`.
 
-### Bug 3: Delete case fails silently (RLS)
-**Root cause:** The `student_cases` table RLS only grants DELETE to admins (`has_role(auth.uid(), 'admin')`). Lawyers have UPDATE and SELECT but NOT DELETE. So `handleDeleteCase` always fails.
+### 3. Case Filter Tabs Have No English Translation
+The `FILTER_LABELS` object (lines 72-80) is hardcoded in Arabic only. When language is English, users still see Arabic labels.
 
-**Fix:** Add an RLS policy allowing lawyers to delete their own assigned cases (restricted to `new`/`eligible` statuses for safety, enforced in the UI).
+**Fix:** Replace `FILTER_LABELS` with a bilingual lookup using the existing `lawyer.filters.*` i18n keys that already exist in the EN translation file.
 
-### Bug 4: Reschedule creates duplicate (potential)
-The current code correctly uses `.update().eq('id', ...)` so this is NOT a bug in the current implementation. The reschedule flow is correct.
-
-### Bug 5: Today's appointments already implemented
-Already working. No change needed.
-
-### Bug 6: Language school dropdown already implemented
-Already using the 4-partner dropdown (`LANGUAGE_SCHOOLS`). No change needed.
+### 4. Duplicate Gender Field in Services Tab
+Gender dropdown appears in both the "Visa Info" tab (line 866) and "Services" tab (line 930). Remove the duplicate from "Services".
 
 ---
 
-## Changes
-
-### 1. Database Migration
-Add `gender` column to `student_cases` and an RLS policy for lawyer delete:
-
-```sql
--- Add gender column
-ALTER TABLE student_cases ADD COLUMN IF NOT EXISTS gender text;
-
--- Allow lawyers to delete their assigned cases
-CREATE POLICY "Lawyers can delete assigned cases"
-  ON student_cases FOR DELETE
-  USING (
-    has_role(auth.uid(), 'lawyer'::app_role)
-    AND assigned_lawyer_id = auth.uid()
-  );
-```
-
-### 2. Fix FSM transitions (`src/lib/caseTransitions.ts`)
-Allow `appointment_scheduled` and `appointment_waiting` to transition directly to `profile_filled`:
-
-```
-APPT_SCHEDULED -> [APPT_COMPLETED, APPT_WAITING, PROFILE_FILLED]
-APPT_WAITING   -> [APPT_SCHEDULED, APPT_COMPLETED, PROFILE_FILLED]
-```
-
-### 3. Fix `saveProfileCompletion` in `src/pages/TeamDashboardPage.tsx`
-- Add `gender` to the `updateData` object so it gets saved to the database.
-- The rest of the flow (mandatory validation, confirmation dialog, auto-switch to "profile_filled" tab) is already in place and will now work once the FSM allows the transition.
-
-### 4. Fix `confirmCompleteFile` resilience
-Add a fallback: if `canTransition` returns false for `PROFILE_FILLED`, force-set it anyway for appointment-stage statuses. This ensures the status always updates when the user confirms.
-
----
-
-## Files Modified
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| Database migration | Add `gender` column + lawyer DELETE RLS policy |
-| `src/lib/caseTransitions.ts` | Add `PROFILE_FILLED` to allowed transitions from `APPT_SCHEDULED` and `APPT_WAITING` |
-| `src/pages/TeamDashboardPage.tsx` | Include `gender` in `updateData`; add fallback in `confirmCompleteFile` to force status transition |
+| `src/pages/TeamDashboardPage.tsx` | 1. Fix `LANGUAGE_SCHOOLS` to the 4 real partners. 2. Replace `FILTER_LABELS` with bilingual i18n keys. 3. Add fallback in `confirmPaymentAndSubmit` for `profile_filled` cases. 4. Remove duplicate gender field from Services tab. |
+| `src/lib/caseTransitions.ts` | Allow `PROFILE_FILLED -> PAID` directly (team members skip `services_filled`). |
 
-## Security Notes
-- The new DELETE policy restricts lawyers to only deleting cases assigned to them.
-- No changes to sensitive financial data flows.
-- Audit logging already covers profile completion and delete actions.
+## Technical Details
+
+### Language Schools Fix
+```typescript
+const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
+```
+
+### FSM Transition Fix
+```
+PROFILE_FILLED -> [SERVICES_FILLED, PAID]  // was only SERVICES_FILLED
+```
+
+### Filter Labels Fix
+Replace the hardcoded Arabic `FILTER_LABELS` with:
+```typescript
+const getFilterLabel = (filter: CaseFilterTab): string => {
+  const labels: Record<CaseFilterTab, { ar: string; en: string }> = {
+    all: { ar: 'الكل', en: 'All' },
+    new: { ar: 'جديد', en: 'New' },
+    contacted: { ar: 'تم التواصل', en: 'Contacted' },
+    appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
+    profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
+    submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted' },
+    sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
+  };
+  return isAr ? labels[filter].ar : labels[filter].en;
+};
+```
+
+### Submit Flow Fix
+In `confirmPaymentAndSubmit`, add fallback:
+```typescript
+if (canTransition(c.case_status, CaseStatus.PAID)) {
+  targetStatus = CaseStatus.PAID;
+} else if (['profile_filled', 'services_filled'].includes(c.case_status)) {
+  targetStatus = CaseStatus.PAID; // Force transition for team workflow
+}
+```
+
