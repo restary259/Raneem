@@ -141,8 +141,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
 
       {/* Mobile Sheet Menu */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side={sheetSide} className="w-72 bg-[#1E293B] text-white border-none p-0">
-          <SheetHeader className="p-6 border-b border-white/10">
+        <SheetContent side={sheetSide} className="w-72 bg-[#1E293B] text-white border-none p-0 flex flex-col h-full">
+          <SheetHeader className="p-6 border-b border-white/10 shrink-0">
             <SheetTitle className="flex items-center gap-3 text-white">
               <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-10 h-10 object-contain" />
               <div>
@@ -152,9 +152,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
             </SheetTitle>
           </SheetHeader>
 
-          {sidebarContent}
+          <div className="flex-1 overflow-y-auto">
+            {sidebarContent}
+          </div>
 
-          <div className="p-4 border-t border-white/10 space-y-2">
+          <div className="p-4 border-t border-white/10 space-y-2 shrink-0">
             <Button variant="ghost" size="sm" className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10" onClick={() => { setMenuOpen(false); navigate('/'); }}>
               <ArrowLeftCircle className="h-4 w-4 me-2" />{t('admin.returnToSite')}
             </Button>
@@ -185,7 +187,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
         </header>
 
         {/* Main Content */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-hidden min-w-0 ${isMobile ? 'pb-24' : ''}`}>{children}</main>
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-auto min-w-0 ${isMobile ? 'pb-24' : ''}`}>{children}</main>
 
         {/* Mobile Bottom Nav */}
         {isMobile && (
