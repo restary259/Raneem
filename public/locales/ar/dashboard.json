@@ -228,30 +228,36 @@
     "signOut": "تسجيل الخروج",
     "groups": {
       "dashboard": "لوحة التحكم",
+      "pipeline": "خط الأنابيب",
+      "people": "الأشخاص",
       "students": "الطلاب",
       "team": "الفريق",
       "finance": "المالية",
+      "system": "النظام",
       "tools": "أدوات"
     },
     "tabs": {
       "overview": "نظرة عامة",
       "leads": "العملاء المحتملين",
       "cases": "ملفات الطلاب",
-      "students": "إدارة الطلاب",
+      "students": "الطلاب",
+      "partners": "الشركاء",
       "influencers": "الوكلاء",
       "checklist": "قائمة المتطلبات",
       "contacts": "رسائل التواصل",
       "referrals": "الإحالات",
       "payouts": "المكافآت والصرف",
-      "money": "لوحة الأموال",
+      "money": "المالية",
       "analytics": "التحليلات",
       "ready": "جاهزون للتقديم",
       "eligibility": "محرك الأهلية",
       "security": "الأمان",
       "audit": "سجل النشاط",
       "notifications": "الإشعارات",
-      "masterServices": "كتالوج الخدمات",
-      "majors": "التخصصات"
+      "masterServices": "الخدمات",
+      "majors": "التخصصات",
+      "settings": "الإعدادات",
+      "securityAudit": "الأمان والسجل"
     },
     "overview": {
       "totalStudents": "إجمالي الطلاب",
@@ -719,12 +725,10 @@
     "eligible": "تم التقييم",
     "assigned": "معيّن",
     "contacted": "تم التواصل",
-    "appointment": "موعد",
     "paid": "مدفوع",
     "ready_to_apply": "جاهز",
-    "registration_submitted": "تم التقديم",
     "visa_stage": "الفيزا",
-    "settled": "مستقر"
+    "completed": "مكتمل"
   },
   "kpi": {
     "netProfit": "صافي الربح الإجمالي",
