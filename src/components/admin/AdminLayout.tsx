@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  LayoutDashboard, Users, ClipboardCheck, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings, BarChart3, Briefcase, Menu, DollarSign
+  LayoutDashboard, Users, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings, BarChart3, Briefcase, Menu, DollarSign
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -37,8 +37,7 @@ const sidebarGroups = [
   {
     labelKey: 'admin.groups.people',
     items: [
-      { id: 'team-members', labelKey: 'admin.tabs.teamMembers', icon: UserCheck },
-      { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: Users },
+      { id: 'team', labelKey: 'admin.tabs.teamMembers', icon: UserCheck },
       { id: 'students', labelKey: 'admin.tabs.students', icon: GraduationCap },
     ],
   },
