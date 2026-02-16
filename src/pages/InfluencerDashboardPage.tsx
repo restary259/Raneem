@@ -159,8 +159,8 @@ const InfluencerDashboardPage = () => {
         </div>
       </header>
 
-      {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
+        <PullToRefresh onRefresh={async () => { await fetchData(); }}>
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <div className="space-y-5">
@@ -280,6 +280,7 @@ const InfluencerDashboardPage = () => {
 
         {/* My Link Tab */}
         {activeTab === 'my-link' && user && <ReferralLink userId={user.id} />}
+        </PullToRefresh>
       </main>
 
       {/* Bottom Navigation */}

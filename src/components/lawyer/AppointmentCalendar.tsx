@@ -412,13 +412,22 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
 
   return (
     <div className="space-y-0 h-full">
-      {/* Mobile: mini calendar collapses above */}
+      {/* Mobile: mini calendar + upcoming */}
       {isMobile && (
-        <Card className="mb-3">
-          <CardContent className="p-3">
-            {renderMiniCalendar()}
-          </CardContent>
-        </Card>
+        <>
+          <Card className="mb-3">
+            <CardContent className="p-3">
+              {renderMiniCalendar()}
+            </CardContent>
+          </Card>
+          {upcomingAppointments.length > 0 && (
+            <Card className="mb-3">
+              <CardContent className="p-3">
+                {renderUpcoming()}
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       <div className="flex gap-4 h-full">
@@ -447,11 +456,11 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
         </div>
       </div>
 
-      {/* Mobile FAB */}
+      {/* Mobile FAB - positioned above bottom nav */}
       {isMobile && (
         <button
           onClick={() => setIsDialogOpen(true)}
-          className="fixed bottom-20 end-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition-transform hover:shadow-xl"
+          className="fixed bottom-24 end-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition-transform hover:shadow-xl"
         >
           <Plus className="h-6 w-6" />
         </button>

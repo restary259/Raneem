@@ -341,9 +341,9 @@ const TeamDashboardPage = () => {
         {/* Main Content */}
         <div className="flex-1 overflow-auto pb-20 lg:pb-0">
           <main className="px-3 sm:px-4 py-3 space-y-3">
+            <PullToRefresh onRefresh={async () => { if (user) { await fetchCases(user.id); await fetchAppointments(user.id); } }} disabled={saving || savingProfile}>
             {/* ===== CASES TAB ===== */}
             {activeTab === 'cases' && (
-              <PullToRefresh onRefresh={async () => { if (user) { await fetchCases(user.id); await fetchAppointments(user.id); } }} disabled={saving || savingProfile}>
               <>
                 {/* Filter chips */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -524,7 +524,6 @@ const TeamDashboardPage = () => {
                   {filteredCases.length === 0 && <p className="text-center text-muted-foreground py-8">{t('lawyer.noCases')}</p>}
                 </div>
               </>
-              </PullToRefresh>
             )}
 
             {/* ===== APPOINTMENTS TAB ===== */}
@@ -631,6 +630,7 @@ const TeamDashboardPage = () => {
                 <EarningsPanel userId={user.id} />
               </div>
             )}
+            </PullToRefresh>
           </main>
         </div>
       </div>
