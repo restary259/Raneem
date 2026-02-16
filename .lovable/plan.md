@@ -1,68 +1,81 @@
 
-# Team Dashboard Final Polish
+# Team Dashboard -- Critical Bug Fixes
 
-## Issues to Fix
+## Root Cause Analysis
 
-### 1. Complete Profile Does Not Move Case to Next Stage
-The `saveProfileCompletion` function only checks 5 required fields (`student_full_name`, `student_email`, `student_phone`, `passport_number`, `nationality`). It needs to check ALL profile fields and reliably transition to `profile_filled` status. After saving, the case filter should auto-switch to the "profile_filled" tab so the user sees the moved case.
+### Bug 1: "Complete Profile" does NOT move case to next tab
+**Root cause identified:** The finite-state machine (FSM) in `caseTransitions.ts` only allows `appointment_completed -> profile_filled`. But most cases sit in `appointment_scheduled` or `appointment_waiting`, so `canTransition()` returns `false` and the status is never updated. The data saves silently but the case stays in the same tab.
 
-**Fix:** Expand the required fields list to include all mandatory fields (age, address, country of birth, language proficiency, destination city, school, intensive course, accommodation, gender). Show validation errors for missing fields. On successful save with all fields filled, transition to `profile_filled` and auto-switch the filter tab.
+**Fix:** Update `ALLOWED_TRANSITIONS` to allow direct transitions from `appointment_scheduled` and `appointment_waiting` to `profile_filled` (completing the profile implicitly means the appointment stage is done).
 
-### 2. Appointment Stage -- Reschedule and Delete Buttons on Case Cards
-Currently, the appointment stage case cards only show [Call] and [Complete Profile]. There is no way to reschedule or delete a case from the appointment stage tab.
+### Bug 2: `gender` field is required but never saved
+**Root cause:** The `gender` field is listed in `requiredProfileFields` but is NOT included in the `updateData` object sent to the database. The `student_cases` table does not have `gender`, `height`, or `eye_color` columns.
 
-**Fix:** Add [Reschedule] and [Delete] buttons to the appointment stage case card actions. Reschedule opens the existing reschedule dialog for the appointment linked to that case. Delete uses the existing delete confirmation flow.
+**Fix:**
+1. Add a database migration to create `gender` column on `student_cases` (text, nullable).
+2. Include `gender` in the `updateData` object in `saveProfileCompletion`.
+3. Remove `gender` from the mandatory list OR keep it mandatory once the column exists (keep it -- user wants all fields mandatory).
 
-### 3. Today's Appointments Visibility
-Today's appointments are filtered to only show future ones (end > now). This is correct, but we also need to ensure the appointments section is visible and prominent on the Cases tab as a quick summary, not just on the Appointments tab.
+### Bug 3: Delete case fails silently (RLS)
+**Root cause:** The `student_cases` table RLS only grants DELETE to admins (`has_role(auth.uid(), 'admin')`). Lawyers have UPDATE and SELECT but NOT DELETE. So `handleDeleteCase` always fails.
 
-**Fix:** Add a compact "Today's Appointments" summary card at the top of the Cases tab when there are active appointments today.
+**Fix:** Add an RLS policy allowing lawyers to delete their own assigned cases (restricted to `new`/`eligible` statuses for safety, enforced in the UI).
 
-### 4. Toast Auto-Dismiss Duration
-Currently toasts stay for a very long time (TOAST_REMOVE_DELAY = 1000000ms). The user wants notifications to auto-disappear in 1-2 seconds.
+### Bug 4: Reschedule creates duplicate (potential)
+The current code correctly uses `.update().eq('id', ...)` so this is NOT a bug in the current implementation. The reschedule flow is correct.
 
-**Fix:** Change the toast duration to 2000ms (2 seconds) for quick action confirmations. Update the `TOAST_REMOVE_DELAY` constant and also pass `duration` to individual toast calls.
+### Bug 5: Today's appointments already implemented
+Already working. No change needed.
 
-### 5. Admin Can Manually Edit Money Fields After Receiving Case
-The `StudentCasesManagement` (admin side) shows financial data read-only. The admin needs to be able to edit `service_fee`, `school_commission`, `influencer_commission`, `lawyer_commission`, `referral_discount`, and `translation_fee` on submitted cases.
-
-**Fix:** Add an "Edit Financials" button in the Money tab of the case detail dialog in `StudentCasesManagement`. This opens editable inputs for all financial fields and saves to the database.
+### Bug 6: Language school dropdown already implemented
+Already using the 4-partner dropdown (`LANGUAGE_SCHOOLS`). No change needed.
 
 ---
 
-## Files to Modify
+## Changes
+
+### 1. Database Migration
+Add `gender` column to `student_cases` and an RLS policy for lawyer delete:
+
+```sql
+-- Add gender column
+ALTER TABLE student_cases ADD COLUMN IF NOT EXISTS gender text;
+
+-- Allow lawyers to delete their assigned cases
+CREATE POLICY "Lawyers can delete assigned cases"
+  ON student_cases FOR DELETE
+  USING (
+    has_role(auth.uid(), 'lawyer'::app_role)
+    AND assigned_lawyer_id = auth.uid()
+  );
+```
+
+### 2. Fix FSM transitions (`src/lib/caseTransitions.ts`)
+Allow `appointment_scheduled` and `appointment_waiting` to transition directly to `profile_filled`:
+
+```
+APPT_SCHEDULED -> [APPT_COMPLETED, APPT_WAITING, PROFILE_FILLED]
+APPT_WAITING   -> [APPT_SCHEDULED, APPT_COMPLETED, PROFILE_FILLED]
+```
+
+### 3. Fix `saveProfileCompletion` in `src/pages/TeamDashboardPage.tsx`
+- Add `gender` to the `updateData` object so it gets saved to the database.
+- The rest of the flow (mandatory validation, confirmation dialog, auto-switch to "profile_filled" tab) is already in place and will now work once the FSM allows the transition.
+
+### 4. Fix `confirmCompleteFile` resilience
+Add a fallback: if `canTransition` returns false for `PROFILE_FILLED`, force-set it anyway for appointment-stage statuses. This ensures the status always updates when the user confirms.
+
+---
+
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/TeamDashboardPage.tsx` | 1. Expand mandatory fields + validation in `saveProfileCompletion`. 2. Auto-switch to `profile_filled` tab after completion. 3. Add Reschedule/Delete to appointment stage cards. 4. Add today's appointments summary to Cases tab. 5. Add `duration: 2000` to all toast calls. |
-| `src/hooks/use-toast.ts` | Change `TOAST_REMOVE_DELAY` from 1000000 to 2000 for faster auto-dismiss. |
-| `src/components/admin/StudentCasesManagement.tsx` | Add editable financial fields in the Money tab of the case detail dialog so admin can update fees/commissions after receiving a submitted case. |
+| Database migration | Add `gender` column + lawyer DELETE RLS policy |
+| `src/lib/caseTransitions.ts` | Add `PROFILE_FILLED` to allowed transitions from `APPT_SCHEDULED` and `APPT_WAITING` |
+| `src/pages/TeamDashboardPage.tsx` | Include `gender` in `updateData`; add fallback in `confirmCompleteFile` to force status transition |
 
----
-
-## Technical Details
-
-### Mandatory Profile Fields (all must be filled to advance)
-- Personal: `student_full_name`, `student_email`, `student_phone`, `student_age`, `student_address`, `passport_number`, `nationality`, `country_of_birth`, `language_proficiency`
-- Visa: `gender`
-- Services: `selected_city`, `selected_school`, `intensive_course`, `accommodation_status`
-
-If any field is missing, show a toast error listing which fields are incomplete and do NOT transition the status.
-
-### Appointment Stage Actions
-For cases in `appointment_scheduled` / `appointment_waiting` / `appointment_completed`:
-- Find the linked appointment via `appointments.filter(a => a.case_id === c.id)`
-- Show [Reschedule] button that opens the reschedule dialog
-- Show [Delete Case] button with confirmation
-
-### Admin Money Edit
-- In `StudentCasesManagement`, add state for `editingMoney` (boolean) inside the case detail dialog
-- When editing, render `Input type="number"` for each financial field
-- On save, update `student_cases` row and call `onRefresh()`
-
-### Toast Duration
-- Set `TOAST_REMOVE_DELAY = 2000` in `use-toast.ts`
-- This ensures all toasts auto-dismiss in 2 seconds
-
-## Security Note
-No new tables or RLS changes needed. All mutations use existing RLS policies (lawyers update their assigned cases, admins manage all cases).
+## Security Notes
+- The new DELETE policy restricts lawyers to only deleting cases assigned to them.
+- No changes to sensitive financial data flows.
+- Audit logging already covers profile completion and delete actions.
