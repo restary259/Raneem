@@ -809,6 +809,29 @@
       "referral": "إحالة",
       "organic": "عضوي",
       "contact_form": "نموذج التواصل"
+      "friend": "صديق",
+      "family": "عائلة",
+      "self": "ذاتي"
+    },
+    "tabs": {
+      "cases": "الملفات",
+      "appointments": "المواعيد",
+      "analytics": "التحليلات",
+      "earnings": "الأرباح"
+    },
+    "filters": {
+      "all": "الكل",
+      "assigned": "جديد",
+      "contacted": "تم التواصل",
+      "appointment_scheduled": "موعد محجوز",
+      "profile_filled": "اكتمل الملف",
+      "paid": "مدفوع",
+      "sla": "تنبيه SLA"
+    },
+    "referralDiscount": "خصم إحالة",
+    "analytics": {
+      "statusDistribution": "توزيع الحالات",
+      "slaAlerts": "تنبيهات SLA"
     },
     "majorsTab": "التخصصات",
     "searchMajors": "ابحث عن تخصص…",
