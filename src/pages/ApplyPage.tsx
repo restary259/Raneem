@@ -217,18 +217,6 @@ const ApplyPage: React.FC = () => {
                     {t('apply.exploreWebsite', 'تصفّح موقعنا')}
                   </Button>
                 </a>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 rounded-xl border-green-500 text-green-700 hover:bg-green-50 text-base font-semibold"
-                  onClick={() => {
-                    const url = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
-                    const win = window.open(url, '_blank');
-                    if (!win || win.closed) window.location.href = url;
-                  }}
-                >
-                  <MessageCircle className="h-5 w-5 me-2" />
-                  {isAr ? 'انضم لمجتمعنا على واتساب' : 'Join our WhatsApp Community'}
-                </Button>
               </div>
             </div>
           </main>

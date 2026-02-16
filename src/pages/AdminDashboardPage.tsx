@@ -184,26 +184,14 @@ const AdminDashboardPage = () => {
         return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
       case 'student-cases':
         return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
-      case 'team-members':
-        return (
-          <InfluencerManagement
-            influencers={[]}
-            invites={invites}
-            students={students}
-            lawyers={lawyers}
-            onRefresh={fetchAllData}
-            filterRole="lawyer"
-          />
-        );
-      case 'influencers':
+      case 'team':
         return (
           <InfluencerManagement
             influencers={influencers}
             invites={invites}
             students={students}
-            lawyers={[]}
+            lawyers={lawyers}
             onRefresh={fetchAllData}
-            filterRole="influencer"
           />
         );
       case 'students':
