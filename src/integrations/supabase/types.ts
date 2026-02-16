@@ -1216,6 +1216,7 @@ export type Database = {
           created_at: string
           fraud_flagged: boolean | null
           fraud_notes: string | null
+          gender: string | null
           id: string
           influencer_commission: number
           intensive_course: string | null
@@ -1250,6 +1251,7 @@ export type Database = {
           created_at?: string
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
+          gender?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
@@ -1284,6 +1286,7 @@ export type Database = {
           created_at?: string
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
+          gender?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
