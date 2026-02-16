@@ -136,28 +136,17 @@ serve(async (req) => {
       details: `Created ${role} account for ${email}`,
     });
 
-    // Send credentials via email instead of returning to client
+    // Send password reset email so user can set their own password
     try {
-      const emailRes = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-branded-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-          },
-          body: JSON.stringify({
-            to: email,
-            subject: "Your Darb Account Credentials",
-            html: `<h2>Welcome to Darb, ${full_name}!</h2><p>Your ${role} account has been created.</p><p><strong>Email:</strong> ${email}</p><p><strong>Temporary Password:</strong> ${tempPassword}</p><p>Please log in and change your password immediately.</p>`,
-          }),
-        }
-      );
-      if (!emailRes.ok) {
-        console.error("Failed to send credentials email:", await emailRes.text());
+      const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+      });
+      if (resetError) {
+        console.error("Failed to send recovery email:", resetError.message);
       }
     } catch (emailErr) {
-      console.error("Email send error:", emailErr);
+      console.error("Recovery email error:", emailErr);
     }
 
     return new Response(
