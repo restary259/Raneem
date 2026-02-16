@@ -56,7 +56,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { email, full_name, role } = body;
+    const { email, full_name, role, commission_amount } = body;
 
     // Input validation
     if (!email || !full_name || !role) {
@@ -119,6 +119,7 @@ serve(async (req) => {
       email,
       full_name,
       must_change_password: true,
+      commission_amount: typeof commission_amount === "number" ? commission_amount : 0,
     });
 
     // Update invite record if exists
