@@ -182,8 +182,8 @@ const ReadyToApplyTable: React.FC = () => {
       const result = res.data;
       if (result?.error) throw new Error(result.error);
 
-      setCreatedTempPassword(result?.temp_password || '');
-      toast({ title: t('admin.ready.accountCreated'), description: 'شارك البيانات يدوياً مع الطالب' });
+      setCreatedTempPassword('sent');
+      toast({ title: t('admin.ready.accountCreated'), description: 'تم إرسال بيانات الدخول عبر البريد الإلكتروني' });
       fetchData();
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('common.error'), description: err.message });
@@ -372,22 +372,13 @@ const ReadyToApplyTable: React.FC = () => {
               <Save className="h-4 w-4 me-1" />{saving ? t('common.loading') : t('admin.ready.saveProfile')}
             </Button>
             {createdTempPassword && (
-              <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 mt-2">
-                <p className="text-sm font-semibold text-amber-800">✅ تم إنشاء الحساب بنجاح</p>
+              <div className="md:col-span-2 bg-green-50 border border-green-200 rounded-xl p-4 space-y-2 mt-2">
+                <p className="text-sm font-semibold text-green-800">✅ تم إنشاء الحساب بنجاح</p>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">البريد الإلكتروني:</p>
                   <p className="text-sm font-mono bg-background border rounded px-2 py-1">{editValues.student_email}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">كلمة المرور المؤقتة:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-sm font-mono bg-background border rounded px-2 py-1 select-all">{createdTempPassword}</code>
-                    <Button size="sm" variant="outline" onClick={copyTempPassword}>
-                      {copiedPassword ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-amber-700 font-medium">⚠️ شارك هذه البيانات يدوياً مع الطالب (واتساب، رسالة مباشرة، إلخ)</p>
+                <p className="text-xs text-green-700 font-medium">📧 تم إرسال بيانات الدخول عبر البريد الإلكتروني للطالب.</p>
                 <p className="text-xs text-muted-foreground">سيُطلب منه تغيير كلمة المرور عند أول تسجيل دخول.</p>
               </div>
             )}
