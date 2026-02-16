@@ -75,7 +75,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
     const rows = filtered.map(c => [
       c.student_full_name || c.lead?.full_name || '', c.student_email || c.lead?.email || '', c.student_phone || c.lead?.phone || '',
       c.passport_number || '', c.nationality || '', c.selected_city || '', c.selected_school || '', c.intensive_course || '',
-      t(`cases.statuses.${c.case_status}`, c.case_status),
+      String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status })),
     ]);
     exportPDF({ headers, rows, fileName: `student-intake-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Student Intake' });
   };
@@ -92,7 +92,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('admin.leads.all')}</SelectItem>
-              {READY_STATUSES.map(s => <SelectItem key={s} value={s}>{t(`cases.statuses.${s}`, s)}</SelectItem>)}
+              {READY_STATUSES.map(s => <SelectItem key={s} value={s}>{String(t(`cases.statuses.${s}`, { defaultValue: s }))}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -120,7 +120,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     </p>
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <Badge variant={isPaid ? 'default' : 'secondary'}>{t(`cases.statuses.${c.case_status}`, c.case_status)}</Badge>
+                    <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
                     {c.case_status === 'services_filled' && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('studentCases.markPaid', { defaultValue: 'Mark Paid' })}
