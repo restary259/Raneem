@@ -96,20 +96,28 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
     return day === 0 ? 6 : day - 1;
   }, [miniCalMonth]);
 
-  // Appointments for selected day
-  const dayAppointments = useMemo(() =>
-    appointments.filter(a => isSameDay(new Date(a.scheduled_at), selectedDate)),
-    [appointments, selectedDate]
-  );
+  // Appointments for selected day – hide past-due ones for today
+  const dayAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments.filter(a => {
+      if (!isSameDay(new Date(a.scheduled_at), selectedDate)) return false;
+      // For today, hide appointments whose end time has passed
+      if (isSameDay(selectedDate, now)) {
+        const end = new Date(new Date(a.scheduled_at).getTime() + a.duration_minutes * 60000);
+        return end > now;
+      }
+      return true;
+    });
+  }, [appointments, selectedDate]);
 
-  // Upcoming appointments (next 7 days)
-  const upcomingAppointments = useMemo(() =>
-    appointments.filter(a => {
-      const d = new Date(a.scheduled_at);
-      return d >= new Date() && !isSameDay(d, selectedDate);
-    }).slice(0, 5),
-    [appointments, selectedDate]
-  );
+  // Upcoming appointments – only future (not past-due)
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments.filter(a => {
+      const end = new Date(new Date(a.scheduled_at).getTime() + a.duration_minutes * 60000);
+      return end > now && !isSameDay(new Date(a.scheduled_at), selectedDate);
+    }).slice(0, 5);
+  }, [appointments, selectedDate]);
 
   // Current time indicator position
   const currentTimeTop = useMemo(() => {
