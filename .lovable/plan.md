@@ -1,75 +1,68 @@
 
+# Team Dashboard Final Polish
 
-# Pull-to-Refresh + Fix Desktop Scroll
+## Issues to Fix
 
-## Problem 1: Desktop App Can't Scroll with Mouse
+### 1. Complete Profile Does Not Move Case to Next Stage
+The `saveProfileCompletion` function only checks 5 required fields (`student_full_name`, `student_email`, `student_phone`, `passport_number`, `nationality`). It needs to check ALL profile fields and reliably transition to `profile_filled` status. After saving, the case filter should auto-switch to the "profile_filled" tab so the user sees the moved case.
 
-In the PWA standalone mode CSS (`pwa.css`), the `overscroll-behavior-y: contain` on `body` combined with nested `overflow-auto` containers in `AdminLayout` (both the wrapper div on line 170 and the `<main>` on line 190) creates conflicting scroll contexts. On desktop PWA, the mouse wheel events get trapped or swallowed.
+**Fix:** Expand the required fields list to include all mandatory fields (age, address, country of birth, language proficiency, destination city, school, intensive course, accommodation, gender). Show validation errors for missing fields. On successful save with all fields filled, transition to `profile_filled` and auto-switch the filter tab.
 
-**Root cause:** The `AdminLayout` has `overflow-auto` on both the flex container (`div.flex-1.overflow-auto`) AND the `<main>` inside it. This double-nesting confuses desktop scroll behavior especially in standalone PWA mode.
+### 2. Appointment Stage -- Reschedule and Delete Buttons on Case Cards
+Currently, the appointment stage case cards only show [Call] and [Complete Profile]. There is no way to reschedule or delete a case from the appointment stage tab.
 
-**Fix:**
-- Remove `overflow-auto` from the inner `<main>` element in `AdminLayout.tsx` (line 190) -- only the parent wrapper needs it
-- In `pwa.css`, remove `overscroll-behavior-y: contain` from `body` in standalone mode -- this property was blocking mouse-wheel scroll propagation on desktop PWA
+**Fix:** Add [Reschedule] and [Delete] buttons to the appointment stage case card actions. Reschedule opens the existing reschedule dialog for the appointment linked to that case. Delete uses the existing delete confirmation flow.
 
-## Problem 2: Pull-to-Refresh for Table Views
+### 3. Today's Appointments Visibility
+Today's appointments are filtered to only show future ones (end > now). This is correct, but we also need to ensure the appointments section is visible and prominent on the Cases tab as a quick summary, not just on the Appointments tab.
 
-Create a lightweight `PullToRefresh` wrapper component that:
-- Only activates on **touch devices** (mobile) -- no interference with desktop mouse scrolling
-- Only triggers when the user is at the **top of the scroll container** and pulls down
-- Shows a spinner animation during refresh
-- Prevents duplicate API calls with a loading guard
-- Does **not** reload the entire page -- just calls the parent's `onRefresh` callback
+**Fix:** Add a compact "Today's Appointments" summary card at the top of the Cases tab when there are active appointments today.
 
-### Where to apply it:
-- Admin dashboard tables (LeadsManagement, StudentCasesManagement, MoneyDashboard, InfluencerManagement, StudentProfilesManagement)
-- Team dashboard case list
-- Influencer dashboard student list
-- Student dashboard tabs
+### 4. Toast Auto-Dismiss Duration
+Currently toasts stay for a very long time (TOAST_REMOVE_DELAY = 1000000ms). The user wants notifications to auto-disappear in 1-2 seconds.
 
-### Safety constraints:
-- Disabled during form submissions, uploads, or payment processing (controlled via a `disabled` prop)
-- Retains filters, sorting, search, and scroll position after refresh
-- Compatible with RTL layouts
+**Fix:** Change the toast duration to 2000ms (2 seconds) for quick action confirmations. Update the `TOAST_REMOVE_DELAY` constant and also pass `duration` to individual toast calls.
 
-## Files to Create
+### 5. Admin Can Manually Edit Money Fields After Receiving Case
+The `StudentCasesManagement` (admin side) shows financial data read-only. The admin needs to be able to edit `service_fee`, `school_commission`, `influencer_commission`, `lawyer_commission`, `referral_discount`, and `translation_fee` on submitted cases.
 
-| File | Purpose |
-|------|---------|
-| `src/components/common/PullToRefresh.tsx` | Reusable pull-to-refresh wrapper component (touch-only) |
+**Fix:** Add an "Edit Financials" button in the Money tab of the case detail dialog in `StudentCasesManagement`. This opens editable inputs for all financial fields and saves to the database.
+
+---
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/admin/AdminLayout.tsx` | Remove duplicate `overflow-auto` from `<main>` (line 190) |
-| `src/styles/pwa.css` | Remove `overscroll-behavior-y: contain` from body in standalone mode |
-| `src/components/admin/LeadsManagement.tsx` | Wrap table content with PullToRefresh |
-| `src/components/admin/StudentCasesManagement.tsx` | Wrap table content with PullToRefresh |
-| `src/components/admin/MoneyDashboard.tsx` | Wrap table content with PullToRefresh |
-| `src/components/admin/InfluencerManagement.tsx` | Wrap table content with PullToRefresh |
-| `src/components/admin/StudentProfilesManagement.tsx` | Wrap table content with PullToRefresh |
-| `src/pages/TeamDashboardPage.tsx` | Wrap case list with PullToRefresh |
-| `src/pages/InfluencerDashboardPage.tsx` | Wrap student list with PullToRefresh |
+| `src/pages/TeamDashboardPage.tsx` | 1. Expand mandatory fields + validation in `saveProfileCompletion`. 2. Auto-switch to `profile_filled` tab after completion. 3. Add Reschedule/Delete to appointment stage cards. 4. Add today's appointments summary to Cases tab. 5. Add `duration: 2000` to all toast calls. |
+| `src/hooks/use-toast.ts` | Change `TOAST_REMOVE_DELAY` from 1000000 to 2000 for faster auto-dismiss. |
+| `src/components/admin/StudentCasesManagement.tsx` | Add editable financial fields in the Money tab of the case detail dialog so admin can update fees/commissions after receiving a submitted case. |
 
-## Technical Details: PullToRefresh Component
+---
 
-```text
-Props:
-- onRefresh: () => Promise<void>  -- async callback to fetch data
-- disabled?: boolean              -- disable during forms/uploads
-- children: React.ReactNode       -- the table/list content
+## Technical Details
 
-Behavior:
-- Uses touchstart/touchmove/touchend events
-- Only activates when scrollTop === 0 and touch moves downward > 60px
-- Shows a rotating spinner at the top during refresh
-- Calls onRefresh(), waits for completion, then hides spinner
-- Guards against duplicate calls with an isRefreshing state lock
-- No-op on desktop (mouse events are not intercepted)
-```
+### Mandatory Profile Fields (all must be filled to advance)
+- Personal: `student_full_name`, `student_email`, `student_phone`, `student_age`, `student_address`, `passport_number`, `nationality`, `country_of_birth`, `language_proficiency`
+- Visa: `gender`
+- Services: `selected_city`, `selected_school`, `intensive_course`, `accommodation_status`
+
+If any field is missing, show a toast error listing which fields are incomplete and do NOT transition the status.
+
+### Appointment Stage Actions
+For cases in `appointment_scheduled` / `appointment_waiting` / `appointment_completed`:
+- Find the linked appointment via `appointments.filter(a => a.case_id === c.id)`
+- Show [Reschedule] button that opens the reschedule dialog
+- Show [Delete Case] button with confirmation
+
+### Admin Money Edit
+- In `StudentCasesManagement`, add state for `editingMoney` (boolean) inside the case detail dialog
+- When editing, render `Input type="number"` for each financial field
+- On save, update `student_cases` row and call `onRefresh()`
+
+### Toast Duration
+- Set `TOAST_REMOVE_DELAY = 2000` in `use-toast.ts`
+- This ensures all toasts auto-dismiss in 2 seconds
 
 ## Security Note
-
-No database or backend changes required. This is purely a frontend UX improvement. No new API calls or data access patterns are introduced.
-
+No new tables or RLS changes needed. All mutations use existing RLS policies (lawyers update their assigned cases, admins manage all cases).
