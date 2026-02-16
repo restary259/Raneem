@@ -1,131 +1,75 @@
-# Real-Time Data Sync -- Gap Analysis and Fix Plan
 
-## Current State
 
-The system already has real-time subscriptions on 3 of 4 dashboards using a `useRealtimeSubscription` hook. However, there are critical gaps causing stale data.
+# Pull-to-Refresh + Fix Desktop Scroll
 
-## Identified Issues
+## Problem 1: Desktop App Can't Scroll with Mouse
 
-### 1. Missing Realtime Publication for Key Tables
+In the PWA standalone mode CSS (`pwa.css`), the `overscroll-behavior-y: contain` on `body` combined with nested `overflow-auto` containers in `AdminLayout` (both the wrapper div on line 170 and the `<main>` on line 190) creates conflicting scroll contexts. On desktop PWA, the mouse wheel events get trapped or swallowed.
 
-These tables are subscribed to in code but **NOT enabled** in the database realtime publication:
+**Root cause:** The `AdminLayout` has `overflow-auto` on both the flex container (`div.flex-1.overflow-auto`) AND the `<main>` inside it. This double-nesting confuses desktop scroll behavior especially in standalone PWA mode.
 
-- `profiles` (Admin subscribes to it)
-- `rewards` (Admin and Influencer subscribe to it)
+**Fix:**
+- Remove `overflow-auto` from the inner `<main>` element in `AdminLayout.tsx` (line 190) -- only the parent wrapper needs it
+- In `pwa.css`, remove `overscroll-behavior-y: contain` from `body` in standalone mode -- this property was blocking mouse-wheel scroll propagation on desktop PWA
 
-This means those subscriptions silently do nothing.
+## Problem 2: Pull-to-Refresh for Table Views
 
-**Fix:** Add a migration to enable realtime for `profiles` and `rewards`.
+Create a lightweight `PullToRefresh` wrapper component that:
+- Only activates on **touch devices** (mobile) -- no interference with desktop mouse scrolling
+- Only triggers when the user is at the **top of the scroll container** and pulls down
+- Shows a spinner animation during refresh
+- Prevents duplicate API calls with a loading guard
+- Does **not** reload the entire page -- just calls the parent's `onRefresh` callback
 
-### 2. Student Dashboard Has Zero Realtime Subscriptions
+### Where to apply it:
+- Admin dashboard tables (LeadsManagement, StudentCasesManagement, MoneyDashboard, InfluencerManagement, StudentProfilesManagement)
+- Team dashboard case list
+- Influencer dashboard student list
+- Student dashboard tabs
 
-The Student Dashboard (`StudentDashboardPage.tsx`) fetches profile data once on load and never updates. If admin changes student status, case stage, or marks payment -- the student sees stale data until they manually refresh.
+### Safety constraints:
+- Disabled during form submissions, uploads, or payment processing (controlled via a `disabled` prop)
+- Retains filters, sorting, search, and scroll position after refresh
+- Compatible with RTL layouts
 
-**Fix:** Add realtime subscriptions to the Student Dashboard for `profiles`, `student_cases`, `notifications`, and `student_checklist`.
+## Files to Create
 
-### 3. No Window Focus Refetch
-
-When a user switches tabs/windows and comes back, data could be minutes old. None of the dashboards refetch on window focus.
-
-**Fix:** Add a `visibilitychange` listener to refetch data when the user returns to the app.
-
-### 4. No Post-Mutation Refetch Guarantee
-
-Some child components (like `NextStepButton`, case status updates) call `onRefresh` but others may not propagate correctly.
-
-**Fix:** Ensure all mutation callbacks trigger the parent's refetch function.
-
----
-
-## Implementation Plan
-
-### Step 1: Database Migration
-
-Enable realtime for `profiles` and `rewards` tables:
-
-```text
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.rewards;
-```
-
-### Step 2: Enhance useRealtimeSubscription Hook
-
-Add an optional `refetchOnFocus` parameter. When enabled, it will also refetch data when the browser tab regains focus using the `visibilitychange` event.
-
-### Step 3: Add Realtime to Student Dashboard
-
-Add subscriptions for:
-
-- `profiles` -- profile changes (status, visa, etc.)
-- `student_cases` -- case stage updates
-- `notifications` -- new notifications
-- `student_checklist` -- checklist updates
-
-Also add window-focus refetch so the student always sees fresh data.
-
-### Step 4: Add Window Focus Refetch to All Dashboards
-
-Update Admin, Team, and Influencer dashboards to also refetch on window focus, providing a safety net even if a realtime event is missed.
-
----
+| File | Purpose |
+|------|---------|
+| `src/components/common/PullToRefresh.tsx` | Reusable pull-to-refresh wrapper component (touch-only) |
 
 ## Files to Modify
 
+| File | Change |
+|------|--------|
+| `src/components/admin/AdminLayout.tsx` | Remove duplicate `overflow-auto` from `<main>` (line 190) |
+| `src/styles/pwa.css` | Remove `overscroll-behavior-y: contain` from body in standalone mode |
+| `src/components/admin/LeadsManagement.tsx` | Wrap table content with PullToRefresh |
+| `src/components/admin/StudentCasesManagement.tsx` | Wrap table content with PullToRefresh |
+| `src/components/admin/MoneyDashboard.tsx` | Wrap table content with PullToRefresh |
+| `src/components/admin/InfluencerManagement.tsx` | Wrap table content with PullToRefresh |
+| `src/components/admin/StudentProfilesManagement.tsx` | Wrap table content with PullToRefresh |
+| `src/pages/TeamDashboardPage.tsx` | Wrap case list with PullToRefresh |
+| `src/pages/InfluencerDashboardPage.tsx` | Wrap student list with PullToRefresh |
 
-| File                                    | Change                                               |
-| --------------------------------------- | ---------------------------------------------------- |
-| New migration SQL                       | Enable realtime for `profiles` and `rewards`         |
-| `src/hooks/useRealtimeSubscription.ts`  | Add `visibilitychange` listener for refetch on focus |
-| `src/pages/StudentDashboardPage.tsx`    | Add realtime subscriptions + focus refetch           |
-| `src/pages/AdminDashboardPage.tsx`      | Add focus refetch                                    |
-| `src/pages/TeamDashboardPage.tsx`       | Add focus refetch                                    |
-| `src/pages/InfluencerDashboardPage.tsx` | Add focus refetch                                    |
+## Technical Details: PullToRefresh Component
 
+```text
+Props:
+- onRefresh: () => Promise<void>  -- async callback to fetch data
+- disabled?: boolean              -- disable during forms/uploads
+- children: React.ReactNode       -- the table/list content
+
+Behavior:
+- Uses touchstart/touchmove/touchend events
+- Only activates when scrollTop === 0 and touch moves downward > 60px
+- Shows a rotating spinner at the top during refresh
+- Calls onRefresh(), waits for completion, then hides spinner
+- Guards against duplicate calls with an isRefreshing state lock
+- No-op on desktop (mouse events are not intercepted)
+```
 
 ## Security Note
 
-No new RLS policies needed. Existing policies already control which rows each role can see. Realtime respects RLS -- users only receive events for rows they have SELECT access to.
+No database or backend changes required. This is purely a frontend UX improvement. No new API calls or data access patterns are introduced.
 
-&nbsp;
-
-**Prompt: Pull-to-Refresh for Tables**
-
-&nbsp;
-
-&nbsp;
-
-Implement pull-to-refresh only for table/list views on the Darb_Study dashboards.
-
-&nbsp;
-
-Requirements:
-
-&nbsp;
-
-1. Pull-to-refresh triggers only on top of the table/list scroll, not anywhere else.
-2. On refresh:  
-
-  - Fetch the latest data from the server/API for that table only.
-  - Do not reload the entire page.
-  - Update the table data in-place, keeping pagination, filters, and scroll position intact.
-3. &nbsp;
-4. Disable pull-to-refresh on pages with active forms, uploads, or payment processing.
-5. Show a standard “refresh spinner” while fetching data.
-6. Prevent duplicate API calls if the user repeatedly pulls during the same fetch.
-7. Ensure real-time updates also reflect changes made on other dashboards:  
-
-  - Admin → Student status / revenue
-  - Influencer → commission / referral data
-  - Team → appointments / case assignments
-8. &nbsp;
-9. Add a fallback auto-refresh every 20–30 seconds in case pull-to-refresh is not triggered.
-10. Ensure compatibility with both mobile and desktop scroll behaviors.
-11. After refresh, the table should retain user-applied filters, sorting, and search.
-
-&nbsp;
-
-&nbsp;
-
-Goal: Allow users to get the latest table data safely and quickly without losing context or interrupting other workflows.
-
-&nbsp;
