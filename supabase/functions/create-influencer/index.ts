@@ -127,32 +127,13 @@ serve(async (req) => {
       details: `Created influencer account for ${email}`,
     });
 
-    // Send password reset email via Auth REST API (this actually delivers the email)
-    try {
-      const recoveryRes = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/auth/v1/recover`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-      if (!recoveryRes.ok) {
-        console.error("Failed to send recovery email:", await recoveryRes.text());
-      }
-    } catch (emailErr) {
-      console.error("Recovery email error:", emailErr);
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         user_id: userId,
         email,
-        message: "Influencer account created. Credentials sent via email.",
+        temp_password: tempPassword,
+        message: "Influencer account created.",
       }),
       {
         status: 200,

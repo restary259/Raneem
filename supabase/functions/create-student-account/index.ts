@@ -143,32 +143,13 @@ serve(async (req) => {
       details: `Created student account for ${email} (case: ${case_id})`,
     });
 
-    // Send password reset email via Auth REST API (this actually delivers the email)
-    try {
-      const recoveryRes = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/auth/v1/recover`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-      if (!recoveryRes.ok) {
-        console.error("Failed to send recovery email:", await recoveryRes.text());
-      }
-    } catch (emailErr) {
-      console.error("Recovery email error:", emailErr);
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         user_id: userId,
         email,
-        message: "Student account created. Credentials sent via email.",
+        temp_password: tempPassword,
+        message: "Student account created.",
       }),
       {
         status: 200,
