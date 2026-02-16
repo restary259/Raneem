@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminOverview from '@/components/admin/AdminOverview';
-import StudentManagement from '@/components/admin/StudentManagement';
+import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import ContactsManager from '@/components/admin/ContactsManager';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import CasesManagement from '@/components/admin/CasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
+import InfluencerManagement from '@/components/admin/InfluencerManagement';
 import PartnersManagement from '@/components/admin/PartnersManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
-import SecurityAuditPanel from '@/components/admin/SecurityAuditPanel';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -28,13 +29,13 @@ const AdminDashboardPage = () => {
   const [services, setServices] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [cases, setCases] = useState<any[]>([]);
   const [lawyers, setLawyers] = useState<any[]>([]);
   const [commissions, setCommissions] = useState<any[]>([]);
   const [rewards, setRewards] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -69,14 +70,12 @@ const AdminDashboardPage = () => {
     init();
   }, [navigate, toast]);
 
-  const fetchAllData = async () => {
-    const [p, s, pay, con, audit, logins, items, checklists, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes, rewardsRes] = await Promise.all([
+  const fetchAllData = useCallback(async () => {
+    const [p, s, pay, con, items, checklists, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes, rewardsRes, audit, logins] = await Promise.all([
       (supabase as any).from('profiles').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('services').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('payments').select('*').order('created_at', { ascending: false }),
       (supabase as any).from('contact_submissions').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100),
-      (supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200),
       (supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true }),
       (supabase as any).from('student_checklist').select('*'),
       (supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }),
@@ -86,14 +85,14 @@ const AdminDashboardPage = () => {
       (supabase as any).from('user_roles').select('*').eq('role', 'lawyer'),
       (supabase as any).from('commissions').select('*'),
       (supabase as any).from('rewards').select('*'),
+      (supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100),
+      (supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200),
     ]);
 
     if (p.data) setStudents(p.data);
     if (s.data) setServices(s.data);
     if (pay.data) setPayments(pay.data);
     if (con.data) setContacts(con.data);
-    if (audit.data) setAuditLogs(audit.data);
-    if (logins.data) setLoginAttempts(logins.data);
     if (items.data) setChecklistItems(items.data);
     if (checklists.data) setStudentChecklists(checklists.data);
     if (inv.data) setInvites(inv.data);
@@ -101,14 +100,14 @@ const AdminDashboardPage = () => {
     if (casesRes.data) setCases(casesRes.data);
     if (commissionsRes.data) setCommissions(commissionsRes.data);
     if (rewardsRes.data) setRewards(rewardsRes.data);
+    if (audit.data) setAuditLogs(audit.data);
+    if (logins.data) setLoginAttempts(logins.data);
 
     if (roles.data) {
       const influencerIds = roles.data.map((r: any) => r.user_id);
       if (influencerIds.length > 0) {
         const { data: infProfiles } = await (supabase as any)
-          .from('profiles')
-          .select('*')
-          .in('id', influencerIds);
+          .from('profiles').select('*').in('id', influencerIds);
         if (infProfiles) setInfluencers(infProfiles);
       }
     }
@@ -117,13 +116,19 @@ const AdminDashboardPage = () => {
       const lawyerIds = lawyerRoles.data.map((r: any) => r.user_id);
       if (lawyerIds.length > 0) {
         const { data: lawyerProfiles } = await (supabase as any)
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', lawyerIds);
+          .from('profiles').select('id, full_name, commission_amount').in('id', lawyerIds);
         if (lawyerProfiles) setLawyers(lawyerProfiles);
       }
     }
-  };
+  }, []);
+
+  // Real-time subscriptions
+  useRealtimeSubscription('leads', fetchAllData, isAdmin);
+  useRealtimeSubscription('student_cases', fetchAllData, isAdmin);
+  useRealtimeSubscription('commissions', fetchAllData, isAdmin);
+  useRealtimeSubscription('rewards', fetchAllData, isAdmin);
+  useRealtimeSubscription('payout_requests', fetchAllData, isAdmin);
+  useRealtimeSubscription('contact_submissions', fetchAllData, isAdmin);
 
   if (isLoading) {
     return (
@@ -169,19 +174,38 @@ const AdminDashboardPage = () => {
             onStageClick={handleStageClick}
           />
         );
+      case 'analytics':
+        return (
+          <AdminAnalytics
+            leads={leads}
+            cases={cases}
+            rewards={rewards}
+            commissions={commissions}
+            lawyers={lawyers}
+            influencers={influencers}
+          />
+        );
       case 'leads':
         return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={fetchAllData} />;
       case 'cases':
         return <CasesManagement cases={cases} leads={leads.map(l => ({ id: l.id, full_name: l.full_name, phone: l.phone, source_type: l.source_type, source_id: l.source_id }))} lawyers={lawyers} onRefresh={fetchAllData} />;
-      case 'students':
+      case 'team-members':
         return (
-          <StudentManagement
-            students={students}
+          <InfluencerManagement
             influencers={influencers}
-            checklistItems={checklistItems}
-            studentChecklists={studentChecklists}
+            invites={invites}
+            students={students}
             lawyers={lawyers}
-            cases={cases.map(c => ({ lead_id: c.lead_id, assigned_lawyer_id: c.assigned_lawyer_id, student_profile_id: c.student_profile_id }))}
+            onRefresh={fetchAllData}
+          />
+        );
+      case 'influencers':
+        return (
+          <InfluencerManagement
+            influencers={influencers}
+            invites={invites}
+            students={students}
+            lawyers={lawyers}
             onRefresh={fetchAllData}
           />
         );
@@ -203,9 +227,7 @@ const AdminDashboardPage = () => {
       case 'master-services':
         return <MasterServicesManagement />;
       case 'settings':
-        return <SettingsPanel />;
-      case 'security-audit':
-        return <SecurityAuditPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
+        return <SettingsPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
       default:
         return null;
     }
