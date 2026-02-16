@@ -59,12 +59,34 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     }
   };
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const ALLOWED_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+  const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
       toast({ variant: "destructive", title: t('common.error'), description: t('documents.selectFile') });
       return;
     }
+
+    // File size validation
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: t('common.error'), description: t('documents.fileTooLarge', { defaultValue: 'File exceeds 10 MB limit' }) });
+      return;
+    }
+
+    // File type validation
+    const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+    if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+      toast({ variant: "destructive", title: t('common.error'), description: t('documents.invalidType', { defaultValue: 'Only PDF, DOC, DOCX, JPG, PNG files allowed' }) });
+      return;
+    }
+    if (selectedFile.type && !ALLOWED_TYPES.includes(selectedFile.type)) {
+      toast({ variant: "destructive", title: t('common.error'), description: t('documents.invalidType', { defaultValue: 'Only PDF, DOC, DOCX, JPG, PNG files allowed' }) });
+      return;
+    }
+
     setIsUploading(true);
     try {
       const fileExt = selectedFile.name.split('.').pop();
@@ -185,7 +207,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                 <div className="space-y-2">
                   <Label>{t('documents.file')}</Label>
                   <Input type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required />
-                  <p className="text-xs text-gray-500">{t('documents.fileHint')}</p>
+                  <p className="text-xs text-muted-foreground">{t('documents.fileHint')} — {t('documents.maxSize', { defaultValue: 'Max 10 MB' })}</p>
                 </div>
                 <div className="space-y-2">
                   <Label>{t('documents.category')}</Label>
