@@ -829,16 +829,43 @@
     "avgProgress": "متوسط التقدم",
     "tabs": {
       "overview": "نظرة عامة",
+      "analytics": "التحليلات",
       "students": "الطلاب",
       "earnings": "الأرباح",
       "media": "المحتوى",
-      "referralLink": "رابط الإحالة"
+      "referralLink": "رابطي"
     },
     "referredClients": "العملاء المحالين",
     "enrolledStudents": "الطلاب المسجلين",
     "noStudents": "لا يوجد طلاب معينين لك حالياً",
     "eligibleForApply": "مؤهل للتقديم",
     "notMeetReqs": "لم يستوفِ الشروط",
+    "kpi": {
+      "totalSubmissions": "إجمالي التقديمات",
+      "eligible": "مؤهل",
+      "ineligible": "غير مؤهل",
+      "convertedPaid": "مدفوع (محوّل)",
+      "conversionFunnel": "مسار التحويل",
+      "funnelSubmitted": "مقدَّم",
+      "funnelEligible": "مؤهل",
+      "funnelPaid": "مدفوع"
+    },
+    "studentFilters": {
+      "all": "الكل",
+      "eligible": "مؤهل",
+      "ineligible": "غير مؤهل",
+      "paid": "مدفوع"
+    },
+    "studentCard": {
+      "payment": "حالة الدفع:",
+      "paid": "✅ مدفوع",
+      "notPaid": "⏳ لم يدفع بعد",
+      "readyPayout": "✅ جاهز لطلب الدفع",
+      "daysLeft": "{{count}} يوم متبقي",
+      "statusEligible": "مؤهل",
+      "statusIneligible": "غير مؤهل",
+      "statusPaid": "مدفوع"
+    },
     "leadStatuses": {
       "new": "جديد",
       "eligible": "مؤهل",

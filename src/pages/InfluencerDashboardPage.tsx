@@ -93,10 +93,10 @@ const InfluencerDashboardPage = () => {
 
   // Funnel data for chart
   const funnelData = useMemo(() => [
-    { name: isAr ? 'مقدَّم' : 'Submitted', value: totalLeads, fill: 'hsl(var(--primary))' },
-    { name: isAr ? 'مؤهل' : 'Eligible', value: eligibleLeads, fill: 'hsl(160, 60%, 45%)' },
-    { name: isAr ? 'مدفوع' : 'Paid', value: paidCases, fill: 'hsl(130, 60%, 40%)' },
-  ], [totalLeads, eligibleLeads, paidCases, isAr]);
+    { name: t('influencerDash.kpi.funnelSubmitted'), value: totalLeads, fill: 'hsl(var(--primary))' },
+    { name: t('influencerDash.kpi.funnelEligible'), value: eligibleLeads, fill: 'hsl(160, 60%, 45%)' },
+    { name: t('influencerDash.kpi.funnelPaid'), value: paidCases, fill: 'hsl(130, 60%, 40%)' },
+  ], [totalLeads, eligibleLeads, paidCases, t]);
 
   // Filtered students
   const filteredLeads = useMemo(() => {
@@ -165,16 +165,16 @@ const InfluencerDashboardPage = () => {
           <div className="space-y-5">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 gap-3">
-              <KPICard icon={Users} label={isAr ? 'إجمالي التقديمات' : 'Total Submissions'} value={totalLeads} color="text-blue-600" />
-              <KPICard icon={Target} label={isAr ? 'مؤهل' : 'Eligible'} value={eligibleLeads} color="text-emerald-600" />
-              <KPICard icon={XCircle} label={isAr ? 'غير مؤهل' : 'Ineligible'} value={ineligibleLeads} color="text-red-500" />
-              <KPICard icon={CreditCard} label={isAr ? 'مدفوع (محوّل)' : 'Converted (Paid)'} value={paidCases} color="text-green-600" />
+              <KPICard icon={Users} label={t('influencerDash.kpi.totalSubmissions')} value={totalLeads} color="text-blue-600" />
+              <KPICard icon={Target} label={t('influencerDash.kpi.eligible')} value={eligibleLeads} color="text-emerald-600" />
+              <KPICard icon={XCircle} label={t('influencerDash.kpi.ineligible')} value={ineligibleLeads} color="text-red-500" />
+              <KPICard icon={CreditCard} label={t('influencerDash.kpi.convertedPaid')} value={paidCases} color="text-green-600" />
             </div>
 
             {/* Funnel Chart */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{isAr ? 'مسار التحويل' : 'Conversion Funnel'}</CardTitle>
+                <CardTitle className="text-base">{t('influencerDash.kpi.conversionFunnel')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={180}>
@@ -204,10 +204,10 @@ const InfluencerDashboardPage = () => {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                     studentFilter === f ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}>
-                  {f === 'all' ? (isAr ? 'الكل' : 'All')
-                    : f === 'eligible' ? (isAr ? 'مؤهل' : 'Eligible')
-                    : f === 'ineligible' ? (isAr ? 'غير مؤهل' : 'Ineligible')
-                    : (isAr ? 'مدفوع' : 'Paid')}
+                  {f === 'all' ? t('influencerDash.studentFilters.all')
+                    : f === 'eligible' ? t('influencerDash.studentFilters.eligible')
+                    : f === 'ineligible' ? t('influencerDash.studentFilters.ineligible')
+                    : t('influencerDash.studentFilters.paid')}
                 </button>
               ))}
             </div>
@@ -236,11 +236,11 @@ const InfluencerDashboardPage = () => {
                           <p className="font-medium text-sm">{initials}</p>
                           <div className="flex items-center gap-2">
                             {isPaid ? (
-                              <Badge variant="default" className="bg-green-600 text-xs">{isAr ? 'مدفوع' : 'Paid'}</Badge>
+                              <Badge variant="default" className="bg-green-600 text-xs">{t('influencerDash.studentCard.statusPaid')}</Badge>
                             ) : isEligible ? (
-                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs">{isAr ? 'مؤهل' : 'Eligible'}</Badge>
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs">{t('influencerDash.studentCard.statusEligible')}</Badge>
                             ) : (
-                              <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">{isAr ? 'غير مؤهل' : 'Ineligible'}</Badge>
+                              <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">{t('influencerDash.studentCard.statusIneligible')}</Badge>
                             )}
                           </div>
                         </div>
@@ -248,7 +248,7 @@ const InfluencerDashboardPage = () => {
                         {/* Payment status row */}
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
-                            {isAr ? 'حالة الدفع:' : 'Payment:'} {isPaid ? (isAr ? '✅ مدفوع' : '✅ Paid') : (isAr ? '⏳ لم يدفع بعد' : '⏳ Not paid')}
+                            {t('influencerDash.studentCard.payment')} {isPaid ? t('influencerDash.studentCard.paid') : t('influencerDash.studentCard.notPaid')}
                           </span>
                         </div>
 
@@ -259,8 +259,8 @@ const InfluencerDashboardPage = () => {
                           }`}>
                             <Timer className="h-4 w-4 shrink-0" />
                             {timerInfo.ready
-                              ? (isAr ? '✅ جاهز لطلب الدفع' : '✅ Ready to request payout')
-                              : (isAr ? `${timerInfo.remaining} يوم متبقي` : `${timerInfo.remaining} days left`)}
+                              ? t('influencerDash.studentCard.readyPayout')
+                              : t('influencerDash.studentCard.daysLeft', { count: timerInfo.remaining })}
                           </div>
                         )}
                       </CardContent>
