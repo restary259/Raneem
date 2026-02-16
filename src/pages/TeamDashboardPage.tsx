@@ -464,13 +464,13 @@ const TeamDashboardPage = () => {
                                   {(lead as any).english_units && (
                                     <div className="p-2 bg-muted/30 rounded">
                                       <span className="text-muted-foreground">{t('admin.leads.englishCol')}</span>
-                                      <p className="font-medium">{(lead as any).english_units} {isAr ? 'وحدات' : 'units'}</p>
+                                      <p className="font-medium">{(lead as any).english_units} {t('lawyer.units', 'units')}</p>
                                     </div>
                                   )}
                                   {(lead as any).math_units && (
                                     <div className="p-2 bg-muted/30 rounded">
                                       <span className="text-muted-foreground">{t('admin.leads.mathCol')}</span>
-                                      <p className="font-medium">{(lead as any).math_units} {isAr ? 'وحدات' : 'units'}</p>
+                                      <p className="font-medium">{(lead as any).math_units} {t('lawyer.units', 'units')}</p>
                                     </div>
                                   )}
                                 </div>
@@ -634,9 +634,10 @@ const TeamDashboardPage = () => {
 
       {/* Profile Completion Modal */}
       <Dialog open={!!profileCase} onOpenChange={(open) => !open && setProfileCase(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" aria-describedby="profile-completion-desc">
           <DialogHeader>
             <DialogTitle>{t('lawyer.completeProfile')}</DialogTitle>
+            <p id="profile-completion-desc" className="text-sm text-muted-foreground">{t('lawyer.completeProfileDesc', 'Fill in the student profile details below.')}</p>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
             <div><Label>{t('admin.ready.fullName')}</Label><Input value={profileValues.student_full_name || ''} onChange={e => setProfileValues(v => ({ ...v, student_full_name: e.target.value }))} /></div>
@@ -676,9 +677,7 @@ const TeamDashboardPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('lawyer.statuses.ready_to_apply')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {isAr
-                ? 'هل أنت متأكد أن جميع المعلومات صحيحة وكاملة؟ سيتم تغيير الحالة إلى "جاهز للتقديم".'
-                : 'Are you sure all information is correct and complete? The status will be changed to "Ready to Apply".'}
+              {t('lawyer.readyConfirmDesc', 'Are you sure all information is correct and complete? The status will be changed to "Ready to Apply".')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

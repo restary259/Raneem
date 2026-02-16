@@ -808,7 +808,7 @@
       "influencer": "وكيل",
       "referral": "إحالة",
       "organic": "عضوي",
-      "contact_form": "نموذج التواصل"
+      "contact_form": "نموذج التواصل",
       "friend": "صديق",
       "family": "عائلة",
       "self": "ذاتي"
@@ -836,6 +836,9 @@
     "majorsTab": "التخصصات",
     "searchMajors": "ابحث عن تخصص…",
     "completeProfile": "إكمال الملف",
+    "completeProfileDesc": "أكمل بيانات ملف الطالب أدناه.",
+    "readyConfirmDesc": "هل أنت متأكد أن جميع المعلومات صحيحة وكاملة؟ سيتم تغيير الحالة إلى \"جاهز للتقديم\".",
+    "units": "وحدات",
     "showCalendar": "عرض التقويم",
     "hideCalendar": "إخفاء التقويم"
   },
