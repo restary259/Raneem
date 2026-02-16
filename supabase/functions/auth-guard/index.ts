@@ -44,18 +44,36 @@ serve(async (req) => {
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-    // Check rate limit: 5 failed attempts in 15 minutes
+    // Check rate limit: 5 failed attempts per email in 15 minutes
     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
+    const { count: emailCount } = await supabaseAdmin
       .from("login_attempts")
       .select("*", { count: "exact", head: true })
       .eq("email", email.toLowerCase())
       .eq("success", false)
       .gte("created_at", fifteenMinAgo);
 
-    if ((count ?? 0) >= 5) {
+    // IP-based rate limit: 20 failed attempts per IP in 15 minutes (prevents credential stuffing)
+    const { count: ipCount } = await supabaseAdmin
+      .from("login_attempts")
+      .select("*", { count: "exact", head: true })
+      .eq("ip_address", ip)
+      .eq("success", false)
+      .gte("created_at", fifteenMinAgo);
+
+    if ((emailCount ?? 0) >= 5) {
       return new Response(JSON.stringify({
         error: "تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة بعد 15 دقيقة.",
+        locked: true,
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if ((ipCount ?? 0) >= 20) {
+      return new Response(JSON.stringify({
+        error: "Too many login attempts from this network. Please try again in 15 minutes.",
         locked: true,
       }), {
         status: 429,
