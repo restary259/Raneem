@@ -11,17 +11,23 @@ interface MyApplicationTabProps {
   userId: string;
 }
 
+// Simplified 6-stage funnel aligned with admin CasesManagement
 const CASE_STEPS = [
   'assigned',
   'contacted',
-  'appointment',
   'paid',
   'ready_to_apply',
-  'registration_submitted',
   'visa_stage',
-  'settled',
   'completed',
 ] as const;
+
+// Map legacy statuses to the simplified funnel for display
+const LEGACY_STATUS_MAP: Record<string, string> = {
+  appointment: 'contacted',
+  closed: 'completed',
+  registration_submitted: 'ready_to_apply',
+  settled: 'completed',
+};
 
 const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
   const [studentCase, setStudentCase] = useState<any>(null);
@@ -100,7 +106,8 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
     );
   }
 
-  const currentStepIndex = CASE_STEPS.indexOf(studentCase.case_status);
+  const mappedStatus = LEGACY_STATUS_MAP[studentCase.case_status] || studentCase.case_status;
+  const currentStepIndex = CASE_STEPS.indexOf(mappedStatus as typeof CASE_STEPS[number]);
 
   return (
     <div className="space-y-4">

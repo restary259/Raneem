@@ -89,16 +89,12 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
 
   const logDocumentAccess = async (action: string, docName: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await (supabase as any).from('admin_audit_log').insert({
-          admin_id: session.user.id,
-          action: `document_${action}`,
-          target_id: userId,
-          target_table: 'documents',
-          details: `${action} document: ${docName}`,
-        });
-      }
+      await (supabase as any).rpc('log_user_activity', {
+        p_action: `document_${action}`,
+        p_target_id: userId,
+        p_target_table: 'documents',
+        p_details: `${action} document: ${docName}`,
+      });
     } catch {}
   };
 

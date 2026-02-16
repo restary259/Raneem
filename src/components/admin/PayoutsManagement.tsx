@@ -143,10 +143,15 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     const { data: { session } } = await supabase.auth.getSession();
     const adminId = session?.user?.id || null;
     for (const id of ids) {
+      const req = requests.find(r => r.id === id);
       await (supabase as any).from('payout_requests').update({
         status: action,
         ...(action === 'approved' ? { approved_at: new Date().toISOString(), approved_by: adminId } : {}),
       }).eq('id', id);
+      // Audit log for each bulk action
+      if (req) {
+        auditLog(`bulk_payout_${action}`, id, `Bulk ${action} ${req.amount} NIS for ${getName(req.requestor_id)}`);
+      }
     }
     setSelected(new Set());
     toast({ title: t('admin.payouts.statusUpdated') });

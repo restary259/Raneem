@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Gift, Trophy, Award, Star, Clock, CheckCircle, Send, XCircle } from 'lucide-react';
@@ -23,6 +24,9 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   const [minThreshold, setMinThreshold] = useState(100);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestNotes, setRequestNotes] = useState('');
+  const [profile, setProfile] = useState<any>(null);
+  const [ibanInput, setIbanInput] = useState('');
+  const [savingIban, setSavingIban] = useState(false);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const LOCK_DAYS = 20;
 
@@ -33,16 +37,18 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   };
 
   const fetchData = async () => {
-    const [rewardsRes, milestonesRes, requestsRes, configRes] = await Promise.all([
+    const [rewardsRes, milestonesRes, requestsRes, configRes, profileRes] = await Promise.all([
       (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       (supabase as any).from('referral_milestones').select('*').eq('user_id', userId),
       (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
-      (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single()
+      (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single(),
+      (supabase as any).from('profiles').select('iban, iban_confirmed_at').eq('id', userId).maybeSingle(),
     ]);
     if (rewardsRes.data) setRewards(rewardsRes.data);
     if (milestonesRes.data) setMilestones(milestonesRes.data);
     if (requestsRes.data) setPayoutRequests(requestsRes.data);
     if (configRes.data) setMinThreshold(configRes.data.weight);
+    if (profileRes.data) { setProfile(profileRes.data); setIbanInput(profileRes.data.iban || ''); }
   };
 
   useEffect(() => { fetchData(); }, [userId]);
@@ -58,7 +64,22 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
     return days >= LOCK_DAYS;
   });
   const availableAmount = eligibleRewards.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const canRequest = availableAmount >= minThreshold;
+  const hasIban = !!profile?.iban && profile.iban.length >= 15;
+  const canRequest = availableAmount >= minThreshold && hasIban;
+
+  const saveIban = async () => {
+    const trimmed = ibanInput.trim().replace(/\s/g, '');
+    if (trimmed.length < 15 || !/^[A-Z]{2}\d{2}/.test(trimmed.toUpperCase())) {
+      toast({ variant: 'destructive', title: t('rewards.invalidIban', 'Invalid IBAN'), description: t('rewards.ibanFormatHint', 'Please enter a valid IBAN (e.g. DE89370400440532013000)') });
+      return;
+    }
+    setSavingIban(true);
+    const { error } = await (supabase as any).from('profiles').update({ iban: trimmed.toUpperCase(), iban_confirmed_at: new Date().toISOString() }).eq('id', userId);
+    setSavingIban(false);
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
+    toast({ title: t('rewards.ibanSaved', 'IBAN saved') });
+    fetchData();
+  };
 
   const submitPayoutRequest = async () => {
     if (!canRequest) return;
@@ -116,12 +137,31 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
         </CardContent></Card>
       </div>
 
+      {/* IBAN Entry */}
+      {!hasIban && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="p-4 space-y-3">
+            <p className="text-sm font-medium text-amber-800">🏦 {t('rewards.ibanRequired', 'Bank IBAN required before requesting payouts')}</p>
+            <div className="flex gap-2 items-end flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-xs">{t('rewards.ibanLabel', 'IBAN')}</Label>
+                <Input value={ibanInput} onChange={e => setIbanInput(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="mt-1 font-mono" />
+              </div>
+              <Button size="sm" onClick={saveIban} disabled={savingIban}>{savingIban ? '...' : t('rewards.saveIban', 'Save IBAN')}</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Request Payout */}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={() => setShowRequestModal(true)} disabled={!canRequest} className="w-full sm:w-auto">
           <Send className="h-4 w-4 me-2" />{t('rewards.requestPayout')}
         </Button>
-        {!canRequest && availableAmount > 0 && availableAmount < minThreshold && (
+        {!hasIban && availableAmount >= minThreshold && (
+          <Badge variant="secondary" className="text-xs">🏦 {t('rewards.addIbanFirst', 'Add IBAN first')}</Badge>
+        )}
+        {hasIban && !canRequest && availableAmount > 0 && availableAmount < minThreshold && (
           <Badge variant="secondary" className="text-xs">🔒 {t('rewards.minThreshold', { defaultValue: `Minimum ${minThreshold} ₪`, amount: minThreshold })}</Badge>
         )}
       </div>

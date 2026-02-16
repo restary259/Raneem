@@ -1351,6 +1351,15 @@ export type Database = {
             }
             Returns: undefined
           }
+      log_user_activity: {
+        Args: {
+          p_action: string
+          p_details?: string
+          p_target_id?: string
+          p_target_table?: string
+        }
+        Returns: undefined
+      }
       upsert_lead_from_contact: {
         Args: {
           p_email: string
