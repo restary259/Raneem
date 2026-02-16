@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/hooks/useDirection';
 import {
-  LayoutDashboard, Users, ClipboardCheck, Mail, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings
+  LayoutDashboard, Users, ClipboardCheck, LogOut, ArrowLeftCircle, Wallet, GraduationCap, UserCheck, Package, Settings, BarChart3, Briefcase
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
@@ -22,13 +22,14 @@ const sidebarGroups = [
     labelKey: 'admin.groups.dashboard',
     items: [
       { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
-      { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: ClipboardCheck },
+      { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: BarChart3 },
     ],
   },
   {
     labelKey: 'admin.groups.pipeline',
     items: [
       { id: 'leads', labelKey: 'admin.tabs.leads', icon: Users },
+      { id: 'student-cases', labelKey: 'admin.tabs.studentCases', icon: Briefcase },
       { id: 'cases', labelKey: 'admin.tabs.cases', icon: ClipboardCheck },
     ],
   },
@@ -51,7 +52,6 @@ const sidebarGroups = [
     labelKey: 'admin.groups.system',
     items: [
       { id: 'settings', labelKey: 'admin.tabs.settings', icon: Settings },
-      { id: 'contacts', labelKey: 'admin.tabs.contacts', icon: Mail },
     ],
   },
 ];

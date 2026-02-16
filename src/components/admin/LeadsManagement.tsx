@@ -233,7 +233,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => markNotEligible(lead.id)} disabled={loading}><UserX className="h-3 w-3 me-1" />{t('admin.leads.markNotEligible')}</Button>
         </>
       )}
-      {lead.status === 'eligible' && (
+      {/* Allow assigning any lead regardless of status */}
+      {(lead.status === 'new' || lead.status === 'eligible') && (
         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setAssignModal({ leadId: lead.id, leadName: lead.full_name })} disabled={loading}>
           <Gavel className="h-3 w-3 me-1" />{t('admin.leads.assignTeamMember')}
         </Button>
@@ -272,17 +273,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           </Select>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 me-1" />CSV</Button>
           <Button variant="outline" size="sm" onClick={() => {
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
-            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.education, hk.german, hk.score, hk.status, hk.source, hk.date];
-            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.education_level || '', l.german_level || '', l.eligibility_score ?? '', l.status, l.source_type, new Date(l.created_at).toLocaleDateString(locale)]);
-            exportXLSX({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
-          }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
-          <Button variant="outline" size="sm" onClick={() => {
-            const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
-            const headers = [hk.name, hk.phone, hk.city, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
-            const rows = filtered.map(l => [l.full_name, l.phone, l.city || '', l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale)]);
+            const headers = [hk.name, hk.phone, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
+            const rows = filtered.map(l => [l.full_name, l.phone, l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale)]);
             exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
           }}><FileText className="h-4 w-4 me-1" />PDF</Button>
           <Button onClick={() => setShowAddModal(true)} size="sm"><Plus className="h-4 w-4 me-1" />{t('admin.leads.addLead')}</Button>
@@ -298,16 +292,16 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               <table className="w-full table-fixed text-sm">
                  <thead>
                    <tr className="border-b bg-muted/30">
-                     <th className="w-[15%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
-                     <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.city', 'City')}</th>
-                     <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.interestedMajor', 'Interested Major')}</th>
-                     <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
-                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.englishCol', 'English')}</th>
-                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
-                     <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
-                     <th className="w-[8%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
-                     <th className="w-[8%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
-                     <th className="w-[12%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
+                      <th className="w-[15%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
+                      <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
+                      <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.educationLevel', 'Education')}</th>
+                      <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.interestedMajor', 'Major')}</th>
+                      <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.englishCol', 'Eng')}</th>
+                      <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.mathCol', 'Math')}</th>
+                      <th className="w-[7%] px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.leads.score', 'Score')}</th>
+                      <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.source', 'Source')}</th>
+                      <th className="w-[8%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.status', 'Status')}</th>
+                      <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.students.actions', 'Actions')}</th>
                    </tr>
                  </thead>
                 <tbody>
@@ -325,13 +319,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                             {lead.ref_code && <span className="block text-[10px] font-mono text-muted-foreground">{lead.ref_code}</span>}
                           </div>
                         </td>
-                        <td className="p-3 text-muted-foreground">{lead.city || '—'}</td>
-                        <td className="p-3 text-muted-foreground">{lead.study_destination || lead.preferred_city || '—'}</td>
-                        <td className="p-3">
-                          <a href={`tel:${lead.phone}`} className="text-primary hover:underline flex items-center gap-1">
-                            <Phone className="h-3 w-3" />{lead.phone}
-                          </a>
-                        </td>
+                         <td className="p-3">
+                           <a href={`tel:${lead.phone}`} className="text-primary hover:underline flex items-center gap-1">
+                             <Phone className="h-3 w-3" />{lead.phone}
+                           </a>
+                         </td>
+                         <td className="p-3 text-muted-foreground text-xs">{lead.education_level || '—'}</td>
+                         <td className="p-3 text-muted-foreground">{lead.preferred_major || '—'}</td>
                         <td className="p-3 text-center">{lead.english_units ?? '—'}</td>
                         <td className="p-3 text-center">{lead.math_units ?? '—'}</td>
                         <td className="p-3">

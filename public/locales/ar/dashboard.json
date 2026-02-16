@@ -239,7 +239,8 @@
     "tabs": {
       "overview": "نظرة عامة",
       "leads": "العملاء المحتملين",
-      "cases": "ملفات الطلاب",
+      "studentCases": "ملفات الطلاب",
+      "cases": "إدارة الملفات",
       "students": "الطلاب",
       "partners": "الشركاء",
       "influencers": "الوكلاء",

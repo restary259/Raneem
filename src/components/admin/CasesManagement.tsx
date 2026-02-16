@@ -216,13 +216,6 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{t('cases.studentFiles', { count: cases.length })}</p>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => setShowExportVerify(true)}><Download className="h-4 w-4 me-1" />CSV</Button>
-          <Button variant="outline" size="sm" onClick={() => {
-            const headers = [t('admin.students.name'), t('cases.teamMemberLabel'), t('lawyer.cityLabel'), t('lawyer.schoolLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.teamMemberComm'), t('cases.referralDiscount'), t('cases.schoolComm'), t('cases.translationFee'), t('cases.netProfit'), t('admin.referralsMgmt.date')];
-            const rows = cases.map(c => [getLeadName(c.lead_id), getTeamMemberName(c.assigned_lawyer_id), c.selected_city || '', c.selected_school || '', t(`cases.statuses.${c.case_status}`, c.case_status), c.service_fee, c.influencer_commission, c.lawyer_commission, c.referral_discount, c.school_commission, c.translation_fee, getNetProfit(c), new Date(c.created_at).toLocaleDateString()]);
-            const totalRow = ['TOTAL', '', '', '', '', cases.reduce((s,c) => s + c.service_fee, 0), cases.reduce((s,c) => s + c.influencer_commission, 0), cases.reduce((s,c) => s + c.lawyer_commission, 0), cases.reduce((s,c) => s + c.referral_discount, 0), cases.reduce((s,c) => s + c.school_commission, 0), cases.reduce((s,c) => s + c.translation_fee, 0), cases.reduce((s,c) => s + getNetProfit(c), 0), ''];
-            exportXLSX({ headers, rows, fileName: `cases-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Cases', summaryRows: [totalRow] });
-          }}><FileSpreadsheet className="h-4 w-4 me-1" />XLSX</Button>
           <Button variant="outline" size="sm" onClick={() => {
             const headers = [t('admin.students.name'), t('cases.teamMemberLabel'), t('admin.students.status'), t('cases.serviceFee'), t('cases.agentComm'), t('cases.teamMemberComm'), t('cases.netProfit')];
             const rows = cases.map(c => [getLeadName(c.lead_id), getTeamMemberName(c.assigned_lawyer_id), t(`cases.statuses.${c.case_status}`, c.case_status), c.service_fee, c.influencer_commission, c.lawyer_commission, getNetProfit(c)]);
@@ -303,16 +296,16 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                   {!isEditing ? (
                     <>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{c.service_fee} €</span></div>
-                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">{c.influencer_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.teamMemberComm')}</span><span className="font-semibold text-red-700">{c.lawyer_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">{c.referral_discount} €</span></div>
+                        <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{c.service_fee} ₪</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">{c.influencer_commission} ₪</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.teamMemberComm')}</span><span className="font-semibold text-red-700">{c.lawyer_commission} ₪</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">{c.referral_discount} ₪</span></div>
                         <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200"><span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{c.school_commission} €</span></div>
-                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">{c.translation_fee} €</span></div>
+                        <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200"><span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">{c.translation_fee} ₪</span></div>
                       </div>
-                      <div className={`flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(c) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
-                        <span className="flex items-center gap-1"><DollarSign className="h-4 w-4" />{t('cases.netProfit')}</span>
-                        <span className={getNetProfit(c) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(c)} €</span>
+                       <div className={`flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(c) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
+                         <span className="flex items-center gap-1"><DollarSign className="h-4 w-4" />{t('cases.netProfit')}</span>
+                         <span className={getNetProfit(c) >= 0 ? 'text-emerald-700' : 'text-red-600'}>{getNetProfit(c)} ₪</span>
                       </div>
                       {/* Attached Services Snapshots */}
                       {(caseSnapshots[c.id] || []).length > 0 && (
@@ -344,10 +337,10 @@ const CasesManagement: React.FC<CasesManagementProps> = ({ cases, leads, lawyers
                       </div>
                       {/* Financial fields are now READ-ONLY — calculated from service snapshots */}
                       <div className="grid grid-cols-2 gap-3">
-                        {FINANCIAL_FIELDS.map(field => (
-                          <div key={field} className="flex justify-between p-2 bg-muted/30 rounded border text-sm">
-                            <span className="text-xs text-muted-foreground">{t(FINANCIAL_FIELD_KEYS[field])}</span>
-                            <span className="font-semibold">{c[field as keyof StudentCase]} €</span>
+                         {FINANCIAL_FIELDS.map(field => (
+                           <div key={field} className="flex justify-between p-2 bg-muted/30 rounded border text-sm">
+                             <span className="text-xs text-muted-foreground">{t(FINANCIAL_FIELD_KEYS[field])}</span>
+                             <span className="font-semibold">{c[field as keyof StudentCase]} {field === 'school_commission' ? '€' : '₪'}</span>
                           </div>
                         ))}
                       </div>

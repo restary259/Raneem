@@ -239,7 +239,8 @@
     "tabs": {
       "overview": "Overview",
       "leads": "Leads",
-      "cases": "Student Cases",
+      "studentCases": "Student Cases",
+      "cases": "Case Management",
       "students": "Students",
       "partners": "Partners",
       "influencers": "Agents",

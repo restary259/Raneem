@@ -91,7 +91,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         />
         <SparklineCard
           icon={DollarSign} label={t('admin.overview.revenueThisMonth')}
-          value={revenueThisMonth > 0 ? `${revenueThisMonth.toLocaleString()} €` : '0 €'} color="bg-emerald-600"
+          value={revenueThisMonth > 0 ? `${revenueThisMonth.toLocaleString()} ₪` : '0 ₪'} color="bg-emerald-600"
           sparkData={spark7d(cases.filter(c => ['paid', 'completed'].includes(c.case_status)), 'paid_at')}
         />
         <SparklineCard
@@ -101,7 +101,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         <SparklineCard
           icon={BarChart3} label={t('admin.overview.influencerROI')}
           value={infROI > 0 ? `${infROI}x` : '—'} color="bg-violet-600"
-          subtext={infPayouts > 0 ? `${infRevenue.toLocaleString()} / ${infPayouts.toLocaleString()} €` : undefined}
+          subtext={infPayouts > 0 ? `${infRevenue.toLocaleString()} / ${infPayouts.toLocaleString()} ₪` : undefined}
         />
       </div>
 
