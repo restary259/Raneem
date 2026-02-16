@@ -1,39 +1,131 @@
+# Real-Time Data Sync -- Gap Analysis and Fix Plan
+
+## Current State
+
+The system already has real-time subscriptions on 3 of 4 dashboards using a `useRealtimeSubscription` hook. However, there are critical gaps causing stale data.
+
+## Identified Issues
+
+### 1. Missing Realtime Publication for Key Tables
+
+These tables are subscribed to in code but **NOT enabled** in the database realtime publication:
+
+- `profiles` (Admin subscribes to it)
+- `rewards` (Admin and Influencer subscribe to it)
+
+This means those subscriptions silently do nothing.
+
+**Fix:** Add a migration to enable realtime for `profiles` and `rewards`.
+
+### 2. Student Dashboard Has Zero Realtime Subscriptions
+
+The Student Dashboard (`StudentDashboardPage.tsx`) fetches profile data once on load and never updates. If admin changes student status, case stage, or marks payment -- the student sees stale data until they manually refresh.
+
+**Fix:** Add realtime subscriptions to the Student Dashboard for `profiles`, `student_cases`, `notifications`, and `student_checklist`.
+
+### 3. No Window Focus Refetch
+
+When a user switches tabs/windows and comes back, data could be minutes old. None of the dashboards refetch on window focus.
+
+**Fix:** Add a `visibilitychange` listener to refetch data when the user returns to the app.
+
+### 4. No Post-Mutation Refetch Guarantee
+
+Some child components (like `NextStepButton`, case status updates) call `onRefresh` but others may not propagate correctly.
+
+**Fix:** Ensure all mutation callbacks trigger the parent's refetch function.
+
+---
+
+## Implementation Plan
+
+### Step 1: Database Migration
+
+Enable realtime for `profiles` and `rewards` tables:
+
+```text
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.rewards;
+```
+
+### Step 2: Enhance useRealtimeSubscription Hook
+
+Add an optional `refetchOnFocus` parameter. When enabled, it will also refetch data when the browser tab regains focus using the `visibilitychange` event.
+
+### Step 3: Add Realtime to Student Dashboard
+
+Add subscriptions for:
+
+- `profiles` -- profile changes (status, visa, etc.)
+- `student_cases` -- case stage updates
+- `notifications` -- new notifications
+- `student_checklist` -- checklist updates
+
+Also add window-focus refetch so the student always sees fresh data.
+
+### Step 4: Add Window Focus Refetch to All Dashboards
+
+Update Admin, Team, and Influencer dashboards to also refetch on window focus, providing a safety net even if a realtime event is missed.
+
+---
+
+## Files to Modify
 
 
-# Fix: Redeploy Edge Functions for Temp Password Display
+| File                                    | Change                                               |
+| --------------------------------------- | ---------------------------------------------------- |
+| New migration SQL                       | Enable realtime for `profiles` and `rewards`         |
+| `src/hooks/useRealtimeSubscription.ts`  | Add `visibilitychange` listener for refetch on focus |
+| `src/pages/StudentDashboardPage.tsx`    | Add realtime subscriptions + focus refetch           |
+| `src/pages/AdminDashboardPage.tsx`      | Add focus refetch                                    |
+| `src/pages/TeamDashboardPage.tsx`       | Add focus refetch                                    |
+| `src/pages/InfluencerDashboardPage.tsx` | Add focus refetch                                    |
 
-## Problem
 
-The screenshot shows "Login credentials have been sent to the member's email address" -- this is the OLD deployed version of the edge function. The source code has already been updated correctly to return `temp_password`, but the edge functions were never redeployed after the last changes.
+## Security Note
 
-## What's Already Correct (No Code Changes Needed)
+No new RLS policies needed. Existing policies already control which rows each role can see. Realtime respects RLS -- users only receive events for rows they have SELECT access to.
 
-All three edge functions already have the right code:
-- `create-team-member/index.ts` -- returns `temp_password` in response (line 145)
-- `create-influencer/index.ts` -- returns `temp_password` in response (line 135)
-- `create-student-account/index.ts` -- returns `temp_password` in response (line 151)
+&nbsp;
 
-The UI components are also correct:
-- `InfluencerManagement.tsx` -- stores `result.temp_password`, shows it with Copy button (lines 62, 136-155)
-- `ReadyToApplyTable.tsx` -- stores `result.temp_password`, shows it with Copy button (lines 185, 374-393)
+**Prompt: Pull-to-Refresh for Tables**
 
-Commission flow is also connected: the `commission_amount` is sent from `InfluencerManagement.tsx` (line 58) and stored on the profile by `create-team-member` (line 122).
+&nbsp;
 
-## Action Required
+&nbsp;
 
-**Redeploy all three edge functions** so the deployed versions match the source code:
+Implement pull-to-refresh only for table/list views on the Darb_Study dashboards.
 
-1. `create-team-member`
-2. `create-influencer`
-3. `create-student-account`
+&nbsp;
 
-## Post-Deploy Testing
+Requirements:
 
-After redeploying, test all three account creation flows:
+&nbsp;
 
-1. **Team Member** -- Create via admin panel, verify temp password is shown with copy button
-2. **Agent (Influencer)** -- Create via admin panel, verify temp password is shown with copy button
-3. **Student** -- Create via ReadyToApply table, verify temp password is shown with copy button
-4. **Commission** -- Set commission amount when creating, verify it is stored on the profile
-5. **First Login** -- Log in with the temp password, verify the forced password change modal appears
+1. Pull-to-refresh triggers only on top of the table/list scroll, not anywhere else.
+2. On refresh:  
 
+  - Fetch the latest data from the server/API for that table only.
+  - Do not reload the entire page.
+  - Update the table data in-place, keeping pagination, filters, and scroll position intact.
+3. &nbsp;
+4. Disable pull-to-refresh on pages with active forms, uploads, or payment processing.
+5. Show a standard “refresh spinner” while fetching data.
+6. Prevent duplicate API calls if the user repeatedly pulls during the same fetch.
+7. Ensure real-time updates also reflect changes made on other dashboards:  
+
+  - Admin → Student status / revenue
+  - Influencer → commission / referral data
+  - Team → appointments / case assignments
+8. &nbsp;
+9. Add a fallback auto-refresh every 20–30 seconds in case pull-to-refresh is not triggered.
+10. Ensure compatibility with both mobile and desktop scroll behaviors.
+11. After refresh, the table should retain user-applied filters, sorting, and search.
+
+&nbsp;
+
+&nbsp;
+
+Goal: Allow users to get the latest table data safely and quickly without losing context or interrupting other workflows.
+
+&nbsp;
