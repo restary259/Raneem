@@ -1,131 +1,128 @@
 
 
-# Complete Dashboard Overhaul: Simplify, Consolidate, Clean Up
+# Deterministic Case Status Machine + Auto-Advancing Workflow
 
-## The Problem
+## Overview
 
-The current admin dashboard has **18 separate tabs** spread across 5 groups. Many overlap in purpose, creating confusion and unnecessary navigation. The funnel visualization still references legacy statuses that were removed from the actual workflow. Financial data is scattered across multiple views.
+Implement a strict finite-state machine for case statuses that replaces free-form dropdowns with guided "Next Step" actions. Statuses auto-advance when conditions are met (e.g., appointment attended, profile saved, payment recorded). This eliminates manual status management and ensures data integrity across all dashboards.
 
-## New Simplified Structure
-
-### Admin Dashboard: 18 tabs reduced to 10
-
-Current 18 tabs grouped into a cleaner structure:
+## New Status Flow (13 stages)
 
 ```text
-BEFORE (18 tabs):                    AFTER (10 tabs):
--------------------------------      --------------------------
-Dashboard:                           Pipeline:
-  - Overview                           - Overview (merged with Analytics)
-  - Analytics                          - Leads
-Students:                              - Cases (merged with Ready)
-  - Leads                            People:
-  - Cases                              - Students (merged with Checklist)
-  - Ready                              - Partners (merged Influencers + Referrals)
-  - Students                         Finance:
-  - Checklist                          - Services (renamed Master Services)
-Team:                                  - Money (merged with Payouts)
-  - Influencers                      System:
-  - Referrals                          - Contacts
-Finance:                               - Settings (merged Eligibility + Notifications)
-  - Master Services                    - Security + Audit (merged)
-  - Money
-  - Payouts
-Tools:
-  - Majors
-  - Contacts
-  - Notifications
-  - Eligibility
-  - Security
-  - Audit
+NEW --> ELIGIBLE --> ASSIGNED --> CONTACTED --> APPT_SCHEDULED --> APPT_WAITING (loop)
+                                                    |
+                                              APPT_COMPLETED --> PROFILE_FILLED --> SERVICES_FILLED
+                                                                                        |
+                                                                   PAID --> READY_TO_APPLY --> VISA_STAGE --> COMPLETED
 ```
 
-### What Gets Merged
+Key rules:
+- Forward-only transitions (no backward jumps from UI)
+- Auto-advance on events (appointment attended, profile saved, services attached, payment recorded)
+- Admin override with audit reason for exceptional rollbacks
 
-1. **Overview + Analytics** -- KPI cards, funnel, and charts all in one view
-2. **Cases + Ready to Apply** -- "Ready" is just a filtered view of cases; add a filter toggle instead of a separate tab
-3. **Students + Checklist** -- Checklist is per-student; embed it within student management
-4. **Influencers + Referrals** -- Both are partner/team management; combine into one "Partners" tab
-5. **Money + Payouts** -- Both are financial operations; payouts become a section within Money
-6. **Eligibility + Notifications** -- Low-traffic config screens; combine into a "Settings" tab
-7. **Security + Audit** -- Both are security/compliance; combine into one tab
-8. **Majors** -- Stays as is (recently built, self-contained)
+---
 
-### Funnel Visualization Fix
+## Files to Create
 
-Update `FunnelVisualization.tsx` to remove legacy statuses (`appointment`, `registration_submitted`, `settled`) and align with the actual 6-stage funnel: new, eligible, assigned, contacted, paid, ready_to_apply, visa_stage, completed.
+### 1. `src/lib/caseStatus.ts` -- Status enum
+Define the canonical `CaseStatus` enum with all 13 stages, plus display labels and color mappings.
 
-### Financial Simplification
+### 2. `src/lib/caseTransitions.ts` -- Transition rules
+- `ALLOWED_TRANSITIONS` map defining which statuses can follow which
+- `canTransition(current, next)` validator function
+- `getNextSteps(current)` helper returning allowed next statuses
+- Legacy status mapping (old statuses like `appointment`, `settled` mapped to nearest new equivalent)
 
-Currently, when attaching services to a case, the system:
-1. Creates snapshots from master services (correct)
-2. Adds snapshot totals to the case's `service_fee`, `lawyer_commission`, `influencer_commission` fields
+### 3. `src/components/admin/NextStepButton.tsx` -- UI component
+- Renders a primary "Mark as [next status]" button
+- If multiple next states allowed, shows a small dropdown
+- Calls Supabase update with transition validation
+- Shows toast on success/failure
+- Disabled state with tooltip when no transitions available
 
-The case card in CasesManagement also allows **manual editing** of all 6 financial fields. This creates confusion because the manual values can diverge from the snapshot totals.
+---
 
-**Fix:** Make the financial fields on the case **read-only summaries** calculated from attached snapshots. Remove manual financial input fields from the case edit form. The only way to change financials is to attach/remove services from the master services table.
+## Files to Modify
 
-### Team Dashboard
+### 4. `src/pages/TeamDashboardPage.tsx`
+- **Replace** the free-form status `<Select>` dropdown (line 374-377) with `<NextStepButton>`
+- **Auto-advance on "Mark Contacted"**: already does this (line 207), keep it
+- **Auto-advance on appointment attended**: when marking an appointment as attended in the calendar, also update case status to `appointment_completed` if transition is valid
+- **Add progress indicator**: replace status badge with a compact horizontal step indicator showing current position in the 13-stage funnel
+- **Profile modal save**: after saving profile fields, auto-advance to `profile_filled` if all required fields are present
 
-Already streamlined to 3 tabs -- no changes needed. The Team Dashboard is clean.
+### 5. `src/components/admin/CasesManagement.tsx`
+- **Replace** status dropdown (lines 377-381) with `<NextStepButton>`
+- **Make financial fields read-only** (lines 383-389): display them as text, not inputs. Financials are calculated from attached service snapshots only
+- **Remove** manual number inputs for `service_fee`, `influencer_commission`, `lawyer_commission`, etc. from the edit form
+- **Auto-advance on "Attach Services"**: after attaching services, auto-set status to `services_filled` if transition valid
+- **Auto-advance on payment**: when status moves to `paid`, auto-set `paid_at` (already happens) and show "Submit for Ready to Apply" as the next step
+- **Add "Ready to Apply" filter toggle**: a button/chip at the top to filter cases where `case_status === 'ready_to_apply'` (replaces the old separate ReadyToApplyTable tab)
+
+### 6. `src/components/lawyer/AppointmentCalendar.tsx`
+- When an appointment status is changed to "completed"/"attended", trigger auto-advance of the linked case to `appointment_completed` (using `canTransition` check)
+
+### 7. `src/components/admin/StudentManagement.tsx`
+- Add inline gating: show completion indicators for profile fields and services
+- "Submit for Ready to Apply" button disabled until `profileComplete && servicesAttached && caseStatus === 'paid'`
+- Tooltip explaining missing prerequisites when button is disabled
+
+### 8. `src/components/admin/FunnelVisualization.tsx`
+- Update funnel stages to include the new 13-stage model
+- Group stages into visual phases for the funnel chart: Intake (new, eligible), Assignment (assigned, contacted), Appointment (scheduled, waiting, completed), Preparation (profile, services), Payment (paid), Application (ready, visa, completed)
+
+---
+
+## Auto-Advance Logic Summary
+
+| Event | Triggers Status Change To |
+|-------|--------------------------|
+| Admin assigns case | `assigned` |
+| Team clicks "Mark Contacted" | `contacted` |
+| Team creates appointment for case | `appointment_scheduled` |
+| Appointment marked attended | `appointment_completed` |
+| Profile modal saved (all fields filled) | `profile_filled` |
+| Services attached to case | `services_filled` |
+| Payment recorded | `paid` |
+| Team clicks "Submit for Ready" | `ready_to_apply` |
+| Admin advances to visa | `visa_stage` |
+| Admin marks complete | `completed` |
+
+Each auto-advance checks `canTransition()` before updating -- if the case is already past that stage, no change occurs.
+
+---
 
 ## Technical Details
 
-### Files to Modify
+### Transition Validation Pattern
+```text
+// Used in every status update handler:
+1. Get current case status from state/DB
+2. Call canTransition(current, targetStatus)
+3. If false: show toast "Cannot skip to [status]" and abort
+4. If true: update DB, show success toast, trigger refetch
+```
 
-**1. `src/components/admin/AdminLayout.tsx`**
-- Reduce sidebar groups from 5 to 4
-- Reduce total tabs from 18 to 10
-- Update tab IDs and icons
+### NextStepButton Component API
+```text
+Props:
+  - caseId: string
+  - currentStatus: CaseStatus
+  - onStatusUpdated: (newStatus) => void
 
-**2. `src/pages/AdminDashboardPage.tsx`**
-- Remove imports for merged components
-- Update `renderContent()` switch statement
-- Remove redundant state variables
+Renders:
+  - Primary button: "Mark as [first allowed next status]"
+  - Optional dropdown: additional allowed transitions
+  - Disabled state when currentStatus === 'completed'
+```
 
-**3. `src/components/admin/AdminOverview.tsx`**
-- Merge KPIAnalytics content into Overview (charts, conversion metrics)
-- Single unified dashboard view
-
-**4. `src/components/admin/FunnelVisualization.tsx`**
-- Remove legacy stages: `appointment`, `registration_submitted`, `settled`
-- Use clean 8-stage funnel: new, eligible, assigned, contacted, paid, ready_to_apply, visa_stage, completed
-
-**5. `src/components/admin/CasesManagement.tsx`**
-- Add a "Ready to Apply" filter toggle (replaces the separate ReadyToApplyTable tab)
-- Make financial fields read-only (calculated from snapshots)
-- Remove manual number inputs for service_fee, commissions, etc.
-
-**6. `src/components/admin/StudentManagement.tsx`**
-- Embed checklist progress per student (inline, not separate tab)
-
-**7. New: `src/components/admin/PartnersManagement.tsx`**
-- Combines InfluencerManagement + ReferralManagement into one tabbed view
-
-**8. `src/components/admin/MoneyDashboard.tsx`**
-- Add PayoutsManagement as a section/sub-tab within Money
-
-**9. New: `src/components/admin/SettingsPanel.tsx`**
-- Combines EligibilityConfig + CustomNotifications
-
-**10. New: `src/components/admin/SecurityAuditPanel.tsx`**
-- Combines SecurityPanel + AuditLog into one view with sub-tabs
-
-**11. Localization files**
-- Update `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json` with new tab labels
+### Financial Fields (Read-Only)
+In CasesManagement edit mode, financial fields will display as styled text boxes (not inputs). The values are auto-calculated from `case_service_snapshots`. The only way to change financials is to attach/remove services.
 
 ### No Database Changes Required
+All 13 statuses are stored as plain strings in the existing `case_status` text column. No schema migration needed. The state machine is enforced purely in the frontend (with a recommendation to mirror server-side later).
 
-All changes are UI-only. The database schema, RLS policies, and edge functions remain unchanged. This is purely a frontend consolidation.
-
-### What Stays Unchanged
-
-- Team Dashboard (already clean with 3 tabs)
-- Student Dashboard
-- Influencer Dashboard
-- All Supabase tables, RLS policies, and triggers
-- Real-time subscriptions
-- Financial engine (auto_split_payment trigger)
-- SLA logic
-- Export functionality (CSV, XLSX, PDF)
+### Localization
+Add status labels for the 5 new statuses (`appointment_scheduled`, `appointment_waiting`, `appointment_completed`, `profile_filled`, `services_filled`) to both `en/dashboard.json` and `ar/dashboard.json`.
 
