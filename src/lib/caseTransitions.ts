@@ -9,7 +9,7 @@ export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   [CaseStatus.APPT_SCHEDULED]: [CaseStatus.APPT_COMPLETED, CaseStatus.APPT_WAITING, CaseStatus.PROFILE_FILLED],
   [CaseStatus.APPT_WAITING]: [CaseStatus.APPT_SCHEDULED, CaseStatus.APPT_COMPLETED, CaseStatus.PROFILE_FILLED],
   [CaseStatus.APPT_COMPLETED]: [CaseStatus.PROFILE_FILLED],
-  [CaseStatus.PROFILE_FILLED]: [CaseStatus.SERVICES_FILLED],
+  [CaseStatus.PROFILE_FILLED]: [CaseStatus.SERVICES_FILLED, CaseStatus.PAID],
   [CaseStatus.SERVICES_FILLED]: [CaseStatus.PAID],
   [CaseStatus.PAID]: [CaseStatus.READY_TO_APPLY],
   [CaseStatus.READY_TO_APPLY]: [CaseStatus.VISA_STAGE],
