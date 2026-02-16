@@ -92,13 +92,9 @@ const ApplyPage: React.FC = () => {
     const ref = searchParams.get('ref');
     if (ref) {
       supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('user_id', ref)
-        .eq('role', 'influencer')
-        .maybeSingle()
+        .rpc('validate_influencer_ref', { ref_id: ref })
         .then(({ data }) => {
-          if (data) {
+          if (data === true) {
             setSourceType('influencer');
             setSourceId(ref);
           }

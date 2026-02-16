@@ -1532,6 +1532,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_influencer_ref: { Args: { ref_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "influencer" | "lawyer"

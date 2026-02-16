@@ -59,7 +59,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
-      setCreatedPassword(result.temp_password || '');
+      setCreatedPassword('sent');
       toast({ title: t('admin.influencers.createSuccess') });
       onRefresh();
     } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
@@ -134,22 +134,13 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <div><Label>{t('admin.influencers.email')}</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
               <div><Label>{t('team.commission', { defaultValue: 'Commission (₪)' })}</Label><Input type="number" min="0" value={commission} onChange={e => setCommission(e.target.value)} placeholder="0" /></div>
               {createdPassword && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                  <p className="text-sm font-semibold text-amber-800">✅ {t('team.accountCreatedSuccess', { defaultValue: 'Account created successfully' })}</p>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                  <p className="text-sm font-semibold text-green-800">✅ {t('team.accountCreatedSuccess', { defaultValue: 'Account created successfully' })}</p>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">{t('admin.influencers.email')}:</p>
                     <p className="text-sm font-mono bg-background border rounded px-2 py-1">{email}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">{t('admin.influencers.tempPassword')}:</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-sm font-mono bg-background border rounded px-2 py-1 select-all">{createdPassword}</code>
-                      <Button size="sm" variant="outline" onClick={copyPassword}>
-                        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-amber-700 font-medium">⚠️ {t('team.shareManually', { defaultValue: 'Share credentials manually with the member (WhatsApp, DM, etc.)' })}</p>
+                  <p className="text-xs text-green-700 font-medium">📧 {t('team.credentialsSentViaEmail', { defaultValue: 'Login credentials have been sent to the member\'s email address.' })}</p>
                   <p className="text-xs text-muted-foreground">{t('team.passwordChangeNote')}</p>
                 </div>
               )}
