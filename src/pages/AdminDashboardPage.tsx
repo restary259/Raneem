@@ -142,8 +142,18 @@ const AdminDashboardPage = () => {
 
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
-  const totalStudents = students.length;
-  const newThisMonth = students.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
+
+  // Filter out team/influencer/admin accounts from "students" list
+  const nonStudentIds = new Set([
+    ...influencers.map((i: any) => i.id),
+    ...lawyers.map((l: any) => l.id),
+  ]);
+  // Also exclude the current admin user
+  if (user) nonStudentIds.add(user.id);
+  const actualStudents = students.filter((s: any) => !nonStudentIds.has(s.id));
+
+  const totalStudents = actualStudents.length;
+  const newThisMonth = actualStudents.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
   const totalPayments = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
 
   const handleStageClick = (stage: string) => {
@@ -198,7 +208,7 @@ const AdminDashboardPage = () => {
       case 'students':
         return (
           <StudentProfilesManagement
-            students={students}
+            students={actualStudents}
             influencers={influencers}
             leads={leads}
             onRefresh={fetchAllData}
