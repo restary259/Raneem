@@ -1,77 +1,64 @@
 
 
-# Team Dashboard -- Verification Fixes
+# Team Dashboard Earnings Fix -- Complete Scan Results
 
-## Issues Found
+## Issue Found: Earnings Not Showing for Team Members
 
-### 1. Wrong Language School Names (CRITICAL)
-**Line 37** has hardcoded wrong schools:
-```
-['Goethe-Institut', 'Humboldt-Institut', 'DID Deutsch-Institut', 'Carl Duisberg']
-```
-Must be changed to your actual 4 partners:
-```
-['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy']
-```
+### Root Cause
+The `auto_split_payment` database trigger fires when a case moves to `paid` status. It creates reward entries for **influencers** and **referrals**, but **never creates a reward for the lawyer/team member**. The Earnings tab uses the `EarningsPanel` component which reads exclusively from the `rewards` table. Since no reward row exists for the lawyer, earnings show as 0.
 
-### 2. "Submit for Application" Does NOT Move Case Forward (CRITICAL)
-The `confirmPaymentAndSubmit` function tries `canTransition(profile_filled, PAID)` -- but the FSM requires `profile_filled -> services_filled -> paid`. Since teams skip `services_filled`, the transition always fails silently (status stays unchanged).
+**Evidence:** Case `74ebe0a8...` has `lawyer_commission = 1000` and `paid_at` set, but the `rewards` table has zero rows for the assigned lawyer `4e7dd70d...`.
 
-**Fix:** Update the FSM in `caseTransitions.ts` to allow `PROFILE_FILLED -> PAID` directly. Also add a fallback in `confirmPaymentAndSubmit` so that from `profile_filled` or `services_filled`, it forces the status to `paid`.
+### Current Flow (Broken)
+1. Admin sets `lawyer_commission` on the case (money profile)
+2. Team member clicks "Submit for Application" --> status becomes `paid`, `paid_at` is set
+3. `auto_split_payment` trigger fires --> creates rewards for influencer only
+4. Team member opens Earnings tab --> reads `rewards` table --> shows 0
 
-### 3. Case Filter Tabs Have No English Translation
-The `FILTER_LABELS` object (lines 72-80) is hardcoded in Arabic only. When language is English, users still see Arabic labels.
-
-**Fix:** Replace `FILTER_LABELS` with a bilingual lookup using the existing `lawyer.filters.*` i18n keys that already exist in the EN translation file.
-
-### 4. Duplicate Gender Field in Services Tab
-Gender dropdown appears in both the "Visa Info" tab (line 866) and "Services" tab (line 930). Remove the duplicate from "Services".
+### Fixed Flow
+1-3 same as above
+4. `auto_split_payment` trigger ALSO creates a reward row for the assigned lawyer with `lawyer_commission` amount
+5. Team member opens Earnings tab --> reads `rewards` table --> shows correct earnings
 
 ---
+
+## Changes
+
+### 1. Update `auto_split_payment` Database Trigger
+Add a block that creates a reward for the assigned lawyer when `lawyer_commission > 0`:
+
+```sql
+-- After existing influencer/referral reward logic, add:
+IF NEW.assigned_lawyer_id IS NOT NULL AND NEW.lawyer_commission > 0 THEN
+  INSERT INTO rewards (user_id, amount, status, admin_notes)
+  VALUES (NEW.assigned_lawyer_id, NEW.lawyer_commission, 'pending',
+          'Auto-generated lawyer commission from case ' || NEW.id::text);
+END IF;
+```
+
+### 2. Backfill Existing Paid Cases
+Insert a reward row for the already-paid case so the team member sees their existing earnings immediately:
+
+```sql
+INSERT INTO rewards (user_id, amount, status, admin_notes)
+VALUES ('4e7dd70d-0ef1-4b79-9f34-476b8111dfea', 1000, 'pending',
+        'Backfill: lawyer commission from case 74ebe0a8...');
+```
+
+### 3. Fix EarningsPanel `requestor_role` for Team Members
+The EarningsPanel currently hardcodes `requestor_role: 'influencer'` when creating payout requests. For team members, this should be `'lawyer'`. Add a `role` prop to EarningsPanel and pass it from TeamDashboardPage.
+
+---
+
+## Security Scan Results
+Database linter: **No issues found.** All RLS policies are in place. The lawyer DELETE policy added earlier is working correctly.
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/pages/TeamDashboardPage.tsx` | 1. Fix `LANGUAGE_SCHOOLS` to the 4 real partners. 2. Replace `FILTER_LABELS` with bilingual i18n keys. 3. Add fallback in `confirmPaymentAndSubmit` for `profile_filled` cases. 4. Remove duplicate gender field from Services tab. |
-| `src/lib/caseTransitions.ts` | Allow `PROFILE_FILLED -> PAID` directly (team members skip `services_filled`). |
-
-## Technical Details
-
-### Language Schools Fix
-```typescript
-const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
-```
-
-### FSM Transition Fix
-```
-PROFILE_FILLED -> [SERVICES_FILLED, PAID]  // was only SERVICES_FILLED
-```
-
-### Filter Labels Fix
-Replace the hardcoded Arabic `FILTER_LABELS` with:
-```typescript
-const getFilterLabel = (filter: CaseFilterTab): string => {
-  const labels: Record<CaseFilterTab, { ar: string; en: string }> = {
-    all: { ar: 'الكل', en: 'All' },
-    new: { ar: 'جديد', en: 'New' },
-    contacted: { ar: 'تم التواصل', en: 'Contacted' },
-    appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
-    profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
-    submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted' },
-    sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
-  };
-  return isAr ? labels[filter].ar : labels[filter].en;
-};
-```
-
-### Submit Flow Fix
-In `confirmPaymentAndSubmit`, add fallback:
-```typescript
-if (canTransition(c.case_status, CaseStatus.PAID)) {
-  targetStatus = CaseStatus.PAID;
-} else if (['profile_filled', 'services_filled'].includes(c.case_status)) {
-  targetStatus = CaseStatus.PAID; // Force transition for team workflow
-}
-```
+| Database function `auto_split_payment` | Add lawyer reward creation block |
+| Database data (backfill) | Insert reward for existing paid case |
+| `src/components/influencer/EarningsPanel.tsx` | Add `role` prop, use it for `requestor_role` |
+| `src/pages/TeamDashboardPage.tsx` | Pass `role="lawyer"` to EarningsPanel |
 
