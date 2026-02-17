@@ -91,12 +91,16 @@ const ApplyPage: React.FC = () => {
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
+      localStorage.setItem('darb_ref', ref);
+    }
+    const savedRef = ref || localStorage.getItem('darb_ref');
+    if (savedRef) {
       supabase
-        .rpc('validate_influencer_ref', { ref_id: ref })
+        .rpc('validate_influencer_ref', { ref_id: savedRef })
         .then(({ data }) => {
           if (data === true) {
             setSourceType('influencer');
-            setSourceId(ref);
+            setSourceId(savedRef);
           }
         });
     }
