@@ -183,20 +183,27 @@ const TeamDashboardPage = () => {
 
   const kpis = useMemo(() => {
     const activeLeads = cases.filter(c => !['paid', 'settled', 'completed'].includes(c.case_status)).length;
-    const todayAppts = appointments.filter(a => isToday(new Date(a.scheduled_at))).length;
+    const now = new Date();
+    const todayAppts = appointments.filter(a => {
+      if (!isToday(new Date(a.scheduled_at))) return false;
+      if (a.status === 'cancelled' || a.status === 'deleted' || a.status === 'completed') return false;
+      const end = new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000);
+      return end > now;
+    }).length;
     const paidThisMonth = cases.filter(c => {
       if (!c.paid_at) return false;
       const d = new Date(c.paid_at);
-      const now = new Date();
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     }).length;
     const slaWarnings = cases.filter(c => isSlaBreached(c)).length;
     const totalEarnings = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
     const totalServiceFees = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
     const conversionRate = cases.length > 0 ? Math.round((cases.filter(c => c.paid_at).length / cases.length) * 100) : 0;
-    const bookedAppts = appointments.filter(a => a.status === 'scheduled' || a.status === 'completed').length;
-    const completedAppts = appointments.filter(a => a.status === 'completed').length;
-    const showRate = bookedAppts > 0 ? Math.round((completedAppts / bookedAppts) * 100) : 0;
+    // Show rate: only count past appointments (not future ones)
+    const pastAppts = appointments.filter(a => new Date(a.scheduled_at) < now);
+    const bookedPast = pastAppts.filter(a => a.status === 'scheduled' || a.status === 'completed').length;
+    const completedAppts = pastAppts.filter(a => a.status === 'completed').length;
+    const showRate = bookedPast > 0 ? Math.round((completedAppts / bookedPast) * 100) : 0;
     return { activeLeads, todayAppts, paidThisMonth, slaWarnings, totalEarnings, totalServiceFees, conversionRate, showRate };
   }, [cases, leads, appointments]);
 
@@ -429,9 +436,10 @@ const TeamDashboardPage = () => {
     );
   }
 
-  // Only show today's appointments that haven't ended yet
+  // Only show today's active scheduled appointments that haven't ended yet
   const todayAppointments = appointments.filter(a => {
     if (!isToday(new Date(a.scheduled_at))) return false;
+    if (a.status !== 'scheduled') return false;
     const end = new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000);
     return end > new Date();
   });

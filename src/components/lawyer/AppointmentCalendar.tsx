@@ -142,6 +142,39 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
     }
     setSaving(true);
     const scheduledAt = new Date(`${newAppt.scheduled_at}T${newAppt.time}:00`).toISOString();
+
+    // If case_id is set, check for existing appointment and update instead of duplicate
+    if (newAppt.case_id) {
+      const { data: existing } = await (supabase as any)
+        .from('appointments')
+        .select('id')
+        .eq('case_id', newAppt.case_id)
+        .eq('lawyer_id', userId)
+        .eq('status', 'scheduled')
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing appointment instead of creating duplicate
+        const { error } = await (supabase as any).from('appointments').update({
+          student_name: newAppt.student_name,
+          scheduled_at: scheduledAt,
+          duration_minutes: newAppt.duration_minutes,
+          location: newAppt.location || null,
+          notes: newAppt.notes || null,
+        }).eq('id', existing.id);
+        if (error) {
+          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+        } else {
+          toast({ title: t('admin.appointments.added') });
+          setIsDialogOpen(false);
+          setNewAppt({ case_id: '', student_name: '', scheduled_at: '', time: '10:00', duration_minutes: 30, location: '', notes: '' });
+          await fetchAppointments();
+        }
+        setSaving(false);
+        return;
+      }
+    }
+
     const { error } = await (supabase as any).from('appointments').insert({
       lawyer_id: userId,
       case_id: newAppt.case_id || null,
