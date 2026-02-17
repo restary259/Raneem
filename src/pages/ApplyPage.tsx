@@ -1,17 +1,14 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones, Search, MessageCircle } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
-import { majorsData } from '@/data/majorsData';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const PASSPORT_TYPES = [
   { value: 'israeli_blue', label: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
@@ -60,7 +57,6 @@ const ApplyPage: React.FC = () => {
 
   // Step 3 — Major
   const [preferredMajor, setPreferredMajor] = useState('');
-  const [majorSearchOpen, setMajorSearchOpen] = useState(false);
 
   // Step 4 — Companion
   const [applyingWith, setApplyingWith] = useState('alone');
@@ -70,23 +66,7 @@ const ApplyPage: React.FC = () => {
   const [sourceType, setSourceType] = useState('organic');
   const [sourceId, setSourceId] = useState<string | null>(null);
 
-  const allMajors = useMemo(() => {
-    return majorsData.flatMap(cat =>
-      cat.subMajors.map(sub => ({
-        id: sub.id,
-        nameAR: sub.nameAR,
-        nameEN: sub.nameEN,
-        categoryAR: cat.title,
-        categoryEN: cat.titleEN,
-      }))
-    );
-  }, []);
-
-  const getMajorLabel = (id: string) => {
-    const m = allMajors.find(m => m.id === id);
-    if (!m) return '';
-    return isAr ? m.nameAR : m.nameEN;
-  };
+  // Step 4 — Companion (continued)
 
   useEffect(() => {
     const ref = searchParams.get('ref');
@@ -388,15 +368,12 @@ const ApplyPage: React.FC = () => {
               {step === 3 && (
                 <div className="space-y-4 animate-fade-in">
                   <FieldGroup label={isAr ? 'التخصص المفضل' : 'Preferred Major'}>
-                    <MajorTypeahead
+                    <Input
                       value={preferredMajor}
-                      onChange={setPreferredMajor}
-                      open={majorSearchOpen}
-                      onOpenChange={setMajorSearchOpen}
+                      onChange={e => setPreferredMajor(e.target.value)}
+                      placeholder={isAr ? 'اكتب التخصص الذي تريده...' : 'Type your desired major...'}
                       dir={dir}
-                      isAr={isAr}
-                      allMajors={allMajors}
-                      getMajorLabel={getMajorLabel}
+                      className="h-11"
                     />
                   </FieldGroup>
                   <p className="text-xs text-muted-foreground">
@@ -540,34 +517,5 @@ const ApplyTopBar = () => (
   <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
 );
 
-const MajorTypeahead = ({ value, onChange, open, onOpenChange, dir, isAr, allMajors, getMajorLabel }: any) => (
-  <Popover open={open} onOpenChange={onOpenChange}>
-    <PopoverTrigger asChild>
-      <Button variant="outline" role="combobox" aria-expanded={open} className="w-full h-11 justify-between text-sm font-normal rounded-xl">
-        {value ? getMajorLabel(value) : (isAr ? 'اختر التخصص...' : 'Select a major...')}
-        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-full p-0" align="start">
-      <Command dir={dir}>
-        <CommandInput placeholder={isAr ? 'ابحث عن تخصص...' : 'Search majors...'} />
-        <CommandList>
-          <CommandEmpty>{isAr ? 'لا توجد نتائج' : 'No results found'}</CommandEmpty>
-          {majorsData.map(cat => (
-            <CommandGroup key={cat.id} heading={isAr ? cat.title : cat.titleEN}>
-              {cat.subMajors.map(sub => (
-                <CommandItem key={sub.id} value={`${sub.nameAR} ${sub.nameEN}`}
-                  onSelect={() => { onChange(sub.id); onOpenChange(false); }}>
-                  {isAr ? sub.nameAR : sub.nameEN}
-                  {value === sub.id && <CheckCircle className="ml-auto h-4 w-4 text-primary" />}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
-      </Command>
-    </PopoverContent>
-  </Popover>
-);
 
 export default ApplyPage;

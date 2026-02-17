@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, User, GraduationCap } from 'lucide-react';
+import { Edit, Save, X, User } from 'lucide-react';
 import { Profile, VisaStatus } from '@/types/profile';
 import { useTranslation } from 'react-i18next';
 
@@ -135,6 +135,40 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
               )}
             </div>
 
+            {/* Application fields within same card */}
+            <div className="mt-6 space-y-4 border-t pt-4">
+              <h3 className="font-semibold text-sm text-muted-foreground">{t('profile.applicationInfo', 'Language School & Application')}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>{t('profile.languageSchool', 'Language School')}</Label>
+                  <Input value={editedProfile.university_name || ''} onChange={e => setEditedProfile({ ...editedProfile, university_name: e.target.value })} disabled={!isEditing} />
+                </div>
+                <div>
+                  <Label>{t('profile.intakeMonth')}</Label>
+                  <Input value={editedProfile.intake_month || ''} onChange={e => setEditedProfile({ ...editedProfile, intake_month: e.target.value })} disabled={!isEditing} />
+                </div>
+                <div>
+                  <Label>{t('profile.visaStatus')}</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant={
+                      editedProfile.visa_status === 'approved' || editedProfile.visa_status === 'received' ? 'default' :
+                      editedProfile.visa_status === 'rejected' ? 'destructive' : 'secondary'
+                    }>
+                      {editedProfile.visa_status === 'not_applied'
+                        ? t('profile.visaStatuses.pending', 'Pending')
+                        : t(`profile.visaStatuses.${editedProfile.visa_status || 'not_applied'}`)}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{t('profile.visaAdminOnly', 'Updated by admin only')}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label>{t('profile.arrivalDate', 'Arrival Date in Germany')}</Label>
+                  <Input type="date" value={editedProfile.arrival_date || ''} disabled readOnly className="bg-muted" />
+                  <span className="text-xs text-muted-foreground">{t('profile.arrivalDateAdminOnly', 'Set by admin')}</span>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-4">
               <Label>{t('profile.notes')}</Label>
               <Textarea value={editedProfile.notes || ''} onChange={e => setEditedProfile({ ...editedProfile, notes: e.target.value })} disabled={!isEditing} rows={3} />
@@ -150,50 +184,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
         </CardContent>
       </Card>
 
-      {/* Section 2: Application / Visa Info (Read-Only for students) */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
-            <CardTitle>{t('profile.applicationInfo', 'Visa & Language School Info')}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>{t('profile.languageSchool', 'Language School')}</Label>
-              <Input value={editedProfile.university_name || ''} onChange={e => setEditedProfile({ ...editedProfile, university_name: e.target.value })} disabled={!isEditing} />
-            </div>
-            <div>
-              <Label>{t('profile.intakeMonth')}</Label>
-              <Input value={editedProfile.intake_month || ''} onChange={e => setEditedProfile({ ...editedProfile, intake_month: e.target.value })} disabled={!isEditing} />
-            </div>
-            <div>
-              <Label>{t('profile.visaStatus')}</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant={
-                  editedProfile.visa_status === 'approved' || editedProfile.visa_status === 'received' ? 'default' :
-                  editedProfile.visa_status === 'rejected' ? 'destructive' : 'secondary'
-                }>
-                  {t(`profile.visaStatuses.${editedProfile.visa_status || 'not_applied'}`)}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{t('profile.visaAdminOnly', 'Updated by admin only')}</span>
-              </div>
-            </div>
-            <div>
-              <Label>{t('profile.arrivalDate', 'Arrival Date in Germany')}</Label>
-              <Input
-                type="date"
-                value={editedProfile.arrival_date || ''}
-                disabled
-                readOnly
-                className="bg-muted"
-              />
-              <span className="text-xs text-muted-foreground">{t('profile.arrivalDateAdminOnly', 'Set by admin')}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
