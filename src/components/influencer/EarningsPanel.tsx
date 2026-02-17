@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DollarSign, Clock, CheckCircle, Send, XCircle, CreditCard, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface EarningsPanelProps { userId: string; role?: 'influencer' | 'lawyer'; }
 
@@ -30,12 +31,13 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   const [bankNameInput, setBankNameInput] = useState('');
   const [branchInput, setBranchInput] = useState('');
   const [accountNumberInput, setAccountNumberInput] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const isAr = i18n.language === 'ar';
 
   const LOCK_DAYS = 20;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const [rewardsRes, requestsRes, configRes, profileRes] = await Promise.all([
       (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
@@ -46,9 +48,13 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
     if (requestsRes.data) setPayoutRequests(requestsRes.data);
     if (configRes.data) setMinThreshold(configRes.data.weight);
     if (profileRes.data) setProfile(profileRes.data);
-  };
+  }, [userId]);
 
-  useEffect(() => { fetchData(); }, [userId]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Real-time subscriptions for instant updates
+  useRealtimeSubscription('rewards', fetchData, true);
+  useRealtimeSubscription('payout_requests', fetchData, true);
 
   const totalEarned = rewards.reduce((s, r) => s + Number(r.amount || 0), 0);
   const paidAmount = rewards.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount || 0), 0);
@@ -108,32 +114,36 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   };
 
   const submitPayoutRequest = async () => {
-    if (!canRequest) return;
-    const referralIds = eligibleRewards.map(r => r.referral_id).filter(Boolean);
-    let studentNames: string[] = [];
-    if (referralIds.length > 0) {
-      const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
-      if (data) studentNames = data.map((r: any) => r.referred_name);
+    if (!canRequest || submitting) return;
+    setSubmitting(true);
+    try {
+      const referralIds = eligibleRewards.map(r => r.referral_id).filter(Boolean);
+      let studentNames: string[] = [];
+      if (referralIds.length > 0) {
+        const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
+        if (data) studentNames = data.map((r: any) => r.referred_name);
+      }
+      await (supabase as any).from('payout_requests').insert({
+        requestor_id: userId,
+        requestor_role: role,
+        linked_reward_ids: eligibleRewards.map(r => r.id),
+        linked_student_names: studentNames,
+        amount: availableAmount,
+        admin_notes: requestNotes || null,
+        payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
+      });
+      for (const r of eligibleRewards) {
+        await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
+      }
+      toast({ title: t('influencer.earnings.payoutSuccess', 'Payout request submitted!') });
+      setShowRequestModal(false);
+      setRequestNotes('');
+      fetchData();
+      const win = window.open(WHATSAPP_URL, '_blank');
+      if (!win || win.closed) window.location.href = WHATSAPP_URL;
+    } finally {
+      setSubmitting(false);
     }
-    await (supabase as any).from('payout_requests').insert({
-      requestor_id: userId,
-      requestor_role: role,
-      linked_reward_ids: eligibleRewards.map(r => r.id),
-      linked_student_names: studentNames,
-      amount: availableAmount,
-      admin_notes: requestNotes || null,
-      payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
-    });
-    for (const r of eligibleRewards) {
-      await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
-    }
-    toast({ title: t('influencer.earnings.payoutSuccess', 'Payout request submitted!') });
-    setShowRequestModal(false);
-    setRequestNotes('');
-    fetchData();
-    // Redirect to WhatsApp
-    const win = window.open(WHATSAPP_URL, '_blank');
-    if (!win || win.closed) window.location.href = WHATSAPP_URL;
   };
 
   const cancelRequest = async (reqId: string) => {
