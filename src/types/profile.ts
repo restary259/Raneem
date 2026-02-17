@@ -23,6 +23,7 @@ export interface Profile {
   criminal_record_details?: string;
   has_dual_citizenship?: boolean;
   second_passport_country?: string;
+  arrival_date?: string;
   created_at?: string;
   updated_at?: string;
 }

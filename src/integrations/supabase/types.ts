@@ -915,6 +915,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
           bank_name: string | null
@@ -948,6 +949,7 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_name?: string | null
@@ -981,6 +983,7 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_name?: string | null
