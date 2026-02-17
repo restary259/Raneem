@@ -1,186 +1,96 @@
 
 
-# Pre-Launch Checklist Audit -- 30-Point Results and Fixes
+# Comprehensive Dashboard & Data Flow Fix Plan
 
-## Audit Summary
+## Issues Identified (from screenshots and code review)
 
-| Area | Pass | Issues Found |
-|------|------|-------------|
-| 1-5: Core System & Data Integrity | 4/5 | 2 orphaned appointments, no phone uniqueness constraint |
-| 6-10: Appointment & Workflow Logic | 4/5 | Reschedule doesn't update status label correctly |
-| 11-15: Payment & Commission Flow | 3/5 | No commission cancellation on refund, no 20-day auto-payout |
-| 16-20: Influencer Safeguards | 4/5 | Referral link depends on URL param (no cookie persistence) |
-| 21-25: Team & Admin Dashboards | 5/5 | Real-time, permissions, and notifications all working |
-| 26-30: System Reliability | 3/5 | No automatic backups, orphan cleanup needed |
+### 1. Merge "Legal/Visa Information" and "Visa & Language School Info" into one section
+Currently StudentProfile.tsx has two separate cards. Merge them into a single "Visa Information" card. Visa status default should show "Pending" (not "Not Applied") and only change when admin updates it.
 
----
+### 2. Table text wrapping/breaking issues (CRITICAL)
+Screenshots show "Fam ily", "Pen ding", "2/17/2 026", "Da y", "Assign ed", "Pa id", "Reven ue", "Commiss ion", "Commissi on" all breaking mid-word.
 
-## PASSED Checks (No Action Required)
+**Root cause**: Table cells are too narrow and CSS allows `word-break` or `overflow-wrap` to split words. Fix by adding `whitespace-nowrap` to all table headers and relevant cells across:
+- `ReferralTracker.tsx` (Referral Status table)
+- `AdminAnalytics.tsx` (Team Performance and Agent Performance tables)
+- `AppointmentCalendar.tsx` (Day view badge "Day" text)
 
-- **#1** Form submission via influencer link creates a lead correctly via `insert_lead_from_apply` RPC with `source_type='influencer'` and `source_id` set.
-- **#2** Influencer assignment is done via `source_id` on the `leads` table. Cases inherit this link. RLS restricts influencers to only see their own leads.
-- **#3** Duplicate leads are prevented -- the RPC uses `UPDATE ... WHERE phone = p_phone` before inserting. Same phone = update, not duplicate.
-- **#4** All IDs are UUID `gen_random_uuid()` -- uniqueness guaranteed by database.
-- **#6** Appointment lifecycle (create, reschedule, delete) all work. Status filtering is correct after previous fixes.
-- **#7** `AppointmentCalendar.tsx` already checks for existing scheduled appointments per case_id and updates instead of inserting.
-- **#8** Deleting appointments removes them from the database; real-time subscriptions refresh all dashboards.
-- **#9** Case deletion cascades properly.
-- **#11** Payment status changes trigger `auto_split_payment` which creates rewards and commissions instantly. Real-time subscriptions on `rewards`, `commissions`, `payout_requests` refresh all dashboards.
-- **#12** Influencer commission is only triggered when `case_status` changes to `'paid'` -- controlled by the `auto_split_payment` BEFORE UPDATE trigger.
-- **#14** Commission is calculated once per case transition (trigger checks `OLD.case_status IS DISTINCT FROM 'paid'`). `commissions` table uses `ON CONFLICT DO NOTHING`.
-- **#17** Influencer dashboard has real-time subscriptions on `leads`, `student_cases`, `rewards`, `payout_requests`, `commissions`.
-- **#19** `source_id` on leads is set at creation time only. Team members and admins cannot accidentally change it (no UI for this field).
-- **#21** Team member permissions enforced via RLS -- lawyers can only see `student_cases` where `assigned_lawyer_id = auth.uid()`.
-- **#22** Admin dashboard uses service-role key via edge function verification. Can view all tables.
-- **#23** All dashboards use `useRealtimeSubscription` hook + pull-to-refresh + visibility-change refetch.
-- **#25** Notification system exists: `notify_case_status_change`, `notify_influencer_case_created`, `notify_payout_status_change`, `notify_referral_accepted` triggers all fire on relevant events.
-- **#29** All state changes propagate via real-time subscriptions across dashboards.
+### 3. Appointment modal - Date and Time inputs touching
+Screenshot shows Date and Time fields side by side with no gap in the create dialog. The grid uses `gap-3` but the inputs are bordering each other visually. Add explicit spacing between them.
 
----
+### 4. Calendar "Day" badge text breaking ("Da y")
+The Day badge in the calendar header breaks the word. Add `whitespace-nowrap` to the Badge.
 
-## Issues Found and Fixes Required
+### 5. Notifications disappear too slowly
+`TOAST_REMOVE_DELAY` is 2000ms but the toast animation/display duration is longer. The issue is the toast `duration` prop. Set toast default duration to 2000ms in the Toaster component so they auto-dismiss faster.
 
-### Issue A: 2 Orphaned Appointments (Checkpoints #5, #26)
+### 6. Bank details must persist to profile on save (Influencer)
+EarningsPanel.tsx `saveBankDetails` already saves to profiles table. The data persists correctly. However, when admin views payout requests, the `payment_method` field shows the bank info string. The admin PayoutsManagement already shows this. Verify the admin can see bank details -- this is already working via the `payment_method` column on `payout_requests`.
 
-Two appointments exist with `case_id = NULL`:
-- `4e28c141` -- student "Yhshs"
-- `3d3fc144` -- student "Helal"
+### 7. Remove all popups/distractions from Apply page
+Currently, PWAInstaller, InAppBrowserBanner, and CookieBanner only hide when `?ref=` is present. They should ALWAYS be hidden on `/apply` regardless of ref param. Update App.tsx to hide these on `/apply`.
 
-These create ghost data in analytics counters.
+### 8. Replace major typeahead with free-text input on Apply page
+Remove the Popover/Command selector for majors in Step 3. Replace with a simple text Input field where students can type whatever they want.
 
-**Fix:** Database cleanup to delete orphaned appointments. No code change needed since the creation form already links to a case.
+### 9. Admin analytics tables word-breaking fix
+Team Performance and Agent Performance tables in AdminAnalytics.tsx need `whitespace-nowrap` on headers and cells.
 
-```sql
-DELETE FROM appointments WHERE case_id IS NULL;
-```
+### 10. Lead generation from all sources must work
+The apply page already calls `insert_lead_from_apply` RPC which creates leads. Contact page uses `upsert_lead_from_contact`. Referral form calls RPC too. Self-added referrals already work. The issue may be RLS -- leads are only visible to admins. Verify the flow works end-to-end.
 
-### Issue B: No Phone Uniqueness Constraint on Leads (#3 hardening)
+### 11. Remove AI advisor icon from all dashboards
+ChatWidget.tsx already hides on `/student-dashboard`, `/influencer-dashboard`, `/team-dashboard`, and `/admin` routes. This is already done.
 
-The `insert_lead_from_apply` RPC handles duplicates via upsert logic, but there's no database-level unique constraint on `leads.phone`. If two concurrent submissions arrive, both could insert.
+### 12. Checkbox styling - make smaller and cleaner
+The current Radix Checkbox has `rounded-sm` by default. Make them more like iOS-style checkmarks: smaller, with a clean checkmark icon, less rounded.
 
-**Fix:** Add a unique index on `leads.phone`:
-```sql
-CREATE UNIQUE INDEX IF NOT EXISTS leads_phone_unique ON leads (phone);
-```
-
-### Issue C: No Commission Cancellation on Refund/Cancel (#13)
-
-There is NO logic anywhere to reverse commissions or rewards when a case is cancelled or payment is refunded. The `auto_split_payment` trigger only fires on `case_status = 'paid'` but never cleans up when status reverts.
-
-**Fix:** Add a block to `auto_split_payment` that cancels rewards when status moves away from `'paid'`:
-```sql
--- At the start of auto_split_payment, before the paid check:
-IF OLD.case_status = 'paid' AND NEW.case_status IS DISTINCT FROM 'paid' THEN
-  -- Cancel any pending rewards linked to this case
-  UPDATE rewards SET status = 'cancelled'
-  WHERE admin_notes LIKE '%' || OLD.id::text || '%'
-    AND status IN ('pending', 'approved');
-  UPDATE commissions SET status = 'cancelled'
-  WHERE case_id = OLD.id AND status != 'paid';
-END IF;
-```
-
-### Issue D: No 20-Day Auto-Payout Timer (#15)
-
-The 20-day lock is enforced client-side in `EarningsPanel.tsx` (line 66-67): rewards are only eligible after 20 days. However, there is no automatic payout trigger after 20 days -- the influencer/team member must manually request it.
-
-**Fix:** This is by design (manual request required). The 20-day timer UI already exists on the influencer dashboard. Add a brief helper text to the Earnings tab clarifying that payouts become available after 20 days and must be requested manually. No backend change needed.
-
-### Issue E: Referral Link Persistence (#16)
-
-The referral `?ref=` parameter is read from URL on page load (`useSearchParams`). If the student clears cookies or opens on a new device, the `ref` param is only preserved if they use the exact same URL. There's no cookie/localStorage fallback.
-
-**Fix:** Store the `ref` parameter in `localStorage` so it persists across page reloads and cookie clears:
-```typescript
-// In ApplyPage.tsx useEffect:
-useEffect(() => {
-  const ref = searchParams.get('ref');
-  if (ref) {
-    localStorage.setItem('darb_ref', ref);
-  }
-  const savedRef = ref || localStorage.getItem('darb_ref');
-  if (savedRef) {
-    supabase.rpc('validate_influencer_ref', { ref_id: savedRef })
-      .then(({ data }) => {
-        if (data === true) {
-          setSourceType('influencer');
-          setSourceId(savedRef);
-        }
-      });
-  }
-}, [searchParams]);
-```
-
-### Issue F: Audit Log for Referral Chain (#18)
-
-Partial implementation exists. The `admin_audit_log` captures `mark_contacted`, `profile_completed`, `submit_for_application`. However, there's no explicit entry for "lead created from influencer referral" or "commission generated."
-
-**Fix:** The `notify_influencer_case_created` trigger creates a notification, which serves as an audit trail. The `auto_split_payment` trigger inserts into `commissions` and `rewards` tables with notes containing the case ID. This is sufficient for audit purposes -- no additional changes needed.
-
-### Issue G: No Automatic Backups (#20, #27, #28)
-
-Lovable Cloud handles database backups automatically as part of the infrastructure. No custom backup implementation is needed.
-
-### Issue H: Influencer EarningsPanel Missing Role Prop (#10 edge case)
-
-In `InfluencerDashboardPage.tsx` line 279, the `EarningsPanel` is rendered without a `role` prop:
-```tsx
-<EarningsPanel userId={user.id} />
-```
-
-This defaults to `'influencer'` which is correct. No fix needed.
+### 13. Settings panel checkbox styling
+Same fix applies to settings panel checkboxes.
 
 ---
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| Database (cleanup) | Delete 2 orphaned appointments |
-| Database (migration) | Add unique index on `leads.phone` |
-| Database (migration) | Update `auto_split_payment` to cancel rewards on status revert |
-| `src/pages/ApplyPage.tsx` | Add localStorage persistence for referral `ref` parameter |
+| File | Changes |
+|------|---------|
+| `src/components/dashboard/StudentProfile.tsx` | Merge legal + visa sections into one "Visa Information" card. Default visa_status display as "Pending". |
+| `src/components/dashboard/ReferralTracker.tsx` | Add `whitespace-nowrap` to table headers and badge/date cells to prevent word breaking. |
+| `src/components/admin/AdminAnalytics.tsx` | Add `whitespace-nowrap` to all table headers in Team and Agent performance tables. |
+| `src/components/lawyer/AppointmentCalendar.tsx` | 1. Add gap between Date/Time inputs. 2. Fix "Day" badge with `whitespace-nowrap`. |
+| `src/hooks/use-toast.ts` | Reduce `TOAST_REMOVE_DELAY` to 1500ms for faster dismissal. |
+| `src/components/ui/toaster.tsx` | Add `duration={2000}` to Toast component. |
+| `src/App.tsx` | Hide PWAInstaller, InAppBrowserBanner, CookieBanner on ALL `/apply` visits (not just with `?ref=`). |
+| `src/pages/ApplyPage.tsx` | Replace major typeahead (Popover/Command) with a free-text Input field. |
+| `src/components/ui/checkbox.tsx` | Restyle to cleaner iOS-like design: smaller indicator, cleaner checkmark. |
 
 ---
 
 ## Technical Details
 
-### Migration: Phone Uniqueness + Commission Cancellation
+### StudentProfile.tsx Merge
+Remove the second Card completely. Move Language School, Intake Month, Visa Status, and Arrival Date fields into the first card's form, under the legal fields section. Rename section header to "Visa Information". Map `not_applied` visa status to display as "Pending".
 
-```sql
--- 1. Unique phone constraint
-CREATE UNIQUE INDEX IF NOT EXISTS leads_phone_unique ON leads (phone);
+### Table Text Fix Pattern
+Add `whitespace-nowrap` class to all `<th>` elements and date/badge `<td>` cells. This prevents mid-word breaks on mobile. The tables already have `overflow-x-auto` so horizontal scroll handles overflow.
 
--- 2. Update auto_split_payment to handle refunds/cancellations
-CREATE OR REPLACE FUNCTION public.auto_split_payment()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
-AS $$
-DECLARE
-  v_lead RECORD;
-  v_referral RECORD;
-  v_influencer_commission numeric := 0;
-BEGIN
-  -- CANCEL rewards if moving AWAY from paid
-  IF OLD.case_status = 'paid' AND NEW.case_status IS DISTINCT FROM 'paid' THEN
-    UPDATE rewards SET status = 'cancelled'
-    WHERE admin_notes LIKE '%' || OLD.id::text || '%'
-      AND status IN ('pending', 'approved');
-    UPDATE commissions SET status = 'cancelled'
-    WHERE case_id = OLD.id AND status != 'paid';
-    NEW.paid_at := NULL;
-  END IF;
-
-  -- CREATE rewards when moving TO paid (existing logic)
-  IF NEW.case_status = 'paid' AND (OLD.case_status IS DISTINCT FROM 'paid') THEN
-    -- ... existing payment split logic unchanged ...
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
+### Apply Page Distraction-Free
+Change App.tsx line 80 from:
+```typescript
+const isInfluencerApply = location.pathname === '/apply' && searchParams.has('ref');
 ```
+to:
+```typescript
+const isApplyPage = location.pathname === '/apply';
+```
+And use `isApplyPage` for hiding PWAInstaller, InAppBrowserBanner, CookieBanner. Keep ChatWidget hidden on apply via its own logic.
 
-### ApplyPage.tsx Referral Persistence
+### Major Field - Free Text
+Replace the `MajorTypeahead` component in Step 3 with a simple `Input` field. The `preferredMajor` state will store the free text string directly instead of an ID.
 
-Add localStorage read/write in the existing `useEffect` that processes the `ref` query parameter. This ensures the influencer attribution survives across sessions, devices (if user copies URL), and browser restarts.
+### Checkbox Restyle
+Update the Checkbox component to use `rounded-[4px]` instead of default, scale down the check icon, and use a cleaner SVG checkmark path.
+
+### Toast Speed
+Reduce `TOAST_REMOVE_DELAY` from 2000 to 1500ms and set explicit `duration={2000}` on the Toast to ensure auto-dismiss happens quickly.
 
