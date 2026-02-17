@@ -180,6 +180,17 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                 <span className="text-xs text-muted-foreground">{t('profile.visaAdminOnly', 'Updated by admin only')}</span>
               </div>
             </div>
+            <div>
+              <Label>{t('profile.arrivalDate', 'Arrival Date in Germany')}</Label>
+              <Input
+                type="date"
+                value={editedProfile.arrival_date || ''}
+                disabled
+                readOnly
+                className="bg-muted"
+              />
+              <span className="text-xs text-muted-foreground">{t('profile.arrivalDateAdminOnly', 'Set by admin')}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
