@@ -823,7 +823,7 @@ const TeamDashboardPage = () => {
                 <h2 className="font-bold text-sm flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />{t('lawyer.tabs.earnings', 'Earnings')}
                 </h2>
-                <EarningsPanel userId={user.id} />
+                <EarningsPanel userId={user.id} role="lawyer" />
               </div>
             )}
             </PullToRefresh>
