@@ -5,6 +5,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ChecklistTrackerProps {
   userId: string;
@@ -14,6 +24,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   const [items, setItems] = useState<any[]>([]);
   const [completions, setCompletions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmItem, setConfirmItem] = useState<{ id: string; name: string; completed: boolean } | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
 
@@ -31,7 +42,15 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     setIsLoading(false);
   };
 
-  const toggleItem = async (itemId: string, currentlyCompleted: boolean) => {
+  const handleItemClick = (itemId: string, itemName: string, currentlyCompleted: boolean) => {
+    setConfirmItem({ id: itemId, name: itemName, completed: currentlyCompleted });
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmItem) return;
+    const { id: itemId, completed: currentlyCompleted } = confirmItem;
+    setConfirmItem(null);
+
     const existing = completions.find(c => c.checklist_item_id === itemId);
 
     if (existing) {
@@ -108,7 +127,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
               className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
                 isCompleted ? 'bg-emerald-50/50 border-emerald-200' : ''
               }`}
-              onClick={() => toggleItem(item.id, isCompleted)}
+              onClick={() => handleItemClick(item.id, item.item_name, isCompleted)}
             >
               <CardContent className="p-4 flex items-center gap-4">
                 <Checkbox checked={isCompleted} className="h-5 w-5" />
@@ -134,6 +153,27 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
       {items.length === 0 && (
         <p className="text-center text-muted-foreground py-8">{t('checklist.noItems')}</p>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!confirmItem} onOpenChange={(open) => !open && setConfirmItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmItem?.completed ? t('checklist.uncheckTitle', 'Uncheck Item?') : t('checklist.checkTitle', 'Mark as Complete?')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmItem?.completed
+                ? t('checklist.uncheckDesc', 'Are you sure you want to uncheck "{{name}}"?', { name: confirmItem?.name })
+                : t('checklist.checkDesc', 'Confirm that you have completed "{{name}}"?', { name: confirmItem?.name })
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('checklist.cancelBtn', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>{t('checklist.confirmBtn', 'Confirm')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
