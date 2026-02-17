@@ -141,21 +141,21 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="px-3 py-2 text-start">{t('admin.analytics.name')}</th>
-                  <th className="px-3 py-2 text-center">{t('admin.analytics.assigned')}</th>
-                  <th className="px-3 py-2 text-center">{t('admin.analytics.paid')}</th>
-                  <th className="px-3 py-2 text-end">{t('admin.analytics.revenue')}</th>
-                  <th className="px-3 py-2 text-end">{t('admin.analytics.commission')}</th>
+                  <th className="px-3 py-2 text-start whitespace-nowrap">{t('admin.analytics.name')}</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.assigned')}</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.paid')}</th>
+                  <th className="px-3 py-2 text-end whitespace-nowrap">{t('admin.analytics.revenue')}</th>
+                  <th className="px-3 py-2 text-end whitespace-nowrap">{t('admin.analytics.commission')}</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.teamPerf.map((tm, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    <td className="px-3 py-2 font-medium">{tm.name}</td>
-                    <td className="px-3 py-2 text-center">{tm.assigned}</td>
-                    <td className="px-3 py-2 text-center">{tm.paid}</td>
-                    <td className="px-3 py-2 text-end">{tm.revenue.toLocaleString()} ₪</td>
-                    <td className="px-3 py-2 text-end">{tm.commission.toLocaleString()} ₪</td>
+                    <td className="px-3 py-2 font-medium whitespace-nowrap">{tm.name}</td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">{tm.assigned}</td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">{tm.paid}</td>
+                    <td className="px-3 py-2 text-end whitespace-nowrap">{tm.revenue.toLocaleString()} ₪</td>
+                    <td className="px-3 py-2 text-end whitespace-nowrap">{tm.commission.toLocaleString()} ₪</td>
                   </tr>
                 ))}
                 {stats.teamPerf.length === 0 && (
@@ -175,19 +175,19 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="px-3 py-2 text-start">{t('admin.analytics.name')}</th>
-                  <th className="px-3 py-2 text-center">{t('admin.analytics.leadsGenerated')}</th>
-                  <th className="px-3 py-2 text-center">{t('admin.analytics.paid')}</th>
-                  <th className="px-3 py-2 text-end">{t('admin.analytics.commission')}</th>
+                  <th className="px-3 py-2 text-start whitespace-nowrap">{t('admin.analytics.name')}</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.leadsGenerated')}</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.paid')}</th>
+                  <th className="px-3 py-2 text-end whitespace-nowrap">{t('admin.analytics.commission')}</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.infPerf.map((inf, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    <td className="px-3 py-2 font-medium">{inf.name}</td>
-                    <td className="px-3 py-2 text-center">{inf.leads}</td>
-                    <td className="px-3 py-2 text-center">{inf.paid}</td>
-                    <td className="px-3 py-2 text-end">{inf.commission.toLocaleString()} ₪</td>
+                    <td className="px-3 py-2 font-medium whitespace-nowrap">{inf.name}</td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">{inf.leads}</td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">{inf.paid}</td>
+                    <td className="px-3 py-2 text-end whitespace-nowrap">{inf.commission.toLocaleString()} ₪</td>
                   </tr>
                 ))}
                 {stats.infPerf.length === 0 && (

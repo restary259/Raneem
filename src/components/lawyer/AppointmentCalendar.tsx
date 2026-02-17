@@ -321,7 +321,7 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
         </h2>
       </div>
       <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-xs whitespace-nowrap">
           {t('admin.appointments.dayView', 'Day')}
         </Badge>
       </div>
@@ -421,13 +421,13 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
             <Label className="text-xs">{t('admin.appointments.studentName')}</Label>
             <Input value={newAppt.student_name} onChange={e => setNewAppt(p => ({ ...p, student_name: e.target.value }))} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs">{t('admin.appointments.date')}</Label>
+              <Label className="text-xs mb-1 block">{t('admin.appointments.date')}</Label>
               <Input type="date" value={newAppt.scheduled_at} onChange={e => setNewAppt(p => ({ ...p, scheduled_at: e.target.value }))} />
             </div>
             <div>
-              <Label className="text-xs">{t('admin.appointments.time')}</Label>
+              <Label className="text-xs mb-1 block">{t('admin.appointments.time')}</Label>
               <Input type="time" value={newAppt.time} onChange={e => setNewAppt(p => ({ ...p, time: e.target.value }))} />
             </div>
           </div>
