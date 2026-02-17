@@ -20,9 +20,9 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, disabled = fal
   const isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window;
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (disabled || isRefreshing || !containerRef.current) return;
-    // Only start pull if scrolled to top
-    const scrollTop = containerRef.current.scrollTop;
+    if (disabled || isRefreshing) return;
+    // Only start pull if page is scrolled to top
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
     if (scrollTop <= 0) {
       startY.current = e.touches[0].clientY;
       isPulling.current = true;
@@ -33,10 +33,10 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, disabled = fal
     if (!isPulling.current || disabled || isRefreshing) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY.current;
-    if (diff > 0) {
+    if (diff > 0 && (window.scrollY || document.documentElement.scrollTop || 0) <= 0) {
       // Dampen the pull distance
       setPullDistance(Math.min(diff * 0.4, 100));
-      if (diff > 10) {
+      if (diff > 20) {
         e.preventDefault();
       }
     } else {
