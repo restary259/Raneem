@@ -12,11 +12,11 @@ import { DollarSign, Clock, CheckCircle, Send, XCircle, CreditCard, AlertTriangl
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface EarningsPanelProps { userId: string; }
+interface EarningsPanelProps { userId: string; role?: 'influencer' | 'lawyer'; }
 
 const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
 
-const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
+const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influencer' }) => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
   const isMobile = useIsMobile();
@@ -117,7 +117,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId }) => {
     }
     await (supabase as any).from('payout_requests').insert({
       requestor_id: userId,
-      requestor_role: 'influencer',
+      requestor_role: role,
       linked_reward_ids: eligibleRewards.map(r => r.id),
       linked_student_names: studentNames,
       amount: availableAmount,
