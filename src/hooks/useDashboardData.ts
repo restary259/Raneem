@@ -37,7 +37,7 @@ export function useDashboardData<T extends DashboardType>({
 }: UseDashboardDataOptions<T>): UseDashboardDataResult<T> {
   const [data, setData] = useState<DataForType<T> | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!enabled) return;

@@ -85,7 +85,14 @@ const AdminDashboardPage = () => {
   useRealtimeSubscription('payout_requests', refetch, isAdmin);
   useRealtimeSubscription('profiles', refetch, isAdmin);
 
-  if (!isAdmin && !isLoading) return null;
+  if (!authReady && !isAdmin) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center space-y-3">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-muted-foreground text-sm">جاري التحقق من الصلاحيات…</p>
+      </div>
+    </div>
+  );
 
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
@@ -172,7 +179,7 @@ const AdminDashboardPage = () => {
 
   return (
     <DashboardContainer
-      isLoading={!authReady || isLoading}
+      isLoading={isLoading}
       error={!isLoading ? error : null}
       onRetry={refetch}
     >
