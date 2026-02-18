@@ -45,7 +45,6 @@ const sidebarGroups = [
     labelKey: 'admin.groups.finance',
     items: [
       { id: 'money', labelKey: 'admin.tabs.money', icon: Wallet },
-      { id: 'master-services', labelKey: 'admin.tabs.masterServices', icon: Package },
     ],
   },
   {

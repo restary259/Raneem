@@ -175,23 +175,45 @@ const InfluencerDashboardPage = () => {
                     <CardTitle className="text-base">{t('influencerDash.kpi.conversionFunnel')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                  <ResponsiveContainer width="100%" height={isAr ? 220 : 180}>
-                      <BarChart data={funnelData} layout="vertical" margin={{ left: isAr ? 8 : 0, right: 16 }}>
-                        <XAxis type="number" hide />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          width={isAr ? 120 : 90}
-                          tick={{ fontSize: isAr ? 11 : 12, textAnchor: isAr ? 'end' : 'start' }}
-                        />
-                        <Tooltip />
-                        <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
-                          {funnelData.map((entry, i) => (
-                            <Cell key={i} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  {(() => {
+                    const CustomYAxisTick = ({ x, y, payload }: any) => (
+                      <g transform={`translate(${x},${y})`}>
+                        <text
+                          x={isAr ? 6 : -6}
+                          y={0}
+                          dy={4}
+                          textAnchor={isAr ? 'start' : 'end'}
+                          fill="currentColor"
+                          fontSize={10}
+                        >
+                          {payload.value}
+                        </text>
+                      </g>
+                    );
+                    return (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart
+                          data={funnelData}
+                          layout="vertical"
+                          margin={{ left: isAr ? 110 : 10, right: isAr ? 10 : 20, top: 4, bottom: 4 }}
+                        >
+                          <XAxis type="number" hide />
+                          <YAxis
+                            type="category"
+                            dataKey="name"
+                            width={isAr ? 110 : 100}
+                            tick={<CustomYAxisTick />}
+                          />
+                          <Tooltip />
+                          <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
+                            {funnelData.map((entry, i) => (
+                              <Cell key={i} fill={entry.fill} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
                   </CardContent>
                 </Card>
               </div>

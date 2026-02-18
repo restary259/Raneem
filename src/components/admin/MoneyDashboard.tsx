@@ -11,9 +11,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
-  ArrowUpRight, ArrowDownRight, Search, FileText, CheckCircle, X
+  ArrowUpRight, ArrowDownRight, Search, FileText, CheckCircle, X, MessageCircle, Clock
 } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
+
 
 interface MoneyDashboardProps {
   cases: any[];
@@ -23,6 +24,7 @@ interface MoneyDashboardProps {
   influencers: any[];
   lawyers: any[];
   onRefresh?: () => void;
+  payoutRequests?: any[];
 }
 
 type TransactionRow = {
@@ -46,7 +48,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
-  cases, leads, rewards, commissions, influencers, lawyers, onRefresh,
+  cases, leads, rewards, commissions, influencers, lawyers, onRefresh, payoutRequests = [],
 }) => {
   const { t } = useTranslation('dashboard');
   const { toast } = useToast();
@@ -186,6 +188,111 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Payout Requests — Admin Approval Panel */}
+      {(() => {
+        const pending = payoutRequests.filter((r: any) => r.status === 'pending' || r.status === 'approved');
+        if (pending.length === 0) return null;
+        return (
+          <Card className="border-blue-300 bg-blue-50/40">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <h3 className="font-semibold text-sm">{t('money.payoutRequests', 'Payout Requests')} ({pending.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {pending.map((req: any) => {
+                  const requesterName = getProfileName(req.requestor_id);
+                  const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+                  return (
+                    <div key={req.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium truncate">{requesterName}</p>
+                          <Badge variant="secondary" className="text-[10px] capitalize">{req.requestor_role}</Badge>
+                          <Badge variant={req.status === 'approved' ? 'default' : 'secondary'} className="text-[10px]">{req.status}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {Number(req.amount).toLocaleString()} ₪ · {new Date(req.requested_at).toLocaleDateString()}
+                          {req.payment_method && ` · ${req.payment_method.slice(0, 40)}`}
+                        </p>
+                        {req.linked_student_names?.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground">
+                            {t('money.students')}: {req.linked_student_names.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1 border-green-500 text-green-700 hover:bg-green-50"
+                          onClick={() => window.open(WHATSAPP_URL, '_blank')}
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          WA
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="h-7 text-xs gap-1"
+                          disabled={actionLoading === req.id}
+                          onClick={async () => {
+                            setActionLoading(req.id);
+                            const { error } = await (supabase as any)
+                              .from('payout_requests')
+                              .update({ status: 'paid', paid_at: new Date().toISOString() })
+                              .eq('id', req.id);
+                            setActionLoading(null);
+                            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+                            // Also mark linked rewards as paid
+                            if (req.linked_reward_ids?.length) {
+                              await (supabase as any).from('rewards')
+                                .update({ status: 'paid', paid_at: new Date().toISOString() })
+                                .in('id', req.linked_reward_ids);
+                            }
+                            toast({ title: t('money.markedPaid', 'Marked as paid') });
+                            onRefresh?.();
+                          }}
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                          {t('money.markPaid', 'Mark Paid')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+                          disabled={actionLoading === req.id}
+                          onClick={async () => {
+                            setActionLoading(req.id);
+                            const { error } = await (supabase as any)
+                              .from('payout_requests')
+                              .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
+                              .eq('id', req.id);
+                            // Restore rewards to pending so they can be re-requested
+                            if (!error && req.linked_reward_ids?.length) {
+                              await (supabase as any).from('rewards')
+                                .update({ status: 'pending', payout_requested_at: null })
+                                .in('id', req.linked_reward_ids);
+                            }
+                            setActionLoading(null);
+                            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+                            toast({ title: t('money.rejected', 'Request rejected') });
+                            onRefresh?.();
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                          {t('money.reject', 'Reject')}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Pending Rewards — Manual Payout Controls */}
       {(() => {
         const pendingRewards = rewards.filter(r => r.status === 'pending');

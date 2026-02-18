@@ -9,7 +9,7 @@ import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import StudentCasesManagement from '@/components/admin/StudentCasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
-import MasterServicesManagement from '@/components/admin/MasterServicesManagement';
+
 import InfluencerManagement from '@/components/admin/InfluencerManagement';
 import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
@@ -91,6 +91,7 @@ const AdminDashboardPage = () => {
   const rewards = data?.rewards ?? [];
   const auditLogs = data?.auditLogs ?? [];
   const loginAttempts = data?.loginAttempts ?? [];
+  const payoutRequests = data?.payoutRequests ?? [];
 
   // Real-time subscriptions — only active once session is ready
   useRealtimeSubscription('leads', refetch, isAdmin);
@@ -186,9 +187,7 @@ const AdminDashboardPage = () => {
           />
         );
       case 'money':
-        return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} />;
-      case 'master-services':
-        return <MasterServicesManagement />;
+        return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} onRefresh={refetch} payoutRequests={payoutRequests} />;
       case 'settings':
         return <SettingsPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
       default:
