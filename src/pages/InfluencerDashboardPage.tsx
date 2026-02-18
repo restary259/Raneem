@@ -37,6 +37,7 @@ const InfluencerDashboardPage = () => {
   const [authReady, setAuthReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('analytics');
   const [studentFilter, setStudentFilter] = useState<StudentFilter>('all');
+  const [eligibleMin, setEligibleMin] = useState(50); // safe default until DB loaded
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
@@ -62,6 +63,17 @@ const InfluencerDashboardPage = () => {
     init();
   }, [navigate, toast, t]);
 
+  // Fetch eligibility threshold from DB
+  useEffect(() => {
+    (supabase as any)
+      .from('eligibility_thresholds')
+      .select('eligible_min')
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data?.eligible_min != null) setEligibleMin(data.eligible_min);
+      });
+  }, []);
+
   // Centralised data layer
   const { data, error, isLoading, refetch } = useDashboardData({
     type: 'influencer',
@@ -86,8 +98,8 @@ const InfluencerDashboardPage = () => {
 
   // Stats
   const totalLeads = leads.length;
-  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= 50).length;
-  const ineligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) < 50 && l.status !== 'new').length;
+  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin).length;
+  const ineligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new').length;
   const paidCases = cases.filter(c => c.case_status === 'paid' || c.paid_at).length;
 
   // Funnel data
@@ -100,14 +112,14 @@ const InfluencerDashboardPage = () => {
   // Filtered students
   const filteredLeads = useMemo(() => {
     if (studentFilter === 'all') return leads;
-    if (studentFilter === 'eligible') return leads.filter(l => (l.eligibility_score ?? 0) >= 50);
-    if (studentFilter === 'ineligible') return leads.filter(l => (l.eligibility_score ?? 0) < 50 && l.status !== 'new');
+    if (studentFilter === 'eligible') return leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin);
+    if (studentFilter === 'ineligible') return leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new');
     if (studentFilter === 'paid') {
       const paidLeadIds = new Set(cases.filter(c => c.paid_at).map(c => c.lead_id));
       return leads.filter(l => paidLeadIds.has(l.id));
     }
     return leads;
-  }, [leads, cases, studentFilter]);
+  }, [leads, cases, studentFilter, eligibleMin]);
 
   const getCaseForLead = (leadId: string) => cases.find(c => c.lead_id === leadId);
 

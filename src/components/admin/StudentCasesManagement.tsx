@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,11 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   const [loading, setLoading] = useState(false);
   const [editingMoney, setEditingMoney] = useState(false);
   const [moneyValues, setMoneyValues] = useState<Record<string, number>>({});
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
+
+  // Reset page on filter change
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   const studentCases = useMemo(() => {
     return cases
@@ -54,6 +60,9 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
       return matchSearch && matchStatus;
     });
   }, [studentCases, search, statusFilter]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const markAsPaid = async (caseId: string) => {
     const existingCase = studentCases.find(c => c.id === caseId);
@@ -111,7 +120,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
       <p className="text-sm text-muted-foreground">{filtered.length} {t('studentCases.casesCount', { defaultValue: 'student cases' })}</p>
 
       <div className="space-y-3">
-        {filtered.map(c => {
+        {paginated.map(c => {
           const name = c.student_full_name || c.lead?.full_name || '—';
           const isPaid = c.case_status === 'paid' || !!c.paid_at;
           return (
@@ -149,6 +158,23 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
         })}
         {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('studentCases.noCases', { defaultValue: 'No student cases at this stage' })}</p>}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} aria-disabled={page === 1} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="px-4 py-2 text-sm text-muted-foreground">{page} / {totalPages}</span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-disabled={page === totalPages} className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       {/* Case Detail Dialog */}
       <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>

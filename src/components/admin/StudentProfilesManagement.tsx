@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,11 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
+
+  // Reset page on search change
+  useEffect(() => { setPage(1); }, [search]);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -68,6 +74,9 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
     return s.full_name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q) || s.phone_number?.includes(q);
   });
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const openProfile = async (student: any) => {
     setSelectedStudent(student);
     setLoadingDocs(true);
@@ -110,7 +119,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
 
       {isMobile ? (
         <div className="space-y-3">
-          {filtered.map(s => {
+          {paginated.map(s => {
             const ref = getReferrerInfo(s);
             return (
               <Card key={s.id} className="cursor-pointer" onClick={() => openProfile(s)}>
@@ -144,7 +153,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(s => {
+                {paginated.map(s => {
                   const ref = getReferrerInfo(s);
                   return (
                     <tr key={s.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
@@ -169,6 +178,23 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
             {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('team.noMembers', 'No students found')}</p>}
           </div>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} aria-disabled={page === 1} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="px-4 py-2 text-sm text-muted-foreground">{page} / {totalPages}</span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-disabled={page === totalPages} className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
 
       {/* Student Detail Modal */}

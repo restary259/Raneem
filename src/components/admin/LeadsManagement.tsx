@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { exportPDF } from '@/utils/exportUtils';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,8 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterSource, setFilterSource] = useState('all');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignModal, setAssignModal] = useState<{ leadId: string; leadName: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -72,12 +75,18 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Reset page on filter changes
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterSource]);
+
   const filtered = leads.filter(l => {
     const matchSearch = l.full_name.toLowerCase().includes(search.toLowerCase()) || l.phone.includes(search) || (l.email?.toLowerCase().includes(search.toLowerCase()));
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
     const matchSource = filterSource === 'all' || l.source_type === filterSource;
     return matchSearch && matchStatus && matchSource;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleAddLead = async () => {
     if (!newLead.full_name || !newLead.phone) { toast({ variant: 'destructive', title: t('common.error'), description: t('admin.leads.namePhoneRequired') }); return; }
@@ -319,7 +328,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                    </tr>
                  </thead>
                 <tbody>
-                  {filtered.map(lead => {
+                  {paginated.map(lead => {
                     const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
                     const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
                     const score = lead.eligibility_score ?? 0;
@@ -367,7 +376,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       ) : (
         /* Mobile Cards */
         <div className="grid gap-3">
-          {filtered.map(lead => {
+          {paginated.map(lead => {
             const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
             const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
             const score = lead.eligibility_score ?? 0;
@@ -410,6 +419,23 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           })}
           {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} aria-disabled={page === 1} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="px-4 py-2 text-sm text-muted-foreground">{page} / {totalPages}</span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-disabled={page === totalPages} className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
 
       {/* Delete Confirmation */}
