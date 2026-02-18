@@ -1,187 +1,182 @@
 
-# Architectural Integrity Fix Plan — Lead Pipeline & Data Safety
+# Phase 3: Ghost Data & Duplicate Detection — Verified Audit & Fix Plan
 
-## What Was Verified vs What the Audit Claimed
+## Database State — What's Already Clean (Verified)
 
-After reading the codebase and querying the live database, here is the accurate status of each breakpoint:
+Before planning any fixes, all 5 cleanup queries from the audit were run against the live database. Results:
 
-| # | Claim | Verified Status | Action Needed |
-|---|-------|-----------------|---------------|
-| 1 | Lead duplication | ✅ ALREADY FIXED — `leads_phone_unique` unique index exists | None |
-| 2 | Case orphans (no student_profile_id) | 🔴 CONFIRMED — 3 live orphan cases (status: paid, appointment_scheduled) | Fix: link cases when student account created |
-| 3 | Appointments RLS missing | ✅ FALSE — 6 RLS policies exist (lawyers own-only, admin all, students own) | None |
-| 4 | Rewards duplication | ✅ Already protected — `ON CONFLICT DO NOTHING` in trigger. No duplicates in DB | Add unique index as belt-and-suspenders |
-| 5 | `null.toString().trim()` bug | 🟠 CONFIRMED — was in TeamDashboardPage, already partially fixed in previous sessions | Verify completely fixed |
-| 6 | Leads-Cases N+1 query | ✅ ALREADY FIXED — `getTeamDashboard()` in dataService batches leads with `IN` | None |
-| 7 | No transaction wrapping | 🟠 CONFIRMED — `markEligible()` does UPDATE + INSERT separately, no rollback | Fix with DB migration: add unique index on `student_cases(lead_id)` |
-| 8 | Rewards duplication risk | 🟡 MEDIUM — no unique index on rewards table. Trigger has `ON CONFLICT DO NOTHING` on commissions, but rewards has no constraint | Add partial unique index |
-| 9 | No archive strategy | 🟡 MEDIUM — out of scope for now, no performance issues yet | Defer |
-| 10 | Missing i18n keys | 🟡 MEDIUM — some keys exist, some missing | Partial fix |
+| Query | Result |
+|-------|--------|
+| Duplicate leads (same phone) | 0 found — unique index working |
+| Duplicate rewards for same case | 0 found — `rewards_user_case_unique` index from Phase 2 is protecting this |
+| Orphan appointments (case_id → no case) | 0 found |
+| Stale referrals with no matching lead | 0 found |
+| Cases with null lead FK | 0 found |
+
+**This means no data cleanup scripts are needed today.** The previous phases already protected the data. The focus now is fixing the **code-level risks** that could still create ghost data in future interactions.
 
 ---
 
-## Real Issues to Fix (Confirmed and Prioritized)
+## Confirmed Real Issues (From Code Inspection)
 
-### 🔴 CRITICAL-1: Case Orphans — 3 Live Cases with NULL student_profile_id
-**Problem confirmed in DB**: 3 cases including 2 with `case_status = 'paid'` have NULL `student_profile_id`. This means:
-- The `notify_case_status_change` trigger silently skips notifications
-- The student can never view their case in the Student Dashboard
-- `ReadyToApplyTable` correctly filters by `case_status = 'ready_to_apply'`, which is correct behavior — student account creation populates `student_profile_id` via `create-student-account` edge function
-
-**Fix**: Add a DB migration with a unique partial index on `student_cases(lead_id)` to prevent a second case being created for the same lead, AND fix `markEligible()` in `LeadsManagement.tsx` to use an upsert pattern. Also fix the `assignLawyer()` function: it already checks for existing cases (lines 144-155), but the `markEligible` path at line 109 does `leads.update` + `student_cases.insert` without checking for existing case — creating duplicate cases is possible if admin clicks twice.
-
-### 🔴 CRITICAL-2: Duplicate Case Creation in markEligible()
-**File**: `src/components/admin/LeadsManagement.tsx:109`
-**Problem**: `markEligible()` at line 109 calls:
+### Issue 1: `confirmPaymentAndSubmit` in TeamDashboardPage — Audit Log Runs Before Error Check
+**File**: `src/pages/TeamDashboardPage.tsx:369-376`
+**Verified problem**:
 ```typescript
-await (supabase as any).from('leads').update({ status: 'eligible' }).eq('id', lead.id);
-const { error: caseErr } = await (supabase as any).from('student_cases').insert({ lead_id: lead.id, ... });
+const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
+await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', ... }); // ← runs even if error!
+if (error) {
+  toast({ variant: 'destructive', ... });
+}
 ```
-There is **no check** whether a case already exists for this lead. If admin double-clicks, 2 cases are created. No unique constraint exists on `student_cases.lead_id`.
+The audit log records "submit_for_application" even when the actual case update failed. This is a **data integrity bug** — the audit log becomes untrustworthy.
 
-**Fix**: 
-1. DB Migration: Add `CREATE UNIQUE INDEX IF NOT EXISTS student_cases_lead_id_key ON public.student_cases(lead_id)` — this is a safe structural change
-2. Code: Change `markEligible()` to do an upsert check (same pattern as `assignLawyer()` which already does `select('id').eq('lead_id', ...).limit(1)`)
-
-### 🟠 HIGH-1: Rewards Duplication Risk — No Unique Index
-**Problem**: The `auto_split_payment` trigger uses `ON CONFLICT DO NOTHING` for `commissions` table (which has no unique index, so that's actually a no-op). For `rewards`, there is NO conflict protection at all. If a case is set to `paid`, then manually un-paid, then re-paid, the trigger fires twice creating two reward records.
-
-**Verified from DB**: No duplicates currently exist, but the risk is architectural.
-
-**Fix**: Add DB migration with a partial unique index:
-```sql
-CREATE UNIQUE INDEX IF NOT EXISTS rewards_case_user_unique 
-ON public.rewards(admin_notes) 
-WHERE admin_notes LIKE 'Auto-generated from case%';
-```
-Actually better: Add a `case_id` column to rewards OR add a unique index on `(user_id, admin_notes)`. The cleanest approach is a partial unique index on the `admin_notes` pattern since that's the current correlation mechanism.
-
-### 🟠 HIGH-2: markEligible → Case Creation Has No Error Recovery
-**File**: `src/components/admin/LeadsManagement.tsx:105-114`
-**Problem**: If `leads.update` succeeds but `student_cases.insert` fails, the lead is marked `eligible` but has no case. The admin sees a success toast but the case is missing.
-
-**Fix**: Show a more specific error and re-fetch. Add check for existing case before inserting.
-
-### 🟡 MEDIUM-1: useRealtimeSubscription — Stale Closure Risk
-**File**: `src/hooks/useRealtimeSubscription.ts`
-**Problem (from audit)**: The hook has `[tableName, onUpdate, enabled]` dependency. If `onUpdate` is not memoized with `useCallback`, the hook re-subscribes on every render (destroys and recreates the channel). 
-
-**Verified**: `useRealtimeSubscription` already properly cleans up (`supabase.removeChannel(channel)`). The risk is that `onUpdate` being non-memoized causes churn.
-
-**Fix**: The hook itself is fine. The `refetch` from `useDashboardData` IS memoized with `useCallback`. No change needed.
-
-### 🟡 MEDIUM-2: Admin Payout View Missing Bank Details Column
-**File**: `src/components/admin/PayoutsManagement.tsx`
-**Verified**: `payment_method` column IS stored on `payout_requests` when submitted (line 137 of EarningsPanel). The PayoutsManagement component fetches `*` from `payout_requests` which includes `payment_method`. Need to verify it's displayed.
+**Fix**: Move `log_user_activity` inside the success branch (after `if (error)` check is false), matching the fixed pattern already applied to `completeFile`.
 
 ---
 
-## Migration Plan (Database Changes)
-
-### Migration 1: Prevent Duplicate Cases per Lead
-```sql
--- Add unique constraint on lead_id in student_cases
--- This prevents double case creation via double-clicks or race conditions
-CREATE UNIQUE INDEX IF NOT EXISTS student_cases_lead_id_key 
-ON public.student_cases(lead_id);
-```
-**Risk assessment**: 3 existing orphan cases — since we've confirmed they all have DIFFERENT lead_ids (checked: `b84a3a96`, `bbef4114`, `0f14121e`), this migration will succeed safely.
-
-### Migration 2: Prevent Duplicate Auto-Generated Rewards per Case
-```sql
--- Prevent same case from generating two rewards for same user
--- Use a partial unique index on rewards to prevent duplicates from trigger re-firing
-CREATE UNIQUE INDEX IF NOT EXISTS rewards_user_case_unique 
-ON public.rewards(user_id, admin_notes) 
-WHERE admin_notes IS NOT NULL AND admin_notes LIKE 'Auto-generated from case%';
-```
-
----
-
-## Code Changes
-
-### 1. Fix `markEligible()` in LeadsManagement.tsx
-Replace the naive `insert` with an upsert-style check matching how `assignLawyer()` already works:
-
+### Issue 2: AppointmentCalendar — `fetchAppointments` Has No Error Handling
+**File**: `src/components/lawyer/AppointmentCalendar.tsx:82-85`
+**Verified problem**:
 ```typescript
-const markEligible = async (lead: Lead) => {
-  setLoading(true);
-  
-  // Step 1: Check if case already exists for this lead
-  const { data: existingCases } = await (supabase as any)
-    .from('student_cases')
-    .select('id')
-    .eq('lead_id', lead.id)
-    .limit(1);
-  
-  // Step 2: Update lead status
-  const { error: updateErr } = await (supabase as any)
-    .from('leads')
-    .update({ status: 'eligible' })
-    .eq('id', lead.id);
-  
-  if (updateErr) {
-    toast({ variant: 'destructive', title: t('common.error'), description: updateErr.message });
-    setLoading(false);
-    return;
-  }
-  
-  // Step 3: Only insert case if none exists
-  if (!existingCases?.[0]) {
-    const { error: caseErr } = await (supabase as any).from('student_cases').insert({
-      lead_id: lead.id,
-      selected_city: lead.preferred_city,
-      accommodation_status: lead.accommodation ? 'needed' : 'not_needed',
-    });
-    if (caseErr) {
-      toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
-      setLoading(false);
-      return;
-    }
-  }
-  
-  setLoading(false);
-  toast({ title: t('admin.leads.updated'), description: t('admin.leads.qualifiedAndCaseCreated', { name: lead.full_name }) });
-  onRefresh();
+const fetchAppointments = async () => {
+  const { data } = await (supabase as any).from('appointments').select('*')...
+  if (data) setAppointments(data);
+  // ❌ No error handling — if fetch fails, stale appointments remain silently
 };
 ```
+Also: `AppointmentCalendar` manages its own `appointments` state separately from the `refetch()` in the parent `TeamDashboardPage`. After a delete or reschedule in the **parent page** (`handleDeleteAppointment`, `handleRescheduleAppointment` at lines 393-415), `refetch()` is called which reloads `TeamDashboardPage`'s data — but `AppointmentCalendar`'s internal `appointments` state is NOT re-synced unless `fetchAppointments()` is called within the calendar component itself.
 
-### 2. Show Bank Details in Admin PayoutsManagement
-**File**: `src/components/admin/PayoutsManagement.tsx`
-Verify and add `payment_method` column display in the payout requests table/card view so admin can see the bank details stored in `payment_method` field.
+**Fix**: Add error handling to `fetchAppointments`. The appointment refetch issue is actually self-contained since all appointment mutations in `TeamDashboardPage` call `refetch()` which triggers a re-render of `AppointmentCalendar` with `key={userId}` effectively resetting it, and the calendar has its own `useEffect(() => { fetchAppointments(); }, [userId])`. This is acceptable.
 
-### 3. Phone Validation — International Numbers
-**File**: `src/pages/ApplyPage.tsx:93-96`  
-The phone validation only accepts Israeli numbers. This blocks international applicants. Expand to accept:
-- Israeli: `^05\d{8}$` or `^+9725\d{8}$`
-- International fallback: `^\+?\d{7,15}$`
+---
+
+### Issue 3: `RewardsPanel.submitPayoutRequest` — Missing Error Check Before UI Update
+**File**: `src/components/dashboard/RewardsPanel.tsx:96-108`
+**Verified problem**:
+```typescript
+await (supabase as any).from('payout_requests').insert({...});  // ← no error check
+for (const r of eligibleRewards) {
+  await (supabase as any).from('rewards').update({ status: 'approved', ... }).eq('id', r.id);
+}
+toast({ title: t('rewards.payoutRequested') });  // Always shows success
+setShowRequestModal(false);
+fetchData();
+```
+If the `payout_requests` insert fails, the rewards are still marked as `approved` and the user sees a success toast. This creates a state where rewards show `approved` but no payout request exists.
+
+**Fix**: Check the insert result. If it errors, show a toast error and return without updating rewards or showing success.
+
+---
+
+### Issue 4: `RewardsPanel.cancelRequest` — No Error Check
+**File**: `src/components/dashboard/RewardsPanel.tsx:111-122`
+**Verified problem**: `cancelRequest` runs `payout_requests.update` and then `rewards.update` with no error checking on either operation. If the payout cancel fails, rewards are still reset to `pending` state, creating a mismatch.
+
+**Fix**: Check both errors and show toasts on failure.
+
+---
+
+### Issue 5: `StudentCasesManagement.markAsPaid` — No Check for Already-Paid Status
+**File**: `src/components/admin/StudentCasesManagement.tsx:58-64`
+**Verified problem**: Admin can call `markAsPaid` on a case already in `paid` status. The trigger's `IF NEW.case_status = 'paid' AND (OLD.case_status IS DISTINCT FROM 'paid')` condition protects the database, but the UI has no guard — admin sees no warning.
+
+**Fix**: Before calling the update, check `if (c.case_status === 'paid') { toast(already paid); return; }` — cheap client-side guard for UX clarity.
+
+---
+
+### Issue 6: `AppointmentCalendar.fetchAppointments` — Missing Error Destructuring
+**File**: `src/components/lawyer/AppointmentCalendar.tsx:82-85`
+The fetch doesn't destructure `error` from the response. If it fails (RLS issue, network), `appointments` stays as previous state silently.
+
+**Fix**: Destructure `{ data, error }`, log error on failure.
+
+---
+
+## Issues That Are Actually Already Fixed (Confirmed Safe)
+
+| Claim | Reality |
+|-------|---------|
+| Rewards duplication (trigger fires twice) | The `rewards_user_case_unique` partial index added in Phase 2 blocks this at DB level |
+| Lead duplication | `leads_phone_unique` index + `insert_lead_from_apply` uses UPDATE-then-INSERT (upsert pattern) |
+| No check in `markEligible` before case insert | Fixed in Phase 2 |
+| Appointment orphans | AppointmentCalendar already checks for existing appointment by case_id before inserting (lines 147-175) |
+| `null.toString().trim()` bug | Fixed in Phase 2 |
+| `log_user_activity` runs before error check in `completeFile` | Already fixed in Phase 2 |
 
 ---
 
 ## Files to Modify
 
-| File | Change | Risk |
-|------|--------|------|
-| DB Migration (new) | Add unique index on `student_cases(lead_id)` | Low — no duplicates exist |
-| DB Migration (new) | Add partial unique index on `rewards` | Low — no duplicates exist |
-| `src/components/admin/LeadsManagement.tsx` | Fix `markEligible()` to check for existing case before insert | Low |
-| `src/components/admin/PayoutsManagement.tsx` | Show `payment_method` bank details in UI | Low |
-| `src/pages/ApplyPage.tsx` | Broaden phone validation to accept international numbers | Low |
+| File | Change | Lines |
+|------|--------|-------|
+| `src/pages/TeamDashboardPage.tsx` | Move `log_user_activity` inside success branch of `confirmPaymentAndSubmit` | ~369-376 |
+| `src/components/dashboard/RewardsPanel.tsx` | Add error check in `submitPayoutRequest` before marking rewards | ~96-108 |
+| `src/components/dashboard/RewardsPanel.tsx` | Add error check in `cancelRequest` | ~111-122 |
+| `src/components/admin/StudentCasesManagement.tsx` | Add already-paid guard in `markAsPaid` | ~58-64 |
+| `src/components/lawyer/AppointmentCalendar.tsx` | Add `{ data, error }` destructuring + error log in `fetchAppointments` | ~82-85 |
+
+---
+
+## Technical Details
+
+### Fix 1 — TeamDashboardPage `confirmPaymentAndSubmit`
+```typescript
+const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
+// Move log_user_activity INSIDE success branch:
+if (error) {
+  toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+} else {
+  await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', ... });
+  toast({ title: t('lawyer.saved') });
+}
+setSaving(false);
+setPaymentConfirm(null);
+await refetch();
+```
+
+### Fix 2 — RewardsPanel `submitPayoutRequest` with error check
+```typescript
+const { error: insertError } = await (supabase as any).from('payout_requests').insert({...});
+if (insertError) {
+  toast({ variant: 'destructive', title: t('common.error'), description: insertError.message });
+  return;
+}
+// Only update rewards if insert succeeded:
+for (const r of eligibleRewards) {
+  await (supabase as any).from('rewards').update({ status: 'approved', ... }).eq('id', r.id);
+}
+toast({ title: t('rewards.payoutRequested') });
+setShowRequestModal(false);
+setRequestNotes('');
+fetchData();
+```
+
+### Fix 3 — `markAsPaid` already-paid guard
+```typescript
+const markAsPaid = async (c: any) => {
+  if (c.case_status === 'paid') {
+    toast({ title: 'Already marked as paid' });
+    return;
+  }
+  // ... existing code
+};
+```
+
+### Fix 4 — `fetchAppointments` error handling
+```typescript
+const fetchAppointments = async () => {
+  const { data, error } = await (supabase as any).from('appointments').select('*')...
+  if (error) { console.error('Appointments fetch failed:', error); return; }
+  if (data) setAppointments(data);
+};
+```
 
 ---
 
 ## What Does NOT Change
-- RLS policies — already correct and complete
-- `useRealtimeSubscription` hook — already correct with proper cleanup
-- The lead deduplication — already working via `leads_phone_unique` index
-- The data service and dashboard architecture from previous sessions
-- Any auth or security logic
-
----
-
-## Expected Outcome
-1. Double-clicking "Mark Eligible" no longer creates duplicate cases (DB enforced)
-2. Auto-generated rewards cannot be created twice for the same case (DB enforced)
-3. Admin can clearly see bank details when reviewing payout requests
-4. International phone numbers can submit applications on the Apply page
-5. Lead pipeline is fully integrity-protected end-to-end at the database level
+- No DB migrations needed (all constraints already in place)
+- No RLS changes needed (verified complete and correct)
+- No data cleanup scripts needed (zero ghost data in production DB)
+- All existing UI components and layouts
+- All business logic beyond the specific mutation functions listed above
