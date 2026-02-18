@@ -161,6 +161,7 @@ export interface AdminDashboardData {
   rewards: any[];
   auditLogs: any[];
   loginAttempts: any[];
+  payoutRequests: any[];
 }
 
 export async function getAdminDashboard(): Promise<{
@@ -170,7 +171,7 @@ export async function getAdminDashboard(): Promise<{
   try {
     const [
       p, s, pay, inv, roles, leadsRes, casesRes,
-      lawyerRoles, commissionsRes, rewardsRes, audit, logins,
+      lawyerRoles, commissionsRes, rewardsRes, audit, logins, payoutReqRes,
     ] = await Promise.all([
       safeQuery((supabase as any).from('profiles').select('*').order('created_at', { ascending: false })),
       safeQuery((supabase as any).from('services').select('*').order('created_at', { ascending: false })),
@@ -184,6 +185,7 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('rewards').select('*')),
       safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),
       safeQuery((supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200)),
+      safeQuery((supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false })),
     ]);
 
     if (p.error) console.error('[dataService] Admin profiles fetch failed:', p.error);
@@ -234,6 +236,7 @@ export async function getAdminDashboard(): Promise<{
         rewards: rewardsRes.data ?? [],
         auditLogs: audit.data ?? [],
         loginAttempts: logins.data ?? [],
+        payoutRequests: payoutReqRes.data ?? [],
       },
       error: null,
     };

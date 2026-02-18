@@ -264,7 +264,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     <Button variant="outline" size="sm" className="mt-3" onClick={() => {
                       setEditingMoney(true);
                       setMoneyValues({
-                        service_fee: selectedCase.service_fee || 0,
+                        service_fee: Number(selectedCase.service_fee) || 8000,
                         school_commission: selectedCase.school_commission || 0,
                         influencer_commission: selectedCase.influencer_commission || 0,
                         lawyer_commission: selectedCase.lawyer_commission || 0,

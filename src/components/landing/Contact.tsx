@@ -51,7 +51,14 @@ const Contact = () => {
       if (error) throw new Error(error.message);
       return { success: true };
     },
-    onSuccess: () => { toast({ title: t('contact.successTitle', { ns: 'common' }), description: t('contact.successDesc', { ns: 'common' }) }); form.reset(); },
+    onSuccess: () => {
+      toast({ title: t('contact.successTitle', { ns: 'common' }), description: t('contact.successDesc', { ns: 'common' }) });
+      form.reset();
+      // Auto-redirect to WhatsApp community after short delay
+      setTimeout(() => {
+        window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
+      }, 1200);
+    },
     onError: (error) => { toast({ variant: "destructive", title: t('contact.errorTitle', { ns: 'common' }), description: error.message }); },
   });
 

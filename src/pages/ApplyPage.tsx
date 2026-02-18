@@ -140,7 +140,11 @@ const ApplyPage: React.FC = () => {
         ...companionData,
       };
       const { error } = await supabase.rpc('insert_lead_from_apply', rpcParams as any);
-      if (error) throw error;
+      if (error) {
+        console.error('[ApplyPage] insert_lead_from_apply error:', error);
+        throw error;
+      }
+      console.log('[ApplyPage] Lead created successfully for:', rpcParams.p_phone);
 
       // Submit additional companions (index 1+)
       if (hasCompanions && companions.length > 1) {
@@ -164,8 +168,9 @@ const ApplyPage: React.FC = () => {
       setTimeout(() => {
         window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
       }, 1500);
-    } catch {
-      toast({ title: t('apply.error', 'حدث خطأ، حاول مرة أخرى'), variant: 'destructive' });
+    } catch (err: any) {
+      console.error('[ApplyPage] Submission failed:', err);
+      toast({ title: t('apply.error', 'حدث خطأ، حاول مرة أخرى'), description: err?.message || '', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
