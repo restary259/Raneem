@@ -1215,6 +1215,7 @@ export type Database = {
       student_cases: {
         Row: {
           accommodation_status: string | null
+          admin_notes: string | null
           assigned_at: string | null
           assigned_lawyer_id: string | null
           case_status: string
@@ -1234,6 +1235,9 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           passport_number: string | null
+          reassigned_from: string | null
+          reassignment_history: Json | null
+          reassignment_notes: string | null
           referral_discount: number
           refund_status: string | null
           school_commission: number
@@ -1251,6 +1255,7 @@ export type Database = {
         }
         Insert: {
           accommodation_status?: string | null
+          admin_notes?: string | null
           assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
@@ -1270,6 +1275,9 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           passport_number?: string | null
+          reassigned_from?: string | null
+          reassignment_history?: Json | null
+          reassignment_notes?: string | null
           referral_discount?: number
           refund_status?: string | null
           school_commission?: number
@@ -1287,6 +1295,7 @@ export type Database = {
         }
         Update: {
           accommodation_status?: string | null
+          admin_notes?: string | null
           assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
@@ -1306,6 +1315,9 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           passport_number?: string | null
+          reassigned_from?: string | null
+          reassignment_history?: Json | null
+          reassignment_notes?: string | null
           referral_discount?: number
           refund_status?: string | null
           school_commission?: number

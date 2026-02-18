@@ -182,7 +182,7 @@ const StudentAuthPage = () => {
               country: country,
               ...(refId ? { influencer_id: refId } : {}),
             },
-            emailRedirectTo: `${window.location.origin}/student-dashboard`
+            emailRedirectTo: `https://darb-agency.lovable.app/student-dashboard`
           }
         });
 

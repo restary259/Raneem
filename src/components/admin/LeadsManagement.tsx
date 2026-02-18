@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -69,6 +70,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [assignModal, setAssignModal] = useState<{ leadId: string; leadName: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedLawyer, setSelectedLawyer] = useState('');
+  const [assignNotes, setAssignNotes] = useState('');
   const [overrideModal, setOverrideModal] = useState<Lead | null>(null);
   const [overrideScore, setOverrideScore] = useState('');
   const [overrideStatus, setOverrideStatus] = useState('');
@@ -208,7 +210,11 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
     const { data: existingCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({ assigned_lawyer_id: selectedLawyer, assigned_at: new Date().toISOString() }).eq('id', existingCases[0].id);
+      await (supabase as any).from('student_cases').update({
+        assigned_lawyer_id: selectedLawyer,
+        assigned_at: new Date().toISOString(),
+        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
+      }).eq('id', existingCases[0].id);
     } else {
       const lead = leads.find(l => l.id === assignModal.leadId);
       await (supabase as any).from('student_cases').insert({
@@ -217,6 +223,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         selected_city: lead?.preferred_city || null,
         accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
         assigned_at: new Date().toISOString(),
+        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
       });
     }
     const { data: { session } } = await supabase.auth.getSession();
@@ -231,7 +238,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     }
     setLoading(false);
     toast({ title: t('admin.leads.teamMemberAssigned') });
-    setAssignModal(null); setSelectedLawyer(''); onRefresh();
+    setAssignModal(null); setSelectedLawyer(''); setAssignNotes(''); onRefresh();
   };
 
   const handleOverrideScore = async () => {
@@ -570,7 +577,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       </Dialog>
 
       {/* Assign Team Member Modal */}
-      <Dialog open={!!assignModal} onOpenChange={() => setAssignModal(null)}>
+      <Dialog open={!!assignModal} onOpenChange={() => { setAssignModal(null); setAssignNotes(''); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{t('admin.leads.assignTeamMemberTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
           {lawyers.length === 0 ? (
@@ -580,12 +587,26 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
             </div>
           ) : (
             <>
-              <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
-                <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
-                <SelectContent>
-                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div className="space-y-3">
+                <div>
+                  <Label>{t('admin.leads.selectTeamMember', 'Team Member')}</Label>
+                  <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
+                    <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
+                    <SelectContent>
+                      {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t('admin.leads.internalNotes', 'Internal Notes (optional)')}</Label>
+                  <Textarea
+                    value={assignNotes}
+                    onChange={e => setAssignNotes(e.target.value)}
+                    placeholder={t('admin.leads.notesPlaceholder', 'Notes visible to the assigned team member...')}
+                    rows={3}
+                  />
+                </div>
+              </div>
               <DialogFooter>
                 <Button onClick={assignLawyer} disabled={loading || !selectedLawyer}>{loading ? t('admin.leads.assigning') : t('admin.leads.assign')}</Button>
               </DialogFooter>
