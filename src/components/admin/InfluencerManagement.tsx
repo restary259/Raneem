@@ -21,23 +21,35 @@ interface InfluencerManagementProps {
   lawyers?: any[];
   onRefresh: () => void;
   filterRole?: 'influencer' | 'lawyer';
+  /** Lifted to parent so credentials survive any re-render/remount of this component */
+  pendingCredentials?: { email: string; password: string } | null;
+  onCredentialsCreated: (email: string, password: string) => void;
+  onCredentialsDismissed: () => void;
 }
 
-const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers, invites, students, lawyers = [], onRefresh, filterRole }) => {
+const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
+  influencers,
+  invites,
+  students,
+  lawyers = [],
+  onRefresh,
+  filterRole,
+  pendingCredentials,
+  onCredentialsCreated,
+  onCredentialsDismissed,
+}) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'influencer' | 'lawyer'>(filterRole || 'influencer');
   const [commission, setCommission] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [createdPassword, setCreatedPassword] = useState(() => sessionStorage.getItem('darb_new_cred_pw') || '');
-  const [createdEmail, setCreatedEmail] = useState(() => sessionStorage.getItem('darb_new_cred_email') || '');
-  const [showCredentialsModal, setShowCredentialsModal] = useState(() => !!sessionStorage.getItem('darb_new_cred_pw'));
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
   const isMobile = useIsMobile();
 
-  // If filterRole is set, show only that role's members
   const allTeamMembers = filterRole === 'lawyer'
     ? lawyers.map(l => ({ ...l, _role: 'lawyer' }))
     : filterRole === 'influencer'
@@ -46,9 +58,6 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
         ...influencers.map(i => ({ ...i, _role: 'influencer' })),
         ...lawyers.map(l => ({ ...l, _role: 'lawyer' })),
       ];
-
-  const [copied, setCopied] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleCreate = async () => {
     if (!name || !email) return;
@@ -69,17 +78,11 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
         throw new Error('Account created but no temporary password was returned. Contact support.');
       }
 
-      // Persist credentials in sessionStorage so they survive parent re-renders
-      sessionStorage.setItem('darb_new_cred_pw', result.temp_password);
-      sessionStorage.setItem('darb_new_cred_email', email);
-      setCreatedPassword(result.temp_password);
-      setCreatedEmail(email);
+      // Lift credentials to parent — parent state survives any re-render of this child
+      onCredentialsCreated(email, result.temp_password);
       setDialogOpen(false);
-      setShowCredentialsModal(true);
-
-      // Reset form fields
       setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer');
-      // onRefresh() is called when admin dismisses the credentials modal
+      // onRefresh() is called when admin dismisses the credentials modal (in parent)
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('common.error'), description: err.message });
     } finally {
@@ -88,19 +91,25 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
   };
 
   const copyPassword = () => {
-    if (createdPassword) {
-      navigator.clipboard.writeText(createdPassword);
+    if (pendingCredentials?.password) {
+      navigator.clipboard.writeText(pendingCredentials.password);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const copyEmail = () => {
-    if (createdEmail) {
-      navigator.clipboard.writeText(createdEmail);
+    if (pendingCredentials?.email) {
+      navigator.clipboard.writeText(pendingCredentials.email);
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
     }
+  };
+
+  const handleDismissCredentials = () => {
+    setCopied(false);
+    setCopiedEmail(false);
+    onCredentialsDismissed(); // clears parent state + calls onRefresh
   };
 
   const getStudentCount = (influencerId: string) => students.filter(s => s.influencer_id === influencerId).length;
@@ -145,7 +154,11 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">{pageTitle}</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button onClick={() => { setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer'); }}><UserPlus className="h-4 w-4 me-2" />{t('team.addMember')}</Button></DialogTrigger>
+          <DialogTrigger asChild>
+            <Button onClick={() => { setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer'); }}>
+              <UserPlus className="h-4 w-4 me-2" />{t('team.addMember')}
+            </Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{t('team.createTitle')}</DialogTitle></DialogHeader>
             <div className="space-y-4">
@@ -171,8 +184,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
         </Dialog>
       </div>
 
-      {/* Credentials Modal — persistent, cannot be dismissed accidentally */}
-      <Dialog open={showCredentialsModal} onOpenChange={() => {}}>
+      {/* Credentials Modal — driven by parent state, immune to child re-renders */}
+      <Dialog open={!!pendingCredentials} onOpenChange={() => {}}>
         <DialogContent onPointerDownOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -188,7 +201,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('admin.influencers.email')}</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono break-all">{createdEmail}</code>
+                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono break-all">{pendingCredentials?.email}</code>
                   <Button size="sm" variant="outline" className="shrink-0" onClick={copyEmail}>
                     {copiedEmail ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
@@ -197,7 +210,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <div>
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('team.tempPassword', { defaultValue: 'Temporary Password' })}</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono font-bold tracking-wider">{createdPassword}</code>
+                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono font-bold tracking-wider">{pendingCredentials?.password}</code>
                   <Button size="sm" variant="outline" className="shrink-0" onClick={copyPassword}>
                     {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
@@ -209,19 +222,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
                 ⚠️ {t('team.passwordWarning', { defaultValue: 'This password will NOT be shown again. Copy it now and send it securely to the new member.' })}
               </p>
             </div>
-            <Button
-              className="w-full"
-              onClick={() => {
-                sessionStorage.removeItem('darb_new_cred_pw');
-                sessionStorage.removeItem('darb_new_cred_email');
-                setShowCredentialsModal(false);
-                setCreatedPassword('');
-                setCreatedEmail('');
-                setCopied(false);
-                setCopiedEmail(false);
-                onRefresh();
-              }}
-            >
+            <Button className="w-full" onClick={handleDismissCredentials}>
               {t('team.savedCredentials', { defaultValue: "I've Saved the Credentials — Close" })}
             </Button>
           </div>

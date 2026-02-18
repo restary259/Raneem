@@ -17,6 +17,7 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({
   influencers, invites, students, lawyers, profiles, onRefresh,
 }) => {
   const { t } = useTranslation('dashboard');
+  const [pendingCredentials, setPendingCredentials] = React.useState<{ email: string; password: string } | null>(null);
 
   return (
     <Tabs defaultValue="agents" className="space-y-4">
@@ -31,6 +32,9 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({
           students={students}
           lawyers={lawyers}
           onRefresh={onRefresh}
+          pendingCredentials={pendingCredentials}
+          onCredentialsCreated={(email, password) => setPendingCredentials({ email, password })}
+          onCredentialsDismissed={() => { setPendingCredentials(null); onRefresh(); }}
         />
       </TabsContent>
       <TabsContent value="referrals">

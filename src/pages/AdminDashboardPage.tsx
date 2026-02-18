@@ -24,6 +24,7 @@ const AdminDashboardPage = () => {
   // sessionReady = auth fully resolved + role verified → safe to fetch data
   const [sessionReady, setSessionReady] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [pendingCredentials, setPendingCredentials] = useState<{ email: string; password: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -170,6 +171,9 @@ const AdminDashboardPage = () => {
             students={students}
             lawyers={lawyers}
             onRefresh={refetch}
+            pendingCredentials={pendingCredentials}
+            onCredentialsCreated={(email, password) => setPendingCredentials({ email, password })}
+            onCredentialsDismissed={() => { setPendingCredentials(null); refetch(); }}
           />
         );
       case 'students':
