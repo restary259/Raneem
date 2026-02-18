@@ -460,6 +460,7 @@ export type Database = {
           city: string | null
           companion_lead_id: string | null
           created_at: string
+          deleted_at: string | null
           education_level: string | null
           eligibility_reason: string | null
           eligibility_score: number | null
@@ -494,6 +495,7 @@ export type Database = {
           city?: string | null
           companion_lead_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           education_level?: string | null
           eligibility_reason?: string | null
           eligibility_score?: number | null
@@ -528,6 +530,7 @@ export type Database = {
           city?: string | null
           companion_lead_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           education_level?: string | null
           eligibility_reason?: string | null
           eligibility_score?: number | null
@@ -1217,6 +1220,7 @@ export type Database = {
           case_status: string
           country_of_birth: string | null
           created_at: string
+          deleted_at: string | null
           fraud_flagged: boolean | null
           fraud_notes: string | null
           gender: string | null
@@ -1252,6 +1256,7 @@ export type Database = {
           case_status?: string
           country_of_birth?: string | null
           created_at?: string
+          deleted_at?: string | null
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
@@ -1287,6 +1292,7 @@ export type Database = {
           case_status?: string
           country_of_birth?: string | null
           created_at?: string
+          deleted_at?: string | null
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
