@@ -50,10 +50,13 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
           }
         });
         Object.entries(ibanMap).filter(([, names]) => names.length > 1).forEach(([iban, names]) => {
-          alerts.push({ type: 'duplicate_iban', severity: 'high', message: isAr ? 'IBAN مكرر' : 'Duplicate IBAN detected', details: `${iban}: ${names.join(', ')}` });
+          const masked = `****${iban.slice(-4)}`;
+          alerts.push({ type: 'duplicate_iban', severity: 'high', message: isAr ? 'IBAN مكرر' : 'Duplicate IBAN detected', details: `${masked}: ${names.join(', ')}` });
         });
         Object.entries(accountMap).filter(([, names]) => names.length > 1).forEach(([acc, names]) => {
-          alerts.push({ type: 'duplicate_account', severity: 'high', message: isAr ? 'حساب بنكي مكرر' : 'Duplicate bank account', details: `${acc}: ${names.join(', ')}` });
+          const parts = acc.split('-');
+          const maskedAcc = parts.length === 2 ? `${parts[0]}-****${parts[1].slice(-4)}` : `****${acc.slice(-4)}`;
+          alerts.push({ type: 'duplicate_account', severity: 'high', message: isAr ? 'حساب بنكي مكرر' : 'Duplicate bank account', details: `${maskedAcc}: ${names.join(', ')}` });
         });
       }
 

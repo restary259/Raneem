@@ -27,7 +27,7 @@ export async function getInfluencerDashboard(
       safeQuery(
         (supabase as any)
           .from('leads')
-          .select('*')
+          .select('id, full_name, phone, eligibility_score, eligibility_reason, status, source_type, created_at, preferred_city, preferred_major, accommodation, ref_code, last_contacted')
           .eq('source_id', userId)
           .order('created_at', { ascending: false })
       ),
