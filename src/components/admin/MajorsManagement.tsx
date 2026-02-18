@@ -81,13 +81,17 @@ const MajorsManagement: React.FC = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
   const fetchData = async () => {
     setLoading(true);
     const [catsRes, majorsRes] = await Promise.all([
-      (supabase as any).from('major_categories').select('*').order('sort_order'),
-      (supabase as any).from('majors').select('*').order('sort_order'),
+      safeQuery((supabase as any).from('major_categories').select('*').order('sort_order')),
+      safeQuery((supabase as any).from('majors').select('*').order('sort_order')),
     ]);
+    if (catsRes.error) console.error('Categories fetch failed:', catsRes.error);
     if (catsRes.data) setCategories(catsRes.data);
+    if (majorsRes.error) console.error('Majors fetch failed:', majorsRes.error);
     if (majorsRes.data) setMajors(majorsRes.data);
     setLoading(false);
   };

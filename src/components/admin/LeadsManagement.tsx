@@ -203,7 +203,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const getSourceLabel = (source: string) => String(t(`lawyer.sources.${source}`, { defaultValue: source }));
   const getInfluencerName = (lead: Lead) => {
     if (lead.source_type === 'influencer' && lead.source_id) {
-      return influencers.find(i => i.id === lead.source_id)?.full_name || null;
+      return (influencers ?? []).find(i => i.id === lead.source_id)?.full_name || null;
     }
     return null;
   };

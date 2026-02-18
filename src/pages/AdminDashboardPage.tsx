@@ -68,28 +68,34 @@ const AdminDashboardPage = () => {
     init();
   }, [navigate, toast]);
 
+  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
   const fetchAllData = useCallback(async () => {
     const [p, s, pay, items, inv, roles, leadsRes, casesRes, lawyerRoles, commissionsRes, rewardsRes, audit, logins] = await Promise.all([
-      (supabase as any).from('profiles').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('services').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('payments').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true }),
-      (supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('user_roles').select('*').eq('role', 'influencer'),
-      (supabase as any).from('leads').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('student_cases').select('*').order('created_at', { ascending: false }),
-      (supabase as any).from('user_roles').select('*').eq('role', 'lawyer'),
-      (supabase as any).from('commissions').select('*'),
-      (supabase as any).from('rewards').select('*'),
-      (supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100),
-      (supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200),
+      safeQuery((supabase as any).from('profiles').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('services').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('payments').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true })),
+      safeQuery((supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'influencer')),
+      safeQuery((supabase as any).from('leads').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('student_cases').select('*').order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'lawyer')),
+      safeQuery((supabase as any).from('commissions').select('*')),
+      safeQuery((supabase as any).from('rewards').select('*')),
+      safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),
+      safeQuery((supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200)),
     ]);
 
+    if (p.error) console.error('Profiles fetch failed:', p.error);
     if (p.data) setStudents(p.data);
+    if (s.error) console.error('Services fetch failed:', s.error);
     if (s.data) setServices(s.data);
     if (pay.data) setPayments(pay.data);
     if (inv.data) setInvites(inv.data);
+    if (leadsRes.error) console.error('Leads fetch failed:', leadsRes.error);
     if (leadsRes.data) setLeads(leadsRes.data);
+    if (casesRes.error) console.error('Cases fetch failed:', casesRes.error);
     if (casesRes.data) setCases(casesRes.data);
     if (commissionsRes.data) setCommissions(commissionsRes.data);
     if (rewardsRes.data) setRewards(rewardsRes.data);

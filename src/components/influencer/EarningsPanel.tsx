@@ -37,14 +37,18 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   const LOCK_DAYS = 20;
 
+  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
   const fetchData = useCallback(async () => {
     const [rewardsRes, requestsRes, configRes, profileRes] = await Promise.all([
-      (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
-      (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single(),
-      (supabase as any).from('profiles').select('iban, bank_name, iban_confirmed_at, bank_branch, bank_account_number').eq('id', userId).single(),
+      safeQuery((supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false })),
+      safeQuery((supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single()),
+      safeQuery((supabase as any).from('profiles').select('iban, bank_name, iban_confirmed_at, bank_branch, bank_account_number').eq('id', userId).single()),
     ]);
+    if (rewardsRes.error) console.error('Rewards fetch failed:', rewardsRes.error);
     if (rewardsRes.data) setRewards(rewardsRes.data);
+    if (requestsRes.error) console.error('Payout requests fetch failed:', requestsRes.error);
     if (requestsRes.data) setPayoutRequests(requestsRes.data);
     if (configRes.data) setMinThreshold(configRes.data.weight);
     if (profileRes.data) setProfile(profileRes.data);
