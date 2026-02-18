@@ -686,6 +686,18 @@ const TeamDashboardPage = () => {
                           )}
 
                           {c.notes && <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">{c.notes}</p>}
+                          {c.admin_notes && (
+                            <div className="flex items-start gap-1.5 p-2 rounded bg-amber-50 border border-amber-200">
+                              <span className="text-[10px] font-bold text-amber-700 shrink-0">📋 {isAr ? 'ملاحظة المسؤول:' : 'Admin note:'}</span>
+                              <p className="text-[10px] text-amber-800">{c.admin_notes}</p>
+                            </div>
+                          )}
+                          {c.reassigned_from && (
+                            <div className="text-[10px] text-muted-foreground italic">
+                              {isAr ? 'محوّل من عضو آخر' : 'Reassigned from another member'}
+                              {c.reassignment_notes && ` — ${c.reassignment_notes}`}
+                            </div>
+                          )}
 
                           {/* Two-button actions per tab */}
                           {renderCaseActions(c, lead)}

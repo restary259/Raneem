@@ -228,18 +228,41 @@ const InfluencerDashboardPage = () => {
                         ? lead.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
                         : '—';
 
+                      // Workflow mirror: map case_status to Arabic/English label
+                      const caseStatusLabels: Record<string, { ar: string; en: string }> = {
+                        assigned: { ar: 'قيد المراجعة', en: 'Under Review' },
+                        contacted: { ar: 'تم التواصل', en: 'Contacted' },
+                        appointment_scheduled: { ar: 'موعد مجدوّل', en: 'Appt. Scheduled' },
+                        appointment_waiting: { ar: 'في انتظار الموعد', en: 'Awaiting Appt.' },
+                        appointment_completed: { ar: 'تم الموعد', en: 'Appt. Done' },
+                        profile_filled: { ar: 'تم ملء الملف', en: 'File Completed' },
+                        services_filled: { ar: 'تم ملء الخدمات', en: 'Services Filled' },
+                        paid: { ar: 'مدفوع ✓', en: 'Paid ✓' },
+                        ready_to_apply: { ar: 'جاهز للتقديم', en: 'Ready to Apply' },
+                        visa_stage: { ar: 'مرحلة التأشيرة', en: 'Visa Stage' },
+                        completed: { ar: 'مكتمل ✓', en: 'Completed ✓' },
+                      };
+                      const caseStatusLabel = linkedCase?.case_status
+                        ? (isAr ? caseStatusLabels[linkedCase.case_status]?.ar : caseStatusLabels[linkedCase.case_status]?.en) || linkedCase.case_status
+                        : null;
+
                       return (
                         <Card key={lead.id}>
                           <CardContent className="p-4 space-y-2">
                             <div className="flex items-center justify-between">
                               <p className="font-medium text-sm">{initials}</p>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap justify-end">
                                 {isPaid ? (
                                   <Badge variant="default" className="bg-green-600 text-xs">{t('influencerDash.studentCard.statusPaid')}</Badge>
                                 ) : isEligible ? (
                                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs">{t('influencerDash.studentCard.statusEligible')}</Badge>
                                 ) : (
                                   <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">{t('influencerDash.studentCard.statusIneligible')}</Badge>
+                                )}
+                                {caseStatusLabel && (
+                                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                                    {caseStatusLabel}
+                                  </Badge>
                                 )}
                               </div>
                             </div>

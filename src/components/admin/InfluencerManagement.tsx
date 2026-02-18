@@ -50,14 +50,22 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
   const { t } = useTranslation('dashboard');
   const isMobile = useIsMobile();
 
-  const allTeamMembers = filterRole === 'lawyer'
-    ? lawyers.map(l => ({ ...l, _role: 'lawyer' }))
-    : filterRole === 'influencer'
-    ? influencers.map(i => ({ ...i, _role: 'influencer' }))
-    : [
-        ...influencers.map(i => ({ ...i, _role: 'influencer' })),
-        ...lawyers.map(l => ({ ...l, _role: 'lawyer' })),
-      ];
+  const allTeamMembers = (() => {
+    const raw = filterRole === 'lawyer'
+      ? lawyers.map(l => ({ ...l, _role: 'lawyer' }))
+      : filterRole === 'influencer'
+      ? influencers.map(i => ({ ...i, _role: 'influencer' }))
+      : [
+          ...influencers.map(i => ({ ...i, _role: 'influencer' })),
+          ...lawyers.map(l => ({ ...l, _role: 'lawyer' })),
+        ];
+    // Sort by student count descending (#17)
+    return [...raw].sort((a, b) => {
+      const countA = students.filter((s: any) => s.influencer_id === a.id).length;
+      const countB = students.filter((s: any) => s.influencer_id === b.id).length;
+      return countB - countA;
+    });
+  })();
 
   const handleCreate = async () => {
     if (!name || !email) return;
