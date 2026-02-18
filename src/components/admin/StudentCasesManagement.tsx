@@ -85,7 +85,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
     return <Badge variant="outline" className="text-[10px]">🌐 {t('lawyer.sources.organic')}</Badge>;
   };
 
-  const getNetProfit = (c: any) => (c.service_fee || 0) + (c.school_commission || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0) - (c.translation_fee || 0);
+  // Net profit is NIS only: school commission (EUR) is separate revenue, not included
+  const getNetProfit = (c: any) => (c.service_fee || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0) - (c.translation_fee || 0);
 
   const bulkExportPDF = () => {
     const headers = [t('admin.ready.fullName', 'Full Name'), t('admin.ready.email', 'Email'), t('admin.ready.phone', 'Phone'), t('admin.ready.passportNumber', 'Passport'), t('admin.ready.nationality', 'Nationality'), t('admin.ready.destinationCity', 'City'), t('admin.ready.schoolLabel', 'School'), t('admin.ready.intensiveCourse', 'Course'), t('admin.students.status', 'Status')];
@@ -236,19 +237,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               <TabsContent value="money" className="mt-4">
                 {!editingMoney ? (
                   <>
-                    {/* Commission over-budget warning */}
-                    {(() => {
-                      const totalComm = (selectedCase.influencer_commission || 0) + (selectedCase.lawyer_commission || 0) + (selectedCase.school_commission || 0);
-                      const fee = selectedCase.service_fee || 0;
-                      return totalComm > fee ? (
-                        <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-xs flex items-start gap-2">
-                          <span className="text-base leading-none">⚠️</span>
-                          <span>
-                            {t('studentCases.overBudgetWarning', { defaultValue: 'Total commissions ({{total}} ₪) exceed the service fee ({{fee}} ₪). Please review the financials.', total: totalComm, fee })}
-                          </span>
-                        </div>
-                      ) : null;
-                    })()}
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
                         <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>

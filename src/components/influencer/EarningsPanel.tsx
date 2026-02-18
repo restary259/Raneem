@@ -38,7 +38,14 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   const LOCK_DAYS = 20;
 
-  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+  const safeQuery = async (queryBuilder: any): Promise<{ data: any; error: any }> => {
+    try {
+      const result = await queryBuilder;
+      return result;
+    } catch (err) {
+      return { data: null, error: err };
+    }
+  };
 
   const fetchData = useCallback(async () => {
     const [rewardsRes, requestsRes, configRes, profileRes] = await Promise.all([
