@@ -1436,6 +1436,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_influencer_lead_ids: {
+        Args: { _influencer_id: string }
+        Returns: string[]
+      }
+      get_lawyer_lead_ids: { Args: { _lawyer_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
