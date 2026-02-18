@@ -40,6 +40,7 @@ interface Lead {
   ref_code?: string | null;
   study_destination?: string | null;
   preferred_major?: string | null;
+  deleted_at?: string | null;
 }
 
 interface LeadsManagementProps {
@@ -79,6 +80,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   useEffect(() => { setPage(1); }, [search, filterStatus, filterSource]);
 
   const filtered = leads.filter(l => {
+    if (l.deleted_at) return false; // Exclude soft-deleted leads
     const matchSearch = l.full_name.toLowerCase().includes(search.toLowerCase()) || l.phone.includes(search) || (l.email?.toLowerCase().includes(search.toLowerCase()));
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
     const matchSource = filterSource === 'all' || l.source_type === filterSource;
@@ -160,17 +162,41 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { data: relatedCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', deleteId);
+    setLoading(true);
+    const now = new Date().toISOString();
+
+    // 1. Find all related cases for this lead
+    const { data: relatedCases } = await (supabase as any)
+      .from('student_cases')
+      .select('id')
+      .eq('lead_id', deleteId);
+
     if (relatedCases?.length) {
-      for (const c of relatedCases) {
-        await (supabase as any).from('appointments').delete().eq('case_id', c.id);
-        await (supabase as any).from('case_payments').delete().eq('case_id', c.id);
-        await (supabase as any).from('commissions').delete().eq('case_id', c.id);
-        await (supabase as any).from('case_service_snapshots').delete().eq('case_id', c.id);
+      const caseIds = relatedCases.map((c: any) => c.id);
+
+      // 2. Cancel any pending/approved rewards linked to these cases
+      for (const caseId of caseIds) {
+        await (supabase as any)
+          .from('rewards')
+          .update({ status: 'cancelled' })
+          .like('admin_notes', `%${caseId}%`)
+          .in('status', ['pending', 'approved']);
       }
-      await (supabase as any).from('student_cases').delete().eq('lead_id', deleteId);
+
+      // 3. Soft-delete related cases
+      await (supabase as any)
+        .from('student_cases')
+        .update({ deleted_at: now })
+        .eq('lead_id', deleteId);
     }
-    const { error } = await (supabase as any).from('leads').delete().eq('id', deleteId);
+
+    // 4. Soft-delete the lead
+    const { error } = await (supabase as any)
+      .from('leads')
+      .update({ deleted_at: now })
+      .eq('id', deleteId);
+
+    setLoading(false);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
     else { toast({ title: t('admin.leads.deleted') }); onRefresh(); }
     setDeleteId(null);
