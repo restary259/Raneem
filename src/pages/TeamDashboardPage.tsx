@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import DashboardContainer from '@/components/dashboard/DashboardContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,11 +93,7 @@ function matchesFilter(status: string, filter: CaseFilterTab): boolean {
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [cases, setCases] = useState<any[]>([]);
-  const [leads, setLeads] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('cases');
   const [caseFilter, setCaseFilter] = useState<CaseFilterTab>('all');
@@ -118,24 +116,11 @@ const TeamDashboardPage = () => {
   const isMobile = useIsMobile();
   const isAr = i18n.language === 'ar';
 
-  const refetchAll = useCallback(() => {
-    if (user) {
-      fetchCases(user.id);
-      fetchAppointments(user.id);
-    }
-  }, [user]);
-
-  useRealtimeSubscription('student_cases', refetchAll, !!user);
-  useRealtimeSubscription('appointments', refetchAll, !!user);
-  useRealtimeSubscription('leads', refetchAll, !!user);
-  useRealtimeSubscription('commissions', refetchAll, !!user);
-  useRealtimeSubscription('payout_requests', refetchAll, !!user);
-
+  // Auth & role check
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate('/student-auth'); return; }
-      setUser(session.user);
 
       const { data: roles } = await (supabase as any)
         .from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'lawyer');
@@ -144,33 +129,33 @@ const TeamDashboardPage = () => {
         navigate('/'); return;
       }
 
-      const { data: prof } = await (supabase as any).from('profiles').select('*').eq('id', session.user.id).maybeSingle();
-      if (prof) setProfile(prof);
-
-      await fetchCases(session.user.id);
-      await fetchAppointments(session.user.id);
-      setIsLoading(false);
+      setUser(session.user);
+      setAuthReady(true);
     };
     init();
-  }, [navigate, toast]);
+  }, [navigate, toast, t]);
 
-  const fetchCases = async (userId: string) => {
-    const { data: casesData } = await (supabase as any)
-      .from('student_cases').select('*').eq('assigned_lawyer_id', userId).order('created_at', { ascending: false });
-    if (casesData) {
-      setCases(casesData);
-      const leadIds = [...new Set(casesData.map((c: any) => c.lead_id))];
-      if (leadIds.length > 0) {
-        const { data: leadsData } = await (supabase as any).from('leads').select('id, full_name, phone, email, eligibility_score, eligibility_reason, source_type, source_id, passport_type, english_units, math_units, last_contacted, created_at, preferred_major').in('id', leadIds);
-        if (leadsData) setLeads(leadsData);
-      }
-    }
-  };
+  // Centralised data layer
+  const { data, error: dataError, isLoading, refetch } = useDashboardData({
+    type: 'team',
+    userId: user?.id,
+    enabled: authReady,
+    onError: (err) => toast({ variant: 'destructive', title: t('common.error'), description: err }),
+  });
 
-  const fetchAppointments = async (userId: string) => {
-    const { data } = await (supabase as any).from('appointments').select('*').eq('lawyer_id', userId).order('scheduled_at', { ascending: true });
-    if (data) setAppointments(data);
-  };
+  // Safe extractions — preserve old variable names so all downstream code is untouched
+  const cases: any[] = data?.cases ?? [];
+  const leads: any[] = data?.leads ?? [];
+  const appointments: any[] = data?.appointments ?? [];
+  const profile: any = data?.profile ?? null;
+
+  // Real-time subscriptions point to the centralised refetch
+  useRealtimeSubscription('student_cases', refetch, authReady);
+  useRealtimeSubscription('appointments', refetch, authReady);
+  useRealtimeSubscription('leads', refetch, authReady);
+  useRealtimeSubscription('commissions', refetch, authReady);
+  useRealtimeSubscription('payout_requests', refetch, authReady);
+
 
   const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' };
 
@@ -224,7 +209,7 @@ const TeamDashboardPage = () => {
     // Audit log
     await (supabase as any).rpc('log_user_activity', { p_action: 'mark_contacted', p_target_id: caseId, p_target_table: 'student_cases' });
     toast({ title: t('lawyer.contactLogged') });
-    if (user) await fetchCases(user.id);
+    await refetch();
   };
 
   const handleMakeAppointment = (caseId: string) => {
@@ -339,7 +324,7 @@ const TeamDashboardPage = () => {
       toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
       setProfileCase(null);
       setCaseFilter('profile_filled');
-      if (user) await fetchCases(user.id);
+      await refetch();
     }
   };
 
@@ -391,7 +376,7 @@ const TeamDashboardPage = () => {
     }
     setSaving(false);
     setPaymentConfirm(null);
-    if (user) await fetchCases(user.id);
+    await refetch();
   };
 
   const handleDeleteCase = async (caseId: string) => {
@@ -400,7 +385,7 @@ const TeamDashboardPage = () => {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } else {
       toast({ title: isAr ? 'تم الحذف' : 'Case deleted' });
-      if (user) await fetchCases(user.id);
+      await refetch();
     }
     setDeleteConfirm(null);
   };
@@ -409,7 +394,7 @@ const TeamDashboardPage = () => {
     const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
     if (!error) {
       toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' });
-      if (user) await fetchAppointments(user.id);
+      await refetch();
     } else {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     }
@@ -423,7 +408,7 @@ const TeamDashboardPage = () => {
     if (!error) {
       toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
       setRescheduleAppt(null);
-      if (user) await fetchAppointments(user.id);
+      await refetch();
     } else {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     }
@@ -432,7 +417,7 @@ const TeamDashboardPage = () => {
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
-  if (isLoading) {
+  if (!authReady || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -587,7 +572,7 @@ const TeamDashboardPage = () => {
         {/* Main Content */}
         <div className="flex-1 overflow-auto pb-20 lg:pb-0">
           <main className="px-3 sm:px-4 py-3 space-y-3">
-            <PullToRefresh onRefresh={async () => { if (user) { await fetchCases(user.id); await fetchAppointments(user.id); } }} disabled={saving || savingProfile}>
+            <PullToRefresh onRefresh={async () => { await refetch(); }} disabled={saving || savingProfile}>
 
             {/* ===== CASES TAB ===== */}
             {activeTab === 'cases' && (
