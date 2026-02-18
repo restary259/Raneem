@@ -367,11 +367,11 @@ const TeamDashboardPage = () => {
     }
 
     const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
-    await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', p_target_id: caseId, p_target_table: 'student_cases' });
     
     if (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } else {
+      await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', p_target_id: caseId, p_target_table: 'student_cases' });
       toast({ title: t('lawyer.saved') });
     }
     setSaving(false);

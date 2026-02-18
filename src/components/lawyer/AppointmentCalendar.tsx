@@ -80,7 +80,8 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
   }, []);
 
   const fetchAppointments = async () => {
-    const { data } = await (supabase as any).from('appointments').select('*').eq('lawyer_id', userId).order('scheduled_at', { ascending: true });
+    const { data, error } = await (supabase as any).from('appointments').select('*').eq('lawyer_id', userId).order('scheduled_at', { ascending: true });
+    if (error) { console.error('Appointments fetch failed:', error); return; }
     if (data) setAppointments(data);
   };
 
