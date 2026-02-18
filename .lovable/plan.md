@@ -1,180 +1,159 @@
 
-# Fix: Temporary Password Not Displayed After Account Creation
+# Stage 1 Critical Fixes — 4 Blockers Before Operations
 
-## Root Cause (Confirmed)
+## Issue Analysis
 
-Three accounts were already created successfully (verified in database: `must_change_password: true` for all three). The password **was returned by the edge function** but was **never seen** in the UI due to a timing + state reset bug.
+### Issue 1: Apply Page Submit — Does Nothing
+The apply page code (`ApplyPage.tsx`) looks **correct** — `handleSubmit` calls `supabase.rpc('insert_lead_from_apply', ...)` and on success sets `submitted = true`. The bug is likely **not the RPC call itself** but the success screen behavior:
 
-### The Exact Bug Chain
+- The success screen currently only shows a "Explore Website" button — **no WhatsApp redirect** as required
+- The `canGoNext()` check on step 4 always returns `true`, so the Submit button is enabled — but `loading` state correctly prevents double submission
+- The main issue to fix: **WhatsApp community redirect is missing** from the success screen
 
-1. Admin fills form → clicks "Create Account"
-2. `handleCreate()` runs → edge function called → succeeds, returns `temp_password`
-3. `setCreatedPassword(result.temp_password || 'sent')` is called — password is stored in state
-4. **`onRefresh()` is called immediately after** — this triggers parent to refetch all data
-5. The parent re-render causes the `InfluencerManagement` component to re-render
-6. React re-renders the Dialog, which may flash or reset depending on DOM reconciliation
-7. The admin may have briefly seen the green box, or it appeared and disappeared quickly on fast networks
+For the "Add Someone Else" fields: companions only collect `name`, `phone`, and `education` — they are missing `passport_type` which the main applicant has. The companion RPC call omits `p_passport_type`, `p_english_units`, `p_math_units` — so eligibility score is always 0 for companions.
 
-### Secondary Bug: Fallback to `'sent'`
-
-On line 63:
+### Issue 2: Financial Logic — Wrong Net Profit Warning
+**Found the exact bug:** In `StudentCasesManagement.tsx` lines 240-251:
 ```typescript
-setCreatedPassword(result.temp_password || 'sent');
+const totalComm = (selectedCase.influencer_commission || 0) 
+                + (selectedCase.lawyer_commission || 0) 
+                + (selectedCase.school_commission || 0);  // ← BUG: adds EUR to NIS
+```
+The `school_commission` is in EUR (€) but is being added to NIS commissions and compared to the NIS `service_fee`. This makes the warning fire incorrectly (e.g., 2000 NIS commissions + 4000 EUR school commission = 6000 > 4000 NIS service fee).
+
+**Fix:** Remove `school_commission` from the commission comparison entirely. The warning must only compare NIS-denominated payouts vs NIS service fee. Better yet, **remove the warning entirely** as requested — it's conceptually wrong because School Commission is revenue, not an expense.
+
+**Net Profit formula** in `getNetProfit()` (line 88):
+```typescript
+const getNetProfit = (c) => (c.service_fee || 0) + (c.school_commission || 0) 
+  - (c.influencer_commission || 0) - (c.lawyer_commission || 0) 
+  - (c.referral_discount || 0) - (c.translation_fee || 0);
+```
+This mixes EUR school commission into NIS profit. The correct formula:
+```
+Net Profit (₪) = service_fee - influencer_commission - lawyer_commission - referral_discount - translation_fee
+School commission (€) is shown separately, not subtracted from NIS net profit
 ```
 
-If `result.temp_password` were ever `undefined` (unlikely but possible), the green box shows "Account created successfully" but **hides the password** because of this check on line 145:
-```typescript
-{createdPassword !== 'sent' && (
-  // password display — completely hidden when fallback is 'sent'
-)}
+### Issue 3: Agents Appearing in Team Member Dropdown
+**Found the exact code** in `LeadsManagement.tsx` lines 586-588:
+```tsx
+{lawyers.map(l => <SelectItem ...>{l.full_name} (Team)</SelectItem>)}
+{influencers.map(i => <SelectItem ...>{i.full_name} (Agent)</SelectItem>)}
 ```
+The `influencers` array is being rendered in the same dropdown as `lawyers`. The fix is simple: **remove the influencers mapping from this Select entirely.** The dropdown for case assignment should only show team members (lawyers).
 
-### Third Issue: Invite Insert Can Fail Silently
-
-Line 56 inserts into `influencer_invites` before creating the account:
+### Issue 4: Runtime Crash — `a.catch is not a function`
+The console logs show repeated `TypeError: a.catch is not a function` originating from `EarningsPanel-3sGMVXYP.js`. The root cause is in `EarningsPanel.tsx` line 41:
 ```typescript
-await (supabase as any).from('influencer_invites').insert({...});
+const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
 ```
-If this insert throws (e.g. duplicate email), the error is not caught — execution continues to the `fetch()` call. However the outer `try/catch` would catch it and show an error toast. But we observed accounts were created — so this isn't blocking here, just untidy.
+Supabase's `PostgrestFilterBuilder` (what `.from().select()...` returns) is **not a native Promise** — it's a thenable. Calling `.catch()` on it directly can fail in certain bundler/runtime contexts. The `PullToRefresh` component also triggers document event handlers that try to call `.catch` on non-promise values.
 
----
-
-## The Fix
-
-### Change 1: Show Password in a Persistent Modal (Not Inside Create Dialog)
-
-The most reliable fix is to separate the "password reveal" step from the creation dialog. After creation succeeds:
-- Close the creation form
-- Open a **second, dedicated modal** that shows only the credentials
-- This modal cannot be accidentally dismissed without the admin explicitly closing it
-- The admin must click "I've saved the password" to close it
-
-This guarantees the admin sees the password regardless of any re-render timing from `onRefresh()`.
-
-### Change 2: Remove the `'sent'` fallback — Always Require `temp_password`
-
-If the edge function returns no temp password, show an error toast instead of silently hiding it.
-
-### Change 3: Move `onRefresh()` After the Admin Dismisses the Password Modal
-
-The parent data refresh should happen after the admin closes the credentials modal, not immediately after creation — this eliminates the re-render race.
-
----
-
-## Implementation Plan
-
-### File: `src/components/admin/InfluencerManagement.tsx`
-
-**Add new state variables:**
+**Fix:** Change `safeQuery` to properly await the query:
 ```typescript
-const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-const [createdEmail, setCreatedEmail] = useState('');
-```
-
-**Refactor `handleCreate`:**
-```typescript
-const handleCreate = async () => {
-  if (!name || !email) return;
-  setIsCreating(true);
+const safeQuery = async (queryBuilder: any) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Not authenticated');
-
-    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ email, full_name: name, role: filterRole || role, commission_amount: commission ? parseInt(commission) : 0 }),
-    });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error || 'Failed to create');
-
-    if (!result.temp_password) {
-      throw new Error('Account created but no temporary password was returned. Contact support.');
-    }
-
-    // Store credentials and show dedicated modal
-    setCreatedPassword(result.temp_password);
-    setCreatedEmail(email);
-    setDialogOpen(false); // Close creation form
-    setShowCredentialsModal(true); // Open dedicated credentials modal
-
-    // Reset form fields
-    setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer');
-    // NOTE: onRefresh() is called when admin dismisses the credentials modal
-  } catch (err: any) {
-    toast({ variant: 'destructive', title: t('common.error'), description: err.message });
-  } finally {
-    setIsCreating(false);
+    const result = await queryBuilder;
+    return result;
+  } catch (err) {
+    return { data: null, error: err };
   }
 };
 ```
 
-**Add credentials modal (after closing creation dialog):**
-```tsx
-<Dialog open={showCredentialsModal} onOpenChange={() => {}}>
-  <DialogContent onPointerDownOutside={e => e.preventDefault()}>
-    <DialogHeader>
-      <DialogTitle>✅ Account Created — Save These Credentials</DialogTitle>
-    </DialogHeader>
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Share these credentials with the new member. They will be required to change their password on first login.
-      </p>
-      <div className="space-y-3">
-        <div>
-          <Label>Email</Label>
-          <div className="flex items-center gap-2 mt-1">
-            <code className="flex-1 text-sm bg-muted border rounded px-3 py-2">{createdEmail}</code>
-            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(createdEmail); }}>
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-        <div>
-          <Label>Temporary Password</Label>
-          <div className="flex items-center gap-2 mt-1">
-            <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-bold tracking-wider">{createdPassword}</code>
-            <Button size="sm" variant="outline" onClick={copyPassword}>
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="bg-amber-50 border border-amber-200 rounded p-3">
-        <p className="text-xs text-amber-800 font-medium">
-          ⚠️ This password will NOT be shown again. Please copy it now and send it securely to the new member.
-        </p>
-      </div>
-      <Button
-        className="w-full"
-        onClick={() => {
-          setShowCredentialsModal(false);
-          setCreatedPassword('');
-          setCreatedEmail('');
-          onRefresh(); // Refresh AFTER admin confirms they saw the password
-        }}
-      >
-        I've Saved the Credentials — Close
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+## Files to Change
+
+| File | Change |
+|------|--------|
+| `src/pages/ApplyPage.tsx` | Add WhatsApp redirect on success screen; fix companion data to include passport/unit fields |
+| `src/components/admin/StudentCasesManagement.tsx` | Remove the commission-vs-service-fee warning; fix `getNetProfit` to exclude school commission (EUR) |
+| `src/components/admin/LeadsManagement.tsx` | Remove influencers from the team member assignment dropdown |
+| `src/components/influencer/EarningsPanel.tsx` | Fix `safeQuery` to properly handle Supabase querbuilder (not Promise) |
+
+## Detailed Changes
+
+### 1. `ApplyPage.tsx` — Success Screen + WhatsApp Redirect
+
+After `setSubmitted(true)`, trigger WhatsApp redirect:
+```typescript
+const handleSubmit = async () => {
+  // ... existing RPC call ...
+  setSubmitted(true);
+  // Redirect to WhatsApp after short delay
+  setTimeout(() => {
+    window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
+  }, 1500);
+};
 ```
 
-**Remove the inline password display from within the creation dialog** (lines 138–157) — it's replaced by the dedicated modal above.
+Update the success screen to include a WhatsApp join button:
+```tsx
+<a href="https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo" target="_blank" rel="noopener noreferrer">
+  <Button className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white text-base font-semibold">
+    💬 {isAr ? 'انضم لمجموعة واتساب' : 'Join WhatsApp Group'}
+  </Button>
+</a>
+```
 
----
+### 2. `StudentCasesManagement.tsx` — Fix Financial Display
 
-## What Changes
+Remove the warning block entirely (lines 239-251).
 
-| What | Before | After |
-|---|---|---|
-| Password display location | Inside creation dialog (races with re-render) | Dedicated locked modal that cannot be dismissed accidentally |
-| `onRefresh()` timing | Called immediately after creation | Called only when admin dismisses credentials modal |
-| Password fallback | Falls back to `'sent'` which hides the password | Throws an error toast — admin knows something is wrong |
-| Dialog close behavior | `onOpenChange` can close and reset state | Creation dialog closes cleanly before credentials modal opens |
-| Invite pre-insert | Before account creation (silently fails) | Removed from frontend — the edge function handles this internally |
+Fix `getNetProfit` (line 88) — exclude school commission (it's EUR revenue, not NIS expense):
+```typescript
+const getNetProfit = (c: any) => 
+  (c.service_fee || 0) 
+  - (c.influencer_commission || 0) 
+  - (c.lawyer_commission || 0) 
+  - (c.referral_discount || 0) 
+  - (c.translation_fee || 0);
+// School commission stays separate as EUR revenue
+```
 
-## Files Changed
+The MoneyDashboard's `kpis` calculation (`MoneyDashboard.tsx` line 114) already correctly separates NIS and EUR — no change needed there.
 
-- `src/components/admin/InfluencerManagement.tsx` — Refactor create flow + add credentials reveal modal
+### 3. `LeadsManagement.tsx` — Team Member Dropdown Only
+
+Lines 586-588: Remove the influencer rows from the Select:
+```tsx
+<SelectContent>
+  {lawyers.map(l => (
+    <SelectItem key={l.id} value={l.id}>
+      {l.full_name}
+    </SelectItem>
+  ))}
+</SelectContent>
+```
+Also update the empty-state condition from `lawyers.length === 0 && influencers.length === 0` to `lawyers.length === 0`.
+
+### 4. `EarningsPanel.tsx` — Fix `safeQuery` Promise Handling
+
+Replace `safeQuery` (line 41):
+```typescript
+// BEFORE (broken):
+const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
+// AFTER (correct):
+const safeQuery = async (queryBuilder: any): Promise<{ data: any; error: any }> => {
+  try {
+    const result = await queryBuilder;
+    return result;
+  } catch (err) {
+    return { data: null, error: err };
+  }
+};
+```
+
+## No Database Changes Required
+
+All four fixes are pure frontend/UI changes. The database schema, RLS policies, and edge functions are correct for these issues.
+
+## Summary
+
+| # | Issue | Root Cause | Fix Complexity |
+|---|-------|------------|----------------|
+| 1 | Apply submit — WhatsApp missing | Success screen has no redirect | Simple: add button + setTimeout redirect |
+| 2 | Net profit wrong; bad warning | School commission (EUR) mixed into NIS math | Simple: remove warning, fix formula |
+| 3 | Agents in team dropdown | Influencers rendered in lawyer Select | Simple: remove 1 line |
+| 4 | `a.catch` crash in EarningsPanel | Supabase builder not a native Promise | Simple: wrap in try/await |
