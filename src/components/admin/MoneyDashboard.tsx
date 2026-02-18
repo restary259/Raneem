@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
-  ArrowUpRight, ArrowDownRight, Search, FileText
+  ArrowUpRight, ArrowDownRight, Search, FileText, CheckCircle, X
 } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
 
@@ -21,6 +22,7 @@ interface MoneyDashboardProps {
   commissions: any[];
   influencers: any[];
   lawyers: any[];
+  onRefresh?: () => void;
 }
 
 type TransactionRow = {
@@ -40,16 +42,19 @@ const STATUS_COLORS: Record<string, string> = {
   approved: 'bg-blue-100 text-blue-800',
   paid: 'bg-emerald-100 text-emerald-800',
   completed: 'bg-emerald-100 text-emerald-800',
+  cancelled: 'bg-muted text-muted-foreground',
 };
 
 const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
-  cases, leads, rewards, commissions, influencers, lawyers,
+  cases, leads, rewards, commissions, influencers, lawyers, onRefresh,
 }) => {
   const { t } = useTranslation('dashboard');
+  const { toast } = useToast();
   const isMobile = useIsMobile();
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || '—';
   const getProfileName = (id: string) => {
@@ -58,6 +63,30 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     const law = lawyers.find(l => l.id === id);
     if (law) return law.full_name;
     return '—';
+  };
+
+  const handleMarkRewardPaid = async (rewardId: string) => {
+    setActionLoading(rewardId);
+    const { error } = await (supabase as any)
+      .from('rewards')
+      .update({ status: 'paid', paid_at: new Date().toISOString() })
+      .eq('id', rewardId);
+    setActionLoading(null);
+    if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+    toast({ title: t('money.markedPaid', 'Marked as paid') });
+    onRefresh?.();
+  };
+
+  const handleClearReward = async (rewardId: string) => {
+    setActionLoading(rewardId);
+    const { error } = await (supabase as any)
+      .from('rewards')
+      .update({ status: 'cancelled' })
+      .eq('id', rewardId);
+    setActionLoading(null);
+    if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+    toast({ title: t('money.cleared', 'Cleared') });
+    onRefresh?.();
   };
 
   // Build transaction rows from cases
@@ -157,6 +186,55 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Pending Rewards — Manual Payout Controls */}
+      {(() => {
+        const pendingRewards = rewards.filter(r => r.status === 'pending');
+        if (pendingRewards.length === 0) return null;
+        return (
+          <Card className="border-amber-300 bg-amber-50/40">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-amber-600" />
+                <h3 className="font-semibold text-sm">{t('money.pendingPayouts', 'Pending Payouts')} ({pendingRewards.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {pendingRewards.map(r => (
+                  <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{getProfileName(r.user_id)}</p>
+                      <p className="text-xs text-muted-foreground">{r.amount.toLocaleString()} ₪ · {new Date(r.created_at).toLocaleDateString()}</p>
+                      {r.admin_notes && <p className="text-[10px] text-muted-foreground truncate">{r.admin_notes}</p>}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 text-xs gap-1"
+                        disabled={actionLoading === r.id}
+                        onClick={() => handleMarkRewardPaid(r.id)}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        {t('money.markPaid', 'Mark Paid')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+                        disabled={actionLoading === r.id}
+                        onClick={() => handleClearReward(r.id)}
+                      >
+                        <X className="h-3 w-3" />
+                        {t('money.clear', 'Clear')}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Card className="border-emerald-200 bg-emerald-50/50">

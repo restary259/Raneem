@@ -37,7 +37,7 @@ const InfluencerDashboardPage = () => {
   const [authReady, setAuthReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('analytics');
   const [studentFilter, setStudentFilter] = useState<StudentFilter>('all');
-  const [eligibleMin, setEligibleMin] = useState(50); // safe default until DB loaded
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const { dir } = useDirection();
@@ -63,16 +63,7 @@ const InfluencerDashboardPage = () => {
     init();
   }, [navigate, toast, t]);
 
-  // Fetch eligibility threshold from DB
-  useEffect(() => {
-    (supabase as any)
-      .from('eligibility_thresholds')
-      .select('eligible_min')
-      .maybeSingle()
-      .then(({ data }: any) => {
-        if (data?.eligible_min != null) setEligibleMin(data.eligible_min);
-      });
-  }, []);
+  // eligibleMin removed — we now use lead.status (admin-set) for eligibility
 
   // Centralised data layer
   const { data, error, isLoading, refetch } = useDashboardData({
@@ -96,10 +87,10 @@ const InfluencerDashboardPage = () => {
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
-  // Stats
+  // Stats — use admin-set status field (not score)
   const totalLeads = leads.length;
-  const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin).length;
-  const ineligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new').length;
+  const eligibleLeads = leads.filter(l => ['eligible', 'assigned', 'paid'].includes(l.status)).length;
+  const ineligibleLeads = leads.filter(l => l.status === 'not_eligible').length;
   const paidCases = cases.filter(c => c.case_status === 'paid' || c.paid_at).length;
 
   // Funnel data
@@ -109,17 +100,17 @@ const InfluencerDashboardPage = () => {
     { name: t('influencerDash.kpi.funnelPaid'), value: paidCases, fill: 'hsl(130, 60%, 40%)' },
   ], [totalLeads, eligibleLeads, paidCases, t]);
 
-  // Filtered students
+  // Filtered students — use admin-set status field
   const filteredLeads = useMemo(() => {
     if (studentFilter === 'all') return leads;
-    if (studentFilter === 'eligible') return leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin);
-    if (studentFilter === 'ineligible') return leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new');
+    if (studentFilter === 'eligible') return leads.filter(l => ['eligible', 'assigned', 'paid'].includes(l.status));
+    if (studentFilter === 'ineligible') return leads.filter(l => l.status === 'not_eligible');
     if (studentFilter === 'paid') {
       const paidLeadIds = new Set(cases.filter(c => c.paid_at).map(c => c.lead_id));
       return leads.filter(l => paidLeadIds.has(l.id));
     }
     return leads;
-  }, [leads, cases, studentFilter, eligibleMin]);
+  }, [leads, cases, studentFilter]);
 
   const getCaseForLead = (leadId: string) => cases.find(c => c.lead_id === leadId);
 
@@ -184,10 +175,15 @@ const InfluencerDashboardPage = () => {
                     <CardTitle className="text-base">{t('influencerDash.kpi.conversionFunnel')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={funnelData} layout="vertical" margin={{ left: 0, right: 16 }}>
+                  <ResponsiveContainer width="100%" height={isAr ? 220 : 180}>
+                      <BarChart data={funnelData} layout="vertical" margin={{ left: isAr ? 8 : 0, right: 16 }}>
                         <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={isAr ? 120 : 90}
+                          tick={{ fontSize: isAr ? 11 : 12, textAnchor: isAr ? 'end' : 'start' }}
+                        />
                         <Tooltip />
                         <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
                           {funnelData.map((entry, i) => (
@@ -223,8 +219,7 @@ const InfluencerDashboardPage = () => {
                 ) : (
                   <div className="space-y-2">
                     {filteredLeads.map(lead => {
-                      const score = lead.eligibility_score ?? 0;
-                      const isEligible = score >= 50;
+                      const isEligible = ['eligible', 'assigned', 'paid'].includes(lead.status);
                       const linkedCase = getCaseForLead(lead.id);
                       const isPaid = linkedCase?.paid_at != null;
                       const timerInfo = isPaid ? getTimerInfo(linkedCase.paid_at) : null;

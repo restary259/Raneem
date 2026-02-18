@@ -219,7 +219,11 @@ const TeamDashboardPage = () => {
   };
 
   const openProfileModal = (c: any) => {
-    const lead = getLeadInfo(c.lead_id);
+    const lead = leads.find(l => l.id === c.lead_id);
+    if (!lead) {
+      toast({ variant: 'destructive', title: isAr ? 'بيانات الطالب غير موجودة' : 'Lead data not found' });
+      return;
+    }
     setProfileCase(c);
     setProfileValues({
       student_full_name: c.student_full_name || lead.full_name || '',
