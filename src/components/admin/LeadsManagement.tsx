@@ -104,10 +104,40 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
   const markEligible = async (lead: Lead) => {
     setLoading(true);
-    const { error: updateErr } = await (supabase as any).from('leads').update({ status: 'eligible' }).eq('id', lead.id);
-    if (updateErr) { toast({ variant: 'destructive', title: t('common.error'), description: updateErr.message }); setLoading(false); return; }
-    const { error: caseErr } = await (supabase as any).from('student_cases').insert({ lead_id: lead.id, selected_city: lead.preferred_city, accommodation_status: lead.accommodation ? 'needed' : 'not_needed' });
-    if (caseErr) { toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message }); }
+
+    // Step 1: Check if a case already exists for this lead (prevents duplicate on double-click)
+    const { data: existingCases } = await (supabase as any)
+      .from('student_cases')
+      .select('id')
+      .eq('lead_id', lead.id)
+      .limit(1);
+
+    // Step 2: Update lead status to eligible
+    const { error: updateErr } = await (supabase as any)
+      .from('leads')
+      .update({ status: 'eligible' })
+      .eq('id', lead.id);
+
+    if (updateErr) {
+      toast({ variant: 'destructive', title: t('common.error'), description: updateErr.message });
+      setLoading(false);
+      return;
+    }
+
+    // Step 3: Only insert case if none exists yet
+    if (!existingCases?.[0]) {
+      const { error: caseErr } = await (supabase as any).from('student_cases').insert({
+        lead_id: lead.id,
+        selected_city: lead.preferred_city,
+        accommodation_status: lead.accommodation ? 'needed' : 'not_needed',
+      });
+      if (caseErr) {
+        toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(false);
     toast({ title: t('admin.leads.updated'), description: t('admin.leads.qualifiedAndCaseCreated', { name: lead.full_name }) });
     onRefresh();

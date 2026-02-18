@@ -293,6 +293,12 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                     <Users className="h-3.5 w-3.5 me-1" />{r.linked_student_names.length} {t('admin.payouts.linkedStudents', 'students')}
                   </Button>
                 )}
+                {r.payment_method && (
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium">{t('admin.payouts.paymentMethodCol', 'Method')}:</span>{' '}
+                    {String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method }))}
+                  </p>
+                )}
                 <ActionButtons req={r} />
               </CardContent>
             </Card>
