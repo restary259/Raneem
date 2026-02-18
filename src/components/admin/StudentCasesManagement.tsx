@@ -56,6 +56,11 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   }, [studentCases, search, statusFilter]);
 
   const markAsPaid = async (caseId: string) => {
+    const existingCase = studentCases.find(c => c.id === caseId);
+    if (existingCase?.case_status === 'paid') {
+      toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
+      return;
+    }
     setLoading(true);
     const { error } = await (supabase as any).from('student_cases').update({ case_status: 'paid', paid_at: new Date().toISOString() }).eq('id', caseId);
     if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }

@@ -93,12 +93,16 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
       const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
       if (data) studentNames = data.map((r: any) => r.referred_name);
     }
-    await (supabase as any).from('payout_requests').insert({
+    const { error: insertError } = await (supabase as any).from('payout_requests').insert({
       requestor_id: userId, requestor_role: 'student',
       linked_reward_ids: eligibleRewards.map(r => r.id),
       linked_student_names: studentNames, amount: availableAmount,
       admin_notes: requestNotes || null
     });
+    if (insertError) {
+      toast({ variant: 'destructive', title: t('common.error'), description: insertError.message });
+      return;
+    }
     for (const r of eligibleRewards) {
       await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
     }
@@ -111,7 +115,11 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   const cancelRequest = async (reqId: string) => {
     const req = payoutRequests.find(r => r.id === reqId);
     if (!req || req.status !== 'pending') return;
-    await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: 'Cancelled by user' }).eq('id', reqId);
+    const { error: cancelError } = await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: 'Cancelled by user' }).eq('id', reqId);
+    if (cancelError) {
+      toast({ variant: 'destructive', title: t('common.error'), description: cancelError.message });
+      return;
+    }
     if (req.linked_reward_ids?.length) {
       for (const rid of req.linked_reward_ids) {
         await (supabase as any).from('rewards').update({ status: 'pending', payout_requested_at: null }).eq('id', rid);
