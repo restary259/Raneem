@@ -1,96 +1,240 @@
 
+# Critical Error Handling & Stability Fix Plan
 
-# Comprehensive Dashboard & Data Flow Fix Plan
+## Audit Summary
 
-## Issues Identified (from screenshots and code review)
+After reviewing all flagged files in detail, here is a precise breakdown of every real issue found and the exact fix required for each.
 
-### 1. Merge "Legal/Visa Information" and "Visa & Language School Info" into one section
-Currently StudentProfile.tsx has two separate cards. Merge them into a single "Visa Information" card. Visa status default should show "Pending" (not "Not Applied") and only change when admin updates it.
+---
 
-### 2. Table text wrapping/breaking issues (CRITICAL)
-Screenshots show "Fam ily", "Pen ding", "2/17/2 026", "Da y", "Assign ed", "Pa id", "Reven ue", "Commiss ion", "Commissi on" all breaking mid-word.
+## Issues Confirmed & Prioritized
 
-**Root cause**: Table cells are too narrow and CSS allows `word-break` or `overflow-wrap` to split words. Fix by adding `whitespace-nowrap` to all table headers and relevant cells across:
-- `ReferralTracker.tsx` (Referral Status table)
-- `AdminAnalytics.tsx` (Team Performance and Agent Performance tables)
-- `AppointmentCalendar.tsx` (Day view badge "Day" text)
+### 🔴 CRITICAL — Application-Crashing Bugs
 
-### 3. Appointment modal - Date and Time inputs touching
-Screenshot shows Date and Time fields side by side with no gap in the create dialog. The grid uses `gap-3` but the inputs are bordering each other visually. Add explicit spacing between them.
+#### Issue 1: `Promise.all()` Without Error Isolation
+**Files:** `AdminDashboardPage.tsx` (L72), `EarningsPanel.tsx` (L41), `RewardsPanel.tsx` (L40), `ChecklistTracker.tsx` (L36), `InfluencerDashboardPage.tsx` (L49), `MajorsManagement.tsx` (L86)
 
-### 4. Calendar "Day" badge text breaking ("Da y")
-The Day badge in the calendar header breaks the word. Add `whitespace-nowrap` to the Badge.
+**Problem:** If any single database query in a `Promise.all()` block fails (e.g., network hiccup, RLS rejection, timeout), the entire `await` rejects and the dashboard shows a blank screen or crashes silently. Currently there are zero `.catch()` handlers on individual promises.
 
-### 5. Notifications disappear too slowly
-`TOAST_REMOVE_DELAY` is 2000ms but the toast animation/display duration is longer. The issue is the toast `duration` prop. Set toast default duration to 2000ms in the Toaster component so they auto-dismiss faster.
+**Fix:** Wrap every query in a safe wrapper so each resolves independently:
+```typescript
+// Safe helper to add to each file:
+const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
 
-### 6. Bank details must persist to profile on save (Influencer)
-EarningsPanel.tsx `saveBankDetails` already saves to profiles table. The data persists correctly. However, when admin views payout requests, the `payment_method` field shows the bank info string. The admin PayoutsManagement already shows this. Verify the admin can see bank details -- this is already working via the `payment_method` column on `payout_requests`.
+// Usage:
+const [p, s, pay, ...] = await Promise.all([
+  safeQuery((supabase as any).from('profiles').select('*')...),
+  safeQuery((supabase as any).from('services').select('*')...),
+  // ...
+]);
+// Then check individually: if (p.data) setStudents(p.data);
+// Individual failures are logged but don't crash other data
+```
 
-### 7. Remove all popups/distractions from Apply page
-Currently, PWAInstaller, InAppBrowserBanner, and CookieBanner only hide when `?ref=` is present. They should ALWAYS be hidden on `/apply` regardless of ref param. Update App.tsx to hide these on `/apply`.
+#### Issue 2: `validate_influencer_ref` RPC Has No `.catch()` in `ApplyPage.tsx`
+**File:** `src/pages/ApplyPage.tsx` (L79)
 
-### 8. Replace major typeahead with free-text input on Apply page
-Remove the Popover/Command selector for majors in Step 3. Replace with a simple text Input field where students can type whatever they want.
+**Problem:** If `validate_influencer_ref` fails (bad UUID, network error), the promise rejects silently and the referral attribution is silently lost.
 
-### 9. Admin analytics tables word-breaking fix
-Team Performance and Agent Performance tables in AdminAnalytics.tsx need `whitespace-nowrap` on headers and cells.
+**Fix:** Add `.catch(console.error)` to the chain.
 
-### 10. Lead generation from all sources must work
-The apply page already calls `insert_lead_from_apply` RPC which creates leads. Contact page uses `upsert_lead_from_contact`. Referral form calls RPC too. Self-added referrals already work. The issue may be RLS -- leads are only visible to admins. Verify the flow works end-to-end.
+#### Issue 3: Checklist update has no error handling or rollback
+**File:** `src/components/dashboard/ChecklistTracker.tsx` (L56-68)
 
-### 11. Remove AI advisor icon from all dashboards
-ChatWidget.tsx already hides on `/student-dashboard`, `/influencer-dashboard`, `/team-dashboard`, and `/admin` routes. This is already done.
+**Problem:** `setConfirmItem(null)` clears the modal state BEFORE the database write completes. If the `update` or `insert` fails, the UI shows the item as toggled but the DB still has the old value. `fetchData()` at the end will re-sync but only if it succeeds too.
 
-### 12. Checkbox styling - make smaller and cleaner
-The current Radix Checkbox has `rounded-sm` by default. Make them more like iOS-style checkmarks: smaller, with a clean checkmark icon, less rounded.
+**Fix:** Add error check after each Supabase operation. Show a toast on failure. Move `setConfirmItem(null)` after confirming success.
 
-### 13. Settings panel checkbox styling
-Same fix applies to settings panel checkboxes.
+#### Issue 4: `log_user_activity` Runs Before Checking Update Success
+**File:** `src/pages/TeamDashboardPage.tsx` (L327-329)
+
+**Problem:** 
+```typescript
+const { error } = await supabase.from('student_cases').update(...).eq('id', ...);
+await supabase.rpc('log_user_activity', {...}); // runs even if error exists!
+```
+The audit log records a "success" even when the actual update failed.
+
+**Fix:** Move `log_user_activity` inside the `else` block (only after confirming no error).
+
+---
+
+### 🟠 HIGH — Silent Failures & Missing Feedback
+
+#### Issue 5: `null.toString()` Bug in Team Dashboard Required Fields Check
+**File:** `src/pages/TeamDashboardPage.tsx` (L284)
+
+**Problem:**
+```typescript
+const missingFields = requiredProfileFields.filter(f => !profileValues[f]?.toString().trim());
+```
+If `profileValues[f]` is `null`, then `null?.toString()` returns `undefined`, and `undefined.trim()` throws. The `?.` only protects the `.toString()` call, not the `.trim()` call after it.
+
+Actually reviewing this more carefully: `null?.toString()` → `undefined`, then `undefined.trim()` would throw. But wait — `.trim()` is being called on `undefined` here. This IS a real bug. If `profileValues[f]` is the literal string `"null"` it would pass, but if it's a JS `null`, this will crash on `.trim()`.
+
+**Fix:** Change to explicit truthiness check:
+```typescript
+const missingFields = requiredProfileFields.filter(f => {
+  const val = profileValues[f];
+  return !val || String(val).trim() === '' || String(val).trim() === 'null';
+});
+```
+
+#### Issue 6: `fetchProfileSafely` Creates Profile But Doesn't Fetch It
+**File:** `src/pages/StudentDashboardPage.tsx` (L85-88)
+
+**Problem:** When `createUserProfile` is called (because no profile exists), the function returns without re-fetching the newly created profile. The student sees a blank/fallback UI indefinitely until they reload.
+
+**Fix:** After `createUserProfile` completes, call `fetchProfileSafely` again once to load the newly created profile.
+
+#### Issue 7: No Error Logging on `Promise.all()` Individual Failures in `AdminDashboardPage.tsx`
+**File:** `src/pages/AdminDashboardPage.tsx` (L72-86)
+
+**Problem:** `if (p.data) setStudents(p.data)` silently ignores `p.error` — if a fetch failed, state is never updated AND no one knows why.
+
+**Fix:** After wrapping with `safeQuery`, log and optionally toast on errors:
+```typescript
+if (p.error) console.error('Profiles fetch failed:', p.error);
+if (p.data) setStudents(p.data);
+```
+
+#### Issue 8: `getInfluencerName` in `LeadsManagement.tsx` Has No Guard on `influencers`
+**File:** `src/components/admin/LeadsManagement.tsx` (L204-209)
+
+**Problem:** The component receives `influencers = []` as a default prop, which is safe. However, if `influencers` is somehow `undefined` (e.g., parent passes `undefined`), the `.find()` will crash.
+
+**Fix:** Add a double-safety guard: `(influencers ?? []).find(...)`.
+
+#### Issue 9: `AdminOverview.tsx` — Props With `leads.forEach(...)` Without Guard
+**File:** `src/components/admin/AdminOverview.tsx` (L61-79)
+
+**Problem:** The component sets defaults (`leads = []`, `cases = []`) but the usage in the compute block calls `.forEach()` on them, which is safe since defaults are arrays. **This is actually safe** as-is. However the `onStageClick` prop is optional but passed as callback — that's fine. No fix needed here.
+
+---
+
+### 🟡 MEDIUM — Missing Fallbacks & UX Gaps
+
+#### Issue 10: `MyApplicationTab.tsx` — No Guard on `studentCase`
+**File:** `src/components/dashboard/MyApplicationTab.tsx` (L215)
+
+**Problem:** `studentCase.selected_city` is accessed directly. The component's own data-fetch logic could result in `studentCase` being null during loading. 
+
+**Fix:** Ensure `studentCase` guard is present before rendering the grid at L209. The file likely already has a guard earlier, but confirm the details grid renders only when `studentCase` is truthy.
+
+#### Issue 11: `InfluencerDashboardPage.tsx` — Compute on Potentially Empty Array
+**File:** `src/pages/InfluencerDashboardPage.tsx` (L91)
+
+**Problem:** `leads.filter(l => (l.eligibility_score ?? 0) >= 50)` — the array defaults to `[]` from `useState([])`, so this is actually safe. Not a crash risk.
+
+---
+
+## Global Safety Net
+
+Add a global `unhandledrejection` event handler in `App.tsx` to catch any promise rejections that escape all the above fixes:
+
+```typescript
+useEffect(() => {
+  const handler = (event: PromiseRejectionEvent) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    event.preventDefault();
+  };
+  window.addEventListener('unhandledrejection', handler);
+  return () => window.removeEventListener('unhandledrejection', handler);
+}, []);
+```
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/dashboard/StudentProfile.tsx` | Merge legal + visa sections into one "Visa Information" card. Default visa_status display as "Pending". |
-| `src/components/dashboard/ReferralTracker.tsx` | Add `whitespace-nowrap` to table headers and badge/date cells to prevent word breaking. |
-| `src/components/admin/AdminAnalytics.tsx` | Add `whitespace-nowrap` to all table headers in Team and Agent performance tables. |
-| `src/components/lawyer/AppointmentCalendar.tsx` | 1. Add gap between Date/Time inputs. 2. Fix "Day" badge with `whitespace-nowrap`. |
-| `src/hooks/use-toast.ts` | Reduce `TOAST_REMOVE_DELAY` to 1500ms for faster dismissal. |
-| `src/components/ui/toaster.tsx` | Add `duration={2000}` to Toast component. |
-| `src/App.tsx` | Hide PWAInstaller, InAppBrowserBanner, CookieBanner on ALL `/apply` visits (not just with `?ref=`). |
-| `src/pages/ApplyPage.tsx` | Replace major typeahead (Popover/Command) with a free-text Input field. |
-| `src/components/ui/checkbox.tsx` | Restyle to cleaner iOS-like design: smaller indicator, cleaner checkmark. |
+| File | Change |
+|------|--------|
+| `src/pages/AdminDashboardPage.tsx` | Wrap all 13 queries in `safeQuery()`, log individual errors |
+| `src/components/influencer/EarningsPanel.tsx` | Wrap 4 queries in `safeQuery()`, add error logging |
+| `src/components/dashboard/RewardsPanel.tsx` | Wrap 5 queries in `safeQuery()`, add error logging |
+| `src/components/dashboard/ChecklistTracker.tsx` | Add error check + toast after each DB write, fix state order |
+| `src/components/admin/MajorsManagement.tsx` | Wrap 2 queries in `safeQuery()` |
+| `src/pages/InfluencerDashboardPage.tsx` | Wrap 2 queries in `safeQuery()` |
+| `src/pages/TeamDashboardPage.tsx` | Fix `log_user_activity` ordering + `null.toString()` bug |
+| `src/pages/StudentDashboardPage.tsx` | Fix profile re-fetch after `createUserProfile` |
+| `src/pages/ApplyPage.tsx` | Add `.catch()` to `validate_influencer_ref` call |
+| `src/components/admin/LeadsManagement.tsx` | Add `?? []` guard on `influencers` in `getInfluencerName` |
+| `src/App.tsx` | Add global `unhandledrejection` handler |
 
 ---
 
 ## Technical Details
 
-### StudentProfile.tsx Merge
-Remove the second Card completely. Move Language School, Intake Month, Visa Status, and Arrival Date fields into the first card's form, under the legal fields section. Rename section header to "Visa Information". Map `not_applied` visa status to display as "Pending".
+### The `safeQuery` Pattern
+A tiny helper that ensures each database query resolves (not rejects), returning `{ data: null, error }` on failure:
 
-### Table Text Fix Pattern
-Add `whitespace-nowrap` class to all `<th>` elements and date/badge `<td>` cells. This prevents mid-word breaks on mobile. The tables already have `overflow-x-auto` so horizontal scroll handles overflow.
-
-### Apply Page Distraction-Free
-Change App.tsx line 80 from:
 ```typescript
-const isInfluencerApply = location.pathname === '/apply' && searchParams.has('ref');
+const safeQuery = <T>(promise: Promise<{ data: T | null; error: any }>) =>
+  promise.catch((err) => ({ data: null as T | null, error: err }));
 ```
-to:
+
+This is added inline in each `fetchData` function — no shared utility file needed, keeping changes self-contained.
+
+### Checklist Fix — Optimistic Update With Rollback
 ```typescript
-const isApplyPage = location.pathname === '/apply';
+const handleConfirm = async () => {
+  if (!confirmItem) return;
+  const { id: itemId, completed: currentlyCompleted } = confirmItem;
+  setConfirmItem(null); // Clear modal immediately for UX
+
+  // Optimistic UI update
+  const prevCompletions = completions;
+  
+  const existing = completions.find(c => c.checklist_item_id === itemId);
+  let dbError = null;
+  
+  if (existing) {
+    const { error } = await (supabase as any).from('student_checklist')
+      .update({ is_completed: !currentlyCompleted, ... }).eq('id', existing.id);
+    dbError = error;
+  } else {
+    const { error } = await (supabase as any).from('student_checklist')
+      .insert({ ... });
+    dbError = error;
+  }
+
+  if (dbError) {
+    toast({ variant: 'destructive', title: 'Error', description: dbError.message });
+    setCompletions(prevCompletions); // Rollback
+    return;
+  }
+  
+  await fetchData(); // Re-sync
+};
 ```
-And use `isApplyPage` for hiding PWAInstaller, InAppBrowserBanner, CookieBanner. Keep ChatWidget hidden on apply via its own logic.
 
-### Major Field - Free Text
-Replace the `MajorTypeahead` component in Step 3 with a simple `Input` field. The `preferredMajor` state will store the free text string directly instead of an ID.
+### TeamDashboard Fix — Correct Audit Log Ordering
+```typescript
+const { error } = await supabase.from('student_cases').update(finalData).eq('id', profileCase.id);
+setSavingProfile(false);
+setCompleteFileConfirm(false);
 
-### Checkbox Restyle
-Update the Checkbox component to use `rounded-[4px]` instead of default, scale down the check icon, and use a cleaner SVG checkmark path.
+if (error) {
+  toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+} else {
+  // Only log on success
+  await supabase.rpc('log_user_activity', { p_action: 'profile_completed', ... });
+  toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
+  // ... rest of success handling
+}
+```
 
-### Toast Speed
-Reduce `TOAST_REMOVE_DELAY` from 2000 to 1500ms and set explicit `duration={2000}` on the Toast to ensure auto-dismiss happens quickly.
-
+### StudentDashboard Fix — Profile Re-fetch
+```typescript
+const fetchProfileSafely = async (userId: string) => {
+  // ... existing code ...
+  if (error?.code === 'PGRST116' || ...) {
+    await createUserProfile(userId);
+    // RE-FETCH after creation:
+    await fetchProfileSafely(userId); // Second call will hit the `if (data)` branch
+    return;
+  }
+  // ...
+};
+```
+Note: A guard is needed to prevent infinite recursion — track a `isRetry` boolean parameter.
