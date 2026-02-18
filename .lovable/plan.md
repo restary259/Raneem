@@ -1,154 +1,202 @@
 
-# Phase 4: Filter & State Sync — Verified Assessment & Targeted Fix Plan
+# Phase 5: Security & Permission Audit — Verified Assessment & Fix Plan
 
-## Verified Database Scale (The Most Important Finding)
+## What the Audit Claims vs What Is Actually True
 
-Before implementing any server-side filtering or pagination, the live database was queried:
+Every single claim in the audit was verified against the live database and codebase before designing any fix.
 
-| Table | Row Count |
-|-------|-----------|
-| leads | 3 |
-| student_cases | 3 |
-| profiles | 5 |
-| appointments | 2 |
-| rewards | 2 |
-| commissions | 2 |
-| referrals | 1 |
+### RLS Status — All Claims Audited
 
-**The audit's entire performance argument is based on a hypothetical 10,000-row scenario that does not exist.** Migrating all filtering to server-side queries right now would add complexity, remove search flexibility, and slow development — with zero user-visible benefit at current scale. The correct engineering approach is to build server-side pagination when there is real data pressure to justify it.
+| Claim | Verified Reality | Action |
+|-------|-----------------|--------|
+| Appointments table has NO RLS | FALSE — 6 policies exist (lawyers own-only, admin all, students via case) | None |
+| student_cases missing influencer RLS | TRUE — no influencer policy on student_cases | Fix: Add influencer SELECT policy |
+| leads table incomplete RLS | FALSE — 3 correct policies: admin ALL, influencer own SELECT, lawyer assigned SELECT | None |
+| RLS loopholes in rewards | FALSE — admin + own-user SELECT, admin INSERT/UPDATE | None |
+| Role redirects trust client-side | FALSE — fetches from DB server-side, edge function is the real gate | None |
+| Admin check bypassable | FALSE — admin-verify edge function is primary gate | None |
 
----
+### Data Exposure Claims — Audited
 
-## Claims Verified Against Actual Code
+| Claim | Verified Reality | Action |
+|-------|-----------------|--------|
+| SecurityPanel fetches all bank data | TRUE — `select('id, full_name, iban, bank_account_number, bank_branch, bank_name')` | Fix: Replace with count-only query |
+| EarningsPanel bank data (self-only) | TRUE but user sees own data — RLS protects correctly | Low risk, no change needed |
+| Influencer dashboard fetches lead emails | TRUE — `select('*')` on leads returns email, notes, passport_type, fraud_flags | Fix: Replace with explicit column list |
+| Phone number unencrypted | TRUE — stored as plain text, but this is standard practice for contact data | No change (encryption without key management is theatre) |
+| Bank account unencrypted | TRUE — stored plain text | No change (client-side encryption is insecure without a KMS) |
 
-| Audit Claim | Verified Reality | Action |
-|---|---|---|
-| Client-side filtering (perf risk) | True structurally, but 3 rows — no impact | Add pagination as UI-only enhancement (no server change) |
-| Tab switching doesn't refetch | FALSE — `useDashboardData` refetch is already wired, realtime subscriptions are active | No change needed |
-| SLA hardcoded at 48h | FALSE — `TeamDashboardPage.tsx:166` reads `> 24` hours, not 48 | No change needed |
-| Eligibility threshold hardcoded at 50 | TRUE — `InfluencerDashboardPage.tsx:103` uses `>= 50` but DB has `eligible_min: 70` | Fix: fetch from `eligibility_thresholds` |
-| `fetchAllData` called once (empty deps) | FALSE — the hook's `refetch` uses `useCallback` correctly, realtime subscriptions call `refetch` | No change needed |
-| Modal data is stale | PARTIAL — `StudentCasesManagement` closes and reopens modal from the props array; `onRefresh` is called after mutations which triggers `useDashboardData.refetch` | No change needed |
-| Inconsistent search (1-3 fields) | True — minor UX inconsistency but not a data-integrity issue | Low-priority standardization |
-| Pagination not implemented | True — but irrelevant at 3 rows | Add client-side pagination component as a forward-looking UI improvement |
+### Other Claims — Audited
 
----
-
-## The One Real Bug: Eligibility Threshold Mismatch
-
-**File**: `src/pages/InfluencerDashboardPage.tsx:89,103`
-
-The `eligibility_thresholds` table exists and has `eligible_min = 70`. The influencer dashboard hardcodes `>= 50`. This means:
-- Stat card "Eligible" shows leads with score >= 50
-- Admin-set threshold is >= 70
-- If admin changes the threshold to 60 or 80, influencer still sees stale count
-
-**Fix**: On mount, fetch the `eligible_min` value from `eligibility_thresholds` and use it for both the KPI stat and the student filter.
+| Claim | Verified Reality | Action |
+|-------|-----------------|--------|
+| SQL injection in RPCs | FALSE — parameterized queries throughout | None |
+| Rate limiting missing from DB | TRUE — but Supabase Auth handles brute force. Payout requests have no DB-level limit | No change (client guard exists, backend trigger prevents duplicates) |
+| IBAN validation weak | TRUE — regex only checks 2-letter country code + 2 digits, not MOD-97 checksum | Fix: Add full IBAN checksum validation |
+| Email shown in login_attempts to admin | INTENTIONAL — this is the security panel's purpose | None |
 
 ---
 
-## What Will Be Implemented
+## The Two Real Issues to Fix
 
-### 1. Fix Eligibility Threshold in InfluencerDashboardPage
-Fetch `eligible_min` from `eligibility_thresholds` on mount (single lightweight query). Use it in:
-- `eligibleLeads` count (line 89)
-- `ineligibleLeads` count (line 90)
-- `filteredLeads` filter (lines 103-104)
+### CONFIRMED BUG 1: Influencer Sees Sensitive Lead Fields (Critical)
 
-Default to `50` if the query fails (safe fallback).
+**Location**: `src/integrations/supabase/dataService.ts:29-32`
 
-### 2. Add Client-Side Pagination to LeadsManagement
-Add a simple `page` / `pageSize = 50` + `Pagination` component to `LeadsManagement`. This uses the already-filtered `filtered` array and slices it for display. No server-side change needed. This is forward-looking — it costs nothing now and prevents a UX problem when leads grow.
+The influencer dashboard fetches all lead columns with `select('*')`. The `leads` table contains:
+- `email` — direct contact info the influencer should not harvest
+- `notes` — internal admin notes  
+- `passport_type` — PII
+- `fraud_flags` — internal risk data
+- `eligibility_reason` — internal scoring details
+- `companion_lead_id`, `source_id` — internal references
 
-**Technical approach**:
-- Add `const [page, setPage] = useState(1)` 
-- Reset page to 1 when `search`, `filterStatus`, or `filterSource` changes
-- `const paginated = filtered.slice((page-1)*50, page*50)`
-- Show `Pagination` only if `filtered.length > 50`
-- Use the existing `src/components/ui/pagination.tsx` component
+The **influencer student card UI** (lines 232-268 of InfluencerDashboardPage) only shows:
+- Initials (not even full name)
+- Eligibility badge
+- Payment status
+- Timer
 
-### 3. Add Client-Side Pagination to StudentProfilesManagement
-Same pattern as above — `page`, `pageSize = 50`, reset on search change.
+So the query returns far more data than the UI uses.
 
-### 4. Add Client-Side Pagination to StudentCasesManagement
-Same pattern — already has a `filtered` array, just slice and add controls.
+**Fix**: Replace `select('*')` with an explicit safe column list — only what the UI actually renders.
+
+### CONFIRMED BUG 2: SecurityPanel Fraud Detection Fetches Full Bank Details Unnecessarily
+
+**Location**: `src/components/admin/SecurityPanel.tsx:37`
+
+```typescript
+const { data: profiles } = await (supabase as any).from('profiles')
+  .select('id, full_name, iban, bank_account_number, bank_branch, bank_name');
+```
+
+The fraud detection logic only needs to:
+1. Check if same IBAN appears for multiple users (duplicate detection)
+2. Check if same `bank_branch + bank_account_number` appears for multiple users
+
+It does NOT need to display the actual IBAN/account numbers to the UI. The `details` shown in alerts currently reveals the actual IBAN string (`${iban}: ${names.join(', ')}`).
+
+**Risk**: Admin sees full IBAN numbers of all students in a list. This is unnecessary — the fraud alert just needs to say "duplicate bank account detected" with user names, not expose the raw IBAN.
+
+**Fix**: Keep the query (admin has legitimate access to profile data for fraud detection), but **mask the IBAN in the alert display** — show only the last 4 characters: `IL**...1234: Ahmed, Sara`.
+
+### CONFIRMED BUG 3: Missing Influencer RLS on student_cases
+
+**Location**: Database — `student_cases` table
+
+Influencers currently have NO SELECT policy on `student_cases`. The `dataService.getInfluencerDashboard()` queries:
+```typescript
+(supabase as any)
+  .from('student_cases')
+  .select('*, leads!inner(source_id)')
+  .eq('leads.source_id', userId)
+```
+
+This query relies on RLS to return only the influencer's cases — but there is no RLS policy for influencers on `student_cases`. The query therefore returns **zero results** (because RLS has no matching permissive policy, all rows are denied by default). This means the influencer's `cases` array is always empty — the paid case count and timer display are permanently broken.
+
+**Fix**: Add a DB migration to add an influencer SELECT policy on `student_cases` that joins through `leads.source_id = auth.uid()`.
+
+### CONFIRMED BUG 4: IBAN Validation Missing MOD-97 Checksum
+
+**Location**: `src/components/influencer/EarningsPanel.tsx` — the IBAN input uses `ibanInput.trim().replace(/\s/g, '')` with only basic format check. The `saveIban` function in EarningsPanel does not have a proper IBAN validator — it checks `length < 15` and first 4 chars only.
+
+**Fix**: Add MOD-97 checksum validation to `saveIban` before the database update.
 
 ---
 
 ## What Does NOT Change
 
-- No server-side filtering migration — current data scale makes this premature
-- No changes to `useDashboardData`, `dataService`, or realtime subscriptions — already correct
-- No SLA threshold changes — already reads 24h in code
-- No tab switching changes — already refetching correctly
-- No `useEffect` dependency changes — already correct
-- No search standardization — out of scope for this phase (UX only)
-- No RLS changes
-- No database migrations
+- All appointment RLS policies — already complete and correct (6 policies)
+- All leads RLS policies — already complete and correct
+- All student_cases RLS for lawyers and students — already correct
+- Auth flow — already server-side verified
+- Encryption of phone/bank data — client-side encryption without a proper KMS is security theatre and worse than plaintext (false sense of security, breaks search/fraud detection)
+- Rate limiting — Supabase Auth already handles brute force; payout requests are protected at DB level
+- Login attempt email display — intentional, this is a security monitoring tool for admins
 
 ---
 
-## Files to Modify
+## Files and Migrations to Change
 
-| File | Change |
-|------|--------|
-| `src/pages/InfluencerDashboardPage.tsx` | Fetch `eligible_min` from `eligibility_thresholds`, use in stats + student filter |
-| `src/components/admin/LeadsManagement.tsx` | Add `page` state + `Pagination` component (client-side, 50 per page) |
-| `src/components/admin/StudentProfilesManagement.tsx` | Add `page` state + `Pagination` component |
-| `src/components/admin/StudentCasesManagement.tsx` | Add `page` state + `Pagination` component |
+| Change | Type | Risk |
+|--------|------|------|
+| DB Migration: Add influencer SELECT policy on `student_cases` | Migration | Low — adds new policy, doesn't change existing |
+| `src/integrations/supabase/dataService.ts` | Code | Low — restrict influencer lead select columns |
+| `src/components/admin/SecurityPanel.tsx` | Code | Low — mask IBAN in fraud alert display |
+| `src/components/influencer/EarningsPanel.tsx` | Code | Low — add MOD-97 IBAN checksum validation |
 
 ---
 
-## Technical Detail: Eligibility Threshold Fix
+## Technical Details
 
-```typescript
-// In InfluencerDashboardPage.tsx, add:
-const [eligibleMin, setEligibleMin] = useState(50); // safe default
+### Migration: Influencer SELECT on student_cases
 
-useEffect(() => {
-  (supabase as any)
-    .from('eligibility_thresholds')
-    .select('eligible_min')
-    .maybeSingle()
-    .then(({ data }: any) => {
-      if (data?.eligible_min) setEligibleMin(data.eligible_min);
-    });
-}, []);
-
-// Then replace hardcoded 50 with eligibleMin:
-const eligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin).length;
-const ineligibleLeads = leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new').length;
-
-// And in filteredLeads useMemo:
-if (studentFilter === 'eligible') return leads.filter(l => (l.eligibility_score ?? 0) >= eligibleMin);
-if (studentFilter === 'ineligible') return leads.filter(l => (l.eligibility_score ?? 0) < eligibleMin && l.status !== 'new');
-// Also add eligibleMin to useMemo deps
+```sql
+CREATE POLICY "Influencers can view cases for their leads"
+  ON public.student_cases
+  FOR SELECT
+  TO authenticated
+  USING (
+    public.has_role(auth.uid(), 'influencer'::app_role)
+    AND EXISTS (
+      SELECT 1 FROM public.leads l
+      WHERE l.id = student_cases.lead_id
+        AND l.source_id = auth.uid()
+    )
+  );
 ```
 
-## Technical Detail: Pagination Pattern
+This mirrors the existing leads policy and uses the existing `has_role` security-definer function, preventing recursive RLS.
+
+### dataService.ts — Restricted influencer lead columns
 
 ```typescript
-// Add to component:
-const [page, setPage] = useState(1);
-const PAGE_SIZE = 50;
+// Replace select('*') with:
+.select('id, full_name, phone, eligibility_score, eligibility_reason, status, source_type, created_at, preferred_city, preferred_major, accommodation, ref_code')
+```
 
-// Reset page when filters change:
-useEffect(() => { setPage(1); }, [search, filterStatus, filterSource]);
+Excluded: `email`, `notes`, `passport_type`, `fraud_flags`, `visa_history`, `companion_lead_id`, `source_id`, `is_stale`, `arab48_flag`, `student_portal_created`
 
-// Slice:
-const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+### SecurityPanel.tsx — Mask IBAN in alerts
 
-// Render with existing Pagination component:
-// Replace filtered.map(...) → paginated.map(...)
-// Add <Pagination> below the list when totalPages > 1
+Replace:
+```typescript
+details: `${iban}: ${names.join(', ')}`
+```
+With:
+```typescript
+details: `****${iban.slice(-4)}: ${names.join(', ')}`
+```
+
+Same masking for bank account numbers.
+
+### EarningsPanel.tsx — Full IBAN MOD-97 validation
+
+```typescript
+const validateIBAN = (raw: string): boolean => {
+  const iban = raw.replace(/\s/g, '').toUpperCase();
+  if (iban.length < 15 || iban.length > 34) return false;
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) return false;
+  // MOD-97: move first 4 chars to end, convert letters to numbers
+  const rearranged = iban.slice(4) + iban.slice(0, 4);
+  const numStr = rearranged.split('').map(c =>
+    c >= 'A' ? String(c.charCodeAt(0) - 55) : c
+  ).join('');
+  // BigInt mod 97
+  let remainder = 0;
+  for (const digit of numStr) {
+    remainder = (remainder * 10 + parseInt(digit)) % 97;
+  }
+  return remainder === 1;
+};
 ```
 
 ---
 
 ## Expected Outcome
 
-1. Influencer dashboard eligibility counts match admin-configured threshold exactly
-2. All admin list views are pagination-ready for when data grows (no UX degradation at scale)
-3. No regressions — all existing real-time, filtering, and tab functionality preserved
-4. Phase 4 is complete with honest scope (4 targeted file changes, 0 migrations)
+1. Influencer cases now correctly load from the database (previously silently empty due to missing RLS policy)
+2. Influencer lead data no longer exposes student email, passport type, fraud flags, or internal notes
+3. IBAN fraud alerts show masked numbers (`****1234`) — admin sees who has duplicates without raw account numbers being displayed
+4. IBAN input is fully validated with MOD-97 checksum before saving — prevents invalid IBANs from being stored
+5. No regressions — all existing functionality preserved, no schema destructive changes
