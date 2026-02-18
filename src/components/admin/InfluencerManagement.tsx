@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Loader2, UserX, RotateCcw, Trash2, Copy, Check } from 'lucide-react';
+import { UserPlus, Loader2, UserX, RotateCcw, Trash2, Copy, Check, ShieldCheck } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 import PullToRefresh from '@/components/common/PullToRefresh';
@@ -30,6 +30,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
   const [commission, setCommission] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createdPassword, setCreatedPassword] = useState('');
+  const [createdEmail, setCreatedEmail] = useState('');
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
@@ -46,25 +48,41 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       ];
 
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleCreate = async () => {
     if (!name || !email) return;
-    setIsCreating(true); setCreatedPassword(''); setCopied(false);
+    setIsCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-      await (supabase as any).from('influencer_invites').insert({ email, full_name: name, invited_by: session.user.id });
+
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ email, full_name: name, role: filterRole || role, commission_amount: commission ? parseInt(commission) : 0 }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create');
-      setCreatedPassword(result.temp_password || 'sent');
-      toast({ title: t('admin.influencers.createSuccess') });
-      onRefresh();
-    } catch (err: any) { toast({ variant: 'destructive', title: t('common.error'), description: err.message }); }
-    finally { setIsCreating(false); }
+
+      if (!result.temp_password) {
+        throw new Error('Account created but no temporary password was returned. Contact support.');
+      }
+
+      // Store credentials, close form, open dedicated credentials modal
+      setCreatedPassword(result.temp_password);
+      setCreatedEmail(email);
+      setDialogOpen(false);
+      setShowCredentialsModal(true);
+
+      // Reset form fields
+      setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer');
+      // onRefresh() is called when admin dismisses the credentials modal
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const copyPassword = () => {
@@ -72,6 +90,14 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       navigator.clipboard.writeText(createdPassword);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const copyEmail = () => {
+    if (createdEmail) {
+      navigator.clipboard.writeText(createdEmail);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
     }
   };
 
@@ -117,7 +143,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">{pageTitle}</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button onClick={() => { setName(''); setEmail(''); setCreatedPassword(''); setCommission(''); setRole(filterRole || 'influencer'); }}><UserPlus className="h-4 w-4 me-2" />{t('team.addMember')}</Button></DialogTrigger>
+          <DialogTrigger asChild><Button onClick={() => { setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer'); }}><UserPlus className="h-4 w-4 me-2" />{t('team.addMember')}</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{t('team.createTitle')}</DialogTitle></DialogHeader>
             <div className="space-y-4">
@@ -135,36 +161,68 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
               <div><Label>{t('admin.influencers.fullName')}</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder={t('team.namePlaceholder')} /></div>
               <div><Label>{t('admin.influencers.email')}</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
               <div><Label>{t('team.commission', { defaultValue: 'Commission (₪)' })}</Label><Input type="number" min="0" value={commission} onChange={e => setCommission(e.target.value)} placeholder="0" /></div>
-              {createdPassword && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-                  <p className="text-sm font-semibold text-green-800">✅ {t('team.accountCreatedSuccess', { defaultValue: 'Account created successfully' })}</p>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">{t('admin.influencers.email')}:</p>
-                    <p className="text-sm font-mono bg-background border rounded px-2 py-1">{email}</p>
-                  </div>
-                  {createdPassword !== 'sent' && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">{t('team.tempPassword', { defaultValue: 'Temporary Password' })}:</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-mono bg-background border rounded px-2 py-1 flex-1">{createdPassword}</p>
-                        <Button size="sm" variant="outline" onClick={copyPassword} className="shrink-0">
-                          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">{t('team.passwordChangeNote', { defaultValue: 'The member will be asked to change their password on first login.' })}</p>
-                </div>
-              )}
-              {!createdPassword && (
-                <Button className="w-full" onClick={handleCreate} disabled={isCreating || !name || !email}>
-                  {isCreating ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('team.creating')}</> : t('team.createAccount')}
-                </Button>
-              )}
+              <Button className="w-full" onClick={handleCreate} disabled={isCreating || !name || !email}>
+                {isCreating ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('team.creating')}</> : t('team.createAccount')}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Credentials Modal — persistent, cannot be dismissed accidentally */}
+      <Dialog open={showCredentialsModal} onOpenChange={() => {}}>
+        <DialogContent onPointerDownOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              {t('team.accountCreatedSuccess', { defaultValue: 'Account Created — Save These Credentials' })}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {t('team.credentialsNote', { defaultValue: 'Share these credentials with the new member. They must change their password on first login.' })}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('admin.influencers.email')}</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono break-all">{createdEmail}</code>
+                  <Button size="sm" variant="outline" className="shrink-0" onClick={copyEmail}>
+                    {copiedEmail ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('team.tempPassword', { defaultValue: 'Temporary Password' })}</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-mono font-bold tracking-wider">{createdPassword}</code>
+                  <Button size="sm" variant="outline" className="shrink-0" onClick={copyPassword}>
+                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
+              <p className="text-xs text-warning-foreground font-medium">
+                ⚠️ {t('team.passwordWarning', { defaultValue: 'This password will NOT be shown again. Copy it now and send it securely to the new member.' })}
+              </p>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                setShowCredentialsModal(false);
+                setCreatedPassword('');
+                setCreatedEmail('');
+                setCopied(false);
+                setCopiedEmail(false);
+                onRefresh();
+              }}
+            >
+              {t('team.savedCredentials', { defaultValue: "I've Saved the Credentials — Close" })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isMobile ? (
         <div className="space-y-3">
