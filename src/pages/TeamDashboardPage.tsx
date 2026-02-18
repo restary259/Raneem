@@ -21,7 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import {
   Phone, LogOut, ArrowLeftCircle, Save, Briefcase,
   CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, DollarSign, TrendingUp, BarChart3, Send, FileText, Trash2, UserX
+  Home, Calendar, DollarSign, TrendingUp, BarChart3, Send, FileText, Trash2, UserX, UserCheck
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
@@ -108,6 +108,11 @@ const TeamDashboardPage = () => {
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
   const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
+  const [reassignCase, setReassignCase] = useState<any | null>(null);
+  const [reassignTargetId, setReassignTargetId] = useState('');
+  const [reassignNotes, setReassignNotes] = useState('');
+  const [reassigning, setReassigning] = useState(false);
+  const [allLawyers, setAllLawyers] = useState<{ id: string; full_name: string }[]>([]);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -134,6 +139,19 @@ const TeamDashboardPage = () => {
     };
     init();
   }, [navigate, toast, t]);
+
+  // Fetch all lawyers for reassignment dropdown
+  useEffect(() => {
+    if (!authReady) return;
+    const fetchLawyers = async () => {
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
+      if (data) setAllLawyers(data);
+    };
+    fetchLawyers();
+  }, [authReady]);
 
   // Centralised data layer
   const { data, error: dataError, isLoading, refetch } = useDashboardData({
@@ -419,6 +437,36 @@ const TeamDashboardPage = () => {
     setSaving(false);
   };
 
+  const handleReassignCase = async () => {
+    if (!reassignCase || !reassignTargetId) return;
+    setReassigning(true);
+    const historyEntry = {
+      from: reassignCase.assigned_lawyer_id,
+      to: reassignTargetId,
+      at: new Date().toISOString(),
+      by: user?.id,
+      notes: reassignNotes.trim() || null,
+    };
+    const currentHistory = Array.isArray(reassignCase.reassignment_history) ? reassignCase.reassignment_history : [];
+    const { error } = await (supabase as any).from('student_cases').update({
+      assigned_lawyer_id: reassignTargetId,
+      reassigned_from: reassignCase.assigned_lawyer_id,
+      reassignment_notes: reassignNotes.trim() || null,
+      reassignment_history: [...currentHistory, historyEntry],
+    }).eq('id', reassignCase.id);
+    setReassigning(false);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    } else {
+      await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${reassignTargetId}` });
+      toast({ title: isAr ? 'تم التحويل بنجاح' : 'Case reassigned successfully' });
+      setReassignCase(null);
+      setReassignTargetId('');
+      setReassignNotes('');
+      await refetch();
+    }
+  };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 
   if (!authReady || isLoading) {
@@ -515,7 +563,12 @@ const TeamDashboardPage = () => {
     }
 
     // Submitted/paid: just call
-    return phoneBtn ? <div className="flex gap-2">{phoneBtn}</div> : null;
+    const reassignBtn = (
+      <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
+        <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
+      </Button>
+    );
+    return phoneBtn ? <div className="flex gap-2 flex-wrap">{phoneBtn}{reassignBtn}</div> : <div className="flex gap-2">{reassignBtn}</div>;
   };
 
   return (
@@ -1036,6 +1089,40 @@ const TeamDashboardPage = () => {
             <Button variant="outline" onClick={() => setRescheduleAppt(null)}>{t('common.cancel')}</Button>
             <Button onClick={handleRescheduleAppointment} disabled={saving || !rescheduleDate || !rescheduleTime}>
               {saving ? t('common.loading') : (isAr ? 'حفظ' : 'Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reassign Case Dialog */}
+      <Dialog open={!!reassignCase} onOpenChange={(open) => !open && setReassignCase(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{isAr ? 'تحويل الحالة لعضو آخر' : 'Reassign Case'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">{isAr ? 'اختر العضو الجديد' : 'Select new team member'}</Label>
+              <Select value={reassignTargetId} onValueChange={setReassignTargetId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={isAr ? 'اختر...' : 'Select...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {allLawyers.filter(l => l.id !== user?.id).map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">{isAr ? 'ملاحظات (اختياري)' : 'Notes (optional)'}</Label>
+              <Textarea value={reassignNotes} onChange={e => setReassignNotes(e.target.value)} rows={2} placeholder={isAr ? 'سبب التحويل...' : 'Reason for reassignment...'} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReassignCase(null)}>{t('common.cancel')}</Button>
+            <Button onClick={handleReassignCase} disabled={reassigning || !reassignTargetId}>
+              {reassigning ? t('common.loading') : (isAr ? 'تحويل' : 'Reassign')}
             </Button>
           </DialogFooter>
         </DialogContent>
