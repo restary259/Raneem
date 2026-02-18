@@ -51,20 +51,31 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     const { id: itemId, completed: currentlyCompleted } = confirmItem;
     setConfirmItem(null);
 
+    const prevCompletions = completions;
     const existing = completions.find(c => c.checklist_item_id === itemId);
 
+    let dbError: any = null;
+
     if (existing) {
-      await (supabase as any).from('student_checklist').update({
+      const { error } = await (supabase as any).from('student_checklist').update({
         is_completed: !currentlyCompleted,
         completed_at: !currentlyCompleted ? new Date().toISOString() : null,
       }).eq('id', existing.id);
+      dbError = error;
     } else {
-      await (supabase as any).from('student_checklist').insert({
+      const { error } = await (supabase as any).from('student_checklist').insert({
         student_id: userId,
         checklist_item_id: itemId,
         is_completed: true,
         completed_at: new Date().toISOString(),
       });
+      dbError = error;
+    }
+
+    if (dbError) {
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: dbError.message });
+      setCompletions(prevCompletions);
+      return;
     }
 
     await fetchData();

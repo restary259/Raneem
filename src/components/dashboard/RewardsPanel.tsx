@@ -36,16 +36,20 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
     '10_referrals': <Trophy className="h-5 w-5 text-purple-500" />,
   };
 
+  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
   const fetchData = async () => {
     const [rewardsRes, milestonesRes, requestsRes, configRes, profileRes] = await Promise.all([
-      (supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      (supabase as any).from('referral_milestones').select('*').eq('user_id', userId),
-      (supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false }),
-      (supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single(),
-      (supabase as any).from('profiles').select('iban, iban_confirmed_at').eq('id', userId).maybeSingle(),
+      safeQuery((supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('referral_milestones').select('*').eq('user_id', userId)),
+      safeQuery((supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false })),
+      safeQuery((supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single()),
+      safeQuery((supabase as any).from('profiles').select('iban, iban_confirmed_at').eq('id', userId).maybeSingle()),
     ]);
+    if (rewardsRes.error) console.error('Rewards fetch failed:', rewardsRes.error);
     if (rewardsRes.data) setRewards(rewardsRes.data);
     if (milestonesRes.data) setMilestones(milestonesRes.data);
+    if (requestsRes.error) console.error('Payout requests fetch failed:', requestsRes.error);
     if (requestsRes.data) setPayoutRequests(requestsRes.data);
     if (configRes.data) setMinThreshold(configRes.data.weight);
     if (profileRes.data) { setProfile(profileRes.data); setIbanInput(profileRes.data.iban || ''); }

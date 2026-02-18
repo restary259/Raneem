@@ -44,13 +44,17 @@ const InfluencerDashboardPage = () => {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
 
+  const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     const [leadsRes, casesRes] = await Promise.all([
-      (supabase as any).from('leads').select('*').eq('source_id', user.id).order('created_at', { ascending: false }),
-      (supabase as any).from('student_cases').select('*, leads!inner(source_id)').eq('leads.source_id', user.id),
+      safeQuery((supabase as any).from('leads').select('*').eq('source_id', user.id).order('created_at', { ascending: false })),
+      safeQuery((supabase as any).from('student_cases').select('*, leads!inner(source_id)').eq('leads.source_id', user.id)),
     ]);
+    if (leadsRes.error) console.error('Leads fetch failed:', leadsRes.error);
     if (leadsRes.data) setLeads(leadsRes.data);
+    if (casesRes.error) console.error('Cases fetch failed:', casesRes.error);
     if (casesRes.data) setCases(casesRes.data);
   }, [user]);
 

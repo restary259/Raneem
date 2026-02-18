@@ -73,7 +73,7 @@ const StudentDashboardPage = () => {
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
 
-  const fetchProfileSafely = async (userId: string) => {
+  const fetchProfileSafely = async (userId: string, isRetry = false) => {
     try {
       const { data, error } = await (supabase as any)
         .from('profiles')
@@ -83,7 +83,11 @@ const StudentDashboardPage = () => {
 
       if (error) {
         if (error.code === 'PGRST116' || error.message?.includes('No rows found') || error.message?.includes('infinite recursion')) {
-          await createUserProfile(userId);
+          if (!isRetry) {
+            await createUserProfile(userId);
+            // Re-fetch after creation so profile renders immediately
+            await fetchProfileSafely(userId, true);
+          }
           return;
         }
         throw error;
@@ -95,8 +99,9 @@ const StudentDashboardPage = () => {
           ...data,
           visa_status: allowedStatuses.includes(data.visa_status) ? data.visa_status : 'not_applied',
         });
-      } else {
+      } else if (!isRetry) {
         await createUserProfile(userId);
+        await fetchProfileSafely(userId, true);
       }
     } catch (error: any) {
       setError(error.message);

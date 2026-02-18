@@ -281,7 +281,10 @@ const TeamDashboardPage = () => {
       'passport_number', 'nationality', 'country_of_birth', 'language_proficiency',
       'gender', 'selected_city', 'selected_school', 'intensive_course', 'accommodation_status'
     ];
-    const missingFields = requiredProfileFields.filter(f => !profileValues[f]?.toString().trim());
+    const missingFields = requiredProfileFields.filter(f => {
+      const val = profileValues[f];
+      return !val || String(val).trim() === '' || String(val).trim() === 'null';
+    });
     
     if (missingFields.length > 0) {
       const fieldLabels: Record<string, string> = {
@@ -325,13 +328,14 @@ const TeamDashboardPage = () => {
       finalData.case_status = CaseStatus.PROFILE_FILLED;
     }
     const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
-    await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
     setSavingProfile(false);
     setCompleteFileConfirm(false);
     setPendingUpdateData(null);
     if (error) {
       toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } else {
+      // Only log activity on successful update
+      await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
       toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
       setProfileCase(null);
       setCaseFilter('profile_filled');

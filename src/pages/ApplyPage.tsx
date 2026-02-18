@@ -75,14 +75,18 @@ const ApplyPage: React.FC = () => {
     }
     const savedRef = ref || localStorage.getItem('darb_ref');
     if (savedRef) {
-      supabase
-        .rpc('validate_influencer_ref', { ref_id: savedRef })
-        .then(({ data }) => {
+      const validateRef = async () => {
+        try {
+          const { data } = await supabase.rpc('validate_influencer_ref', { ref_id: savedRef });
           if (data === true) {
             setSourceType('influencer');
             setSourceId(savedRef);
           }
-        });
+        } catch (err) {
+          console.error('validate_influencer_ref failed:', err);
+        }
+      };
+      validateRef();
     }
   }, [searchParams]);
 
