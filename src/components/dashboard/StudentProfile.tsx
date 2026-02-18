@@ -7,11 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, User } from 'lucide-react';
-import { Profile, VisaStatus } from '@/types/profile';
+import { Edit, Save, X, User, Trash2 } from 'lucide-react';
+import { Profile } from '@/types/profile';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 interface StudentProfileProps {
   profile: Profile;
@@ -19,6 +21,7 @@ interface StudentProfileProps {
   userId: string;
 }
 
+type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'received';
 const visaStatusKeys: VisaStatus[] = ['not_applied', 'applied', 'approved', 'rejected', 'received'];
 const eyeColorOptions = ['brown', 'blue', 'green', 'hazel', 'gray', 'other'];
 
@@ -26,8 +29,12 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
+  const navigate = useNavigate();
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -60,6 +67,29 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
       toast({ variant: "destructive", title: t('profile.updateError'), description: error.message });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed to delete account');
+      await supabase.auth.signOut();
+      toast({ title: t('profile.accountDeleted', 'Account Deleted'), description: t('profile.accountDeletedDesc', 'Your account has been permanently deleted.') });
+      navigate('/');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -184,6 +214,59 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
         </CardContent>
       </Card>
 
+      {/* Danger Zone */}
+      <Card className="border-destructive/40">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2 text-base">
+            <Trash2 className="h-4 w-4" />
+            {t('profile.dangerZone', 'Danger Zone')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            {t('profile.deleteAccountWarning', 'Permanently delete your account and all associated data. This action cannot be undone.')}
+          </p>
+          <Button variant="destructive" size="sm" onClick={() => { setDeleteConfirmText(''); setShowDeleteDialog(true); }}>
+            <Trash2 className="h-4 w-4 me-2" />
+            {t('profile.deleteAccount', 'Delete Account Permanently')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              {t('profile.deleteAccountTitle', 'Delete Account Permanently')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>{t('profile.deleteAccountDesc', 'This will permanently delete your account, profile, documents, and all associated data. This cannot be undone.')}</p>
+                <p className="font-medium text-foreground">
+                  {t('profile.typeDelete', 'Type DELETE to confirm:')}
+                </p>
+                <Input
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="font-mono"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t('common.loading') : t('profile.confirmDelete', 'Yes, Delete My Account')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
