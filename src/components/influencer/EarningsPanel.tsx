@@ -148,24 +148,29 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
     if (!canRequest || submitting) return;
     setSubmitting(true);
     try {
+      // Gather student names from referrals for display
       const referralIds = eligibleRewards.map(r => r.referral_id).filter(Boolean);
       let studentNames: string[] = [];
       if (referralIds.length > 0) {
         const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
         if (data) studentNames = data.map((r: any) => r.referred_name);
       }
-      await (supabase as any).from('payout_requests').insert({
-        requestor_id: userId,
-        requestor_role: role,
-        linked_reward_ids: eligibleRewards.map(r => r.id),
-        linked_student_names: studentNames,
-        amount: availableAmount,
-        admin_notes: requestNotes || null,
-        payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
+
+      // Call server-side RPC — validates ownership, pending status, 20-day lock, and no duplicate requests atomically
+      const { data: newId, error: rpcError } = await (supabase as any).rpc('request_payout', {
+        p_reward_ids: eligibleRewards.map(r => r.id),
+        p_amount: availableAmount,
+        p_notes: requestNotes || null,
+        p_payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
+        p_requestor_role: role,
+        p_student_names: studentNames,
       });
-      for (const r of eligibleRewards) {
-        await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
+
+      if (rpcError) {
+        toast({ variant: 'destructive', title: 'Error', description: rpcError.message });
+        return;
       }
+
       toast({ title: t('influencer.earnings.payoutSuccess', 'Payout request submitted!') });
       setShowRequestModal(false);
       setRequestNotes('');

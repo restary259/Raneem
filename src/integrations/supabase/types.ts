@@ -1527,6 +1527,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      request_payout: {
+        Args: {
+          p_amount: number
+          p_notes?: string
+          p_payment_method?: string
+          p_requestor_role?: string
+          p_reward_ids: string[]
+          p_student_names?: string[]
+        }
+        Returns: string
+      }
       upsert_lead_from_contact: {
         Args: {
           p_email: string

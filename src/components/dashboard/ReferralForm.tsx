@@ -51,6 +51,12 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
       toast({ variant: 'destructive', title: t('referrals.duplicateError') });
       return;
     }
+    // Also check by phone to prevent duplicate leads for the same person via different emails
+    const { data: existingByPhone } = await (supabase as any).from('referrals').select('id').eq('referred_phone', form.phone).eq('referrer_id', userId);
+    if (existingByPhone?.length) {
+      toast({ variant: 'destructive', title: t('referrals.duplicateError') });
+      return;
+    }
     setIsLoading(true);
     try {
       const fullName = `${form.first_name} ${form.surname}`.trim();

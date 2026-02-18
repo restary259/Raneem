@@ -236,6 +236,19 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               <TabsContent value="money" className="mt-4">
                 {!editingMoney ? (
                   <>
+                    {/* Commission over-budget warning */}
+                    {(() => {
+                      const totalComm = (selectedCase.influencer_commission || 0) + (selectedCase.lawyer_commission || 0) + (selectedCase.school_commission || 0);
+                      const fee = selectedCase.service_fee || 0;
+                      return totalComm > fee ? (
+                        <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-xs flex items-start gap-2">
+                          <span className="text-base leading-none">⚠️</span>
+                          <span>
+                            {t('studentCases.overBudgetWarning', { defaultValue: 'Total commissions ({{total}} ₪) exceed the service fee ({{fee}} ₪). Please review the financials.', total: totalComm, fee })}
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
                         <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>
