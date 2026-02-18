@@ -1,240 +1,133 @@
 
-# Critical Error Handling & Stability Fix Plan
+# Unified Data Access Layer — Implementation Plan
 
-## Audit Summary
+## Assessment of Current State
 
-After reviewing all flagged files in detail, here is a precise breakdown of every real issue found and the exact fix required for each.
-
----
-
-## Issues Confirmed & Prioritized
-
-### 🔴 CRITICAL — Application-Crashing Bugs
-
-#### Issue 1: `Promise.all()` Without Error Isolation
-**Files:** `AdminDashboardPage.tsx` (L72), `EarningsPanel.tsx` (L41), `RewardsPanel.tsx` (L40), `ChecklistTracker.tsx` (L36), `InfluencerDashboardPage.tsx` (L49), `MajorsManagement.tsx` (L86)
-
-**Problem:** If any single database query in a `Promise.all()` block fails (e.g., network hiccup, RLS rejection, timeout), the entire `await` rejects and the dashboard shows a blank screen or crashes silently. Currently there are zero `.catch()` handlers on individual promises.
-
-**Fix:** Wrap every query in a safe wrapper so each resolves independently:
-```typescript
-// Safe helper to add to each file:
-const safeQuery = (p: Promise<any>) => p.catch(err => ({ data: null, error: err }));
-
-// Usage:
-const [p, s, pay, ...] = await Promise.all([
-  safeQuery((supabase as any).from('profiles').select('*')...),
-  safeQuery((supabase as any).from('services').select('*')...),
-  // ...
-]);
-// Then check individually: if (p.data) setStudents(p.data);
-// Individual failures are logged but don't crash other data
-```
-
-#### Issue 2: `validate_influencer_ref` RPC Has No `.catch()` in `ApplyPage.tsx`
-**File:** `src/pages/ApplyPage.tsx` (L79)
-
-**Problem:** If `validate_influencer_ref` fails (bad UUID, network error), the promise rejects silently and the referral attribution is silently lost.
-
-**Fix:** Add `.catch(console.error)` to the chain.
-
-#### Issue 3: Checklist update has no error handling or rollback
-**File:** `src/components/dashboard/ChecklistTracker.tsx` (L56-68)
-
-**Problem:** `setConfirmItem(null)` clears the modal state BEFORE the database write completes. If the `update` or `insert` fails, the UI shows the item as toggled but the DB still has the old value. `fetchData()` at the end will re-sync but only if it succeeds too.
-
-**Fix:** Add error check after each Supabase operation. Show a toast on failure. Move `setConfirmItem(null)` after confirming success.
-
-#### Issue 4: `log_user_activity` Runs Before Checking Update Success
-**File:** `src/pages/TeamDashboardPage.tsx` (L327-329)
-
-**Problem:** 
-```typescript
-const { error } = await supabase.from('student_cases').update(...).eq('id', ...);
-await supabase.rpc('log_user_activity', {...}); // runs even if error exists!
-```
-The audit log records a "success" even when the actual update failed.
-
-**Fix:** Move `log_user_activity` inside the `else` block (only after confirming no error).
+The previous audit fixes already applied `safeQuery` isolation to all `Promise.all()` calls. The dashboards are now crash-safe. This plan focuses on the next level: creating a **centralized data service and shared hook** so all dashboards share one reliable, consistent data-fetching pattern — eliminating duplicate code, inconsistent error states, and scattered subscription logic.
 
 ---
 
-### 🟠 HIGH — Silent Failures & Missing Feedback
+## What Will Be Built
 
-#### Issue 5: `null.toString()` Bug in Team Dashboard Required Fields Check
-**File:** `src/pages/TeamDashboardPage.tsx` (L284)
+### 1. `src/integrations/supabase/dataService.ts` (NEW FILE)
+A centralized module with typed fetch functions for each dashboard type.
 
-**Problem:**
-```typescript
-const missingFields = requiredProfileFields.filter(f => !profileValues[f]?.toString().trim());
-```
-If `profileValues[f]` is `null`, then `null?.toString()` returns `undefined`, and `undefined.trim()` throws. The `?.` only protects the `.toString()` call, not the `.trim()` call after it.
+**Functions:**
+- `getInfluencerDashboard(userId)` — Fetches leads (filtered by `source_id`), student cases, and profile in parallel. Returns `{ leads, cases, profile }`.
+- `getTeamDashboard(userId)` — Fetches assigned cases, appointments, then derives leads from case `lead_id` list. Returns `{ cases, leads, appointments, profile }`.
+- `getAdminDashboard()` — Fetches all 13 tables in parallel with `safeQuery` on each. Returns the full admin state shape.
 
-Actually reviewing this more carefully: `null?.toString()` → `undefined`, then `undefined.trim()` would throw. But wait — `.trim()` is being called on `undefined` here. This IS a real bug. If `profileValues[f]` is the literal string `"null"` it would pass, but if it's a JS `null`, this will crash on `.trim()`.
+Each function:
+- Uses `safeQuery` isolation on every individual promise
+- Logs errors to console with descriptive labels
+- Returns safe fallbacks (`[]` or `null`) on failure — never throws
+- Returns a typed `{ data, error }` result
 
-**Fix:** Change to explicit truthiness check:
-```typescript
-const missingFields = requiredProfileFields.filter(f => {
-  const val = profileValues[f];
-  return !val || String(val).trim() === '' || String(val).trim() === 'null';
-});
-```
+### 2. `src/hooks/useDashboardData.ts` (NEW FILE)
+A single hook that wraps the data service with React state management.
 
-#### Issue 6: `fetchProfileSafely` Creates Profile But Doesn't Fetch It
-**File:** `src/pages/StudentDashboardPage.tsx` (L85-88)
+**Features:**
+- Accepts `{ userId, type: 'influencer' | 'team' | 'admin', onError? }`
+- Manages `isLoading`, `error`, and `data` state
+- Exposes a stable `refetch` callback (via `useCallback`)
+- Can be connected to existing `useRealtimeSubscription` calls
+- Prevents stale closure issues via `useCallback` dependency on `userId` and `type`
 
-**Problem:** When `createUserProfile` is called (because no profile exists), the function returns without re-fetching the newly created profile. The student sees a blank/fallback UI indefinitely until they reload.
+### 3. `src/components/dashboard/DashboardContainer.tsx` (NEW FILE)
+A reusable wrapper component that handles the three universal states:
+- **Loading** — centered spinner with "Loading..." text
+- **Error** — card with error message and "Try Again" button that calls `onRetry`
+- **Empty** — configurable message and icon
+- **Content** — renders `children` when data is ready
 
-**Fix:** After `createUserProfile` completes, call `fetchProfileSafely` again once to load the newly created profile.
+This replaces the repeated `if (isLoading) return <spinner>` blocks in each dashboard page.
 
-#### Issue 7: No Error Logging on `Promise.all()` Individual Failures in `AdminDashboardPage.tsx`
-**File:** `src/pages/AdminDashboardPage.tsx` (L72-86)
+### 4. Update `src/pages/InfluencerDashboardPage.tsx`
+- Replace the inline `fetchData` + scattered `useState` + `useRealtimeSubscription` calls with `useDashboardData({ userId, type: 'influencer' })`
+- Remove duplicate `safeQuery` helper (now in dataService)
+- Wrap render in `<DashboardContainer>` for consistent loading/error/empty states
+- Keep all existing UI (KPI cards, funnel chart, student cards, tabs) — only the data layer changes
+- Keep existing `useRealtimeSubscription` calls but point them to `refetch` from the hook
 
-**Problem:** `if (p.data) setStudents(p.data)` silently ignores `p.error` — if a fetch failed, state is never updated AND no one knows why.
+### 5. Update `src/pages/TeamDashboardPage.tsx` (Key sections only)
+- Replace `fetchCases` + `fetchAppointments` with `useDashboardData({ userId, type: 'team' })`
+- Remove the separate `fetchCases` and `fetchAppointments` functions
+- Extract `cases`, `leads`, `appointments` from `data?.cases ?? []` etc.
+- The full 1084-line business logic (profile form, appointment modal, case actions) stays unchanged — only the top-level data loading is refactored
 
-**Fix:** After wrapping with `safeQuery`, log and optionally toast on errors:
-```typescript
-if (p.error) console.error('Profiles fetch failed:', p.error);
-if (p.data) setStudents(p.data);
-```
-
-#### Issue 8: `getInfluencerName` in `LeadsManagement.tsx` Has No Guard on `influencers`
-**File:** `src/components/admin/LeadsManagement.tsx` (L204-209)
-
-**Problem:** The component receives `influencers = []` as a default prop, which is safe. However, if `influencers` is somehow `undefined` (e.g., parent passes `undefined`), the `.find()` will crash.
-
-**Fix:** Add a double-safety guard: `(influencers ?? []).find(...)`.
-
-#### Issue 9: `AdminOverview.tsx` — Props With `leads.forEach(...)` Without Guard
-**File:** `src/components/admin/AdminOverview.tsx` (L61-79)
-
-**Problem:** The component sets defaults (`leads = []`, `cases = []`) but the usage in the compute block calls `.forEach()` on them, which is safe since defaults are arrays. **This is actually safe** as-is. However the `onStageClick` prop is optional but passed as callback — that's fine. No fix needed here.
-
----
-
-### 🟡 MEDIUM — Missing Fallbacks & UX Gaps
-
-#### Issue 10: `MyApplicationTab.tsx` — No Guard on `studentCase`
-**File:** `src/components/dashboard/MyApplicationTab.tsx` (L215)
-
-**Problem:** `studentCase.selected_city` is accessed directly. The component's own data-fetch logic could result in `studentCase` being null during loading. 
-
-**Fix:** Ensure `studentCase` guard is present before rendering the grid at L209. The file likely already has a guard earlier, but confirm the details grid renders only when `studentCase` is truthy.
-
-#### Issue 11: `InfluencerDashboardPage.tsx` — Compute on Potentially Empty Array
-**File:** `src/pages/InfluencerDashboardPage.tsx` (L91)
-
-**Problem:** `leads.filter(l => (l.eligibility_score ?? 0) >= 50)` — the array defaults to `[]` from `useState([])`, so this is actually safe. Not a crash risk.
+### 6. Update `src/pages/AdminDashboardPage.tsx`
+- Replace `fetchAllData` with `useDashboardData({ type: 'admin' })`
+- Extract all 13 state setters from `data` object
+- Keep `useRealtimeSubscription` calls pointing to `refetch`
+- The `renderContent()` switch and all tab components stay unchanged
 
 ---
 
-## Global Safety Net
+## Files to Create / Modify
 
-Add a global `unhandledrejection` event handler in `App.tsx` to catch any promise rejections that escape all the above fixes:
-
-```typescript
-useEffect(() => {
-  const handler = (event: PromiseRejectionEvent) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    event.preventDefault();
-  };
-  window.addEventListener('unhandledrejection', handler);
-  return () => window.removeEventListener('unhandledrejection', handler);
-}, []);
-```
-
----
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/pages/AdminDashboardPage.tsx` | Wrap all 13 queries in `safeQuery()`, log individual errors |
-| `src/components/influencer/EarningsPanel.tsx` | Wrap 4 queries in `safeQuery()`, add error logging |
-| `src/components/dashboard/RewardsPanel.tsx` | Wrap 5 queries in `safeQuery()`, add error logging |
-| `src/components/dashboard/ChecklistTracker.tsx` | Add error check + toast after each DB write, fix state order |
-| `src/components/admin/MajorsManagement.tsx` | Wrap 2 queries in `safeQuery()` |
-| `src/pages/InfluencerDashboardPage.tsx` | Wrap 2 queries in `safeQuery()` |
-| `src/pages/TeamDashboardPage.tsx` | Fix `log_user_activity` ordering + `null.toString()` bug |
-| `src/pages/StudentDashboardPage.tsx` | Fix profile re-fetch after `createUserProfile` |
-| `src/pages/ApplyPage.tsx` | Add `.catch()` to `validate_influencer_ref` call |
-| `src/components/admin/LeadsManagement.tsx` | Add `?? []` guard on `influencers` in `getInfluencerName` |
-| `src/App.tsx` | Add global `unhandledrejection` handler |
+| File | Action | Scope |
+|------|--------|-------|
+| `src/integrations/supabase/dataService.ts` | CREATE | New centralized fetch layer |
+| `src/hooks/useDashboardData.ts` | CREATE | New React hook wrapping dataService |
+| `src/components/dashboard/DashboardContainer.tsx` | CREATE | New reusable loading/error/empty UI |
+| `src/pages/InfluencerDashboardPage.tsx` | MODIFY | Replace data fetching, wrap in container |
+| `src/pages/TeamDashboardPage.tsx` | MODIFY | Replace fetchCases/fetchAppointments only |
+| `src/pages/AdminDashboardPage.tsx` | MODIFY | Replace fetchAllData with hook |
 
 ---
 
 ## Technical Details
 
-### The `safeQuery` Pattern
-A tiny helper that ensures each database query resolves (not rejects), returning `{ data: null, error }` on failure:
-
+### The `safeQuery` Helper (moved to dataService)
 ```typescript
-const safeQuery = <T>(promise: Promise<{ data: T | null; error: any }>) =>
-  promise.catch((err) => ({ data: null as T | null, error: err }));
+const safeQuery = <T>(p: Promise<{ data: T | null; error: any }>) =>
+  p.catch((err) => ({ data: null as T | null, error: err }));
 ```
 
-This is added inline in each `fetchData` function — no shared utility file needed, keeping changes self-contained.
-
-### Checklist Fix — Optimistic Update With Rollback
+### Return Shape from `useDashboardData`
 ```typescript
-const handleConfirm = async () => {
-  if (!confirmItem) return;
-  const { id: itemId, completed: currentlyCompleted } = confirmItem;
-  setConfirmItem(null); // Clear modal immediately for UX
-
-  // Optimistic UI update
-  const prevCompletions = completions;
-  
-  const existing = completions.find(c => c.checklist_item_id === itemId);
-  let dbError = null;
-  
-  if (existing) {
-    const { error } = await (supabase as any).from('student_checklist')
-      .update({ is_completed: !currentlyCompleted, ... }).eq('id', existing.id);
-    dbError = error;
-  } else {
-    const { error } = await (supabase as any).from('student_checklist')
-      .insert({ ... });
-    dbError = error;
-  }
-
-  if (dbError) {
-    toast({ variant: 'destructive', title: 'Error', description: dbError.message });
-    setCompletions(prevCompletions); // Rollback
-    return;
-  }
-  
-  await fetchData(); // Re-sync
-};
-```
-
-### TeamDashboard Fix — Correct Audit Log Ordering
-```typescript
-const { error } = await supabase.from('student_cases').update(finalData).eq('id', profileCase.id);
-setSavingProfile(false);
-setCompleteFileConfirm(false);
-
-if (error) {
-  toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-} else {
-  // Only log on success
-  await supabase.rpc('log_user_activity', { p_action: 'profile_completed', ... });
-  toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
-  // ... rest of success handling
+{
+  data: T | null,       // null until first load
+  error: string | null, // human-readable error
+  isLoading: boolean,
+  refetch: () => Promise<void>  // stable callback for realtime use
 }
 ```
 
-### StudentDashboard Fix — Profile Re-fetch
+### How Realtime Still Works
+The existing `useRealtimeSubscription` calls in each dashboard are kept. They just call `refetch` (from `useDashboardData`) instead of the inline `fetchData`. This means no change to realtime behavior.
+
+### TeamDashboardPage Strategy
+The team dashboard is 1084 lines. Only the top ~170 lines (data loading section) will be modified. Everything from `getLeadInfo` downward — the profile form, case cards, appointment modals, analytics — stays byte-for-byte identical. This is the safest approach given the complexity.
+
+### DashboardContainer Props
 ```typescript
-const fetchProfileSafely = async (userId: string) => {
-  // ... existing code ...
-  if (error?.code === 'PGRST116' || ...) {
-    await createUserProfile(userId);
-    // RE-FETCH after creation:
-    await fetchProfileSafely(userId); // Second call will hit the `if (data)` branch
-    return;
-  }
-  // ...
-};
+interface DashboardContainerProps {
+  isLoading: boolean;
+  error: string | null;
+  isEmpty?: boolean;
+  onRetry: () => void;
+  emptyMessage?: string;
+  children: React.ReactNode;
+}
 ```
-Note: A guard is needed to prevent infinite recursion — track a `isRetry` boolean parameter.
+
+---
+
+## What Does NOT Change
+- All existing UI markup and component layouts
+- All business logic (case transitions, profile form validation, checklist actions)
+- All RLS policies and database schema
+- All translation keys and i18n usage
+- Realtime subscription behavior
+- The `useRealtimeSubscription` hook itself
+
+---
+
+## Expected Outcome
+After implementation:
+1. One place to debug data fetching issues for any dashboard
+2. Consistent loading, error, and empty states across all 3 dashboards
+3. No duplicate `safeQuery` definitions across files
+4. Easier to add new data sources — just extend the dataService function
+5. All existing functionality preserved with zero regression risk
