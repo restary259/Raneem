@@ -92,14 +92,17 @@ const ApplyPage: React.FC = () => {
 
   const isValidPhone = (p: string) => {
     const cleaned = p.replace(/[\s\-()]/g, '');
-    return /^05\d{8}$/.test(cleaned) || /^\+9725\d{8}$/.test(cleaned);
+    // Accept Israeli format (05X) or international format (+XXX or 00XXX, 7-15 digits)
+    return /^05\d{8}$/.test(cleaned) ||
+      /^\+9725\d{8}$/.test(cleaned) ||
+      /^\+?\d{7,15}$/.test(cleaned);
   };
   const [phoneError, setPhoneError] = useState('');
 
   const handlePhoneChange = (val: string) => {
     setPhone(val);
     if (val.trim() && !isValidPhone(val)) {
-      setPhoneError(isAr ? 'رقم هاتف غير صالح (مثال: 0501234567)' : 'Invalid phone number (e.g. 0501234567)');
+      setPhoneError(isAr ? 'رقم هاتف غير صالح (مثال: 0501234567 أو +491234567890)' : 'Invalid phone number (e.g. 0501234567 or +491234567890)');
     } else {
       setPhoneError('');
     }
