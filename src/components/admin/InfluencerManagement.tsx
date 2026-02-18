@@ -29,9 +29,9 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
   const [role, setRole] = useState<'influencer' | 'lawyer'>(filterRole || 'influencer');
   const [commission, setCommission] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [createdPassword, setCreatedPassword] = useState('');
-  const [createdEmail, setCreatedEmail] = useState('');
-  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [createdPassword, setCreatedPassword] = useState(() => sessionStorage.getItem('darb_new_cred_pw') || '');
+  const [createdEmail, setCreatedEmail] = useState(() => sessionStorage.getItem('darb_new_cred_email') || '');
+  const [showCredentialsModal, setShowCredentialsModal] = useState(() => !!sessionStorage.getItem('darb_new_cred_pw'));
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
@@ -69,7 +69,9 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
         throw new Error('Account created but no temporary password was returned. Contact support.');
       }
 
-      // Store credentials, close form, open dedicated credentials modal
+      // Persist credentials in sessionStorage so they survive parent re-renders
+      sessionStorage.setItem('darb_new_cred_pw', result.temp_password);
+      sessionStorage.setItem('darb_new_cred_email', email);
       setCreatedPassword(result.temp_password);
       setCreatedEmail(email);
       setDialogOpen(false);
@@ -210,6 +212,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({ influencers
             <Button
               className="w-full"
               onClick={() => {
+                sessionStorage.removeItem('darb_new_cred_pw');
+                sessionStorage.removeItem('darb_new_cred_email');
                 setShowCredentialsModal(false);
                 setCreatedPassword('');
                 setCreatedEmail('');
