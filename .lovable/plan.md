@@ -1,218 +1,180 @@
 
-# Financial Reset + Soft Delete System
+# Fix: Temporary Password Not Displayed After Account Creation
 
-## What Is Actually Wrong (Root Cause Analysis)
+## Root Cause (Confirmed)
 
-The dashboard shows **3,000 NIS pending money** despite having no active users or cases. Here is exactly why:
+Three accounts were already created successfully (verified in database: `must_change_password: true` for all three). The password **was returned by the edge function** but was **never seen** in the UI due to a timing + state reset bug.
 
-The `rewards` table contains 2 orphaned rows from deleted test sessions:
-- `1,000 NIS` — linked to user `4e7dd70d` (profile deleted, user deleted)
-- `2,000 NIS` — linked to user `7a5ab2dd` (profile deleted, user deleted)
+### The Exact Bug Chain
 
-These rewards were created when test cases were paid, but when the cases and users were cleaned up, the rewards were not cleaned up. The `MoneyDashboard` calculates pending payouts by summing ALL rewards with `status='pending'` — it has no filter for whether the owning user still exists.
+1. Admin fills form → clicks "Create Account"
+2. `handleCreate()` runs → edge function called → succeeds, returns `temp_password`
+3. `setCreatedPassword(result.temp_password || 'sent')` is called — password is stored in state
+4. **`onRefresh()` is called immediately after** — this triggers parent to refetch all data
+5. The parent re-render causes the `InfluencerManagement` component to re-render
+6. React re-renders the Dialog, which may flash or reset depending on DOM reconciliation
+7. The admin may have briefly seen the green box, or it appeared and disappeared quickly on fast networks
 
-There are also **2 test leads** in the database with `status='assigned'` pointing to these deleted users.
+### Secondary Bug: Fallback to `'sent'`
 
-The current hard-delete logic in `LeadsManagement.handleDelete()` correctly cascades to cases, appointments, and commissions — but it **does not cancel related rewards**. This is the primary financial data integrity gap.
-
----
-
-## Plan of Action
-
-### Step 1: Clean the Database (Data Fix)
-
-Using the data insertion tool, cancel the 2 orphaned reward records so they stop contributing to the pending total:
-
-```sql
-UPDATE rewards SET status = 'cancelled' WHERE id IN (
-  'dc2caa65-8dce-4f9f-964c-9f9f37ba05c1',
-  '5bf41be2-a50f-4412-84a0-78b3a3c00d7c'
-);
-```
-
-Also delete the 2 test leads (hard delete is safe since there are no associated cases):
-```sql
-DELETE FROM leads WHERE id IN (
-  '0f14121e-929e-4637-ac7a-cc83b8f26538',
-  'b84a3a96-8e1b-45a5-9c87-1ea3223ea693'
-);
-```
-
-After this, the dashboard should show 0 across all metrics.
-
----
-
-### Step 2: Add Soft Delete to Leads and Cases (Schema Migration)
-
-Add `deleted_at` timestamp columns to `leads` and `student_cases`. This enables soft deletes — records are hidden from all queries but the data is preserved for audit purposes.
-
-**Migration SQL:**
-```sql
--- Add soft delete to leads
-ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
-
--- Add soft delete to student_cases  
-ALTER TABLE public.student_cases ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
-
--- Update RLS policies to exclude soft-deleted records
--- Leads: admin can manage all, but non-admin views exclude deleted
-DROP POLICY IF EXISTS "Admins can manage all leads" ON public.leads;
-CREATE POLICY "Admins can manage all leads" ON public.leads
-  FOR ALL TO authenticated USING (has_role(auth.uid(), 'admin'::app_role));
-
-DROP POLICY IF EXISTS "Influencers can view their leads" ON public.leads;
-CREATE POLICY "Influencers can view their leads" ON public.leads
-  FOR SELECT TO authenticated USING (
-    has_role(auth.uid(), 'influencer'::app_role)
-    AND source_id = auth.uid()
-    AND deleted_at IS NULL
-  );
-
-DROP POLICY IF EXISTS "Lawyers can view leads for assigned cases" ON public.leads;
-CREATE POLICY "Lawyers can view leads for assigned cases" ON public.leads
-  FOR SELECT TO authenticated USING (
-    has_role(auth.uid(), 'lawyer'::app_role)
-    AND id IN (SELECT get_lawyer_lead_ids(auth.uid()))
-    AND deleted_at IS NULL
-  );
-
--- student_cases: exclude deleted from non-admin views
-DROP POLICY IF EXISTS "Influencers can view cases for their leads" ON public.student_cases;
-CREATE POLICY "Influencers can view cases for their leads" ON public.student_cases
-  FOR SELECT TO authenticated USING (
-    has_role(auth.uid(), 'influencer'::app_role)
-    AND lead_id IN (SELECT get_influencer_lead_ids(auth.uid()))
-    AND deleted_at IS NULL
-  );
-
-DROP POLICY IF EXISTS "Lawyers can view assigned cases" ON public.student_cases;
-CREATE POLICY "Lawyers can view assigned cases" ON public.student_cases
-  FOR SELECT TO authenticated USING (
-    has_role(auth.uid(), 'lawyer'::app_role)
-    AND assigned_lawyer_id = auth.uid()
-    AND deleted_at IS NULL
-  );
-
-DROP POLICY IF EXISTS "Students can view own case" ON public.student_cases;
-CREATE POLICY "Students can view own case" ON public.student_cases
-  FOR SELECT TO authenticated USING (
-    student_profile_id = auth.uid()
-    AND deleted_at IS NULL
-  );
-```
-
----
-
-### Step 3: Fix the Delete Logic in `LeadsManagement.tsx`
-
-The current `handleDelete()` function does cascade hard deletes but **misses rewards cancellation**. Upgrade it to:
-
-1. Find all related cases for the lead
-2. Cancel any `pending` or `approved` rewards linked to those cases (via `admin_notes` or direct lookup)
-3. Soft-delete the cases by setting `deleted_at = NOW()`
-4. Soft-delete the lead by setting `deleted_at = NOW()`
-5. Call `onRefresh()` to trigger real-time recalculation
-
-**Updated delete handler:**
+On line 63:
 ```typescript
-const handleDelete = async () => {
-  if (!deleteId) return;
-  setLoading(true);
-  const now = new Date().toISOString();
+setCreatedPassword(result.temp_password || 'sent');
+```
 
-  // 1. Find related cases
-  const { data: relatedCases } = await supabase
-    .from('student_cases')
-    .select('id')
-    .eq('lead_id', deleteId);
+If `result.temp_password` were ever `undefined` (unlikely but possible), the green box shows "Account created successfully" but **hides the password** because of this check on line 145:
+```typescript
+{createdPassword !== 'sent' && (
+  // password display — completely hidden when fallback is 'sent'
+)}
+```
 
-  if (relatedCases?.length) {
-    const caseIds = relatedCases.map(c => c.id);
+### Third Issue: Invite Insert Can Fail Silently
 
-    // 2. Cancel rewards linked to these cases (via admin_notes pattern)
-    for (const caseId of caseIds) {
-      await supabase
-        .from('rewards')
-        .update({ status: 'cancelled' })
-        .like('admin_notes', `%${caseId}%`)
-        .in('status', ['pending', 'approved']);
+Line 56 inserts into `influencer_invites` before creating the account:
+```typescript
+await (supabase as any).from('influencer_invites').insert({...});
+```
+If this insert throws (e.g. duplicate email), the error is not caught — execution continues to the `fetch()` call. However the outer `try/catch` would catch it and show an error toast. But we observed accounts were created — so this isn't blocking here, just untidy.
+
+---
+
+## The Fix
+
+### Change 1: Show Password in a Persistent Modal (Not Inside Create Dialog)
+
+The most reliable fix is to separate the "password reveal" step from the creation dialog. After creation succeeds:
+- Close the creation form
+- Open a **second, dedicated modal** that shows only the credentials
+- This modal cannot be accidentally dismissed without the admin explicitly closing it
+- The admin must click "I've saved the password" to close it
+
+This guarantees the admin sees the password regardless of any re-render timing from `onRefresh()`.
+
+### Change 2: Remove the `'sent'` fallback — Always Require `temp_password`
+
+If the edge function returns no temp password, show an error toast instead of silently hiding it.
+
+### Change 3: Move `onRefresh()` After the Admin Dismisses the Password Modal
+
+The parent data refresh should happen after the admin closes the credentials modal, not immediately after creation — this eliminates the re-render race.
+
+---
+
+## Implementation Plan
+
+### File: `src/components/admin/InfluencerManagement.tsx`
+
+**Add new state variables:**
+```typescript
+const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+const [createdEmail, setCreatedEmail] = useState('');
+```
+
+**Refactor `handleCreate`:**
+```typescript
+const handleCreate = async () => {
+  if (!name || !email) return;
+  setIsCreating(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+
+    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email, full_name: name, role: filterRole || role, commission_amount: commission ? parseInt(commission) : 0 }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || 'Failed to create');
+
+    if (!result.temp_password) {
+      throw new Error('Account created but no temporary password was returned. Contact support.');
     }
 
-    // 3. Soft-delete the cases
-    await supabase
-      .from('student_cases')
-      .update({ deleted_at: now })
-      .eq('lead_id', deleteId);
-  }
+    // Store credentials and show dedicated modal
+    setCreatedPassword(result.temp_password);
+    setCreatedEmail(email);
+    setDialogOpen(false); // Close creation form
+    setShowCredentialsModal(true); // Open dedicated credentials modal
 
-  // 4. Soft-delete the lead
-  const { error } = await supabase
-    .from('leads')
-    .update({ deleted_at: now })
-    .eq('id', deleteId);
-
-  if (error) {
-    toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-  } else {
-    toast({ title: t('admin.leads.deleted') });
-    onRefresh();
+    // Reset form fields
+    setName(''); setEmail(''); setCommission(''); setRole(filterRole || 'influencer');
+    // NOTE: onRefresh() is called when admin dismisses the credentials modal
+  } catch (err: any) {
+    toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+  } finally {
+    setIsCreating(false);
   }
-  setLoading(false);
-  setDeleteId(null);
 };
 ```
 
----
-
-### Step 4: Filter Deleted Records from All Dashboard Queries
-
-Update `dataService.ts` to exclude soft-deleted records from all admin queries:
-
-```typescript
-// In getAdminDashboard():
-safeQuery((supabase as any).from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false })),
-safeQuery((supabase as any).from('student_cases').select('*').is('deleted_at', null).order('created_at', { ascending: false })),
+**Add credentials modal (after closing creation dialog):**
+```tsx
+<Dialog open={showCredentialsModal} onOpenChange={() => {}}>
+  <DialogContent onPointerDownOutside={e => e.preventDefault()}>
+    <DialogHeader>
+      <DialogTitle>✅ Account Created — Save These Credentials</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Share these credentials with the new member. They will be required to change their password on first login.
+      </p>
+      <div className="space-y-3">
+        <div>
+          <Label>Email</Label>
+          <div className="flex items-center gap-2 mt-1">
+            <code className="flex-1 text-sm bg-muted border rounded px-3 py-2">{createdEmail}</code>
+            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(createdEmail); }}>
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        <div>
+          <Label>Temporary Password</Label>
+          <div className="flex items-center gap-2 mt-1">
+            <code className="flex-1 text-sm bg-muted border rounded px-3 py-2 font-bold tracking-wider">{createdPassword}</code>
+            <Button size="sm" variant="outline" onClick={copyPassword}>
+              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="bg-amber-50 border border-amber-200 rounded p-3">
+        <p className="text-xs text-amber-800 font-medium">
+          ⚠️ This password will NOT be shown again. Please copy it now and send it securely to the new member.
+        </p>
+      </div>
+      <Button
+        className="w-full"
+        onClick={() => {
+          setShowCredentialsModal(false);
+          setCreatedPassword('');
+          setCreatedEmail('');
+          onRefresh(); // Refresh AFTER admin confirms they saw the password
+        }}
+      >
+        I've Saved the Credentials — Close
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
 ```
 
----
-
-### Step 5: Fix `MoneyDashboard` — Exclude Cancelled Rewards from Pending Total
-
-The `pendingPayouts` KPI currently sums ALL rewards with `status='pending'` or `status='approved'`. It must exclude `cancelled` rewards (which it already does by filtering for those statuses), but also the underlying data must be clean (fixed in Step 1).
-
-Also update `MoneyDashboard` to only count cases where `deleted_at IS NULL` — since cases are passed in from `dataService`, this is automatically handled once Step 4 is done. No code change needed in `MoneyDashboard` itself beyond passing clean data.
+**Remove the inline password display from within the creation dialog** (lines 138–157) — it's replaced by the dedicated modal above.
 
 ---
 
-### Step 6: Update `LeadsManagement` Filter to Exclude Soft-Deleted Leads
+## What Changes
 
-Since the admin can see deleted records (per RLS admin policy), the frontend filter must explicitly exclude them from the displayed list:
-
-```typescript
-const filtered = leads.filter(l => {
-  if (l.deleted_at) return false; // Exclude soft-deleted
-  const matchSearch = ...
-  ...
-});
-```
-
----
-
-## Summary of Changes
-
-| Area | What Changes | Why |
+| What | Before | After |
 |---|---|---|
-| Database (data) | Cancel 2 orphaned reward rows, delete 2 test leads | Immediate fix for 3,000 NIS ghost value |
-| Database (schema migration) | Add `deleted_at` to `leads` and `student_cases`, update RLS policies | Enable soft delete |
-| `dataService.ts` | Add `.is('deleted_at', null)` filters to leads and cases queries | Exclude soft-deleted from all dashboards |
-| `LeadsManagement.tsx` | Upgrade `handleDelete` to soft-delete + cancel rewards | Prevent future orphaned financial data |
-| `LeadsManagement.tsx` | Add `deleted_at` check in frontend filter | Hide soft-deleted from admin list view |
+| Password display location | Inside creation dialog (races with re-render) | Dedicated locked modal that cannot be dismissed accidentally |
+| `onRefresh()` timing | Called immediately after creation | Called only when admin dismisses credentials modal |
+| Password fallback | Falls back to `'sent'` which hides the password | Throws an error toast — admin knows something is wrong |
+| Dialog close behavior | `onOpenChange` can close and reset state | Creation dialog closes cleanly before credentials modal opens |
+| Invite pre-insert | Before account creation (silently fails) | Removed from frontend — the edge function handles this internally |
 
-## Expected Result After Fix
+## Files Changed
 
-- Pending money: **0 NIS**
-- Revenue: **0 NIS**
-- Active leads: **0**
-- Active cases: **0**
-- All financial numbers dynamically derived from live, non-deleted data
-- Future lead/case deletions will automatically zero-out their financial contributions
+- `src/components/admin/InfluencerManagement.tsx` — Refactor create flow + add credentials reveal modal
