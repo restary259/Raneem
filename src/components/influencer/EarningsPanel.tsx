@@ -31,6 +31,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   const [bankNameInput, setBankNameInput] = useState('');
   const [branchInput, setBranchInput] = useState('');
   const [accountNumberInput, setAccountNumberInput] = useState('');
+  const [ibanInput, setIbanInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const isAr = i18n.language === 'ar';
@@ -72,6 +73,22 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   });
   const availableAmount = eligibleRewards.reduce((s, r) => s + Number(r.amount || 0), 0);
 
+  // MOD-97 IBAN checksum validation (full RFC 3166 / ISO 13616)
+  const validateIBAN = (raw: string): boolean => {
+    const iban = raw.replace(/\s/g, '').toUpperCase();
+    if (iban.length < 15 || iban.length > 34) return false;
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) return false;
+    const rearranged = iban.slice(4) + iban.slice(0, 4);
+    const numStr = rearranged.split('').map(c =>
+      c >= 'A' ? String(c.charCodeAt(0) - 55) : c
+    ).join('');
+    let remainder = 0;
+    for (const digit of numStr) {
+      remainder = (remainder * 10 + parseInt(digit, 10)) % 97;
+    }
+    return remainder === 1;
+  };
+
   // Israeli bank validation: bank name + branch + account number
   const hasBankDetails = profile?.bank_name && profile?.bank_branch && profile?.bank_account_number && profile?.iban_confirmed_at;
   const canRequest = availableAmount >= minThreshold && hasBankDetails;
@@ -89,13 +106,21 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       toast({ variant: 'destructive', title: isAr ? 'رقم حساب غير صالح' : 'Invalid account number (4-12 digits)' });
       return;
     }
+    // IBAN is optional but if provided must pass MOD-97 checksum
+    if (ibanInput.trim() && !validateIBAN(ibanInput.trim())) {
+      toast({ variant: 'destructive', title: isAr ? 'رقم IBAN غير صالح' : 'Invalid IBAN — please check the number and try again' });
+      return;
+    }
 
-    const { error } = await (supabase as any).from('profiles').update({
+    const updatePayload: any = {
       bank_name: bankNameInput.trim(),
       bank_branch: branchInput.trim(),
       bank_account_number: accountNumberInput.trim(),
       iban_confirmed_at: new Date().toISOString(),
-    }).eq('id', userId);
+    };
+    if (ibanInput.trim()) updatePayload.iban = ibanInput.trim().replace(/\s/g, '').toUpperCase();
+
+    const { error } = await (supabase as any).from('profiles').update(updatePayload).eq('id', userId);
 
     if (error) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
@@ -111,11 +136,13 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       setBankNameInput(profile?.bank_name || '');
       setBranchInput(profile?.bank_branch || '');
       setAccountNumberInput(profile?.bank_account_number || '');
+      setIbanInput(profile?.iban || '');
       setShowBankModal(true);
       return;
     }
     setShowRequestModal(true);
   };
+
 
   const submitPayoutRequest = async () => {
     if (!canRequest || submitting) return;
@@ -190,7 +217,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
           <div className="flex-1">
             <p className="text-sm font-medium">{isAr ? 'يرجى إضافة بيانات الحساب البنكي الإسرائيلي لطلب الدفع' : 'Add your Israeli bank account details to request payouts'}</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setShowBankModal(true); }}>
+          <Button size="sm" variant="outline" onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setIbanInput(profile?.iban || ''); setShowBankModal(true); }}>
             <CreditCard className="h-4 w-4 me-1" />{isAr ? 'إضافة' : 'Add'}
           </Button>
         </div>
@@ -303,6 +330,11 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
             <div>
               <Label>{isAr ? 'رقم الحساب' : 'Account Number'}</Label>
               <Input value={accountNumberInput} onChange={e => setAccountNumberInput(e.target.value)} placeholder={isAr ? 'مثال: 123456' : 'e.g. 123456'} dir="ltr" className="mt-1 font-mono" maxLength={12} />
+            </div>
+            <div>
+              <Label>{isAr ? 'رقم IBAN (اختياري)' : 'IBAN (optional)'}</Label>
+              <Input value={ibanInput} onChange={e => setIbanInput(e.target.value.toUpperCase())} placeholder="IL620108000000099999999" dir="ltr" className="mt-1 font-mono" maxLength={34} />
+              <p className="text-xs text-muted-foreground mt-1">{isAr ? 'سيتم التحقق من صحة الرقم تلقائياً' : 'Checksum will be validated automatically'}</p>
             </div>
           </div>
           <DialogFooter>
