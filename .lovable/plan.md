@@ -1,86 +1,138 @@
 
-# Fix: Admin Dashboard Crash — "p.catch is not a function"
+# Fix: Admin Dashboard Flickering (AbortError Race Condition)
 
-## Root Cause (Confirmed)
+## Confirmed Root Causes
 
-The `safeQuery` helper in `src/integrations/supabase/dataService.ts` is defined as:
+There are three compounding bugs causing the flicker loop on desktop:
 
-```typescript
-const safeQuery = (p: Promise<any>): Promise<{ data: any; error: any }> =>
-  p.catch((err) => ({ data: null, error: err }));
-```
+### Bug 1: Unstable `onError` callback recreates `refetch` on every render (PRIMARY)
 
-This calls `.catch()` directly on the argument. The Supabase JS client's query builder returns a **PostgrestFilterBuilder** — a thenable object, not a native `Promise`. When you pass it directly to `safeQuery`, the `.catch()` call fails because it's not a real Promise method on that object.
-
-The fix is to `await` each query builder inside `safeQuery` so it becomes a real resolved/rejected Promise first. The correct pattern is:
+In `AdminDashboardPage.tsx`, the `onError` prop passed to `useDashboardData` is an **inline arrow function**:
 
 ```typescript
-const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
-  try {
-    const result = await p;
-    return { data: result.data, error: result.error };
-  } catch (err) {
-    return { data: null, error: err };
-  }
-};
+onError: (err) => toast({ variant: 'destructive', title: 'خطأ في التحميل', description: err }),
 ```
 
-This works with every Supabase query builder chain because `await` forces the thenable to resolve.
+Every time the component re-renders, a new function reference is created. Inside `useDashboardData`, `refetch` is a `useCallback` that depends on `onError`. So:
 
-## Secondary Issue: Admin Dashboard Never Sets authReady Properly
-
-Looking at `AdminDashboardPage.tsx` line 29-57, the `init()` function calls:
-
-```typescript
-setIsAdmin(true);
-setAuthReady(true);
+```
+new render → new onError ref → new refetch ref → useEffect([refetch]) fires → new fetch starts → previous fetch gets ABORTED → AbortError → component updates → new render → loop
 ```
 
-Only AFTER the edge function responds. If the edge function call fails with a network error (the `catch` block), it navigates away — this is fine. But `useDashboardData` is mounted with `enabled: authReady` immediately. Since `authReady` starts `false`, the data hook won't fire until `authReady` becomes `true`. That part is correct.
+This is exactly what the console shows: every single query firing `AbortError: signal is aborted without reason` repeatedly.
 
-The **crash** is entirely in `safeQuery`. Fixing it will restore the admin dashboard.
+### Bug 2: No concurrent fetch guard in `useDashboardData`
 
-## Verification of Other Dashboards
+When `refetch` is recreated mid-fetch, the new call starts a fresh `Promise.all` in `getAdminDashboard()` while the old one is still running. Supabase internally aborts the stalled requests, producing the flood of AbortErrors.
 
-- **Team dashboard** (`getTeamDashboard`): Same `safeQuery` calls — will also crash for team members trying to log in.
-- **Influencer dashboard** (`getInfluencerDashboard`): Same pattern — will also crash.
-- All three dashboards share the broken `safeQuery`.
+### Bug 3: React StrictMode double-execution
+
+In development, React 18 StrictMode runs every `useEffect` twice. Without a `useRef` guard, the initial fetch fires twice even before the auth race begins.
+
+---
 
 ## What Changes
 
-### 1. Fix `safeQuery` in `src/integrations/supabase/dataService.ts`
+### 1. `src/hooks/useDashboardData.ts`
 
-Replace the one-liner `.catch()` approach with an `async/try/catch` wrapper that properly awaits the Supabase query builder:
+- Store `onError` in a `useRef` so changes to the callback reference **do not** recreate `refetch`. The ref always points to the latest version of the callback without being a dependency.
+- Add an `isFetchingRef` guard so concurrent calls to `refetch` are skipped if one is already running — this eliminates the AbortError flood.
 
 ```typescript
-// BEFORE (broken):
-const safeQuery = (p: Promise<any>): Promise<{ data: any; error: any }> =>
-  p.catch((err) => ({ data: null, error: err }));
+// Store callback in ref — changes to it don't recreate refetch
+const onErrorRef = useRef(onError);
+useEffect(() => { onErrorRef.current = onError; });
 
-// AFTER (correct):
+// Guard against concurrent fetches
+const isFetchingRef = useRef(false);
+
+const refetch = useCallback(async () => {
+  if (!enabled) return;
+  if (isFetchingRef.current) return; // already in-flight, skip
+  isFetchingRef.current = true;
+  setIsLoading(true);
+  // ... fetch logic using onErrorRef.current instead of onError
+  isFetchingRef.current = false;
+  setIsLoading(false);
+}, [type, userId, enabled]); // onError no longer in deps
+```
+
+### 2. `src/pages/AdminDashboardPage.tsx`
+
+- Add a stable `sessionReady` state that only becomes `true` once auth is fully resolved. This replaces the combined `authReady && isAdmin` check.
+- Add a `hasFetchedRef` to prevent double execution under React StrictMode.
+- Keep the `onError` callback stable using `useCallback` so it doesn't recreate `refetch`.
+- Show a single, stable loading screen until `sessionReady` is true — no more flicker between "checking permissions" and "loading data" states.
+
+```typescript
+const [sessionReady, setSessionReady] = useState(false);
+const hasFetchedRef = useRef(false);
+
+const onError = useCallback((err: string) => {
+  toast({ variant: 'destructive', title: 'خطأ في التحميل', description: err });
+}, [toast]);
+
+useEffect(() => {
+  if (hasFetchedRef.current) return;
+  hasFetchedRef.current = true;
+
+  const init = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { navigate('/student-auth'); return; }
+    setUser(session.user);
+    // ... admin-verify call ...
+    setIsAdmin(true);
+    setSessionReady(true); // only now is it safe to fetch data
+  };
+  init();
+}, []); // empty deps — runs once, protected by ref
+
+// useDashboardData is gated on sessionReady
+const { data, error, isLoading, refetch } = useDashboardData({
+  type: 'admin',
+  enabled: sessionReady,
+  onError,
+});
+
+// Single loading gate — show spinner until fully ready
+if (!sessionReady) return <FullScreenLoader message="جاري التحقق من الصلاحيات…" />;
+```
+
+### 3. `src/integrations/supabase/dataService.ts`
+
+- Silently ignore `AbortError` (treat as a no-op, not a real failure). If the request was aborted because a component unmounted or a newer fetch started, there is nothing to display — logging it as an error and propagating it causes unnecessary toasts and re-renders.
+
+```typescript
 const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
   try {
     const result = await p;
     return { data: result.data ?? null, error: result.error ?? null };
-  } catch (err) {
+  } catch (err: any) {
+    // Silently ignore aborted requests — not a real error
+    if (err?.name === 'AbortError') return { data: null, error: null };
     return { data: null, error: err };
   }
 };
 ```
 
-This is the **only change needed**. All existing calls to `safeQuery(...)` throughout the file are already passing Supabase query builder chains — they just need to be properly awaited instead of having `.catch()` called on them.
+---
 
-## What Does NOT Change
+## Files Changed
 
-- No database migrations
-- No RLS policy changes
-- No other files — the fix is contained entirely within the `safeQuery` helper
-- All existing query logic, column selectors, and data transformations remain the same
+| File | What Changes |
+|---|---|
+| `src/hooks/useDashboardData.ts` | Store `onError` in ref, add `isFetchingRef` concurrent guard |
+| `src/pages/AdminDashboardPage.tsx` | Add `sessionReady` state, `hasFetchedRef`, memoize `onError` with `useCallback` |
+| `src/integrations/supabase/dataService.ts` | Silently swallow `AbortError` in `safeQuery` |
+
+---
 
 ## Expected Outcome
 
-1. Admin dashboard loads without the `p.catch is not a function` crash
-2. Team dashboard loads correctly for lawyers
-3. Influencer dashboard loads correctly for influencers
-4. All real-time subscriptions continue to work (they call `refetch` which calls `safeQuery` again after the fix)
-5. No regressions — the `safeQuery` signature change is fully backward-compatible since all callers pass Supabase query builders
+After this fix:
+- ONE session fetch on login
+- ONE dashboard data fetch, no repeats
+- No AbortErrors in console
+- No spinner flicker — stable loading screen until auth + data are both ready
+- StrictMode safe in development
+- Real-time subscriptions continue to work correctly (they call `refetch` which now has a concurrency guard)
