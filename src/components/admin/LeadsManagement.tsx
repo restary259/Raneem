@@ -573,7 +573,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       <Dialog open={!!assignModal} onOpenChange={() => setAssignModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{t('admin.leads.assignTeamMemberTitle', { name: assignModal?.leadName })}</DialogTitle></DialogHeader>
-          {lawyers.length === 0 && influencers.length === 0 ? (
+          {lawyers.length === 0 ? (
             <div className="py-6 text-center space-y-2">
               <Users className="h-8 w-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{t('admin.leads.noTeamMembers', { defaultValue: 'No team members found. Add team members first from the Team tab.' })}</p>
@@ -583,8 +583,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               <Select value={selectedLawyer} onValueChange={setSelectedLawyer}>
                 <SelectTrigger><SelectValue placeholder={t('admin.leads.selectTeamMember')} /></SelectTrigger>
                 <SelectContent>
-                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name} <span className="text-muted-foreground text-xs ms-1">({t('admin.tabs.teamMembers', 'Team')})</span></SelectItem>)}
-                  {influencers.map(i => <SelectItem key={i.id} value={i.id}>{i.full_name} <span className="text-muted-foreground text-xs ms-1">({t('admin.tabs.influencers', 'Agent')})</span></SelectItem>)}
+                  {lawyers.map(l => <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <DialogFooter>

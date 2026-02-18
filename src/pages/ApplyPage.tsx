@@ -160,6 +160,10 @@ const ApplyPage: React.FC = () => {
       }
 
       setSubmitted(true);
+      // Auto-open WhatsApp community after short delay
+      setTimeout(() => {
+        window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
+      }, 1500);
     } catch {
       toast({ title: t('apply.error', 'حدث خطأ، حاول مرة أخرى'), variant: 'destructive' });
     } finally {
@@ -199,8 +203,13 @@ const ApplyPage: React.FC = () => {
                 </p>
               )}
               <div className="flex flex-col gap-3">
+                <a href="https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white text-base font-semibold">
+                    💬 {isAr ? 'انضم لمجموعة واتساب' : 'Join WhatsApp Group'}
+                  </Button>
+                </a>
                 <a href="/">
-                  <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold">
+                  <Button variant="outline" className="w-full h-12 rounded-xl text-base font-semibold">
                     {t('apply.exploreWebsite', 'تصفّح موقعنا')}
                   </Button>
                 </a>
