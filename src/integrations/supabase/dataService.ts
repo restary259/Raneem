@@ -11,7 +11,9 @@ const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
   try {
     const result = await p;
     return { data: result.data ?? null, error: result.error ?? null };
-  } catch (err) {
+  } catch (err: any) {
+    // AbortError = request cancelled due to unmount or newer fetch — not a real error
+    if (err?.name === 'AbortError') return { data: null, error: null };
     return { data: null, error: err };
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getInfluencerDashboard,
   getTeamDashboard,
@@ -39,9 +39,20 @@ export function useDashboardData<T extends DashboardType>({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Store onError in a ref so changing the callback never recreates refetch
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; });
+
+  // Guard against concurrent in-flight fetches (prevents AbortError loops)
+  const isFetchingRef = useRef(false);
+
   const refetch = useCallback(async () => {
     if (!enabled) return;
     if ((type === 'influencer' || type === 'team') && !userId) return;
+
+    // Skip if already fetching — prevents the AbortError cascade
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
     setIsLoading(true);
     setError(null);
@@ -59,18 +70,25 @@ export function useDashboardData<T extends DashboardType>({
 
       if (result.error) {
         setError(result.error);
-        onError?.(result.error);
+        onErrorRef.current?.(result.error);
       } else {
         setData(result.data as DataForType<T>);
       }
     } catch (err: any) {
+      // AbortError means the component unmounted or a newer fetch took over — not a real error
+      if (err?.name === 'AbortError') {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+        return;
+      }
       const msg = err?.message ?? 'Unexpected error loading dashboard';
       setError(msg);
-      onError?.(msg);
+      onErrorRef.current?.(msg);
     } finally {
+      isFetchingRef.current = false;
       setIsLoading(false);
     }
-  }, [type, userId, enabled, onError]);
+  }, [type, userId, enabled]); // onError intentionally omitted — stored in ref
 
   useEffect(() => {
     refetch();

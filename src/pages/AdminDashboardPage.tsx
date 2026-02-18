@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -21,12 +21,19 @@ import PullToRefresh from '@/components/common/PullToRefresh';
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authReady, setAuthReady] = useState(false);
+  // sessionReady = auth fully resolved + role verified → safe to fetch data
+  const [sessionReady, setSessionReady] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Prevent double execution under React 18 StrictMode
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate('/student-auth'); return; }
@@ -51,16 +58,23 @@ const AdminDashboardPage = () => {
       }
 
       setIsAdmin(true);
-      setAuthReady(true);
+      // Only after full auth + role verification do we allow data fetching
+      setSessionReady(true);
     };
-    init();
-  }, [navigate, toast]);
 
-  // Centralised data layer
+    init();
+  }, []); // empty deps — runs once, protected by hasFetchedRef
+
+  // Stable onError — useCallback prevents recreating refetch on every render
+  const onError = useCallback((err: string) => {
+    toast({ variant: 'destructive', title: 'خطأ في التحميل', description: err });
+  }, [toast]);
+
+  // Centralised data layer — gated on sessionReady to prevent premature fetches
   const { data, error, isLoading, refetch } = useDashboardData({
     type: 'admin',
-    enabled: authReady,
-    onError: (err) => toast({ variant: 'destructive', title: 'خطأ في التحميل', description: err }),
+    enabled: sessionReady,
+    onError,
   });
 
   // Safe extractions
@@ -77,7 +91,7 @@ const AdminDashboardPage = () => {
   const auditLogs = data?.auditLogs ?? [];
   const loginAttempts = data?.loginAttempts ?? [];
 
-  // Real-time subscriptions
+  // Real-time subscriptions — only active once session is ready
   useRealtimeSubscription('leads', refetch, isAdmin);
   useRealtimeSubscription('student_cases', refetch, isAdmin);
   useRealtimeSubscription('commissions', refetch, isAdmin);
@@ -85,7 +99,8 @@ const AdminDashboardPage = () => {
   useRealtimeSubscription('payout_requests', refetch, isAdmin);
   useRealtimeSubscription('profiles', refetch, isAdmin);
 
-  if (!authReady && !isAdmin) return (
+  // Single stable loading gate — no flicker between auth and data loading states
+  if (!sessionReady) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-3">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
@@ -193,4 +208,3 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
-
