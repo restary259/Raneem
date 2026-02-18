@@ -7,8 +7,14 @@ import { supabase } from './client';
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
-const safeQuery = (p: Promise<any>): Promise<{ data: any; error: any }> =>
-  p.catch((err) => ({ data: null, error: err }));
+const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
+  try {
+    const result = await p;
+    return { data: result.data ?? null, error: result.error ?? null };
+  } catch (err) {
+    return { data: null, error: err };
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Influencer Dashboard
