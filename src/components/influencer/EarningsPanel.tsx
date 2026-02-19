@@ -3,12 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Clock, CheckCircle, Send, XCircle, CreditCard, AlertTriangle, MessageCircle } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, XCircle, CreditCard, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -16,6 +15,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 interface EarningsPanelProps { userId: string; role?: 'influencer' | 'lawyer'; }
 
 const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+const LOCK_DAYS = 20;
 
 const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influencer' }) => {
   const { toast } = useToast();
@@ -24,9 +24,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   const [rewards, setRewards] = useState<any[]>([]);
   const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
   const [minThreshold, setMinThreshold] = useState(100);
-  const [showRequestModal, setShowRequestModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
-  const [requestNotes, setRequestNotes] = useState('');
   const [profile, setProfile] = useState<any>(null);
   const [bankNameInput, setBankNameInput] = useState('');
   const [branchInput, setBranchInput] = useState('');
@@ -35,8 +33,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   const [submitting, setSubmitting] = useState(false);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
   const isAr = i18n.language === 'ar';
-
-  const LOCK_DAYS = 20;
 
   const safeQuery = async (queryBuilder: any): Promise<{ data: any; error: any }> => {
     try {
@@ -52,7 +48,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       safeQuery((supabase as any).from('rewards').select('*').eq('user_id', userId).order('created_at', { ascending: false })),
       safeQuery((supabase as any).from('payout_requests').select('*').eq('requestor_id', userId).order('requested_at', { ascending: false })),
       safeQuery((supabase as any).from('eligibility_config').select('weight').eq('field_name', 'min_payout_threshold').single()),
-      safeQuery((supabase as any).from('profiles').select('iban, bank_name, iban_confirmed_at, bank_branch, bank_account_number').eq('id', userId).single()),
+      safeQuery((supabase as any).from('profiles').select('full_name, iban, bank_name, iban_confirmed_at, bank_branch, bank_account_number').eq('id', userId).single()),
     ]);
     if (rewardsRes.error) console.error('Rewards fetch failed:', rewardsRes.error);
     if (rewardsRes.data) setRewards(rewardsRes.data);
@@ -64,7 +60,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Real-time subscriptions for instant updates
   useRealtimeSubscription('rewards', fetchData, true);
   useRealtimeSubscription('payout_requests', fetchData, true);
 
@@ -80,7 +75,9 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   });
   const availableAmount = eligibleRewards.reduce((s, r) => s + Number(r.amount || 0), 0);
 
-  // MOD-97 IBAN checksum validation (full RFC 3166 / ISO 13616)
+  const hasBankDetails = profile?.bank_name && profile?.bank_branch && profile?.bank_account_number && profile?.iban_confirmed_at;
+
+  // MOD-97 IBAN checksum validation
   const validateIBAN = (raw: string): boolean => {
     const iban = raw.replace(/\s/g, '').toUpperCase();
     if (iban.length < 15 || iban.length > 34) return false;
@@ -96,10 +93,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
     return remainder === 1;
   };
 
-  // Israeli bank validation: bank name + branch + account number
-  const hasBankDetails = profile?.bank_name && profile?.bank_branch && profile?.bank_account_number && profile?.iban_confirmed_at;
-  const canRequest = availableAmount >= minThreshold && hasBankDetails;
-
   const saveBankDetails = async () => {
     if (!bankNameInput.trim()) {
       toast({ variant: 'destructive', title: isAr ? 'يرجى إدخال اسم البنك' : 'Please enter bank name' });
@@ -113,7 +106,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       toast({ variant: 'destructive', title: isAr ? 'رقم حساب غير صالح' : 'Invalid account number (4-12 digits)' });
       return;
     }
-    // IBAN is optional but if provided must pass MOD-97 checksum
     if (ibanInput.trim() && !validateIBAN(ibanInput.trim())) {
       toast({ variant: 'destructive', title: isAr ? 'رقم IBAN غير صالح' : 'Invalid IBAN — please check the number and try again' });
       return;
@@ -138,24 +130,12 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
     }
   };
 
-  const handleRequestPayout = () => {
-    if (!hasBankDetails) {
-      setBankNameInput(profile?.bank_name || '');
-      setBranchInput(profile?.bank_branch || '');
-      setAccountNumberInput(profile?.bank_account_number || '');
-      setIbanInput(profile?.iban || '');
-      setShowBankModal(true);
-      return;
-    }
-    setShowRequestModal(true);
-  };
-
-
-  const submitPayoutRequest = async () => {
-    if (!canRequest || submitting) return;
+  const handleWhatsAppRequest = async () => {
+    if (eligibleRewards.length === 0 || availableAmount < minThreshold || submitting) return;
     setSubmitting(true);
+
     try {
-      // Gather student names from referrals for display
+      // Gather student names for the RPC record
       const referralIds = eligibleRewards.map(r => r.referral_id).filter(Boolean);
       let studentNames: string[] = [];
       if (referralIds.length > 0) {
@@ -163,12 +143,16 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         if (data) studentNames = data.map((r: any) => r.referred_name);
       }
 
-      // Call server-side RPC — validates ownership, pending status, 20-day lock, and no duplicate requests atomically
-      const { data: newId, error: rpcError } = await (supabase as any).rpc('request_payout', {
+      // Silent RPC call — creates admin-side payout request for tracking
+      const paymentMethod = hasBankDetails
+        ? `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`
+        : 'Via WhatsApp';
+
+      const { error: rpcError } = await (supabase as any).rpc('request_payout', {
         p_reward_ids: eligibleRewards.map(r => r.id),
         p_amount: availableAmount,
-        p_notes: requestNotes || null,
-        p_payment_method: `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`,
+        p_notes: 'Requested via WhatsApp',
+        p_payment_method: paymentMethod,
         p_requestor_role: role,
         p_student_names: studentNames,
       });
@@ -178,12 +162,19 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         return;
       }
 
-      toast({ title: t('influencer.earnings.payoutSuccess', 'Payout request submitted!') });
-      setShowRequestModal(false);
-      setRequestNotes('');
+      // Build pre-filled WhatsApp message
+      const userName = profile?.full_name || (isAr ? 'المستخدم' : 'User');
+      const msgAr = `طلب سحب رصيد | Payout Request\nالاسم: ${userName}\nالمبلغ المستحق: ${availableAmount.toLocaleString()} ₪\nعدد الطلاب: ${eligibleRewards.length}`;
+      const msgEn = `Payout Request\nName: ${userName}\nAmount: ${availableAmount.toLocaleString()} ₪\nStudents: ${eligibleRewards.length}`;
+      const message = isAr ? msgAr : msgEn;
+      const waUrl = `https://wa.me/message/IVC4VCAEJ6TBD1?text=${encodeURIComponent(message)}`;
+
       fetchData();
-      const win = window.open(WHATSAPP_URL, '_blank');
-      if (!win || win.closed) window.location.href = WHATSAPP_URL;
+
+      const win = window.open(waUrl, '_blank');
+      if (!win || win.closed) window.location.href = waUrl;
+
+      toast({ title: isAr ? 'تم إرسال الطلب!' : 'Request submitted!' });
     } finally {
       setSubmitting(false);
     }
@@ -204,6 +195,10 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   const statusColor = (s: string) => s === 'paid' ? 'default' : s === 'rejected' ? 'destructive' : 'secondary';
 
+  // Button eligibility
+  const isReady = eligibleRewards.length > 0 && availableAmount >= minThreshold;
+  const hasPendingRequest = payoutRequests.some(p => p.status === 'pending');
+
   return (
     <div className="space-y-6">
       {/* KPI Strip */}
@@ -217,17 +212,17 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
           <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString()} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-[hsl(var(--primary))]"><CheckCircle className="h-6 w-6 text-white" /></div>
+          <div className="p-3 rounded-xl bg-primary"><CheckCircle className="h-6 w-6 text-primary-foreground" /></div>
           <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString()} ₪</p></div>
         </CardContent></Card>
       </div>
 
-      {/* Bank Details Status Banner */}
+      {/* Optional bank details banner (soft, not a blocker) */}
       {!hasBankDetails && (
         <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium">{isAr ? 'يرجى إضافة بيانات الحساب البنكي الإسرائيلي لطلب الدفع' : 'Add your Israeli bank account details to request payouts'}</p>
+            <p className="text-sm font-medium">{isAr ? 'أضف بيانات حسابك البنكي لتسريع عملية الدفع (اختياري)' : 'Add your bank account details to speed up payment (optional)'}</p>
           </div>
           <Button size="sm" variant="outline" onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setIbanInput(profile?.iban || ''); setShowBankModal(true); }}>
             <CreditCard className="h-4 w-4 me-1" />{isAr ? 'إضافة' : 'Add'}
@@ -235,24 +230,44 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         </div>
       )}
 
-      {/* Action Buttons: Request Payout + WhatsApp Contact */}
+      {/* Primary action: Request via WhatsApp */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={handleRequestPayout} disabled={availableAmount < minThreshold} className="w-full sm:w-auto">
-          <Send className="h-4 w-4 me-2" />{t('influencer.earnings.requestPayout')}
-        </Button>
         <Button
-          variant="outline"
-          className="w-full sm:w-auto border-green-500 text-green-700 hover:bg-green-50"
-          onClick={() => { const win = window.open(WHATSAPP_URL, '_blank'); if (!win || win.closed) window.location.href = WHATSAPP_URL; }}
+          onClick={handleWhatsAppRequest}
+          disabled={!isReady || submitting || hasPendingRequest}
+          className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white border-0"
         >
-          <MessageCircle className="h-4 w-4 me-2" />{isAr ? 'تواصل عبر واتساب' : 'Contact via WhatsApp'}
+          <MessageCircle className="h-4 w-4 me-2" />
+          {submitting
+            ? (isAr ? 'جارٍ الإرسال...' : 'Sending...')
+            : (isAr ? 'طلب سحب عبر واتساب' : 'Request Payout via WhatsApp')}
         </Button>
-        {availableAmount > 0 && availableAmount < minThreshold && (
+
+        {/* Optional: add/edit bank details when already saved */}
+        {hasBankDetails && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setIbanInput(profile?.iban || ''); setShowBankModal(true); }}
+          >
+            <CreditCard className="h-4 w-4 me-1" />{isAr ? 'تعديل بيانات البنك' : 'Edit bank details'}
+          </Button>
+        )}
+
+        {/* Contextual status badges */}
+        {hasPendingRequest && (
+          <Badge variant="secondary" className="text-xs">⏳ {isAr ? 'طلب قيد الانتظار' : 'Request pending'}</Badge>
+        )}
+        {!hasPendingRequest && availableAmount > 0 && availableAmount < minThreshold && (
           <Badge variant="secondary" className="text-xs">🔒 {t('influencer.earnings.minThreshold', { amount: minThreshold })}</Badge>
+        )}
+        {!hasPendingRequest && eligibleRewards.length === 0 && availableAmount === 0 && rewards.length > 0 && (
+          <Badge variant="secondary" className="text-xs">⏱ {isAr ? 'المكافآت قيد قفل 20 يوم' : '20-day lock active'}</Badge>
         )}
       </div>
 
-      {/* Payout Requests Table */}
+      {/* Payout Requests History */}
       {payoutRequests.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-lg">{t('influencer.earnings.payoutRequests', 'Payout Requests')}</CardTitle></CardHeader>
@@ -300,31 +315,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         </Card>
       )}
 
-      {/* Request Payout Modal */}
-      <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>{t('influencer.earnings.requestPayout')}</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm">{t('influencer.earnings.linkedRewards', 'Eligible rewards')}: <strong>{eligibleRewards.length}</strong></p>
-            <p className="text-sm">{t('influencer.earnings.totalAmount', 'Total amount')}: <strong>{availableAmount.toLocaleString()} ₪</strong></p>
-            <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
-              <p><strong>{isAr ? 'البنك:' : 'Bank:'}</strong> {profile?.bank_name}</p>
-              <p><strong>{isAr ? 'فرع:' : 'Branch:'}</strong> {profile?.bank_branch}</p>
-              <p><strong>{isAr ? 'رقم حساب:' : 'Account:'}</strong> {profile?.bank_account_number}</p>
-            </div>
-            <div>
-              <Label>{t('admin.payouts.notesOptional', 'Notes (optional)')}</Label>
-              <Textarea value={requestNotes} onChange={e => setRequestNotes(e.target.value)} className="mt-1" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRequestModal(false)}>{t('admin.shared.cancelBtn', 'Cancel')}</Button>
-            <Button onClick={submitPayoutRequest}>{t('influencer.earnings.confirm', 'Confirm')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Israeli Bank Account Entry Modal */}
+      {/* Optional Israeli Bank Account Modal */}
       <Dialog open={showBankModal} onOpenChange={setShowBankModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
