@@ -60,9 +60,9 @@ const NEON_BORDERS: Record<string, string> = {
 
 // Map case_status to the correct neon border
 function getNeonBorder(status: string): string {
-  if (['new', 'eligible'].includes(status)) return NEON_BORDERS.new;
+  if (['new', 'eligible', 'assigned'].includes(status)) return NEON_BORDERS.new;
   if (status === 'contacted') return NEON_BORDERS.contacted;
-  if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed', 'assigned'].includes(status)) return NEON_BORDERS.appointment_stage;
+  if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) return NEON_BORDERS.appointment_stage;
   if (['profile_filled', 'services_filled'].includes(status)) return NEON_BORDERS.profile_filled;
   if (['paid', 'ready_to_apply', 'visa_stage', 'completed'].includes(status)) return NEON_BORDERS.submitted;
   return NEON_BORDERS.all;
@@ -83,9 +83,9 @@ const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
 
 function matchesFilter(status: string, filter: CaseFilterTab): boolean {
   if (filter === 'all') return true;
-  if (filter === 'new') return ['new', 'eligible'].includes(status);
+  if (filter === 'new') return ['new', 'eligible', 'assigned'].includes(status);
   if (filter === 'contacted') return status === 'contacted';
-  if (filter === 'appointment_stage') return ['assigned', 'appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status);
+  if (filter === 'appointment_stage') return ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status);
   if (filter === 'profile_filled') return ['profile_filled', 'services_filled'].includes(status);
   if (filter === 'submitted') return ['paid', 'ready_to_apply', 'visa_stage', 'completed'].includes(status);
   return false;
@@ -524,7 +524,7 @@ const TeamDashboardPage = () => {
       );
     }
 
-    // Appointment stage: Call + Complete Profile + Reschedule + Delete
+    // Appointment stage: Call + Complete Profile + Reschedule + Reassign + Delete
     if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) {
       const linkedAppt = appointments.find(a => a.case_id === c.id);
       return (
@@ -543,6 +543,9 @@ const TeamDashboardPage = () => {
               <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
             </Button>
           )}
+          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
+            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
+          </Button>
           <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
             <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
           </Button>
