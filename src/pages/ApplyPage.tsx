@@ -60,7 +60,10 @@ const ApplyPage: React.FC = () => {
 
   // Step 4 — Companion
   const [applyingWith, setApplyingWith] = useState('alone');
-  const [companions, setCompanions] = useState<Array<{ name: string; phone: string; education: string }>>([{ name: '', phone: '', education: '' }]);
+  const [companions, setCompanions] = useState<Array<{
+    name: string; phone: string; passportType: string; city: string;
+    education: string; englishUnits: string; mathUnits: string; preferredMajor: string;
+  }>>([{ name: '', phone: '', passportType: '', city: '', education: '', englishUnits: '', mathUnits: '', preferredMajor: '' }]);
 
   // Referral
   const [sourceType, setSourceType] = useState('organic');
@@ -121,12 +124,8 @@ const ApplyPage: React.FC = () => {
     if (loading) return;
     setLoading(true);
     try {
-      // Submit main lead
-      const companionData = hasCompanions && companions[0]?.name?.trim() && companions[0]?.phone?.trim()
-        ? { p_companion_name: companions[0].name.trim(), p_companion_phone: companions[0].phone.trim() }
-        : {};
-
-      const rpcParams: Record<string, any> = {
+      // Submit main lead (no inline companion — all companions are submitted separately with full info)
+      const { error } = await supabase.rpc('insert_lead_from_apply', {
         p_full_name: fullName.trim(),
         p_phone: phone.trim(),
         p_passport_type: passportType || null,
@@ -137,34 +136,38 @@ const ApplyPage: React.FC = () => {
         p_source_type: sourceType,
         p_source_id: sourceId,
         p_preferred_major: preferredMajor || null,
-        ...companionData,
-      };
-      const { error } = await supabase.rpc('insert_lead_from_apply', rpcParams as any);
+      } as any);
       if (error) {
         console.error('[ApplyPage] insert_lead_from_apply error:', error);
         throw error;
       }
-      console.log('[ApplyPage] Lead created successfully for:', rpcParams.p_phone);
+      console.log('[ApplyPage] Main lead created for:', phone.trim());
 
-      // Submit additional companions (index 1+)
-      if (hasCompanions && companions.length > 1) {
-        for (let i = 1; i < companions.length; i++) {
-          const c = companions[i];
+      // Submit each companion as a full separate lead with all their info
+      if (hasCompanions) {
+        for (const c of companions) {
           if (c.name.trim() && c.phone.trim()) {
-            await supabase.rpc('insert_lead_from_apply', {
+            const { error: cErr } = await supabase.rpc('insert_lead_from_apply', {
               p_full_name: c.name.trim(),
               p_phone: c.phone.trim(),
+              p_passport_type: c.passportType || null,
+              p_city: c.city.trim() || null,
+              p_preferred_city: c.city.trim() || null,
               p_education_level: c.education || null,
+              p_english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
+              p_math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
+              p_preferred_major: c.preferredMajor.trim() || null,
               p_german_level: null,
               p_source_type: sourceType,
               p_source_id: sourceId,
             } as any);
+            if (cErr) console.error('[ApplyPage] Companion lead error:', cErr);
+            else console.log('[ApplyPage] Companion lead created for:', c.phone.trim());
           }
         }
       }
 
       setSubmitted(true);
-      // Auto-open WhatsApp community after short delay
       setTimeout(() => {
         window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
       }, 1500);
@@ -189,10 +192,10 @@ const ApplyPage: React.FC = () => {
           <main className="flex-1 flex items-center justify-center p-4">
             <div className="w-full max-w-md text-center space-y-6 animate-fade-in">
               <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-green-400/20 animate-[ping_1.5s_ease-out_infinite]" />
-                <span className="absolute inset-2 rounded-full bg-green-400/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
-                <div className="relative w-20 h-20 rounded-full bg-green-100 flex items-center justify-center animate-scale-in">
-                  <CheckCircle className="h-10 w-10 text-green-500" />
+                <span className="absolute inset-0 rounded-full bg-accent/20 animate-[ping_1.5s_ease-out_infinite]" />
+                <span className="absolute inset-2 rounded-full bg-accent/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
+                <div className="relative w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-scale-in">
+                  <CheckCircle className="h-10 w-10 text-accent" />
                 </div>
               </div>
               <h2 className="text-2xl font-bold">{t('apply.successTitle', 'تم استلام بياناتك ✅')}</h2>
@@ -209,7 +212,7 @@ const ApplyPage: React.FC = () => {
               )}
               <div className="flex flex-col gap-3">
                 <a href="https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo" target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white text-base font-semibold">
+                  <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold">
                     💬 {isAr ? 'انضم لمجموعة واتساب' : 'Join WhatsApp Group'}
                   </Button>
                 </a>
@@ -233,8 +236,10 @@ const ApplyPage: React.FC = () => {
     isAr ? 'التقديم مع شخص آخر؟' : 'Applying with someone?',
   ];
 
+  const EMPTY_COMPANION = { name: '', phone: '', passportType: '', city: '', education: '', englishUnits: '', mathUnits: '', preferredMajor: '' };
+
   const addCompanion = () => {
-    setCompanions(prev => [...prev, { name: '', phone: '', education: '' }]);
+    setCompanions(prev => [...prev, { ...EMPTY_COMPANION }]);
   };
 
   const updateCompanion = (index: number, field: string, value: string) => {
@@ -411,8 +416,8 @@ const ApplyPage: React.FC = () => {
                       {APPLYING_WITH_OPTIONS.map(opt => (
                         <button key={opt.value} type="button" onClick={() => {
                           setApplyingWith(opt.value);
-                          if (opt.value === 'alone') setCompanions([{ name: '', phone: '', education: '' }]);
-                          if (opt.value === 'multiple' && companions.length < 2) setCompanions([...companions, { name: '', phone: '', education: '' }]);
+                          if (opt.value === 'alone') setCompanions([{ ...EMPTY_COMPANION }]);
+                          if (opt.value === 'multiple' && companions.length < 2) setCompanions(prev => [...prev, { ...EMPTY_COMPANION }]);
                         }}
                           className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
                             applyingWith === opt.value
@@ -426,7 +431,7 @@ const ApplyPage: React.FC = () => {
                   </FieldGroup>
 
                   {hasCompanions && (
-                    <div className="space-y-4 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+                    <div className="space-y-5 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
                       {companions.map((c, idx) => (
                         <div key={idx} className="space-y-3">
                           {companions.length > 1 && (
@@ -442,14 +447,42 @@ const ApplyPage: React.FC = () => {
                               )}
                             </div>
                           )}
-                          <FieldGroup label={isAr ? 'الاسم الكامل' : 'Full Name'}>
+
+                          {/* Name */}
+                          <FieldGroup label={isAr ? 'الاسم الكامل *' : 'Full Name *'}>
                             <Input value={c.name} onChange={e => updateCompanion(idx, 'name', e.target.value)}
                               placeholder={isAr ? 'الاسم الكامل' : 'Full name'} dir={dir} className="h-11" />
                           </FieldGroup>
-                          <FieldGroup label={isAr ? 'رقم الهاتف' : 'Phone'}>
+
+                          {/* Phone */}
+                          <FieldGroup label={isAr ? 'رقم الهاتف / واتساب *' : 'Phone / WhatsApp *'}>
                             <Input value={c.phone} onChange={e => updateCompanion(idx, 'phone', e.target.value)}
                               placeholder="05X-XXXXXXX" dir="ltr" type="tel" className="h-11" />
                           </FieldGroup>
+
+                          {/* Passport Type */}
+                          <FieldGroup label={isAr ? 'نوع جواز السفر' : 'Passport Type'}>
+                            <div className="grid grid-cols-1 gap-2">
+                              {PASSPORT_TYPES.map(pt => (
+                                <button key={pt.value} type="button" onClick={() => updateCompanion(idx, 'passportType', pt.value)}
+                                  className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                                    c.passportType === pt.value
+                                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                      : 'bg-card border-border hover:border-primary/40'
+                                  }`}>
+                                  {isAr ? pt.label : pt.labelEn}
+                                </button>
+                              ))}
+                            </div>
+                          </FieldGroup>
+
+                          {/* City */}
+                          <FieldGroup label={isAr ? 'المدينة (اختياري)' : 'City (optional)'}>
+                            <Input value={c.city} onChange={e => updateCompanion(idx, 'city', e.target.value)}
+                              placeholder={isAr ? 'مثال: حيفا' : 'e.g. Haifa'} dir={dir} className="h-11" />
+                          </FieldGroup>
+
+                          {/* Education Level */}
                           <FieldGroup label={isAr ? 'المستوى التعليمي' : 'Education Level'}>
                             <div className="grid grid-cols-2 gap-2">
                               {EDUCATION_LEVELS.map(lvl => (
@@ -464,6 +497,40 @@ const ApplyPage: React.FC = () => {
                               ))}
                             </div>
                           </FieldGroup>
+
+                          {/* Bagrut Units — only when education = bagrut */}
+                          {c.education === 'bagrut' && (
+                            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
+                              <FieldGroup label={isAr ? 'وحدات الإنجليزي' : 'English Units'}>
+                                <div className="flex gap-1.5">
+                                  {UNIT_OPTIONS.map(u => (
+                                    <button key={u} type="button" onClick={() => updateCompanion(idx, 'englishUnits', u)}
+                                      className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
+                                        c.englishUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
+                                      }`}>{u}</button>
+                                  ))}
+                                </div>
+                              </FieldGroup>
+                              <FieldGroup label={isAr ? 'وحدات الرياضيات' : 'Math Units'}>
+                                <div className="flex gap-1.5">
+                                  {UNIT_OPTIONS.map(u => (
+                                    <button key={u} type="button" onClick={() => updateCompanion(idx, 'mathUnits', u)}
+                                      className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
+                                        c.mathUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
+                                      }`}>{u}</button>
+                                  ))}
+                                </div>
+                              </FieldGroup>
+                            </div>
+                          )}
+
+                          {/* Preferred Major */}
+                          <FieldGroup label={isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)'}>
+                            <Input value={c.preferredMajor} onChange={e => updateCompanion(idx, 'preferredMajor', e.target.value)}
+                              placeholder={isAr ? 'مثال: هندسة، طب...' : 'e.g. Engineering, Medicine...'}
+                              dir={dir} className="h-11" />
+                          </FieldGroup>
+
                           {idx < companions.length - 1 && <hr className="border-border" />}
                         </div>
                       ))}
