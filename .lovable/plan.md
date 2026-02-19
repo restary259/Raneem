@@ -1,96 +1,68 @@
 
-# Team Dashboard — Workflow & Tab Routing Fix
 
-## Root Cause Analysis
+# Fix: Audit Log NULL admin_id Constraint Violation
 
-The current case "Tsukuyomi" has `case_status: 'assigned'` (set by admin upon assignment). The `matchesFilter` function maps `'assigned'` to the `appointment_stage` filter — not the `new` tab. This is why the case appears under "مرحلة الموعد" (Appointment) instead of "جديد" (New).
+## Root Cause
 
-## Problems to Fix
+When a user submits the apply form (via influencer link or directly), the `insert_lead_from_apply` RPC upserts a lead. If it's an UPDATE (duplicate phone), the trigger `trg_audit_source_id_change` fires `audit_lead_source_change()`, which inserts into `admin_audit_log` using `auth.uid()` as `admin_id`. Since the apply page is public (no authentication), `auth.uid()` is NULL, violating the NOT NULL constraint on `admin_id`.
 
-### Problem 1 — Wrong Tab Routing for Newly Assigned Cases
-**File**: `src/pages/TeamDashboardPage.tsx`, line 88
+This error repeats every time someone re-submits or updates a lead from the public page.
 
-Current:
-```
-appointment_stage → ['assigned', 'appointment_scheduled', 'appointment_waiting', 'appointment_completed']
-new → ['new', 'eligible']
-```
+## Fix (Database Migration)
 
-Correct:
-```
-new → ['new', 'eligible', 'assigned']   ← assigned = brand-new unworked case
-appointment_stage → ['appointment_scheduled', 'appointment_waiting', 'appointment_completed']
-```
+Three changes in one migration:
 
-**Why safe**: `'assigned'` is the status set by admin when a case is first assigned. It has no prior team-member action. It logically belongs in "New" because the team member hasn't done anything yet. This also aligns with `renderCaseActions` which already handles `'assigned'` in the "New" block (line 498: `['new', 'eligible', 'assigned']`).
+1. **Make `admin_id` nullable** in `admin_audit_log` -- some auditable actions (like public form triggers) have no authenticated user.
 
----
+2. **Guard `audit_lead_source_change` trigger** -- skip the INSERT when `auth.uid()` is NULL. Public apply submissions don't need source-change auditing since there's no admin performing the action.
 
-### Problem 2 — Reassign Missing from Appointment Stage
+3. **Guard `log_user_activity` function** -- add a NULL check on `auth.uid()` as a safety net, so if any unauthenticated path calls this function, it silently returns instead of crashing.
 
-Current `renderCaseActions` for appointment stage (line 528–551) shows: Call, Complete Profile, Reschedule, Delete. **Reassign is missing** — it only appears in the fallback "submitted/paid" case at line 566.
+## Risk Assessment
 
-**Fix**: Add Reassign button to the appointment stage action group, alongside the existing buttons.
+| Change | Risk | Reason |
+|--------|------|--------|
+| `admin_id` DROP NOT NULL | None | Existing rows all have values; only future non-admin entries will be NULL |
+| Guard trigger function | None | Only skips logging for unauthenticated users; admin actions still logged |
+| Guard `log_user_activity` | None | Defensive; currently only called by authenticated users (team dashboard) |
 
----
+No UI code changes needed. No RLS changes needed.
 
-### Problem 3 — `getNeonBorder` Maps `'assigned'` to Appointment Color
+## Technical Details
 
-Line 65: `['appointment_scheduled', 'appointment_waiting', 'appointment_completed', 'assigned']` uses the appointment neon border color.
+**Migration SQL:**
+```sql
+ALTER TABLE public.admin_audit_log ALTER COLUMN admin_id DROP NOT NULL;
 
-Fix: Move `'assigned'` to the `new` neon border group.
+CREATE OR REPLACE FUNCTION public.audit_lead_source_change()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public' AS $$
+BEGIN
+  IF NEW.source_id IS DISTINCT FROM OLD.source_id THEN
+    IF auth.uid() IS NOT NULL THEN
+      INSERT INTO public.admin_audit_log (admin_id, action, target_id, target_table, details)
+      VALUES (auth.uid(), 'LEAD_SOURCE_CHANGED', NEW.id::text, 'leads',
+        'source_id changed from ' || COALESCE(OLD.source_id::text, 'NULL')
+        || ' to ' || COALESCE(NEW.source_id::text, 'NULL')
+        || ' | source_type: ' || COALESCE(NEW.source_type, 'NULL'));
+    END IF;
+  END IF;
+  RETURN NEW;
+END; $$;
 
----
-
-## What the Correct Flow Will Look Like
-
-```
-Admin assigns case → case_status = 'assigned'
-   ↓ appears in "New" tab (جديد)
-   Actions: [Call] + [Mark as Contacted] + [Delete]
-
-Team member calls + marks contacted → case_status = 'contacted'
-   ↓ appears in "Contacted" tab (تم التواصل)
-   Actions: [Call] + [Make Appointment]
-
-Appointment created → case_status = 'appointment_scheduled'
-   ↓ appears in "Appointment Stage" tab (مرحلة الموعد)
-   Actions: [Call] + [Complete Profile] + [Reschedule] + [Delete] + [Reassign]
-
-Profile completed → case_status = 'profile_filled'
-   ↓ appears in "Completed Files" tab (ملفات مكتملة)
-   Actions: [Call] + [Submit for Application]
-
-Submitted → case_status = 'paid' / 'ready_to_apply'
-   ↓ appears in "Submitted" tab (تم الإرسال للمسؤول)
+CREATE OR REPLACE FUNCTION public.log_user_activity(
+  p_action text, p_target_id text DEFAULT NULL,
+  p_target_table text DEFAULT NULL, p_details text DEFAULT NULL
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public' AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN RETURN; END IF;
+  INSERT INTO public.admin_audit_log (admin_id, action, target_id, target_table, details)
+  VALUES (auth.uid(), p_action, p_target_id, p_target_table, p_details);
+END; $$;
 ```
 
----
+## Verification Steps
 
-## Safety Assessment
+After applying, test by submitting the apply page with an influencer ref link. The form should submit successfully without any database errors.
 
-| Change | Risk | Mitigation |
-|---|---|---|
-| Moving `'assigned'` to `new` in `matchesFilter` | **Zero** — display-only change, no DB writes | No state mutation |
-| Moving `'assigned'` to `new` in `getNeonBorder` | **Zero** — visual only | No logic change |
-| Adding Reassign to appointment stage | **Low** — reuses existing `handleReassignCase` | Same validated handler, only registered lawyers in dropdown |
-| Reassign restricted to registered team members | **Already implemented** — `allLawyers` populated from `user_roles` table with `role = 'lawyer'` | No change needed |
-
----
-
-## Files to Change
-
-Only **one file** changes: `src/pages/TeamDashboardPage.tsx`
-
-### Specific line changes:
-
-**1. `matchesFilter` function (line 84–92)**
-- Move `'assigned'` from `appointment_stage` to `new`
-
-**2. `getNeonBorder` function (line 62–69)**
-- Move `'assigned'` from `appointment_stage` color group to `new` color group
-
-**3. `renderCaseActions` appointment stage block (line 528–551)**
-- Add Reassign button alongside existing Call, Complete Profile, Reschedule, Delete buttons
-
-No database changes needed. No RLS changes needed. No new components needed.
