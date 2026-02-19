@@ -97,9 +97,6 @@ const Contact = () => {
       // Reset
       setFullName(''); setPhone(''); setPassportType(''); setCity('');
       setEducationLevel(''); setEnglishUnits(''); setMathUnits(''); setPreferredMajor('');
-      setTimeout(() => {
-        window.open('https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo', '_blank');
-      }, 1200);
     },
     onError: (error: any) => {
       toast({ variant: "destructive", title: isAr ? 'حدث خطأ' : 'Error', description: error.message });
