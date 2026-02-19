@@ -1466,81 +1466,27 @@ export type Database = {
         }
         Returns: boolean
       }
-      insert_lead_from_apply:
-        | {
-            Args: {
-              p_accommodation?: boolean
-              p_budget_range?: string
-              p_city?: string
-              p_education_level?: string
-              p_full_name: string
-              p_german_level?: string
-              p_phone: string
-              p_preferred_city?: string
-              p_source_id?: string
-              p_source_type?: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_accommodation?: boolean
-              p_budget_range?: string
-              p_city?: string
-              p_education_level?: string
-              p_english_units?: number
-              p_full_name: string
-              p_german_level?: string
-              p_math_units?: number
-              p_passport_type?: string
-              p_phone: string
-              p_preferred_city?: string
-              p_source_id?: string
-              p_source_type?: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_accommodation?: boolean
-              p_budget_range?: string
-              p_city?: string
-              p_companion_name?: string
-              p_companion_phone?: string
-              p_education_level?: string
-              p_english_units?: number
-              p_full_name: string
-              p_german_level?: string
-              p_math_units?: number
-              p_passport_type?: string
-              p_phone: string
-              p_preferred_city?: string
-              p_source_id?: string
-              p_source_type?: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_accommodation?: boolean
-              p_budget_range?: string
-              p_city?: string
-              p_companion_name?: string
-              p_companion_phone?: string
-              p_education_level?: string
-              p_english_units?: number
-              p_full_name: string
-              p_german_level?: string
-              p_math_units?: number
-              p_passport_type?: string
-              p_phone: string
-              p_preferred_city?: string
-              p_preferred_major?: string
-              p_source_id?: string
-              p_source_type?: string
-            }
-            Returns: undefined
-          }
+      insert_lead_from_apply: {
+        Args: {
+          p_accommodation?: boolean
+          p_budget_range?: string
+          p_city?: string
+          p_companion_name?: string
+          p_companion_phone?: string
+          p_education_level?: string
+          p_english_units?: number
+          p_full_name: string
+          p_german_level?: string
+          p_math_units?: number
+          p_passport_type?: string
+          p_phone: string
+          p_preferred_city?: string
+          p_preferred_major?: string
+          p_source_id?: string
+          p_source_type?: string
+        }
+        Returns: undefined
+      }
       log_user_activity: {
         Args: {
           p_action: string
@@ -1560,17 +1506,6 @@ export type Database = {
           p_student_names?: string[]
         }
         Returns: string
-      }
-      upsert_lead_from_contact: {
-        Args: {
-          p_email: string
-          p_full_name: string
-          p_notes: string
-          p_phone: string
-          p_service_requested: string
-          p_study_destination: string
-        }
-        Returns: undefined
       }
       validate_influencer_ref: { Args: { ref_id: string }; Returns: boolean }
     }

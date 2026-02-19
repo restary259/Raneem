@@ -181,8 +181,9 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false })),
       safeQuery((supabase as any).from('student_cases').select('*').is('deleted_at', null).order('created_at', { ascending: false })),
       safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'lawyer')),
-      safeQuery((supabase as any).from('commissions').select('*')),
-      safeQuery((supabase as any).from('rewards').select('*')),
+      // NOTE: Financial KPI source of truth is student_cases — commissions table is NOT used in KPI calcs to avoid double-counting
+      safeQuery((supabase as any).from('commissions').select('*').order('created_at', { ascending: false }).limit(2000)),
+      safeQuery((supabase as any).from('rewards').select('*').order('created_at', { ascending: false }).limit(2000)),
       safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),
       safeQuery((supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200)),
       safeQuery((supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false })),
