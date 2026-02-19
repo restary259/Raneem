@@ -137,8 +137,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       return;
     }
 
-    // Step 3: Only insert case if none exists yet
-    if (!existingCases?.[0]) {
+    // Step 3: Restore soft-deleted case or insert new one
+    if (existingCases?.[0]) {
+      await (supabase as any).from('student_cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
+    } else {
       const { error: caseErr } = await (supabase as any).from('student_cases').insert({
         lead_id: lead.id,
         selected_city: lead.preferred_city,
@@ -213,6 +215,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       await (supabase as any).from('student_cases').update({
         assigned_lawyer_id: selectedLawyer,
         assigned_at: new Date().toISOString(),
+        deleted_at: null,  // Restore if previously soft-deleted
         ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
       }).eq('id', existingCases[0].id);
     } else {
