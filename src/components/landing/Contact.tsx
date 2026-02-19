@@ -23,7 +23,7 @@ const Contact = () => {
 
   const formSchema = z.object({
     name: z.string().trim().min(2, { message: t('contact.validation.nameMin', { ns: 'common' }) }),
-    phone: z.string().trim().min(9, { message: t('contact.validation.whatsappMin', { ns: 'common' }) }),
+    phone: z.string().trim().regex(/^(05\d{8}|\+9725\d{8}|\+?\d{7,15})$/, { message: t('contact.validation.whatsappMin', { ns: 'common' }) }),
     interestedMajor: z.string({ required_error: t('contact.validation.destinationRequired', { ns: 'common' }) }),
     city: z.string().trim().min(2, { message: t('contact.validation.cityRequired') }),
     educationLevel: z.string({ required_error: t('contact.validation.educationRequired') }),
@@ -47,7 +47,8 @@ const Contact = () => {
         p_education_level: values.educationLevel, p_german_level: 'beginner',
         p_preferred_city: values.city, p_accommodation: false, p_source_type: 'contact_form',
         p_english_units: values.englishUnits, p_math_units: values.mathUnits,
-      });
+        p_preferred_major: values.interestedMajor,
+      } as any);
       if (error) throw new Error(error.message);
       return { success: true };
     },

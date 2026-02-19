@@ -75,6 +75,17 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       .eq('id', rewardId);
     setActionLoading(null);
     if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+    // Audit log: compliance trail for financial mutations
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id, action: 'mark_reward_paid',
+          target_id: rewardId, target_table: 'rewards',
+          details: `Admin manually marked reward ${rewardId} as paid`,
+        });
+      }
+    } catch {}
     toast({ title: t('money.markedPaid', 'Marked as paid') });
     onRefresh?.();
   };
@@ -87,6 +98,16 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       .eq('id', rewardId);
     setActionLoading(null);
     if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await (supabase as any).from('admin_audit_log').insert({
+          admin_id: session.user.id, action: 'clear_reward',
+          target_id: rewardId, target_table: 'rewards',
+          details: `Admin cancelled reward ${rewardId}`,
+        });
+      }
+    } catch {}
     toast({ title: t('money.cleared', 'Cleared') });
     onRefresh?.();
   };
@@ -250,6 +271,17 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                                 .update({ status: 'paid', paid_at: new Date().toISOString() })
                                 .in('id', req.linked_reward_ids);
                             }
+                            // Audit log: financial compliance trail
+                            try {
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (session?.user) {
+                                await (supabase as any).from('admin_audit_log').insert({
+                                  admin_id: session.user.id, action: 'mark_payout_paid',
+                                  target_id: req.id, target_table: 'payout_requests',
+                                  details: `Admin paid payout request ${req.id} — amount: ${req.amount} ₪ — requestor: ${req.requestor_id}`,
+                                });
+                              }
+                            } catch {}
                             toast({ title: t('money.markedPaid', 'Marked as paid') });
                             onRefresh?.();
                           }}
