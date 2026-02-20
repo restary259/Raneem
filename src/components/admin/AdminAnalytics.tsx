@@ -92,16 +92,16 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { icon: DollarSign, label: t('admin.analytics.totalRevenue'), value: `${stats.totalRevenue.toLocaleString()} ₪`, color: 'text-emerald-600' },
-          { icon: DollarSign, label: t('admin.analytics.revenueThisMonth'), value: `${stats.revenueThisMonth.toLocaleString()} ₪`, color: 'text-blue-600' },
-          { icon: UserCheck, label: t('admin.analytics.paidThisMonth'), value: stats.paidThisMonth, color: 'text-green-600' },
-          { icon: TrendingUp, label: t('admin.analytics.conversionRate'), value: `${stats.conversionRate}%`, color: 'text-indigo-600' },
-          { icon: Users, label: t('admin.analytics.teamCommissions'), value: `${stats.totalTeamComm.toLocaleString()} ₪`, color: 'text-orange-600' },
-          { icon: AlertTriangle, label: t('admin.analytics.slaWarnings'), value: stats.slaWarnings, color: stats.slaWarnings > 0 ? 'text-red-600' : 'text-muted-foreground' },
+          { icon: DollarSign, label: t('admin.analytics.totalRevenue'), value: `${stats.totalRevenue.toLocaleString()} ₪`, color: 'text-emerald-600', bg: 'border-s-[3px] border-s-emerald-500' },
+          { icon: DollarSign, label: t('admin.analytics.revenueThisMonth'), value: `${stats.revenueThisMonth.toLocaleString()} ₪`, color: 'text-blue-600', bg: 'border-s-[3px] border-s-blue-500' },
+          { icon: UserCheck, label: t('admin.analytics.paidThisMonth'), value: stats.paidThisMonth, color: 'text-green-600', bg: 'border-s-[3px] border-s-green-500' },
+          { icon: TrendingUp, label: t('admin.analytics.conversionRate'), value: `${stats.conversionRate}%`, color: 'text-indigo-600', bg: 'border-s-[3px] border-s-indigo-500' },
+          { icon: Users, label: t('admin.analytics.teamCommissions'), value: `${stats.totalTeamComm.toLocaleString()} ₪`, color: 'text-orange-600', bg: 'border-s-[3px] border-s-orange-500' },
+          { icon: AlertTriangle, label: t('admin.analytics.slaWarnings'), value: stats.slaWarnings, color: stats.slaWarnings > 0 ? 'text-red-600' : 'text-muted-foreground', bg: stats.slaWarnings > 0 ? 'border-s-[3px] border-s-red-500' : '' },
         ].map((card, i) => {
           const Icon = card.icon;
           return (
-            <Card key={i}>
+            <Card key={i} className={`hover:shadow-md transition-shadow ${card.bg}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Icon className={`h-4 w-4 ${card.color}`} />
@@ -115,32 +115,32 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
       </div>
 
       {/* Monthly Chart */}
-      <Card>
+      <Card className="rounded-xl overflow-hidden">
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold text-muted-foreground mb-4">{t('admin.analytics.monthlyBreakdown')}</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={stats.monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(val: number) => `${val.toLocaleString()} ₪`} />
               <Legend />
-              <Bar dataKey="revenue" name={t('admin.analytics.revenue')} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="teamComm" name={t('admin.analytics.teamComm')} fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="infComm" name={t('admin.analytics.infComm')} fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" name={t('admin.analytics.revenue')} fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="teamComm" name={t('admin.analytics.teamComm')} fill="hsl(215, 20%, 65%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="infComm" name={t('admin.analytics.infComm')} fill="hsl(160, 60%, 45%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
       {/* Team Performance Table */}
-      <Card>
+      <Card className="rounded-xl overflow-hidden">
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t('admin.analytics.teamPerformance')}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/30">
+                <tr className="border-b bg-muted/40">
                   <th className="px-3 py-2 text-start whitespace-nowrap">{t('admin.analytics.name')}</th>
                   <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.assigned')}</th>
                   <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.paid')}</th>
@@ -150,7 +150,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
               </thead>
               <tbody>
                 {stats.teamPerf.map((tm, i) => (
-                  <tr key={i} className="border-b last:border-0">
+              <tr key={i} className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
                     <td className="px-3 py-2 font-medium whitespace-nowrap">{tm.name}</td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">{tm.assigned}</td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">{tm.paid}</td>
@@ -159,7 +159,10 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
                   </tr>
                 ))}
                 {stats.teamPerf.length === 0 && (
-                  <tr><td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">—</td></tr>
+                  <tr><td colSpan={5} className="px-3 py-12 text-center">
+                    <UserCheck className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">—</p>
+                  </td></tr>
                 )}
               </tbody>
             </table>
@@ -168,13 +171,13 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
       </Card>
 
       {/* Influencer Performance Table */}
-      <Card>
+      <Card className="rounded-xl overflow-hidden">
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t('admin.analytics.influencerPerformance')}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/30">
+                <tr className="border-b bg-muted/40">
                   <th className="px-3 py-2 text-start whitespace-nowrap">{t('admin.analytics.name')}</th>
                   <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.leadsGenerated')}</th>
                   <th className="px-3 py-2 text-center whitespace-nowrap">{t('admin.analytics.paid')}</th>
@@ -183,7 +186,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
               </thead>
               <tbody>
                 {stats.infPerf.map((inf, i) => (
-                  <tr key={i} className="border-b last:border-0">
+                  <tr key={i} className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
                     <td className="px-3 py-2 font-medium whitespace-nowrap">{inf.name}</td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">{inf.leads}</td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">{inf.paid}</td>
@@ -191,7 +194,10 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
                   </tr>
                 ))}
                 {stats.infPerf.length === 0 && (
-                  <tr><td colSpan={4} className="px-3 py-4 text-center text-muted-foreground">—</td></tr>
+                  <tr><td colSpan={4} className="px-3 py-12 text-center">
+                    <Users className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">—</p>
+                  </td></tr>
                 )}
               </tbody>
             </table>

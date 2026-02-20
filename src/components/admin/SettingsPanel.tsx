@@ -22,18 +22,20 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ loginAttempts = [], audit
         <TabsTrigger value="security">{t('admin.tabs.security')}</TabsTrigger>
         <TabsTrigger value="audit">{t('admin.tabs.audit')}</TabsTrigger>
       </TabsList>
-      <TabsContent value="eligibility">
-        <EligibilityConfig />
-      </TabsContent>
-      <TabsContent value="notifications">
-        <CustomNotifications />
-      </TabsContent>
-      <TabsContent value="security">
-        <SecurityPanel loginAttempts={loginAttempts} />
-      </TabsContent>
-      <TabsContent value="audit">
-        <AuditLog logs={auditLogs} />
-      </TabsContent>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="eligibility" className="mt-0 lg:col-span-2">
+          <EligibilityConfig />
+        </TabsContent>
+        <TabsContent value="notifications" className="mt-0 lg:col-span-2">
+          <CustomNotifications />
+        </TabsContent>
+        <TabsContent value="security" className="mt-0 lg:col-span-1">
+          <SecurityPanel loginAttempts={loginAttempts} />
+        </TabsContent>
+        <TabsContent value="audit" className="mt-0 lg:col-span-1">
+          <AuditLog logs={auditLogs} />
+        </TabsContent>
+      </div>
     </Tabs>
   );
 };
