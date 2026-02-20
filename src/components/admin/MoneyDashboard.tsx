@@ -136,7 +136,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       }
       // School commission (revenue)
       if (c.school_commission > 0) {
-        rows.push({ id: `${c.id}-sc`, studentName: name, type: 'school_commission', amount: c.school_commission, currency: 'EUR', status, date, notes: '', direction: 'in' });
+        rows.push({ id: `${c.id}-sc`, studentName: name, type: 'school_commission', amount: c.school_commission, currency: 'NIS', status, date, notes: '', direction: 'in' });
       }
       // Influencer commission (expense)
       if (c.influencer_commission > 0) {
@@ -171,8 +171,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     const totalLawyerComm = paidCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
     const totalReferralDiscount = paidCases.reduce((s, c) => s + (Number(c.referral_discount) || 0), 0);
 
-    const totalRevenueNIS = totalServiceFees;
-    const totalRevenueEUR = totalSchoolComm;
+    const totalRevenueNIS = totalServiceFees + totalSchoolComm;
     const totalExpensesNIS = totalInfluencerComm + totalLawyerComm + totalReferralDiscount + totalTranslation;
     const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
 
@@ -180,7 +179,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     const paidPayouts = rewards.filter(r => r.status === 'paid').reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
     return {
-      totalRevenueNIS, totalRevenueEUR, totalExpensesNIS, netProfitNIS,
+      totalRevenueNIS, totalExpensesNIS, netProfitNIS,
       totalServiceFees, totalSchoolComm, totalInfluencerComm, totalLawyerComm,
       totalReferralDiscount, totalTranslation, pendingPayouts, paidPayouts,
       paidStudents: paidCases.length,
@@ -398,9 +397,9 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="text-xs text-muted-foreground">{t('money.totalRevenueEUR')}</span>
+              <span className="text-xs text-muted-foreground">{t('money.schoolCommission', 'School Commission')}</span>
             </div>
-            <p className="text-xl font-bold text-blue-700">{kpis.totalRevenueEUR.toLocaleString()} €</p>
+            <p className="text-xl font-bold text-blue-700">{kpis.totalSchoolComm.toLocaleString()} ₪</p>
             <p className="text-[10px] text-muted-foreground">{t('money.schoolCommissions')}</p>
           </CardContent>
         </Card>
@@ -446,7 +445,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           { label: t('money.types.service_fee'), value: kpis.totalServiceFees, color: 'text-emerald-700', icon: ArrowUpRight },
-          { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight, suffix: '€' },
+          { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight },
           { label: t('money.types.influencer_payout'), value: kpis.totalInfluencerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.team_member_comm'), value: kpis.totalLawyerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.referral_cashback'), value: kpis.totalReferralDiscount, color: 'text-red-600', icon: ArrowDownRight },
@@ -460,7 +459,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                   <Icon className={`h-3 w-3 ${item.color}`} />
                   <span className="text-[10px] text-muted-foreground truncate">{item.label}</span>
                 </div>
-                <p className={`text-sm font-bold ${item.color}`}>{item.value.toLocaleString()} {item.suffix || '₪'}</p>
+                <p className={`text-sm font-bold ${item.color}`}>{item.value.toLocaleString()} ₪</p>
               </CardContent>
             </Card>
           );

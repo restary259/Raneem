@@ -49,7 +49,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
 
   const infRevenue = cases
     .filter(c => ['paid', 'completed'].includes(c.case_status))
-    .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0), 0);
+    .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
   const infPayouts = rewards.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
   const infROI = infPayouts > 0 ? Math.round((infRevenue / infPayouts) * 100) / 100 : 0;
 
@@ -96,7 +96,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         />
         <SparklineCard
           icon={DollarSign} label={t('admin.overview.housingCommission')}
-          value={housingCommission > 0 ? `${housingCommission.toLocaleString()} €` : '0 €'} color="bg-teal-600"
+          value={housingCommission > 0 ? `${housingCommission.toLocaleString()} ₪` : '0 ₪'} color="bg-teal-600"
         />
         <SparklineCard
           icon={BarChart3} label={t('admin.overview.influencerROI')}
