@@ -1,137 +1,79 @@
 
+# Financial Consistency Fix — Admin Dashboard
 
-# Admin Dashboard Visual UI Improvements
-
-These are purely cosmetic/visual changes -- no behavior, data flow, or logic changes.
-
----
-
-## 1. Overview Tab -- KPI Cards
-
-**Current**: Cards are flat with minimal visual hierarchy. All cards look identical regardless of importance.
-
-**Improvement**:
-- Add subtle gradient backgrounds to the top 3 KPI cards (Total Students, New This Month, Revenue) to distinguish them as primary metrics
-- Add a thin colored left border (accent color) to each card matching its icon color
-- Increase the stat number font weight to `font-extrabold` and size to `text-3xl` on desktop for better scannability
-- Add a subtle `shadow-sm` hover effect on cards (`hover:shadow-md transition-shadow`)
+All changes are confined to admin dashboard components. Zero impact on Influencer or Team dashboards.
 
 ---
 
-## 2. Sidebar -- Active Tab Indicator
+## Problem Summary
 
-**Current**: Active tab has a background highlight but no strong visual anchor on the left edge.
+Three tabs (Overview, Analytics, Money) compute and display financial figures differently:
 
-**Improvement**:
-- Add a 3px rounded orange bar on the leading edge (left in LTR, right in RTL) of the active sidebar item
-- Slightly increase padding between sidebar groups for better visual breathing room
-- Make the group label text slightly larger (`text-[11px]`) for readability
-
----
-
-## 3. Mobile Bottom Navigation
-
-**Current**: Icons + tiny text, functional but visually plain.
-
-**Improvement**:
-- Add a subtle pill-shaped background behind the active icon+label (e.g., `bg-orange-500/15 rounded-full px-3 py-1`)
-- Increase icon size from `h-5 w-5` to `h-6 w-6` for the active item only
-- Add a small dot indicator above the active icon instead of just color change
+- **Overview** mixes currencies: `revenueThisMonth = service_fee + school_commission` but school_commission is EUR
+- **Overview** shows "Housing Commission" in EUR (`€`)
+- **Analytics** ignores school_commission entirely in revenue
+- **Money** shows school_commission as separate EUR revenue, excludes it from net profit
+- **StudentCasesManagement** shows school_commission in EUR (`€`) in case details
+- Default service fee fallback is 8000 instead of 4000
 
 ---
 
-## 4. Tables (Leads, Student Cases, Money)
+## Changes
 
-**Current**: Standard table with no row differentiation. Dense on mobile.
+### 1. Unify school_commission to ILS everywhere
 
-**Improvement**:
-- Add alternating row backgrounds (`even:bg-muted/30`) for easier row scanning
-- Add a sticky first column on mobile so the lead name stays visible while scrolling horizontally
-- Round the table container corners (`rounded-xl overflow-hidden`)
-- Add subtle row hover highlight (`hover:bg-muted/50`)
+All `school_commission` values will be treated and displayed as ILS (shekels), not EUR. This means changing currency labels from `€` to `₪` in:
 
----
+- `AdminOverview.tsx` line 99: `€` to `₪`
+- `MoneyDashboard.tsx` line 139: transaction row `currency: 'EUR'` to `'NIS'`
+- `MoneyDashboard.tsx` line 403: KPI card `€` to `₪`
+- `MoneyDashboard.tsx` line 449: breakdown card remove `suffix: '€'`
+- `StudentCasesManagement.tsx` lines 234, 251: `€` to `₪`
 
-## 5. Empty States
+### 2. Include school_commission in net profit calculation
 
-**Current**: Plain text like "No data" when tables are empty.
+Net profit should be: `service_fee + school_commission - all expenses`
 
-**Improvement**:
-- Add illustrated empty states with a muted icon (e.g., `Users` icon at 48px, opacity 30%) centered above the message
-- Use a softer message like "No leads yet" with a subtle description underneath
-- Wrap in a `py-16` container so it doesn't look cramped
+- **MoneyDashboard.tsx** (line 174): Change `totalRevenueNIS = totalServiceFees` to `totalRevenueNIS = totalServiceFees + totalSchoolComm`
+- Remove the separate `totalRevenueEUR` KPI card (line 397-406) — replace it with a "School Commission (₪)" card showing `totalSchoolComm` in ILS as part of revenue
+- **Net profit** (line 177): Already `totalRevenueNIS - totalExpensesNIS`, so once `totalRevenueNIS` includes school_commission, net profit auto-corrects
+- **StudentCasesManagement** `getNetProfit` (line 89): Add `+ (c.school_commission || 0)` to the formula
 
----
+### 3. Make Analytics tab consistent with Money tab
 
-## 6. Header Bar
+- **AdminAnalytics.tsx** line 27: Change `totalRevenue` to include school_commission: `service_fee + school_commission`
+- Line 28: Same for `revenueThisMonth`
+- Lines 45, 77: Team perf and monthly chart revenue should also include school_commission
 
-**Current**: Functional but the email badge and notification bell feel disconnected.
+### 4. Make Overview tab consistent
 
-**Improvement**:
-- Group the email badge and notification bell inside a subtle `bg-muted/50 rounded-full px-3 py-1` container
-- Add a small avatar circle (initials-based) next to the email for visual identity
-- On mobile, hide the email entirely (already done) but show the avatar circle
+- **AdminOverview.tsx** line 44: `revenueThisMonth` already sums both — this is now correct since both are ILS
+- Rename "Housing Commission" card (line 98-100) to "School Commission" and change `€` to `₪`
+- Line 52: `infRevenue` should also include school_commission for accurate ROI
 
----
+### 5. Default service fee: 4000 instead of 8000
 
-## 7. Settings Tab -- Cards Layout
-
-**Current**: Settings items stacked vertically with uniform styling.
-
-**Improvement**:
-- Use a 2-column grid on desktop for settings sections (Eligibility Config, Security, Audit Log)
-- Add subtle icons in the card headers for each settings section
-- Add a muted description line under each section title
+- **StudentCasesManagement.tsx** line 273: Change `|| 8000` to `|| 4000`
 
 ---
 
-## 8. Analytics Tab -- Chart Containers
+## Files Modified (5 files, visual/display only)
 
-**Current**: Charts render directly with minimal framing.
-
-**Improvement**:
-- Wrap each chart in a `Card` with a clear title, subtle border, and consistent padding
-- Add a small legend below each chart using colored dots + labels
-- Use consistent chart colors that match the brand palette (orange, slate, emerald)
-
----
-
-## 9. Mobile Sheet Menu
-
-**Current**: Functional slide-out menu, but visually identical to desktop sidebar.
-
-**Improvement**:
-- Add the user email at the top of the sheet (below the logo) in a muted style
-- Add a subtle divider line between the navigation and the bottom actions
-- Make the close area (overlay) slightly more visible with a darker backdrop
+| File | Changes |
+|------|---------|
+| `AdminOverview.tsx` | EUR to ILS on housing commission card; include school_commission in infRevenue |
+| `AdminAnalytics.tsx` | Include school_commission in all revenue calculations |
+| `MoneyDashboard.tsx` | School commission currency EUR to NIS; include in totalRevenueNIS; remove separate EUR card; fix breakdown suffix |
+| `StudentCasesManagement.tsx` | EUR to ILS labels; include school_commission in getNetProfit; default service_fee 4000 |
+| `admin-weekly-digest/index.ts` | Already sums both — no change needed |
 
 ---
 
-## 10. Status Badges Consistency
+## What does NOT change
 
-**Current**: Status badges use different color schemes across tabs.
-
-**Improvement**:
-- Standardize all status badges to use the same color map everywhere (Leads, Cases, Money)
-- Use pill-shaped badges consistently (`rounded-full px-3 py-0.5`)
-- Add a tiny dot before the status text for visual weight (e.g., a 6px colored circle)
-
----
-
-## Summary Table
-
-| Area | Change Type | Impact |
-|------|------------|--------|
-| KPI Cards | Gradient + border accent | High -- first thing admins see |
-| Sidebar active state | Leading edge bar | Medium -- navigation clarity |
-| Mobile bottom nav | Active pill indicator | Medium -- mobile usability |
-| Tables | Alternating rows + rounded corners | High -- data readability |
-| Empty states | Illustrated placeholders | Low -- edge case polish |
-| Header bar | Grouped controls + avatar | Medium -- visual cohesion |
-| Settings layout | 2-col grid | Low -- settings rarely visited |
-| Analytics charts | Card wrappers + legends | Medium -- data comprehension |
-| Mobile sheet | User info + backdrop | Low -- polish |
-| Status badges | Consistent pills + dots | Medium -- cross-tab consistency |
-
-All changes are CSS/Tailwind class adjustments and minor JSX restructuring. Zero behavior or data changes.
-
+- No database schema changes
+- No RPC or edge function changes
+- No changes to Influencer dashboard, Team dashboard, or Student dashboard
+- No changes to how data is stored or fetched
+- No changes to payout/commission logic or triggers
+- No changes to case status workflow
