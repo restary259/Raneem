@@ -24,8 +24,8 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
     const paidCases = cases.filter(c => c.paid_at);
     const paidThisMonth = paidCases.filter(c => c.paid_at?.startsWith(currentMonth));
 
-    const totalRevenue = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
-    const revenueThisMonth = paidThisMonth.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
+    const totalRevenue = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
+    const revenueThisMonth = paidThisMonth.reduce((s, c) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
     const totalTeamComm = paidCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
     const totalInfluencerComm = paidCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
     const conversionRate = leads.length > 0 ? Math.round((paidCases.length / leads.length) * 100) : 0;
@@ -42,7 +42,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
         name: tm.full_name,
         assigned: assigned.length,
         paid: paid.length,
-        revenue: paid.reduce((s: number, c: any) => s + (Number(c.service_fee) || 0), 0),
+        revenue: paid.reduce((s: number, c: any) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0),
         commission: paid.reduce((s: number, c: any) => s + (Number(c.lawyer_commission) || 0), 0),
       };
     });
@@ -74,7 +74,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
       monthlyData.push({
         month: label,
         students: mCases.length,
-        revenue: mCases.reduce((s: number, c: any) => s + (Number(c.service_fee) || 0), 0),
+        revenue: mCases.reduce((s: number, c: any) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0),
         teamComm: mCases.reduce((s: number, c: any) => s + (Number(c.lawyer_commission) || 0), 0),
         infComm: mCases.reduce((s: number, c: any) => s + (Number(c.influencer_commission) || 0), 0),
       });

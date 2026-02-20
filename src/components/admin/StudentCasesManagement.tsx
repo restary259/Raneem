@@ -85,8 +85,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
     return <Badge variant="outline" className="text-[10px]">🌐 {t('lawyer.sources.organic')}</Badge>;
   };
 
-  // Net profit is NIS only: school commission (EUR) is separate revenue, not included
-  const getNetProfit = (c: any) => (c.service_fee || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0) - (c.translation_fee || 0);
+  // Net profit: service_fee + school_commission (all ILS) minus all expenses
+  const getNetProfit = (c: any) => (c.service_fee || 0) + (c.school_commission || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0) - (c.translation_fee || 0);
 
   const bulkExportPDF = () => {
     const headers = [t('admin.ready.fullName', 'Full Name'), t('admin.ready.email', 'Email'), t('admin.ready.phone', 'Phone'), t('admin.ready.passportNumber', 'Passport'), t('admin.ready.nationality', 'Nationality'), t('admin.ready.destinationCity', 'City'), t('admin.ready.schoolLabel', 'School'), t('admin.ready.intensiveCourse', 'Course'), t('admin.students.status', 'Status')];
@@ -231,7 +231,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>
                       </div>
                       <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
-                        <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} €</span>
+                        <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} ₪</span>
                       </div>
                     </div>
                   ) : (
@@ -248,7 +248,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         <span>{t('cases.serviceFee')}</span><span className="font-semibold text-emerald-700">{selectedCase.service_fee} ₪</span>
                       </div>
                       <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
-                        <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} €</span>
+                        <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} ₪</span>
                       </div>
                       <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
                         <span>{t('cases.agentComm')}</span><span className="font-semibold text-red-700">-{selectedCase.influencer_commission} ₪</span>
@@ -270,7 +270,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     <Button variant="outline" size="sm" className="mt-3" onClick={() => {
                       setEditingMoney(true);
                       setMoneyValues({
-                        service_fee: Number(selectedCase.service_fee) || 8000,
+                        service_fee: Number(selectedCase.service_fee) || 4000,
                         school_commission: selectedCase.school_commission || 0,
                         influencer_commission: selectedCase.influencer_commission || 0,
                         lawyer_commission: selectedCase.lawyer_commission || 0,
