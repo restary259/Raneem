@@ -346,11 +346,11 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
       {/* Desktop Table */}
       {!isMobile ? (
-        <Card className="w-full overflow-hidden">
+        <Card className="w-full overflow-hidden rounded-xl">
           <div className="w-full overflow-x-auto">
               <table className="w-full table-fixed text-sm">
                  <thead>
-                   <tr className="border-b bg-muted/30">
+                   <tr className="border-b bg-muted/40">
                       <th className="w-[15%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.fullName', 'Name')}</th>
                       <th className="w-[13%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.phone', 'Phone')}</th>
                       <th className="w-[10%] px-4 py-3 text-start font-medium text-muted-foreground">{t('admin.leads.educationLevel', 'Education')}</th>
@@ -364,14 +364,14 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                    </tr>
                  </thead>
                 <tbody>
-                  {paginated.map(lead => {
+                  {paginated.map((lead, idx) => {
                     const variant = STATUS_VARIANTS[lead.status] || STATUS_VARIANTS.new;
                     const statusLabel = String(t(`admin.leads.${lead.status === 'not_eligible' ? 'notEligible' : lead.status}`));
                     const score = lead.eligibility_score ?? 0;
                     const isEligible = score >= 50;
                     const infName = getInfluencerName(lead);
                     return (
-                      <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                      <tr key={lead.id} className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${idx % 2 === 1 ? 'bg-muted/20' : ''}`}>
                         <td className="p-3">
                           <div>
                             <span className="font-medium">{lead.full_name}</span>
@@ -406,7 +406,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
                   })}
                 </tbody>
               </table>
-              {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
+              {filtered.length === 0 && (
+                <div className="py-16 text-center">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground font-medium">{t('admin.leads.noLeads')}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">{t('admin.leads.noLeadsDesc', { defaultValue: 'Leads will appear here once submitted' })}</p>
+                </div>
+              )}
           </div>
         </Card>
       ) : (
@@ -453,7 +459,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
               </Card>
             );
           })}
-          {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">{t('admin.leads.noLeads')}</p>}
+          {filtered.length === 0 && (
+            <div className="py-16 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground font-medium">{t('admin.leads.noLeads')}</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">{t('admin.leads.noLeadsDesc', { defaultValue: 'Leads will appear here once submitted' })}</p>
+            </div>
+          )}
         </div>
       )}
 

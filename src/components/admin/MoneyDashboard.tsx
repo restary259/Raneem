@@ -40,11 +40,19 @@ type TransactionRow = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-800',
-  approved: 'bg-blue-100 text-blue-800',
-  paid: 'bg-emerald-100 text-emerald-800',
-  completed: 'bg-emerald-100 text-emerald-800',
-  cancelled: 'bg-muted text-muted-foreground',
+  pending: 'bg-amber-100 text-amber-800 border-amber-200',
+  approved: 'bg-blue-100 text-blue-800 border-blue-200',
+  paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  completed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  cancelled: 'bg-muted text-muted-foreground border-muted',
+};
+
+const STATUS_DOTS: Record<string, string> = {
+  pending: 'bg-amber-500',
+  approved: 'bg-blue-500',
+  paid: 'bg-emerald-500',
+  completed: 'bg-emerald-500',
+  cancelled: 'bg-muted-foreground',
 };
 
 const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
@@ -508,7 +516,10 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm">{row.studentName}</p>
-                  <Badge className={STATUS_COLORS[row.status] || 'bg-muted text-muted-foreground'}>{statusLabel(row.status)}</Badge>
+                  <Badge className={`${STATUS_COLORS[row.status] || 'bg-muted text-muted-foreground'} border`}>
+                    <span className={`w-1.5 h-1.5 rounded-full me-1.5 ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
+                    {statusLabel(row.status)}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">{typeLabel(row.type)}</span>
@@ -520,14 +531,20 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               </CardContent>
             </Card>
           ))}
-          {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('money.noTransactions')}</p>}
+          {filtered.length === 0 && (
+            <div className="py-16 text-center">
+              <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+            </div>
+          )}
         </div>
       ) : (
-        <Card className="w-full overflow-hidden">
+        <Card className="w-full overflow-hidden rounded-xl">
           <div className="w-full overflow-x-auto">
               <table className="w-full table-fixed text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/40">
                     <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.student')}</th>
                     <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.revenueType')}</th>
                     <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('money.amount')}</th>
@@ -538,7 +555,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                 </thead>
                 <tbody>
                   {filtered.map(row => (
-                    <tr key={row.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <tr key={row.id} className={`border-b hover:bg-muted/50 transition-colors ${filtered.indexOf(row) % 2 === 1 ? 'bg-muted/20' : ''}`}>
                       <td className="px-4 py-3 font-medium">{row.studentName}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
@@ -551,7 +568,8 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{row.currency}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[row.status] || 'bg-muted'}`}>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[row.status] || 'bg-muted border-muted'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
                           {statusLabel(row.status)}
                         </span>
                       </td>
@@ -560,7 +578,13 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                   ))}
                 </tbody>
               </table>
-              {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('money.noTransactions')}</p>}
+              {filtered.length === 0 && (
+                <div className="py-16 text-center">
+                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                </div>
+              )}
           </div>
         </Card>
       )}

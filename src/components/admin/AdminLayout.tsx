@@ -85,7 +85,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
     <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
       {sidebarGroups.map((group, gi) => (
         <div key={gi}>
-          <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold px-4 mb-1">{t(group.labelKey)}</p>
+          <p className="text-[11px] uppercase tracking-widest text-white/40 font-semibold px-4 mb-1.5">{t(group.labelKey)}</p>
           <div className="space-y-0.5">
             {group.items.map((tab) => {
               const Icon = tab.icon;
@@ -94,19 +94,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
                 <button
                   key={tab.id}
                   onClick={() => isMobile ? handleMobileTabChange(tab.id) : onTabChange(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative ${
                     isActive
                       ? 'bg-accent/20 text-white shadow-[0_0_12px_rgba(234,88,12,0.3)]'
                       : 'text-white/70 hover:bg-white/8 hover:text-white'
                   }`}
                 >
+                  {isActive && (
+                    <span className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-orange-400 rounded-e-full" />
+                  )}
                   <Icon className="h-5 w-5 shrink-0" />
                   <span>{t(tab.labelKey)}</span>
                 </button>
               );
             })}
           </div>
-          {gi < sidebarGroups.length - 1 && <div className="border-t border-white/10 mt-3" />}
+          {gi < sidebarGroups.length - 1 && <div className="border-t border-white/10 mt-4" />}
         </div>
       ))}
     </nav>
@@ -140,7 +143,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
 
       {/* Mobile Sheet Menu */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side={sheetSide} className="w-72 bg-[#1E293B] text-white border-none p-0 flex flex-col h-full">
+        <SheetContent side={sheetSide} className="w-72 bg-[#1E293B] text-white border-none p-0 flex flex-col h-full [&~[data-state=open]]:bg-black/60">
           <SheetHeader className="p-6 border-b border-white/10 shrink-0">
             <SheetTitle className="flex items-center gap-3 text-white">
               <img src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" alt="Darb" className="w-10 h-10 object-contain" />
@@ -149,6 +152,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
                 <p className="text-xs text-white/60 font-normal">{t('admin.subtitle')}</p>
               </div>
             </SheetTitle>
+            {userEmail && (
+              <p className="text-[11px] text-white/40 truncate mt-1 px-1">{userEmail}</p>
+            )}
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto">
@@ -178,9 +184,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            {userEmail && <Badge variant="secondary" className="hidden sm:inline-flex">{userEmail}</Badge>}
-            <div className="[&_button]:text-muted-foreground [&_button]:hover:text-foreground [&_button]:hover:bg-muted/50">
-              <NotificationBell />
+            <div className="flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1">
+              {userEmail && (
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                    {userEmail.charAt(0).toUpperCase()}
+                  </span>
+                  <Badge variant="secondary">{userEmail}</Badge>
+                </div>
+              )}
+              {userEmail && (
+                <span className="sm:hidden w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                  {userEmail.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <div className="[&_button]:text-muted-foreground [&_button]:hover:text-foreground [&_button]:hover:bg-muted/50">
+                <NotificationBell />
+              </div>
             </div>
           </div>
         </header>
@@ -198,12 +218,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
                 <button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors relative ${
                     isActive ? 'text-orange-400' : 'text-white/50'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
+                  {isActive && <span className="absolute top-1.5 w-1 h-1 rounded-full bg-orange-400" />}
+                  <Icon className={`${isActive ? 'h-6 w-6' : 'h-5 w-5'} transition-all`} />
+                  <span className={`text-[10px] font-medium ${isActive ? 'bg-orange-500/15 rounded-full px-2.5 py-0.5' : ''}`}>{t(item.labelKey)}</span>
                 </button>
               );
             })}

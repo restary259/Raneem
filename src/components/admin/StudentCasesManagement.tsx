@@ -157,7 +157,13 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             </Card>
           );
         })}
-        {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">{t('studentCases.noCases', { defaultValue: 'No student cases at this stage' })}</p>}
+        {filtered.length === 0 && (
+          <div className="py-16 text-center">
+            <Package className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground font-medium">{t('studentCases.noCases', { defaultValue: 'No student cases at this stage' })}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{t('studentCases.noCasesDesc', { defaultValue: 'Cases will appear here as they progress' })}</p>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
