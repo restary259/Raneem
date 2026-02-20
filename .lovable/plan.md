@@ -1,99 +1,137 @@
 
-# Fix: Assigned Leads Not Appearing in Team Member Dashboards
 
-## Root Cause (Confirmed via Database Evidence)
+# Admin Dashboard Visual UI Improvements
 
-**Every single `student_cases` row has `deleted_at` set (non-NULL).** This means team members see ZERO cases.
-
-Evidence from database query -- all 4 assigned cases:
-
-| Case ID | assigned_lawyer_id | case_status | deleted_at |
-|---------|-------------------|-------------|------------|
-| 090ba31d | 644a94f2 | paid | 2026-02-19 20:29:21 |
-| b70bd6aa | b80a72a1 | assigned | 2026-02-19 15:35:27 |
-| 26c61b1f | b80a72a1 | paid | 2026-02-18 23:28:50 |
-| 55561d25 | 644a94f2 | paid | 2026-02-18 23:28:52 |
-
-The RLS policy for team members explicitly requires `deleted_at IS NULL`:
-
-```
-Lawyers can view assigned cases
-USING: has_role(auth.uid(), 'lawyer') AND assigned_lawyer_id = auth.uid() AND deleted_at IS NULL
-```
-
-Since ALL cases have `deleted_at` set, team members see nothing. The admin sees them because their RLS policy is unrestricted (`ALL` command).
-
-**Why this happens**: The admin's `assignLawyer` function (LeadsManagement.tsx, line 207-242) finds existing soft-deleted cases and updates their `assigned_lawyer_id` but **never clears `deleted_at`**. Same issue as the leads bug we just fixed -- the soft-delete flag persists through re-assignment.
+These are purely cosmetic/visual changes -- no behavior, data flow, or logic changes.
 
 ---
 
-## Fix (Two Parts)
+## 1. Overview Tab -- KPI Cards
 
-### Part 1: Code Fix -- Clear `deleted_at` on Assignment (LeadsManagement.tsx)
+**Current**: Cards are flat with minimal visual hierarchy. All cards look identical regardless of importance.
 
-In the `assignLawyer` function, add `deleted_at: null` when updating an existing case (line 213-217):
-
-```typescript
-// BEFORE (line 213-217):
-await supabase.from('student_cases').update({
-  assigned_lawyer_id: selectedLawyer,
-  assigned_at: new Date().toISOString(),
-  ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
-}).eq('id', existingCases[0].id);
-
-// AFTER:
-await supabase.from('student_cases').update({
-  assigned_lawyer_id: selectedLawyer,
-  assigned_at: new Date().toISOString(),
-  deleted_at: null,  // Restore if previously soft-deleted
-  ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
-}).eq('id', existingCases[0].id);
-```
-
-Also in `markEligible` (line 140-152): when an existing case is found but was soft-deleted, restore it:
-
-```typescript
-if (existingCases?.[0]) {
-  // Restore if previously soft-deleted
-  await supabase.from('student_cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
-}
-```
-
-### Part 2: Data Fix -- Restore All Active Cases
-
-Clear `deleted_at` on all cases that are actively assigned (have a lawyer and are not intentionally archived):
-
-```sql
-UPDATE student_cases 
-SET deleted_at = NULL 
-WHERE deleted_at IS NOT NULL 
-  AND assigned_lawyer_id IS NOT NULL;
-```
-
-This immediately makes all 4 existing cases visible to their assigned team members.
+**Improvement**:
+- Add subtle gradient backgrounds to the top 3 KPI cards (Total Students, New This Month, Revenue) to distinguish them as primary metrics
+- Add a thin colored left border (accent color) to each card matching its icon color
+- Increase the stat number font weight to `font-extrabold` and size to `text-3xl` on desktop for better scannability
+- Add a subtle `shadow-sm` hover effect on cards (`hover:shadow-md transition-shadow`)
 
 ---
 
-## Why This Fully Solves the Problem
+## 2. Sidebar -- Active Tab Indicator
 
-1. **Immediate visibility**: Data fix restores all existing cases for team members
-2. **Future-proof**: Code fix ensures new assignments always clear `deleted_at`
-3. **RLS passes**: With `deleted_at = NULL`, the lawyer RLS policy (`deleted_at IS NULL`) allows SELECT
-4. **Realtime works**: The `useRealtimeSubscription('student_cases', refetch)` in TeamDashboardPage already listens for changes -- once RLS allows access, refetch returns the data
-5. **No RLS changes needed**: Policies are correct; the data was wrong
+**Current**: Active tab has a background highlight but no strong visual anchor on the left edge.
 
-## Risk Assessment
+**Improvement**:
+- Add a 3px rounded orange bar on the leading edge (left in LTR, right in RTL) of the active sidebar item
+- Slightly increase padding between sidebar groups for better visual breathing room
+- Make the group label text slightly larger (`text-[11px]`) for readability
 
-| Change | Risk | Reason |
-|--------|------|--------|
-| Add `deleted_at: null` to assignment update | None | Active assignment should always clear soft-delete |
-| Restore existing cases via data fix | Low | Only affects cases with active lawyer assignments |
-| No RLS policy changes | None | Policies are already correct |
+---
 
-## Verification Plan
+## 3. Mobile Bottom Navigation
 
-After applying:
-1. Log in as team member (lawyer role) -- should see assigned cases immediately
-2. As admin, assign a new lead to a team member -- team member should see it in real-time
-3. Soft-delete a case, then re-assign it -- should reappear for team member
-4. Confirm influencer dashboard still shows linked cases correctly
+**Current**: Icons + tiny text, functional but visually plain.
+
+**Improvement**:
+- Add a subtle pill-shaped background behind the active icon+label (e.g., `bg-orange-500/15 rounded-full px-3 py-1`)
+- Increase icon size from `h-5 w-5` to `h-6 w-6` for the active item only
+- Add a small dot indicator above the active icon instead of just color change
+
+---
+
+## 4. Tables (Leads, Student Cases, Money)
+
+**Current**: Standard table with no row differentiation. Dense on mobile.
+
+**Improvement**:
+- Add alternating row backgrounds (`even:bg-muted/30`) for easier row scanning
+- Add a sticky first column on mobile so the lead name stays visible while scrolling horizontally
+- Round the table container corners (`rounded-xl overflow-hidden`)
+- Add subtle row hover highlight (`hover:bg-muted/50`)
+
+---
+
+## 5. Empty States
+
+**Current**: Plain text like "No data" when tables are empty.
+
+**Improvement**:
+- Add illustrated empty states with a muted icon (e.g., `Users` icon at 48px, opacity 30%) centered above the message
+- Use a softer message like "No leads yet" with a subtle description underneath
+- Wrap in a `py-16` container so it doesn't look cramped
+
+---
+
+## 6. Header Bar
+
+**Current**: Functional but the email badge and notification bell feel disconnected.
+
+**Improvement**:
+- Group the email badge and notification bell inside a subtle `bg-muted/50 rounded-full px-3 py-1` container
+- Add a small avatar circle (initials-based) next to the email for visual identity
+- On mobile, hide the email entirely (already done) but show the avatar circle
+
+---
+
+## 7. Settings Tab -- Cards Layout
+
+**Current**: Settings items stacked vertically with uniform styling.
+
+**Improvement**:
+- Use a 2-column grid on desktop for settings sections (Eligibility Config, Security, Audit Log)
+- Add subtle icons in the card headers for each settings section
+- Add a muted description line under each section title
+
+---
+
+## 8. Analytics Tab -- Chart Containers
+
+**Current**: Charts render directly with minimal framing.
+
+**Improvement**:
+- Wrap each chart in a `Card` with a clear title, subtle border, and consistent padding
+- Add a small legend below each chart using colored dots + labels
+- Use consistent chart colors that match the brand palette (orange, slate, emerald)
+
+---
+
+## 9. Mobile Sheet Menu
+
+**Current**: Functional slide-out menu, but visually identical to desktop sidebar.
+
+**Improvement**:
+- Add the user email at the top of the sheet (below the logo) in a muted style
+- Add a subtle divider line between the navigation and the bottom actions
+- Make the close area (overlay) slightly more visible with a darker backdrop
+
+---
+
+## 10. Status Badges Consistency
+
+**Current**: Status badges use different color schemes across tabs.
+
+**Improvement**:
+- Standardize all status badges to use the same color map everywhere (Leads, Cases, Money)
+- Use pill-shaped badges consistently (`rounded-full px-3 py-0.5`)
+- Add a tiny dot before the status text for visual weight (e.g., a 6px colored circle)
+
+---
+
+## Summary Table
+
+| Area | Change Type | Impact |
+|------|------------|--------|
+| KPI Cards | Gradient + border accent | High -- first thing admins see |
+| Sidebar active state | Leading edge bar | Medium -- navigation clarity |
+| Mobile bottom nav | Active pill indicator | Medium -- mobile usability |
+| Tables | Alternating rows + rounded corners | High -- data readability |
+| Empty states | Illustrated placeholders | Low -- edge case polish |
+| Header bar | Grouped controls + avatar | Medium -- visual cohesion |
+| Settings layout | 2-col grid | Low -- settings rarely visited |
+| Analytics charts | Card wrappers + legends | Medium -- data comprehension |
+| Mobile sheet | User info + backdrop | Low -- polish |
+| Status badges | Consistent pills + dots | Medium -- cross-tab consistency |
+
+All changes are CSS/Tailwind class adjustments and minor JSX restructuring. Zero behavior or data changes.
+
