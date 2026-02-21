@@ -47,11 +47,6 @@ const DesktopNav = () => {
       href: '/broadcast',
       description: t('nav.broadcastDesc'),
     },
-    {
-      title: t('housing.title', 'Student Housing'),
-      href: '/housing',
-      description: t('housing.heroSubtitle', 'Find your perfect accommodation'),
-    }
   ];
 
   return (
@@ -80,7 +75,7 @@ const DesktopNav = () => {
 
           {/* تواصل معنا */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-gray-700 hover:text-orange-500 font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item contact-glow font-medium`}>
               <Link to="/contact">
                 {t('nav.contact')}
               </Link>

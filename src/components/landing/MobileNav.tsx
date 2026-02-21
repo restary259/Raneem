@@ -64,7 +64,7 @@ const MobileNav = () => {
           </Link>
           <Link 
             to="/contact" 
-            className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}
+            className={`text-sm font-medium contact-glow transition-colors ${textAlign} py-2`}
           >
             {t('nav.contact')}
           </Link>
@@ -93,12 +93,6 @@ const MobileNav = () => {
                 className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
               >
                 {t('nav.broadcast')}
-              </Link>
-              <Link 
-                to="/housing" 
-                className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}
-              >
-                {t('housing.title', 'Student Housing')}
               </Link>
             </CollapsibleContent>
           </Collapsible>

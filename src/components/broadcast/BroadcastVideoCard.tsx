@@ -19,7 +19,11 @@ interface BroadcastVideoCardProps {
 const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay }) => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('broadcast');
-  const dateLocale = i18n.language === 'ar' ? ar : enUS;
+  const isEn = i18n.language === 'en';
+  const dateLocale = isEn ? enUS : ar;
+
+  const title = isEn && post.title_en ? post.title_en : post.title;
+  const description = isEn && post.description_en ? post.description_en : post.description;
 
   const timeAgo = formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: dateLocale });
 
@@ -35,7 +39,7 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
     };
 
     if (navigator.share) {
-      navigator.share({ title: post.title, url }).catch(copyLink);
+      navigator.share({ title, url }).catch(copyLink);
     } else {
       copyLink();
     }
@@ -44,15 +48,15 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
   return (
     <Card className="w-full animate-scale-in transition-all hover:shadow-xl overflow-hidden group cursor-pointer bg-card flex flex-col border hover:border-accent" onClick={() => onPlay(post)}>
       <div className="relative">
-        <img src={post.posterUrl} alt={post.title} className="w-full h-auto object-cover aspect-video transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+        <img src={post.posterUrl} alt={title} className="w-full h-auto object-cover aspect-video transition-transform duration-300 group-hover:scale-105" loading="lazy" />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
           <PlayCircle className="h-16 w-16 text-white/80 transition-transform group-hover:scale-110" />
         </div>
         <Badge variant="secondary" className="absolute bottom-2 right-2">{post.duration}</Badge>
       </div>
       <CardHeader className="flex-grow pb-4">
-        <CardTitle className="text-base font-bold line-clamp-2" title={post.title}>{post.title}</CardTitle>
-        <CardDescription className="text-sm text-muted-foreground mt-2 line-clamp-3">{post.description}</CardDescription>
+        <CardTitle className="text-base font-bold line-clamp-2" title={title}>{title}</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground mt-2 line-clamp-3">{description}</CardDescription>
       </CardHeader>
       <CardFooter className="flex justify-between items-center pt-0">
         <span className="text-xs text-muted-foreground">{timeAgo}</span>
