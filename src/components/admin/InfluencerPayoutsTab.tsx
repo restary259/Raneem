@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Clock, AlertTriangle, CheckCircle2, DollarSign, Users, CalendarClock, Filter } from 'lucide-react';
+import { ChevronDown, Clock, AlertTriangle, CheckCircle2, DollarSign, Users, CalendarClock, Filter } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const LOCK_DAYS = 20;
 const MS_PER_DAY = 86_400_000;
@@ -41,28 +42,42 @@ function fmtCurrency(n: number) {
   return `₪${n.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 }
 
+/* ---------- dot badge ---------- */
+const DotBadge = ({ color, children }: { color: string; children: React.ReactNode }) => {
+  const colorMap: Record<string, string> = {
+    amber: 'bg-amber-400',
+    emerald: 'bg-emerald-500',
+    red: 'bg-red-500',
+    blue: 'bg-blue-500',
+  };
+  const bgMap: Record<string, string> = {
+    amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
+    emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300',
+    red: 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300',
+    blue: 'bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bgMap[color] || ''}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${colorMap[color] || ''}`} />
+      {children}
+    </span>
+  );
+};
+
 /* ---------- component ---------- */
 
 const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewards, payoutRequests }) => {
   const { t } = useTranslation('dashboard');
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState<FilterType>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'due' | 'amount'>('due');
 
   /* Build per-influencer aggregation */
-  const { rows, summary } = useMemo(() => {
-    const now = Date.now();
-
-    // Map lead_id → lead
+  const { rows, summary, filterCounts } = useMemo(() => {
     const leadMap = new Map(leads.map((l: any) => [l.id, l]));
+    const paidCases = cases.filter((c: any) => c.case_status === 'paid' && !c.deleted_at);
 
-    // Map case → lead → influencer
-    // Only paid cases with influencer source
-    const paidCases = cases.filter((c: any) =>
-      c.case_status === 'paid' && !c.deleted_at
-    );
-
-    // Group cases by influencer id
     const infCaseMap = new Map<string, any[]>();
     for (const cs of paidCases) {
       const lead = leadMap.get(cs.lead_id);
@@ -72,14 +87,12 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
       infCaseMap.get(infId)!.push({ ...cs, _lead: lead });
     }
 
-    // Influencer rewards map: userId → rewards[]
     const infRewardMap = new Map<string, any[]>();
     for (const r of rewards) {
       if (!infRewardMap.has(r.user_id)) infRewardMap.set(r.user_id, []);
       infRewardMap.get(r.user_id)!.push(r);
     }
 
-    // Payout requests by requestor
     const prMap = new Map<string, any[]>();
     for (const pr of payoutRequests) {
       if (!prMap.has(pr.requestor_id)) prMap.set(pr.requestor_id, []);
@@ -106,11 +119,7 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
       const caseDetails = infCases.map((cs: any) => {
         const due = getDueInfo(cs.paid_countdown_started_at);
         const commission = Number(cs.influencer_commission) || 0;
-
-        // Find matching reward for this case (via admin_notes containing case id)
-        const matchingReward = infRewards.find((r: any) =>
-          r.admin_notes?.includes(cs.id)
-        );
+        const matchingReward = infRewards.find((r: any) => r.admin_notes?.includes(cs.id));
         const rewardStatus = matchingReward?.status || 'pending';
 
         let paymentStatus: 'countdown' | 'ready' | 'overdue' | 'paid' = 'countdown';
@@ -125,7 +134,6 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
           if (due.remaining <= 7) dueThisWeek++;
           if (!nextDueDate || due.dueDate < nextDueDate) nextDueDate = due.dueDate;
         } else {
-          // countdown expired
           if (rewardStatus === 'pending' || rewardStatus === 'approved') {
             if (due.remaining <= -7) {
               paymentStatus = 'overdue';
@@ -160,7 +168,6 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
         .reduce((s: number, pr: any) => s + (Number(pr.amount) || 0), 0);
       totalPaidOut += paidTotal;
 
-      // Status badge
       let status: 'green' | 'yellow' | 'red' = 'green';
       if (overdueLocal > 0) status = 'red';
       else if (pendingCountdown > 0 || readyForPayout > 0) status = 'yellow';
@@ -181,185 +188,231 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
       };
     }).filter((r: any) => r.paidStudents > 0 || r.totalReferred > 0);
 
-    return {
-      rows,
-      summary: { totalPending, dueThisWeek, overdueCount, totalPaidOut },
+    // Pre-compute filter counts
+    const filterCounts = {
+      all: rows.length,
+      ready: rows.filter(r => r.readyForPayout > 0).length,
+      overdue: rows.filter(r => r.overdue > 0).length,
+      due7: rows.filter(r => r.caseDetails.some((c: any) => c.paymentStatus === 'countdown' && c.daysRemaining <= 7 && c.daysRemaining > 0)).length,
+      pending: rows.filter(r => r.pendingCountdown > 0 || r.readyForPayout > 0 || r.overdue > 0).length,
     };
+
+    return { rows, summary: { totalPending, dueThisWeek, overdueCount, totalPaidOut }, filterCounts };
   }, [cases, leads, influencers, rewards, payoutRequests]);
 
   /* Filter rows */
   const filtered = useMemo(() => {
     let result = rows;
     switch (filter) {
-      case 'ready':
-        result = rows.filter(r => r.readyForPayout > 0);
-        break;
-      case 'overdue':
-        result = rows.filter(r => r.overdue > 0);
-        break;
-      case 'due7':
-        result = rows.filter(r => r.caseDetails.some((c: any) => c.paymentStatus === 'countdown' && c.daysRemaining <= 7 && c.daysRemaining > 0));
-        break;
-      case 'pending':
-        result = rows.filter(r => r.pendingCountdown > 0 || r.readyForPayout > 0 || r.overdue > 0);
-        break;
+      case 'ready': result = rows.filter(r => r.readyForPayout > 0); break;
+      case 'overdue': result = rows.filter(r => r.overdue > 0); break;
+      case 'due7': result = rows.filter(r => r.caseDetails.some((c: any) => c.paymentStatus === 'countdown' && c.daysRemaining <= 7 && c.daysRemaining > 0)); break;
+      case 'pending': result = rows.filter(r => r.pendingCountdown > 0 || r.readyForPayout > 0 || r.overdue > 0); break;
     }
-    // Sort
-    result = [...result].sort((a, b) => {
+    return [...result].sort((a, b) => {
       if (sortBy === 'amount') return b.totalOwed - a.totalOwed;
-      // by due date ascending (nulls last)
       const aD = a.nextDueDate?.getTime() ?? Infinity;
       const bD = b.nextDueDate?.getTime() ?? Infinity;
       return aD - bD;
     });
-    return result;
   }, [rows, filter, sortBy]);
 
-  const filterButtons: { key: FilterType; label: string; icon?: React.ReactNode }[] = [
+  const filterButtons: { key: FilterType; label: string; dot?: string }[] = [
     { key: 'all', label: t('admin.influencerPayouts.allPending', 'All') },
-    { key: 'ready', label: t('admin.influencerPayouts.readyForPayout', 'Ready') },
-    { key: 'overdue', label: t('admin.influencerPayouts.overdueFilter', 'Overdue') },
-    { key: 'due7', label: t('admin.influencerPayouts.dueIn7Days', 'Due 7d') },
-    { key: 'pending', label: t('admin.influencerPayouts.countdownActive', 'Pending') },
+    { key: 'ready', label: t('admin.influencerPayouts.readyForPayout', 'Ready'), dot: 'bg-emerald-500' },
+    { key: 'overdue', label: t('admin.influencerPayouts.overdueFilter', 'Overdue'), dot: 'bg-red-500' },
+    { key: 'due7', label: t('admin.influencerPayouts.dueIn7Days', 'Due 7d'), dot: 'bg-blue-500' },
+    { key: 'pending', label: t('admin.influencerPayouts.countdownActive', 'Pending'), dot: 'bg-amber-500' },
   ];
 
   const statusBadge = (status: 'green' | 'yellow' | 'red') => {
-    if (status === 'green') return <Badge className="bg-emerald-100 text-emerald-800 border-0"><CheckCircle2 className="h-3 w-3 me-1" />{t('admin.influencerPayouts.noPending', 'No Pending')}</Badge>;
-    if (status === 'yellow') return <Badge className="bg-amber-100 text-amber-800 border-0"><Clock className="h-3 w-3 me-1" />{t('admin.influencerPayouts.countdownActive', 'Countdown')}</Badge>;
-    return <Badge className="bg-red-100 text-red-800 border-0"><AlertTriangle className="h-3 w-3 me-1" />{t('admin.influencerPayouts.overdue', 'Overdue')}</Badge>;
+    if (status === 'green') return <DotBadge color="emerald">{t('admin.influencerPayouts.noPending', 'No Pending')}</DotBadge>;
+    if (status === 'yellow') return <DotBadge color="amber">{t('admin.influencerPayouts.countdownActive', 'Countdown')}</DotBadge>;
+    return <DotBadge color="red">{t('admin.influencerPayouts.overdue', 'Overdue')}</DotBadge>;
   };
 
   const paymentBadge = (status: string) => {
     switch (status) {
-      case 'countdown': return <Badge className="bg-amber-100 text-amber-800 border-0">🔒 {t('admin.influencerPayouts.countdownActive', 'Countdown')}</Badge>;
-      case 'ready': return <Badge className="bg-emerald-100 text-emerald-800 border-0">✅ {t('admin.influencerPayouts.readyForPayout', 'Ready')}</Badge>;
-      case 'overdue': return <Badge className="bg-red-100 text-red-800 border-0">🔴 {t('admin.influencerPayouts.overdue', 'Overdue')}</Badge>;
-      case 'paid': return <Badge className="bg-blue-100 text-blue-800 border-0">💰 {t('admin.influencerPayouts.paid', 'Paid')}</Badge>;
+      case 'countdown': return <DotBadge color="amber">{t('admin.influencerPayouts.countdownActive', 'Countdown')}</DotBadge>;
+      case 'ready': return <DotBadge color="emerald">{t('admin.influencerPayouts.readyForPayout', 'Ready')}</DotBadge>;
+      case 'overdue': return <DotBadge color="red">{t('admin.influencerPayouts.overdue', 'Overdue')}</DotBadge>;
+      case 'paid': return <DotBadge color="blue">{t('admin.influencerPayouts.paid', 'Paid')}</DotBadge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
 
+  /* ---------- KPI cards config ---------- */
+  const kpiCards = [
+    {
+      label: t('admin.influencerPayouts.totalPendingPayout', 'Total Pending'),
+      value: fmtCurrency(summary.totalPending),
+      icon: DollarSign,
+      border: 'border-s-amber-500',
+      iconBg: 'bg-amber-500',
+    },
+    {
+      label: t('admin.influencerPayouts.dueThisWeek', 'Due This Week'),
+      value: summary.dueThisWeek,
+      icon: CalendarClock,
+      border: 'border-s-blue-500',
+      iconBg: 'bg-blue-500',
+    },
+    {
+      label: t('admin.influencerPayouts.overdue', 'Overdue'),
+      value: summary.overdueCount,
+      icon: AlertTriangle,
+      border: 'border-s-red-500',
+      iconBg: 'bg-red-500',
+      valueClass: summary.overdueCount > 0 ? 'text-red-600 dark:text-red-400' : '',
+    },
+    {
+      label: t('admin.influencerPayouts.totalPaidOut', 'Total Paid Out'),
+      value: fmtCurrency(summary.totalPaidOut),
+      icon: CheckCircle2,
+      border: 'border-s-emerald-500',
+      iconBg: 'bg-emerald-500',
+      valueClass: 'text-emerald-600 dark:text-emerald-400',
+    },
+  ];
+
+  /* ---------- Mobile card for an influencer ---------- */
+  const renderMobileCard = (row: typeof filtered[0]) => (
+    <Card key={row.id} className="rounded-xl hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-sm">{row.name}</p>
+          {statusBadge(row.status)}
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+          <div>
+            <span className="block text-foreground font-extrabold text-lg">{row.totalReferred}</span>
+            {t('admin.influencerPayouts.totalReferred', 'Referred')}
+          </div>
+          <div>
+            <span className="block text-foreground font-extrabold text-lg">{row.paidStudents}</span>
+            {t('admin.influencerPayouts.paidStudents', 'Paid')}
+          </div>
+          <div>
+            <span className="block text-foreground font-extrabold text-lg">{row.totalOwed > 0 ? fmtCurrency(row.totalOwed) : '—'}</span>
+            {t('admin.influencerPayouts.totalOwed', 'Owed')}
+          </div>
+          <div>
+            <span className="block text-foreground font-extrabold text-lg">{row.totalPaid > 0 ? fmtCurrency(row.totalPaid) : '—'}</span>
+            {t('admin.influencerPayouts.totalPaidCol', 'Paid Out')}
+          </div>
+        </div>
+        {row.nextDueDate && (
+          <p className="text-xs text-muted-foreground">
+            {t('admin.influencerPayouts.nextDueDate', 'Next Due')}: <span className="font-medium text-foreground">{fmtDate(row.nextDueDate)}</span>
+          </p>
+        )}
+        <div className="flex flex-wrap gap-1.5">
+          {row.pendingCountdown > 0 && <DotBadge color="amber">{row.pendingCountdown} countdown</DotBadge>}
+          {row.readyForPayout > 0 && <DotBadge color="emerald">{row.readyForPayout} ready</DotBadge>}
+          {row.overdue > 0 && <DotBadge color="red">{row.overdue} overdue</DotBadge>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              {t('admin.influencerPayouts.totalPendingPayout', 'Total Pending')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{fmtCurrency(summary.totalPending)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CalendarClock className="h-4 w-4" />
-              {t('admin.influencerPayouts.dueThisWeek', 'Due This Week')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{summary.dueThisWeek}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              {t('admin.influencerPayouts.overdue', 'Overdue')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-destructive">{summary.overdueCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              {t('admin.influencerPayouts.totalPaidOut', 'Total Paid Out')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-emerald-600">{fmtCurrency(summary.totalPaidOut)}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {kpiCards.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <Card key={kpi.label} className={`border-s-[3px] ${kpi.border} rounded-xl hover:shadow-md transition-shadow duration-200`}>
+              <CardContent className="p-3 md:p-4 flex items-start gap-3">
+                <div className={`p-2 md:p-2.5 rounded-xl ${kpi.iconBg} text-white shadow-sm shrink-0`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] md:text-xs text-muted-foreground font-medium truncate">{kpi.label}</p>
+                  <p className={`font-extrabold text-xl md:text-2xl lg:text-3xl leading-tight ${kpi.valueClass || ''}`}>{kpi.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Filters + Sort */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 overflow-x-auto flex-nowrap pb-1 scrollbar-hide">
+        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
         {filterButtons.map(fb => (
           <Button
             key={fb.key}
             size="sm"
             variant={filter === fb.key ? 'default' : 'outline'}
             onClick={() => setFilter(fb.key)}
-            className="text-xs"
+            className={`text-xs rounded-full shrink-0 gap-1.5 ${filter === fb.key ? '' : 'hover:bg-muted/60'}`}
           >
+            {fb.dot && <span className={`h-1.5 w-1.5 rounded-full ${fb.dot}`} />}
             {fb.label}
+            {filterCounts[fb.key] > 0 && (
+              <span className="ml-0.5 text-[10px] opacity-70">({filterCounts[fb.key]})</span>
+            )}
           </Button>
         ))}
-        <div className="ms-auto flex gap-1">
-          <Button size="sm" variant={sortBy === 'due' ? 'secondary' : 'ghost'} onClick={() => setSortBy('due')} className="text-xs">
+        <div className="ms-auto flex gap-1 shrink-0">
+          <Button size="sm" variant={sortBy === 'due' ? 'secondary' : 'ghost'} onClick={() => setSortBy('due')} className="text-xs rounded-full">
             {t('admin.influencerPayouts.payoutDueDate', 'Due Date')}
           </Button>
-          <Button size="sm" variant={sortBy === 'amount' ? 'secondary' : 'ghost'} onClick={() => setSortBy('amount')} className="text-xs">
+          <Button size="sm" variant={sortBy === 'amount' ? 'secondary' : 'ghost'} onClick={() => setSortBy('amount')} className="text-xs rounded-full">
             {t('admin.influencerPayouts.commissionAmount', 'Amount')}
           </Button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Users className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            <p>{t('admin.influencerPayouts.noPayoutsMsg', 'No influencer payouts to display')}</p>
+        <Card className="rounded-xl">
+          <CardContent className="py-16 text-center text-muted-foreground">
+            <Users className="h-16 w-16 mx-auto mb-4 opacity-20" />
+            <p className="text-base font-medium">{t('admin.influencerPayouts.noPayoutsMsg', 'No influencer payouts to display')}</p>
+            <p className="text-sm mt-1 opacity-60">{t('admin.influencerPayouts.noPayoutsSub', 'Payouts will appear here once cases are marked as paid')}</p>
           </CardContent>
         </Card>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {filtered.map(renderMobileCard)}
+        </div>
       ) : (
-        <Card>
+        <Card className="rounded-xl overflow-hidden">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-8" />
-                  <TableHead>{t('admin.influencerPayouts.influencerName', 'Influencer')}</TableHead>
-                  <TableHead className="text-center">{t('admin.influencerPayouts.totalReferred', 'Referred')}</TableHead>
-                  <TableHead className="text-center">{t('admin.influencerPayouts.paidStudents', 'Paid')}</TableHead>
-                  <TableHead className="text-center">{t('admin.influencerPayouts.pendingCountdown', 'Countdown')}</TableHead>
-                  <TableHead className="text-center">{t('admin.influencerPayouts.readyForPayout', 'Ready')}</TableHead>
-                  <TableHead className="text-end">{t('admin.influencerPayouts.totalOwed', 'Owed')}</TableHead>
-                  <TableHead className="text-end">{t('admin.influencerPayouts.totalPaidCol', 'Paid Out')}</TableHead>
-                  <TableHead>{t('admin.influencerPayouts.nextDueDate', 'Next Due')}</TableHead>
-                  <TableHead>{t('admin.influencerPayouts.statusCol', 'Status')}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t('admin.influencerPayouts.influencerName', 'Influencer')}</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">{t('admin.influencerPayouts.totalReferred', 'Referred')}</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">{t('admin.influencerPayouts.paidStudents', 'Paid')}</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">{t('admin.influencerPayouts.pendingCountdown', 'Countdown')}</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">{t('admin.influencerPayouts.readyForPayout', 'Ready')}</TableHead>
+                  <TableHead className="text-end whitespace-nowrap">{t('admin.influencerPayouts.totalOwed', 'Owed')}</TableHead>
+                  <TableHead className="text-end whitespace-nowrap">{t('admin.influencerPayouts.totalPaidCol', 'Paid Out')}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t('admin.influencerPayouts.nextDueDate', 'Next Due')}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t('admin.influencerPayouts.statusCol', 'Status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(row => (
+                {filtered.map((row, idx) => (
                   <Collapsible key={row.id} open={expandedId === row.id} onOpenChange={(open) => setExpandedId(open ? row.id : null)} asChild>
                     <>
                       <CollapsibleTrigger asChild>
-                        <TableRow className="cursor-pointer hover:bg-muted/50 transition-colors">
-                          <TableCell>
-                            {expandedId === row.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        <TableRow className={`cursor-pointer hover:bg-muted/50 transition-colors ${idx % 2 === 1 ? 'bg-muted/20' : ''}`}>
+                          <TableCell className="w-8 px-2">
+                            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedId === row.id ? 'rotate-180' : ''}`} />
                           </TableCell>
                           <TableCell className="font-medium">{row.name}</TableCell>
                           <TableCell className="text-center">{row.totalReferred}</TableCell>
                           <TableCell className="text-center">{row.paidStudents}</TableCell>
                           <TableCell className="text-center">
-                            {row.pendingCountdown > 0 ? (
-                              <Badge className="bg-amber-100 text-amber-800 border-0">{row.pendingCountdown}</Badge>
-                            ) : '—'}
+                            {row.pendingCountdown > 0 ? <DotBadge color="amber">{row.pendingCountdown}</DotBadge> : '—'}
                           </TableCell>
                           <TableCell className="text-center">
-                            {row.readyForPayout > 0 ? (
-                              <Badge className="bg-emerald-100 text-emerald-800 border-0">{row.readyForPayout}</Badge>
-                            ) : '—'}
+                            {row.readyForPayout > 0 ? <DotBadge color="emerald">{row.readyForPayout}</DotBadge> : '—'}
                           </TableCell>
                           <TableCell className="text-end font-semibold">{row.totalOwed > 0 ? fmtCurrency(row.totalOwed) : '—'}</TableCell>
                           <TableCell className="text-end">{row.totalPaid > 0 ? fmtCurrency(row.totalPaid) : '—'}</TableCell>
@@ -370,33 +423,33 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
                       <CollapsibleContent asChild>
                         <tr>
                           <td colSpan={10} className="p-0">
-                            <div className="bg-muted/30 px-6 py-3">
+                            <div className="border-s-2 border-primary/30 ms-4 bg-muted/20 rounded-lg mx-2 mb-2 px-4 py-3">
                               <Table>
                                 <TableHeader>
                                   <TableRow>
-                                    <TableHead>{t('admin.influencerPayouts.studentName', 'Student')}</TableHead>
-                                    <TableHead>{t('admin.influencerPayouts.paidDate', 'Paid Date')}</TableHead>
-                                    <TableHead>{t('admin.influencerPayouts.payoutDueDate', 'Due Date')}</TableHead>
-                                    <TableHead className="text-center">{t('admin.influencerPayouts.daysRemaining', 'Days Left')}</TableHead>
-                                    <TableHead className="text-end">{t('admin.influencerPayouts.commissionAmount', 'Commission')}</TableHead>
-                                    <TableHead>{t('admin.influencerPayouts.paymentStatus', 'Status')}</TableHead>
+                                    <TableHead className="text-xs whitespace-nowrap">{t('admin.influencerPayouts.studentName', 'Student')}</TableHead>
+                                    <TableHead className="text-xs whitespace-nowrap">{t('admin.influencerPayouts.paidDate', 'Paid Date')}</TableHead>
+                                    <TableHead className="text-xs whitespace-nowrap">{t('admin.influencerPayouts.payoutDueDate', 'Due Date')}</TableHead>
+                                    <TableHead className="text-xs text-center whitespace-nowrap">{t('admin.influencerPayouts.daysRemaining', 'Days Left')}</TableHead>
+                                    <TableHead className="text-xs text-end whitespace-nowrap">{t('admin.influencerPayouts.commissionAmount', 'Commission')}</TableHead>
+                                    <TableHead className="text-xs whitespace-nowrap">{t('admin.influencerPayouts.paymentStatus', 'Status')}</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                   {row.caseDetails.map((cd: any) => (
-                                    <TableRow key={cd.caseId}>
-                                      <TableCell>{cd.studentName}</TableCell>
-                                      <TableCell>{fmtDate(cd.paidAt)}</TableCell>
-                                      <TableCell>{cd.dueDate ? fmtDate(cd.dueDate) : '—'}</TableCell>
-                                      <TableCell className="text-center">
+                                    <TableRow key={cd.caseId} className="text-sm">
+                                      <TableCell className="text-sm">{cd.studentName}</TableCell>
+                                      <TableCell className="text-sm">{fmtDate(cd.paidAt)}</TableCell>
+                                      <TableCell className="text-sm">{cd.dueDate ? fmtDate(cd.dueDate) : '—'}</TableCell>
+                                      <TableCell className="text-center text-sm">
                                         {cd.paymentStatus === 'paid' ? '—' : (
-                                          <span className={cd.daysRemaining <= 0 ? 'text-destructive font-semibold' : cd.daysRemaining <= 7 ? 'text-amber-600 font-semibold' : ''}>
+                                          <span className={cd.daysRemaining <= 0 ? 'text-red-600 dark:text-red-400 font-semibold' : cd.daysRemaining <= 7 ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''}>
                                             {cd.daysRemaining > 0 ? `${cd.daysRemaining}d` : `${Math.abs(cd.daysRemaining)}d overdue`}
                                           </span>
                                         )}
                                       </TableCell>
-                                      <TableCell className="text-end font-medium">{fmtCurrency(cd.commission)}</TableCell>
-                                      <TableCell>{paymentBadge(cd.paymentStatus)}</TableCell>
+                                      <TableCell className="text-end text-sm font-medium">{fmtCurrency(cd.commission)}</TableCell>
+                                      <TableCell className="text-sm">{paymentBadge(cd.paymentStatus)}</TableCell>
                                     </TableRow>
                                   ))}
                                 </TableBody>
