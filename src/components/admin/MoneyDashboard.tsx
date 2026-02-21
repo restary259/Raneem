@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,7 @@ import {
   ArrowUpRight, ArrowDownRight, Search, FileText, CheckCircle, X, MessageCircle, Clock
 } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
+import InfluencerPayoutsTab from './InfluencerPayoutsTab';
 
 
 interface MoneyDashboardProps {
@@ -221,6 +223,13 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   };
 
   return (
+    <Tabs defaultValue="transactions" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="transactions">{t('money.tabTransactions', 'Transactions')}</TabsTrigger>
+        <TabsTrigger value="payouts">{t('money.tabPayouts', 'Agent Payouts')}</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="transactions">
     <div className="space-y-6">
       {/* Payout Requests — Admin Approval Panel */}
       {(() => {
@@ -638,6 +647,19 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         );
       })()}
     </div>
+      </TabsContent>
+
+      <TabsContent value="payouts">
+        <InfluencerPayoutsTab
+          cases={cases}
+          leads={leads}
+          influencers={influencers}
+          rewards={rewards}
+          payoutRequests={payoutRequests}
+          onRefresh={onRefresh}
+        />
+      </TabsContent>
+    </Tabs>
   );
 };
 

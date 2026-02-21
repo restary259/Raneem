@@ -1065,6 +1065,8 @@
     "statusChangedBody": "تم تغيير حالة طلبك إلى: {{status}}"
   },
   "money": {
+    "tabTransactions": "المعاملات",
+    "tabPayouts": "مدفوعات الوكلاء",
     "totalRevenueNIS": "الإيرادات (شيكل)",
     "totalRevenueEUR": "الإيرادات (يورو)",
     "totalExpenses": "إجمالي المصروفات",
