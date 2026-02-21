@@ -19,6 +19,7 @@ interface ReadyCase {
   selected_city: string | null;
   selected_school: string | null;
   accommodation_status: string | null;
+  housing_description: string | null;
   assigned_lawyer_id: string | null;
   paid_at: string | null;
   student_profile_id: string | null;
@@ -40,7 +41,7 @@ interface ReadyCase {
   lead_email: string | null;
 }
 
-const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
+// ACCOMMODATION_OPTIONS removed — housing merged into single free-text field
 
 const ReadyToApplyTable: React.FC = () => {
   const { t, i18n } = useTranslation('dashboard');
@@ -63,7 +64,7 @@ const ReadyToApplyTable: React.FC = () => {
     setLoading(true);
     const { data: casesData } = await (supabase as any)
       .from('student_cases')
-      .select('id, lead_id, selected_city, selected_school, accommodation_status, assigned_lawyer_id, paid_at, student_profile_id, student_full_name, student_email, student_phone, student_address, student_age, language_proficiency, intensive_course, passport_number, nationality, country_of_birth')
+      .select('id, lead_id, selected_city, selected_school, accommodation_status, housing_description, assigned_lawyer_id, paid_at, student_profile_id, student_full_name, student_email, student_phone, student_address, student_age, language_proficiency, intensive_course, passport_number, nationality, country_of_birth')
       .eq('case_status', 'ready_to_apply')
       .order('paid_at', { ascending: false });
 
@@ -126,7 +127,7 @@ const ReadyToApplyTable: React.FC = () => {
       country_of_birth: c.country_of_birth || '',
       selected_city: c.selected_city || '',
       selected_school: c.selected_school || '',
-      accommodation_status: c.accommodation_status || '',
+      housing_description: c.housing_description || '',
     });
   };
 
@@ -146,7 +147,7 @@ const ReadyToApplyTable: React.FC = () => {
       country_of_birth: editValues.country_of_birth || null,
       selected_city: editValues.selected_city || null,
       selected_school: editValues.selected_school || null,
-      accommodation_status: editValues.accommodation_status || null,
+      housing_description: editValues.housing_description || null,
     }).eq('id', editCase.id);
 
     setSaving(false);
@@ -254,7 +255,7 @@ const ReadyToApplyTable: React.FC = () => {
                     <th className="w-[18%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.name')}</th>
                     <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.city')}</th>
                     <th className="w-[14%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.school')}</th>
-                    <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.accommodation')}</th>
+                    <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.housingType', { defaultValue: 'Housing Type' })}</th>
                     <th className="w-[12%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.staff')}</th>
                     <th className="w-[10%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.account')}</th>
                     <th className="w-[8%] p-3 text-start font-medium text-muted-foreground">{t('admin.ready.actions')}</th>
@@ -277,7 +278,7 @@ const ReadyToApplyTable: React.FC = () => {
                       <td className="p-3 font-medium">{c.student_full_name || c.lead_name}</td>
                       <td className="p-3">{c.selected_city || '—'}</td>
                       <td className="p-3">{c.selected_school || '—'}</td>
-                      <td className="p-3">{c.accommodation_status || '—'}</td>
+                      <td className="p-3">{c.housing_description || '—'}</td>
                       <td className="p-3">{getTeamMemberName(c.assigned_lawyer_id)}</td>
                       <td className="p-3">
                         {c.student_profile_id ? (
@@ -355,15 +356,8 @@ const ReadyToApplyTable: React.FC = () => {
               <Input value={editValues.intensive_course || ''} onChange={e => setEditValues(v => ({ ...v, intensive_course: e.target.value }))} />
             </div>
             <div>
-              <Label>{t('admin.ready.accommodationType')}</Label>
-              <Select value={editValues.accommodation_status || ''} onValueChange={v => setEditValues(ev => ({ ...ev, accommodation_status: v }))}>
-                <SelectTrigger><SelectValue placeholder={t('admin.ready.selectAccommodation')} /></SelectTrigger>
-                <SelectContent>
-                  {ACCOMMODATION_OPTIONS.map(o => (
-                    <SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>{t('admin.ready.housingType', { defaultValue: 'Housing Type' })}</Label>
+              <Input value={editValues.housing_description || ''} onChange={e => setEditValues(v => ({ ...v, housing_description: e.target.value }))} placeholder="e.g. Shared flat with bathroom" />
             </div>
           </div>
 
