@@ -247,7 +247,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       </div>
                       {selectedCase.housing_description && (
                         <div className="flex justify-between p-2 bg-blue-50 rounded border border-blue-200">
-                          <span>{t('cases.housingDesc', { defaultValue: 'Housing / Room Type' })}</span>
+                          <span>{t('cases.housingDesc', { defaultValue: 'Housing Type' })}</span>
                           <span className="font-semibold text-blue-700">{selectedCase.housing_description}</span>
                         </div>
                       )}

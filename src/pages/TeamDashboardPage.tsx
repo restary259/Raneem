@@ -35,7 +35,7 @@ import PullToRefresh from '@/components/common/PullToRefresh';
 import { STATUS_COLORS as IMPORTED_STATUS_COLORS, resolveStatus, CaseStatus } from '@/lib/caseStatus';
 import { canTransition } from '@/lib/caseTransitions';
 
-const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
+// ACCOMMODATION_OPTIONS removed — housing merged into single free-text field
 const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
 
 type TabId = 'cases' | 'appointments' | 'analytics';
@@ -279,7 +279,6 @@ const TeamDashboardPage = () => {
       country_of_birth: c.country_of_birth || '',
       selected_city: c.selected_city || '',
       selected_school: c.selected_school || '',
-      accommodation_status: c.accommodation_status || '',
       housing_description: c.housing_description || '',
       has_translation_service: c.has_translation_service || false,
       gender: c.gender || '',
@@ -303,7 +302,6 @@ const TeamDashboardPage = () => {
       country_of_birth: profileValues.country_of_birth || null,
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
-      accommodation_status: profileValues.accommodation_status || null,
       housing_description: profileValues.housing_description || null,
       has_translation_service: !!profileValues.has_translation_service,
       gender: profileValues.gender || null,
@@ -313,7 +311,7 @@ const TeamDashboardPage = () => {
     const requiredProfileFields = [
       'student_full_name', 'student_email', 'student_phone', 'student_age', 'student_address',
       'passport_number', 'nationality', 'country_of_birth', 'language_proficiency',
-      'gender', 'selected_city', 'selected_school', 'intensive_course', 'accommodation_status'
+      'gender', 'selected_city', 'selected_school', 'intensive_course'
     ];
     const missingFields = requiredProfileFields.filter(f => {
       const val = profileValues[f];
@@ -335,7 +333,7 @@ const TeamDashboardPage = () => {
         selected_city: isAr ? 'المدينة' : 'City',
         selected_school: isAr ? 'المدرسة' : 'School',
         intensive_course: isAr ? 'دورة مكثفة' : 'Intensive Course',
-        accommodation_status: isAr ? 'السكن' : 'Accommodation',
+        housing_description: isAr ? 'نوع السكن' : 'Housing Type',
       };
       const missing = missingFields.map(f => fieldLabels[f] || f).join(', ');
       toast({ variant: 'destructive', title: isAr ? 'حقول مفقودة' : 'Missing Fields', description: missing });
@@ -496,8 +494,14 @@ const TeamDashboardPage = () => {
 
   if (!authReady || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-20 bg-[#1E293B] h-14" />
+        <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-8 w-20 rounded-full bg-muted animate-pulse shrink-0" />)}
+          </div>
+          {[1,2,3].map(i => <div key={i} className="h-32 rounded-xl bg-muted animate-pulse" />)}
+        </div>
       </div>
     );
   }
@@ -937,7 +941,6 @@ const TeamDashboardPage = () => {
           <Tabs defaultValue="personal" className="mt-2">
             <TabsList className="w-full">
               <TabsTrigger value="personal" className="flex-1 text-xs">{isAr ? 'بيانات شخصية' : 'Personal Info'}</TabsTrigger>
-              <TabsTrigger value="visa" className="flex-1 text-xs">{isAr ? 'بيانات التأشيرة' : 'Visa Info'}</TabsTrigger>
               <TabsTrigger value="services" className="flex-1 text-xs">{isAr ? 'الخدمات' : 'Services'}</TabsTrigger>
               <TabsTrigger value="notes" className="flex-1 text-xs">{isAr ? 'ملاحظات' : 'Notes'}</TabsTrigger>
             </TabsList>
@@ -953,13 +956,6 @@ const TeamDashboardPage = () => {
                 <div><Label>{t('admin.ready.nationality')}</Label><Input value={profileValues.nationality || ''} onChange={e => setProfileValues(v => ({ ...v, nationality: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.countryOfBirth')}</Label><Input value={profileValues.country_of_birth || ''} onChange={e => setProfileValues(v => ({ ...v, country_of_birth: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.languageProficiency')}</Label><Input value={profileValues.language_proficiency || ''} onChange={e => setProfileValues(v => ({ ...v, language_proficiency: e.target.value }))} placeholder="e.g. German B1" /></div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="visa">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div><Label>{isAr ? 'الطول' : 'Height'}</Label><Input value={profileValues.height || ''} onChange={e => setProfileValues(v => ({ ...v, height: e.target.value }))} placeholder="e.g. 175 cm" /></div>
-                <div><Label>{isAr ? 'لون العينين' : 'Eye Color'}</Label><Input value={profileValues.eye_color || ''} onChange={e => setProfileValues(v => ({ ...v, eye_color: e.target.value }))} /></div>
                 <div>
                   <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
                   <Select value={profileValues.gender || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, gender: v }))}>
@@ -967,26 +963,6 @@ const TeamDashboardPage = () => {
                     <SelectContent>
                       <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
                       <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{isAr ? 'جنسية مزدوجة' : 'Dual Citizenship'}</Label>
-                  <Select value={profileValues.has_dual_citizenship || 'no'} onValueChange={v => setProfileValues(ev => ({ ...ev, has_dual_citizenship: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">{isAr ? 'نعم' : 'Yes'}</SelectItem>
-                      <SelectItem value="no">{isAr ? 'لا' : 'No'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{isAr ? 'سجل جنائي' : 'Criminal Record'}</Label>
-                  <Select value={profileValues.has_criminal_record || 'no'} onValueChange={v => setProfileValues(ev => ({ ...ev, has_criminal_record: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">{isAr ? 'نعم' : 'Yes'}</SelectItem>
-                      <SelectItem value="no">{isAr ? 'لا' : 'No'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1015,18 +991,9 @@ const TeamDashboardPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>{t('admin.ready.accommodationType')}</Label>
-                  <Select value={profileValues.accommodation_status || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, accommodation_status: v }))}>
-                    <SelectTrigger><SelectValue placeholder={t('admin.ready.selectAccommodation')} /></SelectTrigger>
-                    <SelectContent>
-                      {ACCOMMODATION_OPTIONS.map(o => (<SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="md:col-span-2">
-                  <Label>{isAr ? 'وصف السكن / نوع الغرفة' : 'Housing / Room Type'}</Label>
-                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={isAr ? 'مثال: غرفة مفردة مع حمام' : 'e.g. Single room with bathroom'} />
+                  <Label>{isAr ? 'نوع السكن' : 'Housing Type'}</Label>
+                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={isAr ? 'مثال: شقة مشتركة مع حمام' : 'e.g. Shared flat with bathroom'} />
                 </div>
                 <div className="md:col-span-2 flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                   <input
