@@ -1257,6 +1257,7 @@ export type Database = {
           student_phone: string | null
           student_profile_id: string | null
           submitted_to_admin_at: string | null
+          translation_added_by_user_id: string | null
           translation_fee: number
           updated_at: string
         }
@@ -1304,6 +1305,7 @@ export type Database = {
           student_phone?: string | null
           student_profile_id?: string | null
           submitted_to_admin_at?: string | null
+          translation_added_by_user_id?: string | null
           translation_fee?: number
           updated_at?: string
         }
@@ -1351,6 +1353,7 @@ export type Database = {
           student_phone?: string | null
           student_profile_id?: string | null
           submitted_to_admin_at?: string | null
+          translation_added_by_user_id?: string | null
           translation_fee?: number
           updated_at?: string
         }
