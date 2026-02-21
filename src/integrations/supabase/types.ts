@@ -565,6 +565,13 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leads_companion_lead_id_fkey"
+            columns: ["companion_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       login_attempts: {
@@ -1365,6 +1372,13 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "student_cases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       student_checklist: {
@@ -1475,7 +1489,126 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leads_lawyer_safe: {
+        Row: {
+          accommodation: boolean | null
+          age: number | null
+          arab48_flag: boolean | null
+          budget_range: string | null
+          city: string | null
+          companion_lead_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          education_level: string | null
+          eligibility_reason: string | null
+          eligibility_score: number | null
+          english_units: number | null
+          fraud_flags: string[] | null
+          full_name: string | null
+          german_level: string | null
+          id: string | null
+          is_stale: boolean | null
+          last_contacted: string | null
+          math_units: number | null
+          notes: string | null
+          passport_type: string | null
+          phone: string | null
+          preferred_city: string | null
+          preferred_major: string | null
+          ref_code: string | null
+          service_requested: string | null
+          source_id: string | null
+          source_type: string | null
+          status: string | null
+          student_portal_created: boolean | null
+          study_destination: string | null
+          visa_history: string | null
+        }
+        Insert: {
+          accommodation?: boolean | null
+          age?: number | null
+          arab48_flag?: boolean | null
+          budget_range?: string | null
+          city?: string | null
+          companion_lead_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          education_level?: string | null
+          eligibility_reason?: string | null
+          eligibility_score?: number | null
+          english_units?: number | null
+          fraud_flags?: string[] | null
+          full_name?: string | null
+          german_level?: string | null
+          id?: string | null
+          is_stale?: boolean | null
+          last_contacted?: string | null
+          math_units?: number | null
+          notes?: string | null
+          passport_type?: string | null
+          phone?: string | null
+          preferred_city?: string | null
+          preferred_major?: string | null
+          ref_code?: string | null
+          service_requested?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string | null
+          student_portal_created?: boolean | null
+          study_destination?: string | null
+          visa_history?: string | null
+        }
+        Update: {
+          accommodation?: boolean | null
+          age?: number | null
+          arab48_flag?: boolean | null
+          budget_range?: string | null
+          city?: string | null
+          companion_lead_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          education_level?: string | null
+          eligibility_reason?: string | null
+          eligibility_score?: number | null
+          english_units?: number | null
+          fraud_flags?: string[] | null
+          full_name?: string | null
+          german_level?: string | null
+          id?: string | null
+          is_stale?: boolean | null
+          last_contacted?: string | null
+          math_units?: number | null
+          notes?: string | null
+          passport_type?: string | null
+          phone?: string | null
+          preferred_city?: string | null
+          preferred_major?: string | null
+          ref_code?: string | null
+          service_requested?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string | null
+          student_portal_created?: boolean | null
+          study_destination?: string | null
+          visa_history?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_companion_lead_id_fkey"
+            columns: ["companion_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_companion_lead_id_fkey"
+            columns: ["companion_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_influencer_lead_ids: {

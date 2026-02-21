@@ -120,10 +120,11 @@ export async function getTeamDashboard(
     let leadsData: any[] = [];
     const leadIds = [...new Set(casesData.map((c: any) => c.lead_id).filter(Boolean))];
     if (leadIds.length > 0) {
+      // Use lawyer-safe view (excludes email column) for team members
       const leadsRes = await safeQuery(
         (supabase as any)
-          .from('leads')
-          .select('id, full_name, phone, email, eligibility_score, eligibility_reason, source_type, source_id, passport_type, english_units, math_units, last_contacted, created_at, preferred_major')
+          .from('leads_lawyer_safe')
+          .select('id, full_name, phone, eligibility_score, eligibility_reason, source_type, source_id, passport_type, english_units, math_units, last_contacted, created_at, preferred_major')
           .in('id', leadIds)
       );
       if (leadsRes.error) console.error('[dataService] Team leads fetch failed:', leadsRes.error);
