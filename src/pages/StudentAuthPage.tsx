@@ -141,6 +141,10 @@ const StudentAuthPage = () => {
         }
 
         if (result.session) {
+          // Store session nonce for single-session enforcement
+          if (result.session_nonce) {
+            localStorage.setItem('darb_session_nonce', result.session_nonce);
+          }
           await supabase.auth.setSession({
             access_token: result.session.access_token,
             refresh_token: result.session.refresh_token,

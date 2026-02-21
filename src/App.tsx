@@ -22,6 +22,16 @@ import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import { useSessionGuard } from "./hooks/useSessionGuard";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 // Lazy-loaded routes
 const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
@@ -46,6 +56,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useSessionTimeout();
+  const { kicked, acknowledgeKick } = useSessionGuard();
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
@@ -94,6 +105,20 @@ const App = () => {
         <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
           <Toaster />
           <Sonner />
+          {/* Single-session kick modal */}
+          <AlertDialog open={kicked}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>تم تسجيل الدخول من جهاز آخر</AlertDialogTitle>
+                <AlertDialogDescription>
+                  تم تسجيل الدخول إلى حسابك من جهاز أو متصفح آخر. سيتم تسجيل خروجك تلقائياً.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={acknowledgeKick}>حسناً</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {!isApplyPage && <OfflineIndicator />}
           {!isApplyPage && <InAppBrowserBanner />}
           <Suspense fallback={<div />}>
