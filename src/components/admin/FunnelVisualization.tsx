@@ -13,7 +13,7 @@ const FUNNEL_STAGES = [
   { key: 'new', source: 'lead', colorClass: 'bg-slate-100 text-slate-800 border-slate-200', phase: 'intake' },
   { key: 'eligible', source: 'lead', colorClass: 'bg-cyan-100 text-cyan-800 border-cyan-200', phase: 'intake' },
   // Assignment
-  { key: 'assigned', source: 'both', colorClass: 'bg-blue-100 text-blue-800 border-blue-200', phase: 'assignment' },
+  { key: 'assigned', source: 'case', colorClass: 'bg-blue-100 text-blue-800 border-blue-200', phase: 'assignment' },
   { key: 'contacted', source: 'case', colorClass: 'bg-yellow-100 text-yellow-800 border-yellow-200', phase: 'assignment' },
   // Appointment
   { key: 'appointment_scheduled', source: 'case', colorClass: 'bg-purple-100 text-purple-800 border-purple-200', phase: 'appointment' },
