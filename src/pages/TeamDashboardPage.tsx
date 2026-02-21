@@ -38,10 +38,11 @@ import { canTransition } from '@/lib/caseTransitions';
 // ACCOMMODATION_OPTIONS removed — housing merged into single free-text field
 const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
 
-type TabId = 'cases' | 'appointments' | 'analytics';
+type TabId = 'cases' | 'today' | 'appointments' | 'analytics';
 
 const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
   { id: 'cases', icon: Home, labelKey: 'lawyer.tabs.cases' },
+  { id: 'today', icon: CalendarDays, labelKey: 'lawyer.tabs.today' },
   { id: 'appointments', icon: Calendar, labelKey: 'lawyer.tabs.appointments' },
   { id: 'analytics', icon: BarChart3, labelKey: 'lawyer.tabs.analytics' },
 ];
@@ -676,25 +677,7 @@ const TeamDashboardPage = () => {
             {/* ===== CASES TAB ===== */}
             {activeTab === 'cases' && (
               <>
-                {/* Today's Appointments Summary */}
-                {todayAppointments.length > 0 && (
-                  <Card className="border-purple-200 bg-purple-50/50">
-                    <CardContent className="p-3">
-                      <h3 className="text-xs font-bold flex items-center gap-1.5 mb-2">
-                        <CalendarDays className="h-3.5 w-3.5 text-purple-600" />
-                        {isAr ? `مواعيد اليوم (${todayAppointments.length})` : `Today's Appointments (${todayAppointments.length})`}
-                      </h3>
-                      <div className="flex gap-2 overflow-x-auto">
-                        {todayAppointments.map(appt => (
-                          <div key={appt.id} className="shrink-0 flex items-center gap-2 px-2 py-1 bg-white rounded-lg border text-xs">
-                            <span className="font-medium">{appt.student_name}</span>
-                            <span className="text-muted-foreground">{format(new Date(appt.scheduled_at), 'HH:mm')}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Today's appointments moved to dedicated "Today" tab */}
 
                 {/* Filter chips with neon coding */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -703,6 +686,13 @@ const TeamDashboardPage = () => {
                       : f === 'sla' ? cases.filter(c => isSlaBreached(c)).length
                       : cases.filter(c => matchesFilter(c.case_status, f)).length;
                     const active = caseFilter === f;
+                    // Color-coded count badges
+                    const countColor = !active && count > 0
+                      ? f === 'sla' ? 'text-destructive'
+                      : f === 'paid' ? 'text-emerald-600'
+                      : f === 'new' ? 'text-blue-600'
+                      : ''
+                      : '';
                     return (
                       <button
                         key={f}
@@ -712,7 +702,7 @@ const TeamDashboardPage = () => {
                         } ${f === 'sla' && count > 0 && !active ? 'border-destructive/50 text-destructive' : ''}`}
                       >
                         {isAr ? FILTER_LABELS[f].ar : FILTER_LABELS[f].en}
-                        {count > 0 && <span className="ms-1">({count})</span>}
+                        {count > 0 && <span className={`ms-1 ${countColor}`}>({count})</span>}
                       </button>
                     );
                   })}
@@ -803,6 +793,100 @@ const TeamDashboardPage = () => {
                   {filteredCases.length === 0 && <p className="text-center text-muted-foreground py-8">{t('lawyer.noCases')}</p>}
                 </div>
               </>
+            )}
+
+            {/* ===== TODAY TAB ===== */}
+            {activeTab === 'today' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold text-sm flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-purple-600" />
+                    {isAr ? 'مواعيد اليوم' : "Today's Appointments"}
+                    <Badge variant="secondary" className="text-xs">{todayAppointments.length}</Badge>
+                  </h2>
+                  <span className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMM d')}</span>
+                </div>
+
+                {todayAppointments.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <CalendarDays className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">{isAr ? 'لا توجد مواعيد مجدولة لليوم' : 'No appointments scheduled for today'}</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {todayAppointments.map(appt => {
+                      const linkedCase = cases.find(c => c.id === appt.case_id);
+                      const linkedLead = linkedCase ? getLeadInfo(linkedCase.lead_id) : null;
+                      const statusColor = linkedCase ? (IMPORTED_STATUS_COLORS[linkedCase.case_status] || 'bg-muted text-muted-foreground') : '';
+                      const statusLabel = linkedCase ? t(`lawyer.statuses.${linkedCase.case_status}`, linkedCase.case_status) : '';
+                      const isApptStage = linkedCase && ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(linkedCase.case_status);
+
+                      return (
+                        <Card key={appt.id} className="border-purple-200/60">
+                          <CardContent className="p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="text-center shrink-0 bg-purple-50 rounded-lg px-2.5 py-1">
+                                  <p className="text-lg font-bold leading-tight text-purple-700">{format(new Date(appt.scheduled_at), 'HH:mm')}</p>
+                                  <p className="text-[10px] text-purple-500">{appt.duration_minutes || 30} min</p>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-sm truncate">{appt.student_name}</p>
+                                  {appt.location && <p className="text-xs text-muted-foreground truncate">📍 {appt.location}</p>}
+                                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    {linkedCase && (
+                                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColor}`}>
+                                        {String(statusLabel)}
+                                      </span>
+                                    )}
+                                    {linkedLead && (linkedLead as any).source_type && (
+                                      <Badge variant="outline" className="text-[10px]">
+                                        {String(t(`lawyer.sources.${(linkedLead as any).source_type}`, (linkedLead as any).source_type))}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2 flex-wrap pt-1 border-t border-muted/50">
+                              {linkedLead?.phone && (
+                                <Button size="sm" variant="outline" className="h-8 text-xs gap-1" asChild>
+                                  <a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a>
+                                </Button>
+                              )}
+                              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => {
+                                setRescheduleAppt(appt);
+                                const d = new Date(appt.scheduled_at);
+                                setRescheduleDate(format(d, 'yyyy-MM-dd'));
+                                setRescheduleTime(format(d, 'HH:mm'));
+                              }}>
+                                <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
+                              </Button>
+                              {isApptStage && linkedCase && (
+                                <Button size="sm" className="h-8 text-xs gap-1" onClick={() => openProfileModal(linkedCase)}>
+                                  <FileText className="h-3.5 w-3.5" />{t('lawyer.completeProfile')}
+                                </Button>
+                              )}
+                              {appt.case_id && (
+                                <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
+                                  <Briefcase className="h-3.5 w-3.5" />{isAr ? 'عرض الملف' : 'View Case'}
+                                </Button>
+                              )}
+                              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* ===== APPOINTMENTS TAB ===== */}
@@ -1147,15 +1231,21 @@ const TeamDashboardPage = () => {
           <div className="flex items-center justify-around max-w-md mx-auto">
             {TAB_CONFIG.map(item => {
               const active = activeTab === item.id;
+              const hasTodayBadge = item.id === 'today' && todayAppointments.length > 0 && !active;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all active:scale-95 ${
+                  className={`relative flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all active:scale-95 ${
                     active ? 'text-orange-500' : 'text-gray-600'
                   }`}
                 >
                   <item.icon className={`h-5 w-5 ${active ? 'stroke-2' : 'stroke-[1.5]'}`} />
+                  {hasTodayBadge && (
+                    <span className="absolute top-0.5 end-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white px-1">
+                      {todayAppointments.length}
+                    </span>
+                  )}
                   <span className={`text-[10px] font-medium ${active ? 'text-orange-500' : 'text-gray-600'}`}>{t(item.labelKey, item.id)}</span>
                 </button>
               );

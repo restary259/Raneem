@@ -858,6 +858,7 @@
     },
     "tabs": {
       "cases": "Cases",
+      "today": "Today",
       "appointments": "Appointments",
       "analytics": "Analytics",
       "earnings": "Earnings"
