@@ -199,12 +199,10 @@ const TeamDashboardPage = () => {
   const profile: any = data?.profile ?? null;
 
   // Real-time subscriptions point to the centralised refetch
+  // Only subscribe to tables the team dashboard actually displays
   useRealtimeSubscription('student_cases', refetch, authReady);
   useRealtimeSubscription('appointments', refetch, authReady);
   useRealtimeSubscription('leads', refetch, authReady);
-  useRealtimeSubscription('commissions', refetch, authReady);
-  useRealtimeSubscription('payout_requests', refetch, authReady);
-  useRealtimeSubscription('rewards', refetch, authReady);
 
 
   const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' };
@@ -250,16 +248,21 @@ const TeamDashboardPage = () => {
   // ── ACTIONS ──
 
   const handleMarkContacted = async (leadId: string, caseId: string) => {
-    const now = new Date().toISOString();
-    await (supabase as any).from('leads').update({ last_contacted: now }).eq('id', leadId);
-    const caseItem = cases.find(c => c.id === caseId);
-    if (caseItem && canTransition(caseItem.case_status, CaseStatus.CONTACTED)) {
-      await (supabase as any).from('student_cases').update({ case_status: 'contacted' }).eq('id', caseId);
+    try {
+      const now = new Date().toISOString();
+      await (supabase as any).from('leads').update({ last_contacted: now }).eq('id', leadId);
+      const caseItem = cases.find(c => c.id === caseId);
+      if (caseItem && canTransition(caseItem.case_status, CaseStatus.CONTACTED)) {
+        await (supabase as any).from('student_cases').update({ case_status: 'contacted' }).eq('id', caseId);
+      }
+      await (supabase as any).rpc('log_user_activity', { p_action: 'mark_contacted', p_target_id: caseId, p_target_table: 'student_cases' });
+      toast({ title: t('lawyer.contactLogged') });
+      try { await refetch(); } catch {}
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
     }
-    // Audit log
-    await (supabase as any).rpc('log_user_activity', { p_action: 'mark_contacted', p_target_id: caseId, p_target_table: 'student_cases' });
-    toast({ title: t('lawyer.contactLogged') });
-    await refetch();
   };
 
   const handleMakeAppointment = (caseId: string) => {
@@ -275,55 +278,60 @@ const TeamDashboardPage = () => {
   const handleCreateAppointmentInline = async () => {
     if (!scheduleForCase || !scheduleDate || !scheduleTime) return;
     setSaving(true);
-    const lead = getLeadInfo(scheduleForCase.lead_id);
-    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
+    try {
+      const lead = getLeadInfo(scheduleForCase.lead_id);
+      const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
 
-    // Check for existing scheduled appointment on same case
-    const { data: existing } = await (supabase as any)
-      .from('appointments')
-      .select('id')
-      .eq('case_id', scheduleForCase.id)
-      .eq('lawyer_id', user?.id)
-      .eq('status', 'scheduled')
-      .maybeSingle();
+      // Check for existing scheduled appointment on same case
+      const { data: existing } = await (supabase as any)
+        .from('appointments')
+        .select('id')
+        .eq('case_id', scheduleForCase.id)
+        .eq('lawyer_id', user?.id)
+        .eq('status', 'scheduled')
+        .maybeSingle();
 
-    if (existing) {
-      // Update existing
-      const { error } = await (supabase as any).from('appointments').update({
-        student_name: lead.full_name || 'Unknown',
-        scheduled_at: scheduledAt,
-        duration_minutes: scheduleDuration,
-        location: scheduleLocation || null,
-        notes: scheduleNotes || null,
-      }).eq('id', existing.id);
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      if (existing) {
+        const { error } = await (supabase as any).from('appointments').update({
+          student_name: lead.full_name || 'Unknown',
+          scheduled_at: scheduledAt,
+          duration_minutes: scheduleDuration,
+          location: scheduleLocation || null,
+          notes: scheduleNotes || null,
+        }).eq('id', existing.id);
+        if (error) {
+          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+        } else {
+          toast({ title: isAr ? 'تم تحديث الموعد' : 'Appointment updated' });
+        }
       } else {
-        toast({ title: isAr ? 'تم تحديث الموعد' : 'Appointment updated' });
-      }
-    } else {
-      const { error } = await (supabase as any).from('appointments').insert({
-        lawyer_id: user?.id,
-        case_id: scheduleForCase.id,
-        student_name: lead.full_name || 'Unknown',
-        scheduled_at: scheduledAt,
-        duration_minutes: scheduleDuration,
-        location: scheduleLocation || null,
-        notes: scheduleNotes || null,
-      });
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      } else {
-        toast({ title: isAr ? 'تم حجز الموعد' : 'Appointment scheduled' });
-        // Auto-advance case status
-        if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
-          await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
+        const { error } = await (supabase as any).from('appointments').insert({
+          lawyer_id: user?.id,
+          case_id: scheduleForCase.id,
+          student_name: lead.full_name || 'Unknown',
+          scheduled_at: scheduledAt,
+          duration_minutes: scheduleDuration,
+          location: scheduleLocation || null,
+          notes: scheduleNotes || null,
+        });
+        if (error) {
+          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+        } else {
+          toast({ title: isAr ? 'تم حجز الموعد' : 'Appointment scheduled' });
+          if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
+            await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
+          }
         }
       }
+      try { await refetch(); } catch {}
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
+      setScheduleForCase(null);
+      setSaving(false);
     }
-    setScheduleForCase(null);
-    setSaving(false);
-    await refetch();
   };
 
   const openProfileModal = (c: any) => {
@@ -422,32 +430,32 @@ const TeamDashboardPage = () => {
   const confirmCompleteFile = async () => {
     if (!profileCase || !pendingUpdateData) return;
     setSavingProfile(true);
-    const finalData = { ...pendingUpdateData };
-    // Always transition to profile_filled when user confirms completion
-    const appointmentStatuses = ['appointment_scheduled', 'appointment_waiting', 'appointment_completed', 'assigned', 'contacted'];
-    if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
-      finalData.case_status = CaseStatus.PROFILE_FILLED;
-    } else {
-      // Do not force transition — show error instead
-      toast({ variant: 'destructive', title: t('common.error'), description: isAr ? 'لا يمكن الانتقال إلى هذه المرحلة' : 'Cannot transition to this stage from current status' });
+    try {
+      const finalData = { ...pendingUpdateData };
+      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
+        finalData.case_status = CaseStatus.PROFILE_FILLED;
+      } else {
+        toast({ variant: 'destructive', title: t('common.error'), description: isAr ? 'لا يمكن الانتقال إلى هذه المرحلة' : 'Cannot transition to this stage from current status' });
+        return;
+      }
+      const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
+        toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
+        setProfileCase(null);
+        setCaseFilter('profile_filled');
+        try { await refetch(); } catch {}
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
       setSavingProfile(false);
       setCompleteFileConfirm(false);
       setPendingUpdateData(null);
-      return;
-    }
-    const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
-    setSavingProfile(false);
-    setCompleteFileConfirm(false);
-    setPendingUpdateData(null);
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-    } else {
-      // Only log activity on successful update
-      await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
-      toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
-      setProfileCase(null);
-      setCaseFilter('profile_filled');
-      await refetch();
     }
   };
 
@@ -464,101 +472,129 @@ const TeamDashboardPage = () => {
 
   const confirmPaymentAndSubmit = async (caseId: string) => {
     setSaving(true);
-    const c = cases.find(cs => cs.id === caseId);
-    if (!c) { setSaving(false); return; }
+    try {
+      const c = cases.find(cs => cs.id === caseId);
+      if (!c) return;
 
-    // Team member submit: only mark submitted_to_admin_at, do NOT set paid or trigger commissions
-    const updateData: Record<string, any> = {
-      submitted_to_admin_at: new Date().toISOString(),
-    };
+      const updateData: Record<string, any> = {
+        submitted_to_admin_at: new Date().toISOString(),
+      };
+      if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) {
+        updateData.case_status = CaseStatus.SERVICES_FILLED;
+      }
+      const lead = leads.find(l => l.id === c.lead_id);
+      if (lead && (lead.source_type === 'friend' || lead.source_type === 'family')) {
+        updateData.referral_discount = 500;
+      }
 
-    // Move to services_filled if possible (submit step)
-    if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) {
-      updateData.case_status = CaseStatus.SERVICES_FILLED;
+      const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', p_target_id: caseId, p_target_table: 'student_cases' });
+        toast({ title: t('lawyer.saved') });
+      }
+      try { await refetch(); } catch {}
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
+      setSaving(false);
+      setPaymentConfirm(null);
     }
-
-    // Auto-apply referral discount
-    const lead = leads.find(l => l.id === c.lead_id);
-    if (lead && (lead.source_type === 'friend' || lead.source_type === 'family')) {
-      updateData.referral_discount = 500;
-    }
-
-    const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
-    
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-    } else {
-      await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', p_target_id: caseId, p_target_table: 'student_cases' });
-      toast({ title: t('lawyer.saved') });
-    }
-    setSaving(false);
-    setPaymentConfirm(null);
-    await refetch();
   };
 
   const handleDeleteCase = async (caseId: string) => {
-    const { error } = await (supabase as any).from('student_cases').delete().eq('id', caseId);
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-    } else {
-      toast({ title: isAr ? 'تم الحذف' : 'Case deleted' });
-      await refetch();
+    try {
+      const { error } = await (supabase as any).from('student_cases').delete().eq('id', caseId);
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        toast({ title: isAr ? 'تم الحذف' : 'Case deleted' });
+        try { await refetch(); } catch {}
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
+      setDeleteConfirm(null);
     }
-    setDeleteConfirm(null);
   };
 
   const handleDeleteAppointment = async (apptId: string) => {
-    const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
-    if (!error) {
-      toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' });
-      await refetch();
-    } else {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    try {
+      const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
+      if (!error) {
+        toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' });
+        try { await refetch(); } catch {}
+      } else {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
     }
   };
 
   const handleRescheduleAppointment = async () => {
     if (!rescheduleAppt || !rescheduleDate || !rescheduleTime) return;
     setSaving(true);
-    const newScheduledAt = new Date(`${rescheduleDate}T${rescheduleTime}:00`).toISOString();
-    const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', rescheduleAppt.id);
-    if (!error) {
-      toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
-      setRescheduleAppt(null);
-      await refetch();
-    } else {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+    try {
+      const newScheduledAt = new Date(`${rescheduleDate}T${rescheduleTime}:00`).toISOString();
+      const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', rescheduleAppt.id);
+      if (!error) {
+        toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
+        setRescheduleAppt(null);
+        try { await refetch(); } catch {}
+      } else {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleReassignCase = async () => {
     if (!reassignCase || !reassignTargetId) return;
     setReassigning(true);
-    const historyEntry = {
-      from: reassignCase.assigned_lawyer_id,
-      to: reassignTargetId,
-      at: new Date().toISOString(),
-      by: user?.id,
-      notes: reassignNotes.trim() || null,
-    };
-    const currentHistory = Array.isArray(reassignCase.reassignment_history) ? reassignCase.reassignment_history : [];
-    const { error } = await (supabase as any).from('student_cases').update({
-      assigned_lawyer_id: reassignTargetId,
-      reassigned_from: reassignCase.assigned_lawyer_id,
-      reassignment_notes: reassignNotes.trim() || null,
-      reassignment_history: [...currentHistory, historyEntry],
-    }).eq('id', reassignCase.id);
-    setReassigning(false);
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-    } else {
-      await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${reassignTargetId}` });
-      toast({ title: isAr ? 'تم التحويل بنجاح' : 'Case reassigned successfully' });
-      setReassignCase(null);
-      setReassignTargetId('');
-      setReassignNotes('');
-      await refetch();
+    try {
+      const historyEntry = {
+        from: reassignCase.assigned_lawyer_id,
+        to: reassignTargetId,
+        at: new Date().toISOString(),
+        by: user?.id,
+        notes: reassignNotes.trim() || null,
+      };
+      const currentHistory = Array.isArray(reassignCase.reassignment_history) ? reassignCase.reassignment_history : [];
+      const { error } = await (supabase as any).from('student_cases').update({
+        assigned_lawyer_id: reassignTargetId,
+        reassigned_from: reassignCase.assigned_lawyer_id,
+        reassignment_notes: reassignNotes.trim() || null,
+        reassignment_history: [...currentHistory, historyEntry],
+      }).eq('id', reassignCase.id);
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${reassignTargetId}` });
+        toast({ title: isAr ? 'تم التحويل بنجاح' : 'Case reassigned successfully' });
+        setReassignCase(null);
+        setReassignTargetId('');
+        setReassignNotes('');
+        try { await refetch(); } catch {}
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      }
+    } finally {
+      setReassigning(false);
     }
   };
 
@@ -1127,7 +1163,7 @@ const TeamDashboardPage = () => {
       </Dialog>
 
       {/* Complete File Confirmation Dialog */}
-      <AlertDialog open={completeFileConfirm} onOpenChange={(open) => { if (!open) cancelCompleteFile(); }}>
+      <AlertDialog open={completeFileConfirm} onOpenChange={(open) => { if (!open) { setSavingProfile(false); cancelCompleteFile(); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{isAr ? 'إكمال ملف الطالب' : 'Complete Student File'}</AlertDialogTitle>
