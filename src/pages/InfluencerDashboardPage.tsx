@@ -13,6 +13,7 @@ import DashboardContainer from '@/components/dashboard/DashboardContainer';
 import PullToRefresh from '@/components/common/PullToRefresh';
 import { User } from '@supabase/supabase-js';
 import { Users, TrendingUp, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle, LogOut, ArrowLeftCircle, BarChart3, Timer } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import ReferralLink from '@/components/influencer/ReferralLink';
@@ -116,9 +117,11 @@ const InfluencerDashboardPage = () => {
 
   const getTimerInfo = (paidAt: string | null) => {
     if (!paidAt) return null;
-    const elapsed = Math.floor((Date.now() - new Date(paidAt).getTime()) / (1000 * 60 * 60 * 24));
+    const paidDate = new Date(paidAt);
+    const unlockDate = new Date(paidDate.getTime() + LOCK_DAYS * 24 * 60 * 60 * 1000);
+    const elapsed = Math.floor((Date.now() - paidDate.getTime()) / (1000 * 60 * 60 * 24));
     const remaining = LOCK_DAYS - elapsed;
-    return { elapsed, remaining, ready: remaining <= 0 };
+    return { elapsed, remaining, ready: remaining <= 0, unlockDate, paidDate };
   };
 
   // Show DashboardContainer for loading/error while auth is resolved
@@ -290,6 +293,11 @@ const InfluencerDashboardPage = () => {
                               <span className="text-muted-foreground">
                                 {t('influencerDash.studentCard.payment')} {isPaid ? t('influencerDash.studentCard.paid') : t('influencerDash.studentCard.notPaid')}
                               </span>
+                              {timerInfo && (
+                                <span className="text-muted-foreground">
+                                  {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
+                                </span>
+                              )}
                             </div>
 
                             {timerInfo && (
@@ -299,7 +307,7 @@ const InfluencerDashboardPage = () => {
                                 <Timer className="h-4 w-4 shrink-0" />
                                 {timerInfo.ready
                                   ? t('influencerDash.studentCard.readyPayout')
-                                  : t('influencerDash.studentCard.daysLeft', { count: timerInfo.remaining })}
+                                  : `${t('influencerDash.studentCard.daysLeft', { count: timerInfo.remaining })} — ${timerInfo.unlockDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}`}
                               </div>
                             )}
                           </CardContent>
@@ -320,17 +328,17 @@ const InfluencerDashboardPage = () => {
         </main>
 
         {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-50 safe-area-pb">
-          <div className="max-w-7xl mx-auto flex">
+        <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+          <div className="max-w-7xl mx-auto flex items-center justify-around px-2 py-1">
             {TAB_CONFIG.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
-                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  className={`flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center rounded-lg px-2 py-1.5 transition-all active:scale-95 ${
+                    isActive ? 'text-orange-500' : 'text-gray-400'
                   }`}>
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : ''}`} />
+                  <Icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium">{t(`influencerDash.tabs.${tab.labelKey}`)}</span>
                 </button>
               );
