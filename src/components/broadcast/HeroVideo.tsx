@@ -30,7 +30,7 @@ const HeroVideo: React.FC<HeroVideoProps> = ({ post }) => {
           <Button size="lg" asChild className="bg-green-600 hover:bg-green-700 text-white">
             <a href={post.youtubeId ? `https://www.youtube.com/watch?v=${post.youtubeId}` : post.videoUrl} target="_blank" rel="noopener noreferrer">
               <Play className="ml-2 h-5 w-5" />
-              {post.youtubeId ? t('broadcastPage.watchOnYoutube') : t('broadcastPage.watchVideo')}
+              {post.youtubeId ? t('watchOnYoutube') : t('watchVideo')}
             </a>
           </Button>
         </div>

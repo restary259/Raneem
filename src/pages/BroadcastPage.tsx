@@ -30,7 +30,7 @@ const BroadcastPage = () => {
   if (!featuredVideo) {
     return (
         <div dir={dir} className="flex items-center justify-center h-screen">
-            <p>{t('broadcastPage.loading')}</p>
+            <p>{t('loading', { ns: 'broadcast' })}</p>
         </div>
     );
   }
@@ -45,7 +45,7 @@ const BroadcastPage = () => {
         <section className="py-8 md:py-16">
           <div className="container">
               <div className="mb-8">
-                  <h2 className="text-3xl font-bold">{t('broadcastPage.categoriesTitle')}</h2>
+                  <h2 className="text-3xl font-bold">{t('categoriesTitle', { ns: 'broadcast' })}</h2>
               </div>
               <VideoCategories selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
           </div>
@@ -54,7 +54,7 @@ const BroadcastPage = () => {
         <section className="pb-12 md:pb-24">
             <div className="container">
                 <div className="mb-8">
-                    <h2 className="text-3xl font-bold">{t('broadcastPage.galleryTitle')}</h2>
+                    <h2 className="text-3xl font-bold">{t('galleryTitle', { ns: 'broadcast' })}</h2>
                 </div>
                 <VideoGallery posts={galleryVideos} />
             </div>
@@ -65,7 +65,7 @@ const BroadcastPage = () => {
       </main>
       <footer className="py-8 text-center text-muted-foreground bg-muted/50">
         <div className="container">
-          <p>{t('broadcastPage.footer')}</p>
+          <p>{t('footer', { ns: 'broadcast' })}</p>
         </div>
       </footer>
     </div>

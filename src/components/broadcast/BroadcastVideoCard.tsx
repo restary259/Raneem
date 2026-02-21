@@ -34,7 +34,7 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
 
     const copyLink = () => {
       navigator.clipboard.writeText(url).then(() => {
-        toast({ title: t('broadcastPage.linkCopied'), description: t('broadcastPage.linkCopiedDesc') });
+        toast({ title: t('linkCopied'), description: t('linkCopiedDesc') });
       });
     };
 
@@ -64,10 +64,10 @@ const BroadcastVideoCard: React.FC<BroadcastVideoCardProps> = ({ post, onPlay })
           <TooltipTrigger asChild>
             <Button variant="ghost" size="sm" onClick={handleShare}>
               <Share2 className="ml-2 h-4 w-4" />
-              {t('broadcastPage.share')}
+              {t('share')}
             </Button>
           </TooltipTrigger>
-          <TooltipContent><p>{t('broadcastPage.copyTooltip')}</p></TooltipContent>
+          <TooltipContent><p>{t('copyTooltip')}</p></TooltipContent>
         </Tooltip>
       </CardFooter>
     </Card>

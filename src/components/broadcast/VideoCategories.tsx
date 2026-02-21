@@ -29,14 +29,14 @@ const VideoCategories: React.FC<VideoCategoriesProps> = ({ selectedCategory, onS
         <CarouselContent>
           <CarouselItem className="basis-auto pr-2">
             <Button variant={selectedCategory === 'all' ? 'default' : 'outline'} onClick={() => onSelectCategory('all')}>
-              {t('broadcastPage.allCategories')}
+              {t('allCategories')}
             </Button>
           </CarouselItem>
           {Object.entries(categoryDetails).map(([name, { icon: Icon, key }]) => (
             <CarouselItem key={name} className="basis-auto pr-2">
               <Button variant={selectedCategory === name ? 'default' : 'outline'} onClick={() => onSelectCategory(name as BroadcastCategory)}>
                 <Icon className="ml-2 h-4 w-4" />
-                {t(`broadcastPage.${key}`)}
+                {t(key)}
               </Button>
             </CarouselItem>
           ))}
