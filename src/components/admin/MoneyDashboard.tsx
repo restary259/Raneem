@@ -245,7 +245,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <div className="space-y-2">
                 {pending.map((req: any) => {
                   const requesterName = getProfileName(req.requestor_id);
-                  const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+                  const WHATSAPP_URL = import.meta.env.VITE_WHATSAPP_URL || 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
                   return (
                     <div key={req.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
                       <div className="min-w-0 flex-1">

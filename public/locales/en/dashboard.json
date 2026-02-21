@@ -754,7 +754,9 @@
   },
   "common": {
     "error": "Error",
-    "loading": "Loading...",
+    "loading": "Loading…",
+    "loadError": "Failed to load data",
+    "retry": "Try Again",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
