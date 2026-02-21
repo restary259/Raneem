@@ -175,19 +175,24 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
         </Button>
       </div>
     ) : (
-      <AlertDialog>
-        <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><UserX className="h-3 w-3 me-1" />{t('team.deactivate')}</Button></AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('team.deactivateTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('team.deactivateDesc', { name: member.full_name })}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleToggleAgent(member.id, 'inactive')}>{t('admin.influencers.confirmBtn')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="flex gap-1">
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><UserX className="h-3 w-3 me-1" />{t('team.deactivate')}</Button></AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('team.deactivateTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('team.deactivateDesc', { name: member.full_name })}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleToggleAgent(member.id, 'inactive')}>{t('admin.influencers.confirmBtn')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { setPurgeTarget(member); setPurgeTransferTo(''); setForcePurge(false); }}>
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     )
   );
 
