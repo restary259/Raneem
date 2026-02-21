@@ -136,6 +136,17 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
         {paginated.map(c => {
           const name = c.student_full_name || c.lead?.full_name || '—';
           const isPaid = c.case_status === 'paid' || !!c.paid_at;
+          const noLawyer = !c.assigned_lawyer_id && c.case_status === 'assigned';
+          // 20-day countdown
+          const countdownInfo = (() => {
+            if (!isPaid || !c.paid_countdown_started_at) return null;
+            const start = new Date(c.paid_countdown_started_at);
+            const unlock = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
+            const now = new Date();
+            if (now >= unlock) return { locked: false, daysLeft: 0 };
+            const daysLeft = Math.ceil((unlock.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+            return { locked: true, daysLeft };
+          })();
           return (
             <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedCase(c)}>
               <CardContent className="p-4">
@@ -144,6 +155,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-sm">{name}</h3>
                       {getSourceBadge(c)}
+                      {noLawyer && <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700 bg-amber-50">⚠ {t('cases.noLawyer', { defaultValue: 'Unassigned' })}</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {c.teamMember ? `${t('cases.teamMemberLabel')} ${c.teamMember.full_name}` : t('cases.notAssigned')}
@@ -152,6 +164,11 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                     <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
+                    {countdownInfo && (
+                      countdownInfo.locked
+                        ? <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700 bg-amber-50">🔒 {countdownInfo.daysLeft}d</Badge>
+                        : <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.payoutReady', { defaultValue: 'Payout Ready' })}</Badge>
+                    )}
                     {['services_filled', 'profile_filled'].includes(c.case_status) && !isPaid && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('studentCases.markPaid', { defaultValue: 'Mark Paid' })}
@@ -160,9 +177,12 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                   </div>
                 </div>
                 {isPaid && (
-                  <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
+                  <div className="mt-2 flex gap-3 text-xs text-muted-foreground flex-wrap">
                     <span>{t('cases.serviceFee')}: {c.service_fee} ₪</span>
                     <span>{t('cases.netProfit')}: <span className={getNetProfit(c) >= 0 ? 'text-emerald-700 font-bold' : 'text-red-600 font-bold'}>{getNetProfit(c)} ₪</span></span>
+                    {c.has_translation_service && c.translation_fee > 0 && (
+                      <span>📄 {t('cases.translationFee')}: {c.translation_fee} ₪</span>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -217,6 +237,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     { label: t('admin.ready.email'), value: selectedCase.student_email || selectedCase.lead?.email },
                     { label: t('admin.ready.phone'), value: selectedCase.student_phone || selectedCase.lead?.phone },
                     { label: t('admin.ready.age'), value: selectedCase.student_age },
+                    { label: t('admin.ready.gender', { defaultValue: 'Gender' }), value: selectedCase.gender },
                     { label: t('admin.ready.passportNumber'), value: selectedCase.passport_number },
                     { label: t('admin.ready.nationality'), value: selectedCase.nationality },
                     { label: t('admin.ready.countryOfBirth'), value: selectedCase.country_of_birth },

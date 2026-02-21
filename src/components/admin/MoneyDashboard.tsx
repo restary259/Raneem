@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { exportPDF } from '@/utils/exportUtils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
@@ -65,6 +66,11 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [txPage, setTxPage] = useState(1);
+  const TX_PAGE_SIZE = 50;
+
+  // Reset page on filter change
+  useEffect(() => { setTxPage(1); }, [typeFilter, statusFilter, search]);
 
   const getLeadName = (leadId: string) => leads.find(l => l.id === leadId)?.full_name || '—';
   const getProfileName = (id: string) => {
@@ -243,6 +249,24 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                           {Number(req.amount).toLocaleString()} ₪ · {new Date(req.requested_at).toLocaleDateString()}
                           {req.payment_method && ` · ${req.payment_method.slice(0, 40)}`}
                         </p>
+                        {(() => {
+                          // Show 20-day payout eligibility for linked rewards
+                          const linkedCases = cases.filter(c => c.paid_countdown_started_at);
+                          if (linkedCases.length > 0) {
+                            const latestPaid = linkedCases.reduce((latest, c) => {
+                              const d = new Date(c.paid_countdown_started_at);
+                              return d > latest ? d : latest;
+                            }, new Date(0));
+                            const eligibleDate = new Date(latestPaid.getTime() + 20 * 24 * 60 * 60 * 1000);
+                            const now = new Date();
+                            if (now < eligibleDate) {
+                              const daysLeft = Math.ceil((eligibleDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+                              return <p className="text-[10px] text-amber-700 font-medium mt-0.5">🔒 {t('money.payoutEligibleIn', { days: daysLeft, defaultValue: 'Payout eligible in {{days}} days' })}</p>;
+                            }
+                            return <p className="text-[10px] text-emerald-700 font-medium mt-0.5">✅ {t('money.payoutEligible', { date: eligibleDate.toLocaleDateString(), defaultValue: 'Eligible since {{date}}' })}</p>;
+                          }
+                          return null;
+                        })()}
                         {req.linked_student_names?.length > 0 && (
                           <p className="text-[10px] text-muted-foreground">
                             {t('money.students')}: {req.linked_student_names.join(', ')}
@@ -507,86 +531,112 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         </div>
       </div>
 
+      {/* Transaction count + Pagination info */}
+      <p className="text-sm text-muted-foreground">{filtered.length} {t('money.transactions', { defaultValue: 'transactions' })}</p>
+
       {/* Transaction Table / Cards */}
-      {isMobile ? (
-        <div className="space-y-3">
-          {filtered.map(row => (
-            <Card key={row.id} className="overflow-hidden">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm">{row.studentName}</p>
-                  <Badge className={`${STATUS_COLORS[row.status] || 'bg-muted text-muted-foreground'} border`}>
-                    <span className={`w-1.5 h-1.5 rounded-full me-1.5 ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
-                    {statusLabel(row.status)}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{typeLabel(row.type)}</span>
-                  <span className={`font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()} {row.currency}
-                  </span>
-                </div>
-                <p className="text-[10px] text-muted-foreground">{new Date(row.date).toLocaleDateString()}</p>
-              </CardContent>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
-            <div className="py-16 text-center">
-              <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <Card className="w-full overflow-hidden rounded-xl">
-          <div className="w-full overflow-x-auto">
-              <table className="w-full table-fixed text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.student')}</th>
-                    <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.revenueType')}</th>
-                    <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('money.amount')}</th>
-                    <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('money.currency')}</th>
-                    <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('money.status')}</th>
-                    <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('money.date')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(row => (
-                    <tr key={row.id} className={`border-b hover:bg-muted/50 transition-colors ${filtered.indexOf(row) % 2 === 1 ? 'bg-muted/20' : ''}`}>
-                      <td className="px-4 py-3 font-medium">{row.studentName}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          {row.direction === 'in' ? <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" /> : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />}
-                          <span>{typeLabel(row.type)}</span>
-                        </div>
-                      </td>
-                      <td className={`px-4 py-3 font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
-                        {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{row.currency}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[row.status] || 'bg-muted border-muted'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
+      {(() => {
+        const txTotalPages = Math.ceil(filtered.length / TX_PAGE_SIZE);
+        const paginatedTx = filtered.slice((txPage - 1) * TX_PAGE_SIZE, txPage * TX_PAGE_SIZE);
+        return (
+          <>
+            {isMobile ? (
+              <div className="space-y-3">
+                {paginatedTx.map(row => (
+                  <Card key={row.id} className="overflow-hidden">
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-sm">{row.studentName}</p>
+                        <Badge className={`${STATUS_COLORS[row.status] || 'bg-muted text-muted-foreground'} border`}>
+                          <span className={`w-1.5 h-1.5 rounded-full me-1.5 ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
                           {statusLabel(row.status)}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{typeLabel(row.type)}</span>
+                        <span className={`font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
+                          {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()} {row.currency}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(row.date).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filtered.length === 0 && (
-                <div className="py-16 text-center">
-                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{new Date(row.date).toLocaleDateString()}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {filtered.length === 0 && (
+                  <div className="py-16 text-center">
+                    <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Card className="w-full overflow-hidden rounded-xl">
+                <div className="w-full overflow-x-auto">
+                    <table className="w-full table-fixed text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/40">
+                          <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.student')}</th>
+                          <th className="w-[22%] px-4 py-3 text-start font-semibold">{t('money.revenueType')}</th>
+                          <th className="w-[16%] px-4 py-3 text-start font-semibold">{t('money.amount')}</th>
+                          <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('money.currency')}</th>
+                          <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('money.status')}</th>
+                          <th className="w-[14%] px-4 py-3 text-start font-semibold">{t('money.date')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedTx.map((row, idx) => (
+                          <tr key={row.id} className={`border-b hover:bg-muted/50 transition-colors ${idx % 2 === 1 ? 'bg-muted/20' : ''}`}>
+                            <td className="px-4 py-3 font-medium">{row.studentName}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                {row.direction === 'in' ? <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" /> : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />}
+                                <span>{typeLabel(row.type)}</span>
+                              </div>
+                            </td>
+                            <td className={`px-4 py-3 font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
+                              {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">{row.currency}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[row.status] || 'bg-muted border-muted'}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
+                                {statusLabel(row.status)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(row.date).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filtered.length === 0 && (
+                      <div className="py-16 text-center">
+                        <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                        <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                      </div>
+                    )}
                 </div>
-              )}
-          </div>
-        </Card>
-      )}
+              </Card>
+            )}
+            {txTotalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => setTxPage(p => Math.max(1, p - 1))} aria-disabled={txPage === 1} className={txPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-4 py-2 text-sm text-muted-foreground">{txPage} / {txTotalPages}</span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext onClick={() => setTxPage(p => Math.min(txTotalPages, p + 1))} aria-disabled={txPage === txTotalPages} className={txPage === txTotalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 };
