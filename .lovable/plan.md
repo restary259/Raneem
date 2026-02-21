@@ -1,73 +1,96 @@
 
 
-# Add "Today's Appointments" Tab and UI Improvements
+# Remove Today's Appointments from Appointments Tab, Inline Scheduling Modal, and Data Consistency
 
-## 1. Add "Today" Tab to Main Navigation
+## Overview
+
+Three changes:
+1. Remove the "Today's Appointments" summary card from the Appointments tab (since the dedicated "Today" tab already covers this)
+2. Replace the "Make Appointment" button redirect with an inline scheduling dialog that opens on the Cases tab
+3. Ensure delete and reschedule operations trigger a full data refetch so all tabs stay consistent
+
+---
+
+## 1. Remove Today's Appointments from Appointments Tab
+
+**File: `src/pages/TeamDashboardPage.tsx`** (lines 893-950)
+
+Remove the `todayAppointments` summary card block (lines 895-948) from inside `{activeTab === 'appointments' && ...}`. Keep only the `AppointmentCalendar` component.
+
+The Appointments tab will become:
+```
+{activeTab === 'appointments' && (
+  <div className="space-y-4">
+    {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} onAppointmentChange={refetch} />}
+  </div>
+)}
+```
+
+---
+
+## 2. Inline "Schedule Appointment" Dialog on Cases Tab
 
 **File: `src/pages/TeamDashboardPage.tsx`**
 
-Add a new main navigation tab called "Today" that shows only today's scheduled appointments with full action capabilities (call, reschedule, delete, go to case, complete profile).
+### New state variables:
+- `scheduleForCase` (any | null) -- holds the case for which we're scheduling
+- `scheduleDate` (string), `scheduleTime` (string, default '10:00'), `scheduleDuration` (number, default 30), `scheduleLocation` (string), `scheduleNotes` (string)
 
-### Changes:
-- **TabId type** (line 41): Add `'today'` to the union type: `'cases' | 'today' | 'appointments' | 'analytics'`
-- **TAB_CONFIG** (lines 43-47): Insert a new entry after `cases`:
-  ```
-  { id: 'today', icon: CalendarDays, labelKey: 'lawyer.tabs.today' }
-  ```
-  This places it as the second tab in the sidebar and bottom nav.
-- **New "Today" tab content** (after the cases tab block, ~line 806): Render a dedicated section showing:
-  - A header with today's date and appointment count
-  - Full appointment cards (not the compact chips from the cases tab) with:
-    - Student name, time, location, duration
-    - Linked case status badge
-    - Action buttons: Call, Reschedule, Delete, Open Case/Profile
-  - Empty state message when no appointments today ("No appointments scheduled for today")
-  - The existing `todayAppointments` variable already filters correctly (today + scheduled + not ended)
+### Update `handleMakeAppointment` (line 257-261):
+Instead of switching to the Appointments tab, open the inline scheduling dialog:
+```typescript
+const handleMakeAppointment = (caseId: string) => {
+  const c = cases.find(cs => cs.id === caseId);
+  const lead = c ? getLeadInfo(c.lead_id) : null;
+  setScheduleForCase(c);
+  setScheduleDate(format(new Date(), 'yyyy-MM-dd'));
+  setScheduleTime('10:00');
+  setScheduleDuration(30);
+  setScheduleLocation('');
+  setScheduleNotes('');
+};
+```
 
-### "Today" Tab Card Layout:
-Each appointment card will show:
-- Time (large, left-aligned) + Student name
-- Location and duration
-- Linked case info (status badge, lead source)
-- Actions: Call, Reschedule, Complete Profile (if case is in appointment stage), Delete
+### New function `handleCreateAppointmentInline`:
+- Insert appointment into the `appointments` table
+- Auto-advance case status to `appointment_scheduled` if transition is valid (same logic as AppointmentCalendar)
+- Call `refetch()` to update all tabs
+- Close dialog
 
-## 2. Remove Today's Appointments Summary from Cases Tab
+### New Dialog (added after the existing Reschedule Dialog):
+A small Dialog with fields: Date, Time, Duration, Location, Notes. The student name is auto-filled from the linked case/lead. Similar to the AppointmentCalendar create dialog but self-contained.
 
-Since "Today" now has its own dedicated tab, remove the inline summary card from the Cases tab (lines 679-697) to reduce clutter. The Cases tab becomes purely about case management.
+---
 
-## 3. UI Improvements (Applied in Same Change)
+## 3. Data Consistency: Delete and Reschedule Sync
 
-### A. Color-coded filter badge counts
-Currently all filter chip counts use the same style. Update the count badges:
-- SLA: red text when count > 0 (already partially done)
-- Paid: green text when count > 0
-- New: blue text when count > 0
+The existing `handleDeleteAppointment` (line 439-447) and `handleRescheduleAppointment` (line 449-462) already call `await refetch()` after mutation, which refreshes all data (cases, leads, appointments) from the centralized data layer. This is correct.
 
-### B. Case card status position improvement
-Move the status badge from top-right to below the name, inline with source badges, for better mobile readability on narrow screens.
+However, the `AppointmentCalendar` component has its own local `appointments` state and its own `fetchAppointments` function. When a delete or reschedule happens from the Today tab (via the parent), the calendar's local state won't update.
 
-### C. Bottom nav badge for Today tab
-Show a small red dot/count on the "Today" tab icon in the bottom mobile nav when there are appointments scheduled for today. This draws attention to upcoming appointments.
+### Fix: Add `onAppointmentChange` callback prop to `AppointmentCalendar`
 
-## Technical Details
+**File: `src/components/lawyer/AppointmentCalendar.tsx`**
 
-### Files Modified:
+- Add `onAppointmentChange?: () => void` to `AppointmentCalendarProps`
+- After `handleCreate` and `handleDelete` succeed, call `onAppointmentChange?.()` in addition to `fetchAppointments()`
+- This way, when an appointment is created/deleted from the calendar, the parent's `refetch()` is called, keeping the Today tab and Cases tab in sync
+
+**File: `src/pages/TeamDashboardPage.tsx`**
+
+- Pass `onAppointmentChange={refetch}` to `AppointmentCalendar`
+
+---
+
+## Files Modified Summary
+
 | File | Changes |
 |------|---------|
-| `src/pages/TeamDashboardPage.tsx` | Add 'today' tab type, config, content section; remove inline today summary from cases; color-coded badges; bottom nav indicator |
-
-### Translation Keys Needed:
-- `lawyer.tabs.today` -- fallback: "Today" / will show "Today" in English
-- No new Arabic keys strictly required (fallback works), but ideally add `lawyer.tabs.today` to `public/locales/ar/dashboard.json` as "اليوم" and `public/locales/en/dashboard.json` as "Today"
-
-### Performance:
-- The `todayAppointments` array is already computed and available -- no additional queries needed
-- The new tab renders a filtered subset of existing data, so no new fetches or subscriptions required
-- Tab content continues to use conditional rendering (matching existing pattern)
+| `src/pages/TeamDashboardPage.tsx` | Remove today summary from appointments tab; add inline schedule dialog state + handler + UI; pass `onAppointmentChange` to calendar |
+| `src/components/lawyer/AppointmentCalendar.tsx` | Add `onAppointmentChange` prop; call it after create/delete |
 
 ### No Regression Risk:
-- No changes to case status flow, transitions, or data mutations
-- No changes to financial logic, influencer attribution, or commission calculations
-- Filter logic for all existing tabs remains identical
-- Real-time subscriptions unchanged
+- No changes to case status flow, financial logic, or RLS
+- Influencer/commission logic untouched
+- Real-time subscriptions unchanged -- `refetch()` already covers consistency
 
