@@ -110,6 +110,13 @@ const TeamDashboardPage = () => {
   const [rescheduleAppt, setRescheduleAppt] = useState<any | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
+  // Inline schedule appointment dialog state
+  const [scheduleForCase, setScheduleForCase] = useState<any | null>(null);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('10:00');
+  const [scheduleDuration, setScheduleDuration] = useState(30);
+  const [scheduleLocation, setScheduleLocation] = useState('');
+  const [scheduleNotes, setScheduleNotes] = useState('');
   const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
   const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
   const [reassignCase, setReassignCase] = useState<any | null>(null);
@@ -255,9 +262,67 @@ const TeamDashboardPage = () => {
   };
 
   const handleMakeAppointment = (caseId: string) => {
-    setActiveTab('appointments');
-    // The AppointmentCalendar will handle creating with case link
-    toast({ title: isAr ? 'انتقل لصفحة المواعيد لإنشاء موعد' : 'Switch to Appointments tab to create' });
+    const c = cases.find(cs => cs.id === caseId);
+    setScheduleForCase(c || null);
+    setScheduleDate(format(new Date(), 'yyyy-MM-dd'));
+    setScheduleTime('10:00');
+    setScheduleDuration(30);
+    setScheduleLocation('');
+    setScheduleNotes('');
+  };
+
+  const handleCreateAppointmentInline = async () => {
+    if (!scheduleForCase || !scheduleDate || !scheduleTime) return;
+    setSaving(true);
+    const lead = getLeadInfo(scheduleForCase.lead_id);
+    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
+
+    // Check for existing scheduled appointment on same case
+    const { data: existing } = await (supabase as any)
+      .from('appointments')
+      .select('id')
+      .eq('case_id', scheduleForCase.id)
+      .eq('lawyer_id', user?.id)
+      .eq('status', 'scheduled')
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing
+      const { error } = await (supabase as any).from('appointments').update({
+        student_name: lead.full_name || 'Unknown',
+        scheduled_at: scheduledAt,
+        duration_minutes: scheduleDuration,
+        location: scheduleLocation || null,
+        notes: scheduleNotes || null,
+      }).eq('id', existing.id);
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        toast({ title: isAr ? 'تم تحديث الموعد' : 'Appointment updated' });
+      }
+    } else {
+      const { error } = await (supabase as any).from('appointments').insert({
+        lawyer_id: user?.id,
+        case_id: scheduleForCase.id,
+        student_name: lead.full_name || 'Unknown',
+        scheduled_at: scheduledAt,
+        duration_minutes: scheduleDuration,
+        location: scheduleLocation || null,
+        notes: scheduleNotes || null,
+      });
+      if (error) {
+        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      } else {
+        toast({ title: isAr ? 'تم حجز الموعد' : 'Appointment scheduled' });
+        // Auto-advance case status
+        if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
+          await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
+        }
+      }
+    }
+    setScheduleForCase(null);
+    setSaving(false);
+    await refetch();
   };
 
   const openProfileModal = (c: any) => {
@@ -892,61 +957,7 @@ const TeamDashboardPage = () => {
             {/* ===== APPOINTMENTS TAB ===== */}
             {activeTab === 'appointments' && (
               <div className="space-y-4">
-                {todayAppointments.length > 0 && (
-                  <Card className="border-purple-200">
-                    <CardContent className="p-3">
-                      <h3 className="text-sm font-bold flex items-center gap-2 mb-2">
-                        <CalendarDays className="h-4 w-4 text-purple-600" />
-                        {t('lawyer.todaySchedule')}
-                      </h3>
-                      <div className="space-y-2">
-                        {todayAppointments.map(appt => {
-                          const linkedCase = cases.find(c => c.id === appt.case_id);
-                          const linkedLead = linkedCase ? getLeadInfo(linkedCase.lead_id) : null;
-                          return (
-                            <div key={appt.id} className="flex items-center justify-between gap-2 p-2 bg-purple-50 rounded-lg">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-1 h-8 rounded-full bg-primary shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">{appt.student_name}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(appt.scheduled_at), 'HH:mm')}
-                                    {appt.location && ` · ${appt.location}`}
-                                  </p>
-                                </div>
-                              </div>
-                              {/* Quick actions: Call, Reschedule, Delete, Go to Case */}
-                              <div className="flex gap-1 shrink-0 flex-wrap">
-                                {linkedLead?.phone && (
-                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" asChild>
-                                    <a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" /></a>
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={() => {
-                                  setRescheduleAppt(appt);
-                                  const d = new Date(appt.scheduled_at);
-                                  setRescheduleDate(format(d, 'yyyy-MM-dd'));
-                                  setRescheduleTime(format(d, 'HH:mm'));
-                                }}>
-                                  {isAr ? 'إعادة جدولة' : 'Reschedule'}
-                                </Button>
-                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                                {appt.case_id && (
-                                  <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
-                                    {isAr ? 'عرض' : 'Case'}
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} />}
+                {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} onAppointmentChange={refetch} />}
               </div>
             )}
 
@@ -1183,6 +1194,52 @@ const TeamDashboardPage = () => {
             <Button variant="outline" onClick={() => setRescheduleAppt(null)}>{t('common.cancel')}</Button>
             <Button onClick={handleRescheduleAppointment} disabled={saving || !rescheduleDate || !rescheduleTime}>
               {saving ? t('common.loading') : (isAr ? 'حفظ' : 'Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inline Schedule Appointment Dialog */}
+      <Dialog open={!!scheduleForCase} onOpenChange={(open) => !open && setScheduleForCase(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{isAr ? 'حجز موعد' : 'Schedule Appointment'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="p-2 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">{isAr ? 'الطالب' : 'Student'}</p>
+              <p className="text-sm font-semibold">{scheduleForCase ? getLeadInfo(scheduleForCase.lead_id).full_name : ''}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{isAr ? 'التاريخ' : 'Date'}</Label>
+                <Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">{isAr ? 'الوقت' : 'Time'}</Label>
+                <Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label>
+                <Input type="number" value={scheduleDuration} onChange={e => setScheduleDuration(parseInt(e.target.value) || 30)} />
+              </div>
+              <div>
+                <Label className="text-xs">{isAr ? 'الموقع' : 'Location'}</Label>
+                <Input value={scheduleLocation} onChange={e => setScheduleLocation(e.target.value)} placeholder={isAr ? 'اختياري' : 'Optional'} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">{isAr ? 'ملاحظات' : 'Notes'}</Label>
+              <Textarea value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)} rows={2} placeholder={isAr ? 'اختياري' : 'Optional'} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScheduleForCase(null)}>{t('common.cancel')}</Button>
+            <Button onClick={handleCreateAppointmentInline} disabled={saving || !scheduleDate || !scheduleTime}>
+              <CalendarDays className="h-4 w-4 me-1" />
+              {saving ? t('common.loading') : (isAr ? 'حجز' : 'Schedule')}
             </Button>
           </DialogFooter>
         </DialogContent>
