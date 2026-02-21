@@ -11,6 +11,7 @@ import StudentCasesManagement from '@/components/admin/StudentCasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 
 import InfluencerManagement from '@/components/admin/InfluencerManagement';
+import InfluencerPayoutsTab from '@/components/admin/InfluencerPayoutsTab';
 import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -183,6 +184,17 @@ const AdminDashboardPage = () => {
             students={actualStudents}
             influencers={influencers}
             leads={leads}
+            onRefresh={refetch}
+          />
+        );
+      case 'influencers':
+        return (
+          <InfluencerPayoutsTab
+            cases={cases}
+            leads={leads}
+            influencers={influencers}
+            rewards={rewards}
+            payoutRequests={payoutRequests}
             onRefresh={refetch}
           />
         );
