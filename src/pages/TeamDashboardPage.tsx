@@ -353,9 +353,13 @@ const TeamDashboardPage = () => {
     const appointmentStatuses = ['appointment_scheduled', 'appointment_waiting', 'appointment_completed', 'assigned', 'contacted'];
     if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
       finalData.case_status = CaseStatus.PROFILE_FILLED;
-    } else if (appointmentStatuses.includes(profileCase.case_status)) {
-      // Fallback: force transition for appointment-stage cases
-      finalData.case_status = CaseStatus.PROFILE_FILLED;
+    } else {
+      // Do not force transition — show error instead
+      toast({ variant: 'destructive', title: t('common.error'), description: isAr ? 'لا يمكن الانتقال إلى هذه المرحلة' : 'Cannot transition to this stage from current status' });
+      setSavingProfile(false);
+      setCompleteFileConfirm(false);
+      setPendingUpdateData(null);
+      return;
     }
     const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
     setSavingProfile(false);
@@ -396,8 +400,6 @@ const TeamDashboardPage = () => {
 
     // Move to services_filled if possible (submit step)
     if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) {
-      updateData.case_status = CaseStatus.SERVICES_FILLED;
-    } else if (['profile_filled'].includes(c.case_status)) {
       updateData.case_status = CaseStatus.SERVICES_FILLED;
     }
 

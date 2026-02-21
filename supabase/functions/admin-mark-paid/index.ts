@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Case not found' }), { status: 404, headers: corsHeaders });
     }
 
-    // Idempotent: if already marked paid by admin, return success
-    if (caseRow.is_paid_admin) {
+    // Idempotent: if already marked paid by admin or case_status is already paid, return success
+    if (caseRow.is_paid_admin || caseRow.case_status === 'paid') {
       return new Response(JSON.stringify({ ok: true, message: 'Already marked as paid' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
