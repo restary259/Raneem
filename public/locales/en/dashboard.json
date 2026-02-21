@@ -1096,5 +1096,33 @@
       "paid": "Paid",
       "completed": "Completed"
     }
+  },
+  "influencerPayouts": {
+    "totalPendingPayout": "Total Pending Payout",
+    "dueThisWeek": "Due This Week",
+    "overdue": "Overdue",
+    "totalPaidOut": "Total Paid Out",
+    "influencerName": "Influencer",
+    "totalReferred": "Total Referred",
+    "paidStudents": "Paid Students",
+    "pendingCountdown": "In Countdown",
+    "readyForPayout": "Ready for Payout",
+    "totalOwed": "Total Owed",
+    "totalPaidCol": "Paid Out",
+    "nextDueDate": "Next Due Date",
+    "statusCol": "Status",
+    "studentName": "Student",
+    "paidDate": "Paid Date",
+    "payoutDueDate": "Payout Due Date",
+    "daysRemaining": "Days Remaining",
+    "commissionAmount": "Commission",
+    "paymentStatus": "Payment Status",
+    "allPending": "All",
+    "overdueFilter": "Overdue",
+    "dueIn7Days": "Due in 7 Days",
+    "countdownActive": "Countdown",
+    "noPending": "No Pending",
+    "noPayoutsMsg": "No influencer payouts to display",
+    "paid": "Paid"
   }
 }

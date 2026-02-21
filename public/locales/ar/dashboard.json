@@ -1096,5 +1096,33 @@
       "paid": "مدفوع",
       "completed": "مكتمل"
     }
+  },
+  "influencerPayouts": {
+    "totalPendingPayout": "إجمالي المعلق",
+    "dueThisWeek": "مستحق هذا الأسبوع",
+    "overdue": "متأخر",
+    "totalPaidOut": "إجمالي المدفوع",
+    "influencerName": "الوكيل",
+    "totalReferred": "إجمالي المحالين",
+    "paidStudents": "طلاب مدفوعون",
+    "pendingCountdown": "في العد التنازلي",
+    "readyForPayout": "جاهز للصرف",
+    "totalOwed": "إجمالي المستحق",
+    "totalPaidCol": "المدفوع",
+    "nextDueDate": "تاريخ الاستحقاق التالي",
+    "statusCol": "الحالة",
+    "studentName": "الطالب",
+    "paidDate": "تاريخ الدفع",
+    "payoutDueDate": "تاريخ الاستحقاق",
+    "daysRemaining": "الأيام المتبقية",
+    "commissionAmount": "العمولة",
+    "paymentStatus": "حالة الدفع",
+    "allPending": "الكل",
+    "overdueFilter": "متأخر",
+    "dueIn7Days": "مستحق خلال 7 أيام",
+    "countdownActive": "عد تنازلي",
+    "noPending": "لا يوجد معلق",
+    "noPayoutsMsg": "لا توجد مدفوعات وكلاء لعرضها",
+    "paid": "مدفوع"
   }
 }
