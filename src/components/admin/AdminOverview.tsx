@@ -88,7 +88,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         <SparklineCard
           icon={DollarSign} label={t('admin.overview.revenueThisMonth')}
           value={revenueThisMonth > 0 ? `${revenueThisMonth.toLocaleString()} ₪` : '0 ₪'} color="bg-emerald-600"
-          sparkData={spark7d(cases.filter(c => ['paid', 'completed'].includes(c.case_status)), 'paid_at')}
+          sparkData={spark7d(cases.filter(c => c.case_status === 'paid'), 'paid_at')}
         />
         <SparklineCard
           icon={UserCheck} label={t('admin.overview.activeCases')}
