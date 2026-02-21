@@ -1,62 +1,129 @@
 
+# Admin Dashboard Layout Optimization
 
-# Purge All Test Data (Keep Admin Only)
+## Problem Analysis
 
-## What Gets Deleted
+The current admin dashboard has **9 tabs across 5 groups**, with significant content overlap:
 
-All test/seed data will be removed, leaving only the admin account (`ranimdwahde3@gmail.com`) with a clean, empty database ready for production.
+1. **Overview + Analytics overlap**: Both compute and display revenue KPIs, conversion rates, paid students, and influencer ROI. Overview shows 10 KPI cards + funnel. Analytics shows 6 KPI cards + chart + 2 performance tables. A user must visit two separate tabs to get a complete picture.
 
-### Data to purge (in dependency order):
+2. **Influencer Payouts + Money overlap**: The Money dashboard already has a "Payout Requests" approval panel and "Pending Rewards" section. The Influencer Payouts tab adds countdown tracking but duplicates the concept of managing influencer payments.
 
-| Table | Rows | Action |
-|-------|------|--------|
-| rewards | 4 | DELETE all |
-| commissions | 3 | DELETE all |
-| notifications | 3 | DELETE all |
-| student_cases | 3 | DELETE all |
-| leads | 4 | DELETE all |
-| login_attempts | 11 | DELETE all |
-| admin_audit_log | 34 | DELETE all |
-| user_roles | 3 rows (team + influencer roles, keep admin) | DELETE non-admin |
-| profiles | 2 rows (team + influencer, keep admin) | DELETE non-admin |
-| auth.users | 2 users (team + influencer) | DELETE via edge function |
+## Proposed Merged Structure
 
-### What stays untouched:
-- Admin profile (`ranimdwahde3@gmail.com`)
-- Admin user_roles entry (`admin` role)
-- All schema, triggers, functions, RLS policies
-- Configuration tables (eligibility_config, checklist_items, majors, etc.)
+Current (9 tabs, 5 groups) --> Optimized (7 tabs, 4 groups):
 
-## Execution Steps
-
-1. **Delete dependent records first** (rewards, commissions, notifications, student_cases, leads, login_attempts, audit_log) -- all rows, since they're all test data
-2. **Delete non-admin user_roles** (team + influencer role entries, but keep admin's)
-3. **Delete non-admin profiles** (team + influencer)
-4. **Delete non-admin auth users** via the existing `purge-account` edge function for `team@gmail.com` and `influncer@gmail.com` -- OR directly via SQL DELETE on the data tables + auth admin API
-
-Since we can't delete auth.users from SQL, we'll use the `purge-account` edge function. However, since we're manually cleaning tables first, we just need to call `supabase.auth.admin.deleteUser()` for the two test users via the existing edge function.
-
-**Alternative simpler approach**: Delete all data from tables via SQL, then call purge-account for the two auth users. This avoids FK issues since we clear data first.
-
-## Technical Details
-
-### SQL execution order (to respect any implicit FK relationships):
-```
-1. DELETE FROM rewards;
-2. DELETE FROM commissions;
-3. DELETE FROM notifications;
-4. DELETE FROM student_cases;
-5. DELETE FROM leads;
-6. DELETE FROM login_attempts;
-7. DELETE FROM admin_audit_log;
-8. DELETE FROM user_roles WHERE user_id != '4abfba8f-...';
-9. DELETE FROM profiles WHERE id != '4abfba8f-...';
+```text
+BEFORE                          AFTER
+------                          -----
+Dashboard                       Dashboard
+  Overview                        Dashboard (merged Overview + Analytics)
+  Analytics                     
+                                Pipeline
+Pipeline                          Leads
+  Leads                           Student Cases
+  Student Cases                 
+                                People
+People                            Team Members
+  Team Members                    Students
+  Students                      
+  Influencers (payouts)         Finance
+                                  Money (with Payouts sub-tab inside)
+Finance                         
+  Money                         System
+                                  Settings
+System
+  Settings
 ```
 
-Then call purge-account edge function for the two test auth users to clean them from the auth system.
+---
 
-### Post-purge verification
-- Confirm admin profile still intact
-- Confirm all other tables empty
-- Confirm admin dashboard loads with zero data (clean slate)
+## Step 1: Merge Overview + Analytics into Single "Dashboard" Tab
 
+**File: `src/components/admin/AdminOverview.tsx`** -- Absorb analytics content
+
+The merged view will have this layout (top to bottom):
+
+1. **Primary KPI row** (6 cards, same as current Overview): New Leads Today, Eligible %, Conversion Rate, Revenue This Month, Active Cases, Influencer ROI
+2. **Funnel Visualization** (unchanged)
+3. **Monthly Revenue Chart** (moved from Analytics) -- the bar chart with revenue/team commission/influencer commission
+4. **Secondary stats row** (4 compact cards: Total Students, Agents, Total Payments, Messages)
+5. **Team Performance Table** (moved from Analytics)
+6. **Influencer Performance Table** (moved from Analytics)
+
+This gives the admin a single "command center" view instead of two half-views.
+
+**File: `src/components/admin/AdminAnalytics.tsx`** -- Delete this file (all content absorbed into Overview)
+
+**Props change**: AdminOverview will receive additional props that Analytics currently gets: `commissions` (needed for the useMemo dependency, though not directly used in calculations currently).
+
+## Step 2: Fold Influencer Payouts into Money Dashboard as Sub-Tab
+
+**File: `src/components/admin/MoneyDashboard.tsx`** -- Add internal Tabs
+
+The Money dashboard will gain an internal tab bar at the top:
+
+```text
+[ Transactions ]  [ Influencer Payouts ]
+```
+
+- **Transactions tab**: Current MoneyDashboard content (KPIs, payout requests, pending rewards, transaction table)
+- **Influencer Payouts tab**: Current InfluencerPayoutsTab content (countdown KPIs, per-influencer table with expandable rows)
+
+This is a lightweight UI wrapping change using the existing `Tabs` component. The InfluencerPayoutsTab component itself stays untouched -- it just gets rendered inside MoneyDashboard's second tab.
+
+**Props change**: MoneyDashboard will receive the additional `influencers` and `payoutRequests` props it already has, plus it needs no new data.
+
+## Step 3: Update Sidebar
+
+**File: `src/components/admin/AdminLayout.tsx`**
+
+Remove the `analytics` item from the Dashboard group and the `influencers` item from the People group:
+
+```text
+Dashboard group:  [ overview ]              (was: overview, analytics)
+Pipeline group:   [ leads, student-cases ]  (unchanged)
+People group:     [ team, students ]        (was: team, students, influencers)
+Finance group:    [ money ]                 (unchanged)
+System group:     [ settings ]              (unchanged)
+```
+
+Also update `bottomNavItems` -- keep the same 4 items (overview, leads, student-cases, money).
+
+## Step 4: Update AdminDashboardPage Router
+
+**File: `src/pages/AdminDashboardPage.tsx`**
+
+- Remove `case 'analytics'` and `case 'influencers'` from `renderContent()`
+- Remove the `AdminAnalytics` and `InfluencerPayoutsTab` imports (Analytics is deleted; InfluencerPayoutsTab is now imported inside MoneyDashboard)
+- Pass `commissions` to AdminOverview
+- Pass `influencers`, `payoutRequests`, `rewards`, `leads`, `cases` to MoneyDashboard (most already passed)
+
+## Step 5: Update Translation Keys
+
+**Files: `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json`**
+
+- Add `admin.money.tabTransactions` and `admin.money.tabPayouts` for the internal Money sub-tabs
+- Existing analytics and influencer payout keys remain (they're still used, just in different locations)
+
+---
+
+## Files Summary
+
+| File | Action |
+|------|--------|
+| `src/components/admin/AdminOverview.tsx` | Merge in chart + performance tables from Analytics |
+| `src/components/admin/AdminAnalytics.tsx` | Delete (content merged into Overview) |
+| `src/components/admin/MoneyDashboard.tsx` | Add internal Tabs wrapping InfluencerPayoutsTab |
+| `src/components/admin/AdminLayout.tsx` | Remove `analytics` and `influencers` sidebar items |
+| `src/pages/AdminDashboardPage.tsx` | Remove 2 cases from renderContent, update imports/props |
+| `public/locales/en/dashboard.json` | Add Money sub-tab labels |
+| `public/locales/ar/dashboard.json` | Add Money sub-tab labels |
+
+## What Does NOT Change
+
+- InfluencerPayoutsTab.tsx -- untouched, just rendered inside MoneyDashboard
+- All other tabs (Leads, Student Cases, Team, Students, Settings) -- untouched
+- Database, edge functions, RLS -- no changes
+- Data fetching layer (useDashboardData, dataService) -- no changes
+- Real-time subscriptions -- no changes
