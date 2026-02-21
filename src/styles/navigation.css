@@ -112,17 +112,7 @@
   }
 
   /* Contact Us Glow Animation */
-  @keyframes contact-glow {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
-    }
-    50% {
-      box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.2);
-    }
-  }
-
   .contact-glow {
-    animation: contact-glow 5s ease-in-out infinite;
     border-radius: 9999px;
     padding-inline: 1rem;
     padding-block: 0.375rem;
