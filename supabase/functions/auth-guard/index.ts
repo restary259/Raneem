@@ -103,9 +103,42 @@ serve(async (req) => {
       });
     }
 
+    // --- Single-session enforcement ---
+    // Use a random session nonce as the identifier (stable across token refreshes)
+    const sessionId = crypto.randomUUID();
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
+    // Check if there was an existing session (for audit logging)
+    const { data: existingSession } = await supabaseAdmin
+      .from("active_sessions")
+      .select("session_id")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
+    // Upsert: replaces any previous session for this user
+    await supabaseAdmin.from("active_sessions").upsert({
+      user_id: data.user.id,
+      session_id: sessionId,
+      ip_address: ip,
+      user_agent: userAgent,
+      created_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+
+    // Audit log if a previous session was replaced
+    if (existingSession && existingSession.session_id !== sessionId) {
+      await supabaseAdmin.from("admin_audit_log").insert({
+        admin_id: data.user.id,
+        action: "SESSION_REPLACED",
+        target_id: data.user.id,
+        target_table: "active_sessions",
+        details: `Previous session invalidated due to new login from IP: ${ip}`,
+      });
+    }
+
     return new Response(JSON.stringify({
       session: data.session,
       user: data.user,
+      session_nonce: sessionId,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
