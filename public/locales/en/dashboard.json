@@ -1065,6 +1065,8 @@
     "statusChangedBody": "Your application status changed to: {{status}}"
   },
   "money": {
+    "tabTransactions": "Transactions",
+    "tabPayouts": "Agent Payouts",
     "totalRevenueNIS": "Revenue (NIS)",
     "totalRevenueEUR": "Revenue (EUR)",
     "totalExpenses": "Total Expenses",

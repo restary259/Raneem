@@ -24,7 +24,6 @@ const sidebarGroups = [
     labelKey: 'admin.groups.dashboard',
     items: [
       { id: 'overview', labelKey: 'admin.tabs.overview', icon: LayoutDashboard },
-      { id: 'analytics', labelKey: 'admin.tabs.analytics', icon: BarChart3 },
     ],
   },
   {
@@ -39,7 +38,6 @@ const sidebarGroups = [
     items: [
       { id: 'team', labelKey: 'admin.tabs.teamMembers', icon: UserCheck },
       { id: 'students', labelKey: 'admin.tabs.students', icon: GraduationCap },
-      { id: 'influencers', labelKey: 'admin.tabs.influencers', icon: Users },
     ],
   },
   {

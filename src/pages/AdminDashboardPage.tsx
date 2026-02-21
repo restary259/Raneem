@@ -5,13 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminOverview from '@/components/admin/AdminOverview';
-import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import StudentCasesManagement from '@/components/admin/StudentCasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
 
 import InfluencerManagement from '@/components/admin/InfluencerManagement';
-import InfluencerPayoutsTab from '@/components/admin/InfluencerPayoutsTab';
 import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -145,20 +143,10 @@ const AdminDashboardPage = () => {
             leads={leads}
             cases={cases}
             rewards={rewards}
-            lawyers={lawyers}
-            influencers={influencers}
-            onStageClick={handleStageClick}
-          />
-        );
-      case 'analytics':
-        return (
-          <AdminAnalytics
-            leads={leads}
-            cases={cases}
-            rewards={rewards}
             commissions={commissions}
             lawyers={lawyers}
             influencers={influencers}
+            onStageClick={handleStageClick}
           />
         );
       case 'leads':
@@ -184,17 +172,6 @@ const AdminDashboardPage = () => {
             students={actualStudents}
             influencers={influencers}
             leads={leads}
-            onRefresh={refetch}
-          />
-        );
-      case 'influencers':
-        return (
-          <InfluencerPayoutsTab
-            cases={cases}
-            leads={leads}
-            influencers={influencers}
-            rewards={rewards}
-            payoutRequests={payoutRequests}
             onRefresh={refetch}
           />
         );
