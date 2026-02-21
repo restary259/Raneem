@@ -50,11 +50,6 @@ const NextStepButton: React.FC<NextStepButtonProps> = ({
       ...extraUpdate,
     };
 
-    // Auto-set paid_at when moving to paid
-    if (target === CaseStatus.PAID) {
-      updateData.paid_at = new Date().toISOString();
-    }
-
     const { error } = await (supabase as any)
       .from('student_cases')
       .update(updateData)

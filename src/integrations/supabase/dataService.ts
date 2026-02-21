@@ -91,7 +91,7 @@ export async function getTeamDashboard(
         (supabase as any)
           .from('student_cases')
           .select('*')
-          .eq('assigned_lawyer_id', userId)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
       ),
       safeQuery(

@@ -11,10 +11,10 @@ export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   [CaseStatus.APPT_COMPLETED]: [CaseStatus.PROFILE_FILLED],
   [CaseStatus.PROFILE_FILLED]: [CaseStatus.SERVICES_FILLED],
   [CaseStatus.SERVICES_FILLED]: [],  // PAID is set only via admin-mark-paid edge function
-  [CaseStatus.PAID]: [CaseStatus.READY_TO_APPLY],
-  [CaseStatus.READY_TO_APPLY]: [CaseStatus.VISA_STAGE],
-  [CaseStatus.VISA_STAGE]: [CaseStatus.COMPLETED],
-  [CaseStatus.COMPLETED]: [],
+  [CaseStatus.PAID]: [],             // Terminal state
+  [CaseStatus.READY_TO_APPLY]: [],   // Legacy — resolved to PAID
+  [CaseStatus.VISA_STAGE]: [],       // Legacy — resolved to PAID
+  [CaseStatus.COMPLETED]: [],        // Legacy — resolved to PAID
 };
 
 /** Check if transitioning from `current` to `next` is allowed */

@@ -34,21 +34,17 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   const eligibleCount = leads.filter(l => l.status !== 'not_eligible').length;
   const eligiblePct = leads.length > 0 ? Math.round((eligibleCount / leads.length) * 100) : 0;
 
-  const paidCases = cases.filter(c => ['paid', 'completed', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'settled'].includes(c.case_status));
+  const paidCases = cases.filter(c => c.case_status === 'paid');
   const conversionRate = leads.length > 0 ? Math.round((paidCases.length / leads.length) * 100) : 0;
 
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
   const revenueThisMonth = cases
-    .filter(c => ['paid', 'completed'].includes(c.case_status) && c.paid_at?.startsWith(currentMonth))
+    .filter(c => c.case_status === 'paid' && c.paid_at?.startsWith(currentMonth))
     .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
 
-  const housingCommission = cases
-    .filter(c => c.case_status === 'ready_to_apply')
-    .reduce((sum: number, c: any) => sum + (Number(c.school_commission) || 0), 0);
-
   const infRevenue = cases
-    .filter(c => ['paid', 'completed'].includes(c.case_status))
+    .filter(c => c.case_status === 'paid')
     .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
   const infPayouts = rewards.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
   const infROI = infPayouts > 0 ? Math.round((infRevenue / infPayouts) * 100) / 100 : 0;
@@ -95,8 +91,9 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
           sparkData={spark7d(cases.filter(c => ['paid', 'completed'].includes(c.case_status)), 'paid_at')}
         />
         <SparklineCard
-          icon={DollarSign} label={t('admin.overview.housingCommission')}
-          value={housingCommission > 0 ? `${housingCommission.toLocaleString()} ₪` : '0 ₪'} color="bg-teal-600"
+          icon={UserCheck} label={t('admin.overview.activeCases')}
+          value={cases.filter(c => c.case_status !== 'paid').length} color="bg-teal-600"
+          subtext={`${cases.length} ${t('admin.overview.totalLabel')}`}
         />
         <SparklineCard
           icon={BarChart3} label={t('admin.overview.influencerROI')}
