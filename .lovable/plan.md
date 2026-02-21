@@ -1,97 +1,115 @@
 
-# Debug Report: Team Dashboard "Complete Profile" Freeze Fix
 
-## Root Cause Analysis
+# Single-Session Enforcement Per Account
 
-The freeze occurs when `confirmCompleteFile()` encounters an unhandled exception. The function (line 422) performs a Supabase update followed by an RPC call, but has **no try-catch**. If either call throws (network timeout, AbortError from concurrent refetches), the cleanup code never runs:
+## Overview
 
-- `setSavingProfile(false)` -- never called, so the button stays disabled
-- `setCompleteFileConfirm(false)` -- never called, so the AlertDialog stays open and blocks all interaction
-- The user sees a "frozen" screen with no way to dismiss the dialog
+Implement a system where each user account can only have one active session at a time. When a user logs in on a new device/browser, the previous session is invalidated gracefully with a clear notification.
 
-Contributing factors:
-1. **Six realtime subscriptions** all trigger `refetch()` when the case updates. The case update triggers `auto_split_payment` and `notify_case_status_change` DB triggers, which touch additional tables. This creates a burst of 3-4 debounced refetch calls within 300ms, increasing the chance of AbortErrors.
-2. **Other async handlers** (`handleMarkContacted`, `confirmPaymentAndSubmit`, `handleReassign`) also lack try-catch wrappers, making them vulnerable to the same freeze.
+## Architecture
 
-## Fix Plan
+The approach uses a **session token tracking table** in the database combined with a **frontend heartbeat/polling mechanism**:
 
-### 1. Wrap all async action handlers in try-catch (TeamDashboardPage.tsx)
+1. A new `active_sessions` table stores the current valid session token per user
+2. On login, the `auth-guard` edge function writes the new session ID, invalidating any previous one
+3. The frontend periodically checks if its session is still the active one; if not, it shows a modal and logs the user out
 
-Add try-catch-finally blocks to every async handler that sets loading states:
+This avoids modifying reserved auth schemas and works entirely within public schema + edge functions.
 
-- `confirmCompleteFile` (line 422) -- **primary freeze source**
-- `saveProfileCompletion` (line 357) -- already partially guarded but can still throw
-- `handleMarkContacted` (line 252)
-- `confirmPaymentAndSubmit` (line 465)
-- `handleDeleteCase` (line 499)
-- `handleReassign` (line ~530)
-- `handleCreateAppointmentInline` (line 275)
-- `handleRescheduleAppointment` and `handleDeleteAppointment`
+## Technical Details
 
-Pattern for each:
+### 1. Database Migration -- `active_sessions` table
 
-```typescript
-const confirmCompleteFile = async () => {
-  if (!profileCase || !pendingUpdateData) return;
-  setSavingProfile(true);
-  try {
-    // ... existing logic ...
-  } catch (err: any) {
-    if (err?.name !== 'AbortError') {
-      toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-    }
-  } finally {
-    setSavingProfile(false);
-    setCompleteFileConfirm(false);
-    setPendingUpdateData(null);
-  }
-};
+```sql
+CREATE TABLE public.active_sessions (
+  user_id uuid PRIMARY KEY,
+  session_id text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  ip_address text,
+  user_agent text
+);
+
+ALTER TABLE public.active_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Users can read their own row to check if their session is still active
+CREATE POLICY "Users can view own session"
+  ON public.active_sessions FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Only service role (edge functions) can insert/update/delete
+-- No INSERT/UPDATE/DELETE policies for regular users
+
+-- Enable realtime for instant invalidation detection
+ALTER PUBLICATION supabase_realtime ADD TABLE public.active_sessions;
 ```
 
-### 2. Reduce realtime subscription noise
+### 2. Update `auth-guard` Edge Function
 
-Currently 6 subscriptions each debounce at 300ms independently. When a case update triggers changes across multiple tables, up to 6 refetch calls queue up within a short window.
-
-Fix: Remove redundant subscriptions. The team dashboard only needs to subscribe to:
-- `student_cases` (primary data)
-- `appointments` (scheduling)
-- `leads` (contact status)
-
-Remove subscriptions to `commissions`, `payout_requests`, and `rewards` -- team members do not see these on their dashboard and they only add noise.
-
-### 3. Add error boundary to confirmation dialogs
-
-Ensure the `AlertDialog` for "Complete File Confirmation" resets state if it closes for any reason:
+After successful login, upsert into `active_sessions` with the new session's access token (or a hash/ID derived from it):
 
 ```typescript
-<AlertDialog
-  open={completeFileConfirm}
-  onOpenChange={(open) => {
-    if (!open) {
-      setSavingProfile(false); // Always reset
-      cancelCompleteFile();
-    }
-  }}
->
+// After successful login, register this as the active session
+const sessionId = data.session.access_token.slice(-32); // last 32 chars as identifier
+await supabaseAdmin.from('active_sessions').upsert({
+  user_id: data.user.id,
+  session_id: sessionId,
+  ip_address: ip,
+  user_agent: req.headers.get('user-agent') || 'unknown',
+}, { onConflict: 'user_id' });
 ```
 
-### 4. Guard `refetch` after mutations
+### 3. New Frontend Hook -- `useSessionGuard`
 
-Wrap the `await refetch()` calls inside the action handlers with a safety net so a failed refetch does not cascade:
+Create `src/hooks/useSessionGuard.ts`:
 
-```typescript
-// Safe refetch - swallow errors since realtime will sync anyway
-try { await refetch(); } catch {}
+- On mount, derive the current session ID from the stored access token
+- Subscribe to `active_sessions` table via Supabase Realtime (filtered to own user_id)
+- When a change is detected and the `session_id` no longer matches, show a modal/toast and sign out
+- Fallback: poll every 60 seconds in case realtime misses an event
+
+When the session is invalidated:
+- Show a clear `AlertDialog` saying "Your account was logged in from another device. You have been signed out."
+- After user acknowledges (or after 5 seconds), call `supabase.auth.signOut()` and redirect to `/student-auth`
+
+### 4. Integrate `useSessionGuard` in `App.tsx`
+
+Add the hook call alongside the existing `useSessionTimeout()` in App.tsx. The guard only activates when a user is logged in.
+
+### 5. Handle Direct Logins (non-auth-guard path)
+
+For student signups and password-based logins that bypass `auth-guard` (e.g., `supabase.auth.signUp`), add session registration in the `onAuthStateChange` handler or after `setSession`. This ensures all login paths are covered.
+
+### 6. Audit Logging
+
+When a session is replaced, the `auth-guard` function will also insert into `admin_audit_log`:
+```
+action: 'SESSION_REPLACED'
+details: 'Previous session invalidated due to new login from IP: x.x.x.x'
 ```
 
-## Files to Change
+## Files to Create/Modify
 
-- `src/pages/TeamDashboardPage.tsx` -- All the fixes above (try-catch wrappers, subscription cleanup, dialog state guards)
+| File | Action |
+|------|--------|
+| `active_sessions` table | Create via migration |
+| `supabase/functions/auth-guard/index.ts` | Add session upsert after login |
+| `src/hooks/useSessionGuard.ts` | New -- realtime session monitor + invalidation modal |
+| `src/App.tsx` | Add `useSessionGuard()` call |
 
-## Verification Checklist
+## What Stays Unchanged
 
-After fixes:
-- Open a case in "appointment_scheduled" status, fill all fields, click Save, confirm -- should complete without freeze
-- Simulate a network error (offline toggle) during save -- dialog should close gracefully with error toast
-- Check all tabs (Cases, Today, Appointments, Analytics) load without lag
-- Verify realtime updates still sync when data changes in another tab/browser
+- All dashboard logic (cases, money, analytics, influencer, team)
+- Real-time subscriptions for business data
+- Session timeout logic for admins
+- The `must_change_password` flow
+- Rate limiting and login attempt tracking
+- All RLS policies on existing tables
+
+## Edge Cases Handled
+
+- **Tab refresh**: Session ID is re-derived from the stored token; still valid unless another login occurred
+- **Network delays**: Fallback polling ensures detection even if realtime channel drops
+- **Concurrent actions**: The invalidated session's Supabase JWT remains technically valid until expiry, but the frontend will block further actions by signing out immediately
+- **Signup flow**: New signups get registered in `active_sessions` so they are also protected
+- **Token refresh**: When Supabase refreshes the JWT, the session ID check uses a stable identifier (user_id row), not the token itself -- so token refresh does not trigger false invalidation
+
