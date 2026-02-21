@@ -38,13 +38,12 @@ import { canTransition } from '@/lib/caseTransitions';
 const ACCOMMODATION_OPTIONS = ['dorm', 'private_apartment', 'shared_flat', 'homestay', 'other'];
 const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
 
-type TabId = 'cases' | 'appointments' | 'analytics' | 'earnings';
+type TabId = 'cases' | 'appointments' | 'analytics';
 
 const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
   { id: 'cases', icon: Home, labelKey: 'lawyer.tabs.cases' },
   { id: 'appointments', icon: Calendar, labelKey: 'lawyer.tabs.appointments' },
   { id: 'analytics', icon: BarChart3, labelKey: 'lawyer.tabs.analytics' },
-  { id: 'earnings', icon: DollarSign, labelKey: 'lawyer.tabs.earnings' },
 ];
 
 // Neon border colors per stage filter
@@ -140,15 +139,35 @@ const TeamDashboardPage = () => {
     init();
   }, [navigate, toast, t]);
 
-  // Fetch all lawyers for reassignment dropdown
+  // Fetch all lawyers for reassignment dropdown via admin edge function
   useEffect(() => {
     if (!authReady) return;
     const fetchLawyers = async () => {
-      const { data } = await (supabase as any)
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
-      if (data) setAllLawyers(data);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-team-members`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (resp.ok) {
+          const result = await resp.json();
+          setAllLawyers(result.members || []);
+        } else {
+          // Fallback to direct query for non-admin team members
+          const { data } = await (supabase as any)
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
+          if (data) setAllLawyers(data);
+        }
+      } catch {
+        // Fallback
+        const { data } = await (supabase as any)
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
+        if (data) setAllLawyers(data);
+      }
     };
     fetchLawyers();
   }, [authReady]);
@@ -257,6 +276,8 @@ const TeamDashboardPage = () => {
       selected_city: c.selected_city || '',
       selected_school: c.selected_school || '',
       accommodation_status: c.accommodation_status || '',
+      housing_description: c.housing_description || '',
+      has_translation_service: c.has_translation_service || false,
       gender: c.gender || '',
       notes: c.notes || '',
     });
@@ -279,6 +300,8 @@ const TeamDashboardPage = () => {
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
       accommodation_status: profileValues.accommodation_status || null,
+      housing_description: profileValues.housing_description || null,
+      has_translation_service: !!profileValues.has_translation_service,
       gender: profileValues.gender || null,
       notes: profileValues.notes || null,
     };
@@ -366,20 +389,16 @@ const TeamDashboardPage = () => {
     const c = cases.find(cs => cs.id === caseId);
     if (!c) { setSaving(false); return; }
 
-    // Determine next valid status
-    let targetStatus = c.case_status;
-    if (canTransition(c.case_status, CaseStatus.PAID)) {
-      targetStatus = CaseStatus.PAID;
-    } else if (['profile_filled', 'services_filled'].includes(c.case_status)) {
-      // Fallback: force transition for team workflow (teams skip services_filled)
-      targetStatus = CaseStatus.PAID;
-    } else if (canTransition(c.case_status, CaseStatus.READY_TO_APPLY)) {
-      targetStatus = CaseStatus.READY_TO_APPLY;
-    }
+    // Team member submit: only mark submitted_to_admin_at, do NOT set paid or trigger commissions
+    const updateData: Record<string, any> = {
+      submitted_to_admin_at: new Date().toISOString(),
+    };
 
-    const updateData: Record<string, any> = { case_status: targetStatus };
-    if (targetStatus === CaseStatus.PAID) {
-      updateData.paid_at = new Date().toISOString();
+    // Move to services_filled if possible (submit step)
+    if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) {
+      updateData.case_status = CaseStatus.SERVICES_FILLED;
+    } else if (['profile_filled'].includes(c.case_status)) {
+      updateData.case_status = CaseStatus.SERVICES_FILLED;
     }
 
     // Auto-apply referral discount
@@ -886,15 +905,6 @@ const TeamDashboardPage = () => {
               </div>
             )}
 
-            {/* ===== EARNINGS TAB ===== */}
-            {activeTab === 'earnings' && user && (
-              <div className="space-y-3">
-                <h2 className="font-bold text-sm flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />{t('lawyer.tabs.earnings', 'Earnings')}
-                </h2>
-                <EarningsPanel userId={user.id} role="lawyer" />
-              </div>
-            )}
             </PullToRefresh>
           </main>
         </div>
@@ -997,6 +1007,20 @@ const TeamDashboardPage = () => {
                       {ACCOMMODATION_OPTIONS.map(o => (<SelectItem key={o} value={o}>{t(`admin.ready.accommodationTypes.${o}`)}</SelectItem>))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Label>{isAr ? 'وصف السكن / نوع الغرفة' : 'Housing / Room Type'}</Label>
+                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={isAr ? 'مثال: غرفة مفردة مع حمام' : 'e.g. Single room with bathroom'} />
+                </div>
+                <div className="md:col-span-2 flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="has_translation_service"
+                    checked={!!profileValues.has_translation_service}
+                    onChange={e => setProfileValues(v => ({ ...v, has_translation_service: e.target.checked }))}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  <Label htmlFor="has_translation_service" className="cursor-pointer text-sm">{isAr ? 'خدمة الترجمة' : 'Translation Service'}</Label>
                 </div>
               </div>
             </TabsContent>

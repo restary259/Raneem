@@ -1219,27 +1219,33 @@ export type Database = {
           assigned_at: string | null
           assigned_lawyer_id: string | null
           case_status: string
+          commission_created: boolean | null
           country_of_birth: string | null
           created_at: string
           deleted_at: string | null
           fraud_flagged: boolean | null
           fraud_notes: string | null
           gender: string | null
+          has_translation_service: boolean
+          housing_description: string | null
           id: string
           influencer_commission: number
           intensive_course: string | null
+          is_paid_admin: boolean | null
           language_proficiency: string | null
           lawyer_commission: number
           lead_id: string
           nationality: string | null
           notes: string | null
           paid_at: string | null
+          paid_countdown_started_at: string | null
           passport_number: string | null
           reassigned_from: string | null
           reassignment_history: Json | null
           reassignment_notes: string | null
           referral_discount: number
           refund_status: string | null
+          requires_reassignment: boolean | null
           school_commission: number
           selected_city: string | null
           selected_school: string | null
@@ -1250,6 +1256,7 @@ export type Database = {
           student_full_name: string | null
           student_phone: string | null
           student_profile_id: string | null
+          submitted_to_admin_at: string | null
           translation_fee: number
           updated_at: string
         }
@@ -1259,27 +1266,33 @@ export type Database = {
           assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
+          commission_created?: boolean | null
           country_of_birth?: string | null
           created_at?: string
           deleted_at?: string | null
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
+          has_translation_service?: boolean
+          housing_description?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
+          is_paid_admin?: boolean | null
           language_proficiency?: string | null
           lawyer_commission?: number
           lead_id: string
           nationality?: string | null
           notes?: string | null
           paid_at?: string | null
+          paid_countdown_started_at?: string | null
           passport_number?: string | null
           reassigned_from?: string | null
           reassignment_history?: Json | null
           reassignment_notes?: string | null
           referral_discount?: number
           refund_status?: string | null
+          requires_reassignment?: boolean | null
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
@@ -1290,6 +1303,7 @@ export type Database = {
           student_full_name?: string | null
           student_phone?: string | null
           student_profile_id?: string | null
+          submitted_to_admin_at?: string | null
           translation_fee?: number
           updated_at?: string
         }
@@ -1299,27 +1313,33 @@ export type Database = {
           assigned_at?: string | null
           assigned_lawyer_id?: string | null
           case_status?: string
+          commission_created?: boolean | null
           country_of_birth?: string | null
           created_at?: string
           deleted_at?: string | null
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
+          has_translation_service?: boolean
+          housing_description?: string | null
           id?: string
           influencer_commission?: number
           intensive_course?: string | null
+          is_paid_admin?: boolean | null
           language_proficiency?: string | null
           lawyer_commission?: number
           lead_id?: string
           nationality?: string | null
           notes?: string | null
           paid_at?: string | null
+          paid_countdown_started_at?: string | null
           passport_number?: string | null
           reassigned_from?: string | null
           reassignment_history?: Json | null
           reassignment_notes?: string | null
           referral_discount?: number
           refund_status?: string | null
+          requires_reassignment?: boolean | null
           school_commission?: number
           selected_city?: string | null
           selected_school?: string | null
@@ -1330,6 +1350,7 @@ export type Database = {
           student_full_name?: string | null
           student_phone?: string | null
           student_profile_id?: string | null
+          submitted_to_admin_at?: string | null
           translation_fee?: number
           updated_at?: string
         }

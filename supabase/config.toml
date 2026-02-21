@@ -34,3 +34,9 @@ verify_jwt = false
 verify_jwt = false
 [functions.delete-account]
 verify_jwt = false
+[functions.get-team-members]
+verify_jwt = false
+[functions.admin-mark-paid]
+verify_jwt = false
+[functions.purge-account]
+verify_jwt = false
