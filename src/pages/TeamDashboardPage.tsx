@@ -204,6 +204,7 @@ const TeamDashboardPage = () => {
   useRealtimeSubscription('leads', refetch, authReady);
   useRealtimeSubscription('commissions', refetch, authReady);
   useRealtimeSubscription('payout_requests', refetch, authReady);
+  useRealtimeSubscription('rewards', refetch, authReady);
 
 
   const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' };
@@ -347,6 +348,7 @@ const TeamDashboardPage = () => {
       selected_school: c.selected_school || '',
       housing_description: c.housing_description || '',
       has_translation_service: c.has_translation_service || false,
+      translation_added_by_user_id: c.translation_added_by_user_id || null,
       gender: c.gender || '',
       notes: c.notes || '',
     });
@@ -370,6 +372,10 @@ const TeamDashboardPage = () => {
       selected_school: profileValues.selected_school || null,
       housing_description: profileValues.housing_description || null,
       has_translation_service: !!profileValues.has_translation_service,
+      translation_added_by_user_id:
+        profileCase.translation_added_by_user_id && profileValues.has_translation_service
+          ? profileCase.translation_added_by_user_id
+          : (profileValues.has_translation_service ? user?.id ?? null : null),
       gender: profileValues.gender || null,
       notes: profileValues.notes || null,
     };
