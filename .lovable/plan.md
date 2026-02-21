@@ -1,35 +1,57 @@
 
 
-# Fix Missing Translation Key and Minor Cleanup
+# Fix Team Dashboard Tabs: Add "Paid" Tab and Correct "Submitted" Filter
 
-## Issues Found During Testing
+## Problem
 
-1. **Missing translation key**: `admin.overview.activeCases` displays as raw text in the admin dashboard Overview tab. Needs to be added to both Arabic and English dashboard locale files.
+Currently in `src/pages/TeamDashboardPage.tsx`:
+- The "Submitted" tab filter shows `paid` cases (line 89) instead of `services_filled` cases
+- There is no separate "Paid" tab for cases the admin has marked as paid
+- The `getNeonBorder` function maps `paid` to the submitted border color (line 66)
+- The `profile_filled` filter incorrectly groups `services_filled` with it (line 88)
 
-2. **Minor inconsistency**: AdminOverview.tsx line 91 sparkline filter still includes `'completed'` alongside `'paid'`. Should be cleaned to just `['paid']` for consistency with the simplified pipeline.
+## Changes (single file: `src/pages/TeamDashboardPage.tsx`)
 
-## Changes
+### 1. Add "paid" to the filter tab type and array
+- Update `CaseFilterTab` type to include `'paid'`
+- Add `'paid'` to `CASE_FILTER_TABS` array (after `'submitted'`, before `'sla'`)
 
-### 1. Add missing translation key
+### 2. Add neon border for "paid" tab
+- Add `paid: 'border-[hsl(140,80%,45%)] shadow-[0_0_6px_hsl(140,80%,45%/0.3)]'` to `NEON_BORDERS`
 
-**File: `public/locales/ar/dashboard.json`**
-- Add `"activeCases": "الحالات النشطة"` under `admin.overview`
+### 3. Fix `getNeonBorder` function
+- `profile_filled` only (remove `services_filled` from this group)
+- `services_filled` maps to `NEON_BORDERS.submitted`
+- `paid` maps to new `NEON_BORDERS.paid`
 
-**File: `public/locales/en/dashboard.json`**
-- Add `"activeCases": "Active Cases"` under `admin.overview`
+### 4. Fix `matchesFilter` function
+- `profile_filled` filter: only `profile_filled` (not `services_filled`)
+- `submitted` filter: only `services_filled`
+- New `paid` filter: only `paid`
 
-### 2. Clean sparkline filter
+### 5. Add "Paid" label to `FILTER_LABELS`
+- Arabic: "مدفوع"
+- English: "Paid"
 
-**File: `src/components/admin/AdminOverview.tsx`**
-- Line 91: Change `['paid', 'completed']` to `['paid']`
+### 6. Update "Submitted" label for clarity
+- Change English from "Submitted" to "Submitted to Admin"
+- Change Arabic from "تم الإرسال للمسؤول" (already correct)
 
-## Verified Working
+## Complete Profile Button Verification
 
-The following were confirmed correct during testing:
-- Funnel shows 9 granular stages ending at Paid (no post-paid stages)
-- Student Cases tab filters to only profile_filled / services_filled / paid
-- Mark Paid button calls the admin-mark-paid edge function (server-side admin check)
-- NextStepButton cannot transition to Paid (empty transitions for services_filled)
-- Transition map is correct: Paid is terminal, no post-paid transitions exist
-- Legacy statuses (ready_to_apply, visa_stage, completed) all resolve to Paid
+The "Complete Profile" button calls `confirmCompleteFile()` which uses `canTransition(case_status, PROFILE_FILLED)`. The transition map allows:
+- `appointment_scheduled` -> `profile_filled` (allowed)
+- `appointment_waiting` -> `profile_filled` (allowed)
+- `appointment_completed` -> `profile_filled` (allowed)
+
+This is correct and will work as expected when clicking "Complete Profile" from appointment-stage cases.
+
+## Technical Details
+
+All changes are in lines 50-91 of `src/pages/TeamDashboardPage.tsx`:
+- Line 57: Add paid neon border
+- Line 62-67: Update getNeonBorder
+- Line 70-71: Add 'paid' to type and array
+- Line 79-81: Update filter labels, add paid label
+- Line 83-91: Fix matchesFilter logic
 
