@@ -23,7 +23,7 @@ interface StudentCasesManagementProps {
   onRefresh: () => void;
 }
 
-const READY_STATUSES = ['profile_filled', 'services_filled', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'completed'];
+const READY_STATUSES = ['profile_filled', 'services_filled', 'paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh }) => {
   const { t } = useTranslation('dashboard');

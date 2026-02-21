@@ -21,12 +21,8 @@ const FUNNEL_STAGES = [
   // Preparation
   { key: 'profile_filled', source: 'case', colorClass: 'bg-indigo-100 text-indigo-800 border-indigo-200', phase: 'preparation' },
   { key: 'services_filled', source: 'case', colorClass: 'bg-sky-100 text-sky-800 border-sky-200', phase: 'preparation' },
-  // Payment
+  // Payment (FINAL)
   { key: 'paid', source: 'case', colorClass: 'bg-green-100 text-green-800 border-green-200', phase: 'payment' },
-  // Application
-  { key: 'ready_to_apply', source: 'case', colorClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', phase: 'application' },
-  { key: 'visa_stage', source: 'case', colorClass: 'bg-amber-100 text-amber-800 border-amber-200', phase: 'application' },
-  { key: 'completed', source: 'case', colorClass: 'bg-teal-100 text-teal-800 border-teal-200', phase: 'application' },
 ];
 
 const FunnelVisualization: React.FC<FunnelVisualizationProps> = ({ leadCounts, caseCounts, onStageClick }) => {

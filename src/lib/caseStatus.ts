@@ -14,7 +14,7 @@ export enum CaseStatus {
   COMPLETED = 'completed',
 }
 
-/** Ordered list for progress indicators */
+/** Ordered list for progress indicators (simplified 6-stage pipeline) */
 export const CASE_STATUS_ORDER: CaseStatus[] = [
   CaseStatus.NEW,
   CaseStatus.ELIGIBLE,
@@ -26,17 +26,17 @@ export const CASE_STATUS_ORDER: CaseStatus[] = [
   CaseStatus.PROFILE_FILLED,
   CaseStatus.SERVICES_FILLED,
   CaseStatus.PAID,
-  CaseStatus.READY_TO_APPLY,
-  CaseStatus.VISA_STAGE,
-  CaseStatus.COMPLETED,
 ];
 
 /** Map legacy DB strings to the nearest canonical status */
 export const LEGACY_STATUS_MAP: Record<string, CaseStatus> = {
   appointment: CaseStatus.APPT_SCHEDULED,
-  closed: CaseStatus.COMPLETED,
-  registration_submitted: CaseStatus.READY_TO_APPLY,
-  settled: CaseStatus.COMPLETED,
+  closed: CaseStatus.PAID,
+  registration_submitted: CaseStatus.PAID,
+  settled: CaseStatus.PAID,
+  ready_to_apply: CaseStatus.PAID,
+  visa_stage: CaseStatus.PAID,
+  completed: CaseStatus.PAID,
 };
 
 /** Resolve any status string to a CaseStatus (handles legacy values) */

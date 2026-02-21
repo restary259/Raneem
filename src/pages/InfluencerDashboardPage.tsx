@@ -260,9 +260,6 @@ const InfluencerDashboardPage = () => {
                         profile_filled: { ar: 'تم إكمال الملف', en: 'File Completed' },
                         services_filled: { ar: 'تم الإرسال (بانتظار الدفع)', en: 'Submitted (Awaiting Payment)' },
                         paid: { ar: 'مدفوع ✓', en: 'Paid ✓' },
-                        ready_to_apply: { ar: 'جاهز للتقديم', en: 'Ready to Apply' },
-                        visa_stage: { ar: 'مرحلة التأشيرة', en: 'Visa Stage' },
-                        completed: { ar: 'مكتمل ✓', en: 'Completed ✓' },
                       };
                       const caseStatusLabel = linkedCase?.case_status
                         ? (isAr ? caseStatusLabels[linkedCase.case_status]?.ar : caseStatusLabels[linkedCase.case_status]?.en) || linkedCase.case_status

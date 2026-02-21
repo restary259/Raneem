@@ -63,7 +63,7 @@ function getNeonBorder(status: string): string {
   if (status === 'contacted') return NEON_BORDERS.contacted;
   if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) return NEON_BORDERS.appointment_stage;
   if (['profile_filled', 'services_filled'].includes(status)) return NEON_BORDERS.profile_filled;
-  if (['paid', 'ready_to_apply', 'visa_stage', 'completed'].includes(status)) return NEON_BORDERS.submitted;
+  if (['paid'].includes(status)) return NEON_BORDERS.submitted;
   return NEON_BORDERS.all;
 }
 
@@ -86,7 +86,7 @@ function matchesFilter(status: string, filter: CaseFilterTab): boolean {
   if (filter === 'contacted') return status === 'contacted';
   if (filter === 'appointment_stage') return ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status);
   if (filter === 'profile_filled') return ['profile_filled', 'services_filled'].includes(status);
-  if (filter === 'submitted') return ['paid', 'ready_to_apply', 'visa_stage', 'completed'].includes(status);
+  if (filter === 'submitted') return ['paid'].includes(status);
   return false;
 }
 
@@ -204,7 +204,7 @@ const TeamDashboardPage = () => {
   };
 
   const kpis = useMemo(() => {
-    const activeLeads = cases.filter(c => !['paid', 'settled', 'completed'].includes(c.case_status)).length;
+    const activeLeads = cases.filter(c => c.case_status !== 'paid').length;
     const now = new Date();
     const todayAppts = appointments.filter(a => {
       if (!isToday(new Date(a.scheduled_at))) return false;
@@ -523,7 +523,9 @@ const TeamDashboardPage = () => {
           <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMarkContacted((lead as any).id, c.id)}>
             <CheckCircle className="h-3.5 w-3.5" />{t('lawyer.markContacted')}
           </Button>
-          {/* Delete only on new tab */}
+          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
+            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
+          </Button>
           {['new', 'eligible'].includes(status) && (
             <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
               <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
@@ -533,13 +535,16 @@ const TeamDashboardPage = () => {
       );
     }
 
-    // Contacted: Call + Make Appointment
+    // Contacted: Call + Make Appointment + Reassign
     if (status === 'contacted') {
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
           <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMakeAppointment(c.id)}>
             <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'حجز موعد' : 'Make Appointment'}
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
+            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
           </Button>
         </div>
       );
@@ -574,19 +579,24 @@ const TeamDashboardPage = () => {
       );
     }
 
-    // File completed: Call + Submit for Application
+    // File completed: Call + Submit for Application + Reassign
     if (['profile_filled', 'services_filled'].includes(status)) {
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
-          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleSubmitForApplication(c.id)}>
-            <Send className="h-3.5 w-3.5" />{isAr ? 'إرسال للتقديم' : 'Submit for Application'}
+          {status !== 'services_filled' && (
+            <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleSubmitForApplication(c.id)}>
+              <Send className="h-3.5 w-3.5" />{isAr ? 'إرسال للتقديم' : 'Submit for Application'}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
+            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
           </Button>
         </div>
       );
     }
 
-    // Submitted/paid: just call
+    // Paid (terminal): just call + reassign (no mark-paid button)
     const reassignBtn = (
       <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
         <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
