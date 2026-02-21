@@ -54,6 +54,7 @@ const NEON_BORDERS: Record<string, string> = {
   appointment_stage: 'border-[hsl(270,100%,65%)] shadow-[0_0_6px_hsl(270,100%,65%/0.3)]',
   profile_filled: 'border-[hsl(140,70%,50%)] shadow-[0_0_6px_hsl(140,70%,50%/0.3)]',
   submitted: 'border-[hsl(185,100%,50%)] shadow-[0_0_6px_hsl(185,100%,50%/0.3)]',
+  paid: 'border-[hsl(140,80%,45%)] shadow-[0_0_6px_hsl(140,80%,45%/0.3)]',
   sla: 'border-[hsl(0,100%,55%)] shadow-[0_0_6px_hsl(0,100%,55%/0.3)]',
 };
 
@@ -62,13 +63,14 @@ function getNeonBorder(status: string): string {
   if (['new', 'eligible', 'assigned'].includes(status)) return NEON_BORDERS.new;
   if (status === 'contacted') return NEON_BORDERS.contacted;
   if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) return NEON_BORDERS.appointment_stage;
-  if (['profile_filled', 'services_filled'].includes(status)) return NEON_BORDERS.profile_filled;
-  if (['paid'].includes(status)) return NEON_BORDERS.submitted;
+  if (status === 'profile_filled') return NEON_BORDERS.profile_filled;
+  if (status === 'services_filled') return NEON_BORDERS.submitted;
+  if (status === 'paid') return NEON_BORDERS.paid;
   return NEON_BORDERS.all;
 }
 
-type CaseFilterTab = 'all' | 'new' | 'contacted' | 'appointment_stage' | 'profile_filled' | 'submitted' | 'sla';
-const CASE_FILTER_TABS: CaseFilterTab[] = ['all', 'new', 'contacted', 'appointment_stage', 'profile_filled', 'submitted', 'sla'];
+type CaseFilterTab = 'all' | 'new' | 'contacted' | 'appointment_stage' | 'profile_filled' | 'submitted' | 'paid' | 'sla';
+const CASE_FILTER_TABS: CaseFilterTab[] = ['all', 'new', 'contacted', 'appointment_stage', 'profile_filled', 'submitted', 'paid', 'sla'];
 
 const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
   all: { ar: 'الكل', en: 'All' },
@@ -76,7 +78,8 @@ const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
   contacted: { ar: 'تم التواصل', en: 'Contacted' },
   appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
   profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
-  submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted' },
+  submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted to Admin' },
+  paid: { ar: 'مدفوع', en: 'Paid' },
   sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
 };
 
@@ -85,8 +88,9 @@ function matchesFilter(status: string, filter: CaseFilterTab): boolean {
   if (filter === 'new') return ['new', 'eligible', 'assigned'].includes(status);
   if (filter === 'contacted') return status === 'contacted';
   if (filter === 'appointment_stage') return ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status);
-  if (filter === 'profile_filled') return ['profile_filled', 'services_filled'].includes(status);
-  if (filter === 'submitted') return ['paid'].includes(status);
+  if (filter === 'profile_filled') return status === 'profile_filled';
+  if (filter === 'submitted') return status === 'services_filled';
+  if (filter === 'paid') return status === 'paid';
   return false;
 }
 
