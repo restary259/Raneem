@@ -32,6 +32,7 @@ interface AppointmentCalendarProps {
   userId: string;
   cases: any[];
   leads: any[];
+  onAppointmentChange?: () => void;
 }
 
 const HOUR_HEIGHT = 60; // px per hour
@@ -46,7 +47,7 @@ const APPOINTMENT_COLORS = [
   'bg-cyan-500/90 border-cyan-600',
 ];
 
-const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps) => {
+const AppointmentCalendar = ({ userId, cases, leads, onAppointmentChange }: AppointmentCalendarProps) => {
   const { t, i18n } = useTranslation('dashboard');
   const dateFnsLocale = i18n.language === 'ar' ? ar : enUS;
   const isMobile = useIsMobile();
@@ -192,6 +193,7 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
       setIsDialogOpen(false);
       setNewAppt({ case_id: '', student_name: '', scheduled_at: '', time: '10:00', duration_minutes: 30, location: '', notes: '' });
       await fetchAppointments();
+      onAppointmentChange?.();
       // Auto-advance case to appointment_scheduled using FSM
       if (newAppt.case_id) {
         const { data: caseData } = await (supabase as any).from('student_cases').select('case_status').eq('id', newAppt.case_id).maybeSingle();
@@ -211,6 +213,7 @@ const AppointmentCalendar = ({ userId, cases, leads }: AppointmentCalendarProps)
     if (!error) {
       toast({ title: t('admin.appointments.deleted') });
       await fetchAppointments();
+      onAppointmentChange?.();
     }
   };
 
