@@ -1,129 +1,66 @@
 
-# Admin Dashboard Layout Optimization
 
-## Problem Analysis
+# Sync Influencer Dashboard with System-Wide Data
 
-The current admin dashboard has **9 tabs across 5 groups**, with significant content overlap:
+## Problem Summary
 
-1. **Overview + Analytics overlap**: Both compute and display revenue KPIs, conversion rates, paid students, and influencer ROI. Overview shows 10 KPI cards + funnel. Analytics shows 6 KPI cards + chart + 2 performance tables. A user must visit two separate tabs to get a complete picture.
+Three issues on the Influencer Dashboard:
 
-2. **Influencer Payouts + Money overlap**: The Money dashboard already has a "Payout Requests" approval panel and "Pending Rewards" section. The Influencer Payouts tab adds countdown tracking but duplicates the concept of managing influencer payments.
+1. **Eligibility display**: Status badges and filter logic already use admin-set `lead.status` correctly (eligible/not_eligible). No logic bug here -- this is working as intended.
 
-## Proposed Merged Structure
+2. **Bottom navigation styling mismatch**: The influencer bottom nav uses a plain `bg-card border-t` style with `text-primary` active color, while the team dashboard uses a polished `bg-white border-gray-200` with orange active states, rounded-lg buttons, and `active:scale-95` press feedback. These need to match.
 
-Current (9 tabs, 5 groups) --> Optimized (7 tabs, 4 groups):
-
-```text
-BEFORE                          AFTER
-------                          -----
-Dashboard                       Dashboard
-  Overview                        Dashboard (merged Overview + Analytics)
-  Analytics                     
-                                Pipeline
-Pipeline                          Leads
-  Leads                           Student Cases
-  Student Cases                 
-                                People
-People                            Team Members
-  Team Members                    Students
-  Students                      
-  Influencers (payouts)         Finance
-                                  Money (with Payouts sub-tab inside)
-Finance                         
-  Money                         System
-                                  Settings
-System
-  Settings
-```
+3. **Missing payout eligible date**: When a case is paid and the 20-day timer starts, the influencer student card only shows "X days left" but does NOT show the actual date when payout can be requested. This date needs to be calculated (`paid_at + 20 days`) and displayed.
 
 ---
 
-## Step 1: Merge Overview + Analytics into Single "Dashboard" Tab
+## Changes
 
-**File: `src/components/admin/AdminOverview.tsx`** -- Absorb analytics content
+**Single file: `src/pages/InfluencerDashboardPage.tsx`**
 
-The merged view will have this layout (top to bottom):
+### 1. Add Payout Eligible Date to Student Cards
 
-1. **Primary KPI row** (6 cards, same as current Overview): New Leads Today, Eligible %, Conversion Rate, Revenue This Month, Active Cases, Influencer ROI
-2. **Funnel Visualization** (unchanged)
-3. **Monthly Revenue Chart** (moved from Analytics) -- the bar chart with revenue/team commission/influencer commission
-4. **Secondary stats row** (4 compact cards: Total Students, Agents, Total Payments, Messages)
-5. **Team Performance Table** (moved from Analytics)
-6. **Influencer Performance Table** (moved from Analytics)
+Update the `getTimerInfo` function to also return the unlock date:
 
-This gives the admin a single "command center" view instead of two half-views.
-
-**File: `src/components/admin/AdminAnalytics.tsx`** -- Delete this file (all content absorbed into Overview)
-
-**Props change**: AdminOverview will receive additional props that Analytics currently gets: `commissions` (needed for the useMemo dependency, though not directly used in calculations currently).
-
-## Step 2: Fold Influencer Payouts into Money Dashboard as Sub-Tab
-
-**File: `src/components/admin/MoneyDashboard.tsx`** -- Add internal Tabs
-
-The Money dashboard will gain an internal tab bar at the top:
-
-```text
-[ Transactions ]  [ Influencer Payouts ]
+```typescript
+const getTimerInfo = (paidAt: string | null) => {
+  if (!paidAt) return null;
+  const paidDate = new Date(paidAt);
+  const unlockDate = new Date(paidDate.getTime() + LOCK_DAYS * 24 * 60 * 60 * 1000);
+  const elapsed = Math.floor((Date.now() - paidDate.getTime()) / (1000 * 60 * 60 * 24));
+  const remaining = LOCK_DAYS - elapsed;
+  return { elapsed, remaining, ready: remaining <= 0, unlockDate };
+};
 ```
 
-- **Transactions tab**: Current MoneyDashboard content (KPIs, payout requests, pending rewards, transaction table)
-- **Influencer Payouts tab**: Current InfluencerPayoutsTab content (countdown KPIs, per-influencer table with expandable rows)
+Then in the timer display section, add the payout eligible date:
 
-This is a lightweight UI wrapping change using the existing `Tabs` component. The InfluencerPayoutsTab component itself stays untouched -- it just gets rendered inside MoneyDashboard's second tab.
+- When locked: show "X days left -- Payout available on DD/MM/YYYY"
+- When ready: show "Payout available" (as now)
 
-**Props change**: MoneyDashboard will receive the additional `influencers` and `payoutRequests` props it already has, plus it needs no new data.
+Also add the **paid date** display: "Paid on DD/MM/YYYY" below the payment status line.
 
-## Step 3: Update Sidebar
+### 2. Match Bottom Navigation to Team Dashboard Style
 
-**File: `src/components/admin/AdminLayout.tsx`**
+Replace the current bottom nav with the same visual pattern used by TeamDashboardPage:
 
-Remove the `analytics` item from the Dashboard group and the `influencers` item from the People group:
+- `bg-white border-t border-gray-200` container
+- `rounded-lg` button style with `active:scale-95` press feedback
+- Orange active color (`text-orange-500`) instead of generic `text-primary`
+- `min-w-[56px] min-h-[44px]` touch targets
+- `safe-area-inset-bottom` padding
+- Import `useIsMobile` hook to only show bottom nav on mobile (matching team pattern)
 
-```text
-Dashboard group:  [ overview ]              (was: overview, analytics)
-Pipeline group:   [ leads, student-cases ]  (unchanged)
-People group:     [ team, students ]        (was: team, students, influencers)
-Finance group:    [ money ]                 (unchanged)
-System group:     [ settings ]              (unchanged)
-```
+### 3. Add `useIsMobile` Import
 
-Also update `bottomNavItems` -- keep the same 4 items (overview, leads, student-cases, money).
-
-## Step 4: Update AdminDashboardPage Router
-
-**File: `src/pages/AdminDashboardPage.tsx`**
-
-- Remove `case 'analytics'` and `case 'influencers'` from `renderContent()`
-- Remove the `AdminAnalytics` and `InfluencerPayoutsTab` imports (Analytics is deleted; InfluencerPayoutsTab is now imported inside MoneyDashboard)
-- Pass `commissions` to AdminOverview
-- Pass `influencers`, `payoutRequests`, `rewards`, `leads`, `cases` to MoneyDashboard (most already passed)
-
-## Step 5: Update Translation Keys
-
-**Files: `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json`**
-
-- Add `admin.money.tabTransactions` and `admin.money.tabPayouts` for the internal Money sub-tabs
-- Existing analytics and influencer payout keys remain (they're still used, just in different locations)
+Import `useIsMobile` from `@/hooks/use-mobile` so the bottom nav only renders on mobile, matching the team dashboard behavior. On desktop, the tab navigation still works via the bottom bar but uses the same consistent styling.
 
 ---
 
-## Files Summary
+## Technical Details
 
-| File | Action |
-|------|--------|
-| `src/components/admin/AdminOverview.tsx` | Merge in chart + performance tables from Analytics |
-| `src/components/admin/AdminAnalytics.tsx` | Delete (content merged into Overview) |
-| `src/components/admin/MoneyDashboard.tsx` | Add internal Tabs wrapping InfluencerPayoutsTab |
-| `src/components/admin/AdminLayout.tsx` | Remove `analytics` and `influencers` sidebar items |
-| `src/pages/AdminDashboardPage.tsx` | Remove 2 cases from renderContent, update imports/props |
-| `public/locales/en/dashboard.json` | Add Money sub-tab labels |
-| `public/locales/ar/dashboard.json` | Add Money sub-tab labels |
+- Only `src/pages/InfluencerDashboardPage.tsx` is modified
+- No database changes needed -- `paid_at` is already available on cases
+- Date formatting will use the browser's locale-aware `toLocaleDateString()` for proper Arabic/English date display
+- The `unlockDate` is derived client-side from `paid_at + 20 days`, keeping it in sync with the same calculation used in `request_payout` RPC and the admin `InfluencerPayoutsTab`
 
-## What Does NOT Change
-
-- InfluencerPayoutsTab.tsx -- untouched, just rendered inside MoneyDashboard
-- All other tabs (Leads, Student Cases, Team, Students, Settings) -- untouched
-- Database, edge functions, RLS -- no changes
-- Data fetching layer (useDashboardData, dataService) -- no changes
-- Real-time subscriptions -- no changes
