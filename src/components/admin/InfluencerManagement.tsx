@@ -134,9 +134,46 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
     else { toast({ title: t('team.inviteDeleted') }); onRefresh(); }
   };
 
+  const [purgeTarget, setPurgeTarget] = useState<any | null>(null);
+  const [purgeTransferTo, setPurgeTransferTo] = useState('');
+  const [forcePurge, setForcePurge] = useState(false);
+  const [purging, setPurging] = useState(false);
+
+  const handlePurgeAccount = async () => {
+    if (!purgeTarget) return;
+    setPurging(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/purge-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          target_user_id: purgeTarget.id,
+          transfer_to: purgeTransferTo || undefined,
+          force_purge: forcePurge,
+          reason: 'Admin permanent deletion',
+        }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed to purge');
+      toast({ title: t('team.accountPurged', { defaultValue: 'Account permanently deleted' }) });
+      setPurgeTarget(null);
+      onRefresh();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+    }
+    setPurging(false);
+  };
+
   const ActionButtons = ({ member }: { member: any }) => (
     member.student_status === 'inactive' ? (
-      <Button size="sm" variant="outline" onClick={() => handleToggleAgent(member.id, 'eligible')}><RotateCcw className="h-3 w-3 me-1" />{t('team.restore')}</Button>
+      <div className="flex gap-1">
+        <Button size="sm" variant="outline" onClick={() => handleToggleAgent(member.id, 'eligible')}><RotateCcw className="h-3 w-3 me-1" />{t('team.restore')}</Button>
+        <Button size="sm" variant="destructive" onClick={() => { setPurgeTarget(member); setPurgeTransferTo(''); setForcePurge(false); }}>
+          <Trash2 className="h-3 w-3 me-1" />{t('team.purge', { defaultValue: 'Delete' })}
+        </Button>
+      </div>
     ) : (
       <AlertDialog>
         <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><UserX className="h-3 w-3 me-1" />{t('team.deactivate')}</Button></AlertDialogTrigger>
@@ -312,6 +349,58 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Purge Account Confirmation Dialog */}
+      <Dialog open={!!purgeTarget} onOpenChange={(open) => !open && setPurgeTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              {t('team.purgeTitle', { defaultValue: 'Permanently Delete Account' })}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {t('team.purgeWarning', { defaultValue: 'This will permanently remove the user and all personal data. This action cannot be undone.' })}
+            </p>
+            <div>
+              <Label className="text-xs">{t('team.transferCases', { defaultValue: 'Transfer assigned cases to (optional):' })}</Label>
+              <Select value={purgeTransferTo} onValueChange={setPurgeTransferTo}>
+                <SelectTrigger><SelectValue placeholder={t('team.selectMember', { defaultValue: 'Select team member...' })} /></SelectTrigger>
+                <SelectContent>
+                  {allTeamMembers.filter(m => m.id !== purgeTarget?.id && m.student_status !== 'inactive').map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {!purgeTransferTo && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="force_purge"
+                  checked={forcePurge}
+                  onChange={e => setForcePurge(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="force_purge" className="text-xs cursor-pointer text-destructive">
+                  {t('team.forcePurge', { defaultValue: 'Force delete — assigned cases will be unassigned (requires manual reassignment)' })}
+                </Label>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setPurgeTarget(null)}>{t('common.cancel')}</Button>
+              <Button
+                variant="destructive"
+                onClick={handlePurgeAccount}
+                disabled={purging || (!purgeTransferTo && !forcePurge)}
+              >
+                {purging ? t('common.loading') : t('team.confirmPurge', { defaultValue: 'Permanently Delete' })}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     </PullToRefresh>
   );

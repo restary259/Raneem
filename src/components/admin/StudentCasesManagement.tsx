@@ -23,7 +23,7 @@ interface StudentCasesManagementProps {
   onRefresh: () => void;
 }
 
-const READY_STATUSES = ['services_filled', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'completed'];
+const READY_STATUSES = ['profile_filled', 'services_filled', 'paid', 'ready_to_apply', 'registration_submitted', 'visa_stage', 'completed'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh }) => {
   const { t } = useTranslation('dashboard');
@@ -66,14 +66,26 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const markAsPaid = async (caseId: string) => {
     const existingCase = studentCases.find(c => c.id === caseId);
-    if (existingCase?.case_status === 'paid') {
+    if (existingCase?.is_paid_admin || existingCase?.case_status === 'paid') {
       toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
       return;
     }
     setLoading(true);
-    const { error } = await (supabase as any).from('student_cases').update({ case_status: 'paid', paid_at: new Date().toISOString() }).eq('id', caseId);
-    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); }
-    else { toast({ title: t('studentCases.markedPaid', { defaultValue: 'Case marked as paid' }) }); onRefresh(); }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ case_id: caseId }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed to mark paid');
+      toast({ title: t('studentCases.markedPaid', { defaultValue: 'Case marked as paid — 20-day countdown started' }) });
+      onRefresh();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+    }
     setLoading(false);
   };
 
@@ -140,7 +152,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                     <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
-                    {c.case_status === 'services_filled' && (
+                    {['services_filled', 'profile_filled'].includes(c.case_status) && !isPaid && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('studentCases.markPaid', { defaultValue: 'Mark Paid' })}
                       </Button>
@@ -232,6 +244,18 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       </div>
                       <div className="flex justify-between p-2 bg-emerald-50 rounded border border-emerald-200">
                         <span>{t('cases.schoolComm')}</span><span className="font-semibold text-emerald-700">{selectedCase.school_commission} ₪</span>
+                      </div>
+                      {selectedCase.housing_description && (
+                        <div className="flex justify-between p-2 bg-blue-50 rounded border border-blue-200">
+                          <span>{t('cases.housingDesc', { defaultValue: 'Housing / Room Type' })}</span>
+                          <span className="font-semibold text-blue-700">{selectedCase.housing_description}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between p-2 bg-muted/30 rounded border">
+                        <span>{t('cases.translations', { defaultValue: 'Translations' })}</span>
+                        <Badge variant={selectedCase.has_translation_service ? 'default' : 'secondary'}>
+                          {selectedCase.has_translation_service ? (t('common.yes', { defaultValue: 'Yes' })) : (t('common.no', { defaultValue: 'No' }))}
+                        </Badge>
                       </div>
                     </div>
                   ) : (
