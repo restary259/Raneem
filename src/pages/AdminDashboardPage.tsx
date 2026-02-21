@@ -122,7 +122,9 @@ const AdminDashboardPage = () => {
 
   const totalStudents = actualStudents.length;
   const newThisMonth = actualStudents.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
-  const totalPayments = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+  // Source of truth: student_cases with paid_at (not legacy payments table)
+  const totalPayments = cases.filter((c: any) => !!c.paid_at)
+    .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
 
   const handleStageClick = (_stage: string) => {
     setActiveTab('leads');

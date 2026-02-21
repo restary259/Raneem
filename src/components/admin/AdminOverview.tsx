@@ -37,19 +37,23 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   const eligibleCount = leads.filter(l => l.status !== 'not_eligible').length;
   const eligiblePct = leads.length > 0 ? Math.round((eligibleCount / leads.length) * 100) : 0;
 
-  const paidCases = cases.filter(c => c.case_status === 'paid');
+  // Source of truth: paid_at IS NOT NULL (not case_status check)
+  const paidCases = cases.filter(c => !!c.paid_at);
   const conversionRate = leads.length > 0 ? Math.round((paidCases.length / leads.length) * 100) : 0;
 
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
   const revenueThisMonth = cases
-    .filter(c => c.case_status === 'paid' && c.paid_at?.startsWith(currentMonth))
+    .filter(c => !!c.paid_at && c.paid_at.startsWith(currentMonth))
     .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
 
-  const infRevenue = cases
-    .filter(c => c.case_status === 'paid')
+  // Influencer ROI: filter rewards to only influencer user_ids
+  const influencerIds = new Set(influencers.map((inf: any) => inf.id));
+  const infRevenue = paidCases
     .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
-  const infPayouts = rewards.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
+  const infPayouts = rewards
+    .filter((r: any) => influencerIds.has(r.user_id))
+    .reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
   const infROI = infPayouts > 0 ? Math.round((infRevenue / infPayouts) * 100) / 100 : 0;
 
   // Sparkline data (last 7 days)
@@ -145,7 +149,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
         <SparklineCard
           icon={DollarSign} label={t('admin.overview.revenueThisMonth')}
           value={revenueThisMonth > 0 ? `${revenueThisMonth.toLocaleString()} ₪` : '0 ₪'} color="bg-emerald-600"
-          sparkData={spark7d(cases.filter(c => c.case_status === 'paid'), 'paid_at')}
+          sparkData={spark7d(cases.filter(c => !!c.paid_at), 'paid_at')}
         />
         <SparklineCard
           icon={UserCheck} label={t('admin.overview.activeCases')}
@@ -176,9 +180,9 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
               <YAxis />
               <Tooltip formatter={(val: number) => `${val.toLocaleString()} ₪`} />
               <Legend />
-              <Bar dataKey="revenue" name={t('admin.analytics.revenue')} fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="teamComm" name={t('admin.analytics.teamComm')} fill="hsl(215, 20%, 65%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="infComm" name={t('admin.analytics.infComm')} fill="hsl(160, 60%, 45%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" name={t('admin.analytics.revenue')} fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar dataKey="teamComm" name={t('admin.analytics.teamComm')} fill="hsl(215, 20%, 65%)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar dataKey="infComm" name={t('admin.analytics.infComm')} fill="hsl(160, 60%, 45%)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
