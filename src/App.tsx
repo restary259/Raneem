@@ -59,7 +59,7 @@ const App = () => {
   const { kicked, acknowledgeKick } = useSessionGuard();
   const navigate = useNavigate();
   const location = useLocation();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation('dashboard');
 
   // Global safety net for unhandled promise rejections
   useEffect(() => {
@@ -110,17 +110,15 @@ const App = () => {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
-                  {i18n.language === 'ar' ? 'تم تسجيل الدخول من جهاز آخر' : 'Logged in from another device'}
+                  {t('session.kickedTitle', 'Logged in from another device')}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  {i18n.language === 'ar'
-                    ? 'تم تسجيل الدخول إلى حسابك من جهاز أو متصفح آخر. سيتم تسجيل خروجك تلقائياً.'
-                    : 'Your account was logged in from another device or browser. You will be signed out automatically.'}
+                  {t('session.kickedDesc', 'Your account was logged in from another device or browser. You will be signed out automatically.')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogAction onClick={acknowledgeKick}>
-                  {i18n.language === 'ar' ? 'حسناً' : 'OK'}
+                  {t('session.ok', 'OK')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
