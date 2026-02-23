@@ -1011,7 +1011,8 @@
       "daysLeft": "{{count}} يوم متبقي",
       "statusEligible": "مؤهل",
       "statusIneligible": "غير مؤهل",
-      "statusPaid": "مدفوع"
+      "statusPaid": "مدفوع",
+      "commissionReceived": "تم استلام العمولة"
     },
     "leadStatuses": {
       "new": "جديد",
@@ -1203,9 +1204,6 @@
     "noPending": "لا يوجد معلق",
     "noPayoutsMsg": "لا توجد مدفوعات وكلاء لعرضها",
     "paid": "مدفوع"
-  },
-  "common": {
-    "lastRefreshed": "تم التحديث"
   },
   "tabError": {
     "title": "واجه هذا القسم مشكلة",

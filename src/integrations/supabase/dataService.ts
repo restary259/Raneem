@@ -28,6 +28,7 @@ const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
 export interface InfluencerDashboardData {
   leads: Lead[];
   cases: StudentCase[];
+  rewards: any[];
   profile: UserProfile | null;
 }
 
@@ -35,7 +36,7 @@ export async function getInfluencerDashboard(
   userId: string
 ): Promise<{ data: InfluencerDashboardData | null; error: string | null }> {
   try {
-    const [leadsRes, casesRes, profileRes] = await Promise.all([
+    const [leadsRes, casesRes, profileRes, rewardsRes] = await Promise.all([
       safeQuery(
         (supabase as any)
           .from('leads')
@@ -56,16 +57,24 @@ export async function getInfluencerDashboard(
           .eq('id', userId)
           .maybeSingle()
       ),
+      safeQuery(
+        (supabase as any)
+          .from('rewards')
+          .select('id, status, amount, user_id, created_at')
+          .eq('user_id', userId)
+      ),
     ]);
 
     if (leadsRes.error) console.error('[dataService] Influencer leads fetch failed:', leadsRes.error);
     if (casesRes.error) console.error('[dataService] Influencer cases fetch failed:', casesRes.error);
     if (profileRes.error) console.error('[dataService] Influencer profile fetch failed:', profileRes.error);
+    if (rewardsRes.error) console.error('[dataService] Influencer rewards fetch failed:', rewardsRes.error);
 
     return {
       data: {
         leads: leadsRes.data ?? [],
         cases: casesRes.data ?? [],
+        rewards: rewardsRes.data ?? [],
         profile: profileRes.data ?? null,
       },
       error: null,

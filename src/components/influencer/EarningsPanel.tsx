@@ -262,9 +262,13 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         {!hasPendingRequest && availableAmount > 0 && availableAmount < minThreshold && (
           <Badge variant="secondary" className="text-xs">🔒 {t('influencer.earnings.minThreshold', { amount: minThreshold })}</Badge>
         )}
-        {!hasPendingRequest && eligibleRewards.length === 0 && availableAmount === 0 && rewards.length > 0 && (
-          <Badge variant="secondary" className="text-xs">⏱ {isAr ? 'المكافآت قيد قفل 20 يوم' : '20-day lock active'}</Badge>
-        )}
+        {!hasPendingRequest && eligibleRewards.length === 0 && availableAmount === 0 && rewards.length > 0 && (() => {
+          const allPaid = rewards.every(r => r.status === 'paid' || r.status === 'cancelled');
+          if (allPaid) {
+            return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">✅ {isAr ? 'تم استلام جميع العمولات' : 'All commissions received'}</Badge>;
+          }
+          return <Badge variant="secondary" className="text-xs">⏱ {isAr ? 'المكافآت قيد قفل 20 يوم' : '20-day lock active'}</Badge>;
+        })()}
       </div>
 
       {/* Payout Requests History */}

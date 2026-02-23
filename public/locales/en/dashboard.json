@@ -1011,7 +1011,8 @@
       "daysLeft": "{{count}} days left",
       "statusEligible": "Eligible",
       "statusIneligible": "Ineligible",
-      "statusPaid": "Paid"
+      "statusPaid": "Paid",
+      "commissionReceived": "Commission Received"
     },
     "leadStatuses": {
       "new": "New",
@@ -1203,9 +1204,6 @@
     "noPending": "No Pending",
     "noPayoutsMsg": "No influencer payouts to display",
     "paid": "Paid"
-  },
-  "common": {
-    "lastRefreshed": "Updated"
   },
   "tabError": {
     "title": "This section encountered a problem",
