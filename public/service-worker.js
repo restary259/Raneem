@@ -1,5 +1,5 @@
 
-const CACHE_VERSION = '3.0.0';
+const CACHE_VERSION = '4.0.0';
 const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
 const AI_CACHE = 'darb-ai-cache';
 const DOCS_CACHE = 'darb-docs-cache';
