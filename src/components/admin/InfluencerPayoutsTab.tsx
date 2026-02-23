@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Clock, AlertTriangle, CheckCircle2, DollarSign, Users, CalendarClock, Filter } from 'lucide-react';
+import { ChevronDown, Clock, AlertTriangle, CheckCircle2, DollarSign, Users, CalendarClock, Filter, CheckCircle, X, MessageCircle, Wallet } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const LOCK_DAYS = 20;
@@ -20,9 +20,12 @@ interface Props {
   rewards: any[];
   payoutRequests: any[];
   onRefresh: () => void;
+  actionLoading?: string | null;
+  onMarkPayoutPaid?: (reqId: string, linkedRewardIds?: string[]) => Promise<void>;
+  onRejectPayout?: (reqId: string, linkedRewardIds?: string[]) => Promise<void>;
+  onMarkRewardPaid?: (rewardId: string) => Promise<void>;
+  onClearReward?: (rewardId: string) => Promise<void>;
 }
-
-/* ---------- helpers ---------- */
 
 function getDueInfo(paidAt: string | null) {
   if (!paidAt) return null;
@@ -42,7 +45,6 @@ function fmtCurrency(n: number) {
   return `₪${n.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 }
 
-/* ---------- dot badge ---------- */
 const DotBadge = ({ color, children }: { color: string; children: React.ReactNode }) => {
   const colorMap: Record<string, string> = {
     amber: 'bg-amber-400',
@@ -64,14 +66,25 @@ const DotBadge = ({ color, children }: { color: string; children: React.ReactNod
   );
 };
 
-/* ---------- component ---------- */
-
-const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewards, payoutRequests }) => {
+const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewards, payoutRequests, onRefresh, actionLoading, onMarkPayoutPaid, onRejectPayout, onMarkRewardPaid, onClearReward }) => {
   const { t } = useTranslation('dashboard');
   const isMobile = useIsMobile();
   const [filter, setFilter] = useState<FilterType>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'due' | 'amount'>('due');
+
+  const WHATSAPP_URL = import.meta.env.VITE_WHATSAPP_URL || 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+
+  /* Pending payout requests */
+  const pendingPayoutRequests = useMemo(() => {
+    return payoutRequests.filter((r: any) => r.status === 'pending' || r.status === 'approved');
+  }, [payoutRequests]);
+
+  /* Orphaned pending rewards (not linked to any payout request) */
+  const orphanedPendingRewards = useMemo(() => {
+    const linkedRewardIds = new Set(payoutRequests.flatMap((p: any) => p.linked_reward_ids || []));
+    return rewards.filter(r => r.status === 'pending' && !linkedRewardIds.has(r.id));
+  }, [rewards, payoutRequests]);
 
   /* Build per-influencer aggregation */
   const { rows, summary, filterCounts } = useMemo(() => {
@@ -188,7 +201,6 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
       };
     }).filter((r: any) => r.paidStudents > 0 || r.totalReferred > 0);
 
-    // Pre-compute filter counts
     const filterCounts = {
       all: rows.length,
       ready: rows.filter(r => r.readyForPayout > 0).length,
@@ -241,7 +253,12 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
     }
   };
 
-  /* ---------- KPI cards config ---------- */
+  const getProfileName = (id: string) => {
+    const inf = influencers.find((i: any) => i.id === id);
+    return inf?.full_name || inf?.email || '—';
+  };
+
+  /* KPI cards */
   const kpiCards = [
     {
       label: t('admin.influencerPayouts.totalPendingPayout', 'Total Pending'),
@@ -275,7 +292,7 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
     },
   ];
 
-  /* ---------- Mobile card for an influencer ---------- */
+  /* Mobile card */
   const renderMobileCard = (row: typeof filtered[0]) => (
     <Card key={row.id} className="rounded-xl hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-4 space-y-3">
@@ -317,6 +334,116 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
 
   return (
     <div className="space-y-6">
+      {/* ===== Pending Approvals Section (moved from Transactions tab) ===== */}
+      {pendingPayoutRequests.length > 0 && (
+        <Card className="border-blue-300 bg-blue-50/40">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <h3 className="font-semibold text-sm">{t('money.payoutRequests', 'Payout Requests')} ({pendingPayoutRequests.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {pendingPayoutRequests.map((req: any) => (
+                <div key={req.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium truncate">{getProfileName(req.requestor_id)}</p>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{req.requestor_role}</Badge>
+                      <Badge variant={req.status === 'approved' ? 'default' : 'secondary'} className="text-[10px]">{req.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {Number(req.amount).toLocaleString()} ₪ · {new Date(req.requested_at).toLocaleDateString()}
+                      {req.payment_method && ` · ${req.payment_method.slice(0, 40)}`}
+                    </p>
+                    {req.linked_student_names?.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {t('money.students')}: {req.linked_student_names.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1 border-green-500 text-green-700 hover:bg-green-50"
+                      onClick={() => window.open(WHATSAPP_URL, '_blank')}
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                      WA
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="h-7 text-xs gap-1"
+                      disabled={actionLoading === req.id}
+                      onClick={() => onMarkPayoutPaid?.(req.id, req.linked_reward_ids)}
+                    >
+                      <CheckCircle className="h-3 w-3" />
+                      {t('money.markPaid', 'Mark Paid')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+                      disabled={actionLoading === req.id}
+                      onClick={() => onRejectPayout?.(req.id, req.linked_reward_ids)}
+                    >
+                      <X className="h-3 w-3" />
+                      {t('money.reject', 'Reject')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ===== Orphaned Pending Rewards ===== */}
+      {orphanedPendingRewards.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50/40">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-amber-600" />
+              <h3 className="font-semibold text-sm">{t('money.pendingPayouts', 'Pending Payouts')} ({orphanedPendingRewards.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {orphanedPendingRewards.map((r: any) => (
+                <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{getProfileName(r.user_id)}</p>
+                    <p className="text-xs text-muted-foreground">{Number(r.amount).toLocaleString()} ₪ · {new Date(r.created_at).toLocaleDateString()}</p>
+                    {r.admin_notes && <p className="text-[10px] text-muted-foreground truncate">{r.admin_notes}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="h-7 text-xs gap-1"
+                      disabled={actionLoading === r.id}
+                      onClick={() => onMarkRewardPaid?.(r.id)}
+                    >
+                      <CheckCircle className="h-3 w-3" />
+                      {t('money.markPaid', 'Mark Paid')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
+                      disabled={actionLoading === r.id}
+                      onClick={() => onClearReward?.(r.id)}
+                    >
+                      <X className="h-3 w-3" />
+                      {t('money.clear', 'Clear')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {kpiCards.map((kpi) => {

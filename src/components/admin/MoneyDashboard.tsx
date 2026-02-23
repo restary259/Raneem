@@ -231,190 +231,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
       <TabsContent value="transactions">
     <div className="space-y-6">
-      {/* Payout Requests — Admin Approval Panel */}
-      {(() => {
-        const pending = payoutRequests.filter((r: any) => r.status === 'pending' || r.status === 'approved');
-        if (pending.length === 0) return null;
-        return (
-          <Card className="border-blue-300 bg-blue-50/40">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <h3 className="font-semibold text-sm">{t('money.payoutRequests', 'Payout Requests')} ({pending.length})</h3>
-              </div>
-              <div className="space-y-2">
-                {pending.map((req: any) => {
-                  const requesterName = getProfileName(req.requestor_id);
-                  const WHATSAPP_URL = import.meta.env.VITE_WHATSAPP_URL || 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
-                  return (
-                    <div key={req.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium truncate">{requesterName}</p>
-                          <Badge variant="secondary" className="text-[10px] capitalize">{req.requestor_role}</Badge>
-                          <Badge variant={req.status === 'approved' ? 'default' : 'secondary'} className="text-[10px]">{req.status}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {Number(req.amount).toLocaleString()} ₪ · {new Date(req.requested_at).toLocaleDateString()}
-                          {req.payment_method && ` · ${req.payment_method.slice(0, 40)}`}
-                        </p>
-                        {(() => {
-                          // Show 20-day payout eligibility for linked rewards
-                          const linkedCases = cases.filter(c => c.paid_countdown_started_at);
-                          if (linkedCases.length > 0) {
-                            const latestPaid = linkedCases.reduce((latest, c) => {
-                              const d = new Date(c.paid_countdown_started_at);
-                              return d > latest ? d : latest;
-                            }, new Date(0));
-                            const eligibleDate = new Date(latestPaid.getTime() + 20 * 24 * 60 * 60 * 1000);
-                            const now = new Date();
-                            if (now < eligibleDate) {
-                              const daysLeft = Math.ceil((eligibleDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-                              return <p className="text-[10px] text-amber-700 font-medium mt-0.5">🔒 {t('money.payoutEligibleIn', { days: daysLeft, defaultValue: 'Payout eligible in {{days}} days' })}</p>;
-                            }
-                            return <p className="text-[10px] text-emerald-700 font-medium mt-0.5">✅ {t('money.payoutEligible', { date: eligibleDate.toLocaleDateString(), defaultValue: 'Eligible since {{date}}' })}</p>;
-                          }
-                          return null;
-                        })()}
-                        {req.linked_student_names?.length > 0 && (
-                          <p className="text-[10px] text-muted-foreground">
-                            {t('money.students')}: {req.linked_student_names.join(', ')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs gap-1 border-green-500 text-green-700 hover:bg-green-50"
-                          onClick={() => window.open(WHATSAPP_URL, '_blank')}
-                        >
-                          <MessageCircle className="h-3 w-3" />
-                          WA
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="h-7 text-xs gap-1"
-                          disabled={actionLoading === req.id}
-                          onClick={async () => {
-                            setActionLoading(req.id);
-                            const { error } = await (supabase as any)
-                              .from('payout_requests')
-                              .update({ status: 'paid', paid_at: new Date().toISOString() })
-                              .eq('id', req.id);
-                            setActionLoading(null);
-                            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-                            // Also mark linked rewards as paid
-                            if (req.linked_reward_ids?.length) {
-                              await (supabase as any).from('rewards')
-                                .update({ status: 'paid', paid_at: new Date().toISOString() })
-                                .in('id', req.linked_reward_ids);
-                            }
-                            // Audit log: financial compliance trail
-                            try {
-                              const { data: { session } } = await supabase.auth.getSession();
-                              if (session?.user) {
-                                await (supabase as any).from('admin_audit_log').insert({
-                                  admin_id: session.user.id, action: 'mark_payout_paid',
-                                  target_id: req.id, target_table: 'payout_requests',
-                                  details: `Admin paid payout request ${req.id} — amount: ${req.amount} ₪ — requestor: ${req.requestor_id}`,
-                                });
-                              }
-                            } catch {}
-                            toast({ title: t('money.markedPaid', 'Marked as paid') });
-                            onRefresh?.();
-                          }}
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                          {t('money.markPaid', 'Mark Paid')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
-                          disabled={actionLoading === req.id}
-                          onClick={async () => {
-                            setActionLoading(req.id);
-                            const { error } = await (supabase as any)
-                              .from('payout_requests')
-                              .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
-                              .eq('id', req.id);
-                            // Restore rewards to pending so they can be re-requested
-                            if (!error && req.linked_reward_ids?.length) {
-                              await (supabase as any).from('rewards')
-                                .update({ status: 'pending', payout_requested_at: null })
-                                .in('id', req.linked_reward_ids);
-                            }
-                            setActionLoading(null);
-                            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-                            toast({ title: t('money.rejected', 'Request rejected') });
-                            onRefresh?.();
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                          {t('money.reject', 'Reject')}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
-
-      {/* Pending Rewards — Manual Payout Controls */}
-      {(() => {
-        // Filter out rewards already linked to a payout request
-        const linkedRewardIds = new Set(payoutRequests.flatMap((p: any) => p.linked_reward_ids || []));
-        const pendingRewards = rewards.filter(r => r.status === 'pending' && !linkedRewardIds.has(r.id));
-        if (pendingRewards.length === 0) return null;
-        return (
-          <Card className="border-amber-300 bg-amber-50/40">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-amber-600" />
-                <h3 className="font-semibold text-sm">{t('money.pendingPayouts', 'Pending Payouts')} ({pendingRewards.length})</h3>
-              </div>
-              <div className="space-y-2">
-                {pendingRewards.map(r => (
-                  <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{getProfileName(r.user_id)}</p>
-                      <p className="text-xs text-muted-foreground">{r.amount.toLocaleString()} ₪ · {new Date(r.created_at).toLocaleDateString()}</p>
-                      {r.admin_notes && <p className="text-[10px] text-muted-foreground truncate">{r.admin_notes}</p>}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-7 text-xs gap-1"
-                        disabled={actionLoading === r.id}
-                        onClick={() => handleMarkRewardPaid(r.id)}
-                      >
-                        <CheckCircle className="h-3 w-3" />
-                        {t('money.markPaid', 'Mark Paid')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs gap-1 text-destructive hover:text-destructive"
-                        disabled={actionLoading === r.id}
-                        onClick={() => handleClearReward(r.id)}
-                      >
-                        <X className="h-3 w-3" />
-                        {t('money.clear', 'Clear')}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -658,7 +474,52 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           influencers={influencers}
           rewards={rewards}
           payoutRequests={payoutRequests}
-          onRefresh={onRefresh}
+          onRefresh={onRefresh || (() => {})}
+          actionLoading={actionLoading}
+          onMarkPayoutPaid={async (reqId: string, linkedRewardIds?: string[]) => {
+            setActionLoading(reqId);
+            const { error } = await (supabase as any)
+              .from('payout_requests')
+              .update({ status: 'paid', paid_at: new Date().toISOString() })
+              .eq('id', reqId);
+            if (error) { setActionLoading(null); toast({ variant: 'destructive', description: error.message }); return; }
+            if (linkedRewardIds?.length) {
+              await (supabase as any).from('rewards')
+                .update({ status: 'paid', paid_at: new Date().toISOString() })
+                .in('id', linkedRewardIds);
+            }
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.user) {
+                await (supabase as any).from('admin_audit_log').insert({
+                  admin_id: session.user.id, action: 'mark_payout_paid',
+                  target_id: reqId, target_table: 'payout_requests',
+                  details: `Admin paid payout request ${reqId}`,
+                });
+              }
+            } catch {}
+            setActionLoading(null);
+            toast({ title: t('money.markedPaid', 'Marked as paid') });
+            onRefresh?.();
+          }}
+          onRejectPayout={async (reqId: string, linkedRewardIds?: string[]) => {
+            setActionLoading(reqId);
+            const { error } = await (supabase as any)
+              .from('payout_requests')
+              .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
+              .eq('id', reqId);
+            if (!error && linkedRewardIds?.length) {
+              await (supabase as any).from('rewards')
+                .update({ status: 'pending', payout_requested_at: null })
+                .in('id', linkedRewardIds);
+            }
+            setActionLoading(null);
+            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+            toast({ title: t('money.rejected', 'Request rejected') });
+            onRefresh?.();
+          }}
+          onMarkRewardPaid={handleMarkRewardPaid}
+          onClearReward={handleClearReward}
         />
       </TabsContent>
     </Tabs>
