@@ -1,111 +1,170 @@
+# Data Purge + Agent Payouts UI Merge + KPI Fix
+
+## 1. Full Data Purge (Database)
+
+Run a SQL migration to hard-delete all operational data while preserving user accounts (profiles, user_roles, auth users). This is a one-time cleanup to start fresh.
+
+**Tables to purge (in order to respect FK dependencies):**
 
 
-# Multi-Fix: Translation, Freeze Prevention, Payout UX, Bottom Nav, and Session Modal
+| Order | Table                  | Action     |
+| ----- | ---------------------- | ---------- |
+| 1     | case_service_snapshots | DELETE all |
+| 2     | case_payments          | DELETE all |
+| 3     | appointments           | DELETE all |
+| 4     | commissions            | DELETE all |
+| 5     | payout_requests        | DELETE all |
+| 6     | rewards                | DELETE all |
+| 7     | student_cases          | DELETE all |
+| 8     | leads                  | DELETE all |
+| 9     | referrals              | DELETE all |
+| 10    | notifications          | DELETE all |
+| 11    | admin_audit_log        | DELETE all |
+| 12    | login_attempts         | DELETE all |
 
-## Fix 1: Translation Keys Broken (ROOT CAUSE FOUND)
 
-**Problem**: The "common.save" and "common.cancel" buttons show as raw keys in the ProfileCompletionModal.
+**Preserved:** profiles, user_roles, active_sessions, influencer_invites, master_services, checklist_items, eligibility_config, eligibility_thresholds, majors, major_categories
 
-**Root Cause**: Both `en/dashboard.json` and `ar/dashboard.json` have **duplicate `"common"` keys**. JSON does not support duplicate keys -- the second one (line 1207) overwrites the first one (line 761). The first `"common"` block has `save`, `cancel`, `loading`, `error`, etc. The second `"common"` block only has `"lastRefreshed"`. So all the save/cancel/etc. keys are silently lost.
+## 2. Move Payout Confirmations to Agent Payouts Tab
 
-**Fix**: Merge the second `"common"` block into the first one and remove the duplicate. The `lastRefreshed` key already exists in the first block, so the second block is entirely redundant.
+**Problem:** The "Payout Requests" approval panel (with Mark Paid / Reject buttons) appears at the top of the Transactions tab. It should be in the Agent Payouts tab instead.
 
-| File | Change |
-|---|---|
-| `public/locales/en/dashboard.json` | Remove duplicate `"common"` block at line 1207-1209 |
-| `public/locales/ar/dashboard.json` | Remove duplicate `"common"` block at line 1207-1209 |
+**Changes to `MoneyDashboard.tsx`:**
 
----
+- Remove the payout requests approval panel (lines 234-366) from the Transactions `TabsContent`
+- Remove the pending rewards manual payout panel (lines 368-417) from Transactions
+- Pass `payoutRequests`, `actionLoading`, `handleMarkRewardPaid`, `handleClearReward`, and payout approval handlers to `InfluencerPayoutsTab`
 
-## Fix 2: Influencer Dashboard -- Replace 20-Day Timer with "Commission Received"
+**Changes to `InfluencerPayoutsTab.tsx`:**
 
-**Problem**: When admin marks a case as paid and the reward is already paid (via early release or manual mark), the influencer dashboard still shows "20 days left" countdown. It should show "Commission Received" or "Case Closed" instead.
+- Accept new props: `payoutRequests` action handlers, `onMarkPayoutPaid`, `onRejectPayout`, `onMarkRewardPaid`, `onClearReward`
+- Add a "Pending Approvals" section above the KPI cards showing payout requests with Mark Paid / WA / Reject buttons (same UI as currently in Transactions, just moved)
+- The KPI cards already compute real data from cases/rewards -- they will show correct values once data exists
 
-**Current Logic** (InfluencerDashboardPage.tsx line 124-131): `getTimerInfo()` only checks `paidAt` date math, never checks reward status.
+## 3. KPI Cards Already Use Real Data
 
-**Fix**: Check the rewards data. If the linked reward for this case has `status === 'paid'`, show a green "Commission Received" badge instead of the countdown timer.
+The `InfluencerPayoutsTab` KPI cards (Total Pending, Due This Week, Overdue, Total Paid Out) already compute from `cases`, `rewards`, and `payoutRequests` props. They show 0 because the database currently has no paid cases. After the purge and fresh data entry, they will reflect real numbers. No code change needed for KPI logic.
 
-Also in EarningsPanel.tsx (line 265-267): The "20-day lock active" badge shows when `eligibleRewards.length === 0` even if all rewards are already paid. Fix: only show it when there are pending (not paid) rewards still in the lock window.
+## Summary of File Changes
 
-| File | Change |
-|---|---|
-| `src/pages/InfluencerDashboardPage.tsx` | Fetch rewards alongside leads/cases. In student card, check if linked reward is paid -- show "Commission Received" badge instead of timer |
-| `src/components/influencer/EarningsPanel.tsx` | Fix lock badge to not show when all rewards are already paid |
 
----
+| File                                            | Change                                                                                            | Risk                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| SQL Migration                                   | Purge all operational data                                                                        | **Irreversible** -- intentional per user request |
+| `src/components/admin/MoneyDashboard.tsx`       | Remove payout approval panels from Transactions tab; pass action handlers to InfluencerPayoutsTab | Low -- UI reorganization only                    |
+| `src/components/admin/InfluencerPayoutsTab.tsx` | Add payout approval section with Mark Paid/Reject/WA buttons above KPI cards                      | Low -- UI addition only                          |
 
-## Fix 3: WhatsApp Payout Button Should Light Up After Early Release
-
-**Problem**: When admin does early release, the WhatsApp button stays disabled because `eligibleRewards` is empty (rewards are marked as `paid`, not `pending`).
-
-**Current Logic**: The button requires `eligibleRewards.length > 0` but early-released rewards have `status: 'paid'`, so they're excluded from `eligibleRewards`.
-
-**Analysis**: This is actually correct behavior -- after early release, the admin has already paid, so there's nothing for the influencer to request. The button should remain disabled. BUT the UX message should change from "20-day lock active" to "All commissions received" to make this clear.
-
-| File | Change |
-|---|---|
-| `src/components/influencer/EarningsPanel.tsx` | Add a new badge state: when all rewards are paid and none pending, show "All commissions received" instead of "20-day lock active" |
-
----
-
-## Fix 4: Bottom Navigation Must Not Scroll Away (Team Dashboard)
-
-**Problem**: On mobile, the bottom nav can scroll up with the page content.
-
-**Current Code** (TeamDashboardPage.tsx line 594): Already uses `position: fixed; bottom: 0`. However, the main content area has `overflow-auto` on line 402, and the outer `div` has `min-h-screen`. The issue is likely the content wrapper `div.flex-1.overflow-auto` -- when this scrolls, the fixed nav should stay, but on some mobile browsers the fixed positioning can break inside a flex scroll container.
-
-**Fix**: Ensure the bottom nav is outside the scrollable flex container, at the root level of the component. Move it outside the `div.flex` wrapper.
-
-| File | Change |
-|---|---|
-| `src/pages/TeamDashboardPage.tsx` | Move bottom nav outside the flex container to be a direct child of the root div |
-
----
-
-## Fix 5: Session Kick "OK" Button Fix
-
-**Problem**: The OK button on the session kick modal doesn't close it (visible in screenshot 192).
-
-**Analysis**: The `acknowledgeKick` function was fixed in the previous edit to call `setKicked(false)`. However, the `AlertDialog` in App.tsx has `open={kicked}` but no `onOpenChange` handler. This means clicking outside or pressing Escape won't close it. The OK button click calls `acknowledgeKick` which does `setKicked(false)` then `signOut()` then `navigate()`. The navigate happens after signOut -- but since the user is already on `/student-auth`, the navigate may be a no-op, and the `setKicked(false)` should work. Let me check if the issue is that `acknowledgeKick` awaits `signOut()` and the promise rejection prevents `navigate()`.
-
-Looking at the hook (line 100-106 from session guard): `acknowledgeKick` calls `setKicked(false)` first, then tries to sign out and navigate. This should work. The issue may be that the auto-dismiss timer (10 seconds) fired first and already called `signOut()`, so the user's session is gone, and when they click OK, the `acknowledgeKick` runs but `signOut()` fails silently because they're already signed out -- this is fine.
-
-The real issue: `AlertDialog` has `open={kicked}` but NO `onOpenChange` prop. If the component unmounts before `setKicked(false)` takes effect (due to navigation), the modal stays. Add `onOpenChange` to handle the dialog close properly.
-
-| File | Change |
-|---|---|
-| `src/App.tsx` | Add `onOpenChange` to AlertDialog that calls `acknowledgeKick` when closed |
-
----
-
-## Fix 6: Merge Pending Payments in Admin Money Tab
-
-**Problem**: The admin Money tab shows two separate sections -- "Payout Requests" (blue card) and "Pending Payouts" (amber card) -- which are visually redundant and confusing.
-
-**Fix**: Merge the "Pending Payouts" (individual rewards) section into the "Payout Requests" section when a payout request exists for those rewards. Only show standalone pending rewards that have NO associated payout request.
-
-| File | Change |
-|---|---|
-| `src/components/admin/MoneyDashboard.tsx` | Filter out pending rewards that are already linked to a payout request (their IDs appear in `linked_reward_ids`). Only show orphaned pending rewards separately. |
-
----
-
-## Summary of All Changes
-
-| Priority | Issue | Files | Risk |
-|---|---|---|---|
-| CRITICAL | Duplicate `common` key in JSON | 2 JSON files | Zero -- removes redundant key |
-| HIGH | Timer shows instead of "Commission Received" | `InfluencerDashboardPage.tsx`, `EarningsPanel.tsx` | Low -- display only |
-| HIGH | Session modal OK button | `App.tsx` | Low -- adds `onOpenChange` |
-| MEDIUM | Bottom nav scrolling | `TeamDashboardPage.tsx` | Low -- DOM restructure |
-| LOW | Merge pending payments | `MoneyDashboard.tsx` | Low -- display only |
 
 ## What Will NOT Change
+
 - Commission calculation formulas
-- Case status definitions and transitions
-- Payment marking logic
+- Case status transitions
+- Payment marking logic (same functions, just called from different tab)
 - RLS policies
 - Database schema
-- Edge functions
-- Role permissions
+- Edge functions 
+- Role permissions                    D — UI Deployment (merge payout controls)
+  - Deploy the frontend change that removes panels from Transactions and adds “Pending Approvals” to InfluencerPayoutsTab.
+  - Confirm backend endpoints used by both tabs remain the same.
+  ### E — POST-PURGE: RE-INDEX, VACUUM, REBUILD AGGREGATES
+  - Run `ANALYZE` / `VACUUM` / reindex (DB specific) to free space & speed queries.
+  - Rebuild or warm up materialized views or counters used by KPIs.
+  ### F — SEED / BRING SYSTEM LIVE
+  - If you want initial numbers, seed a small set of test/real cases.
+  - Watch metrics.
+  # 4) Concurrency & no-freeze recommendations (technical)
+  - **Atomic payout flow**:
+    - Start DB transaction.
+    - Verify `payout_request.status = pending`.
+    - Update `payout_request.status = paid`, create ledger entry, update case/reward status.
+    - Commit.
+  - **Idempotency token**: frontend should pass `idempotency_key` to backend to avoid duplicate marking when user double-clicks.
+  - **Optimistic locking**: add `version` or `updated_at` check on critical rows.
+  - **Background recalculation**: any heavy KPI recalculation should be queued and done asynchronously; show "in-progress" on UI with socket updates.
+  - **WebSockets / SSE** to push updates to clients so simultaneous sessions see progress without refresh.
+  # 5) Exact UI/Prop changes (pseudocode)
+  MoneyDashboard.tsx (simplified)
+  ```
+  // BEFORE: Transactions TabsContent included payout approvals
+  // AFTER: remove approval panels; pass handlers down
+  <InfluencerPayoutsTab
+    payoutRequests={payoutRequests}
+    actionLoading={actionLoading}
+    onMarkPayoutPaid={handleMarkPayoutPaid}
+    onRejectPayout={handleRejectPayout}
+    onMarkRewardPaid={handleMarkRewardPaid}
+    onClearReward={handleClearReward}
+    cases={cases}
+    rewards={rewards}
+  />
+  ```
+  InfluencerPayoutsTab.tsx (simplified)
+  ```
+  type Props = {
+    payoutRequests: PayoutRequest[];
+    onMarkPayoutPaid: (id) => Promise<void>;
+    onRejectPayout: (id) => Promise<void>;
+    onMarkRewardPaid: (id) => Promise<void>;
+    onClearReward: (id) => Promise<void>;
+    cases: Case[];
+    rewards: Reward[];
+  };
 
+  export function InfluencerPayoutsTab(props: Props) {
+    return (
+      <div>
+        <section aria-label="Pending Approvals">
+          {props.payoutRequests.map(pr => (
+            <PayoutRequestRow
+              key={pr.id}
+              request={pr}
+              onMarkPaid={() => props.onMarkPayoutPaid(pr.id)}
+              onReject={() => props.onRejectPayout(pr.id)}
+            />
+          ))}
+        </section>
+
+        <section aria-label="KPIs">
+          <KpiCard title="Total Pending" value={computeTotalPending(props.cases, props.rewards, props.payoutRequests)} />
+          ...
+        </section>
+
+        {/* other influencer payout UI */}
+      </div>
+    );
+  }
+  ```
+  Important: Buttons should disable while `actionLoading` and use idempotency.
+  # 6) Tests & Validation checklist (must pass before going to production)
+  -  Full DB backup available and verified.
+  -  Staging: purge + UI migration run successfully and rollback verified.
+  -  Unit tests for payout handlers (including failure paths) pass.
+  -  Integration tests: mark payout paid → `payout_requests` status + ledger + KPI change.
+  -  Concurrency test: 50 simultaneous mark-paid attempts on same request → only one success, others return idempotent response.
+  -  UI E2E: influencer sees Pending Approvals, Mark Paid updates KPI card in <5s.
+  -  Load test for KPI endpoints to ensure no timeouts.
+  -  Audit log created for every payout action.
+  # 7) KPIs to monitor immediately after deploy
+  - Payout action success rate (%)
+  - API latency for payout endpoints (p50 / p95)
+  - KPI calculation time (seconds)
+  - Number of concurrency conflicts / optimistic lock failures
+  - UI-freeze incidents (frontend errors logged)
+  - Discrepancies between `transactions` tab totals and `influencer payouts` totals (should be zero)
+  # 8) Rollback plan (if anything goes wrong)
+  1. Put system back in maintenance mode.
+  2. Restore DB snapshot from backup (fastest full recovery).
+  3. Re-deploy previous frontend build.
+  4. Investigate root cause in staging before retry.
+  # 9) Minor clarifications / adjustments I auto-applied (no need to confirm)
+  - I assumed the KPI logic already used the same tables you listed (cases/rewards/payoutRequests). If KPI code uses *different* sources (cached counters, third-party analytics), rewire those to correct tables or update cache invalidation.
+  - I assumed you want the **same** Mark Paid semantics (balance ledger updates, commission calc) unchanged — only the UI location changes.
+  # 10) Quick prioritized checklist you can hand to the devs (copy-paste)
+  1. TAKE BACKUPS (DB + CSV exports) — block deploy until done.
+  2. Implement frontend change: remove approval panel from Transactions tab, add to InfluencerPayoutsTab, wire handlers. Add `idempotency_key`.
+  3. Ensure backend payout handlers are single source-of-truth; add DB transaction & optimistic locking.
+  4. Add integration tests + concurrency test (50 parallel).
+  5. Deploy to staging; run purge on staging; test all flows & KPI aggregates.
+  6. Schedule maintenance window; run purge on production (archive first).
+  7. Post-purge: re-index, warm caches, seed initial data (if any).
+  8. Monitor KPIs & logs for 48 hours.
