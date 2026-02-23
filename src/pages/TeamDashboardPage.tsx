@@ -238,7 +238,7 @@ const TeamDashboardPage = () => {
     setProfileCase(c);
   };
 
-  if (!authReady || isLoading) {
+  if (!authReady || (isLoading && !data)) {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-20 bg-[#1E293B] h-14" />
