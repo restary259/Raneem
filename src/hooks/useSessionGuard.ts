@@ -132,6 +132,7 @@ export const useSessionGuard = () => {
   const acknowledgeKick = useCallback(async () => {
     // Clear auto-dismiss timer so it doesn't fire after user clicks OK
     if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
+    kickedRef.current = false;
     setKicked(false);
     localStorage.removeItem(SESSION_NONCE_KEY);
     try { await supabase.auth.signOut(); } catch {}
