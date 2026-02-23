@@ -42,3 +42,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.health-check]
 verify_jwt = false
+[functions.admin-early-release]
+verify_jwt = false

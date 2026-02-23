@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { exportPDF } from '@/utils/exportUtils';
-import { Search, FileText, User, Package, DollarSign, StickyNote, CheckCircle } from 'lucide-react';
+import { Search, FileText, User, Package, DollarSign, StickyNote, CheckCircle, Unlock } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
 
 interface StudentCasesManagementProps {
@@ -39,6 +39,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   const [moneyValues, setMoneyValues] = useState<Record<string, number>>({});
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
+  const [earlyReleaseId, setEarlyReleaseId] = useState<string | null>(null);
+  const [releasedCases, setReleasedCases] = useState<Set<string>>(new Set());
 
   // Reset page on filter change
   useEffect(() => { setPage(1); }, [search, statusFilter]);
@@ -176,10 +178,19 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                     <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
-                    {countdownInfo && (
-                      countdownInfo.locked
-                        ? <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700 bg-amber-50">🔒 {countdownInfo.daysLeft}d</Badge>
-                        : <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.payoutReady', { defaultValue: 'Payout Ready' })}</Badge>
+                    {releasedCases.has(c.id) ? (
+                      <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.paidOut', { defaultValue: 'Paid Out' })}</Badge>
+                    ) : countdownInfo && (
+                      countdownInfo.locked ? (
+                        <>
+                          <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700 bg-amber-50">🔒 {countdownInfo.daysLeft}d</Badge>
+                          <Button size="sm" variant="outline" className="h-6 text-[10px] border-emerald-400 text-emerald-700" onClick={(e) => { e.stopPropagation(); setEarlyReleaseId(c.id); }} disabled={loading}>
+                            <Unlock className="h-3 w-3 me-1" />{t('cases.releaseEarly', { defaultValue: 'Release Early' })}
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.payoutReady', { defaultValue: 'Payout Ready' })}</Badge>
+                      )
                     )}
                     {['services_filled', 'profile_filled'].includes(c.case_status) && !isPaid && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
@@ -417,6 +428,52 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             <Button variant="outline" onClick={() => setPayConfirmCaseId(null)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
             <Button onClick={() => payConfirmCaseId && executeMarkAsPaid(payConfirmCaseId)} disabled={loading}>
               <CheckCircle className="h-4 w-4 me-1" />{loading ? t('common.loading', { defaultValue: 'Loading...' }) : t('studentCases.confirmPay', { defaultValue: 'Confirm & Mark Paid' })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Early Release Confirmation Modal */}
+      <Dialog open={!!earlyReleaseId} onOpenChange={() => setEarlyReleaseId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('cases.earlyReleaseTitle', { defaultValue: '⚡ Release Payout Early' })}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>{t('cases.earlyReleaseDesc', { defaultValue: 'This will immediately mark all rewards for this case as paid. The influencer and team member will see "Paid Out" status.' })}</p>
+            {earlyReleaseId && (() => {
+              const rc = studentCases.find(c => c.id === earlyReleaseId);
+              return (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p><strong>{t('studentCases.studentLabel', { defaultValue: 'Student' })}:</strong> {rc?.student_full_name || rc?.lead?.full_name || '—'}</p>
+                </div>
+              );
+            })()}
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button variant="outline" onClick={() => setEarlyReleaseId(null)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
+            <Button onClick={async () => {
+              if (!earlyReleaseId) return;
+              setLoading(true);
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) throw new Error('Not authenticated');
+                const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-early-release`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                  body: JSON.stringify({ case_id: earlyReleaseId }),
+                });
+                const result = await resp.json();
+                if (!resp.ok) throw new Error(result.error || 'Failed');
+                toast({ title: t('cases.earlyReleaseSuccess', { defaultValue: 'Payout released successfully' }) });
+                setReleasedCases(prev => new Set([...prev, earlyReleaseId]));
+                onRefresh();
+              } catch (err: any) {
+                toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+              }
+              setLoading(false);
+              setEarlyReleaseId(null);
+            }} disabled={loading}>
+              <Unlock className="h-4 w-4 me-1" />{loading ? t('common.loading', { defaultValue: 'Loading...' }) : t('cases.confirmRelease', { defaultValue: 'Confirm Release' })}
             </Button>
           </div>
         </DialogContent>
