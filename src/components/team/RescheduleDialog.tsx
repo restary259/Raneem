@@ -16,8 +16,7 @@ interface RescheduleDialogProps {
 
 const RescheduleDialog: React.FC<RescheduleDialogProps> = ({ appointment, onClose, refetch }) => {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [saving, setSaving] = useState(false);
@@ -37,7 +36,7 @@ const RescheduleDialog: React.FC<RescheduleDialogProps> = ({ appointment, onClos
       const newScheduledAt = new Date(`${date}T${time}:00`).toISOString();
       const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', appointment.id);
       if (!error) {
-        toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
+        toast({ title: t('lawyer.appointmentRescheduled') });
         onClose();
         try { await refetch(); } catch {}
       } else {
@@ -53,14 +52,14 @@ const RescheduleDialog: React.FC<RescheduleDialogProps> = ({ appointment, onClos
   return (
     <Dialog open={!!appointment} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{isAr ? 'إعادة جدولة الموعد' : 'Reschedule Appointment'}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('lawyer.rescheduleAppointment')}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label className="text-xs">{isAr ? 'التاريخ الجديد' : 'New Date'}</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
-          <div><Label className="text-xs">{isAr ? 'الوقت الجديد' : 'New Time'}</Label><Input type="time" value={time} onChange={e => setTime(e.target.value)} /></div>
+          <div><Label className="text-xs">{t('lawyer.newDate')}</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+          <div><Label className="text-xs">{t('lawyer.newTime')}</Label><Input type="time" value={time} onChange={e => setTime(e.target.value)} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={handleReschedule} disabled={saving || !date || !time}>{saving ? t('common.loading') : (isAr ? 'حفظ' : 'Save')}</Button>
+          <Button onClick={handleReschedule} disabled={saving || !date || !time}>{saving ? t('common.loading') : t('common.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

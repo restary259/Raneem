@@ -10,22 +10,19 @@ interface PaymentConfirmDialogProps {
 }
 
 export const PaymentConfirmDialog: React.FC<PaymentConfirmDialogProps> = ({ caseId, saving, onConfirm, onClose }) => {
-  const { t, i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
 
   return (
     <AlertDialog open={!!caseId} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{isAr ? 'تأكيد استلام الدفع' : 'Payment Confirmation'}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {isAr ? 'هل تم استلام الدفعة من الطالب؟ سيتم تحديث الحالة وحساب العمولات تلقائياً.' : 'Did you receive payment from the student? This will update the status and auto-calculate commissions.'}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('lawyer.paymentConfirmTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('lawyer.paymentConfirmDesc')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={() => { if (caseId) onConfirm(caseId); }} disabled={saving}>
-            {saving ? t('common.loading') : (isAr ? 'نعم، تم الاستلام' : 'Yes, Payment Received')}
+            {saving ? t('common.loading') : t('lawyer.yesPaymentReceived')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -40,22 +37,19 @@ interface DeleteConfirmDialogProps {
 }
 
 export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ caseId, onConfirm, onClose }) => {
-  const { t, i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
 
   return (
     <AlertDialog open={!!caseId} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{isAr ? 'حذف الحالة' : 'Delete Case'}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {isAr ? 'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع.' : 'Are you sure you want to delete this case? This cannot be undone.'}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('lawyer.deleteCaseTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('lawyer.deleteCaseDesc')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={() => { if (caseId) onConfirm(caseId); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            {isAr ? 'حذف' : 'Delete'}
+            {t('common.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

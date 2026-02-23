@@ -195,7 +195,7 @@ const TeamDashboardPage = () => {
     try {
       const { error } = await (supabase as any).from('student_cases').delete().eq('id', caseId);
       if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      else { toast({ title: isAr ? 'تم الحذف' : 'Case deleted' }); try { await refetch(); } catch {} }
+      else { toast({ title: t('lawyer.caseDeleted') }); try { await refetch(); } catch {} }
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
     } finally { setDeleteConfirm(null); }
@@ -204,7 +204,7 @@ const TeamDashboardPage = () => {
   const handleDeleteAppointment = async (apptId: string) => {
     try {
       const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
-      if (!error) { toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' }); try { await refetch(); } catch {} }
+      if (!error) { toast({ title: t('lawyer.appointmentDeleted') }); try { await refetch(); } catch {} }
       else toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
@@ -215,7 +215,7 @@ const TeamDashboardPage = () => {
 
   const openProfileModal = (c: any) => {
     const lead = leads.find(l => l.id === c.lead_id);
-    if (!lead) { toast({ variant: 'destructive', title: isAr ? 'بيانات الطالب غير موجودة' : 'Lead data not found' }); return; }
+    if (!lead) { toast({ variant: 'destructive', title: t('lawyer.leadNotFound') }); return; }
     setProfileCase(c);
   };
 
@@ -249,7 +249,7 @@ const TeamDashboardPage = () => {
     ) : null;
     const reassignBtn = (
       <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => setReassignCase(c)}>
-        <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
+        <UserCheck className="h-3.5 w-3.5" />{t('lawyer.reassign')}
       </Button>
     );
 
@@ -263,7 +263,7 @@ const TeamDashboardPage = () => {
           {reassignBtn}
           {['new', 'eligible'].includes(status) && (
             <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
-              <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
+              <Trash2 className="h-3.5 w-3.5" />{t('lawyer.deleteLabel')}
             </Button>
           )}
         </div>
@@ -272,7 +272,7 @@ const TeamDashboardPage = () => {
     if (status === 'contacted') {
       return (<div className="flex gap-2 flex-wrap">{phoneBtn}
         <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => { const cs = cases.find(x => x.id === c.id); setScheduleForCase(cs || null); }}>
-          <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'حجز موعد' : 'Make Appointment'}
+          <CalendarDays className="h-3.5 w-3.5" />{t('lawyer.makeAppointment')}
         </Button>{reassignBtn}</div>);
     }
     if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) {
@@ -284,14 +284,14 @@ const TeamDashboardPage = () => {
             <FileText className="h-3.5 w-3.5" />{t('lawyer.completeProfile')}
           </Button>
           {linkedAppt && (
-            <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setRescheduleAppt(linkedAppt)}>
-              <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
-            </Button>
+             <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setRescheduleAppt(linkedAppt)}>
+               <CalendarDays className="h-3.5 w-3.5" />{t('lawyer.reschedule')}
+             </Button>
           )}
           {reassignBtn}
-          <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
-            <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
-          </Button>
+           <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
+             <Trash2 className="h-3.5 w-3.5" />{t('lawyer.deleteLabel')}
+           </Button>
         </div>
       );
     }
@@ -300,9 +300,9 @@ const TeamDashboardPage = () => {
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
           {status !== 'services_filled' && (
-            <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setPaymentConfirm(c.id)}>
-              <Send className="h-3.5 w-3.5" />{isAr ? 'إرسال للتقديم' : 'Submit for Application'}
-            </Button>
+             <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setPaymentConfirm(c.id)}>
+               <Send className="h-3.5 w-3.5" />{t('lawyer.submitForApplication')}
+             </Button>
           )}
           {reassignBtn}
         </div>
@@ -430,13 +430,13 @@ const TeamDashboardPage = () => {
                           {c.notes && <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">{c.notes}</p>}
                           {c.admin_notes && (
                             <div className="flex items-start gap-1.5 p-2 rounded bg-amber-50 border border-amber-200">
-                              <span className="text-[10px] font-bold text-amber-700 shrink-0">📋 {isAr ? 'ملاحظة المسؤول:' : 'Admin note:'}</span>
+                              <span className="text-[10px] font-bold text-amber-700 shrink-0">📋 {t('lawyer.adminNote')}</span>
                               <p className="text-[10px] text-amber-800">{c.admin_notes}</p>
                             </div>
                           )}
                           {c.reassigned_from && (
                             <div className="text-[10px] text-muted-foreground italic">
-                              {isAr ? 'محوّل من عضو آخر' : 'Reassigned from another member'}
+                              {t('lawyer.reassignedNote')}
                               {c.reassignment_notes && ` — ${c.reassignment_notes}`}
                             </div>
                           )}
@@ -456,7 +456,7 @@ const TeamDashboardPage = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="font-bold text-sm flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-purple-600" />
-                    {isAr ? 'مواعيد اليوم' : "Today's Appointments"}
+                    {t('lawyer.todayAppointments')}
                     <Badge variant="secondary" className="text-xs">{todayAppointments.length}</Badge>
                   </h2>
                   <span className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMM d')}</span>
@@ -464,7 +464,7 @@ const TeamDashboardPage = () => {
                 {todayAppointments.length === 0 ? (
                   <Card><CardContent className="p-8 text-center">
                     <CalendarDays className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">{isAr ? 'لا توجد مواعيد مجدولة لليوم' : 'No appointments scheduled for today'}</p>
+                    <p className="text-sm text-muted-foreground">{t('lawyer.noTodayAppointments')}</p>
                   </CardContent></Card>
                 ) : (
                   <div className="space-y-3">
@@ -496,7 +496,7 @@ const TeamDashboardPage = () => {
                             <div className="flex gap-2 flex-wrap pt-1 border-t border-muted/50">
                               {linkedLead?.phone && <Button size="sm" variant="outline" className="h-8 text-xs gap-1" asChild><a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a></Button>}
                               <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setRescheduleAppt(appt)}>
-                                <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
+                                <CalendarDays className="h-3.5 w-3.5" />{t('lawyer.reschedule')}
                               </Button>
                               {isApptStage && linkedCase && (
                                 <Button size="sm" className="h-8 text-xs gap-1" onClick={() => openProfileModal(linkedCase)}>
@@ -504,10 +504,10 @@ const TeamDashboardPage = () => {
                                 </Button>
                               )}
                               {appt.case_id && <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
-                                <Briefcase className="h-3.5 w-3.5" />{isAr ? 'عرض الملف' : 'View Case'}
-                              </Button>}
+                                 <Briefcase className="h-3.5 w-3.5" />{t('lawyer.viewCase')}
+                               </Button>}
                               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
+                                <Trash2 className="h-3.5 w-3.5" />{t('lawyer.deleteLabel')}
                               </Button>
                             </div>
                           </CardContent>

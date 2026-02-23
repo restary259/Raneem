@@ -22,8 +22,6 @@ interface ScheduleDialogProps {
 
 const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads, userId, onClose, refetch }) => {
   const { toast } = useToast();
-  const { i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
   const { t } = useTranslation('dashboard');
 
   const [scheduleDate, setScheduleDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -62,7 +60,7 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads,
           duration_minutes: scheduleDuration, location: scheduleLocation || null, notes: scheduleNotes || null,
         }).eq('id', existing.id);
         if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-        else toast({ title: isAr ? 'تم تحديث الموعد' : 'Appointment updated' });
+        else toast({ title: t('lawyer.appointmentUpdated') });
       } else {
         const { error } = await (supabase as any).from('appointments').insert({
           lawyer_id: userId, case_id: scheduleForCase.id, student_name: lead.full_name || 'Unknown',
@@ -71,7 +69,7 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads,
         });
         if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
         else {
-          toast({ title: isAr ? 'تم حجز الموعد' : 'Appointment scheduled' });
+          toast({ title: t('lawyer.appointmentScheduled') });
           if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
             await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
           }
@@ -90,27 +88,27 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads,
     <Dialog open={!!scheduleForCase} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isAr ? 'حجز موعد' : 'Schedule Appointment'}</DialogTitle>
+          <DialogTitle>{t('lawyer.scheduleAppointment')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="p-2 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">{isAr ? 'الطالب' : 'Student'}</p>
+            <p className="text-xs text-muted-foreground">{t('lawyer.student')}</p>
             <p className="text-sm font-semibold">{scheduleForCase ? getLeadInfo(scheduleForCase.lead_id).full_name : ''}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-xs">{isAr ? 'التاريخ' : 'Date'}</Label><Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></div>
-            <div><Label className="text-xs">{isAr ? 'الوقت' : 'Time'}</Label><Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} /></div>
+            <div><Label className="text-xs">{t('lawyer.date')}</Label><Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></div>
+            <div><Label className="text-xs">{t('lawyer.time')}</Label><Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-xs">{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label><Input type="number" value={scheduleDuration} onChange={e => setScheduleDuration(parseInt(e.target.value) || 30)} /></div>
-            <div><Label className="text-xs">{isAr ? 'الموقع' : 'Location'}</Label><Input value={scheduleLocation} onChange={e => setScheduleLocation(e.target.value)} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
+            <div><Label className="text-xs">{t('lawyer.durationMin')}</Label><Input type="number" value={scheduleDuration} onChange={e => setScheduleDuration(parseInt(e.target.value) || 30)} /></div>
+            <div><Label className="text-xs">{t('lawyer.location')}</Label><Input value={scheduleLocation} onChange={e => setScheduleLocation(e.target.value)} placeholder={t('lawyer.optional')} /></div>
           </div>
-          <div><Label className="text-xs">{isAr ? 'ملاحظات' : 'Notes'}</Label><Textarea value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)} rows={2} placeholder={isAr ? 'اختياري' : 'Optional'} /></div>
+          <div><Label className="text-xs">{t('lawyer.notes')}</Label><Textarea value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)} rows={2} placeholder={t('lawyer.optional')} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
           <Button onClick={handleCreate} disabled={saving || !scheduleDate || !scheduleTime}>
-            <CalendarDays className="h-4 w-4 me-1" />{saving ? t('common.loading') : (isAr ? 'حجز' : 'Schedule')}
+            <CalendarDays className="h-4 w-4 me-1" />{saving ? t('common.loading') : t('lawyer.schedule')}
           </Button>
         </DialogFooter>
       </DialogContent>

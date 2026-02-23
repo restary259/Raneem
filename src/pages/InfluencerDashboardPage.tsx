@@ -241,19 +241,8 @@ const InfluencerDashboardPage = () => {
                         ? lead.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
                         : '—';
 
-                      // Workflow mirror: map case_status to Arabic/English label
-                      const caseStatusLabels: Record<string, { ar: string; en: string }> = {
-                        assigned: { ar: 'قيد المراجعة', en: 'Under Review' },
-                        contacted: { ar: 'تم التواصل', en: 'Contacted' },
-                        appointment_scheduled: { ar: 'موعد مجدوّل', en: 'Appt. Scheduled' },
-                        appointment_waiting: { ar: 'في انتظار الموعد', en: 'Awaiting Appt.' },
-                        appointment_completed: { ar: 'تم الموعد', en: 'Appt. Done' },
-                        profile_filled: { ar: 'تم إكمال الملف', en: 'File Completed' },
-                        services_filled: { ar: 'تم الإرسال (بانتظار الدفع)', en: 'Submitted (Awaiting Payment)' },
-                        paid: { ar: 'مدفوع ✓', en: 'Paid ✓' },
-                      };
                       const caseStatusLabel = linkedCase?.case_status
-                        ? (isAr ? caseStatusLabels[linkedCase.case_status]?.ar : caseStatusLabels[linkedCase.case_status]?.en) || linkedCase.case_status
+                        ? String(t(`lawyer.statuses.${linkedCase.case_status}`, linkedCase.case_status))
                         : null;
 
                       return (
