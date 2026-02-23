@@ -22,16 +22,6 @@ import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
-import { useSessionGuard } from "./hooks/useSessionGuard";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
 
 // Lazy-loaded routes
 const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
@@ -56,7 +46,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useSessionTimeout();
-  const { kicked, acknowledgeKick } = useSessionGuard();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation('dashboard');
@@ -105,24 +95,6 @@ const App = () => {
         <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
           <Toaster />
           <Sonner />
-          {/* Single-session kick modal */}
-          <AlertDialog open={kicked} onOpenChange={(open) => { if (!open) acknowledgeKick(); }}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t('session.kickedTitle', 'Logged in from another device')}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('session.kickedDesc', 'Your account was logged in from another device or browser. You will be signed out automatically.')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction onClick={acknowledgeKick}>
-                  {t('session.ok', 'OK')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
           {!isApplyPage && <OfflineIndicator />}
           {!isApplyPage && <InAppBrowserBanner />}
           <Suspense fallback={<div />}>
