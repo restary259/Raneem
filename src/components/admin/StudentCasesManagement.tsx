@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { guardedAction } from '@/lib/conflictPrevention';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
@@ -73,24 +74,26 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   const [payConfirmCaseId, setPayConfirmCaseId] = useState<string | null>(null);
 
   const executeMarkAsPaid = async (caseId: string) => {
-    setLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ case_id: caseId }),
-      });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed to mark paid');
-      toast({ title: t('studentCases.markedPaid', { defaultValue: 'Case marked as paid — 20-day countdown started' }) });
-      onRefresh();
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
-    }
-    setLoading(false);
-    setPayConfirmCaseId(null);
+    await guardedAction(`mark-case-paid-${caseId}`, async () => {
+      setLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Not authenticated');
+        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ case_id: caseId }),
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Failed to mark paid');
+        toast({ title: t('studentCases.markedPaid', { defaultValue: 'Case marked as paid — 20-day countdown started' }) });
+        onRefresh();
+      } catch (err: any) {
+        toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+      }
+      setLoading(false);
+      setPayConfirmCaseId(null);
+    });
   };
 
   const markAsPaid = (caseId: string) => {
@@ -371,17 +374,19 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     ))}
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" disabled={loading} onClick={async () => {
-                        setLoading(true);
-                        const { error } = await (supabase as any).from('student_cases').update(moneyValues).eq('id', selectedCase.id);
-                        if (error) {
-                          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-                        } else {
-                          toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
-                          setSelectedCase({ ...selectedCase, ...moneyValues });
-                          setEditingMoney(false);
-                          onRefresh();
-                        }
-                        setLoading(false);
+                        await guardedAction(`update-financials-${selectedCase.id}`, async () => {
+                          setLoading(true);
+                          const { error } = await (supabase as any).from('student_cases').update(moneyValues).eq('id', selectedCase.id);
+                          if (error) {
+                            toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+                          } else {
+                            toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
+                            setSelectedCase({ ...selectedCase, ...moneyValues });
+                            setEditingMoney(false);
+                            onRefresh();
+                          }
+                          setLoading(false);
+                        });
                       }}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('common.save', { defaultValue: 'Save' })}
                       </Button>
@@ -453,25 +458,27 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             <Button variant="outline" onClick={() => setEarlyReleaseId(null)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
             <Button onClick={async () => {
               if (!earlyReleaseId) return;
-              setLoading(true);
-              try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) throw new Error('Not authenticated');
-                const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-early-release`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-                  body: JSON.stringify({ case_id: earlyReleaseId }),
-                });
-                const result = await resp.json();
-                if (!resp.ok) throw new Error(result.error || 'Failed');
-                toast({ title: t('cases.earlyReleaseSuccess', { defaultValue: 'Payout released successfully' }) });
-                setReleasedCases(prev => new Set([...prev, earlyReleaseId]));
-                onRefresh();
-              } catch (err: any) {
-                toast({ variant: 'destructive', title: t('common.error'), description: err.message });
-              }
-              setLoading(false);
-              setEarlyReleaseId(null);
+              await guardedAction(`early-release-${earlyReleaseId}`, async () => {
+                setLoading(true);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) throw new Error('Not authenticated');
+                  const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-early-release`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ case_id: earlyReleaseId }),
+                  });
+                  const result = await resp.json();
+                  if (!resp.ok) throw new Error(result.error || 'Failed');
+                  toast({ title: t('cases.earlyReleaseSuccess', { defaultValue: 'Payout released successfully' }) });
+                  setReleasedCases(prev => new Set([...prev, earlyReleaseId]));
+                  onRefresh();
+                } catch (err: any) {
+                  toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+                }
+                setLoading(false);
+                setEarlyReleaseId(null);
+              });
             }} disabled={loading}>
               <Unlock className="h-4 w-4 me-1" />{loading ? t('common.loading', { defaultValue: 'Loading...' }) : t('cases.confirmRelease', { defaultValue: 'Confirm Release' })}
             </Button>

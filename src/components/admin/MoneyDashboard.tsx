@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { exportPDF } from '@/utils/exportUtils';
+import { guardedAction } from '@/lib/conflictPrevention';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -84,48 +85,51 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   };
 
   const handleMarkRewardPaid = async (rewardId: string) => {
-    setActionLoading(rewardId);
-    const { error } = await (supabase as any)
-      .from('rewards')
-      .update({ status: 'paid', paid_at: new Date().toISOString() })
-      .eq('id', rewardId);
-    setActionLoading(null);
-    if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-    // Audit log: compliance trail for financial mutations
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await (supabase as any).from('admin_audit_log').insert({
-          admin_id: session.user.id, action: 'mark_reward_paid',
-          target_id: rewardId, target_table: 'rewards',
-          details: `Admin manually marked reward ${rewardId} as paid`,
-        });
-      }
-    } catch {}
-    toast({ title: t('money.markedPaid', 'Marked as paid') });
-    onRefresh?.();
+    await guardedAction(`mark-reward-paid-${rewardId}`, async () => {
+      setActionLoading(rewardId);
+      const { error } = await (supabase as any)
+        .from('rewards')
+        .update({ status: 'paid', paid_at: new Date().toISOString() })
+        .eq('id', rewardId);
+      setActionLoading(null);
+      if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await (supabase as any).from('admin_audit_log').insert({
+            admin_id: session.user.id, action: 'mark_reward_paid',
+            target_id: rewardId, target_table: 'rewards',
+            details: `Admin manually marked reward ${rewardId} as paid`,
+          });
+        }
+      } catch {}
+      toast({ title: t('money.markedPaid', 'Marked as paid') });
+      onRefresh?.();
+    });
   };
 
   const handleClearReward = async (rewardId: string) => {
-    setActionLoading(rewardId);
-    const { error } = await (supabase as any)
-      .from('rewards')
-      .update({ status: 'cancelled' })
-      .eq('id', rewardId);
-    setActionLoading(null);
-    if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await (supabase as any).from('admin_audit_log').insert({
-          admin_id: session.user.id, action: 'clear_reward',
-          target_id: rewardId, target_table: 'rewards',
-          details: `Admin cancelled reward ${rewardId}`,
-        });
-      }
-    } catch {}
-    toast({ title: t('money.cleared', 'Cleared') });
-    onRefresh?.();
+    await guardedAction(`clear-reward-${rewardId}`, async () => {
+      setActionLoading(rewardId);
+      const { error } = await (supabase as any)
+        .from('rewards')
+        .update({ status: 'cancelled' })
+        .eq('id', rewardId);
+      setActionLoading(null);
+      if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await (supabase as any).from('admin_audit_log').insert({
+            admin_id: session.user.id, action: 'clear_reward',
+            target_id: rewardId, target_table: 'rewards',
+            details: `Admin cancelled reward ${rewardId}`,
+          });
+        }
+      } catch {}
+      toast({ title: t('money.cleared', 'Cleared') });
+      onRefresh?.();
+    });
   };
 
   // Build transaction rows from cases
@@ -477,46 +481,50 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           onRefresh={onRefresh || (() => {})}
           actionLoading={actionLoading}
           onMarkPayoutPaid={async (reqId: string, linkedRewardIds?: string[]) => {
-            setActionLoading(reqId);
-            const { error } = await (supabase as any)
-              .from('payout_requests')
-              .update({ status: 'paid', paid_at: new Date().toISOString() })
-              .eq('id', reqId);
-            if (error) { setActionLoading(null); toast({ variant: 'destructive', description: error.message }); return; }
-            if (linkedRewardIds?.length) {
-              await (supabase as any).from('rewards')
+            await guardedAction(`mark-payout-paid-${reqId}`, async () => {
+              setActionLoading(reqId);
+              const { error } = await (supabase as any)
+                .from('payout_requests')
                 .update({ status: 'paid', paid_at: new Date().toISOString() })
-                .in('id', linkedRewardIds);
-            }
-            try {
-              const { data: { session } } = await supabase.auth.getSession();
-              if (session?.user) {
-                await (supabase as any).from('admin_audit_log').insert({
-                  admin_id: session.user.id, action: 'mark_payout_paid',
-                  target_id: reqId, target_table: 'payout_requests',
-                  details: `Admin paid payout request ${reqId}`,
-                });
+                .eq('id', reqId);
+              if (error) { setActionLoading(null); toast({ variant: 'destructive', description: error.message }); return; }
+              if (linkedRewardIds?.length) {
+                await (supabase as any).from('rewards')
+                  .update({ status: 'paid', paid_at: new Date().toISOString() })
+                  .in('id', linkedRewardIds);
               }
-            } catch {}
-            setActionLoading(null);
-            toast({ title: t('money.markedPaid', 'Marked as paid') });
-            onRefresh?.();
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                  await (supabase as any).from('admin_audit_log').insert({
+                    admin_id: session.user.id, action: 'mark_payout_paid',
+                    target_id: reqId, target_table: 'payout_requests',
+                    details: `Admin paid payout request ${reqId}`,
+                  });
+                }
+              } catch {}
+              setActionLoading(null);
+              toast({ title: t('money.markedPaid', 'Marked as paid') });
+              onRefresh?.();
+            });
           }}
           onRejectPayout={async (reqId: string, linkedRewardIds?: string[]) => {
-            setActionLoading(reqId);
-            const { error } = await (supabase as any)
-              .from('payout_requests')
-              .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
-              .eq('id', reqId);
-            if (!error && linkedRewardIds?.length) {
-              await (supabase as any).from('rewards')
-                .update({ status: 'pending', payout_requested_at: null })
-                .in('id', linkedRewardIds);
-            }
-            setActionLoading(null);
-            if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-            toast({ title: t('money.rejected', 'Request rejected') });
-            onRefresh?.();
+            await guardedAction(`reject-payout-${reqId}`, async () => {
+              setActionLoading(reqId);
+              const { error } = await (supabase as any)
+                .from('payout_requests')
+                .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
+                .eq('id', reqId);
+              if (!error && linkedRewardIds?.length) {
+                await (supabase as any).from('rewards')
+                  .update({ status: 'pending', payout_requested_at: null })
+                  .in('id', linkedRewardIds);
+              }
+              setActionLoading(null);
+              if (error) { toast({ variant: 'destructive', description: error.message }); return; }
+              toast({ title: t('money.rejected', 'Request rejected') });
+              onRefresh?.();
+            });
           }}
           onMarkRewardPaid={handleMarkRewardPaid}
           onClearReward={handleClearReward}
