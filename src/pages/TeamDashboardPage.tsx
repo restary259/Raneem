@@ -130,6 +130,7 @@ const TeamDashboardPage = () => {
   useRealtimeSubscription('student_cases', debouncedRefetch, authReady);
   useRealtimeSubscription('appointments', debouncedRefetch, authReady);
   useRealtimeSubscription('leads', debouncedRefetch, authReady);
+  useRealtimeSubscription('notifications', debouncedRefetch, authReady);
 
   const getLeadInfo = useCallback((leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' }, [leads, t]);
 

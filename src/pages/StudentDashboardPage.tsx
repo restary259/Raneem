@@ -27,9 +27,11 @@ const StudentDashboardPage = () => {
     if (user) fetchProfileSafely(user.id);
   }, [user]);
 
-  // Real-time subscriptions — only tables this dashboard displays
+  // Real-time subscriptions — all tables this dashboard uses
   useRealtimeSubscription('profiles', refetchProfile, !!user);
   useRealtimeSubscription('student_cases', refetchProfile, !!user);
+  useRealtimeSubscription('appointments', refetchProfile, !!user);
+  useRealtimeSubscription('notifications', refetchProfile, !!user);
 
   useEffect(() => {
     const initializeDashboard = async () => {

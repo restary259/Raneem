@@ -53,7 +53,7 @@ serve(async (req) => {
       .eq("success", false)
       .gte("created_at", fifteenMinAgo);
 
-    // IP-based rate limit: 20 failed attempts per IP in 15 minutes (prevents credential stuffing)
+    // IP-based rate limit: 20 failed attempts per IP in 15 minutes
     const { count: ipCount } = await supabaseAdmin
       .from("login_attempts")
       .select("*", { count: "exact", head: true })
@@ -81,7 +81,7 @@ serve(async (req) => {
       });
     }
 
-    // Attempt login using a fresh client with anon key
+    // Attempt login
     const supabaseAnon = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -103,37 +103,41 @@ serve(async (req) => {
       });
     }
 
-    // --- Single-session enforcement ---
-    // Use a random session nonce as the identifier (stable across token refreshes)
+    // --- Multi-device session support ---
+    // Each login creates a NEW session row (no upsert replacing old ones)
     const sessionId = crypto.randomUUID();
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // Check if there was an existing session (for audit logging)
-    const { data: existingSession } = await supabaseAdmin
-      .from("active_sessions")
-      .select("session_id")
-      .eq("user_id", data.user.id)
-      .maybeSingle();
+    // Generate a short device identifier from user-agent
+    const deviceId = userAgent.substring(0, 80);
 
-    // Upsert: replaces any previous session for this user
-    await supabaseAdmin.from("active_sessions").upsert({
+    // Insert new session (allows multiple per user)
+    await supabaseAdmin.from("active_sessions").insert({
       user_id: data.user.id,
       session_id: sessionId,
       ip_address: ip,
       user_agent: userAgent,
+      device_id: deviceId,
+      last_seen_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
-    }, { onConflict: "user_id" });
+    });
 
-    // Audit log if a previous session was replaced
-    if (existingSession && existingSession.session_id !== sessionId) {
-      await supabaseAdmin.from("admin_audit_log").insert({
-        admin_id: data.user.id,
-        action: "SESSION_REPLACED",
-        target_id: data.user.id,
-        target_table: "active_sessions",
-        details: `Previous session invalidated due to new login from IP: ${ip}`,
-      });
-    }
+    // Clean up stale sessions older than 7 days for this user
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    await supabaseAdmin
+      .from("active_sessions")
+      .delete()
+      .eq("user_id", data.user.id)
+      .lt("last_seen_at", sevenDaysAgo);
+
+    // Audit log
+    await supabaseAdmin.from("admin_audit_log").insert({
+      admin_id: data.user.id,
+      action: "LOGIN",
+      target_id: data.user.id,
+      target_table: "active_sessions",
+      details: `Login from device: ${deviceId}, IP: ${ip}`,
+    });
 
     return new Response(JSON.stringify({
       session: data.session,
