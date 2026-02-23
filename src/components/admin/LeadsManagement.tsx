@@ -49,6 +49,7 @@ interface LeadsManagementProps {
   lawyers: { id: string; full_name: string }[];
   influencers?: { id: string; full_name: string }[];
   onRefresh: () => void;
+  initialFilter?: string | null;
 }
 
 const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -58,11 +59,11 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 
   assigned: 'outline',
 };
 
-const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh }) => {
+const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh, initialFilter }) => {
   const { t, i18n } = useTranslation('dashboard');
   const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState(initialFilter || 'all');
   const [filterSource, setFilterSource] = useState('all');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 50;
@@ -76,10 +77,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const [overrideStatus, setOverrideStatus] = useState('');
   const [newLead, setNewLead] = useState({ full_name: '', phone: '', city: '', age: '', education_level: '', german_level: '', budget_range: '', preferred_city: '', accommodation: false, source_type: 'organic', eligibility_score: '', passport_type: '', english_units: '', math_units: '', email: '', preferred_major: '' });
   const [loading, setLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Reset page on filter changes
   useEffect(() => { setPage(1); }, [search, filterStatus, filterSource]);
+  // Issue 1: sync with external initialFilter changes (funnel clicks)
+  useEffect(() => { if (initialFilter) setFilterStatus(initialFilter); }, [initialFilter]);
 
   const filtered = leads.filter(l => {
     if (l.deleted_at) return false; // Exclude soft-deleted leads
@@ -116,7 +120,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   };
 
   const markEligible = async (lead: Lead) => {
-    setLoading(true);
+    setActionLoadingId(lead.id);
 
     // Step 1: Check if a case already exists for this lead (prevents duplicate on double-click)
     const { data: existingCases } = await (supabase as any)
@@ -133,7 +137,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
     if (updateErr) {
       toast({ variant: 'destructive', title: t('common.error'), description: updateErr.message });
-      setLoading(false);
+      setActionLoadingId(null);
       return;
     }
 
@@ -148,12 +152,12 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       });
       if (caseErr) {
         toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
-        setLoading(false);
+        setActionLoadingId(null);
         return;
       }
     }
 
-    setLoading(false);
+    setActionLoadingId(null);
     toast({ title: t('admin.leads.updated'), description: t('admin.leads.qualifiedAndCaseCreated', { name: lead.full_name }) });
     onRefresh();
   };
@@ -287,8 +291,9 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     <div className="flex items-center gap-1 flex-wrap">
       {lead.status === 'new' && (
         <>
-          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => markEligible(lead)} disabled={loading}><UserCheck className="h-3 w-3 me-1" />{t('admin.leads.markEligible')}</Button>
-          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => markNotEligible(lead.id)} disabled={loading}><UserX className="h-3 w-3 me-1" />{t('admin.leads.markNotEligible')}</Button>
+          <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => markEligible(lead)} disabled={actionLoadingId === lead.id}>
+            {actionLoadingId === lead.id ? <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin me-1" /> : <UserCheck className="h-3 w-3 me-1" />}{t('admin.leads.markEligible')}</Button>
+          <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => markNotEligible(lead.id)} disabled={actionLoadingId === lead.id}><UserX className="h-3 w-3 me-1" />{t('admin.leads.markNotEligible')}</Button>
         </>
       )}
       {/* Allow assigning any lead regardless of status */}

@@ -131,7 +131,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   // Build transaction rows from cases
   const transactions = useMemo(() => {
     const rows: TransactionRow[] = [];
-    const paidCases = cases.filter(c => c.case_status === 'paid' || !!c.paid_at);
+    const paidCases = cases.filter(c => !!c.paid_at);
 
     paidCases.forEach(c => {
       const name = c.student_full_name || getLeadName(c.lead_id);

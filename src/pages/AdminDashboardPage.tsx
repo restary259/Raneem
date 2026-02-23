@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminOverview from '@/components/admin/AdminOverview';
@@ -20,14 +21,15 @@ import PullToRefresh from '@/components/common/PullToRefresh';
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  // sessionReady = auth fully resolved + role verified → safe to fetch data
   const [sessionReady, setSessionReady] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [pendingCredentials, setPendingCredentials] = useState<{ email: string; password: string } | null>(null);
+  // Issue 1: Funnel stage click → auto-filter on leads/cases tab
+  const [funnelFilter, setFunnelFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
 
-  // Prevent double execution under React 18 StrictMode
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
@@ -47,37 +49,33 @@ const AdminDashboardPage = () => {
         });
         const result = await resp.json();
         if (!result.isAdmin) {
-          toast({ variant: 'destructive', title: 'غير مصرح', description: 'ليس لديك صلاحية الوصول.' });
+          toast({ variant: 'destructive', title: t('admin.auth.unauthorized', 'Unauthorized'), description: t('admin.auth.noAccess', 'You do not have access.') });
           navigate('/');
           return;
         }
       } catch {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'فشل التحقق من الصلاحيات.' });
+        toast({ variant: 'destructive', title: t('common.error'), description: t('admin.auth.verifyFailed', 'Failed to verify permissions.') });
         navigate('/');
         return;
       }
 
       setIsAdmin(true);
-      // Only after full auth + role verification do we allow data fetching
       setSessionReady(true);
     };
 
     init();
-  }, []); // empty deps — runs once, protected by hasFetchedRef
+  }, []);
 
-  // Stable onError — useCallback prevents recreating refetch on every render
   const onError = useCallback((err: string) => {
-    toast({ variant: 'destructive', title: 'خطأ في التحميل', description: err });
-  }, [toast]);
+    toast({ variant: 'destructive', title: t('common.error'), description: err });
+  }, [toast, t]);
 
-  // Centralised data layer — gated on sessionReady to prevent premature fetches
   const { data, error, isLoading, refetch } = useDashboardData({
     type: 'admin',
     enabled: sessionReady,
     onError,
   });
 
-  // Safe extractions
   const students = data?.students ?? [];
   const services = data?.services ?? [];
   const payments = data?.payments ?? [];
@@ -92,18 +90,15 @@ const AdminDashboardPage = () => {
   const loginAttempts = data?.loginAttempts ?? [];
   const payoutRequests = data?.payoutRequests ?? [];
 
-  // Real-time subscriptions — only active once session is ready
-  // Only subscribe to tables that drive admin UI — reduced from 6 to 3
   useRealtimeSubscription('leads', refetch, isAdmin);
   useRealtimeSubscription('student_cases', refetch, isAdmin);
   useRealtimeSubscription('payout_requests', refetch, isAdmin);
 
-  // Single stable loading gate — no flicker between auth and data loading states
   if (!sessionReady) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-3">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-muted-foreground text-sm">جاري التحقق من الصلاحيات…</p>
+        <p className="text-muted-foreground text-sm">{t('admin.auth.verifying', 'Verifying permissions…')}</p>
       </div>
     </div>
   );
@@ -120,12 +115,21 @@ const AdminDashboardPage = () => {
 
   const totalStudents = actualStudents.length;
   const newThisMonth = actualStudents.filter((s: any) => s.created_at?.startsWith(currentMonth)).length;
-  // Source of truth: student_cases with paid_at (not legacy payments table)
+  // Issue 4: Standardize on !!c.paid_at as single source of truth
   const totalPayments = cases.filter((c: any) => !!c.paid_at)
     .reduce((sum: number, c: any) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
 
-  const handleStageClick = (_stage: string) => {
-    setActiveTab('leads');
+  // Issue 1: Wire funnel click to filter + switch tab
+  const handleStageClick = (stage: string) => {
+    // Map funnel stage to the appropriate tab & filter
+    const leadStages = ['new', 'eligible', 'not_eligible'];
+    if (leadStages.includes(stage)) {
+      setFunnelFilter(stage);
+      setActiveTab('leads');
+    } else {
+      setFunnelFilter(stage);
+      setActiveTab('student-cases');
+    }
   };
 
   const renderContent = () => {
@@ -150,9 +154,9 @@ const AdminDashboardPage = () => {
           />
         );
       case 'leads':
-        return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} />;
+        return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
       case 'student-cases':
-        return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} />;
+        return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
       case 'team':
         return (
           <InfluencerManagement
@@ -190,7 +194,7 @@ const AdminDashboardPage = () => {
       error={!isLoading ? error : null}
       onRetry={refetch}
     >
-      <AdminLayout activeTab={activeTab} onTabChange={setActiveTab} userEmail={user?.email}>
+      <AdminLayout activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setFunnelFilter(null); }} userEmail={user?.email}>
         <PullToRefresh onRefresh={async () => { await refetch(); }}>
           {renderContent()}
         </PullToRefresh>
