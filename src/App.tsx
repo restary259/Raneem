@@ -109,13 +109,19 @@ const App = () => {
           <AlertDialog open={kicked}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>تم تسجيل الدخول من جهاز آخر</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {i18n.language === 'ar' ? 'تم تسجيل الدخول من جهاز آخر' : 'Logged in from another device'}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  تم تسجيل الدخول إلى حسابك من جهاز أو متصفح آخر. سيتم تسجيل خروجك تلقائياً.
+                  {i18n.language === 'ar'
+                    ? 'تم تسجيل الدخول إلى حسابك من جهاز أو متصفح آخر. سيتم تسجيل خروجك تلقائياً.'
+                    : 'Your account was logged in from another device or browser. You will be signed out automatically.'}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogAction onClick={acknowledgeKick}>حسناً</AlertDialogAction>
+                <AlertDialogAction onClick={acknowledgeKick}>
+                  {i18n.language === 'ar' ? 'حسناً' : 'OK'}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
