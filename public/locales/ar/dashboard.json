@@ -247,6 +247,12 @@
     "subtitle": "درب للدراسة في الخارج",
     "returnToSite": "العودة للموقع",
     "signOut": "تسجيل الخروج",
+    "auth": {
+      "unauthorized": "غير مصرح",
+      "noAccess": "ليس لديك صلاحية الوصول.",
+      "verifyFailed": "فشل التحقق من الصلاحيات.",
+      "verifying": "جاري التحقق من الصلاحيات…"
+    },
     "groups": {
       "dashboard": "لوحة التحكم",
       "pipeline": "خط الأنابيب",
@@ -763,7 +769,9 @@
     "edit": "تعديل",
     "add": "إضافة",
     "search": "بحث",
-    "noData": "لا توجد بيانات"
+    "noData": "لا توجد بيانات",
+    "lastRefreshed": "تم التحديث منذ {{time}}",
+    "justNow": "الآن"
   },
   "funnel": {
     "new": "عميل جديد",
@@ -947,7 +955,11 @@
     "specialNotes": "ملاحظات خاصة",
     "yesLabel": "نعم",
     "noLabel": "لا",
-    "selectLabel": "اختر"
+    "selectLabel": "اختر",
+    "contactLoggedButNotTransitioned": "تم تسجيل التواصل لكن لم يمكن تحديث الحالة.",
+    "noCasesHint": "الملفات المعينة لك ستظهر هنا.",
+    "deleteAppointmentTitle": "حذف الموعد",
+    "deleteAppointmentDesc": "هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع."
   },
   "influencerDash": {
     "title": "لوحة تحكم الوكيل",

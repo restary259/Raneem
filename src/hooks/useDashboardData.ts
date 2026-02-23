@@ -26,6 +26,7 @@ interface UseDashboardDataResult<T extends DashboardType> {
   data: DataForType<T> | null;
   error: string | null;
   isLoading: boolean;
+  lastRefreshedAt: Date | null;
   refetch: () => Promise<void>;
 }
 
@@ -38,6 +39,7 @@ export function useDashboardData<T extends DashboardType>({
   const [data, setData] = useState<DataForType<T> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   // Store onError in a ref so changing the callback never recreates refetch
   const onErrorRef = useRef(onError);
@@ -73,6 +75,7 @@ export function useDashboardData<T extends DashboardType>({
         onErrorRef.current?.(result.error);
       } else {
         setData(result.data as DataForType<T>);
+        setLastRefreshedAt(new Date());
       }
     } catch (err: any) {
       // AbortError means the component unmounted or a newer fetch took over — not a real error
@@ -94,5 +97,5 @@ export function useDashboardData<T extends DashboardType>({
     refetch();
   }, [refetch]);
 
-  return { data, error, isLoading, refetch };
+  return { data, error, isLoading, lastRefreshedAt, refetch };
 }

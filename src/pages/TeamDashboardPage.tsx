@@ -34,13 +34,15 @@ import TeamAnalyticsTab from '@/components/team/TeamAnalyticsTab';
 import { PaymentConfirmDialog, DeleteConfirmDialog } from '@/components/team/ConfirmationDialogs';
 import {
   type TabId, type CaseFilterTab, CASE_FILTER_TABS, TAB_CONFIG,
-  NEON_BORDERS, FILTER_LABELS, getNeonBorder, matchesFilter,
+  NEON_BORDERS, getNeonBorder, matchesFilter,
 } from '@/components/team/TeamConstants';
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [deleteApptConfirm, setDeleteApptConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('cases');
   const [caseFilter, setCaseFilter] = useState<CaseFilterTab>('all');
 
@@ -154,20 +156,29 @@ const TeamDashboardPage = () => {
   }, [cases, caseFilter, isSlaBreached]);
 
   // ── ACTIONS ──
+  // Issue 2: per-button loading + Issue 3: check both results
   const handleMarkContacted = async (leadId: string, caseId: string) => {
+    setActionLoadingId(caseId);
     try {
       const now = new Date().toISOString();
-      await (supabase as any).from('leads').update({ last_contacted: now }).eq('id', leadId);
+      const { error: leadErr } = await (supabase as any).from('leads').update({ last_contacted: now }).eq('id', leadId);
+      if (leadErr) { toast({ variant: 'destructive', title: t('common.error'), description: leadErr.message }); return; }
       const caseItem = cases.find(c => c.id === caseId);
       if (caseItem && canTransition(caseItem.case_status, CaseStatus.CONTACTED)) {
-        await (supabase as any).from('student_cases').update({ case_status: 'contacted' }).eq('id', caseId);
+        const { error: caseErr } = await (supabase as any).from('student_cases').update({ case_status: 'contacted' }).eq('id', caseId);
+        if (caseErr) {
+          toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.contactLoggedButNotTransitioned', 'Contact logged but status could not transition.') });
+          try { await refetch(); } catch {}
+          return;
+        }
       }
       await (supabase as any).rpc('log_user_activity', { p_action: 'mark_contacted', p_target_id: caseId, p_target_table: 'student_cases' });
-      toast({ title: t('lawyer.contactLogged') });
+      const lead = leads.find(l => l.id === leadId);
+      toast({ title: t('lawyer.contactLogged'), description: lead?.full_name || '' });
       try { await refetch(); } catch {}
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-    }
+    } finally { setActionLoadingId(null); }
   };
 
   const confirmPaymentAndSubmit = async (caseId: string) => {
@@ -201,14 +212,16 @@ const TeamDashboardPage = () => {
     } finally { setDeleteConfirm(null); }
   };
 
+  // Issue 9: Delete appointment with confirmation dialog
   const handleDeleteAppointment = async (apptId: string) => {
+    setActionLoadingId(apptId);
     try {
       const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
       if (!error) { toast({ title: t('lawyer.appointmentDeleted') }); try { await refetch(); } catch {} }
       else toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-    }
+    } finally { setActionLoadingId(null); setDeleteApptConfirm(null); }
   };
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
@@ -254,15 +267,16 @@ const TeamDashboardPage = () => {
     );
 
     if (['new', 'eligible', 'assigned'].includes(status)) {
+      const isThisLoading = actionLoadingId === c.id;
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
-          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMarkContacted(lead.id, c.id)}>
-            <CheckCircle className="h-3.5 w-3.5" />{t('lawyer.markContacted')}
+          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMarkContacted(lead.id, c.id)} disabled={isThisLoading}>
+            {isThisLoading ? <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}{t('lawyer.markContacted')}
           </Button>
           {reassignBtn}
           {['new', 'eligible'].includes(status) && (
-            <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
+            <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)} disabled={isThisLoading}>
               <Trash2 className="h-3.5 w-3.5" />{t('lawyer.deleteLabel')}
             </Button>
           )}
@@ -379,7 +393,7 @@ const TeamDashboardPage = () => {
                         className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 border ${
                           active ? 'bg-primary text-primary-foreground border-primary' : `bg-muted text-muted-foreground hover:bg-muted/80 ${NEON_BORDERS[f] || 'border-transparent'}`
                         } ${f === 'sla' && count > 0 && !active ? 'border-destructive/50 text-destructive' : ''}`}>
-                        {isAr ? FILTER_LABELS[f].ar : FILTER_LABELS[f].en}
+                    {t(`lawyer.filters.${f === 'appointment_stage' ? 'appointment_scheduled' : f}`, f)}
                         {count > 0 && <span className={`ms-1 ${countColor}`}>({count})</span>}
                       </button>
                     );
@@ -445,7 +459,13 @@ const TeamDashboardPage = () => {
                       </Card>
                     );
                   })}
-                  {filteredCases.length === 0 && <p className="text-center text-muted-foreground py-8">{t('lawyer.noCases')}</p>}
+                  {filteredCases.length === 0 && (
+                    <Card><CardContent className="p-8 text-center">
+                      <Briefcase className="h-10 w-10 mx-auto mb-2 text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground">{t('lawyer.noCases')}</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">{t('lawyer.noCasesHint', 'Cases assigned to you will appear here.')}</p>
+                    </CardContent></Card>
+                  )}
                 </div>
               </>
             )}
@@ -506,7 +526,7 @@ const TeamDashboardPage = () => {
                               {appt.case_id && <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
                                  <Briefcase className="h-3.5 w-3.5" />{t('lawyer.viewCase')}
                                </Button>}
-                              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
+                              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => setDeleteApptConfirm(appt.id)}>
                                 <Trash2 className="h-3.5 w-3.5" />{t('lawyer.deleteLabel')}
                               </Button>
                             </div>
@@ -543,6 +563,8 @@ const TeamDashboardPage = () => {
       <ReassignDialog reassignCase={reassignCase} allLawyers={allLawyers} userId={user?.id} onClose={() => setReassignCase(null)} refetch={refetch} />
       <PaymentConfirmDialog caseId={paymentConfirm} saving={saving} onConfirm={confirmPaymentAndSubmit} onClose={() => setPaymentConfirm(null)} />
       <DeleteConfirmDialog caseId={deleteConfirm} onConfirm={handleDeleteCase} onClose={() => setDeleteConfirm(null)} />
+      {/* Issue 9: Appointment delete confirmation */}
+      <DeleteConfirmDialog caseId={deleteApptConfirm} onConfirm={handleDeleteAppointment} onClose={() => setDeleteApptConfirm(null)} />
 
       {/* Mobile Bottom Nav */}
       {isMobile && (
@@ -553,7 +575,7 @@ const TeamDashboardPage = () => {
               const active = activeTab === item.id;
               return (
                 <button key={item.id} onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center rounded-lg px-2 py-1.5 transition-all active:scale-95 ${
+                  className={`relative flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center rounded-lg px-2 py-1.5 transition-all active:scale-95 ${
                     active ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                   <item.icon className="h-5 w-5" />

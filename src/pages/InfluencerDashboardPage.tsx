@@ -228,7 +228,11 @@ const InfluencerDashboardPage = () => {
                 </div>
 
                 {filteredLeads.length === 0 ? (
-                  <p className="p-8 text-center text-muted-foreground text-sm">{t('influencerDash.noStudents')}</p>
+                  <Card><CardContent className="p-8 text-center">
+                    <Users className="h-10 w-10 mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">{t('influencerDash.noStudents')}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">{t('influencerDash.noStudentsHint', 'Students referred via your link will appear here.')}</p>
+                  </CardContent></Card>
                 ) : (
                   <div className="space-y-2">
                     {filteredLeads.map(lead => {

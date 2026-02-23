@@ -21,11 +21,12 @@ interface StudentCasesManagementProps {
   lawyers: any[];
   influencers: any[];
   onRefresh: () => void;
+  initialFilter?: string | null;
 }
 
 const READY_STATUSES = ['profile_filled', 'services_filled', 'paid'];
 
-const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh }) => {
+const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -40,6 +41,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   // Reset page on filter change
   useEffect(() => { setPage(1); }, [search, statusFilter]);
+  // Sync with external filter (funnel clicks)
+  useEffect(() => { if (initialFilter) setStatusFilter(initialFilter); }, [initialFilter]);
 
   const studentCases = useMemo(() => {
     return cases
