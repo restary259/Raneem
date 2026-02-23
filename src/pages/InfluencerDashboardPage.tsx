@@ -76,7 +76,7 @@ const InfluencerDashboardPage = () => {
   // eligibleMin removed — we now use lead.status (admin-set) for eligibility
 
   // Centralised data layer
-  const { data, error, isLoading, refetch } = useDashboardData({
+  const { data, error, isLoading, lastRefreshedAt, refetch } = useDashboardData({
     type: 'influencer',
     userId: user?.id,
     enabled: authReady,
@@ -151,7 +151,12 @@ const InfluencerDashboardPage = () => {
                     <span className="hidden sm:inline">{t('influencerDash.title')}</span>
                     <span className="sm:hidden">{isAr ? 'مرحبًا' : 'Hi'}, {profile?.full_name?.split(' ')[0] || ''} 👋</span>
                   </h1>
-                  <p className="hidden sm:block text-xs text-white/60 truncate">{profile?.full_name || user?.email}</p>
+                  <p className="hidden sm:block text-xs text-white/60 truncate">
+                    {profile?.full_name || user?.email}
+                    {lastRefreshedAt && (
+                      <span className="ms-2 text-white/40">· {t('common.lastRefreshed', 'Updated')} {Math.round((Date.now() - lastRefreshedAt.getTime()) / 1000)}s</span>
+                    )}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">

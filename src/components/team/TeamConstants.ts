@@ -25,17 +25,6 @@ export const NEON_BORDERS: Record<string, string> = {
   sla: 'border-[hsl(0,100%,55%)] shadow-[0_0_6px_hsl(0,100%,55%/0.3)]',
 };
 
-export const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
-  all: { ar: 'الكل', en: 'All' },
-  new: { ar: 'جديد', en: 'New' },
-  contacted: { ar: 'تم التواصل', en: 'Contacted' },
-  appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
-  profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
-  submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted to Admin' },
-  paid: { ar: 'مدفوع', en: 'Paid' },
-  sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
-};
-
 export function getNeonBorder(status: string): string {
   if (['new', 'eligible', 'assigned'].includes(status)) return NEON_BORDERS.new;
   if (status === 'contacted') return NEON_BORDERS.contacted;

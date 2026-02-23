@@ -1201,5 +1201,23 @@
     "noPending": "No Pending",
     "noPayoutsMsg": "No influencer payouts to display",
     "paid": "Paid"
+  },
+  "common": {
+    "lastRefreshed": "Updated"
+  },
+  "tabError": {
+    "title": "This section encountered a problem",
+    "message": "Try again or switch to another tab.",
+    "retry": "Try Again"
+  },
+  "errorBoundary": {
+    "title": "An unexpected error occurred",
+    "message": "Sorry, something went wrong. Please try again or return to the homepage.",
+    "technicalDetails": "Technical Details (developers)",
+    "errorLabel": "Error:",
+    "stackLabel": "Stack:",
+    "retry": "Try Again",
+    "home": "Homepage",
+    "resetDev": "Reset Error (dev)"
   }
 }

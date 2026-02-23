@@ -92,6 +92,13 @@ const StudentDashboardPage = () => {
       }
 
       if (data) {
+        // Issue E: Defense-in-depth ownership check
+        if (data.id !== userId) {
+          console.error('Profile ownership mismatch:', data.id, '!==', userId);
+          setProfile(null);
+          setError('Profile ownership mismatch. Please sign in again.');
+          return;
+        }
         const allowedStatuses: VisaStatus[] = ['not_applied', 'applied', 'approved', 'rejected', 'received'];
         setProfile({
           ...data,

@@ -17,6 +17,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardContainer from '@/components/dashboard/DashboardContainer';
 import PullToRefresh from '@/components/common/PullToRefresh';
+import TabErrorBoundary from '@/components/common/TabErrorBoundary';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -133,59 +134,62 @@ const AdminDashboardPage = () => {
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <AdminOverview
-            totalStudents={totalStudents}
-            newThisMonth={newThisMonth}
-            totalPayments={totalPayments}
-            newContacts={0}
-            totalDocuments={0}
-            activeServices={services.filter((s: any) => s.status !== 'completed').length}
-            totalInfluencers={influencers.length}
-            leads={leads}
-            cases={cases}
-            rewards={rewards}
-            commissions={commissions}
-            lawyers={lawyers}
-            influencers={influencers}
-            onStageClick={handleStageClick}
-          />
-        );
-      case 'leads':
-        return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
-      case 'student-cases':
-        return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
-      case 'team':
-        return (
-          <InfluencerManagement
-            influencers={influencers}
-            invites={invites}
-            students={students}
-            lawyers={lawyers}
-            onRefresh={refetch}
-            pendingCredentials={pendingCredentials}
-            onCredentialsCreated={(email, password) => setPendingCredentials({ email, password })}
-            onCredentialsDismissed={() => { setPendingCredentials(null); refetch(); }}
-          />
-        );
-      case 'students':
-        return (
-          <StudentProfilesManagement
-            students={actualStudents}
-            influencers={influencers}
-            leads={leads}
-            onRefresh={refetch}
-          />
-        );
-      case 'money':
-        return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} onRefresh={refetch} payoutRequests={payoutRequests} />;
-      case 'settings':
-        return <SettingsPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
-      default:
-        return null;
-    }
+    const content = (() => {
+      switch (activeTab) {
+        case 'overview':
+          return (
+            <AdminOverview
+              totalStudents={totalStudents}
+              newThisMonth={newThisMonth}
+              totalPayments={totalPayments}
+              newContacts={0}
+              totalDocuments={0}
+              activeServices={services.filter((s: any) => s.status !== 'completed').length}
+              totalInfluencers={influencers.length}
+              leads={leads}
+              cases={cases}
+              rewards={rewards}
+              commissions={commissions}
+              lawyers={lawyers}
+              influencers={influencers}
+              onStageClick={handleStageClick}
+            />
+          );
+        case 'leads':
+          return <LeadsManagement leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
+        case 'student-cases':
+          return <StudentCasesManagement cases={cases} leads={leads} lawyers={lawyers} influencers={influencers} onRefresh={refetch} initialFilter={funnelFilter} />;
+        case 'team':
+          return (
+            <InfluencerManagement
+              influencers={influencers}
+              invites={invites}
+              students={students}
+              lawyers={lawyers}
+              onRefresh={refetch}
+              pendingCredentials={pendingCredentials}
+              onCredentialsCreated={(email, password) => setPendingCredentials({ email, password })}
+              onCredentialsDismissed={() => { setPendingCredentials(null); refetch(); }}
+            />
+          );
+        case 'students':
+          return (
+            <StudentProfilesManagement
+              students={actualStudents}
+              influencers={influencers}
+              leads={leads}
+              onRefresh={refetch}
+            />
+          );
+        case 'money':
+          return <MoneyDashboard cases={cases} leads={leads} rewards={rewards} commissions={commissions} influencers={influencers} lawyers={lawyers} onRefresh={refetch} payoutRequests={payoutRequests} />;
+        case 'settings':
+          return <SettingsPanel loginAttempts={loginAttempts} auditLogs={auditLogs} />;
+        default:
+          return null;
+      }
+    })();
+    return <TabErrorBoundary key={activeTab}>{content}</TabErrorBoundary>;
   };
 
   return (
