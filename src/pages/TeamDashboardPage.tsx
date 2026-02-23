@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +42,7 @@ const TeamDashboardPage = () => {
   const [authReady, setAuthReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const pendingRef = useRef(new Set<string>());
   const [deleteApptConfirm, setDeleteApptConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('cases');
   const [caseFilter, setCaseFilter] = useState<CaseFilterTab>('all');
@@ -107,7 +108,7 @@ const TeamDashboardPage = () => {
   }, [authReady]);
 
   // Centralised data layer
-  const { data, isLoading, refetch } = useDashboardData({
+  const { data, isLoading, lastRefreshedAt, refetch } = useDashboardData({
     type: 'team', userId: user?.id, enabled: authReady,
     onError: (err) => toast({ variant: 'destructive', title: t('common.error'), description: err }),
   });
@@ -158,6 +159,8 @@ const TeamDashboardPage = () => {
   // ── ACTIONS ──
   // Issue 2: per-button loading + Issue 3: check both results
   const handleMarkContacted = async (leadId: string, caseId: string) => {
+    if (pendingRef.current.has(caseId)) return;
+    pendingRef.current.add(caseId);
     setActionLoadingId(caseId);
     try {
       const now = new Date().toISOString();
@@ -178,7 +181,7 @@ const TeamDashboardPage = () => {
       try { await refetch(); } catch {}
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-    } finally { setActionLoadingId(null); }
+    } finally { setActionLoadingId(null); pendingRef.current.delete(caseId); }
   };
 
   const confirmPaymentAndSubmit = async (caseId: string) => {
@@ -214,6 +217,8 @@ const TeamDashboardPage = () => {
 
   // Issue 9: Delete appointment with confirmation dialog
   const handleDeleteAppointment = async (apptId: string) => {
+    if (pendingRef.current.has(apptId)) return;
+    pendingRef.current.add(apptId);
     setActionLoadingId(apptId);
     try {
       const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
@@ -221,7 +226,7 @@ const TeamDashboardPage = () => {
       else toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } catch (err: any) {
       if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-    } finally { setActionLoadingId(null); setDeleteApptConfirm(null); }
+    } finally { setActionLoadingId(null); pendingRef.current.delete(apptId); setDeleteApptConfirm(null); }
   };
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
@@ -338,7 +343,12 @@ const TeamDashboardPage = () => {
                   <span className="hidden sm:inline">{t('lawyer.title')}</span>
                   <span className="sm:hidden">{isAr ? 'مرحبًا' : 'Hi'}, {profile?.full_name?.split(' ')[0]} 👋</span>
                 </h1>
-                <p className="hidden sm:block text-xs text-white/70 truncate">{profile?.full_name || user?.email}</p>
+                <p className="hidden sm:block text-xs text-white/70 truncate">
+                  {profile?.full_name || user?.email}
+                  {lastRefreshedAt && (
+                    <span className="ms-2 text-white/40">· {t('common.lastRefreshed', 'Updated')} {Math.round((Date.now() - lastRefreshedAt.getTime()) / 1000)}s</span>
+                  )}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
