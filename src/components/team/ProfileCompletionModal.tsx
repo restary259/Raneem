@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,15 +28,13 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   profileCase, leads, userId, onClose, onCompleted, refetch,
 }) => {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
 
   const [profileValues, setProfileValues] = useState<Record<string, any>>({});
   const [savingProfile, setSavingProfile] = useState(false);
   const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
   const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
 
-  // Initialize values when profileCase changes
   React.useEffect(() => {
     if (!profileCase) return;
     const lead = leads.find(l => l.id === profileCase.lead_id);
@@ -99,22 +97,22 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
     if (missingFields.length > 0) {
       const fieldLabels: Record<string, string> = {
-        student_full_name: isAr ? 'الاسم الكامل' : 'Full Name',
-        student_email: isAr ? 'البريد الإلكتروني' : 'Email',
-        student_phone: isAr ? 'الهاتف' : 'Phone',
-        student_age: isAr ? 'العمر' : 'Age',
-        student_address: isAr ? 'العنوان' : 'Address',
-        passport_number: isAr ? 'رقم الجواز' : 'Passport',
-        nationality: isAr ? 'الجنسية' : 'Nationality',
-        country_of_birth: isAr ? 'بلد الولادة' : 'Country of Birth',
-        language_proficiency: isAr ? 'مستوى اللغة' : 'Language Level',
-        gender: isAr ? 'الجنس' : 'Gender',
-        selected_city: isAr ? 'المدينة' : 'City',
-        selected_school: isAr ? 'المدرسة' : 'School',
-        intensive_course: isAr ? 'دورة مكثفة' : 'Intensive Course',
+        student_full_name: t('admin.ready.fullName'),
+        student_email: t('admin.ready.email'),
+        student_phone: t('admin.ready.phone'),
+        student_age: t('admin.ready.age'),
+        student_address: t('admin.ready.address'),
+        passport_number: t('admin.ready.passportNumber'),
+        nationality: t('admin.ready.nationality'),
+        country_of_birth: t('admin.ready.countryOfBirth'),
+        language_proficiency: t('admin.ready.languageProficiency'),
+        gender: t('lawyer.gender'),
+        selected_city: t('admin.ready.destinationCity'),
+        selected_school: t('admin.ready.schoolLabel'),
+        intensive_course: t('admin.ready.intensiveCourse'),
       };
       const missing = missingFields.map(f => fieldLabels[f] || f).join(', ');
-      toast({ variant: 'destructive', title: isAr ? 'حقول مفقودة' : 'Missing Fields', description: missing });
+      toast({ variant: 'destructive', title: t('lawyer.missingFields'), description: missing });
       setSavingProfile(false);
       return;
     }
@@ -132,7 +130,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
         finalData.case_status = CaseStatus.PROFILE_FILLED;
       } else {
-        toast({ variant: 'destructive', title: t('common.error'), description: isAr ? 'لا يمكن الانتقال إلى هذه المرحلة' : 'Cannot transition to this stage from current status' });
+        toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.cannotTransition') });
         return;
       }
       const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
@@ -140,7 +138,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
         await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
-        toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
+        toast({ title: t('lawyer.fileCompleted') });
         onClose();
         onCompleted('profile_filled');
         try { await refetch(); } catch {}
@@ -167,14 +165,14 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" aria-describedby="profile-completion-desc">
           <DialogHeader>
             <DialogTitle>{t('lawyer.completeProfile')}</DialogTitle>
-            <p id="profile-completion-desc" className="text-sm text-muted-foreground">{t('lawyer.completeProfileDesc', 'Fill in the student profile details below.')}</p>
+            <p id="profile-completion-desc" className="text-sm text-muted-foreground">{t('lawyer.completeProfileDesc')}</p>
           </DialogHeader>
 
           <Tabs defaultValue="personal" className="mt-2">
             <TabsList className="w-full">
-              <TabsTrigger value="personal" className="flex-1 text-xs">{isAr ? 'بيانات شخصية' : 'Personal Info'}</TabsTrigger>
-              <TabsTrigger value="services" className="flex-1 text-xs">{isAr ? 'الخدمات' : 'Services'}</TabsTrigger>
-              <TabsTrigger value="notes" className="flex-1 text-xs">{isAr ? 'ملاحظات' : 'Notes'}</TabsTrigger>
+              <TabsTrigger value="personal" className="flex-1 text-xs">{t('lawyer.personalInfo')}</TabsTrigger>
+              <TabsTrigger value="services" className="flex-1 text-xs">{t('lawyer.servicesTab')}</TabsTrigger>
+              <TabsTrigger value="notes" className="flex-1 text-xs">{t('lawyer.notesTab')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal">
@@ -189,12 +187,12 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 <div><Label>{t('admin.ready.countryOfBirth')}</Label><Input value={profileValues.country_of_birth || ''} onChange={e => setProfileValues(v => ({ ...v, country_of_birth: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.languageProficiency')}</Label><Input value={profileValues.language_proficiency || ''} onChange={e => setProfileValues(v => ({ ...v, language_proficiency: e.target.value }))} placeholder="e.g. German B1" /></div>
                 <div>
-                  <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
+                  <Label>{t('lawyer.gender')}</Label>
                   <Select value={profileValues.gender || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, gender: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('lawyer.genderSelect')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
-                      <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
+                      <SelectItem value="male">{t('lawyer.male')}</SelectItem>
+                      <SelectItem value="female">{t('lawyer.female')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -207,7 +205,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 <div>
                   <Label>{t('admin.ready.schoolLabel')}</Label>
                   <Select value={profileValues.selected_school || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, selected_school: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر المدرسة' : 'Select school'} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('lawyer.selectSchool')} /></SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_SCHOOLS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
@@ -216,27 +214,27 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 <div>
                   <Label>{t('admin.ready.intensiveCourse')}</Label>
                   <Select value={profileValues.intensive_course || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, intensive_course: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('lawyer.selectLabel')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="yes">{isAr ? 'نعم' : 'Yes'}</SelectItem>
-                      <SelectItem value="no">{isAr ? 'لا' : 'No'}</SelectItem>
+                      <SelectItem value="yes">{t('lawyer.yesLabel')}</SelectItem>
+                      <SelectItem value="no">{t('lawyer.noLabel')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="md:col-span-2">
-                  <Label>{isAr ? 'نوع السكن' : 'Housing Type'}</Label>
-                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={isAr ? 'مثال: شقة مشتركة مع حمام' : 'e.g. Shared flat with bathroom'} />
+                  <Label>{t('lawyer.housingType')}</Label>
+                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={t('lawyer.housingPlaceholder')} />
                 </div>
                 <div className="md:col-span-2 flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                   <input type="checkbox" id="has_translation_service" checked={!!profileValues.has_translation_service} onChange={e => setProfileValues(v => ({ ...v, has_translation_service: e.target.checked }))} className="h-4 w-4 rounded border-input" />
-                  <Label htmlFor="has_translation_service" className="cursor-pointer text-sm">{isAr ? 'خدمة الترجمة' : 'Translation Service'}</Label>
+                  <Label htmlFor="has_translation_service" className="cursor-pointer text-sm">{t('lawyer.translationService')}</Label>
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="notes">
               <div className="mt-2">
-                <Label>{isAr ? 'ملاحظات خاصة' : 'Special Notes'}</Label>
+                <Label>{t('lawyer.specialNotes')}</Label>
                 <Textarea value={profileValues.notes || ''} onChange={e => setProfileValues(v => ({ ...v, notes: e.target.value }))} rows={5} />
               </div>
             </TabsContent>
@@ -254,15 +252,13 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       <AlertDialog open={completeFileConfirm} onOpenChange={(open) => { if (!open) { setSavingProfile(false); cancelCompleteFile(); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{isAr ? 'إكمال ملف الطالب' : 'Complete Student File'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isAr ? 'جميع الحقول مكتملة. هل تريد إكمال الملف ونقله إلى مرحلة "ملفات مكتملة"؟' : 'All fields are filled. Do you want to complete this file and move it to "Completed Files"?'}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('lawyer.completeStudentFile')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('lawyer.completeStudentFileDesc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelCompleteFile}>{isAr ? 'إغلاق' : 'Close'}</AlertDialogCancel>
+            <AlertDialogCancel onClick={cancelCompleteFile}>{t('lawyer.close')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmCompleteFile} disabled={savingProfile}>
-              {savingProfile ? t('common.loading') : (isAr ? 'نعم، إكمال الملف' : 'Yes, Complete File')}
+              {savingProfile ? t('common.loading') : t('lawyer.yesCompleteFile')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

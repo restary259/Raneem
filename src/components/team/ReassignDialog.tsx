@@ -18,8 +18,7 @@ interface ReassignDialogProps {
 
 const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyers, userId, onClose, refetch }) => {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
   const [targetId, setTargetId] = useState('');
   const [notes, setNotes] = useState('');
   const [reassigning, setReassigning] = useState(false);
@@ -42,7 +41,7 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
         await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${targetId}` });
-        toast({ title: isAr ? 'تم التحويل بنجاح' : 'Case reassigned successfully' });
+        toast({ title: t('lawyer.caseReassigned') });
         onClose();
         try { await refetch(); } catch {}
       }
@@ -56,12 +55,12 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
   return (
     <Dialog open={!!reassignCase} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{isAr ? 'تحويل الحالة لعضو آخر' : 'Reassign Case'}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('lawyer.reassignCase')}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-xs">{isAr ? 'اختر العضو الجديد' : 'Select new team member'}</Label>
+            <Label className="text-xs">{t('lawyer.selectNewMember')}</Label>
             <Select value={targetId} onValueChange={setTargetId}>
-              <SelectTrigger><SelectValue placeholder={isAr ? 'اختر...' : 'Select...'} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('lawyer.selectPlaceholder')} /></SelectTrigger>
               <SelectContent>
                 {allLawyers.filter(l => l.id !== userId).map(l => (
                   <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>
@@ -70,13 +69,13 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
             </Select>
           </div>
           <div>
-            <Label className="text-xs">{isAr ? 'ملاحظات (اختياري)' : 'Notes (optional)'}</Label>
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={isAr ? 'سبب التحويل...' : 'Reason for reassignment...'} />
+            <Label className="text-xs">{t('lawyer.notesOptional')}</Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder={t('lawyer.reassignReason')} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={handleReassign} disabled={reassigning || !targetId}>{reassigning ? t('common.loading') : (isAr ? 'تحويل' : 'Reassign')}</Button>
+          <Button onClick={handleReassign} disabled={reassigning || !targetId}>{reassigning ? t('common.loading') : t('lawyer.reassign')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
