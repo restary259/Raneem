@@ -93,12 +93,10 @@ const AdminDashboardPage = () => {
   const payoutRequests = data?.payoutRequests ?? [];
 
   // Real-time subscriptions — only active once session is ready
+  // Only subscribe to tables that drive admin UI — reduced from 6 to 3
   useRealtimeSubscription('leads', refetch, isAdmin);
   useRealtimeSubscription('student_cases', refetch, isAdmin);
-  useRealtimeSubscription('commissions', refetch, isAdmin);
-  useRealtimeSubscription('rewards', refetch, isAdmin);
   useRealtimeSubscription('payout_requests', refetch, isAdmin);
-  useRealtimeSubscription('profiles', refetch, isAdmin);
 
   // Single stable loading gate — no flicker between auth and data loading states
   if (!sessionReady) return (

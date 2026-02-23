@@ -8,92 +8,34 @@ import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardContainer from '@/components/dashboard/DashboardContainer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import {
-  Phone, LogOut, ArrowLeftCircle, Save, Briefcase,
-  CheckCircle, XCircle, AlertTriangle, CalendarDays, Users, CreditCard,
-  Home, Calendar, DollarSign, TrendingUp, BarChart3, Send, FileText, Trash2, UserX, UserCheck
+  Phone, LogOut, ArrowLeftCircle, Briefcase,
+  CheckCircle, AlertTriangle, CalendarDays, Users, CreditCard,
+  Home, Calendar, DollarSign, TrendingUp, BarChart3, Send, FileText, Trash2, UserCheck
 } from 'lucide-react';
 import AppointmentCalendar from '@/components/lawyer/AppointmentCalendar';
-import EarningsPanel from '@/components/influencer/EarningsPanel';
 import NotificationBell from '@/components/common/NotificationBell';
-
 import { differenceInHours, isToday, format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import PullToRefresh from '@/components/common/PullToRefresh';
-
-import { STATUS_COLORS as IMPORTED_STATUS_COLORS, resolveStatus, CaseStatus } from '@/lib/caseStatus';
+import { STATUS_COLORS as IMPORTED_STATUS_COLORS, CaseStatus } from '@/lib/caseStatus';
 import { canTransition } from '@/lib/caseTransitions';
 
-// ACCOMMODATION_OPTIONS removed — housing merged into single free-text field
-const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
-
-type TabId = 'cases' | 'today' | 'appointments' | 'analytics';
-
-const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
-  { id: 'cases', icon: Home, labelKey: 'lawyer.tabs.cases' },
-  { id: 'today', icon: CalendarDays, labelKey: 'lawyer.tabs.today' },
-  { id: 'appointments', icon: Calendar, labelKey: 'lawyer.tabs.appointments' },
-  { id: 'analytics', icon: BarChart3, labelKey: 'lawyer.tabs.analytics' },
-];
-
-// Neon border colors per stage filter
-const NEON_BORDERS: Record<string, string> = {
-  all: 'border-white/30',
-  new: 'border-[hsl(217,100%,60%)] shadow-[0_0_6px_hsl(217,100%,60%/0.3)]',
-  contacted: 'border-[hsl(50,100%,50%)] shadow-[0_0_6px_hsl(50,100%,50%/0.3)]',
-  appointment_stage: 'border-[hsl(270,100%,65%)] shadow-[0_0_6px_hsl(270,100%,65%/0.3)]',
-  profile_filled: 'border-[hsl(140,70%,50%)] shadow-[0_0_6px_hsl(140,70%,50%/0.3)]',
-  submitted: 'border-[hsl(185,100%,50%)] shadow-[0_0_6px_hsl(185,100%,50%/0.3)]',
-  paid: 'border-[hsl(140,80%,45%)] shadow-[0_0_6px_hsl(140,80%,45%/0.3)]',
-  sla: 'border-[hsl(0,100%,55%)] shadow-[0_0_6px_hsl(0,100%,55%/0.3)]',
-};
-
-// Map case_status to the correct neon border
-function getNeonBorder(status: string): string {
-  if (['new', 'eligible', 'assigned'].includes(status)) return NEON_BORDERS.new;
-  if (status === 'contacted') return NEON_BORDERS.contacted;
-  if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) return NEON_BORDERS.appointment_stage;
-  if (status === 'profile_filled') return NEON_BORDERS.profile_filled;
-  if (status === 'services_filled') return NEON_BORDERS.submitted;
-  if (status === 'paid') return NEON_BORDERS.paid;
-  return NEON_BORDERS.all;
-}
-
-type CaseFilterTab = 'all' | 'new' | 'contacted' | 'appointment_stage' | 'profile_filled' | 'submitted' | 'paid' | 'sla';
-const CASE_FILTER_TABS: CaseFilterTab[] = ['all', 'new', 'contacted', 'appointment_stage', 'profile_filled', 'submitted', 'paid', 'sla'];
-
-const FILTER_LABELS: Record<CaseFilterTab, { ar: string; en: string }> = {
-  all: { ar: 'الكل', en: 'All' },
-  new: { ar: 'جديد', en: 'New' },
-  contacted: { ar: 'تم التواصل', en: 'Contacted' },
-  appointment_stage: { ar: 'مرحلة الموعد', en: 'Appointments' },
-  profile_filled: { ar: 'ملفات مكتملة', en: 'Completed Files' },
-  submitted: { ar: 'تم الإرسال للمسؤول', en: 'Submitted to Admin' },
-  paid: { ar: 'مدفوع', en: 'Paid' },
-  sla: { ar: 'تنبيه SLA', en: 'SLA Alert' },
-};
-
-function matchesFilter(status: string, filter: CaseFilterTab): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'new') return ['new', 'eligible', 'assigned'].includes(status);
-  if (filter === 'contacted') return status === 'contacted';
-  if (filter === 'appointment_stage') return ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status);
-  if (filter === 'profile_filled') return status === 'profile_filled';
-  if (filter === 'submitted') return status === 'services_filled';
-  if (filter === 'paid') return status === 'paid';
-  return false;
-}
+// Decomposed sub-components
+import ProfileCompletionModal from '@/components/team/ProfileCompletionModal';
+import ScheduleDialog from '@/components/team/ScheduleDialog';
+import RescheduleDialog from '@/components/team/RescheduleDialog';
+import ReassignDialog from '@/components/team/ReassignDialog';
+import TeamAnalyticsTab from '@/components/team/TeamAnalyticsTab';
+import { PaymentConfirmDialog, DeleteConfirmDialog } from '@/components/team/ConfirmationDialogs';
+import {
+  type TabId, type CaseFilterTab, CASE_FILTER_TABS, TAB_CONFIG,
+  NEON_BORDERS, FILTER_LABELS, getNeonBorder, matchesFilter,
+} from '@/components/team/TeamConstants';
 
 const TeamDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -102,27 +44,13 @@ const TeamDashboardPage = () => {
   const [activeTab, setActiveTab] = useState<TabId>('cases');
   const [caseFilter, setCaseFilter] = useState<CaseFilterTab>('all');
 
+  // Dialog state — simplified, each sub-component manages its own form state
   const [profileCase, setProfileCase] = useState<any | null>(null);
-  const [profileValues, setProfileValues] = useState<Record<string, any>>({});
-  const [savingProfile, setSavingProfile] = useState(false);
   const [paymentConfirm, setPaymentConfirm] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [rescheduleAppt, setRescheduleAppt] = useState<any | null>(null);
-  const [rescheduleDate, setRescheduleDate] = useState('');
-  const [rescheduleTime, setRescheduleTime] = useState('');
-  // Inline schedule appointment dialog state
   const [scheduleForCase, setScheduleForCase] = useState<any | null>(null);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleTime, setScheduleTime] = useState('10:00');
-  const [scheduleDuration, setScheduleDuration] = useState(30);
-  const [scheduleLocation, setScheduleLocation] = useState('');
-  const [scheduleNotes, setScheduleNotes] = useState('');
-  const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
-  const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
   const [reassignCase, setReassignCase] = useState<any | null>(null);
-  const [reassignTargetId, setReassignTargetId] = useState('');
-  const [reassignNotes, setReassignNotes] = useState('');
-  const [reassigning, setReassigning] = useState(false);
   const [allLawyers, setAllLawyers] = useState<{ id: string; full_name: string }[]>([]);
 
   const navigate = useNavigate();
@@ -137,21 +65,19 @@ const TeamDashboardPage = () => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate('/student-auth'); return; }
-
       const { data: roles } = await (supabase as any)
         .from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'lawyer');
       if (!roles?.length) {
         toast({ variant: 'destructive', title: t('lawyer.unauthorized'), description: t('lawyer.unauthorizedDesc') });
         navigate('/'); return;
       }
-
       setUser(session.user);
       setAuthReady(true);
     };
     init();
   }, [navigate, toast, t]);
 
-  // Fetch all lawyers for reassignment dropdown via admin edge function
+  // Fetch all lawyers for reassignment dropdown
   useEffect(() => {
     if (!authReady) return;
     const fetchLawyers = async () => {
@@ -165,18 +91,12 @@ const TeamDashboardPage = () => {
           const result = await resp.json();
           setAllLawyers(result.members || []);
         } else {
-          // Fallback to direct query for non-admin team members
-          const { data } = await (supabase as any)
-            .from('profiles')
-            .select('id, full_name')
+          const { data } = await (supabase as any).from('profiles').select('id, full_name')
             .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
           if (data) setAllLawyers(data);
         }
       } catch {
-        // Fallback
-        const { data } = await (supabase as any)
-          .from('profiles')
-          .select('id, full_name')
+        const { data } = await (supabase as any).from('profiles').select('id, full_name')
           .in('id', (await (supabase as any).from('user_roles').select('user_id').eq('role', 'lawyer')).data?.map((r: any) => r.user_id) ?? []);
         if (data) setAllLawyers(data);
       }
@@ -185,68 +105,55 @@ const TeamDashboardPage = () => {
   }, [authReady]);
 
   // Centralised data layer
-  const { data, error: dataError, isLoading, refetch } = useDashboardData({
-    type: 'team',
-    userId: user?.id,
-    enabled: authReady,
+  const { data, isLoading, refetch } = useDashboardData({
+    type: 'team', userId: user?.id, enabled: authReady,
     onError: (err) => toast({ variant: 'destructive', title: t('common.error'), description: err }),
   });
 
-  // Safe extractions — preserve old variable names so all downstream code is untouched
   const cases: any[] = data?.cases ?? [];
   const leads: any[] = data?.leads ?? [];
   const appointments: any[] = data?.appointments ?? [];
   const profile: any = data?.profile ?? null;
 
-  // Real-time subscriptions point to the centralised refetch
-  // Only subscribe to tables the team dashboard actually displays
   useRealtimeSubscription('student_cases', refetch, authReady);
   useRealtimeSubscription('appointments', refetch, authReady);
   useRealtimeSubscription('leads', refetch, authReady);
 
+  const getLeadInfo = useCallback((leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' }, [leads, t]);
 
-  const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' };
-
-  const isSlaBreached = (c: any) => {
+  const isSlaBreached = useCallback((c: any) => {
     if (c.case_status !== 'assigned') return false;
     const lead = leads.find(l => l.id === c.lead_id);
     if (lead?.last_contacted) return false;
     return differenceInHours(new Date(), new Date(c.created_at)) > 24;
-  };
+  }, [leads]);
 
   const kpis = useMemo(() => {
-    const activeLeads = cases.filter(c => c.case_status !== 'paid').length;
     const now = new Date();
+    const activeLeads = cases.filter(c => c.case_status !== 'paid').length;
     const todayAppts = appointments.filter(a => {
       if (!isToday(new Date(a.scheduled_at))) return false;
-      if (a.status === 'cancelled' || a.status === 'deleted' || a.status === 'completed') return false;
-      const end = new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000);
-      return end > now;
+      if (['cancelled', 'deleted', 'completed'].includes(a.status)) return false;
+      return new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000) > now;
     }).length;
-    const paidThisMonth = cases.filter(c => {
-      if (!c.paid_at) return false;
-      const d = new Date(c.paid_at);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    }).length;
+    const paidThisMonth = cases.filter(c => c.paid_at && new Date(c.paid_at).getMonth() === now.getMonth() && new Date(c.paid_at).getFullYear() === now.getFullYear()).length;
     const slaWarnings = cases.filter(c => isSlaBreached(c)).length;
     const totalEarnings = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
     const totalServiceFees = cases.filter(c => c.paid_at).reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
     const conversionRate = cases.length > 0 ? Math.round((cases.filter(c => c.paid_at).length / cases.length) * 100) : 0;
-    // Show rate: only count past appointments (not future ones)
     const pastAppts = appointments.filter(a => new Date(a.scheduled_at) < now);
     const bookedPast = pastAppts.filter(a => a.status === 'scheduled' || a.status === 'completed').length;
     const completedAppts = pastAppts.filter(a => a.status === 'completed').length;
     const showRate = bookedPast > 0 ? Math.round((completedAppts / bookedPast) * 100) : 0;
     return { activeLeads, todayAppts, paidThisMonth, slaWarnings, totalEarnings, totalServiceFees, conversionRate, showRate };
-  }, [cases, leads, appointments]);
+  }, [cases, appointments, isSlaBreached]);
 
   const filteredCases = useMemo(() => {
     if (caseFilter === 'sla') return cases.filter(c => isSlaBreached(c));
     return cases.filter(c => matchesFilter(c.case_status, caseFilter));
-  }, [cases, caseFilter, leads]);
+  }, [cases, caseFilter, isSlaBreached]);
 
   // ── ACTIONS ──
-
   const handleMarkContacted = async (leadId: string, caseId: string) => {
     try {
       const now = new Date().toISOString();
@@ -259,215 +166,8 @@ const TeamDashboardPage = () => {
       toast({ title: t('lawyer.contactLogged') });
       try { await refetch(); } catch {}
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
+      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
     }
-  };
-
-  const handleMakeAppointment = (caseId: string) => {
-    const c = cases.find(cs => cs.id === caseId);
-    setScheduleForCase(c || null);
-    setScheduleDate(format(new Date(), 'yyyy-MM-dd'));
-    setScheduleTime('10:00');
-    setScheduleDuration(30);
-    setScheduleLocation('');
-    setScheduleNotes('');
-  };
-
-  const handleCreateAppointmentInline = async () => {
-    if (!scheduleForCase || !scheduleDate || !scheduleTime) return;
-    setSaving(true);
-    try {
-      const lead = getLeadInfo(scheduleForCase.lead_id);
-      const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
-
-      // Check for existing scheduled appointment on same case
-      const { data: existing } = await (supabase as any)
-        .from('appointments')
-        .select('id')
-        .eq('case_id', scheduleForCase.id)
-        .eq('lawyer_id', user?.id)
-        .eq('status', 'scheduled')
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await (supabase as any).from('appointments').update({
-          student_name: lead.full_name || 'Unknown',
-          scheduled_at: scheduledAt,
-          duration_minutes: scheduleDuration,
-          location: scheduleLocation || null,
-          notes: scheduleNotes || null,
-        }).eq('id', existing.id);
-        if (error) {
-          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-        } else {
-          toast({ title: isAr ? 'تم تحديث الموعد' : 'Appointment updated' });
-        }
-      } else {
-        const { error } = await (supabase as any).from('appointments').insert({
-          lawyer_id: user?.id,
-          case_id: scheduleForCase.id,
-          student_name: lead.full_name || 'Unknown',
-          scheduled_at: scheduledAt,
-          duration_minutes: scheduleDuration,
-          location: scheduleLocation || null,
-          notes: scheduleNotes || null,
-        });
-        if (error) {
-          toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-        } else {
-          toast({ title: isAr ? 'تم حجز الموعد' : 'Appointment scheduled' });
-          if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
-            await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
-          }
-        }
-      }
-      try { await refetch(); } catch {}
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setScheduleForCase(null);
-      setSaving(false);
-    }
-  };
-
-  const openProfileModal = (c: any) => {
-    const lead = leads.find(l => l.id === c.lead_id);
-    if (!lead) {
-      toast({ variant: 'destructive', title: isAr ? 'بيانات الطالب غير موجودة' : 'Lead data not found' });
-      return;
-    }
-    setProfileCase(c);
-    setProfileValues({
-      student_full_name: c.student_full_name || lead.full_name || '',
-      student_email: c.student_email || (lead as any).email || '',
-      student_phone: c.student_phone || lead.phone || '',
-      student_address: c.student_address || '',
-      student_age: c.student_age || '',
-      language_proficiency: c.language_proficiency || '',
-      intensive_course: c.intensive_course || '',
-      passport_number: c.passport_number || '',
-      nationality: c.nationality || '',
-      country_of_birth: c.country_of_birth || '',
-      selected_city: c.selected_city || '',
-      selected_school: c.selected_school || '',
-      housing_description: c.housing_description || '',
-      has_translation_service: c.has_translation_service || false,
-      translation_added_by_user_id: c.translation_added_by_user_id || null,
-      gender: c.gender || '',
-      notes: c.notes || '',
-    });
-  };
-
-  const saveProfileCompletion = async () => {
-    if (!profileCase) return;
-    setSavingProfile(true);
-    const updateData: Record<string, any> = {
-      student_full_name: profileValues.student_full_name || null,
-      student_email: profileValues.student_email || null,
-      student_phone: profileValues.student_phone || null,
-      student_address: profileValues.student_address || null,
-      student_age: profileValues.student_age ? Number(profileValues.student_age) : null,
-      language_proficiency: profileValues.language_proficiency || null,
-      intensive_course: profileValues.intensive_course || null,
-      passport_number: profileValues.passport_number || null,
-      nationality: profileValues.nationality || null,
-      country_of_birth: profileValues.country_of_birth || null,
-      selected_city: profileValues.selected_city || null,
-      selected_school: profileValues.selected_school || null,
-      housing_description: profileValues.housing_description || null,
-      has_translation_service: !!profileValues.has_translation_service,
-      translation_added_by_user_id:
-        profileCase.translation_added_by_user_id && profileValues.has_translation_service
-          ? profileCase.translation_added_by_user_id
-          : (profileValues.has_translation_service ? user?.id ?? null : null),
-      gender: profileValues.gender || null,
-      notes: profileValues.notes || null,
-    };
-
-    const requiredProfileFields = [
-      'student_full_name', 'student_email', 'student_phone', 'student_age', 'student_address',
-      'passport_number', 'nationality', 'country_of_birth', 'language_proficiency',
-      'gender', 'selected_city', 'selected_school', 'intensive_course'
-    ];
-    const missingFields = requiredProfileFields.filter(f => {
-      const val = profileValues[f];
-      return !val || String(val).trim() === '' || String(val).trim() === 'null';
-    });
-    
-    if (missingFields.length > 0) {
-      const fieldLabels: Record<string, string> = {
-        student_full_name: isAr ? 'الاسم الكامل' : 'Full Name',
-        student_email: isAr ? 'البريد الإلكتروني' : 'Email',
-        student_phone: isAr ? 'الهاتف' : 'Phone',
-        student_age: isAr ? 'العمر' : 'Age',
-        student_address: isAr ? 'العنوان' : 'Address',
-        passport_number: isAr ? 'رقم الجواز' : 'Passport',
-        nationality: isAr ? 'الجنسية' : 'Nationality',
-        country_of_birth: isAr ? 'بلد الولادة' : 'Country of Birth',
-        language_proficiency: isAr ? 'مستوى اللغة' : 'Language Level',
-        gender: isAr ? 'الجنس' : 'Gender',
-        selected_city: isAr ? 'المدينة' : 'City',
-        selected_school: isAr ? 'المدرسة' : 'School',
-        intensive_course: isAr ? 'دورة مكثفة' : 'Intensive Course',
-        housing_description: isAr ? 'نوع السكن' : 'Housing Type',
-      };
-      const missing = missingFields.map(f => fieldLabels[f] || f).join(', ');
-      toast({ variant: 'destructive', title: isAr ? 'حقول مفقودة' : 'Missing Fields', description: missing });
-      setSavingProfile(false);
-      return;
-    }
-
-    // All fields filled — show confirmation dialog before moving
-    setPendingUpdateData(updateData);
-    setSavingProfile(false);
-    setCompleteFileConfirm(true);
-  };
-
-  const confirmCompleteFile = async () => {
-    if (!profileCase || !pendingUpdateData) return;
-    setSavingProfile(true);
-    try {
-      const finalData = { ...pendingUpdateData };
-      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
-        finalData.case_status = CaseStatus.PROFILE_FILLED;
-      } else {
-        toast({ variant: 'destructive', title: t('common.error'), description: isAr ? 'لا يمكن الانتقال إلى هذه المرحلة' : 'Cannot transition to this stage from current status' });
-        return;
-      }
-      const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
-        toast({ title: isAr ? 'تم إكمال الملف' : 'File completed' });
-        setProfileCase(null);
-        setCaseFilter('profile_filled');
-        try { await refetch(); } catch {}
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setSavingProfile(false);
-      setCompleteFileConfirm(false);
-      setPendingUpdateData(null);
-    }
-  };
-
-  const cancelCompleteFile = () => {
-    setCompleteFileConfirm(false);
-    setPendingUpdateData(null);
-    // Keep profile modal open so user can continue editing
-  };
-
-  const handleSubmitForApplication = (caseId: string) => {
-    // Ask "Did you receive payment?" before submitting
-    setPaymentConfirm(caseId);
   };
 
   const confirmPaymentAndSubmit = async (caseId: string) => {
@@ -475,130 +175,49 @@ const TeamDashboardPage = () => {
     try {
       const c = cases.find(cs => cs.id === caseId);
       if (!c) return;
-
-      const updateData: Record<string, any> = {
-        submitted_to_admin_at: new Date().toISOString(),
-      };
-      if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) {
-        updateData.case_status = CaseStatus.SERVICES_FILLED;
-      }
+      const updateData: Record<string, any> = { submitted_to_admin_at: new Date().toISOString() };
+      if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) updateData.case_status = CaseStatus.SERVICES_FILLED;
       const lead = leads.find(l => l.id === c.lead_id);
-      if (lead && (lead.source_type === 'friend' || lead.source_type === 'family')) {
-        updateData.referral_discount = 500;
-      }
-
+      if (lead && (lead.source_type === 'friend' || lead.source_type === 'family')) updateData.referral_discount = 500;
       const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      } else {
+      if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      else {
         await (supabase as any).rpc('log_user_activity', { p_action: 'submit_for_application', p_target_id: caseId, p_target_table: 'student_cases' });
         toast({ title: t('lawyer.saved') });
       }
       try { await refetch(); } catch {}
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setSaving(false);
-      setPaymentConfirm(null);
-    }
+      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+    } finally { setSaving(false); setPaymentConfirm(null); }
   };
 
   const handleDeleteCase = async (caseId: string) => {
     try {
       const { error } = await (supabase as any).from('student_cases').delete().eq('id', caseId);
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      } else {
-        toast({ title: isAr ? 'تم الحذف' : 'Case deleted' });
-        try { await refetch(); } catch {}
-      }
+      if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      else { toast({ title: isAr ? 'تم الحذف' : 'Case deleted' }); try { await refetch(); } catch {} }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setDeleteConfirm(null);
-    }
+      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+    } finally { setDeleteConfirm(null); }
   };
 
   const handleDeleteAppointment = async (apptId: string) => {
     try {
       const { error } = await (supabase as any).from('appointments').delete().eq('id', apptId);
-      if (!error) {
-        toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' });
-        try { await refetch(); } catch {}
-      } else {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      }
+      if (!error) { toast({ title: isAr ? 'تم حذف الموعد' : 'Appointment deleted' }); try { await refetch(); } catch {} }
+      else toast({ variant: 'destructive', title: t('common.error'), description: error.message });
     } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    }
-  };
-
-  const handleRescheduleAppointment = async () => {
-    if (!rescheduleAppt || !rescheduleDate || !rescheduleTime) return;
-    setSaving(true);
-    try {
-      const newScheduledAt = new Date(`${rescheduleDate}T${rescheduleTime}:00`).toISOString();
-      const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', rescheduleAppt.id);
-      if (!error) {
-        toast({ title: isAr ? 'تم إعادة الجدولة' : 'Appointment rescheduled' });
-        setRescheduleAppt(null);
-        try { await refetch(); } catch {}
-      } else {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleReassignCase = async () => {
-    if (!reassignCase || !reassignTargetId) return;
-    setReassigning(true);
-    try {
-      const historyEntry = {
-        from: reassignCase.assigned_lawyer_id,
-        to: reassignTargetId,
-        at: new Date().toISOString(),
-        by: user?.id,
-        notes: reassignNotes.trim() || null,
-      };
-      const currentHistory = Array.isArray(reassignCase.reassignment_history) ? reassignCase.reassignment_history : [];
-      const { error } = await (supabase as any).from('student_cases').update({
-        assigned_lawyer_id: reassignTargetId,
-        reassigned_from: reassignCase.assigned_lawyer_id,
-        reassignment_notes: reassignNotes.trim() || null,
-        reassignment_history: [...currentHistory, historyEntry],
-      }).eq('id', reassignCase.id);
-      if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${reassignTargetId}` });
-        toast({ title: isAr ? 'تم التحويل بنجاح' : 'Case reassigned successfully' });
-        setReassignCase(null);
-        setReassignTargetId('');
-        setReassignNotes('');
-        try { await refetch(); } catch {}
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
-      }
-    } finally {
-      setReassigning(false);
+      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
     }
   };
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
+
+  const openProfileModal = (c: any) => {
+    const lead = leads.find(l => l.id === c.lead_id);
+    if (!lead) { toast({ variant: 'destructive', title: isAr ? 'بيانات الطالب غير موجودة' : 'Lead data not found' }); return; }
+    setProfileCase(c);
+  };
 
   if (!authReady || isLoading) {
     return (
@@ -614,15 +233,13 @@ const TeamDashboardPage = () => {
     );
   }
 
-  // Only show today's active scheduled appointments that haven't ended yet
   const todayAppointments = appointments.filter(a => {
     if (!isToday(new Date(a.scheduled_at))) return false;
     if (a.status !== 'scheduled') return false;
-    const end = new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000);
-    return end > new Date();
+    return new Date(new Date(a.scheduled_at).getTime() + (a.duration_minutes || 30) * 60000) > new Date();
   });
 
-  // ── Render two action buttons per tab/status ──
+  // ── Render case action buttons ──
   const renderCaseActions = (c: any, lead: any) => {
     const status = c.case_status;
     const phoneBtn = lead.phone ? (
@@ -630,18 +247,20 @@ const TeamDashboardPage = () => {
         <a href={`tel:${lead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a>
       </Button>
     ) : null;
+    const reassignBtn = (
+      <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => setReassignCase(c)}>
+        <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
+      </Button>
+    );
 
-    // New tab: Call + Mark as Contacted
     if (['new', 'eligible', 'assigned'].includes(status)) {
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
-          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMarkContacted((lead as any).id, c.id)}>
+          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMarkContacted(lead.id, c.id)}>
             <CheckCircle className="h-3.5 w-3.5" />{t('lawyer.markContacted')}
           </Button>
-          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
-            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
-          </Button>
+          {reassignBtn}
           {['new', 'eligible'].includes(status) && (
             <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
               <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
@@ -650,23 +269,12 @@ const TeamDashboardPage = () => {
         </div>
       );
     }
-
-    // Contacted: Call + Make Appointment + Reassign
     if (status === 'contacted') {
-      return (
-        <div className="flex gap-2 flex-wrap">
-          {phoneBtn}
-          <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleMakeAppointment(c.id)}>
-            <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'حجز موعد' : 'Make Appointment'}
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
-            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
-          </Button>
-        </div>
-      );
+      return (<div className="flex gap-2 flex-wrap">{phoneBtn}
+        <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => { const cs = cases.find(x => x.id === c.id); setScheduleForCase(cs || null); }}>
+          <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'حجز موعد' : 'Make Appointment'}
+        </Button>{reassignBtn}</div>);
     }
-
-    // Appointment stage: Call + Complete Profile + Reschedule + Reassign + Delete
     if (['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(status)) {
       const linkedAppt = appointments.find(a => a.case_id === c.id);
       return (
@@ -676,48 +284,30 @@ const TeamDashboardPage = () => {
             <FileText className="h-3.5 w-3.5" />{t('lawyer.completeProfile')}
           </Button>
           {linkedAppt && (
-            <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" onClick={() => {
-              setRescheduleAppt(linkedAppt);
-              const d = new Date(linkedAppt.scheduled_at);
-              setRescheduleDate(format(d, 'yyyy-MM-dd'));
-              setRescheduleTime(format(d, 'HH:mm'));
-            }}>
+            <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setRescheduleAppt(linkedAppt)}>
               <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
             </Button>
           )}
-          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
-            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
-          </Button>
+          {reassignBtn}
           <Button size="sm" variant="destructive" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setDeleteConfirm(c.id)}>
             <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
           </Button>
         </div>
       );
     }
-
-    // File completed: Call + Submit for Application + Reassign
     if (['profile_filled', 'services_filled'].includes(status)) {
       return (
         <div className="flex gap-2 flex-wrap">
           {phoneBtn}
           {status !== 'services_filled' && (
-            <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => handleSubmitForApplication(c.id)}>
+            <Button size="sm" className="h-8 text-xs active:scale-95 gap-1" onClick={() => setPaymentConfirm(c.id)}>
               <Send className="h-3.5 w-3.5" />{isAr ? 'إرسال للتقديم' : 'Submit for Application'}
             </Button>
           )}
-          <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
-            <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
-          </Button>
+          {reassignBtn}
         </div>
       );
     }
-
-    // Paid (terminal): just call + reassign (no mark-paid button)
-    const reassignBtn = (
-      <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => { setReassignCase(c); setReassignTargetId(''); setReassignNotes(''); }}>
-        <UserCheck className="h-3.5 w-3.5" />{isAr ? 'تحويل' : 'Reassign'}
-      </Button>
-    );
     return phoneBtn ? <div className="flex gap-2 flex-wrap">{phoneBtn}{reassignBtn}</div> : <div className="flex gap-2">{reassignBtn}</div>;
   };
 
@@ -759,15 +349,10 @@ const TeamDashboardPage = () => {
             {TAB_CONFIG.map(item => {
               const isActive = activeTab === item.id;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                <button key={item.id} onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 ${
-                    isActive
-                      ? 'bg-primary/20 text-white border-s-2 border-primary shadow-[0_0_12px_rgba(234,88,12,0.3)]'
-                      : 'text-white/70 hover:bg-white/8 hover:text-white'
-                  }`}
-                >
+                    isActive ? 'bg-primary/20 text-white border-s-2 border-primary shadow-[0_0_12px_rgba(234,88,12,0.3)]' : 'text-white/70 hover:bg-white/8 hover:text-white'
+                  }`}>
                   <item.icon className="h-5 w-5 shrink-0" />
                   <span>{t(item.labelKey, item.id)}</span>
                 </button>
@@ -779,35 +364,21 @@ const TeamDashboardPage = () => {
         {/* Main Content */}
         <div className="flex-1 overflow-auto pb-20 lg:pb-0">
           <main className="px-3 sm:px-4 py-3 space-y-3">
-            <PullToRefresh onRefresh={async () => { await refetch(); }} disabled={saving || savingProfile}>
+            <PullToRefresh onRefresh={async () => { await refetch(); }} disabled={saving}>
 
-            {/* ===== CASES TAB ===== */}
+            {/* CASES TAB */}
             {activeTab === 'cases' && (
               <>
-                {/* Today's appointments moved to dedicated "Today" tab */}
-
-                {/* Filter chips with neon coding */}
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {CASE_FILTER_TABS.map(f => {
-                    const count = f === 'all' ? cases.length
-                      : f === 'sla' ? cases.filter(c => isSlaBreached(c)).length
-                      : cases.filter(c => matchesFilter(c.case_status, f)).length;
+                    const count = f === 'all' ? cases.length : f === 'sla' ? cases.filter(c => isSlaBreached(c)).length : cases.filter(c => matchesFilter(c.case_status, f)).length;
                     const active = caseFilter === f;
-                    // Color-coded count badges
-                    const countColor = !active && count > 0
-                      ? f === 'sla' ? 'text-destructive'
-                      : f === 'paid' ? 'text-emerald-600'
-                      : f === 'new' ? 'text-blue-600'
-                      : ''
-                      : '';
+                    const countColor = !active && count > 0 ? (f === 'sla' ? 'text-destructive' : f === 'paid' ? 'text-emerald-600' : f === 'new' ? 'text-blue-600' : '') : '';
                     return (
-                      <button
-                        key={f}
-                        onClick={() => setCaseFilter(f)}
+                      <button key={f} onClick={() => setCaseFilter(f)}
                         className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 border ${
                           active ? 'bg-primary text-primary-foreground border-primary' : `bg-muted text-muted-foreground hover:bg-muted/80 ${NEON_BORDERS[f] || 'border-transparent'}`
-                        } ${f === 'sla' && count > 0 && !active ? 'border-destructive/50 text-destructive' : ''}`}
-                      >
+                        } ${f === 'sla' && count > 0 && !active ? 'border-destructive/50 text-destructive' : ''}`}>
                         {isAr ? FILTER_LABELS[f].ar : FILTER_LABELS[f].en}
                         {count > 0 && <span className={`ms-1 ${countColor}`}>({count})</span>}
                       </button>
@@ -815,13 +386,11 @@ const TeamDashboardPage = () => {
                   })}
                 </div>
 
-                {/* Case Cards */}
                 <div className="space-y-3">
                   <h2 className="font-bold text-sm flex items-center gap-2">
                     <Briefcase className="h-4 w-4" />{t('lawyer.assignedCases')}
                     <Badge variant="secondary" className="text-xs">{filteredCases.length}</Badge>
                   </h2>
-
                   {filteredCases.map(c => {
                     const lead = getLeadInfo(c.lead_id);
                     const statusLabel = t(`lawyer.statuses.${c.case_status}`, c.case_status);
@@ -830,20 +399,14 @@ const TeamDashboardPage = () => {
                     const sla = isSlaBreached(c);
                     const sourceType = (lead as any).source_type;
                     const isPaid = !!c.paid_at;
-
                     return (
                       <Card key={c.id} className={`transition-all duration-300 border-2 ${neonBorder} ${sla ? 'ring-1 ring-destructive/30' : ''}`}>
                         <CardContent className="p-3 space-y-2">
-                          {/* Header row */}
                           <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="font-bold text-sm truncate">{lead.full_name}</h3>
-                                {sla && (
-                                  <Badge variant="destructive" className="text-[10px] shrink-0">
-                                    <AlertTriangle className="h-3 w-3 me-0.5" />{t('lawyer.slaBreached')}
-                                  </Badge>
-                                )}
+                                {sla && <Badge variant="destructive" className="text-[10px] shrink-0"><AlertTriangle className="h-3 w-3 me-0.5" />{t('lawyer.slaBreached')}</Badge>}
                               </div>
                               {lead.phone && (
                                 <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-xs text-primary hover:underline mt-0.5" onClick={e => e.stopPropagation()}>
@@ -851,32 +414,19 @@ const TeamDashboardPage = () => {
                                 </a>
                               )}
                               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                {sourceType && (
-                                  <Badge variant="outline" className="text-[10px]">
-                                    {String(t(`lawyer.sources.${sourceType}`, sourceType))}
-                                  </Badge>
-                                )}
-                                {(sourceType === 'friend' || sourceType === 'family') && (
-                                  <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
-                                    {t('lawyer.referralDiscount', 'Referral Discount')}
-                                  </Badge>
-                                )}
-                                {(lead as any).preferred_major && (
-                                  <span className="text-[10px] text-muted-foreground">{(lead as any).preferred_major}</span>
-                                )}
+                                {sourceType && <Badge variant="outline" className="text-[10px]">{String(t(`lawyer.sources.${sourceType}`, sourceType))}</Badge>}
+                                {(sourceType === 'friend' || sourceType === 'family') && <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">{t('lawyer.referralDiscount', 'Referral Discount')}</Badge>}
+                                {(lead as any).preferred_major && <span className="text-[10px] text-muted-foreground">{(lead as any).preferred_major}</span>}
                               </div>
                             </div>
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${statusColor}`}>{String(statusLabel)}</span>
                           </div>
-
-                          {/* Financial info – only after payment */}
                           {isPaid && (
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div className="p-2 bg-emerald-50 rounded"><span className="text-muted-foreground">{t('lawyer.serviceFee')}</span><p className="font-semibold">{c.service_fee} ₪</p></div>
                               <div className="p-2 bg-emerald-50 rounded"><span className="text-muted-foreground">{t('lawyer.yourCommission')}</span><p className="font-semibold">{c.lawyer_commission} ₪</p></div>
                             </div>
                           )}
-
                           {c.notes && <p className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">{c.notes}</p>}
                           {c.admin_notes && (
                             <div className="flex items-start gap-1.5 p-2 rounded bg-amber-50 border border-amber-200">
@@ -890,8 +440,6 @@ const TeamDashboardPage = () => {
                               {c.reassignment_notes && ` — ${c.reassignment_notes}`}
                             </div>
                           )}
-
-                          {/* Two-button actions per tab */}
                           {renderCaseActions(c, lead)}
                         </CardContent>
                       </Card>
@@ -902,7 +450,7 @@ const TeamDashboardPage = () => {
               </>
             )}
 
-            {/* ===== TODAY TAB ===== */}
+            {/* TODAY TAB */}
             {activeTab === 'today' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -913,14 +461,11 @@ const TeamDashboardPage = () => {
                   </h2>
                   <span className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMM d')}</span>
                 </div>
-
                 {todayAppointments.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <CalendarDays className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
-                      <p className="text-sm text-muted-foreground">{isAr ? 'لا توجد مواعيد مجدولة لليوم' : 'No appointments scheduled for today'}</p>
-                    </CardContent>
-                  </Card>
+                  <Card><CardContent className="p-8 text-center">
+                    <CalendarDays className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">{isAr ? 'لا توجد مواعيد مجدولة لليوم' : 'No appointments scheduled for today'}</p>
+                  </CardContent></Card>
                 ) : (
                   <div className="space-y-3">
                     {todayAppointments.map(appt => {
@@ -929,7 +474,6 @@ const TeamDashboardPage = () => {
                       const statusColor = linkedCase ? (IMPORTED_STATUS_COLORS[linkedCase.case_status] || 'bg-muted text-muted-foreground') : '';
                       const statusLabel = linkedCase ? t(`lawyer.statuses.${linkedCase.case_status}`, linkedCase.case_status) : '';
                       const isApptStage = linkedCase && ['appointment_scheduled', 'appointment_waiting', 'appointment_completed'].includes(linkedCase.case_status);
-
                       return (
                         <Card key={appt.id} className="border-purple-200/60">
                           <CardContent className="p-3 space-y-2">
@@ -943,34 +487,15 @@ const TeamDashboardPage = () => {
                                   <p className="font-semibold text-sm truncate">{appt.student_name}</p>
                                   {appt.location && <p className="text-xs text-muted-foreground truncate">📍 {appt.location}</p>}
                                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                    {linkedCase && (
-                                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColor}`}>
-                                        {String(statusLabel)}
-                                      </span>
-                                    )}
-                                    {linkedLead && (linkedLead as any).source_type && (
-                                      <Badge variant="outline" className="text-[10px]">
-                                        {String(t(`lawyer.sources.${(linkedLead as any).source_type}`, (linkedLead as any).source_type))}
-                                      </Badge>
-                                    )}
+                                    {linkedCase && <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusColor}`}>{String(statusLabel)}</span>}
+                                    {linkedLead && (linkedLead as any).source_type && <Badge variant="outline" className="text-[10px]">{String(t(`lawyer.sources.${(linkedLead as any).source_type}`, (linkedLead as any).source_type))}</Badge>}
                                   </div>
                                 </div>
                               </div>
                             </div>
-
-                            {/* Actions */}
                             <div className="flex gap-2 flex-wrap pt-1 border-t border-muted/50">
-                              {linkedLead?.phone && (
-                                <Button size="sm" variant="outline" className="h-8 text-xs gap-1" asChild>
-                                  <a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a>
-                                </Button>
-                              )}
-                              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => {
-                                setRescheduleAppt(appt);
-                                const d = new Date(appt.scheduled_at);
-                                setRescheduleDate(format(d, 'yyyy-MM-dd'));
-                                setRescheduleTime(format(d, 'HH:mm'));
-                              }}>
+                              {linkedLead?.phone && <Button size="sm" variant="outline" className="h-8 text-xs gap-1" asChild><a href={`tel:${linkedLead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a></Button>}
+                              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setRescheduleAppt(appt)}>
                                 <CalendarDays className="h-3.5 w-3.5" />{isAr ? 'إعادة جدولة' : 'Reschedule'}
                               </Button>
                               {isApptStage && linkedCase && (
@@ -978,11 +503,9 @@ const TeamDashboardPage = () => {
                                   <FileText className="h-3.5 w-3.5" />{t('lawyer.completeProfile')}
                                 </Button>
                               )}
-                              {appt.case_id && (
-                                <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
-                                  <Briefcase className="h-3.5 w-3.5" />{isAr ? 'عرض الملف' : 'View Case'}
-                                </Button>
-                              )}
+                              {appt.case_id && <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={() => { setCaseFilter('all'); setActiveTab('cases'); }}>
+                                <Briefcase className="h-3.5 w-3.5" />{isAr ? 'عرض الملف' : 'View Case'}
+                              </Button>}
                               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => handleDeleteAppointment(appt.id)}>
                                 <Trash2 className="h-3.5 w-3.5" />{isAr ? 'حذف' : 'Delete'}
                               </Button>
@@ -996,70 +519,16 @@ const TeamDashboardPage = () => {
               </div>
             )}
 
-            {/* ===== APPOINTMENTS TAB ===== */}
+            {/* APPOINTMENTS TAB */}
             {activeTab === 'appointments' && (
               <div className="space-y-4">
                 {user && <AppointmentCalendar userId={user.id} cases={cases} leads={leads} onAppointmentChange={refetch} />}
               </div>
             )}
 
-            {/* ===== ANALYTICS TAB ===== */}
+            {/* ANALYTICS TAB */}
             {activeTab === 'analytics' && (
-              <div className="space-y-4">
-                <h2 className="font-bold text-sm flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />{t('lawyer.tabs.analytics', 'Analytics')}
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <KPICard icon={<Users className="h-4 w-4 text-blue-600" />} label={t('lawyer.kpi.activeLeads')} value={String(kpis.activeLeads)} />
-                  <KPICard icon={<CalendarDays className="h-4 w-4 text-purple-600" />} label={t('lawyer.kpi.todayAppts')} value={String(kpis.todayAppts)} />
-                  <KPICard icon={<AlertTriangle className={`h-4 w-4 ${kpis.slaWarnings > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />} label={t('lawyer.kpi.slaWarnings')} value={String(kpis.slaWarnings)} highlight={kpis.slaWarnings > 0} />
-                  <KPICard icon={<CreditCard className="h-4 w-4 text-emerald-600" />} label={t('lawyer.kpi.paidThisMonth')} value={String(kpis.paidThisMonth)} />
-                  <KPICard icon={<DollarSign className="h-4 w-4 text-emerald-600" />} label={t('lawyer.kpi.myEarnings')} value={`${kpis.totalEarnings.toLocaleString()} ₪`} />
-                  <KPICard icon={<TrendingUp className="h-4 w-4 text-blue-600" />} label={t('lawyer.kpi.totalRevenue')} value={`${kpis.totalServiceFees.toLocaleString()} ₪`} />
-                  <KPICard icon={<CheckCircle className="h-4 w-4 text-green-600" />} label={t('lawyer.kpi.conversionRate', 'Conversion')} value={`${kpis.conversionRate}%`} />
-                  <KPICard icon={<CalendarDays className="h-4 w-4 text-indigo-600" />} label={t('lawyer.kpi.showRate', 'Show Rate')} value={`${kpis.showRate}%`} />
-                </div>
-
-                <Card>
-                  <CardContent className="p-3">
-                    <h3 className="font-semibold text-xs mb-2">{t('lawyer.analytics.statusDistribution', 'Status Distribution')}</h3>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Object.entries(
-                        cases.reduce((acc: Record<string, number>, c) => {
-                          acc[c.case_status] = (acc[c.case_status] || 0) + 1;
-                          return acc;
-                        }, {})
-                      ).map(([status, count]) => (
-                        <Badge key={status} variant="secondary" className="text-[10px] px-2 py-0.5">
-                          {t(`lawyer.statuses.${status}`, status)}: {count as number}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {kpis.slaWarnings > 0 && (
-                  <Card className="border-destructive/50">
-                    <CardContent className="p-3">
-                      <h3 className="font-semibold text-xs mb-2 flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="h-4 w-4" />{t('lawyer.analytics.slaAlerts', 'SLA Alerts')}
-                      </h3>
-                      <div className="space-y-1.5">
-                        {cases.filter(c => isSlaBreached(c)).map(c => {
-                          const lead = leads.find(l => l.id === c.lead_id);
-                          const hours = differenceInHours(new Date(), new Date(c.created_at));
-                          return (
-                            <div key={c.id} className="flex items-center justify-between p-2 bg-red-50 rounded text-xs">
-                              <span className="font-medium">{lead?.full_name || t('lawyer.unknown')}</span>
-                              <Badge variant="destructive" className="text-[10px]">{hours}h</Badge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              <TeamAnalyticsTab kpis={kpis} cases={cases} leads={leads} isSlaBreached={isSlaBreached} />
             )}
 
             </PullToRefresh>
@@ -1067,285 +536,31 @@ const TeamDashboardPage = () => {
         </div>
       </div>
 
-      {/* Profile Completion Modal - expanded with visa fields and nested tabs */}
-      <Dialog open={!!profileCase} onOpenChange={(open) => !open && setProfileCase(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" aria-describedby="profile-completion-desc">
-          <DialogHeader>
-            <DialogTitle>{t('lawyer.completeProfile')}</DialogTitle>
-            <p id="profile-completion-desc" className="text-sm text-muted-foreground">{t('lawyer.completeProfileDesc', 'Fill in the student profile details below.')}</p>
-          </DialogHeader>
-
-          <Tabs defaultValue="personal" className="mt-2">
-            <TabsList className="w-full">
-              <TabsTrigger value="personal" className="flex-1 text-xs">{isAr ? 'بيانات شخصية' : 'Personal Info'}</TabsTrigger>
-              <TabsTrigger value="services" className="flex-1 text-xs">{isAr ? 'الخدمات' : 'Services'}</TabsTrigger>
-              <TabsTrigger value="notes" className="flex-1 text-xs">{isAr ? 'ملاحظات' : 'Notes'}</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="personal">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div><Label>{t('admin.ready.fullName')}</Label><Input value={profileValues.student_full_name || ''} onChange={e => setProfileValues(v => ({ ...v, student_full_name: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.email')}</Label><Input type="email" value={profileValues.student_email || ''} onChange={e => setProfileValues(v => ({ ...v, student_email: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.phone')}</Label><Input value={profileValues.student_phone || ''} onChange={e => setProfileValues(v => ({ ...v, student_phone: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.age')}</Label><Input type="number" value={profileValues.student_age || ''} onChange={e => setProfileValues(v => ({ ...v, student_age: e.target.value }))} /></div>
-                <div className="md:col-span-2"><Label>{t('admin.ready.address')}</Label><Input value={profileValues.student_address || ''} onChange={e => setProfileValues(v => ({ ...v, student_address: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.passportNumber')}</Label><Input value={profileValues.passport_number || ''} onChange={e => setProfileValues(v => ({ ...v, passport_number: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.nationality')}</Label><Input value={profileValues.nationality || ''} onChange={e => setProfileValues(v => ({ ...v, nationality: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.countryOfBirth')}</Label><Input value={profileValues.country_of_birth || ''} onChange={e => setProfileValues(v => ({ ...v, country_of_birth: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.languageProficiency')}</Label><Input value={profileValues.language_proficiency || ''} onChange={e => setProfileValues(v => ({ ...v, language_proficiency: e.target.value }))} placeholder="e.g. German B1" /></div>
-                <div>
-                  <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
-                  <Select value={profileValues.gender || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, gender: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
-                      <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="services">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div><Label>{t('admin.ready.destinationCity')}</Label><Input value={profileValues.selected_city || ''} onChange={e => setProfileValues(v => ({ ...v, selected_city: e.target.value }))} /></div>
-                <div>
-                  <Label>{t('admin.ready.schoolLabel')}</Label>
-                  <Select value={profileValues.selected_school || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, selected_school: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر المدرسة' : 'Select school'} /></SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGE_SCHOOLS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{t('admin.ready.intensiveCourse')}</Label>
-                  <Select value={profileValues.intensive_course || ''} onValueChange={v => setProfileValues(ev => ({ ...ev, intensive_course: v }))}>
-                    <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">{isAr ? 'نعم' : 'Yes'}</SelectItem>
-                      <SelectItem value="no">{isAr ? 'لا' : 'No'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="md:col-span-2">
-                  <Label>{isAr ? 'نوع السكن' : 'Housing Type'}</Label>
-                  <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={isAr ? 'مثال: شقة مشتركة مع حمام' : 'e.g. Shared flat with bathroom'} />
-                </div>
-                <div className="md:col-span-2 flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="has_translation_service"
-                    checked={!!profileValues.has_translation_service}
-                    onChange={e => setProfileValues(v => ({ ...v, has_translation_service: e.target.checked }))}
-                    className="h-4 w-4 rounded border-input"
-                  />
-                  <Label htmlFor="has_translation_service" className="cursor-pointer text-sm">{isAr ? 'خدمة الترجمة' : 'Translation Service'}</Label>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="notes">
-              <div className="mt-2">
-                <Label>{isAr ? 'ملاحظات خاصة' : 'Special Notes'}</Label>
-                <Textarea value={profileValues.notes || ''} onChange={e => setProfileValues(v => ({ ...v, notes: e.target.value }))} rows={5} />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-            <Button variant="outline" onClick={() => setProfileCase(null)}>{t('common.cancel')}</Button>
-            <Button onClick={saveProfileCompletion} disabled={savingProfile}>
-              <Save className="h-4 w-4 me-1" />{savingProfile ? t('common.loading') : t('common.save')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Complete File Confirmation Dialog */}
-      <AlertDialog open={completeFileConfirm} onOpenChange={(open) => { if (!open) { setSavingProfile(false); cancelCompleteFile(); } }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isAr ? 'إكمال ملف الطالب' : 'Complete Student File'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isAr ? 'جميع الحقول مكتملة. هل تريد إكمال الملف ونقله إلى مرحلة "ملفات مكتملة"؟' : 'All fields are filled. Do you want to complete this file and move it to "Completed Files"?'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelCompleteFile}>{isAr ? 'إغلاق' : 'Close'}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmCompleteFile} disabled={savingProfile}>
-              {savingProfile ? t('common.loading') : (isAr ? 'نعم، إكمال الملف' : 'Yes, Complete File')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Payment Confirmation Dialog */}
-      <AlertDialog open={!!paymentConfirm} onOpenChange={(open) => !open && setPaymentConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isAr ? 'تأكيد استلام الدفع' : 'Payment Confirmation'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isAr ? 'هل تم استلام الدفعة من الطالب؟ سيتم تحديث الحالة وحساب العمولات تلقائياً.' : 'Did you receive payment from the student? This will update the status and auto-calculate commissions.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (paymentConfirm) confirmPaymentAndSubmit(paymentConfirm); }} disabled={saving}>
-              {saving ? t('common.loading') : (isAr ? 'نعم، تم الاستلام' : 'Yes, Payment Received')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isAr ? 'حذف الحالة' : 'Delete Case'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isAr ? 'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع.' : 'Are you sure you want to delete this case? This cannot be undone.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (deleteConfirm) handleDeleteCase(deleteConfirm); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isAr ? 'حذف' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reschedule Dialog */}
-      <Dialog open={!!rescheduleAppt} onOpenChange={(open) => !open && setRescheduleAppt(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{isAr ? 'إعادة جدولة الموعد' : 'Reschedule Appointment'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">{isAr ? 'التاريخ الجديد' : 'New Date'}</Label>
-              <Input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">{isAr ? 'الوقت الجديد' : 'New Time'}</Label>
-              <Input type="time" value={rescheduleTime} onChange={e => setRescheduleTime(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRescheduleAppt(null)}>{t('common.cancel')}</Button>
-            <Button onClick={handleRescheduleAppointment} disabled={saving || !rescheduleDate || !rescheduleTime}>
-              {saving ? t('common.loading') : (isAr ? 'حفظ' : 'Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Inline Schedule Appointment Dialog */}
-      <Dialog open={!!scheduleForCase} onOpenChange={(open) => !open && setScheduleForCase(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{isAr ? 'حجز موعد' : 'Schedule Appointment'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="p-2 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground">{isAr ? 'الطالب' : 'Student'}</p>
-              <p className="text-sm font-semibold">{scheduleForCase ? getLeadInfo(scheduleForCase.lead_id).full_name : ''}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">{isAr ? 'التاريخ' : 'Date'}</Label>
-                <Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">{isAr ? 'الوقت' : 'Time'}</Label>
-                <Input type="time" value={scheduleTime} onChange={e => setScheduleTime(e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</Label>
-                <Input type="number" value={scheduleDuration} onChange={e => setScheduleDuration(parseInt(e.target.value) || 30)} />
-              </div>
-              <div>
-                <Label className="text-xs">{isAr ? 'الموقع' : 'Location'}</Label>
-                <Input value={scheduleLocation} onChange={e => setScheduleLocation(e.target.value)} placeholder={isAr ? 'اختياري' : 'Optional'} />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">{isAr ? 'ملاحظات' : 'Notes'}</Label>
-              <Textarea value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)} rows={2} placeholder={isAr ? 'اختياري' : 'Optional'} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setScheduleForCase(null)}>{t('common.cancel')}</Button>
-            <Button onClick={handleCreateAppointmentInline} disabled={saving || !scheduleDate || !scheduleTime}>
-              <CalendarDays className="h-4 w-4 me-1" />
-              {saving ? t('common.loading') : (isAr ? 'حجز' : 'Schedule')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reassign Case Dialog */}
-      <Dialog open={!!reassignCase} onOpenChange={(open) => !open && setReassignCase(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{isAr ? 'تحويل الحالة لعضو آخر' : 'Reassign Case'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-xs">{isAr ? 'اختر العضو الجديد' : 'Select new team member'}</Label>
-              <Select value={reassignTargetId} onValueChange={setReassignTargetId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={isAr ? 'اختر...' : 'Select...'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {allLawyers.filter(l => l.id !== user?.id).map(l => (
-                    <SelectItem key={l.id} value={l.id}>{l.full_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">{isAr ? 'ملاحظات (اختياري)' : 'Notes (optional)'}</Label>
-              <Textarea value={reassignNotes} onChange={e => setReassignNotes(e.target.value)} rows={2} placeholder={isAr ? 'سبب التحويل...' : 'Reason for reassignment...'} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReassignCase(null)}>{t('common.cancel')}</Button>
-            <Button onClick={handleReassignCase} disabled={reassigning || !reassignTargetId}>
-              {reassigning ? t('common.loading') : (isAr ? 'تحويل' : 'Reassign')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Decomposed dialogs */}
+      <ProfileCompletionModal profileCase={profileCase} leads={leads} userId={user?.id} onClose={() => setProfileCase(null)} onCompleted={(f) => setCaseFilter(f as CaseFilterTab)} refetch={refetch} />
+      <ScheduleDialog scheduleForCase={scheduleForCase} leads={leads} userId={user?.id} onClose={() => setScheduleForCase(null)} refetch={refetch} />
+      <RescheduleDialog appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} refetch={refetch} />
+      <ReassignDialog reassignCase={reassignCase} allLawyers={allLawyers} userId={user?.id} onClose={() => setReassignCase(null)} refetch={refetch} />
+      <PaymentConfirmDialog caseId={paymentConfirm} saving={saving} onConfirm={confirmPaymentAndSubmit} onClose={() => setPaymentConfirm(null)} />
+      <DeleteConfirmDialog caseId={deleteConfirm} onConfirm={handleDeleteCase} onClose={() => setDeleteConfirm(null)} />
 
       {/* Mobile Bottom Nav */}
       {isMobile && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 lg:hidden"
-          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
-        >
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 lg:hidden"
+          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
           <div className="flex items-center justify-around max-w-md mx-auto">
             {TAB_CONFIG.map(item => {
               const active = activeTab === item.id;
-              const hasTodayBadge = item.id === 'today' && todayAppointments.length > 0 && !active;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`relative flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[44px] rounded-lg transition-all active:scale-95 ${
-                    active ? 'text-orange-500' : 'text-gray-600'
-                  }`}
-                >
-                  <item.icon className={`h-5 w-5 ${active ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                  {hasTodayBadge && (
-                    <span className="absolute top-0.5 end-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white px-1">
-                      {todayAppointments.length}
-                    </span>
+                <button key={item.id} onClick={() => setActiveTab(item.id)}
+                  className={`flex flex-col items-center gap-0.5 min-w-[56px] min-h-[44px] justify-center rounded-lg px-2 py-1.5 transition-all active:scale-95 ${
+                    active ? 'text-primary' : 'text-muted-foreground'
+                  }`}>
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">{t(item.labelKey, item.id)}</span>
+                  {item.id === 'today' && kpis.todayAppts > 0 && (
+                    <span className="absolute -top-0.5 -end-0.5 h-2 w-2 rounded-full bg-primary" />
                   )}
-                  <span className={`text-[10px] font-medium ${active ? 'text-orange-500' : 'text-gray-600'}`}>{t(item.labelKey, item.id)}</span>
                 </button>
               );
             })}
@@ -1355,17 +570,5 @@ const TeamDashboardPage = () => {
     </div>
   );
 };
-
-function KPICard({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }) {
-  return (
-    <Card className={highlight ? 'border-destructive/50' : ''}>
-      <CardContent className="p-3 text-center">
-        <div className="mx-auto mb-1 flex justify-center">{icon}</div>
-        <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-        <p className={`text-lg font-bold mt-0.5 ${highlight ? 'text-destructive' : ''}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default TeamDashboardPage;

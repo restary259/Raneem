@@ -15,6 +15,15 @@ import { User } from '@supabase/supabase-js';
 import { Users, TrendingUp, DollarSign, Link, Target, CheckCircle, CreditCard, Clock, XCircle, LogOut, ArrowLeftCircle, BarChart3, Timer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+
+// Moved outside component to prevent re-creation on every render
+const CustomYAxisTick = ({ x, y, payload, isAr }: any) => (
+  <g transform={`translate(${x},${y})`}>
+    <text x={isAr ? 6 : -6} y={0} dy={4} textAnchor={isAr ? 'start' : 'end'} fill="currentColor" fontSize={10}>
+      {payload.value}
+    </text>
+  </g>
+);
 import EarningsPanel from '@/components/influencer/EarningsPanel';
 import ReferralLink from '@/components/influencer/ReferralLink';
 import NotificationBell from '@/components/common/NotificationBell';
@@ -175,45 +184,27 @@ const InfluencerDashboardPage = () => {
                     <CardTitle className="text-base">{t('influencerDash.kpi.conversionFunnel')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                  {(() => {
-                    const CustomYAxisTick = ({ x, y, payload }: any) => (
-                      <g transform={`translate(${x},${y})`}>
-                        <text
-                          x={isAr ? 6 : -6}
-                          y={0}
-                          dy={4}
-                          textAnchor={isAr ? 'start' : 'end'}
-                          fill="currentColor"
-                          fontSize={10}
-                        >
-                          {payload.value}
-                        </text>
-                      </g>
-                    );
-                    return (
-                      <ResponsiveContainer width="100%" height={220}>
-                        <BarChart
-                          data={funnelData}
-                          layout="vertical"
-                          margin={{ left: isAr ? 110 : 10, right: isAr ? 10 : 20, top: 4, bottom: 4 }}
-                        >
-                          <XAxis type="number" hide />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            width={isAr ? 110 : 100}
-                            tick={<CustomYAxisTick />}
-                          />
-                          <Tooltip />
-                          <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
-                            {funnelData.map((entry, i) => (
-                              <Cell key={i} fill={entry.fill} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    );
-                  })()}
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart
+                      data={funnelData}
+                      layout="vertical"
+                      margin={{ left: isAr ? 110 : 10, right: isAr ? 10 : 20, top: 4, bottom: 4 }}
+                    >
+                      <XAxis type="number" hide />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={isAr ? 110 : 100}
+                        tick={<CustomYAxisTick isAr={isAr} />}
+                      />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
+                        {funnelData.map((entry, i) => (
+                          <Cell key={i} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                   </CardContent>
                 </Card>
               </div>
