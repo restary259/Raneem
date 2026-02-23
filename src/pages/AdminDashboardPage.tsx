@@ -94,6 +94,10 @@ const AdminDashboardPage = () => {
   useRealtimeSubscription('leads', refetch, isAdmin);
   useRealtimeSubscription('student_cases', refetch, isAdmin);
   useRealtimeSubscription('payout_requests', refetch, isAdmin);
+  useRealtimeSubscription('rewards', refetch, isAdmin);
+  useRealtimeSubscription('commissions', refetch, isAdmin);
+  useRealtimeSubscription('case_payments', refetch, isAdmin);
+  useRealtimeSubscription('notifications', refetch, isAdmin);
 
   if (!sessionReady) return (
     <div className="min-h-screen flex items-center justify-center bg-background">

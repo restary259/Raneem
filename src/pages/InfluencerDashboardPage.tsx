@@ -89,9 +89,11 @@ const InfluencerDashboardPage = () => {
   const rewards: any[] = data?.rewards ?? [];
   const profile: any = data?.profile ?? null;
 
-  // Real-time subscriptions — only tables this dashboard displays
+  // Real-time subscriptions — all tables this dashboard uses
   useRealtimeSubscription('leads', refetch, authReady);
   useRealtimeSubscription('student_cases', refetch, authReady);
+  useRealtimeSubscription('rewards', refetch, authReady);
+  useRealtimeSubscription('payout_requests', refetch, authReady);
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate('/'); };
 

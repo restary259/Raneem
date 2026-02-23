@@ -6,133 +6,40 @@ import { supabase } from '@/integrations/supabase/client';
 const SESSION_NONCE_KEY = 'darb_session_nonce';
 
 /**
- * Single-session enforcement hook.
- * Monitors the `active_sessions` table via Realtime + polling.
- * If the current session is replaced by a login elsewhere, shows a flag
- * and signs the user out.
+ * Multi-device session guard.
+ * No longer kicks users when another device logs in.
+ * Only handles graceful session expiry (e.g. token invalidation).
  */
 export const useSessionGuard = () => {
   const [kicked, setKicked] = useState(false);
   const navigate = useNavigate();
-  const userIdRef = useRef<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval>>();
-  const kickedRef = useRef(false);
   const autoKickTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const getLocalNonce = () => localStorage.getItem(SESSION_NONCE_KEY);
-
-  const handleKick = useCallback(async () => {
-    if (kickedRef.current) return;
-    kickedRef.current = true;
-    setKicked(true);
-
-    // Auto-dismiss after 10 seconds (longer for RTL/Arabic readability)
-    autoKickTimerRef.current = setTimeout(async () => {
-      setKicked(false);
-      localStorage.removeItem(SESSION_NONCE_KEY);
-      try { await supabase.auth.signOut(); } catch {}
-      navigate('/student-auth', { replace: true });
-    }, 10_000);
-  }, [navigate]);
-
-  const checkSession = useCallback(async () => {
-    const nonce = getLocalNonce();
-    if (!userIdRef.current || !nonce || kickedRef.current) return;
-
-    try {
-      const { data } = await (supabase as any)
-        .from('active_sessions')
-        .select('session_id')
-        .eq('user_id', userIdRef.current)
-        .maybeSingle();
-
-      if (data && data.session_id !== nonce) {
-        handleKick();
-      }
-    } catch {
-      // Network error — skip, will retry on next poll
-    }
-  }, [handleKick]);
-
+  // Listen for auth state changes — handle graceful expiry
   useEffect(() => {
-    let channel: any = null;
-
-    const setup = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const userId = session.user.id;
-      userIdRef.current = userId;
-      kickedRef.current = false;
-
-      const nonce = getLocalNonce();
-
-      // If no nonce stored (e.g. direct supabase login, not via auth-guard),
-      // check if there's a matching row. If not, skip guard (auth-guard will set it on next login).
-      if (!nonce) return;
-
-      // Verify current nonce still matches the DB
-      try {
-        const { data: existing } = await (supabase as any)
-          .from('active_sessions')
-          .select('session_id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (existing && existing.session_id !== nonce) {
-          handleKick();
-          return;
-        }
-      } catch {}
-
-      // Subscribe to realtime changes
-      channel = supabase
-        .channel(`session-guard-${userId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'active_sessions',
-            filter: `user_id=eq.${userId}`,
-          },
-          (payload: any) => {
-            const newSessionId = payload.new?.session_id;
-            const localNonce = getLocalNonce();
-            if (newSessionId && localNonce && newSessionId !== localNonce) {
-              handleKick();
-            }
-          }
-        )
-        .subscribe();
-
-      // Fallback polling every 60 seconds
-      pollRef.current = setInterval(checkSession, 60_000);
-    };
-
-    setup();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
-        userIdRef.current = null;
         localStorage.removeItem(SESSION_NONCE_KEY);
-        if (pollRef.current) clearInterval(pollRef.current);
-        if (channel) supabase.removeChannel(channel);
       }
     });
 
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-      if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
-      if (channel) supabase.removeChannel(channel);
       subscription.unsubscribe();
+      if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
     };
-  }, [checkSession, handleKick]);
+  }, []);
+
+  // Clean up own session on manual logout
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Don't remove session on page close — multi-device means sessions persist
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   const acknowledgeKick = useCallback(async () => {
-    // Clear auto-dismiss timer so it doesn't fire after user clicks OK
     if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
-    kickedRef.current = false;
     setKicked(false);
     localStorage.removeItem(SESSION_NONCE_KEY);
     try { await supabase.auth.signOut(); } catch {}
