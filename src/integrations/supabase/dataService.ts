@@ -3,6 +3,10 @@
  * Uses safeQuery isolation so a single failed query never crashes the whole fetch.
  */
 import { supabase } from './client';
+import type {
+  Lead, StudentCase, Appointment, UserProfile,
+  Reward, Commission, PayoutRequest, AuditLogEntry, LoginAttempt,
+} from '@/types/database';
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -22,9 +26,9 @@ const safeQuery = async (p: any): Promise<{ data: any; error: any }> => {
 // Influencer Dashboard
 // ---------------------------------------------------------------------------
 export interface InfluencerDashboardData {
-  leads: any[];
-  cases: any[];
-  profile: any | null;
+  leads: Lead[];
+  cases: StudentCase[];
+  profile: UserProfile | null;
 }
 
 export async function getInfluencerDashboard(
@@ -76,10 +80,10 @@ export async function getInfluencerDashboard(
 // Team Dashboard
 // ---------------------------------------------------------------------------
 export interface TeamDashboardData {
-  cases: any[];
-  leads: any[];
-  appointments: any[];
-  profile: any | null;
+  cases: StudentCase[];
+  leads: Lead[];
+  appointments: Appointment[];
+  profile: UserProfile | null;
 }
 
 export async function getTeamDashboard(
@@ -150,19 +154,19 @@ export async function getTeamDashboard(
 // Admin Dashboard
 // ---------------------------------------------------------------------------
 export interface AdminDashboardData {
-  students: any[];
+  students: UserProfile[];
   services: any[];
   payments: any[];
   invites: any[];
-  leads: any[];
-  cases: any[];
-  influencers: any[];
-  lawyers: any[];
-  commissions: any[];
-  rewards: any[];
-  auditLogs: any[];
-  loginAttempts: any[];
-  payoutRequests: any[];
+  leads: Lead[];
+  cases: StudentCase[];
+  influencers: UserProfile[];
+  lawyers: Pick<UserProfile, 'id' | 'full_name' | 'email' | 'commission_amount'>[];
+  commissions: Commission[];
+  rewards: Reward[];
+  auditLogs: AuditLogEntry[];
+  loginAttempts: LoginAttempt[];
+  payoutRequests: PayoutRequest[];
 }
 
 export async function getAdminDashboard(): Promise<{

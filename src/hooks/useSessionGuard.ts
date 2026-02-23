@@ -25,12 +25,12 @@ export const useSessionGuard = () => {
     kickedRef.current = true;
     setKicked(true);
 
-    // Auto-dismiss after 5 seconds
+    // Auto-dismiss after 10 seconds (longer for RTL/Arabic readability)
     setTimeout(async () => {
       localStorage.removeItem(SESSION_NONCE_KEY);
       try { await supabase.auth.signOut(); } catch {}
       navigate('/student-auth', { replace: true });
-    }, 5000);
+    }, 10_000);
   }, [navigate]);
 
   const checkSession = useCallback(async () => {
