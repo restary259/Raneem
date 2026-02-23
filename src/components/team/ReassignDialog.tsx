@@ -27,8 +27,15 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
     if (reassignCase) { setTargetId(''); setNotes(''); }
   }, [reassignCase]);
 
+  // Guard: only allow reassignment for pre-submission stages
+  const REASSIGN_ALLOWED_STATUSES = ['assigned', 'contacted', 'appointment_scheduled', 'appointment_waiting', 'appointment_completed'];
+
   const handleReassign = async () => {
     if (!reassignCase || !targetId) return;
+    if (!REASSIGN_ALLOWED_STATUSES.includes(reassignCase.case_status)) {
+      toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.reassignNotAllowed', 'Reassignment is only allowed before submission to admin.') });
+      return;
+    }
     setReassigning(true);
     try {
       const historyEntry = { from: reassignCase.assigned_lawyer_id, to: targetId, at: new Date().toISOString(), by: userId, notes: notes.trim() || null };

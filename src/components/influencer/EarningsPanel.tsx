@@ -14,7 +14,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface EarningsPanelProps { userId: string; role?: 'influencer' | 'lawyer'; }
 
-const WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1';
+import { WHATSAPP_SUPPORT_URL } from '@/lib/contactConfig';
 const LOCK_DAYS = 20;
 
 const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influencer' }) => {

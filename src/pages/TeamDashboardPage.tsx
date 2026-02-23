@@ -113,7 +113,8 @@ const TeamDashboardPage = () => {
     onError: (err) => toast({ variant: 'destructive', title: t('common.error'), description: err }),
   });
 
-  const cases: any[] = data?.cases ?? [];
+  // Defense-in-depth: client-side filter ensures team member only sees their own cases
+  const cases: any[] = useMemo(() => (data?.cases ?? []).filter((c: any) => c.assigned_lawyer_id === user?.id), [data?.cases, user?.id]);
   const leads: any[] = data?.leads ?? [];
   const appointments: any[] = data?.appointments ?? [];
   const profile: any = data?.profile ?? null;
@@ -265,11 +266,14 @@ const TeamDashboardPage = () => {
         <a href={`tel:${lead.phone}`}><Phone className="h-3.5 w-3.5" />{t('lawyer.quickCall')}</a>
       </Button>
     ) : null;
-    const reassignBtn = (
+    // Reassignment only allowed before submission to admin
+    const REASSIGN_ALLOWED = ['assigned', 'contacted', 'appointment_scheduled', 'appointment_waiting', 'appointment_completed'];
+    const canReassign = REASSIGN_ALLOWED.includes(status);
+    const reassignBtn = canReassign ? (
       <Button size="sm" variant="ghost" className="h-8 text-xs active:scale-95 gap-1 text-muted-foreground" onClick={() => setReassignCase(c)}>
         <UserCheck className="h-3.5 w-3.5" />{t('lawyer.reassign')}
       </Button>
-    );
+    ) : null;
 
     if (['new', 'eligible', 'assigned'].includes(status)) {
       const isThisLoading = actionLoadingId === c.id;
@@ -327,7 +331,8 @@ const TeamDashboardPage = () => {
         </div>
       );
     }
-    return phoneBtn ? <div className="flex gap-2 flex-wrap">{phoneBtn}{reassignBtn}</div> : <div className="flex gap-2">{reassignBtn}</div>;
+    const actionBtns = [phoneBtn, reassignBtn].filter(Boolean);
+    return actionBtns.length > 0 ? <div className="flex gap-2 flex-wrap">{actionBtns}</div> : null;
   };
 
   return (
