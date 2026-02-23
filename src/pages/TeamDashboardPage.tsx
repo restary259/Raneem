@@ -586,12 +586,11 @@ const TeamDashboardPage = () => {
       <ReassignDialog reassignCase={reassignCase} allLawyers={allLawyers} userId={user?.id} onClose={() => setReassignCase(null)} refetch={refetch} />
       <PaymentConfirmDialog caseId={paymentConfirm} saving={saving} onConfirm={confirmPaymentAndSubmit} onClose={() => setPaymentConfirm(null)} />
       <DeleteConfirmDialog caseId={deleteConfirm} onConfirm={handleDeleteCase} onClose={() => setDeleteConfirm(null)} />
-      {/* Issue 9: Appointment delete confirmation */}
       <DeleteConfirmDialog caseId={deleteApptConfirm} onConfirm={handleDeleteAppointment} onClose={() => setDeleteApptConfirm(null)} />
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav — outside flex container for reliable fixed positioning */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 lg:hidden"
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 px-2 py-2 lg:hidden"
           style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
           <div className="flex items-center justify-around max-w-md mx-auto">
             {TAB_CONFIG.map(item => {
@@ -610,7 +609,7 @@ const TeamDashboardPage = () => {
               );
             })}
           </div>
-        </div>
+        </nav>
       )}
     </div>
   );

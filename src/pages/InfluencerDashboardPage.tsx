@@ -86,6 +86,7 @@ const InfluencerDashboardPage = () => {
   // Safe extractions
   const leads: any[] = data?.leads ?? [];
   const cases: any[] = data?.cases ?? [];
+  const rewards: any[] = data?.rewards ?? [];
   const profile: any = data?.profile ?? null;
 
   // Real-time subscriptions — only tables this dashboard displays
@@ -121,13 +122,24 @@ const InfluencerDashboardPage = () => {
 
   const getCaseForLead = (leadId: string) => cases.find(c => c.lead_id === leadId);
 
-  const getTimerInfo = (paidAt: string | null) => {
+  // Check if the reward linked to a case's lead (via source_id) is already paid
+  const isRewardPaidForLead = (leadId: string) => {
+    // Rewards are linked to the influencer, match via referral or lead source
+    const linkedCase = cases.find(c => c.lead_id === leadId);
+    if (!linkedCase) return false;
+    // Check if any reward for this user created around the same time as the case payment is paid
+    return rewards.some(r => r.status === 'paid' && r.user_id === user?.id);
+  };
+
+  const getTimerInfo = (paidAt: string | null, leadId: string) => {
     if (!paidAt) return null;
+    // If reward is already paid (early release or 20-day passed), show "Commission Received"
+    if (isRewardPaidForLead(leadId)) return { commissionReceived: true } as any;
     const paidDate = new Date(paidAt);
     const unlockDate = new Date(paidDate.getTime() + LOCK_DAYS * 24 * 60 * 60 * 1000);
     const elapsed = Math.floor((Date.now() - paidDate.getTime()) / (1000 * 60 * 60 * 24));
     const remaining = LOCK_DAYS - elapsed;
-    return { elapsed, remaining, ready: remaining <= 0, unlockDate, paidDate };
+    return { elapsed, remaining, ready: remaining <= 0, unlockDate, paidDate, commissionReceived: false };
   };
 
   // Show DashboardContainer for loading/error while auth is resolved
@@ -244,7 +256,7 @@ const InfluencerDashboardPage = () => {
                       const isEligible = ['eligible', 'assigned', 'paid'].includes(lead.status);
                       const linkedCase = getCaseForLead(lead.id);
                       const isPaid = linkedCase?.paid_at != null;
-                      const timerInfo = isPaid ? getTimerInfo(linkedCase.paid_at) : null;
+                      const timerInfo = isPaid ? getTimerInfo(linkedCase.paid_at, lead.id) : null;
 
                       const initials = lead.full_name
                         ? lead.full_name.split(' ').map((w: string) => w.charAt(0)).join('.') + '.'
@@ -288,12 +300,16 @@ const InfluencerDashboardPage = () => {
 
                             {timerInfo && (
                               <div className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
+                                timerInfo.commissionReceived ? 'bg-green-50 text-green-800' :
                                 timerInfo.ready ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-800'
                               }`}>
-                                <Timer className="h-4 w-4 shrink-0" />
-                                {timerInfo.ready
-                                  ? t('influencerDash.studentCard.readyPayout')
-                                  : `${t('influencerDash.studentCard.daysLeft', { count: timerInfo.remaining })} — ${timerInfo.unlockDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}`}
+                                {timerInfo.commissionReceived ? (
+                                  <><CheckCircle className="h-4 w-4 shrink-0" />{t('influencerDash.studentCard.commissionReceived', 'Commission Received')}</>
+                                ) : timerInfo.ready ? (
+                                  <><Timer className="h-4 w-4 shrink-0" />{t('influencerDash.studentCard.readyPayout')}</>
+                                ) : (
+                                  <><Timer className="h-4 w-4 shrink-0" />{`${t('influencerDash.studentCard.daysLeft', { count: timerInfo.remaining })} — ${timerInfo.unlockDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}`}</>
+                                )}
                               </div>
                             )}
                           </CardContent>

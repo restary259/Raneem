@@ -367,7 +367,9 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
       {/* Pending Rewards — Manual Payout Controls */}
       {(() => {
-        const pendingRewards = rewards.filter(r => r.status === 'pending');
+        // Filter out rewards already linked to a payout request
+        const linkedRewardIds = new Set(payoutRequests.flatMap((p: any) => p.linked_reward_ids || []));
+        const pendingRewards = rewards.filter(r => r.status === 'pending' && !linkedRewardIds.has(r.id));
         if (pendingRewards.length === 0) return null;
         return (
           <Card className="border-amber-300 bg-amber-50/40">

@@ -106,7 +106,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           {/* Single-session kick modal */}
-          <AlertDialog open={kicked}>
+          <AlertDialog open={kicked} onOpenChange={(open) => { if (!open) acknowledgeKick(); }}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
