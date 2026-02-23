@@ -149,7 +149,7 @@ const InfluencerDashboardPage = () => {
                 <div className="min-w-0">
                   <h1 className="text-sm sm:text-base font-bold leading-tight truncate">
                     <span className="hidden sm:inline">{t('influencerDash.title')}</span>
-                    <span className="sm:hidden">{isAr ? 'مرحبًا' : 'Hi'}, {profile?.full_name?.split(' ')[0] || ''} 👋</span>
+                    <span className="sm:hidden">{t('influencerDash.hi', 'Hi')}, {profile?.full_name?.split(' ')[0] || ''} 👋</span>
                   </h1>
                   <p className="hidden sm:block text-xs text-white/60 truncate">
                     {profile?.full_name || user?.email}

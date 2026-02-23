@@ -113,15 +113,23 @@ const TeamDashboardPage = () => {
     onError: (err) => toast({ variant: 'destructive', title: t('common.error'), description: err }),
   });
 
+  // Debounced refetch to prevent rapid-fire full fetches from multiple realtime events
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debouncedRefetch = useCallback(() => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => { refetch(); }, 500);
+  }, [refetch]);
+  useEffect(() => () => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); }, []);
+
   // Defense-in-depth: client-side filter ensures team member only sees their own cases
   const cases: any[] = useMemo(() => (data?.cases ?? []).filter((c: any) => c.assigned_lawyer_id === user?.id), [data?.cases, user?.id]);
   const leads: any[] = data?.leads ?? [];
   const appointments: any[] = data?.appointments ?? [];
   const profile: any = data?.profile ?? null;
 
-  useRealtimeSubscription('student_cases', refetch, authReady);
-  useRealtimeSubscription('appointments', refetch, authReady);
-  useRealtimeSubscription('leads', refetch, authReady);
+  useRealtimeSubscription('student_cases', debouncedRefetch, authReady);
+  useRealtimeSubscription('appointments', debouncedRefetch, authReady);
+  useRealtimeSubscription('leads', debouncedRefetch, authReady);
 
   const getLeadInfo = useCallback((leadId: string) => leads.find(l => l.id === leadId) || { full_name: t('lawyer.unknown'), phone: '' }, [leads, t]);
 
@@ -346,7 +354,7 @@ const TeamDashboardPage = () => {
               <div className="min-w-0">
                 <h1 className="text-sm sm:text-base font-bold leading-tight truncate">
                   <span className="hidden sm:inline">{t('lawyer.title')}</span>
-                  <span className="sm:hidden">{isAr ? 'مرحبًا' : 'Hi'}, {profile?.full_name?.split(' ')[0]} 👋</span>
+                  <span className="sm:hidden">{t('lawyer.hi', 'Hi')}, {profile?.full_name?.split(' ')[0]} 👋</span>
                 </h1>
                 <p className="hidden sm:block text-xs text-white/70 truncate">
                   {profile?.full_name || user?.email}

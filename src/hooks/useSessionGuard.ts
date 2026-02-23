@@ -17,6 +17,7 @@ export const useSessionGuard = () => {
   const userIdRef = useRef<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
   const kickedRef = useRef(false);
+  const autoKickTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const getLocalNonce = () => localStorage.getItem(SESSION_NONCE_KEY);
 
@@ -26,7 +27,8 @@ export const useSessionGuard = () => {
     setKicked(true);
 
     // Auto-dismiss after 10 seconds (longer for RTL/Arabic readability)
-    setTimeout(async () => {
+    autoKickTimerRef.current = setTimeout(async () => {
+      setKicked(false);
       localStorage.removeItem(SESSION_NONCE_KEY);
       try { await supabase.auth.signOut(); } catch {}
       navigate('/student-auth', { replace: true });
@@ -121,12 +123,16 @@ export const useSessionGuard = () => {
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
       if (channel) supabase.removeChannel(channel);
       subscription.unsubscribe();
     };
   }, [checkSession, handleKick]);
 
   const acknowledgeKick = useCallback(async () => {
+    // Clear auto-dismiss timer so it doesn't fire after user clicks OK
+    if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
+    setKicked(false);
     localStorage.removeItem(SESSION_NONCE_KEY);
     try { await supabase.auth.signOut(); } catch {}
     navigate('/student-auth', { replace: true });
