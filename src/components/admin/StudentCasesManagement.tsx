@@ -24,7 +24,8 @@ interface StudentCasesManagementProps {
   initialFilter?: string | null;
 }
 
-const READY_STATUSES = ['profile_filled', 'services_filled', 'paid'];
+// Cases only appear in admin after team explicitly clicks "Submit to Admin" (services_filled)
+const READY_STATUSES = ['services_filled', 'paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
@@ -67,12 +68,9 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const markAsPaid = async (caseId: string) => {
-    const existingCase = studentCases.find(c => c.id === caseId);
-    if (existingCase?.is_paid_admin || existingCase?.case_status === 'paid') {
-      toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
-      return;
-    }
+  const [payConfirmCaseId, setPayConfirmCaseId] = useState<string | null>(null);
+
+  const executeMarkAsPaid = async (caseId: string) => {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -90,6 +88,17 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
       toast({ variant: 'destructive', title: t('common.error'), description: err.message });
     }
     setLoading(false);
+    setPayConfirmCaseId(null);
+  };
+
+  const markAsPaid = (caseId: string) => {
+    const existingCase = studentCases.find(c => c.id === caseId);
+    if (existingCase?.is_paid_admin || existingCase?.case_status === 'paid') {
+      toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
+      return;
+    }
+    // Show 20-day confirmation modal
+    setPayConfirmCaseId(caseId);
   };
 
   const getSourceBadge = (c: any) => {
@@ -382,6 +391,34 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               </TabsContent>
             </Tabs>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 20-Day Payment Confirmation Modal */}
+      <Dialog open={!!payConfirmCaseId} onOpenChange={() => setPayConfirmCaseId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('studentCases.confirmPayTitle', { defaultValue: '⚠️ Confirm Payment' })}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>{t('studentCases.confirmPayDesc', { defaultValue: 'This will start a 20-day payout countdown. After 20 days, the influencer and team member will be eligible to request their commission payout.' })}</p>
+            {payConfirmCaseId && (() => {
+              const pc = studentCases.find(c => c.id === payConfirmCaseId);
+              const payoutDate = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000);
+              return (
+                <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                  <p><strong>{t('studentCases.studentLabel', { defaultValue: 'Student' })}:</strong> {pc?.student_full_name || pc?.lead?.full_name || '—'}</p>
+                  <p><strong>{t('studentCases.payoutEligible', { defaultValue: 'Payout eligible after' })}:</strong> {payoutDate.toLocaleDateString()}</p>
+                </div>
+              );
+            })()}
+          </div>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button variant="outline" onClick={() => setPayConfirmCaseId(null)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
+            <Button onClick={() => payConfirmCaseId && executeMarkAsPaid(payConfirmCaseId)} disabled={loading}>
+              <CheckCircle className="h-4 w-4 me-1" />{loading ? t('common.loading', { defaultValue: 'Loading...' }) : t('studentCases.confirmPay', { defaultValue: 'Confirm & Mark Paid' })}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

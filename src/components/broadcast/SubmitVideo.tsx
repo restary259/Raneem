@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { WHATSAPP_PHONE_URL } from '@/lib/contactConfig';
 
 const SubmitVideo: React.FC = () => {
     const { toast } = useToast();
@@ -55,7 +56,7 @@ const SubmitVideo: React.FC = () => {
                     <CardContent>
                         <div className="flex flex-col gap-4">
                             <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white w-full" asChild>
-                                <a href="https://wa.me/972524061225" target="_blank" rel="noopener noreferrer">
+                                <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer">
                                     {t('sendWhatsapp')}
                                 </a>
                             </Button>
