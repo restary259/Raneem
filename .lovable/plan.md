@@ -1,134 +1,91 @@
 
 
-# Critical Logic Correction and Flow Enforcement Plan
+# Two-Part Fix: Early Payout Release + Data Purge
 
-## Priority Assessment
+## Part A: Early Payout Release (WhatsApp Button + Timer Fix)
 
-Based on the screenshot and code analysis, there are **3 critical issues** and **3 important improvements** to implement.
+### Problem
+When admin marks a case as "paid", a 20-day lock starts on the rewards. Even if the admin decides to pay the influencer/team member early, the system still shows a countdown timer and the WhatsApp payout button stays disabled.
 
----
+### What Changes
 
-## CRITICAL FIX 1: Team Data Isolation (HIGHEST PRIORITY)
+**1. New Edge Function: `admin-early-release`**
+- Admin-only function that takes a `case_id`
+- Finds all `pending` rewards linked to that case (via `admin_notes LIKE '%case_id%'`)
+- Backdates each reward's `created_at` by 21 days so the 20-day lock is satisfied
+- Creates a `payout_request` with status `paid` and marks rewards as `paid`
+- Logs the action in `admin_audit_log`
 
-**Root Cause Found**: Two compounding problems cause Team 02 to see all 3 cases:
+**2. UI: "Release Early" Button on Admin Student Cases**
+- On paid cases showing the countdown timer (locked state), add a small "Release Early" button
+- Clicking it shows a confirmation dialog: "This will immediately release payout to the influencer/team member. Are you sure?"
+- On confirm, calls the `admin-early-release` edge function
+- After success, the countdown badge changes from "X days left" to "Payout Ready" (or disappears)
 
-1. **RLS Policy Too Permissive**: The `student_cases` RLS policy "Lawyers can view all active cases" uses `(has_role(auth.uid(), 'lawyer') AND (deleted_at IS NULL))` -- this returns ALL non-deleted cases to every lawyer, not just their assigned ones.
+**3. Countdown Badge Logic Update**
+- In `StudentCasesManagement.tsx`, check if the linked rewards are already `paid`
+- If rewards are paid, show a green "Paid Out" badge instead of the countdown timer
+- This handles both early release and normal 20-day completion scenarios
 
-2. **Query Missing Filter**: `dataService.ts` line 94-99 fetches `student_cases` with `.is('deleted_at', null)` but does NOT include `.eq('assigned_lawyer_id', userId)`.
+**4. EarningsPanel Already Works**
+- The EarningsPanel WhatsApp button checks `reward.status === 'pending'` and the 20-day lock
+- When admin releases early (marks rewards as `paid`), the button correctly shows nothing to request (rewards are already paid)
+- The "Paid" KPI card updates automatically via realtime subscription
 
-**Fix (Two-Layer Defense)**:
+### Files to Create/Modify
 
-- **Database Layer**: Modify the RLS SELECT policy for lawyers on `student_cases` to:
-  `has_role(auth.uid(), 'lawyer') AND assigned_lawyer_id = auth.uid() AND deleted_at IS NULL`
+| File | Change |
+|---|---|
+| `supabase/functions/admin-early-release/index.ts` | New edge function for early payout release |
+| `src/components/admin/StudentCasesManagement.tsx` | Add "Release Early" button + confirmation dialog on locked countdown cases |
+| `public/locales/en/dashboard.json` | Add i18n keys for early release UI |
+| `public/locales/ar/dashboard.json` | Add Arabic i18n keys |
 
-- **Query Layer**: Add `.eq('assigned_lawyer_id', userId)` to the `getTeamDashboard` cases query as defense-in-depth.
-
-- **Client Layer**: Add a defensive `cases.filter(c => c.assigned_lawyer_id === userId)` in TeamDashboardPage as final safety net.
-
-**Impact**: Zero disruption. Cases already have `assigned_lawyer_id` set correctly. Only visibility scope changes.
-
----
-
-## CRITICAL FIX 2: Reassignment Stage Restriction
-
-**Current State**: The reassign button appears on ALL case statuses including `paid`, `services_filled`, and `completed`.
-
-**Required Rule**: Reassignment only allowed for statuses: `assigned`, `contacted`, `appointment_scheduled`, `appointment_waiting`, `appointment_completed`.
-
-**Fix**:
-- In `TeamDashboardPage.tsx` `renderCaseActions`, conditionally render the reassign button only when `case_status` is in the allowed set.
-- In `ReassignDialog.tsx`, add a server-side guard that checks status before executing the update.
-- Add tooltip text on disabled states explaining why.
-
----
-
-## CRITICAL FIX 3: Admin Case Visibility Timing
-
-**Current State**: Admin `StudentCasesManagement` filters by `READY_STATUSES = ['profile_filled', 'services_filled', 'paid']`. Cases appear as soon as `profile_filled` is reached, even before team explicitly clicks "Submit to Admin".
-
-**Required Behavior**: Cases should only appear in admin view after team clicks "Submit to Admin" (which sets `submitted_to_admin_at` and transitions to `services_filled`).
-
-**Fix**:
-- Change `READY_STATUSES` to `['services_filled', 'paid']` -- removing `profile_filled` so cases only appear after the explicit submit action.
-- This ensures the team has a chance to review the profile before it reaches admin.
+### What Does NOT Change
+- Commission calculation (auto_split_payment trigger untouched)
+- 20-day lock logic in `request_payout` RPC (untouched)
+- EarningsPanel logic (already correct)
+- Case status flow (paid remains terminal)
 
 ---
 
-## IMPORTANT FIX 4: 20-Day Payment Confirmation Modal
+## Part B: Data Purge (Keep Accounts, Delete Operations Data)
 
-**Current State**: Admin can mark any case as paid instantly via `admin-mark-paid` edge function with no warning about the 20-day countdown implications.
+### What Gets Deleted
+All operational data will be purged using SQL DELETE statements:
 
-**Fix**:
-- In `StudentCasesManagement.tsx`, before calling `markAsPaid`, show a confirmation dialog that:
-  - Displays the student name
-  - Shows "This will start a 20-day payout countdown"
-  - Shows the expected payout eligibility date (today + 20 days)
-  - Requires explicit confirmation
-- No changes to the edge function itself (business logic preserved).
+1. `case_service_snapshots` (depends on student_cases)
+2. `case_payments` (depends on student_cases)
+3. `appointments` (depends on student_cases)
+4. `commissions` (depends on student_cases)
+5. `rewards` (all)
+6. `payout_requests` (all)
+7. `student_cases` (all)
+8. `leads` (all)
+9. `referrals` (all)
+10. `notifications` (all)
+11. `admin_audit_log` (all)
 
----
+### What Gets Preserved
+- `profiles` (all user accounts)
+- `user_roles` (all role assignments)
+- Auth users (untouched)
+- `eligibility_config`, `eligibility_thresholds`
+- `checklist_items`, `master_services`
+- `major_categories`, `majors`
+- `contact_submissions`
+- `documents`, `services`, `payments` (student-owned)
 
-## IMPORTANT FIX 5: WhatsApp Link Centralization
-
-**Current State**: WhatsApp links are hardcoded in 4+ files:
-- `EarningsPanel.tsx`: `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1`
-- `SubmitVideo.tsx`: `https://wa.me/972524061225`
-- `OfficeLocations.tsx`: `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1`
-- `Contact.tsx`: `https://api.whatsapp.com/message/IVC4VCAEJ6TBD1`
-- `ApplyPage.tsx`: `https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo` (group link, different)
-
-**Fix**:
-- Create `src/lib/contactConfig.ts` with centralized WhatsApp URLs.
-- Replace all hardcoded references with imports from this config.
-- The Apply page group link stays separate (it is a community group, not a support contact).
-
----
-
-## IMPORTANT FIX 6: WhatsApp Payout Button Activation
-
-**Current State**: The EarningsPanel WhatsApp button already works correctly -- it checks `eligibleRewards.length > 0 && availableAmount >= minThreshold` and the 20-day lock. This is already implemented properly.
-
-**Verification**: No code change needed. The existing logic in `EarningsPanel.tsx` lines 70-76 correctly filters rewards by 20-day lock and pending status.
+### Execution Order
+Deletions must happen in dependency order to avoid foreign key violations. This will be executed via the data operation tool (not migration).
 
 ---
 
-## Technical Implementation Details
-
-### Files to Modify
-
-| File | Change | Risk |
-|---|---|---|
-| Database migration (RLS) | Restrict lawyer SELECT on `student_cases` to `assigned_lawyer_id = auth.uid()` | Low -- narrows scope |
-| `src/integrations/supabase/dataService.ts` | Add `.eq('assigned_lawyer_id', userId)` to team cases query | Low -- additive filter |
-| `src/pages/TeamDashboardPage.tsx` | Add client-side filter + reassign button stage guard | Low -- UI only |
-| `src/components/team/ReassignDialog.tsx` | Add status validation before reassignment | Low -- guard only |
-| `src/components/admin/StudentCasesManagement.tsx` | Remove `profile_filled` from READY_STATUSES; add 20-day confirmation modal | Low -- UI filter change |
-| `src/lib/contactConfig.ts` (new) | Centralized WhatsApp URLs | Zero risk |
-| `src/components/influencer/EarningsPanel.tsx` | Import WhatsApp URL from config | Zero risk |
-| `src/components/broadcast/SubmitVideo.tsx` | Import WhatsApp URL from config | Zero risk |
-| `src/components/landing/OfficeLocations.tsx` | Import WhatsApp URL from config | Zero risk |
-| `src/components/landing/Contact.tsx` | Import WhatsApp URL from config | Zero risk |
-| `public/locales/en/dashboard.json` | Add i18n keys for confirmation dialogs | Zero risk |
-| `public/locales/ar/dashboard.json` | Add i18n keys for confirmation dialogs | Zero risk |
-
-### What Will NOT Change
-
-- Commission calculation formulas (auto_split_payment trigger)
-- Case status definitions (CaseStatus enum)
-- Case transition rules (ALLOWED_TRANSITIONS)
-- Financial aggregation queries
-- 20-day lock timer logic
-- Influencer dashboard lead visibility
-- Admin dashboard data access
-- Payment marking edge function logic
-
-### Rollback Plan
-
-Each fix is independent:
-1. RLS policy can be reverted to previous `deleted_at IS NULL` condition
-2. Query filter can be removed (one line)
-3. Client filter can be removed (one line)
-4. Reassign guard can be removed (condition removal)
-5. READY_STATUSES can add back `profile_filled`
-6. Config imports can be replaced with hardcoded strings
+## Safety Guarantees
+- No database schema changes
+- No commission formula changes
+- No case flow changes
+- All user accounts preserved
+- Edge function is admin-only with role verification
+- Each change is independently reversible
 
