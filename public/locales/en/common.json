@@ -114,7 +114,9 @@
     "invalidCredentials": "Invalid login credentials",
     "alreadyRegistered": "This email is already registered",
     "invalidEmail": "Invalid email address",
-    "loginFailed": "Login failed"
+    "loginFailed": "Login failed",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google"
   },
   "advisor": {
     "title": "Darb AI Advisor",
@@ -336,7 +338,7 @@
     "submit": "Update Password",
     "updating": "Updating...",
     "mismatch": "Passwords do not match",
-    "tooShort": "Password must be at least 6 characters",
+    "tooShort": "Password must be at least 10 characters with uppercase, lowercase, number, and symbol",
     "success": "Updated Successfully",
     "successDesc": "Your password has been updated successfully. You can now sign in.",
     "invalidLink": "Invalid Link",

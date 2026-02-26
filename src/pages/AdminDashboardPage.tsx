@@ -9,7 +9,6 @@ import AdminOverview from '@/components/admin/AdminOverview';
 import LeadsManagement from '@/components/admin/LeadsManagement';
 import StudentCasesManagement from '@/components/admin/StudentCasesManagement';
 import MoneyDashboard from '@/components/admin/MoneyDashboard';
-
 import InfluencerManagement from '@/components/admin/InfluencerManagement';
 import StudentProfilesManagement from '@/components/admin/StudentProfilesManagement';
 import SettingsPanel from '@/components/admin/SettingsPanel';
@@ -18,14 +17,15 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardContainer from '@/components/dashboard/DashboardContainer';
 import PullToRefresh from '@/components/common/PullToRefresh';
 import TabErrorBoundary from '@/components/common/TabErrorBoundary';
+import AdminSecurityGate from '@/components/admin/AdminSecurityGate';
 
 const AdminDashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [securityCleared, setSecurityCleared] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [pendingCredentials, setPendingCredentials] = useState<{ email: string; password: string } | null>(null);
-  // Issue 1: Funnel stage click → auto-filter on leads/cases tab
   const [funnelFilter, setFunnelFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,7 +61,7 @@ const AdminDashboardPage = () => {
       }
 
       setIsAdmin(true);
-      setSessionReady(true);
+      // sessionReady is set only after AdminSecurityGate calls onCleared()
     };
 
     init();
@@ -99,7 +99,7 @@ const AdminDashboardPage = () => {
   useRealtimeSubscription('case_payments', refetch, isAdmin);
   useRealtimeSubscription('notifications', refetch, isAdmin);
 
-  if (!sessionReady) return (
+  if (!isAdmin || !user) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-3">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
@@ -107,6 +107,15 @@ const AdminDashboardPage = () => {
       </div>
     </div>
   );
+
+  if (!securityCleared) {
+    return (
+      <AdminSecurityGate
+        userId={user.id}
+        onCleared={() => { setSecurityCleared(true); setSessionReady(true); }}
+      />
+    );
+  }
 
   const now = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
