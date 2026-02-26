@@ -7,7 +7,7 @@ import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
 import PageHero from '@/components/common/PageHero';
-import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
+import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 
@@ -67,7 +67,6 @@ const ResourcesPage = () => {
   const { t } = useTranslation(['resources', 'common']);
 
   const tools = [
-    { id: 'cost-calculator', title: t('costCalculator.title'), description: t('costCalculator.description'), icon: Calculator, path: '/resources/cost-calculator' },
     { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
     { id: 'lebenslauf-builder', title: t('lebenslaufBuilder.title'), description: t('lebenslaufBuilder.description'), icon: FileText, path: '/resources/lebenslauf-builder' },
