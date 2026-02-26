@@ -179,6 +179,7 @@ const AdminDashboardPage = () => {
               invites={invites}
               students={students}
               lawyers={lawyers}
+              cases={cases}
               onRefresh={refetch}
               pendingCredentials={pendingCredentials}
               onCredentialsCreated={(email, password) => setPendingCredentials({ email, password })}
