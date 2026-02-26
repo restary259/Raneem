@@ -19,6 +19,7 @@ interface InfluencerManagementProps {
   invites: any[];
   students: any[];
   lawyers?: any[];
+  cases?: any[];
   onRefresh: () => void;
   filterRole?: 'influencer' | 'lawyer';
   /** Lifted to parent so credentials survive any re-render/remount of this component */
@@ -32,6 +33,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
   invites,
   students,
   lawyers = [],
+  cases = [],
   onRefresh,
   filterRole,
   pendingCredentials,
@@ -121,6 +123,16 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
   };
 
   const getStudentCount = (influencerId: string) => students.filter(s => s.influencer_id === influencerId).length;
+
+  const getInfluencerTierBadge = (influencerId: string) => {
+    const paidCount = cases.filter(
+      (c: any) => c.case_status === 'paid' && c.lead?.source_id === influencerId
+    ).length;
+    if (paidCount < 6)  return { label: 'Tier 1', amount: '800₪',   color: 'bg-slate-100 text-slate-700' };
+    if (paidCount < 16) return { label: 'Tier 2', amount: '1,120₪', color: 'bg-blue-100 text-blue-700' };
+    if (paidCount < 31) return { label: 'Tier 3', amount: '1,520₪', color: 'bg-emerald-100 text-emerald-700' };
+    return               { label: 'Tier 4', amount: '1,720₪',       color: 'bg-amber-100 text-amber-700' };
+  };
 
   const handleToggleAgent = async (agentId: string, newStatus: string) => {
     const { error } = await (supabase as any).from('profiles').update({ student_status: newStatus }).eq('id', agentId);
@@ -225,7 +237,18 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
               )}
               <div><Label>{t('admin.influencers.fullName')}</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder={t('team.namePlaceholder')} /></div>
               <div><Label>{t('admin.influencers.email')}</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com" /></div>
-              <div><Label>{t('team.commission', { defaultValue: 'Commission (₪)' })}</Label><Input type="number" min="0" value={commission} onChange={e => setCommission(e.target.value)} placeholder="0" /></div>
+              {(filterRole === 'lawyer' || (!filterRole && role === 'lawyer')) && (
+                <div>
+                  <Label>{t('team.commission', { defaultValue: 'Commission (₪)' })}</Label>
+                  <Input type="number" min="0" value={commission} onChange={e => setCommission(e.target.value)} placeholder="0" />
+                </div>
+              )}
+              {(filterRole === 'influencer' || (!filterRole && role === 'influencer')) && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                  <p className="text-sm font-medium text-blue-800">💡 Commission is calculated automatically</p>
+                  <p className="text-xs text-blue-600 mt-1">Based on cumulative paid students: 1–5 = 800₪ · 6–15 = 1,120₪ · 16–30 = 1,520₪ · 31+ = 1,720₪</p>
+                </div>
+              )}
               <Button className="w-full" onClick={handleCreate} disabled={isCreating || !name || !email}>
                 {isCreating ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('team.creating')}</> : t('team.createAccount')}
               </Button>
@@ -291,7 +314,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
                 <p className="text-xs text-muted-foreground break-all">{inf.email}</p>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{inf.commission_amount || 0} ₪</Badge>
+                    {inf._role === 'influencer' ? (() => { const tier = getInfluencerTierBadge(inf.id); return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${tier.color}`}>{tier.label} · {tier.amount}</span>; })() : <Badge variant="secondary">{inf.commission_amount || 0} ₪</Badge>}
                     {inf._role === 'influencer' && <Badge variant="secondary">{getStudentCount(inf.id)} {t('team.students')}</Badge>}
                     <Badge variant={inf.student_status === 'inactive' ? 'destructive' : 'default'}>{inf.student_status === 'inactive' ? t('team.inactive') : t('team.active')}</Badge>
                   </div>
@@ -310,7 +333,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
               <th className="w-[18%] px-4 py-3 text-start font-semibold">{t('team.name')}</th>
               <th className="w-[20%] px-4 py-3 text-start font-semibold">{t('team.email')}</th>
               <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('team.role')}</th>
-              <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('team.commission', { defaultValue: 'Commission' })}</th>
+              <th className="w-[12%] px-4 py-3 text-start font-semibold">Rate</th>
               <th className="w-[10%] px-4 py-3 text-start font-semibold">{t('team.students')}</th>
               <th className="w-[12%] px-4 py-3 text-start font-semibold">{t('team.status')}</th>
               <th className="w-[18%] px-4 py-3 text-start font-semibold">{t('team.action')}</th>
@@ -321,7 +344,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
                   <td className="px-4 py-3 font-medium">{inf.full_name}</td>
                   <td className="px-4 py-3 text-muted-foreground break-all">{inf.email}</td>
                   <td className="px-4 py-3"><Badge variant="outline">{inf._role === 'lawyer' ? t('team.teamMemberRole') : t('team.agent')}</Badge></td>
-                  <td className="px-4 py-3"><Badge variant="secondary">{inf.commission_amount || 0} ₪</Badge></td>
+                  <td className="px-4 py-3">{inf._role === 'influencer' ? (() => { const tier = getInfluencerTierBadge(inf.id); return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${tier.color}`}>{tier.label} · {tier.amount}</span>; })() : <Badge variant="secondary">{inf.commission_amount || 0} ₪</Badge>}</td>
                   <td className="px-4 py-3"><Badge variant="secondary">{inf._role === 'influencer' ? getStudentCount(inf.id) : '—'}</Badge></td>
                   <td className="px-4 py-3"><Badge variant={inf.student_status === 'inactive' ? 'destructive' : 'default'}>{inf.student_status === 'inactive' ? t('team.inactive') : t('team.active')}</Badge></td>
                   <td className="px-4 py-3"><ActionButtons member={inf} /></td>

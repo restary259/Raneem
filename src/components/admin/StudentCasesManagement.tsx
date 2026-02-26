@@ -380,6 +380,26 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                           if (error) {
                             toast({ variant: 'destructive', title: t('common.error'), description: error.message });
                           } else {
+                            // Sync reward rows when case is already paid — keeps influencer/lawyer dashboards accurate.
+                            // Only touches pending/approved rewards (never already-paid ones).
+                            if (selectedCase.case_status === 'paid') {
+                              if (moneyValues.influencer_commission !== selectedCase.influencer_commission) {
+                                await (supabase as any)
+                                  .from('rewards')
+                                  .update({ amount: moneyValues.influencer_commission })
+                                  .like('admin_notes', `%${selectedCase.id}%`)
+                                  .not('admin_notes', 'like', '%lawyer%')
+                                  .not('admin_notes', 'like', '%translation%')
+                                  .in('status', ['pending', 'approved']);
+                              }
+                              if (moneyValues.lawyer_commission !== selectedCase.lawyer_commission) {
+                                await (supabase as any)
+                                  .from('rewards')
+                                  .update({ amount: moneyValues.lawyer_commission })
+                                  .like('admin_notes', `%lawyer commission from case ${selectedCase.id}%`)
+                                  .in('status', ['pending', 'approved']);
+                              }
+                            }
                             toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
                             setSelectedCase({ ...selectedCase, ...moneyValues });
                             setEditingMoney(false);
