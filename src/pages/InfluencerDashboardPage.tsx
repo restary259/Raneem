@@ -293,7 +293,7 @@ const InfluencerDashboardPage = () => {
                               <span className="text-muted-foreground">
                                 {t('influencerDash.studentCard.payment')} {isPaid ? t('influencerDash.studentCard.paid') : t('influencerDash.studentCard.notPaid')}
                               </span>
-                              {timerInfo && (
+                            {timerInfo && timerInfo.paidDate && (
                                 <span className="text-muted-foreground">
                                   {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
                                 </span>
