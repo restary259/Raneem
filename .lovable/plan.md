@@ -1,170 +1,132 @@
-# Data Purge + Agent Payouts UI Merge + KPI Fix
 
-## 1. Full Data Purge (Database)
+# Security & Auth Overhaul — 5 Targeted Fixes
 
-Run a SQL migration to hard-delete all operational data while preserving user accounts (profiles, user_roles, auth users). This is a one-time cleanup to start fresh.
+This plan covers exactly what the prompt specifies, no more, no less. Changes are surgical and will not touch any business logic, commission formulas, or unrelated components.
 
-**Tables to purge (in order to respect FK dependencies):**
+---
 
+## Fix 1 — Remove Uniplaces Completely
 
-| Order | Table                  | Action     |
-| ----- | ---------------------- | ---------- |
-| 1     | case_service_snapshots | DELETE all |
-| 2     | case_payments          | DELETE all |
-| 3     | appointments           | DELETE all |
-| 4     | commissions            | DELETE all |
-| 5     | payout_requests        | DELETE all |
-| 6     | rewards                | DELETE all |
-| 7     | student_cases          | DELETE all |
-| 8     | leads                  | DELETE all |
-| 9     | referrals              | DELETE all |
-| 10    | notifications          | DELETE all |
-| 11    | admin_audit_log        | DELETE all |
-| 12    | login_attempts         | DELETE all |
+**Files to delete:**
+- `supabase/functions/uniplaces-proxy/index.ts` (entire folder)
+- `src/pages/HousingPage.tsx`
+- `src/components/housing/BookingButton.tsx`
+- `src/components/housing/HousingCard.tsx`
+- `src/components/housing/HousingDetailModal.tsx`
+- `src/components/housing/HousingFilters.tsx`
+- `src/components/housing/HousingGrid.tsx`
+- `src/components/housing/HousingHero.tsx`
 
+**`src/App.tsx` edits (2 lines removed):**
+- Remove `const HousingPage = lazy(() => import('./pages/HousingPage'));` (line 41)
+- Remove `<Route path="/housing" element={<HousingPage />} />` (line 116)
 
-**Preserved:** profiles, user_roles, active_sessions, influencer_invites, master_services, checklist_items, eligibility_config, eligibility_thresholds, majors, major_categories
+**`supabase/config.toml` edit:**
+- Remove the `[functions.uniplaces-proxy]` block
 
-## 2. Move Payout Confirmations to Agent Payouts Tab
+---
 
-**Problem:** The "Payout Requests" approval panel (with Mark Paid / Reject buttons) appears at the top of the Transactions tab. It should be in the Agent Payouts tab instead.
+## Fix 2 — Password Reset: Always Redirects to Our Page
 
-**Changes to `MoneyDashboard.tsx`:**
+**4 bugs to fix:**
 
-- Remove the payout requests approval panel (lines 234-366) from the Transactions `TabsContent`
-- Remove the pending rewards manual payout panel (lines 368-417) from Transactions
-- Pass `payoutRequests`, `actionLoading`, `handleMarkRewardPaid`, `handleClearReward`, and payout approval handlers to `InfluencerPayoutsTab`
+### 2a — `StudentAuthPage.tsx` line 189
+Change:
+```ts
+emailRedirectTo: `https://darb-agency.lovable.app/student-dashboard`
+```
+To:
+```ts
+emailRedirectTo: `${window.location.origin}/student-dashboard`
+```
 
-**Changes to `InfluencerPayoutsTab.tsx`:**
+### 2b — `PasswordResetModal.tsx`
+Already correct (`${window.location.origin}/reset-password`). No change needed.
 
-- Accept new props: `payoutRequests` action handlers, `onMarkPayoutPaid`, `onRejectPayout`, `onMarkRewardPaid`, `onClearReward`
-- Add a "Pending Approvals" section above the KPI cards showing payout requests with Mark Paid / WA / Reject buttons (same UI as currently in Transactions, just moved)
-- The KPI cards already compute real data from cases/rewards -- they will show correct values once data exists
+### 2c — Rewrite `ResetPasswordPage.tsx`
+The current page checks `access_token` in query params — but Supabase sends the token in the **URL hash fragment** (`#access_token=...`), not as a query param. This is the root cause of the redirect failure. The new implementation:
+- Listens to `onAuthStateChange` for `PASSWORD_RECOVERY` event (which Supabase fires automatically after parsing the hash)
+- Shows a spinner while waiting (up to 8s safety timeout)
+- Validates password using the existing `validatePassword` helper (10+ chars, uppercase, lowercase, number, symbol)
+- Signs out after successful reset and redirects to `/student-auth`
+- Shows password strength indicator and show/hide toggles
 
-## 3. KPI Cards Already Use Real Data
+### 2d — Update `tooShort` locale strings
+- `public/locales/en/common.json` → `"tooShort": "Password must be at least 10 characters with uppercase, lowercase, number, and symbol"`
+- `public/locales/ar/common.json` → `"tooShort": "كلمة المرور يجب أن تكون 10 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز"`
 
-The `InfluencerPayoutsTab` KPI cards (Total Pending, Due This Week, Overdue, Total Paid Out) already compute from `cases`, `rewards`, and `payoutRequests` props. They show 0 because the database currently has no paid cases. After the purge and fresh data entry, they will reflect real numbers. No code change needed for KPI logic.
+---
+
+## Fix 3 — Google Sign-In Button on Auth Page
+
+### 3a — Add Google OAuth button to `StudentAuthPage.tsx`
+- Add a `handleGoogleSignIn` function using `supabase.auth.signInWithOAuth({ provider: 'google' })`
+- Add a visual divider + Google button with an inline SVG Google logo (no new dependency)
+- Placed inside the card, above the mode-switch link
+
+### 3b — Auto-assign `user` role for new Google sign-ins
+In `redirectByRole`, if `roles` array is empty (new Google OAuth user with no role yet), insert `{ user_id, role: 'user' }` into `user_roles` then navigate to `/student-dashboard`. The existing `handle_new_user` trigger already inserts the `user` role on signup, but the OAuth flow may race with the trigger — this adds a safe fallback.
+
+### 3c — Add locale keys
+- `public/locales/en/common.json` inside `"auth"`: add `"orContinueWith"` and `"continueWithGoogle"`
+- `public/locales/ar/common.json` inside `"auth"`: add same keys in Arabic
+
+### 3d — Manual step (noted in comments, not code)
+Developer must enable Google provider in the backend auth settings and add the callback URL to Google Cloud Console. This cannot be done in code.
+
+---
+
+## Fix 4 — Admin Forced Strong Password + 2FA Gate
+
+### 4a — Database migration
+New migration file `supabase/migrations/20260226120000_admin_security_enforcement.sql`:
+- `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE`
+- `UPDATE profiles SET must_change_password = TRUE WHERE id IN (SELECT user_id FROM user_roles WHERE role = 'admin')`
+- Trigger `trg_admin_must_change_password`: automatically flags new admins on role assignment
+
+### 4b — Create `src/components/admin/AdminSecurityGate.tsx`
+A full-screen gate component with 4 sequential steps:
+1. **`checking`** — queries profile for `must_change_password` and MFA factors; shows spinner
+2. **`force-password`** — full password change form with `PasswordStrength` indicator and show/hide toggles; calls `supabase.auth.updateUser({ password })` then clears the DB flag
+3. **`enroll-totp`** — QR code + manual secret + 6-digit code input; calls `supabase.auth.mfa.enroll()` → `challenge()` → `verify()`
+4. **`verify-totp`** — 6-digit code input for returning admins at AAL1; calls `challenge()` → `verify()`
+5. **`done`** — renders null, calls `onCleared()` to proceed
+
+### 4c — Wire into `AdminDashboardPage.tsx`
+- Add `securityCleared` state (starts `false`)
+- Change the existing `setSessionReady(true)` at the end of `init()` to NOT set `sessionReady` immediately — `sessionReady` is only set when `AdminSecurityGate` calls `onCleared`
+- Replace the single loading spinner with: spinner while `!isAdmin`, then `<AdminSecurityGate>` while `!securityCleared`, then the normal dashboard when both are true
+
+---
+
+## Fix 5 — Remove Dead `uniplaces-proxy` from `config.toml`
+
+Already covered in Fix 1 — the `[functions.uniplaces-proxy]` block will be removed from `supabase/config.toml`.
+
+---
 
 ## Summary of File Changes
 
-
-| File                                            | Change                                                                                            | Risk                                             |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| SQL Migration                                   | Purge all operational data                                                                        | **Irreversible** -- intentional per user request |
-| `src/components/admin/MoneyDashboard.tsx`       | Remove payout approval panels from Transactions tab; pass action handlers to InfluencerPayoutsTab | Low -- UI reorganization only                    |
-| `src/components/admin/InfluencerPayoutsTab.tsx` | Add payout approval section with Mark Paid/Reject/WA buttons above KPI cards                      | Low -- UI addition only                          |
-
+| File | Action |
+|---|---|
+| `supabase/functions/uniplaces-proxy/index.ts` | Delete entire folder |
+| `src/pages/HousingPage.tsx` | Delete |
+| `src/components/housing/*` (6 files) | Delete |
+| `src/App.tsx` | Remove 2 lines (HousingPage import + route) |
+| `supabase/config.toml` | Remove `[functions.uniplaces-proxy]` block |
+| `src/pages/StudentAuthPage.tsx` | Fix `emailRedirectTo` + add Google sign-in handler + button |
+| `src/pages/ResetPasswordPage.tsx` | Full rewrite (hash-based recovery, PasswordStrength, sign-out) |
+| `public/locales/en/common.json` | Update `tooShort`, add `orContinueWith` + `continueWithGoogle` in `auth` |
+| `public/locales/ar/common.json` | Same as above in Arabic |
+| `supabase/migrations/20260226120000_admin_security_enforcement.sql` | New migration: `must_change_password` column + admin trigger |
+| `src/components/admin/AdminSecurityGate.tsx` | New component: password + TOTP gate |
+| `src/pages/AdminDashboardPage.tsx` | Wire `AdminSecurityGate`, guard `sessionReady` behind `securityCleared` |
 
 ## What Will NOT Change
-
-- Commission calculation formulas
-- Case status transitions
-- Payment marking logic (same functions, just called from different tab)
-- RLS policies
-- Database schema
-- Edge functions 
-- Role permissions                    D — UI Deployment (merge payout controls)
-  - Deploy the frontend change that removes panels from Transactions and adds “Pending Approvals” to InfluencerPayoutsTab.
-  - Confirm backend endpoints used by both tabs remain the same.
-  ### E — POST-PURGE: RE-INDEX, VACUUM, REBUILD AGGREGATES
-  - Run `ANALYZE` / `VACUUM` / reindex (DB specific) to free space & speed queries.
-  - Rebuild or warm up materialized views or counters used by KPIs.
-  ### F — SEED / BRING SYSTEM LIVE
-  - If you want initial numbers, seed a small set of test/real cases.
-  - Watch metrics.
-  # 4) Concurrency & no-freeze recommendations (technical)
-  - **Atomic payout flow**:
-    - Start DB transaction.
-    - Verify `payout_request.status = pending`.
-    - Update `payout_request.status = paid`, create ledger entry, update case/reward status.
-    - Commit.
-  - **Idempotency token**: frontend should pass `idempotency_key` to backend to avoid duplicate marking when user double-clicks.
-  - **Optimistic locking**: add `version` or `updated_at` check on critical rows.
-  - **Background recalculation**: any heavy KPI recalculation should be queued and done asynchronously; show "in-progress" on UI with socket updates.
-  - **WebSockets / SSE** to push updates to clients so simultaneous sessions see progress without refresh.
-  # 5) Exact UI/Prop changes (pseudocode)
-  MoneyDashboard.tsx (simplified)
-  ```
-  // BEFORE: Transactions TabsContent included payout approvals
-  // AFTER: remove approval panels; pass handlers down
-  <InfluencerPayoutsTab
-    payoutRequests={payoutRequests}
-    actionLoading={actionLoading}
-    onMarkPayoutPaid={handleMarkPayoutPaid}
-    onRejectPayout={handleRejectPayout}
-    onMarkRewardPaid={handleMarkRewardPaid}
-    onClearReward={handleClearReward}
-    cases={cases}
-    rewards={rewards}
-  />
-  ```
-  InfluencerPayoutsTab.tsx (simplified)
-  ```
-  type Props = {
-    payoutRequests: PayoutRequest[];
-    onMarkPayoutPaid: (id) => Promise<void>;
-    onRejectPayout: (id) => Promise<void>;
-    onMarkRewardPaid: (id) => Promise<void>;
-    onClearReward: (id) => Promise<void>;
-    cases: Case[];
-    rewards: Reward[];
-  };
-
-  export function InfluencerPayoutsTab(props: Props) {
-    return (
-      <div>
-        <section aria-label="Pending Approvals">
-          {props.payoutRequests.map(pr => (
-            <PayoutRequestRow
-              key={pr.id}
-              request={pr}
-              onMarkPaid={() => props.onMarkPayoutPaid(pr.id)}
-              onReject={() => props.onRejectPayout(pr.id)}
-            />
-          ))}
-        </section>
-
-        <section aria-label="KPIs">
-          <KpiCard title="Total Pending" value={computeTotalPending(props.cases, props.rewards, props.payoutRequests)} />
-          ...
-        </section>
-
-        {/* other influencer payout UI */}
-      </div>
-    );
-  }
-  ```
-  Important: Buttons should disable while `actionLoading` and use idempotency.
-  # 6) Tests & Validation checklist (must pass before going to production)
-  -  Full DB backup available and verified.
-  -  Staging: purge + UI migration run successfully and rollback verified.
-  -  Unit tests for payout handlers (including failure paths) pass.
-  -  Integration tests: mark payout paid → `payout_requests` status + ledger + KPI change.
-  -  Concurrency test: 50 simultaneous mark-paid attempts on same request → only one success, others return idempotent response.
-  -  UI E2E: influencer sees Pending Approvals, Mark Paid updates KPI card in <5s.
-  -  Load test for KPI endpoints to ensure no timeouts.
-  -  Audit log created for every payout action.
-  # 7) KPIs to monitor immediately after deploy
-  - Payout action success rate (%)
-  - API latency for payout endpoints (p50 / p95)
-  - KPI calculation time (seconds)
-  - Number of concurrency conflicts / optimistic lock failures
-  - UI-freeze incidents (frontend errors logged)
-  - Discrepancies between `transactions` tab totals and `influencer payouts` totals (should be zero)
-  # 8) Rollback plan (if anything goes wrong)
-  1. Put system back in maintenance mode.
-  2. Restore DB snapshot from backup (fastest full recovery).
-  3. Re-deploy previous frontend build.
-  4. Investigate root cause in staging before retry.
-  # 9) Minor clarifications / adjustments I auto-applied (no need to confirm)
-  - I assumed the KPI logic already used the same tables you listed (cases/rewards/payoutRequests). If KPI code uses *different* sources (cached counters, third-party analytics), rewire those to correct tables or update cache invalidation.
-  - I assumed you want the **same** Mark Paid semantics (balance ledger updates, commission calc) unchanged — only the UI location changes.
-  # 10) Quick prioritized checklist you can hand to the devs (copy-paste)
-  1. TAKE BACKUPS (DB + CSV exports) — block deploy until done.
-  2. Implement frontend change: remove approval panel from Transactions tab, add to InfluencerPayoutsTab, wire handlers. Add `idempotency_key`.
-  3. Ensure backend payout handlers are single source-of-truth; add DB transaction & optimistic locking.
-  4. Add integration tests + concurrency test (50 parallel).
-  5. Deploy to staging; run purge on staging; test all flows & KPI aggregates.
-  6. Schedule maintenance window; run purge on production (archive first).
-  7. Post-purge: re-index, warm caches, seed initial data (if any).
-  8. Monitor KPIs & logs for 48 hours.
+- No other routes, components, or hooks touched
+- No existing i18n keys modified (only additions)
+- No `auth-guard` edge function changes
+- No `PasswordStrength`/`validatePassword` changes
+- No `PasswordResetModal` changes (already correct)
+- No commission, case, or payout logic changes
+- No RLS policies changed
