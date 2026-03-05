@@ -20,6 +20,10 @@ interface Case {
   id: string; full_name: string; phone_number: string; status: string; source: string;
   assigned_to: string | null; last_activity_at: string; created_at: string; is_no_show: boolean;
   student_user_id: string | null; partner_id: string | null;
+  // Extended fields from apply form
+  city: string | null; education_level: string | null; bagrut_score: number | null;
+  english_level: string | null; math_units: number | null; passport_type: string | null;
+  degree_interest: string | null; intake_notes: string | null;
 }
 interface Appointment {
   id: string; scheduled_at: string; duration_minutes: number; outcome: string | null; notes: string | null; outcome_notes: string | null;
