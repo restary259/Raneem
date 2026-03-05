@@ -1,51 +1,36 @@
 
-# Fix: Students Tab Crash in Influencer Dashboard
+## Root Cause — Dual Auth Listener Causing Flicker
 
-## Root Cause
+The `StudentAuthPage` has its OWN `onAuthStateChange` listener AND its own `getSession()` call, running in parallel with `AuthContext` which also subscribes to `onAuthStateChange`. This means:
 
-In `src/pages/InfluencerDashboardPage.tsx`, the `getTimerInfo()` function has two possible return shapes:
+1. User types a character → React re-renders → no issue there
+2. BUT: `AuthContext.initializeAuth()` does 2 async DB calls (`get_my_role` + `profiles.must_change_password`) that resolve and call `setState()` — which triggers a global context re-render
+3. The global re-render remounts `StudentAuthPage` → the page's OWN `useEffect` re-fires `getSession()` → calls `setUser()` → triggers ANOTHER re-render
+4. Both listeners are fighting each other on every auth state event, causing the cascade
 
-1. **When commission is already received** — returns `{ commissionReceived: true }` — **no `paidDate` property**
-2. **Normal case** — returns `{ elapsed, remaining, ready, unlockDate, paidDate, commissionReceived: false }`
+**The correct fix**: Strip ALL auth state management out of `StudentAuthPage`. The page should only:
+- Read `useAuth()` from context
+- If `initialized && user` → call `navigate(ROLE_TO_PATH[role])` in a `useEffect`
+- Render the login form with `isLoading` state only for the submit action
+- No local `user` state, no local subscriptions, no local `getSession()` call
 
-Then on line ~278 this code runs unconditionally:
-```tsx
-{timerInfo && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(...)}  // 💥 CRASHES when paidDate is undefined
-  </span>
-)}
-```
+### Plan
 
-When an influencer has a reward already marked as `paid`, `getTimerInfo` returns `{ commissionReceived: true }` with no `paidDate`, so `timerInfo.paidDate.toLocaleDateString()` throws a TypeError and the entire Students tab crashes with an error boundary.
+**`src/pages/StudentAuthPage.tsx` — full rewrite (lean)**
+- Remove: `useState<User>`, `useEffect` with `onAuthStateChange`, `getSession`, `redirectByRole`, `navigateRef`, all local auth tracking
+- Add: `const { initialized, user, role } = useAuth()`
+- Add: single `useEffect` — if `initialized && user && role` → `navigate(ROLE_TO_PATH[role] ?? '/student/checklist')`
+- Keep: `handleLogin` (submits to `auth-guard` edge function) — but after `setSession()` succeeds, AuthContext fires and the redirect `useEffect` handles navigation automatically
+- Keep: `mustChangePassword` modal — but read from `useAuth().mustChangePassword` not from a local DB query
+- Keep: "Back to main website" link, forgot password modal, show/hide password toggle
+- Keep: all visual UI unchanged
 
-## Fix — One file, one line
+**Result**: The page renders statically. No subscriptions. No re-renders during typing. AuthContext handles all auth state in one place.
 
-**File**: `src/pages/InfluencerDashboardPage.tsx`
+### Files to change
 
-Guard the `paidDate` access with optional chaining:
+| File | Change |
+|---|---|
+| `src/pages/StudentAuthPage.tsx` | Rewrite to use `useAuth()` only — remove all local auth subscriptions |
 
-**Before (line ~278):**
-```tsx
-{timerInfo && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
-  </span>
-)}
-```
-
-**After:**
-```tsx
-{timerInfo && timerInfo.paidDate && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
-  </span>
-)}
-```
-
-This is a one-character guard — `timerInfo && timerInfo.paidDate &&` — that prevents the crash when the timer object has no `paidDate` (i.e. commission was already paid out early).
-
-## What Does NOT Change
-- No business logic, no commission logic, no trigger, no other files
-- The `commissionReceived` display still works perfectly — it just won't try to render a date next to it
-- All other tabs (Analytics, Earnings, My Link) are completely untouched
+No other files need changes. The back-to-home link is already present (line 168-175). The `MobileNav` fix was already applied. This is a surgical single-file fix.
