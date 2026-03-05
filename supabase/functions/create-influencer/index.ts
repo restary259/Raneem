@@ -20,19 +20,15 @@ serve(async (req) => {
       });
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verify caller is admin
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: userData, error: userError } = await supabaseUser.auth.getUser();
+    // Use admin client to verify the token (works with ES256 JWTs)
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
@@ -57,7 +53,6 @@ serve(async (req) => {
     const body = await req.json();
     const { email, full_name } = body;
 
-    // Input validation
     if (!email || !full_name) {
       return new Response(JSON.stringify({ error: "Email and full_name required" }), {
         status: 400,
@@ -79,10 +74,8 @@ serve(async (req) => {
       });
     }
 
-    // Generate a random password
     const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
 
-    // Create the auth user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
@@ -99,13 +92,11 @@ serve(async (req) => {
 
     const userId = newUser.user.id;
 
-    // Assign influencer role
     await supabaseAdmin.from("user_roles").insert({
       user_id: userId,
       role: "influencer",
     });
 
-    // Create profile with must_change_password flag
     await supabaseAdmin.from("profiles").upsert({
       id: userId,
       email,
@@ -113,13 +104,11 @@ serve(async (req) => {
       must_change_password: true,
     });
 
-    // Update invite record if exists
     await supabaseAdmin
       .from("influencer_invites")
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
 
-    // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: adminId,
       action: "create_influencer",

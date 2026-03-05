@@ -20,29 +20,23 @@ serve(async (req) => {
       });
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verify caller is admin
-    const token = authHeader.replace("Bearer ", "");
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    // Use admin client to verify the token (works with ES256 JWTs)
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const adminId = claimsData.claims.sub;
+    const adminId = userData.user.id;
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -59,7 +53,6 @@ serve(async (req) => {
     const body = await req.json();
     const { email, full_name, role, commission_amount } = body;
 
-    // Input validation
     if (!email || !full_name || !role) {
       return new Response(JSON.stringify({ error: "Email, full_name, and role required" }), {
         status: 400,
@@ -81,17 +74,18 @@ serve(async (req) => {
       });
     }
 
-    if (!["team_member", "social_media_partner"].includes(role)) {
-      return new Response(JSON.stringify({ error: "Role must be team_member or social_media_partner" }), {
+    if (!["team_member", "social_media_partner", "influencer", "lawyer"].includes(role)) {
+      return new Response(JSON.stringify({ error: "Invalid role" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Generate temp password
+    // Map 'lawyer' UI role to 'team_member' DB role
+    const dbRole = role === "lawyer" ? "team_member" : role;
+
     const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
 
-    // Create auth user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
@@ -108,13 +102,11 @@ serve(async (req) => {
 
     const userId = newUser.user.id;
 
-    // Assign role
     await supabaseAdmin.from("user_roles").insert({
       user_id: userId,
-      role: role,
+      role: dbRole,
     });
 
-    // Create profile with must_change_password = true
     await supabaseAdmin.from("profiles").upsert({
       id: userId,
       email,
@@ -123,18 +115,16 @@ serve(async (req) => {
       commission_amount: typeof commission_amount === "number" ? commission_amount : 0,
     });
 
-    // Update invite record if exists
     await supabaseAdmin
       .from("influencer_invites")
       .update({ status: "accepted", created_user_id: userId })
       .eq("email", email);
 
-    // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: adminId,
-      action: `create_${role}`,
+      action: `create_${dbRole}`,
       target_id: userId,
-      details: `Created ${role} account for ${email}`,
+      details: `Created ${dbRole} account for ${email}`,
     });
 
     return new Response(
@@ -142,9 +132,9 @@ serve(async (req) => {
         success: true,
         user_id: userId,
         email,
-        role,
+        role: dbRole,
         temp_password: tempPassword,
-        message: `${role} account created.`,
+        message: `${dbRole} account created.`,
       }),
       {
         status: 200,
