@@ -180,7 +180,7 @@ const AdminProgramsPage = () => {
         {/* ── Programs ── */}
         <TabsContent value="programs" className="space-y-4 mt-4">
           <div className="flex justify-end">
-            <Dialog open={progOpen} onOpenChange={setProgOpen}>
+            <Dialog open={progOpen} onOpenChange={v => { setProgOpen(v); if (!v) { setEditProgId(null); setProgForm({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' }); } }}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />{t('admin.programs.addProgram', 'Add Program')}</Button>
               </DialogTrigger>
