@@ -127,8 +127,8 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
     setSavingProfile(true);
     try {
       const finalData = { ...pendingUpdateData };
-      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_FILLED)) {
-        finalData.case_status = CaseStatus.PROFILE_FILLED;
+      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_COMPLETION)) {
+        finalData.case_status = CaseStatus.PROFILE_COMPLETION;
       } else {
         toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.cannotTransition') });
         return;

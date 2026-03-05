@@ -1469,5 +1469,85 @@
     "financials": "الماليات",
     "activity": "النشاط",
     "settings": "الإعدادات"
+  },
+  "appointment": {
+    "outcome": {
+      "completed": "مكتمل",
+      "delayed": "متأخر",
+      "cancelled": "ملغى",
+      "rescheduled": "أُعيد الجدولة",
+      "no_show": "لم يحضر"
+    }
+  },
+  "partner": {
+    "earningsTitle": "أرباحي",
+    "commission": {
+      "rateInfo": "تكسب ₪{{rate}} عن كل طالب يقدم طلبه أو يكمل التسجيل.",
+      "label": "العمولة"
+    },
+    "earnings": {
+      "totalEarned": "إجمالي الأرباح",
+      "submitted": "قدّموا طلباتهم",
+      "enrolled": "مسجّلون",
+      "breakdown": "تفاصيل العمولة",
+      "noQualifying": "لم يصل أي طالب إلى مرحلة التقديم بعد.",
+      "pending": "في خط الأنابيب (لم يصلوا بعد)"
+    },
+    "status": {
+      "new": "جديد",
+      "contacted": "تم التواصل",
+      "appointment": "موعد",
+      "profile": "ملف",
+      "payment": "دفع",
+      "submitted": "تم التقديم",
+      "paid": "مسجّل ومدفوع ✅",
+      "cancelled": "ملغى"
+    },
+    "welcome": "مرحباً بعودتك",
+    "subtitle": "تابع إحالاتك وأرباحك",
+    "kpi": {
+      "totalStudents": "إجمالي الطلاب",
+      "eligible": "حالات نشطة",
+      "paid": "مدفوع",
+      "pendingEarnings": "أرباح معلقة"
+    },
+    "funnel": {
+      "title": "مسار التحويل",
+      "submitted": "مقدّمون",
+      "active": "نشطون",
+      "paid": "مدفوع",
+      "students": "طلاب"
+    },
+    "shareLink": "شارك رابطي",
+    "requestPayout": "طلب صرف",
+    "recentStudents": "آخر الطلاب",
+    "studentsTitle": "طلابي",
+    "searchPlaceholder": "بحث بالاسم...",
+    "noResults": "لا يوجد طلاب مطابقون",
+    "noStudents": "لم تُحِل أي طلاب بعد. شارك رابطك للبدء!",
+    "students_referred": "الطلاب المُحالون",
+    "payoutRequests": "طلبات الصرف",
+    "lockInfo": "بعض المكافآت محجوزة لمدة {{days}} أيام أخرى."
+  },
+  "student": {
+    "refer": {
+      "discount_message": "إحالة صديق أو أحد أفراد الأسرة ستمنحهم خصماً بقيمة 500 شيكل على تسجيلهم."
+    },
+    "checklist": {
+      "title": "قائمة مهامك"
+    }
+  },
+  "case": {
+    "status": {
+      "new": "جديد",
+      "contacted": "تم التواصل",
+      "appointment_scheduled": "تم تحديد موعد",
+      "profile_completion": "استكمال الملف",
+      "payment_confirmed": "تم تأكيد الدفع",
+      "submitted": "تم التقديم",
+      "enrollment_paid": "مسجّل ومدفوع",
+      "forgotten": "حالة منسية",
+      "cancelled": "ملغى"
+    }
   }
 }

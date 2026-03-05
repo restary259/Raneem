@@ -1,20 +1,20 @@
 import { CaseStatus, resolveStatus } from './caseStatus';
 
-/** Strict forward-only transitions. UI can only move along these edges. */
+/**
+ * Strict forward-only transitions.
+ * Appointment outcomes are handled server-side via record-appointment-outcome edge function.
+ * UI can only move along these edges.
+ */
 export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
-  [CaseStatus.NEW]: [CaseStatus.ELIGIBLE, CaseStatus.ASSIGNED],
-  [CaseStatus.ELIGIBLE]: [CaseStatus.ASSIGNED],
-  [CaseStatus.ASSIGNED]: [CaseStatus.CONTACTED],
-  [CaseStatus.CONTACTED]: [CaseStatus.APPT_SCHEDULED, CaseStatus.APPT_WAITING],
-  [CaseStatus.APPT_SCHEDULED]: [CaseStatus.APPT_COMPLETED, CaseStatus.APPT_WAITING, CaseStatus.PROFILE_FILLED],
-  [CaseStatus.APPT_WAITING]: [CaseStatus.APPT_SCHEDULED, CaseStatus.APPT_COMPLETED, CaseStatus.PROFILE_FILLED],
-  [CaseStatus.APPT_COMPLETED]: [CaseStatus.PROFILE_FILLED],
-  [CaseStatus.PROFILE_FILLED]: [CaseStatus.SERVICES_FILLED],
-  [CaseStatus.SERVICES_FILLED]: [],  // PAID is set only via admin-mark-paid edge function
-  [CaseStatus.PAID]: [],             // Terminal state
-  [CaseStatus.READY_TO_APPLY]: [],   // Legacy — resolved to PAID
-  [CaseStatus.VISA_STAGE]: [],       // Legacy — resolved to PAID
-  [CaseStatus.COMPLETED]: [],        // Legacy — resolved to PAID
+  [CaseStatus.NEW]:               [CaseStatus.CONTACTED],
+  [CaseStatus.CONTACTED]:         [CaseStatus.APPT_SCHEDULED],
+  [CaseStatus.APPT_SCHEDULED]:    [CaseStatus.PROFILE_COMPLETION, CaseStatus.CONTACTED, CaseStatus.FORGOTTEN],
+  [CaseStatus.PROFILE_COMPLETION]:[CaseStatus.PAYMENT_CONFIRMED],
+  [CaseStatus.PAYMENT_CONFIRMED]: [CaseStatus.SUBMITTED],
+  [CaseStatus.SUBMITTED]:         [CaseStatus.ENROLLMENT_PAID],
+  [CaseStatus.ENROLLMENT_PAID]:   [],  // Terminal state — set via admin-mark-paid
+  [CaseStatus.FORGOTTEN]:         [CaseStatus.CONTACTED],  // Can be re-engaged
+  [CaseStatus.CANCELLED]:         [],  // Terminal state
 };
 
 /** Check if transitioning from `current` to `next` is allowed */
