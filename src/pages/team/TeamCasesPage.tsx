@@ -249,16 +249,55 @@ export default function TeamCasesPage() {
         </div>
       )}
 
-      <Dialog open={showNew} onOpenChange={setShowNew}>
+      <Dialog open={showNew} onOpenChange={open => { setShowNew(open); if (!open) { setNewName(''); setNewPhone(''); setNewApptDate(''); setDuplicateWarning(null); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{isAr ? 'إنشاء ملف جديد' : 'Create New Case'}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={isAr ? 'اسم الطالب' : 'Student name'} /></div>
-            <div><Label>{isAr ? 'الهاتف *' : 'Phone *'}</Label><Input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+972..." /></div>
+            <div>
+              <Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label>
+              <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={isAr ? 'اسم الطالب' : 'Student name'} />
+            </div>
+            <div>
+              <Label>{isAr ? 'الهاتف *' : 'Phone *'}</Label>
+              <Input
+                value={newPhone}
+                onChange={e => { setNewPhone(e.target.value); setDuplicateWarning(null); }}
+                onBlur={e => checkDuplicate(e.target.value)}
+                placeholder="+972..."
+              />
+              {checkingDuplicate && <p className="text-xs text-muted-foreground mt-1">{isAr ? 'جار التحقق...' : 'Checking...'}</p>}
+              {duplicateWarning && (
+                <div className="mt-2 p-3 rounded-lg border border-amber-300 bg-amber-50 text-xs space-y-2">
+                  <p className="font-medium text-amber-800">
+                    {isAr ? `⚠️ يوجد ملف بهذا الرقم: ${duplicateWarning.name}` : `⚠️ Existing case: ${duplicateWarning.name} (${duplicateWarning.status})`}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowNew(false); navigate(`/team/cases/${duplicateWarning.id}`); }}>
+                      {isAr ? 'عرض الملف' : 'View Case'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs text-amber-700 border-amber-300" onClick={() => handleCreateCase(true)}>
+                      {isAr ? 'إنشاء على أي حال' : 'Create Anyway'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <Label>{isAr ? 'موعد الاجتماع *' : 'Appointment Date & Time *'}</Label>
+              <Input
+                type="datetime-local"
+                value={newApptDate}
+                onChange={e => setNewApptDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'مطلوب — لا يمكن إنشاء ملف بدون موعد' : 'Required — a case cannot be created without an appointment'}
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNew(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={() => handleCreateCase(false)} disabled={creating}>
+            <Button onClick={() => handleCreateCase(false)} disabled={creating || !newApptDate}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? 'إنشاء' : 'Create')}
             </Button>
           </DialogFooter>
