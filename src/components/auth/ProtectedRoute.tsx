@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { initialized, user, role, mustChangePassword } = useAuth();
   const location = useLocation();
+  const [adminCleared, setAdminCleared] = useState(false);
 
   // Wait for auth to initialize
   if (!initialized) {
@@ -27,8 +28,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/student-auth" state={{ from: location }} replace />;
   }
 
-  // Must change password
-  if (mustChangePassword) {
+  // Must change password (for non-admin roles — admin handles it in gate)
+  if (mustChangePassword && role !== 'admin') {
     return <Navigate to="/student-auth?action=change-password" replace />;
   }
 
@@ -37,12 +38,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/student-auth" replace />;
   }
 
-  // Wrap admin routes with security gate (TOTP 2FA)
-  if (role === 'admin') {
+  // Admin: must pass security gate (TOTP 2FA) before accessing dashboard
+  if (role === 'admin' && !adminCleared) {
     return (
-      <AdminSecurityGate userId={user.id} onCleared={() => {}}>
-        {children}
-      </AdminSecurityGate>
+      <AdminSecurityGate
+        userId={user.id}
+        onCleared={() => setAdminCleared(true)}
+      />
     );
   }
 
