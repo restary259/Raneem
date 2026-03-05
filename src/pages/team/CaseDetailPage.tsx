@@ -117,6 +117,37 @@ export default function CaseDetailPage() {
     }
   };
 
+  const handleCreateStudentAccount = async () => {
+    if (!studentEmail.trim() || !caseData) return;
+    setCreatingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+        body: JSON.stringify({ case_id: caseData.id, student_email: studentEmail.trim(), student_full_name: caseData.full_name, student_phone: caseData.phone_number }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed to create account');
+
+      if (result.invited) {
+        toast({ title: '✅ Invite Sent', description: `An invite email was sent to ${studentEmail}` });
+        setShowCreateAccountModal(false);
+      } else if (result.temp_password) {
+        setTempPasswordResult(result.temp_password);
+        setShowCreateAccountModal(false);
+      } else {
+        toast({ title: result.message || 'Account ready' });
+        setShowCreateAccountModal(false);
+      }
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
   const latestAppt = appointments[0];
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
