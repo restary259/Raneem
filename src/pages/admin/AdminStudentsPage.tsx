@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -7,10 +6,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Search, User, Mail, Phone, ExternalLink, GraduationCap } from 'lucide-react';
-import { format } from 'date-fns';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  RefreshCw, Search, User, Mail, Phone, GraduationCap,
+  FileText, ExternalLink, KeyRound, Copy, Check, Eye, EyeOff,
+  Shield, Clock, Loader2
+} from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 
 interface StudentRecord {
   id: string;
@@ -18,83 +22,61 @@ interface StudentRecord {
   email: string;
   phone_number: string | null;
   created_at: string;
-  case_status: string | null;
-  case_id: string | null;
+  city: string | null;
+  must_change_password: boolean;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800',
-  contacted: 'bg-yellow-100 text-yellow-800',
-  appointment_scheduled: 'bg-purple-100 text-purple-800',
-  profile_completion: 'bg-orange-100 text-orange-800',
-  payment_confirmed: 'bg-teal-100 text-teal-800',
-  submitted: 'bg-indigo-100 text-indigo-800',
-  enrollment_paid: 'bg-green-100 text-green-800',
-  forgotten: 'bg-gray-100 text-gray-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
+interface Document {
+  id: string;
+  file_name: string;
+  file_url: string;
+  category: string;
+  created_at: string;
+  file_type: string | null;
+  file_size: number | null;
+}
 
 export default function AdminStudentsPage() {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation('dashboard');
   const isRtl = i18n.language === 'ar';
-  const navigate = useNavigate();
 
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Detail sheet
+  const [selected, setSelected] = useState<StudentRecord | null>(null);
+  const [docs, setDocs] = useState<Document[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+
+  // Reset password
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetCreds, setResetCreds] = useState<{ email: string; password: string } | null>(null);
+  const [showResetPw, setShowResetPw] = useState(false);
+  const [copiedReset, setCopiedReset] = useState(false);
 
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
-      // Get all users with 'student' role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'student');
-
       if (roleError) throw roleError;
 
       const userIds = (roleData || []).map(r => r.user_id);
-      if (userIds.length === 0) {
-        setStudents([]);
-        return;
-      }
+      if (userIds.length === 0) { setStudents([]); return; }
 
-      // Get profiles for those users
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, phone_number, created_at')
+        .select('id, full_name, email, phone_number, created_at, city, must_change_password')
         .in('id', userIds)
         .order('created_at', { ascending: false });
 
-      if (profileError) throw profileError;
-
-      // Get case statuses for each student
-      const { data: caseData, error: caseError } = await supabase
-        .from('cases')
-        .select('id, student_user_id, status')
-        .in('student_user_id', userIds);
-
-      if (caseError) throw caseError;
-
-      const caseMap: Record<string, { id: string; status: string }> = {};
-      (caseData || []).forEach(c => {
-        if (c.student_user_id) caseMap[c.student_user_id] = { id: c.id, status: c.status };
-      });
-
-      const merged: StudentRecord[] = (profileData || []).map(p => ({
-        id: p.id,
-        full_name: p.full_name || '',
-        email: p.email || '',
-        phone_number: p.phone_number,
-        created_at: p.created_at,
-        case_status: caseMap[p.id]?.status ?? null,
-        case_id: caseMap[p.id]?.id ?? null,
-      }));
-
-      setStudents(merged);
+      if (error) throw error;
+      setStudents((profileData as StudentRecord[]) ?? []);
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
@@ -103,22 +85,83 @@ export default function AdminStudentsPage() {
   }, [toast]);
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
-  useRealtimeSubscription('profiles', fetchStudents, true);
-  useRealtimeSubscription('cases', fetchStudents, true);
+
+  const openStudent = async (s: StudentRecord) => {
+    setSelected(s);
+    setDocs([]);
+    setDocsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id, file_name, file_url, category, created_at, file_type, file_size')
+        .eq('student_id', s.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocs((data as Document[]) ?? []);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selected) return;
+    setResetting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-student-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session!.access_token}`,
+          },
+          body: JSON.stringify({ user_id: selected.id }),
+        }
+      );
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed');
+
+      setShowResetDialog(false);
+      setShowResetPw(false);
+      setResetCreds({ email: selected.email, password: result.temp_password });
+      // Refresh student to show updated must_change_password
+      fetchStudents();
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const copyResetCreds = async () => {
+    if (!resetCreds) return;
+    try {
+      await navigator.clipboard.writeText(`Email: ${resetCreds.email}\nPassword: ${resetCreds.password}`);
+      setCopiedReset(true);
+      setTimeout(() => setCopiedReset(false), 2000);
+    } catch {
+      toast({ variant: 'destructive', description: 'Could not copy' });
+    }
+  };
 
   const filtered = students.filter(s => {
-    const matchSearch = !search ||
-      s.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase()) ||
-      (s.phone_number || '').includes(search);
-    const matchStatus = statusFilter === 'all' || s.case_status === statusFilter;
-    return matchSearch && matchStatus;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      s.full_name.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      (s.phone_number || '').includes(q)
+    );
   });
 
-  const statusLabel = (status: string | null) => {
-    if (!status) return isRtl ? 'بدون ملف' : 'No Case';
-    const key = `case.status.${status}`;
-    return t(key, status.replace(/_/g, ' '));
+  const formatBytes = (bytes: number | null) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
@@ -134,37 +177,22 @@ export default function AdminStudentsPage() {
         </div>
         <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          {t('common.refresh', 'Refresh')}
+          {isRtl ? 'تحديث' : 'Refresh'}
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={isRtl ? 'بحث بالاسم أو البريد أو الهاتف...' : 'Search by name, email or phone...'}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="ps-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={isRtl ? 'تصفية بالحالة' : 'Filter by status'} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{isRtl ? 'الكل' : 'All'}</SelectItem>
-            <SelectItem value="new">{isRtl ? 'جديد' : 'New'}</SelectItem>
-            <SelectItem value="profile_completion">{isRtl ? 'استكمال الملف' : 'Profile Completion'}</SelectItem>
-            <SelectItem value="payment_confirmed">{isRtl ? 'تأكيد الدفع' : 'Payment Confirmed'}</SelectItem>
-            <SelectItem value="submitted">{isRtl ? 'مقدّم' : 'Submitted'}</SelectItem>
-            <SelectItem value="enrollment_paid">{isRtl ? 'مسجّل' : 'Enrolled'}</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={isRtl ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="ps-9"
+        />
       </div>
 
-      {/* Table */}
+      {/* List */}
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -182,7 +210,7 @@ export default function AdminStudentsPage() {
             <Card
               key={s.id}
               className="cursor-pointer hover:shadow-md transition-shadow border-border"
-              onClick={() => s.case_id && navigate(`/team/cases/${s.case_id}`)}
+              onClick={() => openStudent(s)}
             >
               <CardContent className="p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
@@ -190,37 +218,235 @@ export default function AdminStudentsPage() {
                     <User className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{s.full_name}</p>
+                    <p className="font-medium text-sm truncate">{s.full_name || s.email}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                       <span className="flex items-center gap-1">
                         <Mail className="h-3 w-3" />
-                        <span className="truncate max-w-[160px]">{s.email}</span>
+                        <span className="truncate max-w-[180px]">{s.email}</span>
                       </span>
                       {s.phone_number && (
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {s.phone_number}
+                          <Phone className="h-3 w-3" />{s.phone_number}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-muted-foreground hidden sm:block">
                     {format(new Date(s.created_at), 'dd MMM yyyy')}
                   </span>
-                  <Badge className={`text-xs ${STATUS_COLORS[s.case_status || ''] || 'bg-muted text-muted-foreground'}`}>
-                    {statusLabel(s.case_status)}
-                  </Badge>
-                  {s.case_id && (
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  {s.must_change_password && (
+                    <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50 gap-1">
+                      <KeyRound className="h-3 w-3" />
+                      {isRtl ? 'يجب التغيير' : 'Must change pw'}
+                    </Badge>
                   )}
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Shield className="h-3 w-3" />
+                    {isRtl ? 'طالب' : 'Student'}
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* ── Student Detail Sheet ── */}
+      <Sheet open={!!selected} onOpenChange={open => { if (!open) setSelected(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          {selected && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  {selected.full_name || selected.email}
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="mt-5 space-y-5">
+                {/* Profile Info */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? 'معلومات الطالب' : 'Student Information'}
+                  </p>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground w-20 shrink-0">{isRtl ? 'البريد' : 'Email'}</span>
+                      <span className="font-medium truncate">{selected.email}</span>
+                    </div>
+                    {selected.phone_number && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground w-20 shrink-0">{isRtl ? 'الهاتف' : 'Phone'}</span>
+                        <span className="font-medium">{selected.phone_number}</span>
+                      </div>
+                    )}
+                    {selected.city && (
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground w-20 shrink-0">{isRtl ? 'المدينة' : 'City'}</span>
+                        <span className="font-medium">{selected.city}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground w-20 shrink-0">{isRtl ? 'تاريخ الإنشاء' : 'Created'}</span>
+                      <span className="font-medium">{format(new Date(selected.created_at), 'PPP')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground w-20 shrink-0">{isRtl ? 'كلمة المرور' : 'Password'}</span>
+                      {selected.must_change_password ? (
+                        <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">
+                          {isRtl ? 'يجب التغيير' : 'Pending change'}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          {isRtl ? 'تم التغيير' : 'Changed'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Admin Actions */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? 'إجراءات الأدمن' : 'Admin Actions'}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 w-full"
+                    onClick={() => setShowResetDialog(true)}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    {isRtl ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Documents */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? 'المستندات المرفوعة' : 'Uploaded Documents'} ({docs.length})
+                  </p>
+                  {docsLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : docs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-2">
+                      {isRtl ? 'لم يرفع الطالب أي مستندات بعد' : 'No documents uploaded yet'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {docs.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted text-xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{doc.file_name}</p>
+                              <p className="text-muted-foreground">
+                                <Badge variant="outline" className="text-xs capitalize me-1">{doc.category.replace(/_/g, ' ')}</Badge>
+                                {doc.file_size && formatBytes(doc.file_size)}
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={doc.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline shrink-0"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Reset Password Confirm Dialog ── */}
+      <Dialog open={showResetDialog} onOpenChange={open => { if (!open) setShowResetDialog(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-amber-600" />
+              {isRtl ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {isRtl
+              ? `هل تريد إعادة تعيين كلمة مرور ${selected?.full_name || selected?.email}؟ سيتم إنشاء كلمة مرور مؤقتة جديدة.`
+              : `Reset password for ${selected?.full_name || selected?.email}? A new temporary password will be generated.`}
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowResetDialog(false)} disabled={resetting}>
+              {isRtl ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button onClick={handleResetPassword} disabled={resetting} variant="destructive" className="gap-2">
+              {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              {isRtl ? 'إعادة التعيين' : 'Reset'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── New Password Result Dialog ── */}
+      <Dialog open={!!resetCreds} onOpenChange={open => { if (!open) setResetCreds(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Shield className="h-5 w-5" />
+              {isRtl ? 'تم إعادة التعيين ✓' : 'Password Reset ✓'}
+            </DialogTitle>
+          </DialogHeader>
+          {resetCreds && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                {isRtl ? 'احفظ هذه البيانات — لن تُعرض مرة أخرى.' : 'Save these credentials — they will not be shown again.'}
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{isRtl ? 'البريد' : 'Email'}</p>
+                <p className="font-mono text-sm bg-muted px-3 py-2 rounded-lg">{resetCreds.email}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{isRtl ? 'كلمة المرور الجديدة' : 'New Password'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm bg-muted px-3 py-2 rounded-lg flex-1 tracking-wider">
+                    {showResetPw ? resetCreds.password : '•'.repeat(resetCreds.password.length)}
+                  </p>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setShowResetPw(v => !v)}>
+                    {showResetPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 gap-2" onClick={copyResetCreds}>
+                  {copiedReset ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copiedReset ? (isRtl ? 'تم!' : 'Copied!') : (isRtl ? 'نسخ' : 'Copy')}
+                </Button>
+                <Button className="flex-1" onClick={() => setResetCreds(null)}>
+                  {isRtl ? 'إغلاق' : 'Close'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
