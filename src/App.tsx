@@ -181,15 +181,15 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<TeamPlaceholderPage />} />
-              <Route path="cases" element={<TeamPlaceholderPage />} />
-              <Route path="cases/:id" element={<TeamPlaceholderPage />} />
-              <Route path="appointments" element={<TeamPlaceholderPage />} />
-              <Route path="appointments/today" element={<TeamPlaceholderPage />} />
-              <Route path="submit" element={<TeamPlaceholderPage />} />
-              <Route path="students" element={<TeamPlaceholderPage />} />
-              <Route path="students/:id" element={<TeamPlaceholderPage />} />
-              <Route path="analytics" element={<TeamPlaceholderPage />} />
+              <Route index element={<TeamTodayPage />} />
+              <Route path="cases" element={<TeamCasesPage />} />
+              <Route path="cases/:id" element={<CaseDetailPage />} />
+              <Route path="appointments" element={<TeamAppointmentsPage />} />
+              <Route path="appointments/today" element={<TeamTodayPage />} />
+              <Route path="submit" element={<SubmitNewStudentPage />} />
+              <Route path="students" element={<TeamStudentsPage />} />
+              <Route path="students/:id" element={<TeamStudentProfilePage />} />
+              <Route path="analytics" element={<TeamAnalyticsPage />} />
             </Route>
 
             {/* ── Partner Dashboard (/partner/*) ── */}
