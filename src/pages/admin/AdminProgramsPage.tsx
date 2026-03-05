@@ -251,6 +251,9 @@ const AdminProgramsPage = () => {
                       )}
                     </div>
                     <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditProgram(p)}>
+                        <Pencil className="h-3 w-3" />{isRtl ? 'تعديل' : 'Edit'}
+                      </Button>
                       <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('programs', p.id, p.is_active)}>
                         {p.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
                       </Button>
@@ -321,6 +324,9 @@ const AdminProgramsPage = () => {
                         )}
                       </div>
                       <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditAccom(a)}>
+                          <Pencil className="h-3 w-3" />{isRtl ? 'تعديل' : 'Edit'}
+                        </Button>
                         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('accommodations', a.id, a.is_active)}>
                           {a.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
                         </Button>
