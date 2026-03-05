@@ -2,11 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Phone, Clock, Calendar, FileText, User } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ArrowLeft, Phone, Clock, Calendar, FileText, User, AlertTriangle } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AppointmentSchedulerModal from '@/components/team/AppointmentSchedulerModal';
@@ -18,6 +20,10 @@ interface Case {
   id: string; full_name: string; phone_number: string; status: string; source: string;
   assigned_to: string | null; last_activity_at: string; created_at: string; is_no_show: boolean;
   student_user_id: string | null; partner_id: string | null;
+  // Extended fields from apply form
+  city: string | null; education_level: string | null; bagrut_score: number | null;
+  english_level: string | null; math_units: number | null; passport_type: string | null;
+  degree_interest: string | null; intake_notes: string | null;
 }
 interface Appointment {
   id: string; scheduled_at: string; duration_minutes: number; outcome: string | null; notes: string | null; outcome_notes: string | null;
@@ -50,6 +56,7 @@ export default function CaseDetailPage() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -163,21 +170,38 @@ export default function CaseDetailPage() {
             />
           )}
           {caseData.status === 'payment_confirmed' && (
-            <PaymentConfirmationForm
-              caseId={caseData.id}
-              actorId={user!.id}
-              actorName="Team Member"
-              studentEmail={(submission?.extra_data as any)?.student_email}
-              studentFullName={(submission?.extra_data as any)?.student_name}
-              studentPhone={(submission?.extra_data as any)?.student_phone}
-              onSuccess={fetchData}
-            />
+            <div className="space-y-4">
+              <PaymentConfirmationForm
+                caseId={caseData.id}
+                actorId={user!.id}
+                actorName="Team Member"
+                onSuccess={fetchData}
+              />
+            </div>
+          )}
+          {/* Submit to Admin — appears after payment is confirmed */}
+          {caseData.status === 'payment_confirmed' && submission?.payment_confirmed && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Ready to Submit?</p>
+                  <p className="text-xs text-muted-foreground">Payment confirmed. Send this case to admin for enrollment.</p>
+                </div>
+                <Button
+                  onClick={() => setShowSubmitConfirm(true)}
+                  className="bg-primary"
+                  disabled={updatingStatus}
+                >
+                  Submit to Admin
+                </Button>
+              </div>
+            </div>
           )}
           {caseData.status === 'submitted' && (
             <div className="text-sm text-muted-foreground">✅ Case submitted — waiting for admin review and enrollment.</div>
           )}
           {caseData.status === 'enrollment_paid' && (
-            <div className="text-sm text-green-700 font-medium">🎉 Student enrolled! Case complete.</div>
+            <div className="text-sm font-medium text-primary">🎉 Student enrolled! Case complete.</div>
           )}
           {caseData.status === 'forgotten' && (
             <div className="flex items-center justify-between">
@@ -282,6 +306,43 @@ export default function CaseDetailPage() {
           onSuccess={fetchData}
         />
       )}
+
+      {/* Submit to Admin confirmation dialog */}
+      <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Submit Case to Admin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Have you reviewed all profile data? This will send the case to admin for enrollment processing.
+            </p>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-xs text-warning">This action cannot be undone.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubmitConfirm(false)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                setShowSubmitConfirm(false);
+                await supabase.from('cases').update({ status: 'submitted' }).eq('id', caseData!.id);
+                await supabase.from('case_submissions').update({ submitted_at: new Date().toISOString(), submitted_by: user!.id }).eq('case_id', caseData!.id);
+                await supabase.rpc('log_activity' as any, {
+                  p_actor_id: user!.id, p_actor_name: 'Team Member',
+                  p_action: 'submitted_to_admin', p_entity_type: 'case', p_entity_id: caseData!.id,
+                  p_metadata: {},
+                });
+                fetchData();
+              }}
+              disabled={updatingStatus}
+            >
+              Confirm & Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

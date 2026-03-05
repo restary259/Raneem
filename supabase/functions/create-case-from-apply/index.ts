@@ -5,6 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Input sanitization
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, '').trim();
+}
+
+function isValidPhone(phone: string): boolean {
+  return /^[+\d\s\-()]{7,20}$/.test(phone);
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -15,11 +28,95 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { full_name, phone_number, source = 'apply_page', partner_id, actor_id, actor_name } = body;
 
+    // Honeypot: silently discard bot submissions
+    if (body._honeypot) {
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const {
+      full_name,
+      phone_number,
+      source = 'apply_page',
+      partner_id,
+      actor_id,
+      actor_name,
+      // Extended fields
+      city,
+      education_level,
+      bagrut_score,
+      english_level,
+      math_units,
+      passport_type,
+      degree_interest,
+      intake_notes,
+      email,
+    } = body;
+
+    // Required field validation
     if (!full_name || !phone_number) {
       return new Response(JSON.stringify({ error: 'full_name and phone_number are required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Sanitize and validate
+    const cleanName = stripHtml(String(full_name)).slice(0, 100);
+    const cleanPhone = String(phone_number).trim();
+
+    if (!cleanName) {
+      return new Response(JSON.stringify({ error: 'Invalid full_name' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!isValidPhone(cleanPhone)) {
+      return new Response(JSON.stringify({ error: 'Invalid phone_number format' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (email && !isValidEmail(String(email))) {
+      return new Response(JSON.stringify({ error: 'Invalid email format' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate numeric fields
+    const cleanBagrutScore = bagrut_score != null ? Number(bagrut_score) : null;
+    const cleanMathUnits = math_units != null ? Number(math_units) : null;
+
+    if (cleanBagrutScore !== null && (isNaN(cleanBagrutScore) || cleanBagrutScore < 0 || cleanBagrutScore > 150)) {
+      return new Response(JSON.stringify({ error: 'bagrut_score must be between 0 and 150' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (cleanMathUnits !== null && (isNaN(cleanMathUnits) || cleanMathUnits < 1 || cleanMathUnits > 5)) {
+      return new Response(JSON.stringify({ error: 'math_units must be between 1 and 5' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Duplicate phone detection
+    const { data: existingCase } = await supabaseAdmin
+      .from('cases')
+      .select('id, full_name, status')
+      .eq('phone_number', cleanPhone)
+      .maybeSingle();
+
+    if (existingCase) {
+      return new Response(JSON.stringify({
+        duplicate: true,
+        case_id: existingCase.id,
+        existing_name: existingCase.full_name,
+        existing_status: existingCase.status,
+        message: 'A case with this phone number already exists',
+      }), {
+        status: 409,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -38,15 +135,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert the case
+    // Insert the case with all fields
     const { data: newCase, error: caseError } = await supabaseAdmin
       .from('cases')
       .insert({
-        full_name: full_name.trim(),
-        phone_number: phone_number.trim(),
+        full_name: cleanName,
+        phone_number: cleanPhone,
         source,
         partner_id: validatedPartnerId,
         status: 'new',
+        // Extended fields
+        city: city ? stripHtml(String(city)).slice(0, 100) : null,
+        education_level: education_level ? String(education_level) : null,
+        bagrut_score: cleanBagrutScore,
+        english_level: english_level ? String(english_level) : null,
+        math_units: cleanMathUnits,
+        passport_type: passport_type ? String(passport_type) : null,
+        degree_interest: degree_interest ? String(degree_interest) : null,
+        intake_notes: intake_notes ? stripHtml(String(intake_notes)).slice(0, 2000) : null,
       })
       .select('id')
       .single();
@@ -69,6 +175,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
+    console.error('create-case-from-apply error:', err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

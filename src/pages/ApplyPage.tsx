@@ -147,7 +147,7 @@ const ApplyPage: React.FC = () => {
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
+        const caseResp = await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
           body: JSON.stringify({
@@ -155,8 +155,19 @@ const ApplyPage: React.FC = () => {
             phone_number: phone.trim(),
             source: 'apply_page',
             partner_id: sourceType === 'influencer' ? sourceId : null,
+            city: city.trim() || null,
+            education_level: educationLevel || null,
+            bagrut_score: null,
+            english_level: englishProficiency || null,
+            math_units: mathUnits ? parseInt(mathUnits) : null,
+            passport_type: passportType || null,
+            degree_interest: fieldOfStudy || null,
           }),
         });
+        if (caseResp.status === 409) {
+          // Duplicate detected — still show success to user, case already exists
+          console.log('[ApplyPage] Duplicate phone detected — case already exists');
+        }
       } catch (caseErr) {
         console.warn('[ApplyPage] case creation warning:', caseErr);
       }

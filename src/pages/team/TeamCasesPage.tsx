@@ -55,7 +55,10 @@ export default function TeamCasesPage() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [newApptDate, setNewApptDate] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState<{ id: string; name: string; status: string } | null>(null);
   const [creating, setCreating] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   const fetchCases = useCallback(async () => {
     if (!user) return;
@@ -99,25 +102,58 @@ export default function TeamCasesPage() {
     return matchStatus && matchSearch;
   });
 
-  const handleCreateCase = async () => {
+  const checkDuplicate = async (phone: string) => {
+    if (!phone.trim() || phone.length < 7) return;
+    setCheckingDuplicate(true);
+    try {
+      const { data } = await supabase.from('cases').select('id, full_name, status').eq('phone_number', phone.trim()).maybeSingle();
+      if (data) {
+        setDuplicateWarning({ id: data.id, name: data.full_name, status: data.status });
+      } else {
+        setDuplicateWarning(null);
+      }
+    } catch { /* silent */ } finally {
+      setCheckingDuplicate(false);
+    }
+  };
+
+  const handleCreateCase = async (force = false) => {
     if (!newName.trim() || !newPhone.trim()) {
       toast({ variant: 'destructive', description: isAr ? 'الاسم والهاتف مطلوبان' : 'Name and phone are required' });
       return;
     }
+    if (!newApptDate) {
+      toast({ variant: 'destructive', description: isAr ? 'يجب تحديد موعد لإنشاء الملف' : 'You must schedule an appointment to create a case' });
+      return;
+    }
+    if (duplicateWarning && !force) {
+      return; // Let user decide via the warning UI
+    }
     setCreating(true);
     try {
-      const { data, error } = await supabase.from('cases').insert({
+      // Create case with appointment_scheduled status
+      const { data: caseData, error: caseErr } = await supabase.from('cases').insert({
         full_name: newName.trim(),
         phone_number: newPhone.trim(),
         source: 'manual',
         assigned_to: user!.id,
-        status: 'new',
+        status: 'appointment_scheduled',
       }).select().single();
-      if (error) throw error;
-      toast({ title: isAr ? 'تم إنشاء الملف' : 'Case created' });
+      if (caseErr) throw caseErr;
+
+      // Simultaneously create the appointment
+      const { error: apptErr } = await supabase.from('appointments').insert({
+        case_id: (caseData as Case).id,
+        team_member_id: user!.id,
+        scheduled_at: new Date(newApptDate).toISOString(),
+        duration_minutes: 60,
+      });
+      if (apptErr) console.warn('Appointment creation failed:', apptErr.message);
+
+      toast({ title: isAr ? 'تم إنشاء الملف والموعد' : 'Case and appointment created' });
       setShowNew(false);
-      setNewName(''); setNewPhone('');
-      navigate(`/team/cases/${(data as Case).id}`);
+      setNewName(''); setNewPhone(''); setNewApptDate(''); setDuplicateWarning(null);
+      navigate(`/team/cases/${(caseData as Case).id}`);
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
@@ -213,16 +249,55 @@ export default function TeamCasesPage() {
         </div>
       )}
 
-      <Dialog open={showNew} onOpenChange={setShowNew}>
+      <Dialog open={showNew} onOpenChange={open => { setShowNew(open); if (!open) { setNewName(''); setNewPhone(''); setNewApptDate(''); setDuplicateWarning(null); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{isAr ? 'إنشاء ملف جديد' : 'Create New Case'}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={isAr ? 'اسم الطالب' : 'Student name'} /></div>
-            <div><Label>{isAr ? 'الهاتف *' : 'Phone *'}</Label><Input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+972..." /></div>
+            <div>
+              <Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label>
+              <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={isAr ? 'اسم الطالب' : 'Student name'} />
+            </div>
+            <div>
+              <Label>{isAr ? 'الهاتف *' : 'Phone *'}</Label>
+              <Input
+                value={newPhone}
+                onChange={e => { setNewPhone(e.target.value); setDuplicateWarning(null); }}
+                onBlur={e => checkDuplicate(e.target.value)}
+                placeholder="+972..."
+              />
+              {checkingDuplicate && <p className="text-xs text-muted-foreground mt-1">{isAr ? 'جار التحقق...' : 'Checking...'}</p>}
+              {duplicateWarning && (
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-muted text-xs space-y-2">
+                  <p className="font-medium text-foreground">
+                    {isAr ? `⚠️ يوجد ملف بهذا الرقم: ${duplicateWarning.name}` : `⚠️ Existing case: ${duplicateWarning.name} (${duplicateWarning.status})`}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowNew(false); navigate(`/team/cases/${duplicateWarning.id}`); }}>
+                      {isAr ? 'عرض الملف' : 'View Case'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleCreateCase(true)}>
+                      {isAr ? 'إنشاء على أي حال' : 'Create Anyway'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <Label>{isAr ? 'موعد الاجتماع *' : 'Appointment Date & Time *'}</Label>
+              <Input
+                type="datetime-local"
+                value={newApptDate}
+                onChange={e => setNewApptDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr ? 'مطلوب — لا يمكن إنشاء ملف بدون موعد' : 'Required — a case cannot be created without an appointment'}
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNew(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={handleCreateCase} disabled={creating}>
+            <Button onClick={() => handleCreateCase(false)} disabled={creating || !newApptDate}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? 'إنشاء' : 'Create')}
             </Button>
           </DialogFooter>
