@@ -87,6 +87,7 @@
   ],
   "auth": {
     "loginTitle": "Sign In",
+    "loginSubtitle": "Sign in to your DARB account",
     "signupTitle": "Create Account",
     "fullName": "Full Name *",
     "fullNamePlaceholder": "Enter your full name",

@@ -39,8 +39,8 @@ Deno.serve(async (req) => {
 
     // Fetch current case state
     const { data: caseRow, error: fetchError } = await supabaseAdmin
-      .from('student_cases')
-      .select('id, case_status, is_paid_admin, paid_at')
+      .from('cases')
+      .select('id, status')
       .eq('id', case_id)
       .single();
 
@@ -48,34 +48,52 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Case not found' }), { status: 404, headers: corsHeaders });
     }
 
-    // Idempotent: if already marked paid by admin or case_status is already paid, return success
-    if (caseRow.is_paid_admin || caseRow.case_status === 'paid') {
+    // Idempotent: already paid
+    if (caseRow.status === 'enrollment_paid') {
       return new Response(JSON.stringify({ ok: true, message: 'Already marked as paid' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Mark as paid — this sets case_status to 'paid' which triggers auto_split_payment
     const now = new Date().toISOString();
+
+    // Update case status to enrollment_paid
     const { error: updateError } = await supabaseAdmin
-      .from('student_cases')
-      .update({
-        case_status: 'paid',
-        paid_at: now,
-        is_paid_admin: true,
-        paid_countdown_started_at: now,
-      })
+      .from('cases')
+      .update({ status: 'enrollment_paid', updated_at: now })
       .eq('id', case_id);
 
     if (updateError) throw updateError;
+
+    // Update case_submission enrollment payment fields
+    await supabaseAdmin
+      .from('case_submissions')
+      .update({
+        enrollment_paid_at: now,
+        enrollment_paid_by: user.id,
+        payment_confirmed: true,
+        payment_confirmed_at: now,
+        payment_confirmed_by: user.id,
+      })
+      .eq('case_id', case_id);
+
+    // Log activity
+    await supabaseAdmin.rpc('log_activity', {
+      p_actor_id: user.id,
+      p_actor_name: 'Admin',
+      p_action: 'case_marked_paid',
+      p_entity_type: 'cases',
+      p_entity_id: case_id,
+      p_metadata: { paid_at: now },
+    });
 
     // Audit log
     await supabaseAdmin.from('admin_audit_log').insert({
       admin_id: user.id,
       action: 'admin_mark_paid',
       target_id: case_id,
-      target_table: 'student_cases',
-      details: `Admin marked case as paid. Countdown started at ${now}`,
+      target_table: 'cases',
+      details: `Admin marked case as enrollment_paid at ${now}`,
     });
 
     return new Response(JSON.stringify({ ok: true }), {

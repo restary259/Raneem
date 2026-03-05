@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable/index';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
-import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -51,17 +48,6 @@ const StudentAuthPage = () => {
     const { data: role } = await supabase.rpc('get_my_role' as any);
     const path = (role && ROLE_TO_PATH[role as string]) || '/student/checklist';
     navigate(path);
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: t('auth.errorTitle'), description: err.message });
-    }
   };
 
   useEffect(() => {
@@ -165,17 +151,34 @@ const StudentAuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">{t('auth.loginTitle')}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{t('auth.loginSubtitle', 'Sign in to your DARB account')}</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('auth.email')}</Label>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-background p-4 relative overflow-hidden">
+      {/* Background decorative glows */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo / Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/25 backdrop-blur-sm mb-4 shadow-lg">
+            <ShieldCheck className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">DARB</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('auth.loginSubtitle', 'Sign in to your account')}</p>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl p-8">
+          <h2 className="text-xl font-semibold text-card-foreground mb-6">{t('auth.loginTitle')}</h2>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-foreground/90 text-sm font-medium">
+                {t('auth.email')}
+              </Label>
+              <div className="relative">
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -183,97 +186,95 @@ const StudentAuthPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="ps-10 transition-all"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('auth.password')}</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={t('auth.passwordPlaceholder')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={1}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <div className="text-start">
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    onClick={() => setShowResetModal(true)}
-                    className="p-0 h-auto font-normal text-sm text-primary hover:underline"
-                  >
-                    {t('auth.forgotPassword')}
-                  </Button>
-                </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-foreground/90 text-sm font-medium">
+                  {t('auth.password')}
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  {t('auth.forgotPassword')}
+                </button>
               </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    {t('auth.loading')}
-                  </>
-                ) : t('auth.loginButton')}
-              </Button>
-            </form>
-
-            <div className="my-4 flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">{t('auth.orContinueWith', 'or continue with')}</span>
-              <div className="flex-1 h-px bg-border" />
+              <div className="relative">
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={t('auth.passwordPlaceholder')}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="ps-10 pe-10 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <Button
-              type="button"
-              variant="outline"
-              className="w-full flex items-center gap-2"
-              onClick={handleGoogleSignIn}
+              type="submit"
+              className="w-full font-semibold py-2.5 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              disabled={isLoading}
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-              </svg>
-              {t('auth.continueWithGoogle', 'Continue with Google')}
+              {isLoading ? (
+                <>
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                  {t('auth.loading')}
+                </>
+              ) : t('auth.loginButton')}
             </Button>
-          </CardContent>
-        </Card>
+          </form>
+        </div>
 
-        {import.meta.env.DEV && window.location.hostname === 'localhost' && <AuthDebugPanel />}
-        <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
-
-        <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
-          <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
-            <DialogHeader><DialogTitle>يجب تغيير كلمة المرور</DialogTitle></DialogHeader>
-            <p className="text-sm text-muted-foreground">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
-            <div className="space-y-3">
-              <div>
-                <Label>كلمة المرور الجديدة</Label>
-                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="أدخل كلمة مرور جديدة" />
-                <PasswordStrength password={newPassword} />
-              </div>
-              <Button className="w-full" onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
-                {changingPassword ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />جاري...</> : 'تغيير كلمة المرور'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Footer note */}
+        <p className="text-center text-muted-foreground/50 text-xs mt-6">
+          © {new Date().getFullYear()} DARB Study International
+        </p>
       </div>
+
+      <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
+
+      <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>يجب تغيير كلمة المرور</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
+          <div className="space-y-3">
+            <div>
+              <Label>كلمة المرور الجديدة</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="أدخل كلمة مرور جديدة"
+              />
+              <PasswordStrength password={newPassword} />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleChangePassword}
+              disabled={changingPassword || !newPassword}
+            >
+              {changingPassword ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />جاري...</> : 'تغيير كلمة المرور'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
