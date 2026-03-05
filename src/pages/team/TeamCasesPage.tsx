@@ -46,8 +46,10 @@ const STATUS_COLORS: Record<string, string> = {
   forgotten: 'bg-red-100 text-red-800 border-red-200',
 };
 
+// 'new' is included — cases start at new
 const STATUS_FILTERS: StatusFilter[] = [
   'all',
+  'new',
   'contacted',
   'appointment_scheduled',
   'profile_completion',
@@ -69,11 +71,10 @@ export default function TeamCasesPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // New case modal
+  // New case modal — only name + phone required (no appointment at creation)
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [newApptDate, setNewApptDate] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState<{ id: string; name: string; status: string } | null>(null);
   const [creating, setCreating] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
@@ -82,7 +83,6 @@ export default function TeamCasesPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // RLS handles visibility — team members only see assigned cases + manual/submit_new_student
       const { data, error } = await supabase
         .from('cases')
         .select('*')
@@ -126,32 +126,21 @@ export default function TeamCasesPage() {
       toast({ variant: 'destructive', description: isAr ? 'الاسم والهاتف مطلوبان' : 'Name and phone are required' });
       return;
     }
-    if (!newApptDate) {
-      toast({ variant: 'destructive', description: isAr ? 'يجب تحديد موعد لإنشاء الملف' : 'You must schedule an appointment to create a case' });
-      return;
-    }
     if (duplicateWarning && !force) return;
 
     setCreating(true);
     try {
+      // Cases start at 'new' — no appointment required at creation
       const { data: caseData, error: caseErr } = await supabase.from('cases').insert({
         full_name: newName.trim(),
         phone_number: newPhone.trim(),
         source: 'manual',
         assigned_to: user!.id,
-        status: 'appointment_scheduled',
+        status: 'new',
       }).select().single();
       if (caseErr) throw caseErr;
 
-      const { error: apptErr } = await supabase.from('appointments').insert({
-        case_id: (caseData as Case).id,
-        team_member_id: user!.id,
-        scheduled_at: new Date(newApptDate).toISOString(),
-        duration_minutes: 60,
-      });
-      if (apptErr) console.warn('Appointment creation failed:', apptErr.message);
-
-      toast({ title: isAr ? 'تم إنشاء الملف والموعد' : 'Case and appointment created' });
+      toast({ title: isAr ? 'تم إنشاء الملف' : 'Case created' });
       resetNewModal();
       navigate(`/team/cases/${(caseData as Case).id}`);
     } catch (err: any) {
@@ -165,7 +154,6 @@ export default function TeamCasesPage() {
     setShowNew(false);
     setNewName('');
     setNewPhone('');
-    setNewApptDate('');
     setDuplicateWarning(null);
   };
 
@@ -254,13 +242,16 @@ export default function TeamCasesPage() {
         </div>
       )}
 
-      {/* New Case Dialog */}
+      {/* New Case Dialog — only name + phone required */}
       <Dialog open={showNew} onOpenChange={open => { if (!open) resetNewModal(); else setShowNew(true); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{isAr ? 'إنشاء ملف جديد' : 'Create New Case'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              {isAr ? 'سيبدأ الملف في مرحلة "جديد". يمكنك جدولة موعد لاحقاً بعد التواصل مع الطالب.' : 'The case will start at "New" stage. You can schedule an appointment after contacting the student.'}
+            </p>
             <div>
               <Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label>
               <Input
@@ -288,42 +279,22 @@ export default function TeamCasesPage() {
                       : `⚠️ Existing case: ${duplicateWarning.name} (${statusLabel(duplicateWarning.status)})`}
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={() => { resetNewModal(); navigate(`/team/cases/${duplicateWarning.id}`); }}
-                    >
+                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                      onClick={() => { resetNewModal(); navigate(`/team/cases/${duplicateWarning.id}`); }}>
                       {isAr ? 'عرض الملف' : 'View Case'}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={() => handleCreateCase(true)}
-                    >
+                    <Button size="sm" variant="outline" className="h-7 text-xs"
+                      onClick={() => handleCreateCase(true)}>
                       {isAr ? 'إنشاء على أي حال' : 'Create Anyway'}
                     </Button>
                   </div>
                 </div>
               )}
             </div>
-            <div>
-              <Label>{isAr ? 'موعد الاجتماع *' : 'Appointment Date & Time *'}</Label>
-              <Input
-                type="datetime-local"
-                value={newApptDate}
-                onChange={e => setNewApptDate(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? 'مطلوب — لا يمكن إنشاء ملف بدون موعد' : 'Required — a case cannot be created without an appointment'}
-              </p>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetNewModal}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={() => handleCreateCase(false)} disabled={creating || !newApptDate}>
+            <Button onClick={() => handleCreateCase(false)} disabled={creating}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? 'إنشاء' : 'Create')}
             </Button>
           </DialogFooter>

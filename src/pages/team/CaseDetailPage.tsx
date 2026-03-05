@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   ArrowLeft, Phone, Clock, Calendar, FileText, User, AlertTriangle,
   UserPlus, Copy, Check, MessageCircle, ChevronRight, CheckCircle2,
-  CalendarClock, CreditCard, SendHorizonal, GraduationCap,
+  CalendarClock, CreditCard, SendHorizonal, GraduationCap, Trash2,
+  Download, ExternalLink,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -36,10 +38,15 @@ interface Appointment {
   notes: string | null; outcome_notes: string | null;
 }
 interface Submission {
+  id: string;
   program_id: string | null; accommodation_id: string | null; program_start_date: string | null;
   program_end_date: string | null; service_fee: number; translation_fee: number;
   payment_confirmed: boolean; extra_data: Record<string, unknown> | null;
   submitted_at: string | null;
+}
+interface Document {
+  id: string; file_name: string; file_url: string; file_type: string | null;
+  category: string; created_at: string; notes: string | null;
 }
 interface Activity { id: string; action: string; actor_name: string | null; created_at: string; metadata: Record<string, unknown> | null; }
 
@@ -62,6 +69,28 @@ const OUTCOME_COLORS: Record<string, string> = {
   no_show: 'bg-orange-100 text-orange-800',
 };
 
+// Strict pipeline order
+const PIPELINE_STAGES = ['new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid'];
+const PIPELINE_LABELS: Record<string, string> = {
+  new: 'New',
+  contacted: 'Contacted',
+  appointment_scheduled: 'Appointment',
+  profile_completion: 'Profile',
+  payment_confirmed: 'Payment',
+  submitted: 'Submitted',
+  enrollment_paid: 'Enrolled',
+};
+
+// Allowed forward transitions (strict, sequential)
+const STRICT_NEXT: Record<string, string> = {
+  new: 'contacted',
+  contacted: 'appointment_scheduled',
+  appointment_scheduled: 'profile_completion',
+  profile_completion: 'payment_confirmed',
+  payment_confirmed: 'submitted',
+  submitted: 'enrollment_paid',
+};
+
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -75,6 +104,7 @@ export default function CaseDetailPage() {
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [showScheduler, setShowScheduler] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -86,8 +116,13 @@ export default function CaseDetailPage() {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [tempPasswordResult, setTempPasswordResult] = useState<string | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
-  // profile_completion stage: track if user just saved profile (to show payment form)
   const [profileJustSaved, setProfileJustSaved] = useState(false);
+
+  // Delete confirmations
+  const [showDeleteCase, setShowDeleteCase] = useState(false);
+  const [deletingCase, setDeletingCase] = useState(false);
+  const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
+  const [deletingAppt, setDeletingAppt] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -95,7 +130,6 @@ export default function CaseDetailPage() {
     try {
       const [caseRes, apptRes, subRes, actRes] = await Promise.all([
         supabase.from('cases').select('*').eq('id', id).single(),
-        // Fetch ALL appointments (not just pending) so we see outcomes too
         supabase.from('appointments').select('*').eq('case_id', id).order('scheduled_at', { ascending: false }),
         supabase.from('case_submissions').select('*').eq('case_id', id).maybeSingle(),
         supabase.from('activity_log').select('*').eq('entity_id', id).order('created_at', { ascending: false }).limit(20),
@@ -106,9 +140,18 @@ export default function CaseDetailPage() {
       setSubmission(subRes.data as Submission | null);
       setActivity((actRes.data as Activity[]) ?? []);
 
-      if ((caseRes.data as Case).student_user_id) {
-        const { data: prof } = await supabase.from('profiles').select('full_name, email, phone_number').eq('id', (caseRes.data as Case).student_user_id).maybeSingle();
-        setProfile(prof as Record<string, unknown> | null);
+      const studentId = (caseRes.data as Case).student_user_id;
+      if (studentId) {
+        const [profRes, docsRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', studentId).maybeSingle(),
+          supabase.from('documents').select('*').eq('case_id', id).order('created_at', { ascending: false }),
+        ]);
+        setProfile(profRes.data as Record<string, unknown> | null);
+        setDocuments((docsRes.data as Document[]) ?? []);
+      } else {
+        // Still fetch documents by case_id even without student account
+        const { data: docsData } = await supabase.from('documents').select('*').eq('case_id', id).order('created_at', { ascending: false });
+        setDocuments((docsData as Document[]) ?? []);
       }
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
@@ -119,8 +162,16 @@ export default function CaseDetailPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const updateStatus = async (newStatus: string) => {
+  const updateStatus = async (newStatus: string, force = false) => {
     if (!caseData) return;
+    // Pipeline guard — only allow strict sequential transitions unless forced
+    if (!force) {
+      const allowed = STRICT_NEXT[caseData.status];
+      if (allowed !== newStatus) {
+        toast({ variant: 'destructive', description: `Cannot skip stages. Next allowed stage is: ${allowed?.replace(/_/g, ' ') ?? 'none'}` });
+        return;
+      }
+    }
     setUpdatingStatus(true);
     try {
       await supabase.from('cases').update({ status: newStatus }).eq('id', caseData.id);
@@ -141,6 +192,40 @@ export default function CaseDetailPage() {
     }
   };
 
+  const handleDeleteCase = async () => {
+    if (!caseData) return;
+    setDeletingCase(true);
+    try {
+      // Delete in FK-safe order
+      await supabase.from('documents').delete().eq('case_id', caseData.id);
+      await supabase.from('appointments').delete().eq('case_id', caseData.id);
+      await supabase.from('case_submissions').delete().eq('case_id', caseData.id);
+      await supabase.from('cases').delete().eq('id', caseData.id);
+      toast({ title: 'Case deleted' });
+      navigate('/team/cases');
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setDeletingCase(false);
+      setShowDeleteCase(false);
+    }
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteApptId) return;
+    setDeletingAppt(true);
+    try {
+      await supabase.from('appointments').delete().eq('id', deleteApptId);
+      toast({ title: 'Appointment deleted' });
+      setDeleteApptId(null);
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setDeletingAppt(false);
+    }
+  };
+
   const handleCreateStudentAccount = async () => {
     if (!studentEmail.trim() || !caseData) return;
     setCreatingAccount(true);
@@ -149,15 +234,11 @@ export default function CaseDetailPage() {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
-        body: JSON.stringify({ case_id: caseData.id, student_email: studentEmail.trim(), student_full_name: caseData.full_name, student_phone: caseData.phone_number }),
+        body: JSON.stringify({ case_id: caseData.id, student_email: studentEmail.trim(), student_full_name: caseData.full_name, student_phone: caseData.phone_number, force_temp_password: true }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create account');
-
-      if (result.invited) {
-        toast({ title: '✅ Invite Sent', description: `An invite email was sent to ${studentEmail}` });
-        setShowCreateAccountModal(false);
-      } else if (result.temp_password) {
+      if (result.temp_password) {
         setTempPasswordResult(result.temp_password);
         setShowCreateAccountModal(false);
       } else {
@@ -172,16 +253,49 @@ export default function CaseDetailPage() {
     }
   };
 
-  // The latest appointment (most recent, regardless of outcome)
   const latestAppt = appointments[0] ?? null;
-  // Is there any pending (no outcome) appointment?
   const pendingAppt = appointments.find(a => !a.outcome) ?? null;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
   if (!caseData) return <div className="p-6 text-muted-foreground">Case not found</div>;
 
-  /* ── helpers ── */
-  const profileIsReady = !!submission; // submission exists = profile was saved
+  const profileIsReady = !!submission;
+  const currentStageIdx = PIPELINE_STAGES.indexOf(caseData.status);
+  const isTerminal = caseData.status === 'enrollment_paid' || caseData.status === 'cancelled';
+
+  /* ── Pipeline progress bar ── */
+  const PipelineBar = () => (
+    <Card className="mb-2">
+      <CardContent className="px-4 py-3">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1">
+          {PIPELINE_STAGES.map((stage, idx) => {
+            const isDone = idx < currentStageIdx;
+            const isCurrent = idx === currentStageIdx;
+            const isFuture = idx > currentStageIdx;
+            return (
+              <React.Fragment key={stage}>
+                {idx > 0 && (
+                  <div className={`h-0.5 flex-1 min-w-[8px] ${isDone ? 'bg-primary' : 'bg-border'}`} />
+                )}
+                <div className={`flex flex-col items-center gap-0.5 shrink-0 ${isFuture ? 'opacity-40' : ''}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors
+                    ${isDone ? 'bg-primary border-primary text-primary-foreground' : ''}
+                    ${isCurrent ? 'bg-primary/10 border-primary text-primary' : ''}
+                    ${isFuture ? 'bg-muted border-border text-muted-foreground' : ''}
+                  `}>
+                    {isDone ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                  </div>
+                  <span className={`text-[10px] hidden sm:block ${isCurrent ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+                    {PIPELINE_LABELS[stage]}
+                  </span>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   const renderNextAction = () => {
     const { status } = caseData;
@@ -222,9 +336,10 @@ export default function CaseDetailPage() {
                 </p>
                 {pendingAppt.notes && <p className="text-xs text-muted-foreground mt-0.5">{pendingAppt.notes}</p>}
               </div>
-              <div className="flex gap-2 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => setRescheduleAppt(pendingAppt)}>
-                  Reschedule
+              <div className="flex gap-2 shrink-0 flex-wrap">
+                <Button size="sm" variant="outline" onClick={() => setRescheduleAppt(pendingAppt)}>Reschedule</Button>
+                <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteApptId(pendingAppt.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
                 <Button size="sm" onClick={() => setOutcomeApptId(pendingAppt.id)}>
                   Record Outcome <ChevronRight className="h-4 w-4 ms-1" />
@@ -234,12 +349,11 @@ export default function CaseDetailPage() {
           </div>
         );
       }
-      // All appointments have outcomes but status didn't change (edge fn may have moved it already)
       return (
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="font-medium text-sm text-amber-700">All outcomes recorded</p>
-            <p className="text-xs text-muted-foreground mt-0.5">The appointment outcome was recorded. Manually advance if needed.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Ready to proceed to Profile stage.</p>
           </div>
           <Button size="sm" onClick={() => updateStatus('profile_completion')} disabled={updatingStatus}>
             Go to Profile Stage <ChevronRight className="h-4 w-4 ms-1" />
@@ -249,7 +363,6 @@ export default function CaseDetailPage() {
     }
 
     if (status === 'profile_completion') {
-      // Show profile form if profile not yet saved
       if (!profileIsReady && !profileJustSaved) {
         return (
           <div className="space-y-4">
@@ -268,7 +381,6 @@ export default function CaseDetailPage() {
           </div>
         );
       }
-      // Profile saved → show payment form
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
@@ -278,28 +390,17 @@ export default function CaseDetailPage() {
           {submission && (
             <div className="text-sm space-y-1 px-1">
               {submission.service_fee > 0 && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Service Fee</span><span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
-                </div>
+                <div className="flex justify-between text-muted-foreground"><span>Service Fee</span><span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span></div>
               )}
               {submission.translation_fee > 0 && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Translation</span><span className="font-medium text-foreground">{submission.translation_fee.toLocaleString()} ILS</span>
-                </div>
+                <div className="flex justify-between text-muted-foreground"><span>Translation</span><span className="font-medium text-foreground">{submission.translation_fee.toLocaleString()} ILS</span></div>
               )}
               {submission.program_start_date && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Start Date</span><span>{submission.program_start_date}</span>
-                </div>
+                <div className="flex justify-between text-muted-foreground"><span>Start Date</span><span>{submission.program_start_date}</span></div>
               )}
             </div>
           )}
-          <PaymentConfirmationForm
-            caseId={caseData.id}
-            actorId={user!.id}
-            actorName="Team Member"
-            onSuccess={() => { fetchData(); }}
-          />
+          <PaymentConfirmationForm caseId={caseData.id} actorId={user!.id} actorName="Team Member" onSuccess={() => { fetchData(); }} />
         </div>
       );
     }
@@ -314,14 +415,10 @@ export default function CaseDetailPage() {
           {submission && (
             <div className="text-sm space-y-1 px-1">
               {submission.service_fee > 0 && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Service Fee</span><span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
-                </div>
+                <div className="flex justify-between text-muted-foreground"><span>Service Fee</span><span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span></div>
               )}
               {submission.program_start_date && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Program Start</span><span>{submission.program_start_date}</span>
-                </div>
+                <div className="flex justify-between text-muted-foreground"><span>Program Start</span><span>{submission.program_start_date}</span></div>
               )}
             </div>
           )}
@@ -357,7 +454,7 @@ export default function CaseDetailPage() {
     if (status === 'forgotten') return (
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-destructive">This case was marked forgotten. Re-contact if possible.</p>
-        <Button variant="outline" onClick={() => updateStatus('contacted')}>Re-activate</Button>
+        <Button variant="outline" onClick={() => updateStatus('contacted', true)}>Re-activate</Button>
       </div>
     );
 
@@ -365,7 +462,10 @@ export default function CaseDetailPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-4 max-w-4xl mx-auto">
+      {/* Pipeline progress bar */}
+      <PipelineBar />
+
       {/* Header */}
       <div className="flex items-center gap-4 flex-wrap">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4" /></Button>
@@ -389,6 +489,13 @@ export default function CaseDetailPage() {
           {caseData.student_user_id && (
             <Badge variant="secondary" className="gap-1 text-xs"><User className="h-3 w-3" />Account Active</Badge>
           )}
+          {/* Delete Case button — visible in all non-terminal stages */}
+          {!isTerminal && (
+            <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setShowDeleteCase(true)}>
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Delete Case</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -396,24 +503,35 @@ export default function CaseDetailPage() {
       {(caseData.degree_interest || caseData.education_level || caseData.passport_type) && (
         <Card>
           <CardContent className="p-4 flex flex-wrap gap-4 text-sm">
-            {caseData.degree_interest && (
-              <div><span className="text-muted-foreground">Degree: </span><span className="font-medium">{caseData.degree_interest}</span></div>
-            )}
-            {caseData.education_level && (
-              <div><span className="text-muted-foreground">Education: </span><span className="font-medium">{caseData.education_level}</span></div>
-            )}
-            {caseData.passport_type && (
-              <div><span className="text-muted-foreground">Passport: </span><span className="font-medium">{caseData.passport_type.replace(/_/g, ' ')}</span></div>
-            )}
-            {caseData.math_units != null && (
-              <div><span className="text-muted-foreground">Math Units: </span><span className="font-medium">{caseData.math_units}</span></div>
-            )}
-            {caseData.english_level && (
-              <div><span className="text-muted-foreground">English: </span><span className="font-medium">{caseData.english_level}</span></div>
-            )}
-            {caseData.intake_notes && (
-              <div className="w-full"><span className="text-muted-foreground">Notes: </span><span>{caseData.intake_notes}</span></div>
-            )}
+            {caseData.degree_interest && <div><span className="text-muted-foreground">Degree: </span><span className="font-medium">{caseData.degree_interest}</span></div>}
+            {caseData.education_level && <div><span className="text-muted-foreground">Education: </span><span className="font-medium">{caseData.education_level}</span></div>}
+            {caseData.passport_type && <div><span className="text-muted-foreground">Passport: </span><span className="font-medium">{caseData.passport_type.replace(/_/g, ' ')}</span></div>}
+            {caseData.math_units != null && <div><span className="text-muted-foreground">Math Units: </span><span className="font-medium">{caseData.math_units}</span></div>}
+            {caseData.english_level && <div><span className="text-muted-foreground">English: </span><span className="font-medium">{caseData.english_level}</span></div>}
+            {caseData.intake_notes && <div className="w-full"><span className="text-muted-foreground">Notes: </span><span>{caseData.intake_notes}</span></div>}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Full Student Profile — shown when profile data exists */}
+      {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" /> Student Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {Object.entries(submission.extra_data).map(([key, val]) => {
+                if (!val || val === '') return null;
+                const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return (
+                  <div key={key} className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="font-medium text-foreground text-xs">{String(val)}</p>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -428,12 +546,14 @@ export default function CaseDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4">
         {/* Appointments */}
         <Card>
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2"><Calendar className="h-4 w-4" /> Appointments</CardTitle>
-            <Button size="sm" variant="outline" onClick={() => setShowScheduler(true)}>+ Add</Button>
+            {!['submitted', 'enrollment_paid'].includes(caseData.status) && (
+              <Button size="sm" variant="outline" onClick={() => setShowScheduler(true)}>+ Add</Button>
+            )}
           </CardHeader>
           <CardContent>
             {appointments.length === 0 ? (
@@ -453,13 +573,16 @@ export default function CaseDetailPage() {
                         {a.outcome_notes && <span className="text-xs text-muted-foreground truncate">{a.outcome_notes}</span>}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex gap-1 shrink-0 flex-wrap">
                       {!a.outcome && (
                         <>
                           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setRescheduleAppt(a)}>Reschedule</Button>
                           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setOutcomeApptId(a.id)}>Outcome</Button>
                         </>
                       )}
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10" onClick={() => setDeleteApptId(a.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -487,15 +610,11 @@ export default function CaseDetailPage() {
                 </span>
               </div>
               {submission.submitted_at && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Submitted</span>
-                  <span>{format(new Date(submission.submitted_at), 'MMM d, yyyy')}</span>
-                </div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Submitted</span><span>{format(new Date(submission.submitted_at), 'MMM d, yyyy')}</span></div>
               )}
             </CardContent>
           </Card>
         ) : (
-          /* Student link info if account exists */
           caseData.student_user_id && profile ? (
             <Card>
               <CardHeader className="pb-3">
@@ -511,10 +630,36 @@ export default function CaseDetailPage() {
         )}
       </div>
 
+      {/* Documents */}
+      {documents.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Documents ({documents.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-border">
+              {documents.map(doc => (
+                <div key={doc.id} className="flex items-center justify-between py-2.5 gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                    <p className="text-xs text-muted-foreground">{doc.category} · {format(new Date(doc.created_at), 'MMM d, yyyy')}</p>
+                  </div>
+                  <a href={doc.file_url} target="_blank" rel="noreferrer">
+                    <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0">
+                      <Download className="h-3.5 w-3.5" /> Download
+                    </Button>
+                  </a>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Activity log */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" /> Activity Log</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Activity Log</CardTitle>
         </CardHeader>
         <CardContent>
           {activity.length === 0 ? (
@@ -538,7 +683,7 @@ export default function CaseDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Modals */}
+      {/* ── Modals ── */}
       {showScheduler && user && (
         <AppointmentSchedulerModal
           open={showScheduler}
@@ -557,22 +702,14 @@ export default function CaseDetailPage() {
           onSuccess={() => { fetchData(); }}
         />
       )}
-      <RescheduleDialog
-        appointment={rescheduleAppt}
-        onClose={() => setRescheduleAppt(null)}
-        refetch={fetchData}
-      />
+      <RescheduleDialog appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} refetch={fetchData} />
 
       {/* Submit to Admin confirmation */}
       <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Submit Case to Admin</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Submit Case to Admin</DialogTitle></DialogHeader>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Have you reviewed all profile data? This will send the case to admin for enrollment processing.
-            </p>
+            <p className="text-sm text-muted-foreground">Have you reviewed all profile data? This will send the case to admin for enrollment processing.</p>
             <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
               <p className="text-xs text-amber-700">This action cannot be undone.</p>
@@ -585,11 +722,7 @@ export default function CaseDetailPage() {
                 setShowSubmitConfirm(false);
                 await supabase.from('cases').update({ status: 'submitted' }).eq('id', caseData!.id);
                 await supabase.from('case_submissions').update({ submitted_at: new Date().toISOString(), submitted_by: user!.id }).eq('case_id', caseData!.id);
-                await supabase.rpc('log_activity' as any, {
-                  p_actor_id: user!.id, p_actor_name: 'Team Member',
-                  p_action: 'submitted_to_admin', p_entity_type: 'case', p_entity_id: caseData!.id,
-                  p_metadata: {},
-                });
+                await supabase.rpc('log_activity' as any, { p_actor_id: user!.id, p_actor_name: 'Team Member', p_action: 'submitted_to_admin', p_entity_type: 'case', p_entity_id: caseData!.id, p_metadata: {} });
                 fetchData();
               }}
               disabled={updatingStatus}
@@ -607,16 +740,10 @@ export default function CaseDetailPage() {
             <DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" />Create Student Account</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Enter the student's email. An invite link will be sent so they can set their own password.</p>
+            <p className="text-sm text-muted-foreground">Enter the student's email. A temporary password will be generated — give it to the student in person.</p>
             <div>
               <Label>Student Email</Label>
-              <Input
-                type="email"
-                value={studentEmail}
-                onChange={e => setStudentEmail(e.target.value)}
-                placeholder="student@example.com"
-                className="mt-1"
-              />
+              <Input type="email" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="student@example.com" className="mt-1" />
             </div>
           </div>
           <DialogFooter>
@@ -631,35 +758,22 @@ export default function CaseDetailPage() {
       {/* Temp password credentials modal */}
       <Dialog open={!!tempPasswordResult} onOpenChange={() => setTempPasswordResult(null)}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>✅ Student Account Created</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>✅ Student Account Created</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Share these credentials with the student. The password will not be shown again.</p>
+            <p className="text-sm text-muted-foreground">Share these credentials with the student in person. The password will not be shown again.</p>
             <div className="p-3 rounded-lg bg-muted font-mono text-sm select-all break-all">{tempPasswordResult}</div>
             <div className="flex gap-2">
-              <Button
-                variant="outline" size="sm" className="flex-1 gap-1"
-                onClick={() => {
-                  navigator.clipboard.writeText(tempPasswordResult ?? '');
-                  setCopiedPassword(true);
-                  setTimeout(() => setCopiedPassword(false), 2000);
-                }}
-              >
+              <Button variant="outline" size="sm" className="flex-1 gap-1"
+                onClick={() => { navigator.clipboard.writeText(tempPasswordResult ?? ''); setCopiedPassword(true); setTimeout(() => setCopiedPassword(false), 2000); }}>
                 {copiedPassword ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copiedPassword ? 'Copied!' : 'Copy Password'}
+                {copiedPassword ? 'Copied!' : 'Copy'}
               </Button>
-              <Button
-                size="sm" className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+              <Button size="sm" className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
                 onClick={() => {
-                  const msg = encodeURIComponent(
-                    `مرحبا ${caseData?.full_name ?? ''},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n🔑 كلمة المرور المؤقتة: ${tempPasswordResult}\n\nيرجى تغيير كلمة المرور عند أول دخول.`
-                  );
+                  const msg = encodeURIComponent(`مرحبا ${caseData?.full_name ?? ''},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n🔑 كلمة المرور المؤقتة: ${tempPasswordResult}\n\nيرجى تغيير كلمة المرور عند أول دخول.`);
                   window.open(`https://wa.me/?text=${msg}`, '_blank');
-                }}
-              >
-                <MessageCircle className="h-4 w-4" />
-                Share via WhatsApp
+                }}>
+                <MessageCircle className="h-4 w-4" /> WhatsApp
               </Button>
             </div>
           </div>
@@ -668,6 +782,40 @@ export default function CaseDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Case confirmation */}
+      <AlertDialog open={showDeleteCase} onOpenChange={setShowDeleteCase}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive"><Trash2 className="h-5 w-5" />Delete Case</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the case for <strong>{caseData.full_name}</strong>? This will permanently delete all appointments, submissions, and documents. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCase} disabled={deletingCase} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deletingCase ? 'Deleting…' : 'Delete Case'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Appointment confirmation */}
+      <AlertDialog open={!!deleteApptId} onOpenChange={() => setDeleteApptId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive"><Trash2 className="h-5 w-5" />Delete Appointment</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete this appointment? This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAppointment} disabled={deletingAppt} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deletingAppt ? 'Deleting…' : 'Delete Appointment'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
