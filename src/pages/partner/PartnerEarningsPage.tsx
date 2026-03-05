@@ -195,7 +195,7 @@ export default function PartnerEarningsPage() {
                   <p className="text-xs text-muted-foreground">{new Date(p.requested_at).toLocaleDateString(isAr ? 'ar' : 'en-GB')}</p>
                 </div>
                 <Badge className={`text-xs ${statusColor[p.status] || 'bg-muted text-muted-foreground'}`}>
-                  {t(`admin.payouts.statuses.${p.status}`, p.status)}
+                  {String(t(`admin.payouts.statuses.${p.status}`, p.status))}
                 </Badge>
               </div>
             ))}
