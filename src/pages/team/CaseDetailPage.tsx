@@ -56,6 +56,7 @@ export default function CaseDetailPage() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
