@@ -55,7 +55,10 @@ export default function TeamCasesPage() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [newApptDate, setNewApptDate] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState<{ id: string; name: string; status: string } | null>(null);
   const [creating, setCreating] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   const fetchCases = useCallback(async () => {
     if (!user) return;
