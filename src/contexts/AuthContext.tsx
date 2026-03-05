@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState(prev => ({ ...prev, initialized: true }));
     }, 6000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (safetyTimer.current) {
         clearTimeout(safetyTimer.current);
         safetyTimer.current = null;
@@ -111,7 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      await initializeAuth(session);
+      // Fire-and-forget: never await inside onAuthStateChange to avoid Supabase internal lock deadlocks
+      initializeAuth(session);
     });
 
     // Initial session check
