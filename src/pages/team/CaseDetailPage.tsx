@@ -167,7 +167,16 @@ export default function CaseDetailPage() {
           </div>
         </div>
         <Badge className={STATUS_COLORS[caseData.status] ?? 'bg-muted'}>{caseData.status.replace(/_/g, ' ')}</Badge>
-      </div>
+        {/* Create Student Account button — shown when profile_completion+ and not yet linked */}
+        {!caseData.student_user_id && ['profile_completion','payment_confirmed','submitted','enrollment_paid'].includes(caseData.status) && (
+          <Button size="sm" variant="outline" className="gap-1" onClick={() => { setStudentEmail(''); setShowCreateAccountModal(true); }}>
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Student Account</span>
+          </Button>
+        )}
+        {caseData.student_user_id && (
+          <Badge variant="secondary" className="gap-1 text-xs"><User className="h-3 w-3" />Account Active</Badge>
+        )}
 
       {/* Stage action block */}
       <Card className="border-primary/30 bg-primary/5">
