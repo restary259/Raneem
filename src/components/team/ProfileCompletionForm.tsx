@@ -21,17 +21,29 @@ const PREFERRED_SUBJECTS = ['math', 'english', 'science', 'german', 'arabic', 'c
 const ACCOMMODATION_TYPES = ['single', 'double', 'hall'];
 const ACCOMMODATION_CATEGORIES = ['A', 'B+', 'B', 'C', 'D', 'E'];
 
+interface CaseData {
+  city?: string | null;
+  education_level?: string | null;
+  bagrut_score?: number | null;
+  english_level?: string | null;
+  math_units?: number | null;
+  passport_type?: string | null;
+  degree_interest?: string | null;
+  intake_notes?: string | null;
+}
+
 interface Props {
   caseId: string;
   actorId: string;
   actorName: string;
   existingData?: Record<string, unknown>;
+  caseData?: CaseData;
   onSuccess: () => void;
 }
 
 type FormStep = 'a' | 'b';
 
-export default function ProfileCompletionForm({ caseId, actorId, actorName, existingData, onSuccess }: Props) {
+export default function ProfileCompletionForm({ caseId, actorId, actorName, existingData, caseData: cd, onSuccess }: Props) {
   const { toast } = useToast();
   const { i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
@@ -40,7 +52,7 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
   const [saving, setSaving] = useState(false);
   const [formStep, setFormStep] = useState<FormStep>('a');
 
-  // Section A — Student Identity
+  // Section A — Student Identity (pre-fill from case row if available)
   const ex = existingData ?? {};
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? '');
   const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? '');
@@ -53,7 +65,8 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
   const [street, setStreet] = useState((ex.street as string) ?? '');
   const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? '');
   const [postcode, setPostcode] = useState((ex.postcode as string) ?? '');
-  const [city, setCity] = useState((ex.city as string) ?? '');
+  // Pre-fill city from case row if not in existingData
+  const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? '');
   const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
   const [gender, setGender] = useState((ex.gender as string) ?? '');
 

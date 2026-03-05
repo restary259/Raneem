@@ -166,6 +166,7 @@ export default function CaseDetailPage() {
               actorId={user!.id}
               actorName="Team Member"
               existingData={submission?.extra_data ?? {}}
+              caseData={caseData}
               onSuccess={fetchData}
             />
           )}

@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ interface CaseCounts {
   submitted: number;
   enrollment_paid: number;
   forgotten: number;
+  sla_breaches: number;
 }
 
 interface ActivityEntry {
@@ -31,7 +32,7 @@ const AdminCommandCenter = () => {
   const navigate = useNavigate();
   const isRtl = i18n.language === 'ar';
 
-  const [counts, setCounts] = useState<CaseCounts>({ total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0 });
+  const [counts, setCounts] = useState<CaseCounts>({ total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 });
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +42,7 @@ const AdminCommandCenter = () => {
       const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
       const [casesRes, activityRes, forgottenRes] = await Promise.all([
-        supabase.from('cases').select('status, created_at'),
+        supabase.from('cases').select('status, last_activity_at, created_at'),
         supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(10),
         supabase.rpc('get_forgotten_cases'),
       ]);
@@ -49,11 +50,23 @@ const AdminCommandCenter = () => {
       if (casesRes.error) throw casesRes.error;
       const cases = casesRes.data || [];
 
+      // SLA breach detection
+      const slaBreaches = cases.filter(c => {
+        const days = Math.floor((Date.now() - new Date(c.last_activity_at).getTime()) / 86400000);
+        return (
+          (c.status === 'new' && days >= 3) ||
+          (c.status === 'contacted' && days >= 5) ||
+          (c.status === 'appointment_scheduled' && days >= 14) ||
+          (c.status === 'profile_completion' && days >= 7)
+        );
+      });
+
       setCounts({
-        total: cases.length,
+        total: cases.filter(c => !['enrollment_paid', 'forgotten'].includes(c.status)).length,
         submitted: cases.filter(c => c.status === 'submitted').length,
         enrollment_paid: cases.filter(c => c.status === 'enrollment_paid').length,
         forgotten: (forgottenRes.data || []).length,
+        sla_breaches: slaBreaches.length,
       });
 
       setActivity(activityRes.data || []);
@@ -78,7 +91,7 @@ const AdminCommandCenter = () => {
       onClick: () => navigate('/admin/pipeline'),
     },
     {
-      label: t('admin.commandCenter.submitted', 'Submitted This Month'),
+      label: t('admin.commandCenter.submitted', 'Submitted'),
       value: counts.submitted,
       icon: ClipboardCheck,
       color: 'text-blue-500',
@@ -92,6 +105,14 @@ const AdminCommandCenter = () => {
       color: 'text-green-600',
       bg: 'bg-green-600/10',
       onClick: () => navigate('/admin/submissions'),
+    },
+    {
+      label: t('admin.commandCenter.slaBreaches', 'SLA Breaches'),
+      value: counts.sla_breaches,
+      icon: Clock,
+      color: counts.sla_breaches > 0 ? 'text-amber-600' : 'text-muted-foreground',
+      bg: counts.sla_breaches > 0 ? 'bg-amber-600/10' : 'bg-muted',
+      onClick: () => navigate('/admin/pipeline'),
     },
     {
       label: t('admin.commandCenter.forgotten', 'Forgotten Cases'),
@@ -139,8 +160,20 @@ const AdminCommandCenter = () => {
         </div>
       )}
 
+      {/* SLA Breach Alert */}
+      {counts.sla_breaches > 0 && (
+        <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors" onClick={() => navigate('/admin/pipeline')}>
+          <Clock className="h-5 w-5 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">
+            {isRtl
+              ? `⏱️ يوجد ${counts.sla_breaches} حالة تجاوزت مهلة الاستجابة — انقر لعرضها`
+              : `⏱️ ${counts.sla_breaches} case${counts.sla_breaches > 1 ? 's' : ''} have breached SLA thresholds — click to review`}
+          </p>
+        </div>
+      )}
+
       {/* KPI Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi) => (
           <Card
             key={kpi.label}
