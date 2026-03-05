@@ -154,16 +154,15 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminDashboardPage />} />
-              {/* Phase 2 pages — will be added as built */}
-              <Route path="pipeline" element={<AdminDashboardPage />} />
-              <Route path="team" element={<AdminDashboardPage />} />
-              <Route path="programs" element={<AdminDashboardPage />} />
-              <Route path="submissions" element={<AdminDashboardPage />} />
-              <Route path="financials" element={<AdminDashboardPage />} />
-              <Route path="analytics" element={<AdminDashboardPage />} />
-              <Route path="activity" element={<AdminDashboardPage />} />
-              <Route path="settings" element={<AdminDashboardPage />} />
+              <Route index element={<AdminCommandCenter />} />
+              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="team" element={<AdminTeamPage />} />
+              <Route path="programs" element={<AdminProgramsPage />} />
+              <Route path="submissions" element={<AdminSubmissionsPage />} />
+              <Route path="financials" element={<AdminFinancialsPage />} />
+              <Route path="analytics" element={<AdminAnalyticsPage />} />
+              <Route path="activity" element={<AdminActivityPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}
