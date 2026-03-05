@@ -1,46 +1,51 @@
 
-## Root Cause (Confirmed from Logs)
+# Fix: Students Tab Crash in Influencer Dashboard
 
-**`create-team-member`**: Boot failure — `SyntaxError: Identifier 'token' has already been declared` at line 36. The variable `token` is declared twice (line 29 AND line 36). The function crashes before it can even handle a request.
+## Root Cause
 
-**`create-influencer`**: Uses `supabaseUser.auth.getUser()` (line 35) without passing the token. This fails with Lovable Cloud's ES256 JWTs. Must use `getClaims(token)` instead — same fix that was applied to `create-team-member` but accidentally introduced a duplicate `const token`.
+In `src/pages/InfluencerDashboardPage.tsx`, the `getTimerInfo()` function has two possible return shapes:
 
-## Fix Plan
+1. **When commission is already received** — returns `{ commissionReceived: true }` — **no `paidDate` property**
+2. **Normal case** — returns `{ elapsed, remaining, ready, unlockDate, paidDate, commissionReceived: false }`
 
-### File 1: `supabase/functions/create-team-member/index.ts`
-Remove the duplicate `const token` at line 36. Keep only the one at line 29, and pass it to `getClaims()`.
-
-**Before (broken):**
-```typescript
-const token = authHeader.replace("Bearer ", "");  // line 29
-const supabaseUser = createClient(...);
-
-const token = authHeader.replace("Bearer ", "");  // line 36 — DUPLICATE CRASH
-const { data: claimsData } = await supabaseUser.auth.getClaims(token);
+Then on line ~278 this code runs unconditionally:
+```tsx
+{timerInfo && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(...)}  // 💥 CRASHES when paidDate is undefined
+  </span>
+)}
 ```
 
-**After (fixed):**
-```typescript
-const token = authHeader.replace("Bearer ", "");  // only once
-const supabaseUser = createClient(...);
+When an influencer has a reward already marked as `paid`, `getTimerInfo` returns `{ commissionReceived: true }` with no `paidDate`, so `timerInfo.paidDate.toLocaleDateString()` throws a TypeError and the entire Students tab crashes with an error boundary.
 
-const { data: claimsData } = await supabaseUser.auth.getClaims(token); // use existing token
+## Fix — One file, one line
+
+**File**: `src/pages/InfluencerDashboardPage.tsx`
+
+Guard the `paidDate` access with optional chaining:
+
+**Before (line ~278):**
+```tsx
+{timerInfo && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
+  </span>
+)}
 ```
 
-### File 2: `supabase/functions/create-influencer/index.ts`
-Replace `supabaseUser.auth.getUser()` with `getClaims(token)` pattern (same as fixed team-member):
-
-```typescript
-// Remove:
-const { data: userData, error: userError } = await supabaseUser.auth.getUser();
-if (userError || !userData?.user) { ... }
-const adminId = userData.user.id;
-
-// Replace with:
-const token = authHeader.replace("Bearer ", "");
-const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-if (claimsError || !claimsData?.claims) { ... }
-const adminId = claimsData.claims.sub;
+**After:**
+```tsx
+{timerInfo && timerInfo.paidDate && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
+  </span>
+)}
 ```
 
-Both files get the same working auth pattern. Two minimal, targeted fixes.
+This is a one-character guard — `timerInfo && timerInfo.paidDate &&` — that prevents the crash when the timer object has no `paidDate` (i.e. commission was already paid out early).
+
+## What Does NOT Change
+- No business logic, no commission logic, no trigger, no other files
+- The `commissionReceived` display still works perfectly — it just won't try to render a date next to it
+- All other tabs (Analytics, Earnings, My Link) are completely untouched
