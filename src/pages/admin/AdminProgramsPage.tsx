@@ -77,20 +77,26 @@ const AdminProgramsPage = () => {
     if (!progForm.name_ar || !progForm.name_en) { toast({ variant: 'destructive', description: isRtl ? 'الاسم مطلوب' : 'Name is required' }); return; }
     setSaving(true);
     try {
-      const { error } = await supabase.from('programs').insert({
-        name_ar: progForm.name_ar,
-        name_en: progForm.name_en,
-        type: progForm.type,
-        price: progForm.price ? Number(progForm.price) : null,
-        currency: progForm.currency,
-        duration: progForm.duration || null,
-        description: progForm.description || null,
-      });
-      if (error) throw error;
+      if (editProgId) {
+        const { error } = await supabase.from('programs').update({
+          name_ar: progForm.name_ar, name_en: progForm.name_en, type: progForm.type,
+          price: progForm.price ? Number(progForm.price) : null,
+          currency: progForm.currency, duration: progForm.duration || null, description: progForm.description || null,
+        }).eq('id', editProgId);
+        if (error) throw error;
+        setEditProgId(null);
+      } else {
+        const { error } = await supabase.from('programs').insert({
+          name_ar: progForm.name_ar, name_en: progForm.name_en, type: progForm.type,
+          price: progForm.price ? Number(progForm.price) : null,
+          currency: progForm.currency, duration: progForm.duration || null, description: progForm.description || null,
+        });
+        if (error) throw error;
+      }
       setProgForm({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' });
       setProgOpen(false);
       await fetchAll();
-      toast({ description: isRtl ? 'تم إنشاء البرنامج' : 'Program created' });
+      toast({ description: isRtl ? (editProgId ? 'تم التحديث' : 'تم إنشاء البرنامج') : (editProgId ? 'Program updated' : 'Program created') });
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
