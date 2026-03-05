@@ -6,8 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Phone, GraduationCap, RefreshCw, Clock } from 'lucide-react';
+import { User, Phone, GraduationCap, RefreshCw, Clock, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Case {
@@ -16,42 +15,27 @@ interface Case {
   phone_number: string;
   status: string;
   last_activity_at: string;
+  degree_interest: string | null;
 }
-
-type TabValue = 'ready' | 'enrolled';
-
-const STATUS_COLORS: Record<string, string> = {
-  profile_completion: 'bg-orange-100 text-orange-800',
-  payment_confirmed: 'bg-teal-100 text-teal-800',
-  submitted: 'bg-indigo-100 text-indigo-800',
-  enrollment_paid: 'bg-green-100 text-green-800',
-};
 
 export default function TeamStudentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation('dashboard');
   const isRtl = i18n.language === 'ar';
 
   const [cases, setCases] = useState<Case[]>([]);
-  const [tab, setTab] = useState<TabValue>('ready');
   const [loading, setLoading] = useState(true);
 
   const fetchStudents = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      // "Ready to Apply" = cases in profile_completion, payment_confirmed, or submitted
-      // "Enrolled" = enrollment_paid
-      const statuses: string[] = tab === 'ready'
-        ? ['profile_completion', 'payment_confirmed', 'submitted']
-        : ['enrollment_paid'];
-
       const { data, error } = await supabase
         .from('cases')
-        .select('id, full_name, phone_number, status, last_activity_at')
+        .select('id, full_name, phone_number, status, last_activity_at, degree_interest')
         .eq('assigned_to', user.id)
-        .in('status', statuses)
+        .in('status', ['submitted', 'enrollment_paid'])
         .order('last_activity_at', { ascending: false });
 
       if (error) throw error;
@@ -61,13 +45,24 @@ export default function TeamStudentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, tab]);
+  }, [user]);
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  const statusLabel = (status: string) => {
-    const key = `case.status.${status}`;
-    return t(key, status.replace(/_/g, ' '));
+  const getStatusBadge = (status: string) => {
+    if (status === 'enrollment_paid') {
+      return (
+        <Badge className="bg-green-100 text-green-800 border-green-200 gap-1 text-xs">
+          <CheckCircle2 className="h-3 w-3" />
+          {isRtl ? 'مسجّل ✓' : 'Enrolled ✓'}
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-xs">
+        {isRtl ? 'في انتظار معالجة الإدارة' : 'Awaiting Admin Processing'}
+      </Badge>
+    );
   };
 
   return (
@@ -81,20 +76,15 @@ export default function TeamStudentsPage() {
         </div>
         <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-1.5">
           <RefreshCw className="h-3.5 w-3.5" />
-          {t('common.refresh', 'Refresh')}
+          {isRtl ? 'تحديث' : 'Refresh'}
         </Button>
       </div>
 
-      <Tabs value={tab} onValueChange={v => setTab(v as TabValue)}>
-        <TabsList>
-          <TabsTrigger value="ready">
-            {isRtl ? 'جاهزون للتقديم' : 'Ready to Apply'}
-          </TabsTrigger>
-          <TabsTrigger value="enrolled">
-            {isRtl ? 'مسجّلون' : 'Enrolled'}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <p className="text-sm text-muted-foreground">
+        {isRtl
+          ? 'الطلاب الذين تم تقديمهم أو تسجيلهم'
+          : 'Students who have been submitted or enrolled'}
+      </p>
 
       {loading ? (
         <div className="space-y-2">
@@ -105,7 +95,7 @@ export default function TeamStudentsPage() {
       ) : cases.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <GraduationCap className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p>{isRtl ? 'لا يوجد طلاب في هذه الفئة' : 'No students in this category'}</p>
+          <p>{isRtl ? 'لا يوجد طلاب مقدَّمون أو مسجَّلون بعد' : 'No submitted or enrolled students yet'}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -115,18 +105,24 @@ export default function TeamStudentsPage() {
               className="cursor-pointer hover:shadow-md transition-shadow border-border"
               onClick={() => navigate(`/team/cases/${c.id}`)}
             >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">{c.full_name}</div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{c.full_name}</div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span className="flex items-center gap-1">
                         <Phone className="h-3 w-3" />
                         {c.phone_number}
                       </span>
+                      {c.degree_interest && (
+                        <span className="flex items-center gap-1">
+                          <GraduationCap className="h-3 w-3" />
+                          {c.degree_interest}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}
@@ -134,9 +130,7 @@ export default function TeamStudentsPage() {
                     </div>
                   </div>
                 </div>
-                <Badge className={`text-xs ${STATUS_COLORS[c.status] || 'bg-muted text-muted-foreground'}`}>
-                  {statusLabel(c.status)}
-                </Badge>
+                {getStatusBadge(c.status)}
               </CardContent>
             </Card>
           ))}
