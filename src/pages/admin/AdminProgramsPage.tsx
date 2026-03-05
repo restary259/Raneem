@@ -108,23 +108,43 @@ const AdminProgramsPage = () => {
     if (!accomForm.name_ar || !accomForm.name_en) { toast({ variant: 'destructive', description: isRtl ? 'الاسم مطلوب' : 'Name is required' }); return; }
     setSaving(true);
     try {
-      const { error } = await supabase.from('accommodations').insert({
-        name_ar: accomForm.name_ar,
-        name_en: accomForm.name_en,
-        price: accomForm.price ? Number(accomForm.price) : null,
-        currency: accomForm.currency,
-        description: accomForm.description || null,
-      });
-      if (error) throw error;
+      if (editAccomId) {
+        const { error } = await supabase.from('accommodations').update({
+          name_ar: accomForm.name_ar, name_en: accomForm.name_en,
+          price: accomForm.price ? Number(accomForm.price) : null,
+          currency: accomForm.currency, description: accomForm.description || null,
+        }).eq('id', editAccomId);
+        if (error) throw error;
+        setEditAccomId(null);
+      } else {
+        const { error } = await supabase.from('accommodations').insert({
+          name_ar: accomForm.name_ar, name_en: accomForm.name_en,
+          price: accomForm.price ? Number(accomForm.price) : null,
+          currency: accomForm.currency, description: accomForm.description || null,
+        });
+        if (error) throw error;
+      }
       setAccomForm({ name_ar: '', name_en: '', price: '', currency: 'ILS', description: '' });
       setAccomOpen(false);
       await fetchAll();
-      toast({ description: isRtl ? 'تم إنشاء السكن' : 'Accommodation created' });
+      toast({ description: isRtl ? (editAccomId ? 'تم التحديث' : 'تم إنشاء السكن') : (editAccomId ? 'Accommodation updated' : 'Accommodation created') });
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setSaving(false);
     }
+  };
+
+  const openEditProgram = (p: Program) => {
+    setEditProgId(p.id);
+    setProgForm({ name_ar: p.name_ar, name_en: p.name_en, type: p.type, price: p.price?.toString() ?? '', currency: p.currency, duration: p.duration ?? '', description: p.description ?? '' });
+    setProgOpen(true);
+  };
+
+  const openEditAccom = (a: Accommodation) => {
+    setEditAccomId(a.id);
+    setAccomForm({ name_ar: a.name_ar, name_en: a.name_en, price: a.price?.toString() ?? '', currency: a.currency, description: a.description ?? '' });
+    setAccomOpen(true);
   };
 
   const toggleActive = async (table: 'programs' | 'accommodations', id: string, current: boolean) => {
