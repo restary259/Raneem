@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, User, Trash2 } from 'lucide-react';
+import { Edit, Save, X, User, Trash2, Lock } from 'lucide-react';
 import { Profile } from '@/types/profile';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
