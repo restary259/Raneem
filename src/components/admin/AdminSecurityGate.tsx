@@ -75,8 +75,24 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
     }
     setLoading(true);
     try {
+      // Re-validate session is still alive before attempting password update
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        toast({ variant: 'destructive', title: 'Session expired', description: 'Please log in again.' });
+        await supabase.auth.signOut();
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      if (error) {
+        // If auth session missing, the session token is stale — sign out and retry
+        if (error.message.toLowerCase().includes('session') || error.message.toLowerCase().includes('missing')) {
+          toast({ variant: 'destructive', title: 'Session expired', description: 'Please log in again.' });
+          await supabase.auth.signOut();
+          return;
+        }
+        throw error;
+      }
       await supabase.from('profiles').update({ must_change_password: false } as any).eq('id', userId);
       toast({ title: '✅ Password updated' });
 
