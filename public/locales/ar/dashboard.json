@@ -1370,5 +1370,104 @@
     },
     "students": { "title": "الطلاب", "submitted": "مقدّمون", "enrolled": "ملتحقون" },
     "analytics": { "title": "تحليلاتي", "closedMonth": "مغلقة هذا الشهر", "totalCases": "إجمالي الحالات", "todayAppts": "مواعيد اليوم", "byStatus": "الحالات حسب الحالة" }
+  },
+  "partner": {
+    "welcome": "أهلاً بعودتك",
+    "subtitle": "تابع إحالاتك وأرباحك",
+    "myLink": "رابط الإحالة",
+    "shareLink": "مشاركة",
+    "copyLink": "نسخ الرابط",
+    "shareWhatsApp": "مشاركة عبر واتساب",
+    "waMessage": "قدّم طلبك عبر رابط درب للدراسة الخارجية",
+    "requestPayout": "طلب صرف الأرباح",
+    "recentStudents": "آخر الطلاب",
+    "studentsTitle": "طلابي",
+    "earningsTitle": "أرباحي",
+    "searchPlaceholder": "البحث بالاسم...",
+    "noStudents": "لا طلاب بعد. شارك رابطك للبدء!",
+    "noResults": "لا نتائج مطابقة",
+    "payoutRequests": "طلبات الصرف",
+    "lockInfo": "بعض المكافآت مقفلة لمدة {{days}} يوم إضافي.",
+    "tipsTitle": "نصائح التسويق",
+    "tips": {
+      "bio": "أضف رابط الإحالة في البايو الخاص بك",
+      "stories": "شارك قصص نجاح الطلاب في ستوريزك",
+      "hashtags": "استخدم هاشتاقات مثل #دراسة_في_ألمانيا",
+      "results": "شارك نتائج الطلاب الحقيقية (بإذنهم)"
+    },
+    "kpi": {
+      "totalStudents": "إجمالي الطلاب",
+      "eligible": "حالات نشطة",
+      "paid": "مدفوعون",
+      "pendingEarnings": "أرباح معلّقة"
+    },
+    "funnel": {
+      "title": "قمع التحويل",
+      "submitted": "مقدّمون",
+      "active": "نشطون",
+      "paid": "مدفوعون",
+      "students": "طلاب"
+    },
+    "status": {
+      "new": "جديد",
+      "contacted": "تم التواصل",
+      "appointment": "موعد",
+      "profile": "الملف",
+      "payment": "الدفع",
+      "submitted": "مقدّم",
+      "paid": "مدفوع ✅",
+      "cancelled": "ملغى"
+    }
+  },
+  "visa": {
+    "title": "حالة التأشيرة",
+    "readOnly": "يتم تحديث حالة التأشيرة من قِبل المسؤول المعيّن.",
+    "personalInfo": "معلومات متعلقة بالتأشيرة",
+    "passport": "رقم جواز السفر",
+    "nationality": "الجنسية",
+    "arrivalDate": "تاريخ الوصول",
+    "applicationDetails": "تفاصيل الطلب",
+    "addressAbroad": "العنوان في الخارج",
+    "contactAbroad": "جهة الاتصال في الخارج",
+    "outcome": "النتيجة",
+    "notes": "ملاحظات",
+    "noApplication": "لا يوجد طلب تأشيرة بعد. سيتم التحديث عند بدء إجراءات التأشيرة."
+  },
+  "contacts": {
+    "title": "جهات الاتصال المهمة",
+    "subtitle": "جهات الاتصال الرئيسية لرحلتك الدراسية",
+    "noContacts": "لا توجد جهات اتصال متاحة بعد.",
+    "visitLink": "زيارة",
+    "categories": {
+      "support": "الدعم",
+      "team": "الفريق",
+      "embassy": "السفارة",
+      "other": "أخرى"
+    }
+  },
+  "nav": {
+    "checklist": "قائمة المتطلبات",
+    "profile": "ملفي",
+    "documents": "المستندات",
+    "visa": "حالة التأشيرة",
+    "refer": "أحِل واكسب",
+    "contacts": "جهات الاتصال",
+    "overview": "نظرة عامة",
+    "myLink": "رابطي",
+    "students": "الطلاب",
+    "earnings": "الأرباح",
+    "today": "اليوم",
+    "cases": "الحالات",
+    "appointments": "المواعيد",
+    "todayAppts": "مواعيد اليوم",
+    "submitNew": "تقديم طالب جديد",
+    "analytics": "التحليلات",
+    "pipeline": "خط الأنابيب",
+    "team": "الفريق",
+    "programs": "البرامج",
+    "submissions": "الطلبات",
+    "financials": "الماليات",
+    "activity": "النشاط",
+    "settings": "الإعدادات"
   }
 }

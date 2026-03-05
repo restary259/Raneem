@@ -62,11 +62,19 @@ const TeamStudentsPage = lazy(() => import('./pages/team/TeamStudentsPage'));
 const TeamStudentProfilePage = lazy(() => import('./pages/team/TeamStudentProfilePage'));
 const TeamAnalyticsPage = lazy(() => import('./pages/team/TeamAnalyticsPage'));
 
-// Lazy-loaded Partner pages (Phase 5 — placeholder redirects until built)
-const PartnerPlaceholderPage = lazy(() => import('./pages/placeholders/PartnerPlaceholderPage'));
+// Partner pages (Phase 5)
+const PartnerOverviewPage = lazy(() => import('./pages/partner/PartnerOverviewPage'));
+const PartnerLinkPage = lazy(() => import('./pages/partner/PartnerLinkPage'));
+const PartnerStudentsPage = lazy(() => import('./pages/partner/PartnerStudentsPage'));
+const PartnerEarningsPage = lazy(() => import('./pages/partner/PartnerEarningsPage'));
 
-// Lazy-loaded Student pages (Phase 5 — placeholder redirects until built)
-const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
+// Student pages (Phase 5)
+const StudentChecklistPage = lazy(() => import('./pages/student/StudentChecklistPage'));
+const StudentProfilePage = lazy(() => import('./pages/student/StudentProfilePage'));
+const StudentDocumentsPage = lazy(() => import('./pages/student/StudentDocumentsPage'));
+const StudentVisaPage = lazy(() => import('./pages/student/StudentVisaPage'));
+const StudentReferPage = lazy(() => import('./pages/student/StudentReferPage'));
+const StudentContactsPage = lazy(() => import('./pages/student/StudentContactsPage'));
 
 const queryClient = new QueryClient();
 
@@ -201,10 +209,10 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PartnerPlaceholderPage />} />
-              <Route path="link" element={<PartnerPlaceholderPage />} />
-              <Route path="students" element={<PartnerPlaceholderPage />} />
-              <Route path="earnings" element={<PartnerPlaceholderPage />} />
+              <Route index element={<PartnerOverviewPage />} />
+              <Route path="link" element={<PartnerLinkPage />} />
+              <Route path="students" element={<PartnerStudentsPage />} />
+              <Route path="earnings" element={<PartnerEarningsPage />} />
             </Route>
 
             {/* ── Student Dashboard (/student/*) ── */}
@@ -217,12 +225,12 @@ const App = () => {
               }
             >
               <Route index element={<Navigate to="/student/checklist" replace />} />
-              <Route path="checklist" element={<StudentDashboardPage />} />
-              <Route path="profile" element={<StudentDashboardPage />} />
-              <Route path="documents" element={<StudentDashboardPage />} />
-              <Route path="visa" element={<StudentDashboardPage />} />
-              <Route path="refer" element={<StudentDashboardPage />} />
-              <Route path="contacts" element={<StudentDashboardPage />} />
+              <Route path="checklist" element={<StudentChecklistPage />} />
+              <Route path="profile" element={<StudentProfilePage />} />
+              <Route path="documents" element={<StudentDocumentsPage />} />
+              <Route path="visa" element={<StudentVisaPage />} />
+              <Route path="refer" element={<StudentReferPage />} />
+              <Route path="contacts" element={<StudentContactsPage />} />
             </Route>
 
             {/* ── Legacy redirects (old routes → new) ── */}
