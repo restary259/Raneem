@@ -1549,5 +1549,30 @@
       "forgotten": "حالة منسية",
       "cancelled": "ملغى"
     }
+  },
+  "nav": {
+    "overview": "الرئيسية",
+    "pipeline": "خط الأنابيب",
+    "team": "الفريق",
+    "programs": "البرامج",
+    "submissions": "التقديمات",
+    "financials": "المالية",
+    "analytics": "التحليلات",
+    "activity": "النشاط",
+    "settings": "الإعدادات",
+    "today": "اليوم",
+    "cases": "الملفات",
+    "appointments": "المواعيد",
+    "todayAppts": "اليوم",
+    "submitNew": "جديد",
+    "students": "الطلاب",
+    "myLink": "رابطي",
+    "earnings": "الأرباح",
+    "checklist": "المتطلبات",
+    "profile": "الملف",
+    "documents": "الوثائق",
+    "visa": "التأشيرة",
+    "refer": "إحالة",
+    "contacts": "التواصل"
   }
 }
