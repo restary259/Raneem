@@ -21,11 +21,23 @@ const PREFERRED_SUBJECTS = ['math', 'english', 'science', 'german', 'arabic', 'c
 const ACCOMMODATION_TYPES = ['single', 'double', 'hall'];
 const ACCOMMODATION_CATEGORIES = ['A', 'B+', 'B', 'C', 'D', 'E'];
 
+interface CaseData {
+  city?: string | null;
+  education_level?: string | null;
+  bagrut_score?: number | null;
+  english_level?: string | null;
+  math_units?: number | null;
+  passport_type?: string | null;
+  degree_interest?: string | null;
+  intake_notes?: string | null;
+}
+
 interface Props {
   caseId: string;
   actorId: string;
   actorName: string;
   existingData?: Record<string, unknown>;
+  caseData?: CaseData;
   onSuccess: () => void;
 }
 
