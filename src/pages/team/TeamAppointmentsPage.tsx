@@ -2,10 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { isToday, isFuture, isPast, format, formatDistanceToNow } from 'date-fns';
+import { isToday, isFuture, isPast, format } from 'date-fns';
 import AppointmentOutcomeModal from '@/components/team/AppointmentOutcomeModal';
 
 interface Appointment {
@@ -17,6 +18,8 @@ interface Appointment {
 export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation('dashboard');
+  const isAr = i18n.language === 'ar';
   const [appts, setAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -43,54 +46,78 @@ export default function TeamAppointmentsPage() {
   const renderAppt = (a: Appointment) => (
     <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
       <div>
-        <div className="font-medium">{(a.case as any)?.full_name ?? 'Unknown'}</div>
+        <div className="font-medium">{(a.case as any)?.full_name ?? (isAr ? 'غير معروف' : 'Unknown')}</div>
         <div className="text-sm text-muted-foreground">{format(new Date(a.scheduled_at), 'MMM d, h:mm a')} · {a.duration_minutes}min</div>
         {a.notes && <div className="text-xs text-muted-foreground mt-0.5">{a.notes}</div>}
       </div>
       <div className="flex items-center gap-2">
         {a.outcome ? <Badge variant="secondary">{a.outcome}</Badge> : null}
         {!a.outcome && isPast(new Date(a.scheduled_at)) && (
-          <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>Record Outcome</Button>
+          <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
+            {isAr ? 'تسجيل النتيجة' : 'Record Outcome'}
+          </Button>
         )}
-        <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${a.case_id}`)}>Case</Button>
+        <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${a.case_id}`)}>
+          {isAr ? 'الملف' : 'Case'}
+        </Button>
       </div>
     </div>
   );
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold">Appointments</h1>
+      <h1 className="text-2xl font-bold">{isAr ? 'المواعيد' : 'Appointments'}</h1>
 
       {pastNeedOutcome.length > 0 && (
         <Card className="border-destructive/40 bg-destructive/5">
-          <CardHeader className="pb-2"><CardTitle className="text-base text-destructive">⚠ Need Outcome ({pastNeedOutcome.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-destructive">
+              ⚠ {isAr ? `تحتاج نتيجة (${pastNeedOutcome.length})` : `Need Outcome (${pastNeedOutcome.length})`}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">{pastNeedOutcome.map(renderAppt)}</CardContent>
         </Card>
       )}
 
       {todayAppts.length > 0 && (
         <Card className="border-primary/30">
-          <CardHeader className="pb-2"><CardTitle className="text-base">Today ({todayAppts.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              {isAr ? `اليوم (${todayAppts.length})` : `Today (${todayAppts.length})`}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">{todayAppts.map(renderAppt)}</CardContent>
         </Card>
       )}
 
       {upcomingAppts.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Upcoming ({upcomingAppts.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              {isAr ? `القادمة (${upcomingAppts.length})` : `Upcoming (${upcomingAppts.length})`}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">{upcomingAppts.map(renderAppt)}</CardContent>
         </Card>
       )}
 
       {pastWithOutcome.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base text-muted-foreground">Past Appointments</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-muted-foreground">
+              {isAr ? 'المواعيد السابقة' : 'Past Appointments'}
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">{pastWithOutcome.slice(0, 10).map(renderAppt)}</CardContent>
         </Card>
       )}
 
-      {loading && <div className="text-center py-8 text-muted-foreground">Loading...</div>}
-      {!loading && appts.length === 0 && <div className="text-center py-16 text-muted-foreground">No appointments yet</div>}
+      {loading && <div className="text-center py-8 text-muted-foreground">{isAr ? 'جار التحميل...' : 'Loading...'}</div>}
+      {!loading && appts.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground">
+          {isAr ? 'لا توجد مواعيد بعد' : 'No appointments yet'}
+        </div>
+      )}
 
       {outcomeApptId && (
         <AppointmentOutcomeModal

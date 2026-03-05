@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +43,8 @@ export default function TeamCasesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation('dashboard');
+  const isAr = i18n.language === 'ar';
   const [cases, setCases] = useState<Case[]>([]);
   const [tab, setTab] = useState<TabId>('mine');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -84,7 +87,7 @@ export default function TeamCasesPage() {
 
   const handleCreateCase = async () => {
     if (!newName.trim() || !newPhone.trim()) {
-      toast({ variant: 'destructive', description: 'Name and phone are required' });
+      toast({ variant: 'destructive', description: isAr ? 'الاسم والهاتف مطلوبان' : 'Name and phone are required' });
       return;
     }
     setCreating(true);
@@ -97,7 +100,7 @@ export default function TeamCasesPage() {
         status: 'new',
       }).select().single();
       if (error) throw error;
-      toast({ title: 'Case created' });
+      toast({ title: isAr ? 'تم إنشاء الملف' : 'Case created' });
       setShowNew(false);
       setNewName(''); setNewPhone('');
       navigate(`/team/cases/${(data as Case).id}`);
@@ -110,22 +113,35 @@ export default function TeamCasesPage() {
 
   const STATUS_FILTERS: StatusFilter[] = ['all', 'new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted'];
 
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      all: isAr ? 'الكل' : 'All',
+      new: isAr ? 'جديد' : 'New',
+      contacted: isAr ? 'تم التواصل' : 'Contacted',
+      appointment_scheduled: isAr ? 'موعد محدد' : 'Appointment',
+      profile_completion: isAr ? 'استكمال الملف' : 'Profile',
+      payment_confirmed: isAr ? 'تم الدفع' : 'Payment',
+      submitted: isAr ? 'تم التقديم' : 'Submitted',
+    };
+    return map[s] ?? s.replace(/_/g, ' ');
+  };
+
   return (
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Cases</h1>
+        <h1 className="text-2xl font-bold">{isAr ? 'الملفات' : 'Cases'}</h1>
         <Button onClick={() => setShowNew(true)} size="sm">
-          <Plus className="h-4 w-4 me-2" /> New Case
+          <Plus className="h-4 w-4 me-2" /> {isAr ? 'ملف جديد' : 'New Case'}
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={v => setTab(v as TabId)}>
         <TabsList>
-          <TabsTrigger value="mine">My Cases</TabsTrigger>
-          <TabsTrigger value="unassigned">Unassigned</TabsTrigger>
-          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="mine">{isAr ? 'ملفاتي' : 'My Cases'}</TabsTrigger>
+          <TabsTrigger value="unassigned">{isAr ? 'غير معيّنة' : 'Unassigned'}</TabsTrigger>
+          <TabsTrigger value="all">{isAr ? 'الكل' : 'All'}</TabsTrigger>
           <TabsTrigger value="forgotten" className="text-destructive">
-            <AlertTriangle className="h-3 w-3 me-1" /> Forgotten
+            <AlertTriangle className="h-3 w-3 me-1" /> {isAr ? 'منسية' : 'Forgotten'}
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -133,21 +149,26 @@ export default function TeamCasesPage() {
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search name or phone..." className="ps-9" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input
+            placeholder={isAr ? 'بحث بالاسم أو الهاتف...' : 'Search name or phone...'}
+            className="ps-9"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
         <div className="flex gap-1 flex-wrap">
           {STATUS_FILTERS.map(s => (
-            <Button key={s} size="sm" variant={statusFilter === s ? 'default' : 'outline'} onClick={() => setStatusFilter(s)} className="text-xs h-9 capitalize">
-              {s.replace(/_/g, ' ')}
+            <Button key={s} size="sm" variant={statusFilter === s ? 'default' : 'outline'} onClick={() => setStatusFilter(s)} className="text-xs h-9">
+              {statusLabel(s)}
             </Button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-muted-foreground">Loading...</div>
+        <div className="text-center py-16 text-muted-foreground">{isAr ? 'جار التحميل...' : 'Loading...'}</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">No cases found</div>
+        <div className="text-center py-16 text-muted-foreground">{isAr ? 'لا توجد ملفات' : 'No cases found'}</div>
       ) : (
         <div className="space-y-2">
           {filtered.map(c => (
@@ -162,7 +183,7 @@ export default function TeamCasesPage() {
                   </div>
                 </div>
                 <Badge className={STATUS_COLORS[c.status] ?? 'bg-muted text-foreground'}>
-                  {c.status.replace(/_/g, ' ')}
+                  {statusLabel(c.status)}
                 </Badge>
               </CardContent>
             </Card>
@@ -172,15 +193,15 @@ export default function TeamCasesPage() {
 
       <Dialog open={showNew} onOpenChange={setShowNew}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Create New Case</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{isAr ? 'إنشاء ملف جديد' : 'Create New Case'}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Full Name *</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Student name" /></div>
-            <div><Label>Phone *</Label><Input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+972..." /></div>
+            <div><Label>{isAr ? 'الاسم الكامل *' : 'Full Name *'}</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder={isAr ? 'اسم الطالب' : 'Student name'} /></div>
+            <div><Label>{isAr ? 'الهاتف *' : 'Phone *'}</Label><Input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+972..." /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNew(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowNew(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
             <Button onClick={handleCreateCase} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create'}
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? 'إنشاء' : 'Create')}
             </Button>
           </DialogFooter>
         </DialogContent>

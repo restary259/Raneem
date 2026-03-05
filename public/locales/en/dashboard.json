@@ -1549,5 +1549,30 @@
       "forgotten": "Forgotten",
       "cancelled": "Cancelled"
     }
+  },
+  "nav": {
+    "overview": "Overview",
+    "pipeline": "Pipeline",
+    "team": "Team",
+    "programs": "Programs",
+    "submissions": "Submissions",
+    "financials": "Finance",
+    "analytics": "Analytics",
+    "activity": "Activity",
+    "settings": "Settings",
+    "today": "Today",
+    "cases": "Cases",
+    "appointments": "Appts",
+    "todayAppts": "Today",
+    "submitNew": "New",
+    "students": "Students",
+    "myLink": "My Link",
+    "earnings": "Earnings",
+    "checklist": "Checklist",
+    "profile": "Profile",
+    "documents": "Docs",
+    "visa": "Visa",
+    "refer": "Refer",
+    "contacts": "Contacts"
   }
 }

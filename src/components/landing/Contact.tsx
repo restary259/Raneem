@@ -88,6 +88,24 @@ const Contact = () => {
         p_preferred_major: preferredMajor.trim() || null,
       } as any);
       if (error) throw new Error(error.message);
+
+      // Also create a case in the unified pipeline so team can see it
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
+          body: JSON.stringify({
+            full_name: fullName.trim(),
+            phone_number: phone.trim(),
+            source: 'contact_form',
+          }),
+        });
+      } catch (caseErr) {
+        console.warn('[Contact] case creation warning:', caseErr);
+      }
+
       return { success: true };
     },
     onSuccess: () => {

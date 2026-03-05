@@ -143,6 +143,24 @@ const ApplyPage: React.FC = () => {
       }
       console.log('[ApplyPage] Main lead created for:', phone.trim());
 
+      // Also create a case in the unified cases table so it appears in the team dashboard
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
+          body: JSON.stringify({
+            full_name: fullName.trim(),
+            phone_number: phone.trim(),
+            source: 'apply_page',
+            partner_id: sourceType === 'influencer' ? sourceId : null,
+          }),
+        });
+      } catch (caseErr) {
+        console.warn('[ApplyPage] case creation warning:', caseErr);
+      }
+
       // Submit each companion as a full separate lead with all their info
       if (hasCompanions) {
         for (const c of companions) {
