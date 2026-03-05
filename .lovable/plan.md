@@ -1,29 +1,51 @@
 
-## Issues Found & Fixes
+# Fix: Students Tab Crash in Influencer Dashboard
 
-### Root Cause: Input Flickering
-The `useEffect` in `StudentAuthPage.tsx` has `navigate` in its dependency array (line 79). `navigate` from react-router changes reference on every render, causing the `onAuthStateChange` subscription to be torn down and re-registered every keystroke → forces re-render → flicker.
+## Root Cause
 
-**Fix**: Move `navigate` out of deps with `useRef`, or wrap `redirectByRole` in `useCallback` with a stable ref.
+In `src/pages/InfluencerDashboardPage.tsx`, the `getTimerInfo()` function has two possible return shapes:
 
-### Fix Plan
+1. **When commission is already received** — returns `{ commissionReceived: true }` — **no `paidDate` property**
+2. **Normal case** — returns `{ elapsed, remaining, ready, unlockDate, paidDate, commissionReceived: false }`
 
-**1. `src/pages/StudentAuthPage.tsx` — 3 changes:**
-- Remove `navigate` from `useEffect` deps array (change `[navigate]` to `[]`)
-- Wrap `redirectByRole` logic so it uses a `useRef` for navigate to stay stable
-- Add a "Back to Website" link at the top of the page (← arrow + "Back to main site")
-- The `redirectByRole` function is defined inside the component and referenced in the effect — move it to a stable ref so the effect doesn't need `navigate` in deps
+Then on line ~278 this code runs unconditionally:
+```tsx
+{timerInfo && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(...)}  // 💥 CRASHES when paidDate is undefined
+  </span>
+)}
+```
 
-**2. `src/components/landing/MobileNav.tsx` — hamburger persistence:**
-- Currently the Sheet doesn't auto-close on navigation. But the user says it's not persisting — need to add `open`/`onOpenChange` state controlled at Sheet level so it stays open until user explicitly closes it (or use `key` to preserve)
-- Actually looking at the code the Sheet has no controlled state. Need to add `open` + `onOpenChange` props and only close when user taps a link (with explicit close handler on each Link)
+When an influencer has a reward already marked as `paid`, `getTimerInfo` returns `{ commissionReceived: true }` with no `paidDate`, so `timerInfo.paidDate.toLocaleDateString()` throws a TypeError and the entire Students tab crashes with an error boundary.
 
-**Files to change:**
-| File | Change |
-|---|---|
-| `src/pages/StudentAuthPage.tsx` | Fix flicker (stable effect), add "Back to home" link |
-| `src/components/landing/MobileNav.tsx` | Add controlled open state so hamburger persists properly |
+## Fix — One file, one line
 
-### Visual Result
-- Login page: "← Back to main website" link at top, no more flickering
-- Mobile nav: Sheet stays open until user explicitly taps a link or the X button
+**File**: `src/pages/InfluencerDashboardPage.tsx`
+
+Guard the `paidDate` access with optional chaining:
+
+**Before (line ~278):**
+```tsx
+{timerInfo && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
+  </span>
+)}
+```
+
+**After:**
+```tsx
+{timerInfo && timerInfo.paidDate && (
+  <span className="text-muted-foreground">
+    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
+  </span>
+)}
+```
+
+This is a one-character guard — `timerInfo && timerInfo.paidDate &&` — that prevents the crash when the timer object has no `paidDate` (i.e. commission was already paid out early).
+
+## What Does NOT Change
+- No business logic, no commission logic, no trigger, no other files
+- The `commissionReceived` display still works perfectly — it just won't try to render a date next to it
+- All other tabs (Analytics, Earnings, My Link) are completely untouched

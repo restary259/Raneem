@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +20,8 @@ const ROLE_TO_PATH: Record<string, string> = {
 };
 
 const StudentAuthPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,8 +33,11 @@ const StudentAuthPage = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  // Stable ref so effect never re-runs due to navigate changing
+  const navigateRef = useRef(navigate);
+  useEffect(() => { navigateRef.current = navigate; }, [navigate]);
 
-  const redirectByRole = async (userId: string) => {
+  const redirectByRole = useCallback(async (userId: string) => {
     const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('must_change_password')
@@ -47,8 +51,8 @@ const StudentAuthPage = () => {
 
     const { data: role } = await supabase.rpc('get_my_role' as any);
     const path = (role && ROLE_TO_PATH[role as string]) || '/student/checklist';
-    navigate(path);
-  };
+    navigateRef.current(path);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,7 +80,7 @@ const StudentAuthPage = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [redirectByRole]);
 
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
@@ -159,6 +163,17 @@ const StudentAuthPage = () => {
       </div>
 
       <div className="w-full max-w-md relative z-10">
+        {/* Back to website */}
+        <div className="mb-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className={`h-4 w-4 transition-transform group-hover:-translate-x-1 ${isRTL ? 'rotate-180' : ''}`} />
+            {t('auth.backToWebsite', 'Back to main website')}
+          </Link>
+        </div>
+
         {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/25 backdrop-blur-sm mb-4 shadow-lg">
@@ -178,7 +193,7 @@ const StudentAuthPage = () => {
                 {t('auth.email')}
               </Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
@@ -186,6 +201,7 @@ const StudentAuthPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                   className="ps-10 transition-all"
                 />
               </div>
@@ -205,7 +221,7 @@ const StudentAuthPage = () => {
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -213,6 +229,7 @@ const StudentAuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="ps-10 pe-10 transition-all"
                 />
                 <button
