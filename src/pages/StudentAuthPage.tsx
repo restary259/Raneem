@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
@@ -8,10 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
-import { Checkbox } from '@/components/ui/checkbox';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
@@ -37,20 +35,22 @@ const StudentAuthPage = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const redirectByRole = async (userId: string) => {
-    // Check must_change_password first
-    const { data: profile } = await (supabase as any).from('profiles').select('must_change_password').eq('id', userId).maybeSingle();
+    const { data: profile } = await (supabase as any)
+      .from('profiles')
+      .select('must_change_password')
+      .eq('id', userId)
+      .maybeSingle();
+
     if (profile?.must_change_password) {
       setShowChangePasswordModal(true);
       return;
     }
 
-    // Use get_my_role() RPC — secure, no direct user_roles query
     const { data: role } = await supabase.rpc('get_my_role' as any);
-    const path = role ? ROLE_TO_PATH[role as string] : '/student/checklist';
-    navigate(path || '/student/checklist');
+    const path = (role && ROLE_TO_PATH[role as string]) || '/student/checklist';
+    navigate(path);
   };
 
   const handleGoogleSignIn = async () => {
@@ -102,7 +102,6 @@ const StudentAuthPage = () => {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
-      // Update must_change_password
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         await (supabase as any).from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
@@ -111,7 +110,6 @@ const StudentAuthPage = () => {
       setShowChangePasswordModal(false);
       toast({ title: 'تم تغيير كلمة المرور بنجاح' });
 
-      // Now redirect
       if (session) {
         await redirectByRole(session.user.id);
       }
@@ -122,135 +120,70 @@ const StudentAuthPage = () => {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-guard`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ email, password }),
-        });
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-guard`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-        const result = await resp.json();
+      const result = await resp.json();
 
-        if (!resp.ok) {
-          throw new Error(result.error || t('auth.loginFailed'));
+      if (!resp.ok) {
+        throw new Error(result.error || t('auth.loginFailed'));
+      }
+
+      if (result.session) {
+        if (result.session_nonce) {
+          localStorage.setItem('darb_session_nonce', result.session_nonce);
         }
-
-        if (result.session) {
-          // Store session nonce for single-session enforcement
-          if (result.session_nonce) {
-            localStorage.setItem('darb_session_nonce', result.session_nonce);
-          }
-          await supabase.auth.setSession({
-            access_token: result.session.access_token,
-            refresh_token: result.session.refresh_token,
-          });
-        }
-
-        toast({
-          title: t('auth.loginSuccess'),
-          description: t('auth.loginSuccessDesc'),
-        });
-      } else {
-        if (!validatePassword(password)) {
-          toast({
-            variant: "destructive",
-            title: t('auth.weakPassword'),
-            description: t('auth.weakPasswordDesc'),
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        if (!consentAccepted) {
-          toast({
-            variant: "destructive",
-            title: t('auth.consentRequired', 'Consent Required'),
-            description: t('auth.consentRequiredDesc', 'You must accept the terms and privacy policy to register.'),
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              phone_number: phoneNumber,
-              country: country,
-              ...(refId ? { influencer_id: refId } : {}),
-            },
-            emailRedirectTo: `${window.location.origin}/student-dashboard`
-          }
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: t('auth.signupSuccess'),
-          description: t('auth.signupSuccessDesc'),
+        await supabase.auth.setSession({
+          access_token: result.session.access_token,
+          refresh_token: result.session.refresh_token,
         });
       }
+
+      toast({ title: t('auth.loginSuccess'), description: t('auth.loginSuccessDesc') });
     } catch (error: any) {
       let errorMessage = error.message;
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = t('auth.invalidCredentials');
-      } else if (error.message.includes('User already registered')) {
-        errorMessage = t('auth.alreadyRegistered');
       } else if (error.message.includes('Invalid email')) {
         errorMessage = t('auth.invalidEmail');
       }
-
-      toast({
-        variant: "destructive",
-        title: t('auth.errorTitle'),
-        description: errorMessage,
-      });
+      toast({ variant: 'destructive', title: t('auth.errorTitle'), description: errorMessage });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">
-              {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.loginTitle')}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">{t('auth.loginSubtitle', 'Sign in to your DARB account')}</p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAuth} className="space-y-4">
-              {!isLogin && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">{t('auth.fullName')}</Label>
-                    <Input id="fullName" placeholder={t('auth.fullNamePlaceholder')} value={fullName} onChange={(e) => setFullName(e.target.value)} required={!isLogin} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">{t('auth.phone')}</Label>
-                    <Input id="phoneNumber" type="tel" placeholder={t('auth.phonePlaceholder')} value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="country">{t('auth.country')}</Label>
-                    <Input id="country" placeholder={t('auth.countryPlaceholder')} value={country} onChange={(e) => setCountry(e.target.value)} />
-                  </div>
-                </>
-              )}
-
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t('auth.email')}</Label>
-                <Input id="email" type="email" placeholder={t('auth.emailPlaceholder')} value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t('auth.emailPlaceholder')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -258,12 +191,12 @@ const StudentAuthPage = () => {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={isLogin ? 1 : 10}
+                    minLength={1}
                   />
                   <Button
                     type="button"
@@ -275,42 +208,29 @@ const StudentAuthPage = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                {!isLogin && <PasswordStrength password={password} />}
-                {isLogin && (
-                  <div className="text-left">
-                    <Button type="button" variant="link" size="sm" onClick={() => setShowResetModal(true)} className="p-0 h-auto font-normal text-sm text-primary hover:underline">
-                      {t('auth.forgotPassword')}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {!isLogin && (
-                <div className="flex items-start gap-2 mt-2">
-                  <Checkbox
-                    id="consent"
-                    checked={consentAccepted}
-                    onCheckedChange={(checked) => setConsentAccepted(checked === true)}
-                  />
-                  <Label htmlFor="consent" className="text-xs leading-tight cursor-pointer">
-                    {t('auth.consentText', 'I agree to the Terms of Service and Privacy Policy. My data will be processed to provide educational consulting services.')}
-                  </Label>
+                <div className="text-start">
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={() => setShowResetModal(true)}
+                    className="p-0 h-auto font-normal text-sm text-primary hover:underline"
+                  >
+                    {t('auth.forgotPassword')}
+                  </Button>
                 </div>
-              )}
+              </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     {t('auth.loading')}
                   </>
-                ) : (
-                  isLogin ? t('auth.loginButton') : t('auth.signupButton')
-                )}
+                ) : t('auth.loginButton')}
               </Button>
             </form>
 
-            {/* Google OAuth divider */}
             <div className="my-4 flex items-center gap-3">
               <div className="flex-1 h-px bg-border" />
               <span className="text-xs text-muted-foreground">{t('auth.orContinueWith', 'or continue with')}</span>
@@ -331,19 +251,12 @@ const StudentAuthPage = () => {
               </svg>
               {t('auth.continueWithGoogle', 'Continue with Google')}
             </Button>
-
-            <div className="mt-4 text-center">
-              <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-sm">
-                {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
         {import.meta.env.DEV && window.location.hostname === 'localhost' && <AuthDebugPanel />}
         <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
-        {/* Forced Password Change Modal */}
         <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
           <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
             <DialogHeader><DialogTitle>يجب تغيير كلمة المرور</DialogTitle></DialogHeader>
