@@ -62,11 +62,19 @@ const TeamStudentsPage = lazy(() => import('./pages/team/TeamStudentsPage'));
 const TeamStudentProfilePage = lazy(() => import('./pages/team/TeamStudentProfilePage'));
 const TeamAnalyticsPage = lazy(() => import('./pages/team/TeamAnalyticsPage'));
 
-// Lazy-loaded Partner pages (Phase 5 — placeholder redirects until built)
-const PartnerPlaceholderPage = lazy(() => import('./pages/placeholders/PartnerPlaceholderPage'));
+// Partner pages (Phase 5)
+const PartnerOverviewPage = lazy(() => import('./pages/partner/PartnerOverviewPage'));
+const PartnerLinkPage = lazy(() => import('./pages/partner/PartnerLinkPage'));
+const PartnerStudentsPage = lazy(() => import('./pages/partner/PartnerStudentsPage'));
+const PartnerEarningsPage = lazy(() => import('./pages/partner/PartnerEarningsPage'));
 
-// Lazy-loaded Student pages (Phase 5 — placeholder redirects until built)
-const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
+// Student pages (Phase 5)
+const StudentChecklistPage = lazy(() => import('./pages/student/StudentChecklistPage'));
+const StudentProfilePage = lazy(() => import('./pages/student/StudentProfilePage'));
+const StudentDocumentsPage = lazy(() => import('./pages/student/StudentDocumentsPage'));
+const StudentVisaPage = lazy(() => import('./pages/student/StudentVisaPage'));
+const StudentReferPage = lazy(() => import('./pages/student/StudentReferPage'));
+const StudentContactsPage = lazy(() => import('./pages/student/StudentContactsPage'));
 
 const queryClient = new QueryClient();
 
