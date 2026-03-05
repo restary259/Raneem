@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, RefreshCw, BookOpen, Home, Clock, BadgeCheck, Pause, Play } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, BookOpen, Home, Clock, BadgeCheck, Pause, Play, Pencil } from 'lucide-react';
 
 interface Program {
   id: string;
@@ -48,6 +48,8 @@ const AdminProgramsPage = () => {
   const [progOpen, setProgOpen] = useState(false);
   const [accomOpen, setAccomOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editProgId, setEditProgId] = useState<string | null>(null);
+  const [editAccomId, setEditAccomId] = useState<string | null>(null);
 
   const [progForm, setProgForm] = useState({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' });
   const [accomForm, setAccomForm] = useState({ name_ar: '', name_en: '', price: '', currency: 'ILS', description: '' });
