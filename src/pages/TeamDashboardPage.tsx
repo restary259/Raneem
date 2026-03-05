@@ -411,7 +411,7 @@ const TeamDashboardPage = () => {
                   {CASE_FILTER_TABS.map(f => {
                     const count = f === 'all' ? cases.length : f === 'sla' ? cases.filter(c => isSlaBreached(c)).length : cases.filter(c => matchesFilter(c.case_status, f)).length;
                     const active = caseFilter === f;
-                    const countColor = !active && count > 0 ? (f === 'sla' ? 'text-destructive' : f === 'paid' ? 'text-emerald-600' : f === 'new' ? 'text-blue-600' : '') : '';
+                    const countColor = !active && count > 0 ? (f === 'sla' ? 'text-destructive' : f === 'enrollment_paid' ? 'text-emerald-600' : f === 'new' ? 'text-blue-600' : '') : '';
                     return (
                       <button key={f} onClick={() => setCaseFilter(f)}
                         className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 border ${

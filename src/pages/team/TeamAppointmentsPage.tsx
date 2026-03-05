@@ -61,23 +61,16 @@ export default function TeamAppointmentsPage() {
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
-
-    // Load ±2 weeks for context
-    const rangeStart = subWeeks(weekStart, 1);
-    const rangeEnd = addWeeks(weekEnd, 1);
-
+    // Load ALL appointments for this team member (no date restriction)
+    // The weekly grid will display those in the visible week; navigating loads all
     const { data } = await supabase
       .from('appointments')
       .select('*, case:cases(full_name, phone_number, status)')
       .eq('team_member_id', user.id)
-      .gte('scheduled_at', rangeStart.toISOString())
-      .lte('scheduled_at', rangeEnd.toISOString())
       .order('scheduled_at');
     setAppts((data as any[]) ?? []);
     setLoading(false);
-  }, [user, currentWeek]);
+  }, [user]);
 
   const fetchMyCases = useCallback(async () => {
     if (!user) return;
