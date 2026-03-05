@@ -174,17 +174,40 @@ const AdminPipelinePage = () => {
                       <p className="text-xs text-muted-foreground">{t('admin.pipeline.empty', 'Empty')}</p>
                     </div>
                   ) : (
-                    statusCases.map(c => {
+                     statusCases.map(c => {
                       const days = daysSince(c.last_activity_at);
-                      const isStale = (status === 'new' && days >= 3) || (status === 'contacted' && days >= 5) || (status === 'appointment_scheduled' && days >= 14) || (status === 'profile_completion' && days >= 7) || c.is_no_show;
+                      const isRedStale = (status === 'new' && days >= 3) || c.is_no_show;
+                      const isOrangeStale = !isRedStale && ((status === 'contacted' && days >= 5) || (status === 'appointment_scheduled' && days >= 14) || (status === 'profile_completion' && days >= 7));
+                      const isStale = isRedStale || isOrangeStale;
+                      const borderClass = isRedStale ? 'border-destructive/60' : isOrangeStale ? 'border-orange-400/60' : 'border-border';
+                      const sourceMeta: Record<string, { label: string; cls: string }> = {
+                        apply_page:    { label: isRtl ? 'تطبيق' : 'Apply', cls: 'bg-blue-100 text-blue-700' },
+                        contact_form:  { label: isRtl ? 'نموذج' : 'Form',  cls: 'bg-yellow-100 text-yellow-700' },
+                        manual:        { label: isRtl ? 'يدوي' : 'Manual', cls: 'bg-secondary text-secondary-foreground' },
+                        submit_new_student: { label: isRtl ? 'تسجيل' : 'Enroll', cls: 'bg-purple-100 text-purple-700' },
+                      };
+                      const src = sourceMeta[c.source] ?? { label: c.source, cls: 'bg-muted text-muted-foreground' };
                       return (
-                        <Card key={c.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${isStale ? 'border-destructive/50' : 'border-border'}`}>
+                        <Card key={c.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${borderClass}`}>
                           <CardContent className="p-3 space-y-2">
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-sm font-medium text-foreground truncate">{c.full_name}</p>
-                              {isStale && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${src.cls}`}>{src.label}</span>
+                                {isStale && <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${isRedStale ? 'text-destructive' : 'text-orange-500'}`} />}
+                              </div>
                             </div>
                             <p className="text-xs text-muted-foreground">{c.phone_number}</p>
+                            {/* Assignee */}
+                            {c.assignee_name ? (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <User className="h-3 w-3" />{c.assignee_name}
+                              </p>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
+                                {isRtl ? 'غير معيَّن' : 'Unassigned'}
+                              </span>
+                            )}
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {isRtl ? `${days} يوم` : `${days}d`}
