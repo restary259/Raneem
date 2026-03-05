@@ -235,7 +235,13 @@ const StudentAuthPage = () => {
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
-      <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
+      <Dialog open={showChangePasswordModal} onOpenChange={async (open) => {
+        if (!open) {
+          // Allow closing by signing out (forces fresh login)
+          await supabase.auth.signOut();
+          setShowChangePasswordModal(false);
+        }
+      }}>
         <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>يجب تغيير كلمة المرور</DialogTitle>
