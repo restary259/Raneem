@@ -23,7 +23,6 @@ interface Accommodation { id: string; name_en: string; name_ar: string; price: n
 const GENDER_OPTIONS = ['male', 'female', 'other'] as const;
 const ACCOMMODATION_TYPES = ['single', 'double', 'hall'] as const;
 const ACCOMMODATION_CATEGORIES = ['A', 'B+', 'B', 'C', 'D', 'E'] as const;
-const PREFERRED_SUBJECTS = ['math', 'english', 'science', 'german', 'arabic', 'computer_science', 'art', 'other'];
 
 type Step = 1 | 2 | 3;
 
@@ -67,7 +66,6 @@ export default function SubmitNewStudentPage() {
   const [accommodationType, setAccommodationType] = useState('');
   const [accommodationCategory, setAccommodationCategory] = useState('');
   const [accommodationId, setAccommodationId] = useState('');
-  const [preferredSubjects, setPreferredSubjects] = useState<string[]>([]);
   const [serviceFee, setServiceFee] = useState('');
   const [translationFee, setTranslationFee] = useState('0');
 
@@ -152,25 +150,24 @@ export default function SubmitNewStudentPage() {
         payment_confirmed_by: user!.id,
         submitted_at: now,
         submitted_by: user!.id,
-        extra_data: {
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          gender,
-          city_of_birth: cityOfBirth,
-          address: `${street} ${houseNo}, ${postcode} ${city}`.trim(),
-          street, house_no: houseNo, postcode, city,
-          date_of_birth: dob ? format(dob, 'yyyy-MM-dd') : null,
-          age,
-          emergency_contact_name: emergencyName,
-          emergency_contact_phone: emergencyPhone,
-          school,
-          arrival_date: arrivalDate ? format(arrivalDate, 'yyyy-MM-dd') : null,
-          accommodation_type: accommodationType,
-          accommodation_category: accommodationCategory,
-          preferred_subjects: preferredSubjects,
-          documents_skipped: skipDocuments,
-        },
+          extra_data: {
+            first_name: firstName,
+            middle_name: middleName,
+            last_name: lastName,
+            gender,
+            city_of_birth: cityOfBirth,
+            address: `${street} ${houseNo}, ${postcode} ${city}`.trim(),
+            street, house_no: houseNo, postcode, city,
+            date_of_birth: dob ? format(dob, 'yyyy-MM-dd') : null,
+            age,
+            emergency_contact_name: emergencyName,
+            emergency_contact_phone: emergencyPhone,
+            school,
+            arrival_date: arrivalDate ? format(arrivalDate, 'yyyy-MM-dd') : null,
+            accommodation_type: accommodationType,
+            accommodation_category: accommodationCategory,
+            documents_skipped: skipDocuments,
+          },
       });
 
       // Upload documents if any
@@ -415,26 +412,6 @@ export default function SubmitNewStudentPage() {
                       {accommodations.map(a => <SelectItem key={a.id} value={a.id}>{isAr ? a.name_ar : a.name_en}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-              <div>
-                <Label className="mb-2 block">{isAr ? 'المواد المفضلة' : 'Preferred Subjects'}</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PREFERRED_SUBJECTS.map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => toggleSubject(s)}
-                      className={cn(
-                        'px-3 py-1 rounded-full text-xs border transition-colors',
-                        preferredSubjects.includes(s)
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'border-border text-muted-foreground hover:border-primary/50'
-                      )}
-                    >
-                      {s.replace(/_/g, ' ')}
-                    </button>
-                  ))}
                 </div>
               </div>
             </CardContent>

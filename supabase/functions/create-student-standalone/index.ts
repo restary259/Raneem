@@ -96,6 +96,7 @@ serve(async (req) => {
       email: cleanEmail,
       full_name: full_name?.trim() || "",
       must_change_password: true,
+      created_by: callerId,
     });
 
     // Audit log
