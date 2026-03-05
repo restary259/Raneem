@@ -45,10 +45,14 @@ serve(async (req) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check if already registered
-    const existingList = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    const alreadyExists = existingList.data?.users?.find((u: any) => u.email?.toLowerCase() === cleanEmail);
-    if (alreadyExists) {
+    // Check if already registered via profiles table (faster than listUsers)
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (existingProfile) {
       return new Response(JSON.stringify({ error: "An account with this email already exists" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
