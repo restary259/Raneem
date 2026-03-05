@@ -48,7 +48,6 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_FILTERS: StatusFilter[] = [
   'all',
-  'new',
   'contacted',
   'appointment_scheduled',
   'profile_completion',
