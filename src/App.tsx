@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -22,15 +22,15 @@ import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import DashboardLayout from "./components/layout/DashboardLayout";
 
-// Lazy-loaded routes
+// Lazy-loaded public pages
 const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
 const EducationalProgramsPage = lazy(() => import('./pages/EducationalProgramsPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
 const BroadcastPage = lazy(() => import('./pages/BroadcastPage'));
-const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const InfluencerDashboardPage = lazy(() => import('./pages/InfluencerDashboardPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const QuizPage = lazy(() => import('./pages/QuizPage'));
 const AIAdvisorPage = lazy(() => import('./pages/AIAdvisorPage'));
@@ -38,8 +38,19 @@ const CostCalculatorPage = lazy(() => import('./pages/CostCalculatorPage'));
 const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
 const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
 const LebenslaufBuilderPage = lazy(() => import('./pages/LebenslaufBuilderPage'));
-const TeamDashboardPage = lazy(() => import('./pages/TeamDashboardPage'));
 const ApplyPage = lazy(() => import('./pages/ApplyPage'));
+
+// Lazy-loaded Admin pages
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+
+// Lazy-loaded Team pages (Phase 3 — placeholder redirects until built)
+const TeamPlaceholderPage = lazy(() => import('./pages/placeholders/TeamPlaceholderPage'));
+
+// Lazy-loaded Partner pages (Phase 5 — placeholder redirects until built)
+const PartnerPlaceholderPage = lazy(() => import('./pages/placeholders/PartnerPlaceholderPage'));
+
+// Lazy-loaded Student pages (Phase 5 — placeholder redirects until built)
+const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
 
 const queryClient = new QueryClient();
 
@@ -88,52 +99,141 @@ const App = () => {
   // Hide all distractions on the apply page
   const isApplyPage = location.pathname === '/apply';
 
+  // Paths that use DashboardLayout (no bottom nav / chat)
+  const isDashboardPath = location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/team') ||
+    location.pathname.startsWith('/partner') ||
+    location.pathname.startsWith('/student');
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
-          <Toaster />
-          <Sonner />
-          {!isApplyPage && <OfflineIndicator />}
-          {!isApplyPage && <InAppBrowserBanner />}
-          <Suspense fallback={<div />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<WhoWeArePage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/locations" element={<LocationsPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/partnership" element={<PartnershipPage />} />
-              <Route path="/partners" element={<EducationalDestinationsPage />} />
-              <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
-              <Route path="/educational-programs" element={<EducationalProgramsPage />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/resources/cost-calculator" element={<CostCalculatorPage />} />
-              <Route path="/resources/currency-converter" element={<CurrencyConverterPage />} />
-              <Route path="/resources/bagrut-calculator" element={<BagrutCalculatorPage />} />
-              <Route path="/resources/lebenslauf-builder" element={<LebenslaufBuilderPage />} />
-              <Route path="/broadcast" element={<BroadcastPage />} />
-              <Route path="/student-auth" element={<StudentAuthPage />} />
-              <Route path="/student-dashboard" element={<StudentDashboardPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route path="/influencer-dashboard" element={<InfluencerDashboardPage />} />
-              <Route path="/lawyer-dashboard" element={<TeamDashboardPage />} />
-              <Route path="/team-dashboard" element={<TeamDashboardPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/quiz" element={<QuizPage />} />
-              <Route path="/ai-advisor" element={<AIAdvisorPage />} />
-              <Route path="/apply" element={<ApplyPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          {!isApplyPage && <ChatWidget />}
-          {!isApplyPage && <PWAInstaller />}
-          {!isApplyPage && <CookieBanner />}
-          <BottomNav />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <TooltipProvider>
+      <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
+        <Toaster />
+        <Sonner />
+        {!isApplyPage && !isDashboardPath && <OfflineIndicator />}
+        {!isApplyPage && !isDashboardPath && <InAppBrowserBanner />}
+        <Suspense fallback={<div />}>
+          <Routes>
+            {/* ── Public pages ── */}
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<WhoWeArePage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/locations" element={<LocationsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/partnership" element={<PartnershipPage />} />
+            <Route path="/partners" element={<EducationalDestinationsPage />} />
+            <Route path="/educational-destinations" element={<EducationalDestinationsPage />} />
+            <Route path="/educational-programs" element={<EducationalProgramsPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/resources/cost-calculator" element={<CostCalculatorPage />} />
+            <Route path="/resources/currency-converter" element={<CurrencyConverterPage />} />
+            <Route path="/resources/bagrut-calculator" element={<BagrutCalculatorPage />} />
+            <Route path="/resources/lebenslauf-builder" element={<LebenslaufBuilderPage />} />
+            <Route path="/broadcast" element={<BroadcastPage />} />
+            <Route path="/quiz" element={<QuizPage />} />
+            <Route path="/ai-advisor" element={<AIAdvisorPage />} />
+            <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/student-auth" element={<StudentAuthPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* ── Admin Dashboard (/admin/*) ── */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <DashboardLayout role="admin" />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboardPage />} />
+              {/* Phase 2 pages — will be added as built */}
+              <Route path="pipeline" element={<AdminDashboardPage />} />
+              <Route path="team" element={<AdminDashboardPage />} />
+              <Route path="programs" element={<AdminDashboardPage />} />
+              <Route path="submissions" element={<AdminDashboardPage />} />
+              <Route path="financials" element={<AdminDashboardPage />} />
+              <Route path="analytics" element={<AdminDashboardPage />} />
+              <Route path="activity" element={<AdminDashboardPage />} />
+              <Route path="settings" element={<AdminDashboardPage />} />
+            </Route>
+
+            {/* ── Team Dashboard (/team/*) ── */}
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute allowedRoles={['team_member']}>
+                  <DashboardLayout role="team_member" />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<TeamPlaceholderPage />} />
+              <Route path="cases" element={<TeamPlaceholderPage />} />
+              <Route path="cases/:id" element={<TeamPlaceholderPage />} />
+              <Route path="appointments" element={<TeamPlaceholderPage />} />
+              <Route path="appointments/today" element={<TeamPlaceholderPage />} />
+              <Route path="submit" element={<TeamPlaceholderPage />} />
+              <Route path="students" element={<TeamPlaceholderPage />} />
+              <Route path="students/:id" element={<TeamPlaceholderPage />} />
+              <Route path="analytics" element={<TeamPlaceholderPage />} />
+            </Route>
+
+            {/* ── Partner Dashboard (/partner/*) ── */}
+            <Route
+              path="/partner"
+              element={
+                <ProtectedRoute allowedRoles={['social_media_partner']}>
+                  <DashboardLayout role="social_media_partner" />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<PartnerPlaceholderPage />} />
+              <Route path="link" element={<PartnerPlaceholderPage />} />
+              <Route path="students" element={<PartnerPlaceholderPage />} />
+              <Route path="earnings" element={<PartnerPlaceholderPage />} />
+            </Route>
+
+            {/* ── Student Dashboard (/student/*) ── */}
+            <Route
+              path="/student"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <DashboardLayout role="student" />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/student/checklist" replace />} />
+              <Route path="checklist" element={<StudentDashboardPage />} />
+              <Route path="profile" element={<StudentDashboardPage />} />
+              <Route path="documents" element={<StudentDashboardPage />} />
+              <Route path="visa" element={<StudentDashboardPage />} />
+              <Route path="refer" element={<StudentDashboardPage />} />
+              <Route path="contacts" element={<StudentDashboardPage />} />
+            </Route>
+
+            {/* ── Legacy redirects (old routes → new) ── */}
+            <Route path="/student-dashboard" element={<Navigate to="/student/checklist" replace />} />
+            <Route path="/influencer-dashboard" element={<Navigate to="/partner" replace />} />
+            <Route path="/lawyer-dashboard" element={<Navigate to="/team" replace />} />
+            <Route path="/team-dashboard" element={<Navigate to="/team" replace />} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        {!isApplyPage && !isDashboardPath && <ChatWidget />}
+        {!isApplyPage && !isDashboardPath && <PWAInstaller />}
+        {!isApplyPage && !isDashboardPath && <CookieBanner />}
+        {!isDashboardPath && <BottomNav />}
+      </div>
+    </TooltipProvider>
   );
 }
 
-export default App;
+const AppWithProviders = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </QueryClientProvider>
+);
+
+export default AppWithProviders;
