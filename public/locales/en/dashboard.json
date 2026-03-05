@@ -1370,5 +1370,104 @@
     },
     "students": { "title": "Students", "submitted": "Submitted", "enrolled": "Enrolled" },
     "analytics": { "title": "My Analytics", "closedMonth": "Closed This Month", "totalCases": "Total Cases", "todayAppts": "Today's Appointments", "byStatus": "Cases by Status" }
+  },
+  "partner": {
+    "welcome": "Welcome back",
+    "subtitle": "Track your referrals and earnings",
+    "myLink": "My Referral Link",
+    "shareLink": "Share",
+    "copyLink": "Copy Link",
+    "shareWhatsApp": "Share via WhatsApp",
+    "waMessage": "Apply to DARB Study Abroad using my link",
+    "requestPayout": "Request Payout",
+    "recentStudents": "Recent Students",
+    "studentsTitle": "My Students",
+    "earningsTitle": "My Earnings",
+    "searchPlaceholder": "Search by name...",
+    "noStudents": "No students referred yet. Share your link to get started!",
+    "noResults": "No matching students",
+    "payoutRequests": "Payout Requests",
+    "lockInfo": "Some rewards are locked for {{days}} more days.",
+    "tipsTitle": "Marketing Tips",
+    "tips": {
+      "bio": "Add your referral link to your profile bio",
+      "stories": "Share student success stories in your Stories",
+      "hashtags": "Use hashtags like #StudyInGermany",
+      "results": "Share real student results (with permission)"
+    },
+    "kpi": {
+      "totalStudents": "Total Students",
+      "eligible": "Active Cases",
+      "paid": "Paid",
+      "pendingEarnings": "Pending Earnings"
+    },
+    "funnel": {
+      "title": "Conversion Funnel",
+      "submitted": "Submitted",
+      "active": "Active",
+      "paid": "Paid",
+      "students": "Students"
+    },
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "appointment": "Appointment",
+      "profile": "Profile",
+      "payment": "Payment",
+      "submitted": "Submitted",
+      "paid": "Paid ✅",
+      "cancelled": "Cancelled"
+    }
+  },
+  "visa": {
+    "title": "Visa Status",
+    "readOnly": "Visa status is updated by your assigned team member.",
+    "personalInfo": "Visa-Relevant Info",
+    "passport": "Passport Number",
+    "nationality": "Nationality",
+    "arrivalDate": "Arrival Date",
+    "applicationDetails": "Application Details",
+    "addressAbroad": "Address Abroad",
+    "contactAbroad": "Contact Abroad",
+    "outcome": "Outcome",
+    "notes": "Notes",
+    "noApplication": "No visa application on file yet. Your team will update this when the visa process begins."
+  },
+  "contacts": {
+    "title": "Important Contacts",
+    "subtitle": "Key contacts for your study journey",
+    "noContacts": "No contacts available yet.",
+    "visitLink": "Visit",
+    "categories": {
+      "support": "Support",
+      "team": "Team",
+      "embassy": "Embassy",
+      "other": "Other"
+    }
+  },
+  "nav": {
+    "checklist": "Checklist",
+    "profile": "My Profile",
+    "documents": "Documents",
+    "visa": "Visa Status",
+    "refer": "Refer & Earn",
+    "contacts": "Contacts",
+    "overview": "Overview",
+    "myLink": "My Link",
+    "students": "Students",
+    "earnings": "Earnings",
+    "today": "Today",
+    "cases": "Cases",
+    "appointments": "Appointments",
+    "todayAppts": "Today's Appointments",
+    "submitNew": "Submit New Student",
+    "analytics": "Analytics",
+    "pipeline": "Pipeline",
+    "team": "Team",
+    "programs": "Programs",
+    "submissions": "Submissions",
+    "financials": "Financials",
+    "activity": "Activity",
+    "settings": "Settings"
   }
 }
