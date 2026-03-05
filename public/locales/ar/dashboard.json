@@ -1224,5 +1224,125 @@
     "kickedTitle": "تم تسجيل الدخول من جهاز آخر",
     "kickedDesc": "تم تسجيل الدخول إلى حسابك من جهاز أو متصفح آخر. سيتم تسجيل خروجك تلقائياً.",
     "ok": "حسناً"
+  },
+  "nav": {
+    "overview": "نظرة عامة",
+    "pipeline": "خط الأنابيب",
+    "team": "أعضاء الفريق",
+    "programs": "البرامج",
+    "submissions": "التقديمات",
+    "financials": "المالية",
+    "analytics": "التحليلات",
+    "activity": "النشاط المباشر",
+    "settings": "الإعدادات",
+    "today": "اليوم",
+    "cases": "حالاتي",
+    "appointments": "المواعيد",
+    "todayAppts": "مواعيد اليوم",
+    "submitNew": "تسجيل طالب جديد",
+    "students": "طلابي",
+    "myLink": "رابطي",
+    "earnings": "الأرباح",
+    "checklist": "قائمة المتطلبات",
+    "profile": "ملفي الشخصي",
+    "documents": "المستندات",
+    "visa": "طلب التأشيرة",
+    "refer": "إحالة صديق",
+    "contacts": "جهات الاتصال المهمة"
+  },
+  "case": {
+    "status": {
+      "new": "جديد",
+      "contacted": "تم التواصل",
+      "appointment_scheduled": "تم تحديد موعد",
+      "profile_completion": "استكمال الملف",
+      "payment_confirmed": "تم تأكيد الدفع",
+      "submitted": "تم التقديم",
+      "enrollment_paid": "مسجل ومدفوع",
+      "forgotten": "حالة منسية",
+      "cancelled": "ملغى"
+    }
+  },
+  "common": {
+    "refresh": "تحديث",
+    "save": "حفظ",
+    "done": "تم",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "loading": "جار التحميل...",
+    "error": "خطأ",
+    "success": "نجاح"
+  },
+  "admin": {
+    "commandCenter": {
+      "title": "مركز القيادة",
+      "subtitle": "نظرة عامة في الوقت الفعلي على جميع الأنشطة",
+      "activeCases": "الحالات النشطة",
+      "submitted": "تم التقديم",
+      "enrolled": "مسجلون",
+      "forgotten": "حالات منسية",
+      "recentActivity": "النشاط الأخير",
+      "noActivity": "لا يوجد نشاط حديث",
+      "system": "النظام",
+      "viewPipeline": "عرض خط الأنابيب",
+      "viewSubmissions": "التقديمات",
+      "manageTeam": "إدارة الفريق",
+      "viewFinancials": "المالية"
+    },
+    "pipeline": {
+      "title": "خط أنابيب الطلبات",
+      "searchPlaceholder": "البحث بالاسم أو الهاتف...",
+      "filterTeam": "تصفية حسب عضو الفريق",
+      "allTeam": "الكل",
+      "unassigned": "غير معين",
+      "assign": "تعيين",
+      "empty": "فارغ"
+    },
+    "team": {
+      "title": "أعضاء الفريق",
+      "createMember": "إنشاء عضو",
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "tempPassword": "كلمة المرور المؤقتة",
+      "createBtn": "إنشاء حساب",
+      "noMembers": "لا يوجد أعضاء فريق بعد"
+    },
+    "programs": {
+      "title": "البرامج والسكن",
+      "programs": "البرامج",
+      "accommodations": "السكن",
+      "addProgram": "إضافة برنامج",
+      "addAccommodation": "إضافة سكن",
+      "type": "النوع",
+      "price": "السعر",
+      "duration": "المدة",
+      "description": "الوصف",
+      "freePrice": "مجاني"
+    },
+    "submissions": {
+      "title": "الطلبات المقدمة",
+      "subtitle": "الحالات التي تنتظر تأكيد التسجيل",
+      "empty": "لا توجد طلبات مقدمة بعد",
+      "markEnrolled": "تأكيد التسجيل والدفع"
+    },
+    "financials": {
+      "title": "لوحة المالية"
+    },
+    "analytics": {
+      "title": "التحليلات"
+    },
+    "activity": {
+      "title": "سجل النشاط المباشر",
+      "search": "البحث في النشاط..."
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "platform": "المنصة",
+      "contacts": "جهات الاتصال المهمة",
+      "platformTitle": "إعدادات المنصة",
+      "addContact": "إضافة جهة اتصال"
+    }
   }
 }
