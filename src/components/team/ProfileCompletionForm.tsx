@@ -305,7 +305,7 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <DateField label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
+              <BirthdayPicker label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
               {age !== null && <p className="text-xs text-muted-foreground mt-1">{isAr ? `العمر: ${age} سنة` : `Age: ${age}`}</p>}
             </div>
             <div className="space-y-1">
