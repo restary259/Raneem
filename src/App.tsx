@@ -42,6 +42,15 @@ const ApplyPage = lazy(() => import('./pages/ApplyPage'));
 
 // Lazy-loaded Admin pages
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminCommandCenter = lazy(() => import('./pages/admin/AdminCommandCenter'));
+const AdminPipelinePage = lazy(() => import('./pages/admin/AdminPipelinePage'));
+const AdminTeamPage = lazy(() => import('./pages/admin/AdminTeamPage'));
+const AdminProgramsPage = lazy(() => import('./pages/admin/AdminProgramsPage'));
+const AdminSubmissionsPage = lazy(() => import('./pages/admin/AdminSubmissionsPage'));
+const AdminFinancialsPage = lazy(() => import('./pages/admin/AdminFinancialsPage'));
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
+const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
 // Lazy-loaded Team pages (Phase 3 — placeholder redirects until built)
 const TeamPlaceholderPage = lazy(() => import('./pages/placeholders/TeamPlaceholderPage'));
