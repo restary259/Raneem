@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      accommodations: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          photos: string[] | null
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          photos?: string[] | null
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          photos?: string[] | null
+          price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       active_sessions: {
         Row: {
           created_at: string
@@ -35,6 +74,39 @@ export type Database = {
           session_id?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
         }
         Relationships: []
       }
@@ -94,42 +166,48 @@ export type Database = {
       }
       appointments: {
         Row: {
-          case_id: string | null
+          case_id: string
           created_at: string
           duration_minutes: number
           id: string
-          lawyer_id: string
-          location: string | null
           notes: string | null
+          outcome: string | null
+          outcome_notes: string | null
+          outcome_recorded_at: string | null
+          outcome_recorded_by: string | null
+          rescheduled_to: string | null
           scheduled_at: string
-          status: string
-          student_name: string
+          team_member_id: string
           updated_at: string
         }
         Insert: {
-          case_id?: string | null
+          case_id: string
           created_at?: string
           duration_minutes?: number
           id?: string
-          lawyer_id: string
-          location?: string | null
           notes?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          outcome_recorded_at?: string | null
+          outcome_recorded_by?: string | null
+          rescheduled_to?: string | null
           scheduled_at: string
-          status?: string
-          student_name: string
+          team_member_id: string
           updated_at?: string
         }
         Update: {
-          case_id?: string | null
+          case_id?: string
           created_at?: string
           duration_minutes?: number
           id?: string
-          lawyer_id?: string
-          location?: string | null
           notes?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          outcome_recorded_at?: string | null
+          outcome_recorded_by?: string | null
+          rescheduled_to?: string | null
           scheduled_at?: string
-          status?: string
-          student_name?: string
+          team_member_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -137,7 +215,14 @@ export type Database = {
             foreignKeyName: "appointments_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "student_cases"
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_rescheduled_to_fkey"
+            columns: ["rescheduled_to"]
+            isOneToOne: false
+            referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
         ]
@@ -242,6 +327,142 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      case_submissions: {
+        Row: {
+          accommodation_id: string | null
+          case_id: string
+          created_at: string
+          enrollment_paid_at: string | null
+          enrollment_paid_by: string | null
+          extra_data: Json | null
+          id: string
+          payment_confirmed: boolean
+          payment_confirmed_at: string | null
+          payment_confirmed_by: string | null
+          program_end_date: string | null
+          program_id: string | null
+          program_start_date: string | null
+          service_fee: number
+          submitted_at: string | null
+          submitted_by: string | null
+          translation_fee: number
+          updated_at: string
+        }
+        Insert: {
+          accommodation_id?: string | null
+          case_id: string
+          created_at?: string
+          enrollment_paid_at?: string | null
+          enrollment_paid_by?: string | null
+          extra_data?: Json | null
+          id?: string
+          payment_confirmed?: boolean
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          program_end_date?: string | null
+          program_id?: string | null
+          program_start_date?: string | null
+          service_fee?: number
+          submitted_at?: string | null
+          submitted_by?: string | null
+          translation_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          accommodation_id?: string | null
+          case_id?: string
+          created_at?: string
+          enrollment_paid_at?: string | null
+          enrollment_paid_by?: string | null
+          extra_data?: Json | null
+          id?: string
+          payment_confirmed?: boolean
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          program_end_date?: string | null
+          program_id?: string | null
+          program_start_date?: string | null
+          service_fee?: number
+          submitted_at?: string | null
+          submitted_by?: string | null
+          translation_fee?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_submissions_accommodation_id_fkey"
+            columns: ["accommodation_id"]
+            isOneToOne: false
+            referencedRelation: "accommodations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_submissions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_submissions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          discount_amount: number
+          full_name: string
+          id: string
+          is_no_show: boolean
+          last_activity_at: string
+          partner_id: string | null
+          phone_number: string
+          referred_by: string | null
+          source: string
+          status: string
+          student_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          discount_amount?: number
+          full_name: string
+          id?: string
+          is_no_show?: boolean
+          last_activity_at?: string
+          partner_id?: string | null
+          phone_number: string
+          referred_by?: string | null
+          source?: string
+          status?: string
+          student_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          discount_amount?: number
+          full_name?: string
+          id?: string
+          is_no_show?: boolean
+          last_activity_at?: string
+          partner_id?: string | null
+          phone_number?: string
+          referred_by?: string | null
+          source?: string
+          status?: string
+          student_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       checklist_items: {
         Row: {
@@ -370,6 +591,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          case_id: string | null
           category: string
           created_at: string
           expiry_date: string | null
@@ -378,12 +600,15 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          is_visible_to_student: boolean
           notes: string | null
           service_id: string | null
           student_id: string
           updated_at: string
+          uploaded_by: string | null
         }
         Insert: {
+          case_id?: string | null
           category?: string
           created_at?: string
           expiry_date?: string | null
@@ -392,12 +617,15 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          is_visible_to_student?: boolean
           notes?: string | null
           service_id?: string | null
           student_id: string
           updated_at?: string
+          uploaded_by?: string | null
         }
         Update: {
+          case_id?: string | null
           category?: string
           created_at?: string
           expiry_date?: string | null
@@ -406,12 +634,21 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          is_visible_to_student?: boolean
           notes?: string | null
           service_id?: string | null
           student_id?: string
           updated_at?: string
+          uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_service_id_fkey"
             columns: ["service_id"]
@@ -472,6 +709,54 @@ export type Database = {
           review_min?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      important_contacts: {
+        Row: {
+          category: string
+          created_at: string
+          display_order: number
+          email: string | null
+          id: string
+          is_active: boolean
+          link: string | null
+          name_ar: string
+          name_en: string
+          phone: string | null
+          role_ar: string | null
+          role_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name_ar: string
+          name_en: string
+          phone?: string | null
+          role_ar?: string | null
+          role_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          link?: string | null
+          name_ar?: string
+          name_en?: string
+          phone?: string | null
+          role_ar?: string | null
+          role_en?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -846,35 +1131,64 @@ export type Database = {
       notifications: {
         Row: {
           body: string
+          body_ar: string | null
+          body_en: string | null
+          case_id: string | null
           created_at: string
           id: string
           is_read: boolean
+          link: string | null
           metadata: Json
+          read: boolean
           source: string
           title: string
+          title_ar: string | null
+          title_en: string | null
           user_id: string
         }
         Insert: {
           body: string
+          body_ar?: string | null
+          body_en?: string | null
+          case_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean
+          link?: string | null
           metadata?: Json
+          read?: boolean
           source?: string
           title: string
+          title_ar?: string | null
+          title_en?: string | null
           user_id: string
         }
         Update: {
           body?: string
+          body_ar?: string | null
+          body_en?: string | null
+          case_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean
+          link?: string | null
           metadata?: Json
+          read?: boolean
           source?: string
           title?: string
+          title_ar?: string | null
+          title_en?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -977,12 +1291,41 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          forgotten_contacted_days: number
+          forgotten_new_case_days: number
+          id: string
+          partner_commission_rate: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          forgotten_contacted_days?: number
+          forgotten_new_case_days?: number
+          id?: string
+          partner_commission_rate?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          forgotten_contacted_days?: number
+          forgotten_new_case_days?: number
+          id?: string
+          partner_commission_rate?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
           bank_name: string | null
+          biometric_photo_url: string | null
+          case_id: string | null
           city: string | null
           commission_amount: number
           consent_accepted_at: string | null
@@ -990,7 +1333,10 @@ export type Database = {
           country: string | null
           created_at: string
           criminal_record_details: string | null
+          date_of_birth: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           eye_color: string | null
           full_name: string
           gender: string | null
@@ -1003,13 +1349,17 @@ export type Database = {
           influencer_id: string | null
           intake_month: string | null
           must_change_password: boolean
+          nationality: string | null
           notes: string | null
+          passport_expiry: string | null
+          passport_number: string | null
           phone_number: string | null
           previous_legal_name: string | null
           second_passport_country: string | null
           student_status: string
           university_name: string | null
           updated_at: string
+          updated_by_student_at: string | null
           visa_status: string
         }
         Insert: {
@@ -1017,6 +1367,8 @@ export type Database = {
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_name?: string | null
+          biometric_photo_url?: string | null
+          case_id?: string | null
           city?: string | null
           commission_amount?: number
           consent_accepted_at?: string | null
@@ -1024,7 +1376,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           criminal_record_details?: string | null
+          date_of_birth?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           eye_color?: string | null
           full_name?: string
           gender?: string | null
@@ -1037,13 +1392,17 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           must_change_password?: boolean
+          nationality?: string | null
           notes?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
           second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string
+          updated_by_student_at?: string | null
           visa_status?: string
         }
         Update: {
@@ -1051,6 +1410,8 @@ export type Database = {
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_name?: string | null
+          biometric_photo_url?: string | null
+          case_id?: string | null
           city?: string | null
           commission_amount?: number
           consent_accepted_at?: string | null
@@ -1058,7 +1419,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           criminal_record_details?: string | null
+          date_of_birth?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           eye_color?: string | null
           full_name?: string
           gender?: string | null
@@ -1071,14 +1435,68 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           must_change_password?: boolean
+          nationality?: string | null
           notes?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
           second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string
+          updated_by_student_at?: string | null
           visa_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          duration: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          price: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          price?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          price?: number | null
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1136,65 +1554,40 @@ export type Database = {
       referrals: {
         Row: {
           created_at: string
+          discount_applied: boolean
           id: string
-          is_family: boolean
-          notes: string | null
-          referred_city: string | null
-          referred_country: string | null
-          referred_dob: string | null
-          referred_email: string | null
-          referred_gender: string | null
-          referred_german_level: string | null
+          referred_case_id: string | null
           referred_name: string
-          referred_phone: string | null
-          referred_student_id: string | null
-          referrer_id: string
-          referrer_type: string
-          status: string
-          terms_accepted_at: string | null
-          updated_at: string
+          referred_phone: string
+          referrer_user_id: string
         }
         Insert: {
           created_at?: string
+          discount_applied?: boolean
           id?: string
-          is_family?: boolean
-          notes?: string | null
-          referred_city?: string | null
-          referred_country?: string | null
-          referred_dob?: string | null
-          referred_email?: string | null
-          referred_gender?: string | null
-          referred_german_level?: string | null
+          referred_case_id?: string | null
           referred_name: string
-          referred_phone?: string | null
-          referred_student_id?: string | null
-          referrer_id: string
-          referrer_type?: string
-          status?: string
-          terms_accepted_at?: string | null
-          updated_at?: string
+          referred_phone: string
+          referrer_user_id: string
         }
         Update: {
           created_at?: string
+          discount_applied?: boolean
           id?: string
-          is_family?: boolean
-          notes?: string | null
-          referred_city?: string | null
-          referred_country?: string | null
-          referred_dob?: string | null
-          referred_email?: string | null
-          referred_gender?: string | null
-          referred_german_level?: string | null
+          referred_case_id?: string | null
           referred_name?: string
-          referred_phone?: string | null
-          referred_student_id?: string | null
-          referrer_id?: string
-          referrer_type?: string
-          status?: string
-          terms_accepted_at?: string | null
-          updated_at?: string
+          referred_phone?: string
+          referrer_user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_case_id_fkey"
+            columns: ["referred_case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rewards: {
         Row: {
@@ -1233,15 +1626,7 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "rewards_referral_id_fkey"
-            columns: ["referral_id"]
-            isOneToOne: false
-            referencedRelation: "referrals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       services: {
         Row: {
@@ -1525,21 +1910,83 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
+      }
+      visa_applications: {
+        Row: {
+          accommodation_proof_url: string | null
+          additional_notes: string | null
+          address_abroad: string | null
+          bank_statement_url: string | null
+          case_id: string
+          contact_abroad: string | null
+          created_at: string
+          health_insurance_url: string | null
+          id: string
+          student_user_id: string | null
+          updated_at: string
+          visa_applied_at: string | null
+          visa_notes: string | null
+          visa_outcome: string | null
+        }
+        Insert: {
+          accommodation_proof_url?: string | null
+          additional_notes?: string | null
+          address_abroad?: string | null
+          bank_statement_url?: string | null
+          case_id: string
+          contact_abroad?: string | null
+          created_at?: string
+          health_insurance_url?: string | null
+          id?: string
+          student_user_id?: string | null
+          updated_at?: string
+          visa_applied_at?: string | null
+          visa_notes?: string | null
+          visa_outcome?: string | null
+        }
+        Update: {
+          accommodation_proof_url?: string | null
+          additional_notes?: string | null
+          address_abroad?: string | null
+          bank_statement_url?: string | null
+          case_id?: string
+          contact_abroad?: string | null
+          created_at?: string
+          health_insurance_url?: string | null
+          id?: string
+          student_user_id?: string | null
+          updated_at?: string
+          visa_applied_at?: string | null
+          visa_notes?: string | null
+          visa_outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_applications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1665,6 +2112,31 @@ export type Database = {
       }
     }
     Functions: {
+      get_forgotten_cases: {
+        Args: never
+        Returns: {
+          assigned_to: string | null
+          created_at: string
+          discount_amount: number
+          full_name: string
+          id: string
+          is_no_show: boolean
+          last_activity_at: string
+          partner_id: string | null
+          phone_number: string
+          referred_by: string | null
+          source: string
+          status: string
+          student_user_id: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "cases"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]
@@ -1674,6 +2146,7 @@ export type Database = {
         Returns: number
       }
       get_lawyer_lead_ids: { Args: { _lawyer_id: string }; Returns: string[] }
+      get_my_role: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1702,6 +2175,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_activity: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_actor_name: string
+          p_entity_id?: string
+          p_entity_type: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
       log_user_activity: {
         Args: {
           p_action: string
@@ -1725,7 +2209,7 @@ export type Database = {
       validate_influencer_ref: { Args: { ref_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "influencer" | "lawyer"
+      app_role: "admin" | "team_member" | "social_media_partner" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1853,7 +2337,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "influencer", "lawyer"],
+      app_role: ["admin", "team_member", "social_media_partner", "student"],
     },
   },
 } as const
