@@ -52,11 +52,14 @@ const AdminAnalyticsPage = () => {
   }));
 
   const sourceData = SOURCES.map(s => ({
-    name: s.replace(/_/g, ' '),
+    name: s === 'apply_page' ? (isRtl ? 'صفحة التقديم' : 'Apply Page')
+        : s === 'manual' ? (isRtl ? 'يدوي' : 'Manual')
+        : s === 'submit_new_student' ? (isRtl ? 'تسجيل مباشر' : 'Direct Submit')
+        : (isRtl ? 'شريك' : 'Partner'),
     count: cases.filter(c => c.source === s).length,
   })).filter(s => s.count > 0);
 
-  // Avg days per stage (rough estimate from created_at vs last_activity_at)
+  // Avg days per stage
   const avgDays = STATUSES.slice(0, 7).map(s => {
     const group = cases.filter(c => c.status === s);
     if (group.length === 0) return { name: statusLabels[s], avg: 0 };
@@ -67,11 +70,32 @@ const AdminAnalyticsPage = () => {
     return { name: statusLabels[s], avg: Math.round(avg) };
   });
 
+  const yAxisWidth = isRtl ? 80 : 100;
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t('admin.analytics.title', 'Analytics')}</h1>
-        <Button variant="outline" size="sm" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
+        <h1 className="text-2xl font-bold text-foreground">{isRtl ? 'التحليلات' : 'Analytics'}</h1>
+        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      {/* KPI summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: isRtl ? 'إجمالي الملفات' : 'Total Cases', value: cases.length },
+          { label: isRtl ? 'ملفات نشطة' : 'Active', value: cases.filter(c => !['enrollment_paid','cancelled','forgotten'].includes(c.status)).length },
+          { label: isRtl ? 'مسجلون' : 'Enrolled', value: cases.filter(c => c.status === 'enrollment_paid').length },
+          { label: isRtl ? 'نسبة التحويل' : 'Conversion', value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
+        ].map((kpi, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
+              <p className="text-2xl font-bold">{kpi.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -79,11 +103,24 @@ const AdminAnalyticsPage = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">{isRtl ? 'قمع التحويل' : 'Conversion Funnel'}</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={funnelData} layout="vertical">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={funnelData}
+                layout="vertical"
+                margin={{ top: 4, bottom: 4, left: isRtl ? 8 : 0, right: isRtl ? 0 : 8 }}
+              >
                 <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [v, isRtl ? 'عدد' : 'Cases']} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={yAxisWidth}
+                  tick={{ fontSize: 11, fill: 'currentColor' }}
+                  tickMargin={4}
+                />
+                <Tooltip
+                  formatter={(v) => [v, isRtl ? 'عدد' : 'Cases']}
+                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                />
                 <Bar dataKey="count" radius={4}>
                   {funnelData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Bar>
@@ -99,14 +136,36 @@ const AdminAnalyticsPage = () => {
             {sourceData.length === 0 ? (
               <p className="text-center text-muted-foreground text-sm py-8">{isRtl ? 'لا توجد بيانات' : 'No data yet'}</p>
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={sourceData} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={e => `${e.name}: ${e.count}`}>
-                    {sourceData.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={sourceData}
+                      dataKey="count"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={false}
+                    >
+                      {sourceData.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip
+                      formatter={(v, name) => [v, name]}
+                      contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Legend */}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center mt-2">
+                  {sourceData.map((s, i) => (
+                    <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STATUS_COLORS[i % STATUS_COLORS.length] }} />
+                      {s.name}: <span className="font-medium text-foreground">{s.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -116,10 +175,13 @@ const AdminAnalyticsPage = () => {
           <CardHeader><CardTitle className="text-base">{isRtl ? 'متوسط الأيام في كل مرحلة' : 'Average Days Per Stage'}</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={avgDays}>
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [`${v} ${isRtl ? 'يوم' : 'days'}`, '']} />
+              <BarChart data={avgDays} margin={{ top: 4, bottom: 4 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'currentColor' }} />
+                <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
+                <Tooltip
+                  formatter={(v) => [`${v} ${isRtl ? 'يوم' : 'days'}`, '']}
+                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                />
                 <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} />
               </BarChart>
             </ResponsiveContainer>

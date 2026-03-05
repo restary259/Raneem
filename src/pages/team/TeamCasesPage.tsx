@@ -14,7 +14,9 @@ import { Search, Plus, Loader2, AlertTriangle, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-type TabId = 'mine' | 'unassigned' | 'all' | 'forgotten';
+// "All" tab for team members only shows cases assigned to them OR cases they created (manual)
+// Unassigned apply/contact cases are NOT visible to team members — only Admin can see/assign those
+type TabId = 'mine' | 'all' | 'forgotten';
 type StatusFilter = 'all' | 'new' | 'contacted' | 'appointment_scheduled' | 'profile_completion' | 'payment_confirmed' | 'submitted';
 
 interface Case {
@@ -43,7 +45,7 @@ export default function TeamCasesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
   const [cases, setCases] = useState<Case[]>([]);
   const [tab, setTab] = useState<TabId>('mine');
@@ -59,23 +61,35 @@ export default function TeamCasesPage() {
     if (!user) return;
     setLoading(true);
     try {
-      let query = supabase.from('cases').select('*').order('last_activity_at', { ascending: false });
-
-      if (tab === 'mine') query = query.eq('assigned_to', user.id);
-      else if (tab === 'unassigned') query = query.is('assigned_to', null);
-      else if (tab === 'forgotten') {
+      if (tab === 'forgotten') {
         const { data } = await supabase.rpc('get_forgotten_cases' as any);
-        setCases((data as Case[]) ?? []);
+        // Filter forgotten to only show cases assigned to this team member
+        const myCases = ((data as Case[]) ?? []).filter(c => c.assigned_to === user.id);
+        setCases(myCases);
         setLoading(false);
         return;
       }
 
-      const { data } = await query;
+      let query = supabase.from('cases').select('*').order('last_activity_at', { ascending: false });
+
+      if (tab === 'mine') {
+        // My Cases: assigned to me
+        query = query.eq('assigned_to', user.id);
+      } else if (tab === 'all') {
+        // All: only cases assigned to me OR cases I created (manual/submit_new_student)
+        // This prevents team members seeing unassigned apply/contact cases
+        query = query.or(`assigned_to.eq.${user.id},and(source.in.(manual,submit_new_student))`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
       setCases((data as Case[]) ?? []);
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
     } finally {
       setLoading(false);
     }
-  }, [user, tab]);
+  }, [user, tab, toast]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
@@ -122,6 +136,8 @@ export default function TeamCasesPage() {
       profile_completion: isAr ? 'استكمال الملف' : 'Profile',
       payment_confirmed: isAr ? 'تم الدفع' : 'Payment',
       submitted: isAr ? 'تم التقديم' : 'Submitted',
+      enrollment_paid: isAr ? 'مسجل' : 'Enrolled',
+      forgotten: isAr ? 'منسي' : 'Forgotten',
     };
     return map[s] ?? s.replace(/_/g, ' ');
   };
@@ -138,7 +154,6 @@ export default function TeamCasesPage() {
       <Tabs value={tab} onValueChange={v => setTab(v as TabId)}>
         <TabsList>
           <TabsTrigger value="mine">{isAr ? 'ملفاتي' : 'My Cases'}</TabsTrigger>
-          <TabsTrigger value="unassigned">{isAr ? 'غير معيّنة' : 'Unassigned'}</TabsTrigger>
           <TabsTrigger value="all">{isAr ? 'الكل' : 'All'}</TabsTrigger>
           <TabsTrigger value="forgotten" className="text-destructive">
             <AlertTriangle className="h-3 w-3 me-1" /> {isAr ? 'منسية' : 'Forgotten'}
@@ -168,7 +183,14 @@ export default function TeamCasesPage() {
       {loading ? (
         <div className="text-center py-16 text-muted-foreground">{isAr ? 'جار التحميل...' : 'Loading...'}</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">{isAr ? 'لا توجد ملفات' : 'No cases found'}</div>
+        <div className="text-center py-16 text-muted-foreground">
+          <p>{isAr ? 'لا توجد ملفات' : 'No cases found'}</p>
+          {tab === 'all' && (
+            <p className="text-xs mt-2 text-muted-foreground/60">
+              {isAr ? 'الملفات غير المعيّنة تظهر للمدير فقط' : 'Unassigned cases are only visible to Admin'}
+            </p>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {filtered.map(c => (
