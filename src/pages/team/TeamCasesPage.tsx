@@ -258,7 +258,7 @@ export default function TeamCasesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNew(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={handleCreateCase} disabled={creating}>
+            <Button onClick={() => handleCreateCase(false)} disabled={creating}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? 'إنشاء' : 'Create')}
             </Button>
           </DialogFooter>
