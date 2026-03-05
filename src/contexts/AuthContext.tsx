@@ -99,8 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Fire-and-forget: never await inside onAuthStateChange to avoid Supabase internal lock deadlocks
-      initializeAuth(session);
+      // USER_UPDATED fires after updateUser() — re-initialize to pick up fresh session
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // Fire-and-forget: never await inside onAuthStateChange to avoid Supabase internal lock deadlocks
+        initializeAuth(session);
+      }
     });
 
     // Initial session check
