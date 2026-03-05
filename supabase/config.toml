@@ -41,3 +41,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.admin-early-release]
 verify_jwt = false
+[functions.create-case-from-apply]
+verify_jwt = false
