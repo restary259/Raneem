@@ -173,7 +173,7 @@ export default function PartnerEarningsPage() {
                 <Badge className={`text-xs ${statusColor[r.status] || 'bg-muted text-muted-foreground'}`}>
                   {r.status === 'pending' && !lock.locked
                     ? t('influencer.earnings.ready', 'Ready')
-                    : t(`influencer.earnings.${r.status}`, r.status)}
+                    : String(t(`influencer.earnings.${r.status}` as any, r.status))}
                 </Badge>
               </div>
             );
