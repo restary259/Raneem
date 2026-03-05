@@ -66,20 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Validate session is still alive — if getUser fails, sign out silently
-    try {
-      const { error: userError } = await supabase.auth.getUser(session.access_token);
-      if (userError) {
-        await supabase.auth.signOut();
-        setState({ user: null, session: null, role: null, mustChangePassword: false, initialized: true });
-        return;
-      }
-    } catch {
-      await supabase.auth.signOut();
-      setState({ user: null, session: null, role: null, mustChangePassword: false, initialized: true });
-      return;
-    }
-
+    // Trust the session provided by onAuthStateChange / getSession — no extra getUser call
+    // (getUser(token) causes 401s for newly-set sessions and is redundant here)
     const [role, mustChangePassword] = await Promise.all([
       fetchRole(session.user.id),
       fetchMustChangePassword(session.user.id),
