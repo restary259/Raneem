@@ -304,7 +304,7 @@ export default function TeamStudentsPage() {
                     {ex.accommodation_type && <InfoRow icon={<MapPin className="h-3 w-3" />} label={isRtl ? 'الإقامة' : 'Accommodation'} value={ex.accommodation_type} />}
                     <InfoRow icon={<Info className="h-3 w-3" />} label={isRtl ? 'رسوم الخدمة' : 'Service Fee'} value={`${submission.service_fee?.toLocaleString()} ILS`} />
                     {(submission.translation_fee > 0) && <InfoRow icon={<Info className="h-3 w-3" />} label={isRtl ? 'رسوم الترجمة' : 'Translation Fee'} value={`${submission.translation_fee?.toLocaleString()} ILS`} />}
-                    <InfoRow icon={submission.payment_confirmed ? <CheckCircle2 className="h-3 w-3 text-green-600" /> : <Info className="h-3 w-3" />} label={isRtl ? 'الدفع' : 'Payment'} value={submission.payment_confirmed ? (isRtl ? 'مؤكد' : 'Confirmed') : (isRtl ? 'معلق' : 'Pending')} />
+                    <InfoRow icon={submission.payment_confirmed ? <CheckCircle2 className="h-3 w-3 text-primary" /> : <Info className="h-3 w-3" />} label={isRtl ? 'الدفع' : 'Payment'} value={submission.payment_confirmed ? (isRtl ? 'مؤكد' : 'Confirmed') : (isRtl ? 'معلق' : 'Pending')} />
                     {submission.submitted_at && <InfoRow icon={<CheckCircle2 className="h-3 w-3" />} label={isRtl ? 'تاريخ الإرسال' : 'Submitted'} value={format(new Date(submission.submitted_at), 'PP')} />}
                   </div>
                 </div>
