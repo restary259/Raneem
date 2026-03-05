@@ -41,6 +41,7 @@ interface Case {
 interface TeamMember {
   id: string;
   full_name: string;
+  email: string;
 }
 
 const daysSince = (ts: string) => Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
@@ -61,7 +62,7 @@ const AdminPipelinePage = () => {
     try {
       const [casesRes, profilesRes] = await Promise.all([
         supabase.from('cases').select('*').not('status', 'in', '("forgotten","cancelled")'),
-        supabase.from('profiles').select('id, full_name').in('id',
+        supabase.from('profiles').select('id, full_name, email').in('id',
           (await supabase.from('user_roles').select('user_id').eq('role', 'team_member')).data?.map(r => r.user_id) || []
         ),
       ]);
@@ -77,7 +78,7 @@ const AdminPipelinePage = () => {
       }));
 
       setCases(enriched);
-      setTeamMembers((profilesRes.data || []).map(p => ({ id: p.id, full_name: p.full_name })));
+      setTeamMembers((profilesRes.data || []).map(p => ({ id: p.id, full_name: p.full_name, email: p.email || '' })));
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {

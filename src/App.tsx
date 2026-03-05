@@ -41,6 +41,7 @@ const LebenslaufBuilderPage = lazy(() => import('./pages/LebenslaufBuilderPage')
 const ApplyPage = lazy(() => import('./pages/ApplyPage'));
 
 // Lazy-loaded Admin pages
+const AdminStudentsPage = lazy(() => import('./pages/admin/AdminStudentsPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const AdminCommandCenter = lazy(() => import('./pages/admin/AdminCommandCenter'));
 const AdminPipelinePage = lazy(() => import('./pages/admin/AdminPipelinePage'));
@@ -178,6 +179,7 @@ const App = () => {
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="students" element={<AdminStudentsPage />} />
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}
