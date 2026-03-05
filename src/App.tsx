@@ -52,8 +52,15 @@ const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage')
 const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
-// Lazy-loaded Team pages (Phase 3 — placeholder redirects until built)
-const TeamPlaceholderPage = lazy(() => import('./pages/placeholders/TeamPlaceholderPage'));
+// Team pages (Phase 3)
+const TeamTodayPage = lazy(() => import('./pages/team/TeamTodayPage'));
+const TeamCasesPage = lazy(() => import('./pages/team/TeamCasesPage'));
+const CaseDetailPage = lazy(() => import('./pages/team/CaseDetailPage'));
+const TeamAppointmentsPage = lazy(() => import('./pages/team/TeamAppointmentsPage'));
+const SubmitNewStudentPage = lazy(() => import('./pages/team/SubmitNewStudentPage'));
+const TeamStudentsPage = lazy(() => import('./pages/team/TeamStudentsPage'));
+const TeamStudentProfilePage = lazy(() => import('./pages/team/TeamStudentProfilePage'));
+const TeamAnalyticsPage = lazy(() => import('./pages/team/TeamAnalyticsPage'));
 
 // Lazy-loaded Partner pages (Phase 5 — placeholder redirects until built)
 const PartnerPlaceholderPage = lazy(() => import('./pages/placeholders/PartnerPlaceholderPage'));
