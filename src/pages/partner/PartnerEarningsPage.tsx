@@ -163,7 +163,7 @@ export default function PartnerEarningsPage() {
                   </p>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  {t(`case.status.${c.status}`, c.status)}
+                  {String(t(`case.status.${c.status}`, c.status))}
                 </Badge>
               </div>
             ))}
