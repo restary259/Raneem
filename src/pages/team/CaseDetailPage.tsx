@@ -169,21 +169,38 @@ export default function CaseDetailPage() {
             />
           )}
           {caseData.status === 'payment_confirmed' && (
-            <PaymentConfirmationForm
-              caseId={caseData.id}
-              actorId={user!.id}
-              actorName="Team Member"
-              studentEmail={(submission?.extra_data as any)?.student_email}
-              studentFullName={(submission?.extra_data as any)?.student_name}
-              studentPhone={(submission?.extra_data as any)?.student_phone}
-              onSuccess={fetchData}
-            />
+            <div className="space-y-4">
+              <PaymentConfirmationForm
+                caseId={caseData.id}
+                actorId={user!.id}
+                actorName="Team Member"
+                onSuccess={fetchData}
+              />
+            </div>
+          )}
+          {/* Submit to Admin — appears after payment is confirmed */}
+          {caseData.status === 'payment_confirmed' && submission?.payment_confirmed && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Ready to Submit?</p>
+                  <p className="text-xs text-muted-foreground">Payment confirmed. Send this case to admin for enrollment.</p>
+                </div>
+                <Button
+                  onClick={() => setShowSubmitConfirm(true)}
+                  className="bg-primary"
+                  disabled={updatingStatus}
+                >
+                  Submit to Admin
+                </Button>
+              </div>
+            </div>
           )}
           {caseData.status === 'submitted' && (
             <div className="text-sm text-muted-foreground">✅ Case submitted — waiting for admin review and enrollment.</div>
           )}
           {caseData.status === 'enrollment_paid' && (
-            <div className="text-sm text-green-700 font-medium">🎉 Student enrolled! Case complete.</div>
+            <div className="text-sm font-medium text-emerald-700">🎉 Student enrolled! Case complete.</div>
           )}
           {caseData.status === 'forgotten' && (
             <div className="flex items-center justify-between">
