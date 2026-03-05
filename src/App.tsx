@@ -209,10 +209,10 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<PartnerPlaceholderPage />} />
-              <Route path="link" element={<PartnerPlaceholderPage />} />
-              <Route path="students" element={<PartnerPlaceholderPage />} />
-              <Route path="earnings" element={<PartnerPlaceholderPage />} />
+              <Route index element={<PartnerOverviewPage />} />
+              <Route path="link" element={<PartnerLinkPage />} />
+              <Route path="students" element={<PartnerStudentsPage />} />
+              <Route path="earnings" element={<PartnerEarningsPage />} />
             </Route>
 
             {/* ── Student Dashboard (/student/*) ── */}
@@ -225,12 +225,12 @@ const App = () => {
               }
             >
               <Route index element={<Navigate to="/student/checklist" replace />} />
-              <Route path="checklist" element={<StudentDashboardPage />} />
-              <Route path="profile" element={<StudentDashboardPage />} />
-              <Route path="documents" element={<StudentDashboardPage />} />
-              <Route path="visa" element={<StudentDashboardPage />} />
-              <Route path="refer" element={<StudentDashboardPage />} />
-              <Route path="contacts" element={<StudentDashboardPage />} />
+              <Route path="checklist" element={<StudentChecklistPage />} />
+              <Route path="profile" element={<StudentProfilePage />} />
+              <Route path="documents" element={<StudentDocumentsPage />} />
+              <Route path="visa" element={<StudentVisaPage />} />
+              <Route path="refer" element={<StudentReferPage />} />
+              <Route path="contacts" element={<StudentContactsPage />} />
             </Route>
 
             {/* ── Legacy redirects (old routes → new) ── */}
