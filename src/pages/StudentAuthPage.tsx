@@ -17,15 +17,17 @@ import PasswordStrength, { validatePassword } from '@/components/auth/PasswordSt
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+const ROLE_TO_PATH: Record<string, string> = {
+  admin: '/admin',
+  team_member: '/team',
+  social_media_partner: '/partner',
+  student: '/student/checklist',
+};
+
 const StudentAuthPage = () => {
   const { t } = useTranslation();
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [country, setCountry] = useState('');
-  const [consentAccepted, setConsentAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +38,6 @@ const StudentAuthPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const refId = searchParams.get('ref');
 
   const redirectByRole = async (userId: string) => {
     // Check must_change_password first
@@ -46,23 +47,10 @@ const StudentAuthPage = () => {
       return;
     }
 
-    const { data: roles } = await (supabase as any)
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (roles?.some((r: any) => r.role === 'admin')) {
-      navigate('/admin');
-    } else if (roles?.some((r: any) => r.role === 'lawyer')) {
-      navigate('/team-dashboard');
-    } else if (roles?.some((r: any) => r.role === 'influencer')) {
-      navigate('/influencer-dashboard');
-    } else {
-      if (!roles || roles.length === 0) {
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'user' } as any);
-      }
-      navigate('/student-dashboard');
-    }
+    // Use get_my_role() RPC — secure, no direct user_roles query
+    const { data: role } = await supabase.rpc('get_my_role' as any);
+    const path = role ? ROLE_TO_PATH[role as string] : '/student/checklist';
+    navigate(path || '/student/checklist');
   };
 
   const handleGoogleSignIn = async () => {

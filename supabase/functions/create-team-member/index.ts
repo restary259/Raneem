@@ -80,8 +80,8 @@ serve(async (req) => {
       });
     }
 
-    if (!["influencer", "lawyer"].includes(role)) {
-      return new Response(JSON.stringify({ error: "Role must be influencer or lawyer" }), {
+    if (!["team_member", "social_media_partner"].includes(role)) {
+      return new Response(JSON.stringify({ error: "Role must be team_member or social_media_partner" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
