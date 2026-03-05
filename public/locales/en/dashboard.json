@@ -1469,5 +1469,85 @@
     "financials": "Financials",
     "activity": "Activity",
     "settings": "Settings"
+  },
+  "appointment": {
+    "outcome": {
+      "completed": "Completed",
+      "delayed": "Delayed",
+      "cancelled": "Cancelled",
+      "rescheduled": "Rescheduled",
+      "no_show": "No Show"
+    }
+  },
+  "partner": {
+    "earningsTitle": "My Earnings",
+    "commission": {
+      "rateInfo": "You earn ₪{{rate}} per student who submits or completes enrollment.",
+      "label": "Commission"
+    },
+    "earnings": {
+      "totalEarned": "Total Earned",
+      "submitted": "Submitted",
+      "enrolled": "Enrolled",
+      "breakdown": "Commission Breakdown",
+      "noQualifying": "No students have reached submission stage yet.",
+      "pending": "In Pipeline (not yet qualifying)"
+    },
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "appointment": "Appointment",
+      "profile": "Profile",
+      "payment": "Payment",
+      "submitted": "Submitted",
+      "paid": "Enrolled & Paid ✅",
+      "cancelled": "Cancelled"
+    },
+    "welcome": "Welcome back",
+    "subtitle": "Track your referrals and earnings",
+    "kpi": {
+      "totalStudents": "Total Students",
+      "eligible": "Active Cases",
+      "paid": "Paid",
+      "pendingEarnings": "Pending Earnings"
+    },
+    "funnel": {
+      "title": "Conversion Funnel",
+      "submitted": "Submitted",
+      "active": "Active",
+      "paid": "Paid",
+      "students": "Students"
+    },
+    "shareLink": "Share My Link",
+    "requestPayout": "Request Payout",
+    "recentStudents": "Recent Students",
+    "studentsTitle": "My Students",
+    "searchPlaceholder": "Search by name...",
+    "noResults": "No matching students",
+    "noStudents": "No students referred yet. Share your link to get started!",
+    "students_referred": "Students Referred",
+    "payoutRequests": "Payout Requests",
+    "lockInfo": "Some rewards are locked for {{days}} more days."
+  },
+  "student": {
+    "refer": {
+      "discount_message": "Referring a friend or family member will give them a 500 shekel discount on their registration."
+    },
+    "checklist": {
+      "title": "Your Checklist"
+    }
+  },
+  "case": {
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "appointment_scheduled": "Appointment Scheduled",
+      "profile_completion": "Profile Completion",
+      "payment_confirmed": "Payment Confirmed",
+      "submitted": "Submitted",
+      "enrollment_paid": "Enrolled & Paid",
+      "forgotten": "Forgotten",
+      "cancelled": "Cancelled"
+    }
   }
 }
