@@ -102,25 +102,58 @@ export default function TeamCasesPage() {
     return matchStatus && matchSearch;
   });
 
-  const handleCreateCase = async () => {
+  const checkDuplicate = async (phone: string) => {
+    if (!phone.trim() || phone.length < 7) return;
+    setCheckingDuplicate(true);
+    try {
+      const { data } = await supabase.from('cases').select('id, full_name, status').eq('phone_number', phone.trim()).maybeSingle();
+      if (data) {
+        setDuplicateWarning({ id: data.id, name: data.full_name, status: data.status });
+      } else {
+        setDuplicateWarning(null);
+      }
+    } catch { /* silent */ } finally {
+      setCheckingDuplicate(false);
+    }
+  };
+
+  const handleCreateCase = async (force = false) => {
     if (!newName.trim() || !newPhone.trim()) {
       toast({ variant: 'destructive', description: isAr ? 'الاسم والهاتف مطلوبان' : 'Name and phone are required' });
       return;
     }
+    if (!newApptDate) {
+      toast({ variant: 'destructive', description: isAr ? 'يجب تحديد موعد لإنشاء الملف' : 'You must schedule an appointment to create a case' });
+      return;
+    }
+    if (duplicateWarning && !force) {
+      return; // Let user decide via the warning UI
+    }
     setCreating(true);
     try {
-      const { data, error } = await supabase.from('cases').insert({
+      // Create case with appointment_scheduled status
+      const { data: caseData, error: caseErr } = await supabase.from('cases').insert({
         full_name: newName.trim(),
         phone_number: newPhone.trim(),
         source: 'manual',
         assigned_to: user!.id,
-        status: 'new',
+        status: 'appointment_scheduled',
       }).select().single();
-      if (error) throw error;
-      toast({ title: isAr ? 'تم إنشاء الملف' : 'Case created' });
+      if (caseErr) throw caseErr;
+
+      // Simultaneously create the appointment
+      const { error: apptErr } = await supabase.from('appointments').insert({
+        case_id: (caseData as Case).id,
+        team_member_id: user!.id,
+        scheduled_at: new Date(newApptDate).toISOString(),
+        duration_minutes: 60,
+      });
+      if (apptErr) console.warn('Appointment creation failed:', apptErr.message);
+
+      toast({ title: isAr ? 'تم إنشاء الملف والموعد' : 'Case and appointment created' });
       setShowNew(false);
-      setNewName(''); setNewPhone('');
-      navigate(`/team/cases/${(data as Case).id}`);
+      setNewName(''); setNewPhone(''); setNewApptDate(''); setDuplicateWarning(null);
+      navigate(`/team/cases/${(caseData as Case).id}`);
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
