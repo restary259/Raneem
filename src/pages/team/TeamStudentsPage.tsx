@@ -105,7 +105,12 @@ export default function TeamStudentsPage() {
         }
       );
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed');
+      if (!resp.ok) {
+        // Keep modal open on 409 so user can change the email
+        toast({ variant: 'destructive', description: result.error || (isRtl ? 'فشل إنشاء الحساب' : 'Failed to create account') });
+        setCreating(false);
+        return;
+      }
 
       setShowCreateModal(false);
       setCreateEmail('');
