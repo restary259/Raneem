@@ -52,8 +52,15 @@ const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage')
 const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
-// Lazy-loaded Team pages (Phase 3 — placeholder redirects until built)
-const TeamPlaceholderPage = lazy(() => import('./pages/placeholders/TeamPlaceholderPage'));
+// Team pages (Phase 3)
+const TeamTodayPage = lazy(() => import('./pages/team/TeamTodayPage'));
+const TeamCasesPage = lazy(() => import('./pages/team/TeamCasesPage'));
+const CaseDetailPage = lazy(() => import('./pages/team/CaseDetailPage'));
+const TeamAppointmentsPage = lazy(() => import('./pages/team/TeamAppointmentsPage'));
+const SubmitNewStudentPage = lazy(() => import('./pages/team/SubmitNewStudentPage'));
+const TeamStudentsPage = lazy(() => import('./pages/team/TeamStudentsPage'));
+const TeamStudentProfilePage = lazy(() => import('./pages/team/TeamStudentProfilePage'));
+const TeamAnalyticsPage = lazy(() => import('./pages/team/TeamAnalyticsPage'));
 
 // Lazy-loaded Partner pages (Phase 5 — placeholder redirects until built)
 const PartnerPlaceholderPage = lazy(() => import('./pages/placeholders/PartnerPlaceholderPage'));
@@ -174,15 +181,15 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<TeamPlaceholderPage />} />
-              <Route path="cases" element={<TeamPlaceholderPage />} />
-              <Route path="cases/:id" element={<TeamPlaceholderPage />} />
-              <Route path="appointments" element={<TeamPlaceholderPage />} />
-              <Route path="appointments/today" element={<TeamPlaceholderPage />} />
-              <Route path="submit" element={<TeamPlaceholderPage />} />
-              <Route path="students" element={<TeamPlaceholderPage />} />
-              <Route path="students/:id" element={<TeamPlaceholderPage />} />
-              <Route path="analytics" element={<TeamPlaceholderPage />} />
+              <Route index element={<TeamTodayPage />} />
+              <Route path="cases" element={<TeamCasesPage />} />
+              <Route path="cases/:id" element={<CaseDetailPage />} />
+              <Route path="appointments" element={<TeamAppointmentsPage />} />
+              <Route path="appointments/today" element={<TeamTodayPage />} />
+              <Route path="submit" element={<SubmitNewStudentPage />} />
+              <Route path="students" element={<TeamStudentsPage />} />
+              <Route path="students/:id" element={<TeamStudentProfilePage />} />
+              <Route path="analytics" element={<TeamAnalyticsPage />} />
             </Route>
 
             {/* ── Partner Dashboard (/partner/*) ── */}
