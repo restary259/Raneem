@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus, Users } from 'lucide-react';
+import { Loader2, UserPlus, Gift } from 'lucide-react';
 import ReferralTracker from './ReferralTracker';
 import { useTranslation } from 'react-i18next';
 
@@ -19,16 +18,11 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFamily, setIsFamily] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [form, setForm] = useState({
-    first_name: '', surname: '', email: '', phone: '', country: '', city: '', dob: '', gender: '', german_level: '',
-    education_level: '', passport_type: '', english_units: '', math_units: '',
-  });
+  const [form, setForm] = useState({ referred_name: '', referred_phone: '' });
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: string, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,67 +30,56 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
       toast({ variant: 'destructive', title: t('referrals.termsError') });
       return;
     }
+    if (!form.referred_name.trim()) {
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: t('referrals.nameRequired', 'Name is required') });
+      return;
+    }
     const phoneRegex = /^\+?\d{7,15}$/;
-    if (!phoneRegex.test(form.phone.replace(/[\s\-()]/g, ''))) {
+    if (!phoneRegex.test(form.referred_phone.replace(/[\s\-()]/g, ''))) {
       toast({ variant: 'destructive', title: t('referrals.phoneError'), description: t('referrals.phoneErrorDesc') });
       return;
     }
-    const { data: selfProfile } = await (supabase as any).from('profiles').select('email').eq('id', userId).maybeSingle();
-    if (selfProfile && form.email.toLowerCase() === selfProfile.email?.toLowerCase()) {
-      toast({ variant: 'destructive', title: t('referrals.selfReferralError') });
-      return;
-    }
-    const { data: existing } = await (supabase as any).from('referrals').select('id').eq('referred_email', form.email).eq('referrer_id', userId);
-    if (existing?.length) {
-      toast({ variant: 'destructive', title: t('referrals.duplicateError') });
-      return;
-    }
-    // Also check by phone to prevent duplicate leads for the same person via different emails
-    const { data: existingByPhone } = await (supabase as any).from('referrals').select('id').eq('referred_phone', form.phone).eq('referrer_id', userId);
+
+    // Duplicate check by phone for this referrer
+    const { data: existingByPhone } = await (supabase as any)
+      .from('referrals')
+      .select('id')
+      .eq('referred_phone', form.referred_phone.trim())
+      .eq('referrer_user_id', userId);
+
     if (existingByPhone?.length) {
       toast({ variant: 'destructive', title: t('referrals.duplicateError') });
       return;
     }
+
     setIsLoading(true);
     try {
-      const fullName = `${form.first_name} ${form.surname}`.trim();
-      
-      // 1. Insert referral
       const { error } = await (supabase as any).from('referrals').insert({
-        referrer_id: userId, referrer_type: 'student',
-        referred_name: fullName,
-        referred_email: form.email, referred_phone: form.phone,
-        referred_country: form.country || null, referred_city: form.city || null,
-        referred_dob: form.dob || null, referred_gender: form.gender || null,
-        referred_german_level: form.german_level || null,
-        is_family: isFamily, status: 'pending', terms_accepted_at: new Date().toISOString(),
+        referrer_user_id: userId,
+        referred_name: form.referred_name.trim(),
+        referred_phone: form.referred_phone.trim(),
+        discount_applied: false,
       });
       if (error) throw error;
 
-      // 2. Auto-create lead via RPC
+      // Also create a case via edge function for the referred person
       try {
-        await (supabase as any).rpc('insert_lead_from_apply', {
-          p_full_name: fullName,
-          p_phone: form.phone,
-          p_city: form.city || null,
-          p_education_level: form.education_level || null,
-          p_german_level: form.german_level || null,
-          p_passport_type: form.passport_type || null,
-          p_english_units: form.english_units ? parseInt(form.english_units) : null,
-          p_math_units: form.math_units ? parseInt(form.math_units) : null,
-          p_source_type: 'referral',
-          p_source_id: userId,
+        await supabase.functions.invoke('create-case-from-apply', {
+          body: {
+            full_name: form.referred_name.trim(),
+            phone_number: form.referred_phone.trim(),
+            source: 'apply_page',
+          },
         });
-      } catch (leadErr) {
-        console.warn('Auto-lead creation failed (non-blocking):', leadErr);
+      } catch (caseErr) {
+        console.warn('Auto-case creation for referral failed (non-blocking):', caseErr);
       }
 
       toast({ title: t('referrals.success') });
-      setForm({ first_name: '', surname: '', email: '', phone: '', country: '', city: '', dob: '', gender: '', german_level: '', education_level: '', passport_type: '', english_units: '', math_units: '' });
-      setIsFamily(false);
+      setForm({ referred_name: '', referred_phone: '' });
       setTermsAccepted(false);
     } catch (err: any) {
-      toast({ variant: 'destructive', title: t('common.error'), description: err.message });
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: err.message });
     } finally {
       setIsLoading(false);
     }
@@ -104,126 +87,64 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
 
   return (
     <div className="space-y-6">
+      {/* Discount info banner */}
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+        <Gift className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+        <p className="text-sm text-foreground">
+          {t('student.refer.discount_message', 'Referring a friend or family member will give them a 500 shekel discount on their registration.')}
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
-            {t('referrals.title')}
+            {t('referrals.title', 'Refer a Friend or Family Member')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2">
-              <Checkbox id="isFamily" checked={isFamily} onCheckedChange={(v) => setIsFamily(v === true)} />
-              <Label htmlFor="isFamily" className="flex items-center gap-1 cursor-pointer">
-                <Users className="h-4 w-4" />
-                {t('referrals.familyLabel')}
-              </Label>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">{t('referrals.firstName')} *</Label>
-              <Input id="first_name" value={form.first_name} onChange={e => updateField('first_name', e.target.value)} required />
+              <Label htmlFor="referred_name">{t('referrals.firstName', 'Full Name')} *</Label>
+              <Input
+                id="referred_name"
+                value={form.referred_name}
+                onChange={e => updateField('referred_name', e.target.value)}
+                required
+                placeholder={t('referrals.namePlaceholder', 'Friend\'s full name')}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="surname">{t('referrals.surname')} *</Label>
-              <Input id="surname" value={form.surname} onChange={e => updateField('surname', e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_email">{t('referrals.emailLabel')} *</Label>
-              <Input id="ref_email" type="email" value={form.email} onChange={e => updateField('email', e.target.value)} required placeholder="example@email.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_phone">{t('referrals.phone')} *</Label>
-              <Input id="ref_phone" type="tel" value={form.phone} onChange={e => updateField('phone', e.target.value)} required placeholder={t('referrals.phonePlaceholder')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_country">{t('referrals.country')}</Label>
-              <Input id="ref_country" value={form.country} onChange={e => updateField('country', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_city">{t('referrals.city')}</Label>
-              <Input id="ref_city" value={form.city} onChange={e => updateField('city', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_dob">{t('referrals.dob')}</Label>
-              <Input id="ref_dob" type="date" value={form.dob} onChange={e => updateField('dob', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ref_gender">{t('referrals.gender')}</Label>
-              <Select value={form.gender} onValueChange={v => updateField('gender', v)}>
-                <SelectTrigger><SelectValue placeholder={t('referrals.selectGender')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">{t('referrals.male')}</SelectItem>
-                  <SelectItem value="female">{t('referrals.female')}</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="referred_phone">{t('referrals.phone', 'Phone (with country code)')} *</Label>
+              <Input
+                id="referred_phone"
+                type="tel"
+                value={form.referred_phone}
+                onChange={e => updateField('referred_phone', e.target.value)}
+                required
+                placeholder={t('referrals.phonePlaceholder', '+972 52 XXX XXXX')}
+                dir="ltr"
+              />
             </div>
 
-            {/* Eligibility fields */}
-            <div className="space-y-2">
-              <Label>{t('referrals.educationLevel', { defaultValue: 'المستوى التعليمي' })}</Label>
-              <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
-                <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel', { defaultValue: 'اختر' })} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bagrut">{t('referrals.bagrut', { defaultValue: 'بجروت' })}</SelectItem>
-                  <SelectItem value="diploma">{t('referrals.diploma', { defaultValue: 'دبلوم' })}</SelectItem>
-                  <SelectItem value="bachelor">{t('referrals.bachelor', { defaultValue: 'بكالوريوس' })}</SelectItem>
-                  <SelectItem value="master">{t('referrals.master', { defaultValue: 'ماجستير' })}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('referrals.passportType', { defaultValue: 'نوع جواز السفر' })}</Label>
-              <Select value={form.passport_type} onValueChange={v => updateField('passport_type', v)}>
-                <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel', { defaultValue: 'اختر' })} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="israeli_blue">{t('referrals.israeliBlue', { defaultValue: 'إسرائيلي أزرق' })}</SelectItem>
-                  <SelectItem value="israeli_red">{t('referrals.israeliRed', { defaultValue: 'إسرائيلي أحمر' })}</SelectItem>
-                  <SelectItem value="other">{t('referrals.otherPassport', { defaultValue: 'آخر' })}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('referrals.englishUnits', { defaultValue: 'وحدات الإنجليزي' })}</Label>
-              <Input type="number" min="0" max="5" value={form.english_units} onChange={e => updateField('english_units', e.target.value)} placeholder="3-5" />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('referrals.mathUnits', { defaultValue: 'وحدات الرياضيات' })}</Label>
-              <Input type="number" min="0" max="5" value={form.math_units} onChange={e => updateField('math_units', e.target.value)} placeholder="3-5" />
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="ref_german">{t('referrals.germanLevel')}</Label>
-              <Select value={form.german_level} onValueChange={v => updateField('german_level', v)}>
-                <SelectTrigger><SelectValue placeholder={t('referrals.selectLevel')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t('referrals.noLevel')}</SelectItem>
-                  <SelectItem value="A1">A1</SelectItem>
-                  <SelectItem value="A2">A2</SelectItem>
-                  <SelectItem value="B1">B1</SelectItem>
-                  <SelectItem value="B2">B2</SelectItem>
-                  <SelectItem value="C1">C1</SelectItem>
-                  <SelectItem value="C2">C2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="md:col-span-2 flex items-start gap-2 pt-2">
-              <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(v) => setTermsAccepted(v === true)} />
+            <div className="flex items-start gap-2 pt-2">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(v) => setTermsAccepted(v === true)}
+              />
               <Label htmlFor="terms" className="text-sm cursor-pointer leading-relaxed">
-                {t('referrals.termsLabel')}
+                {t('referrals.termsLabel', 'I confirm that all information provided is correct and I agree to the terms and conditions')}
               </Label>
             </div>
 
-            <div className="md:col-span-2">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <UserPlus className="h-4 w-4 me-2" />}
-                {t('referrals.submit')}
-              </Button>
-            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading
+                ? <Loader2 className="h-4 w-4 animate-spin me-2" />
+                : <UserPlus className="h-4 w-4 me-2" />
+              }
+              {t('referrals.submit', 'Submit Referral')}
+            </Button>
           </form>
         </CardContent>
       </Card>
