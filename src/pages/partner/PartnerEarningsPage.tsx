@@ -80,7 +80,7 @@ export default function PartnerEarningsPage() {
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50 border border-border">
         <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-sm text-muted-foreground">
-          {`${t('partner.commission.rateInfo', 'You earn ₪{{rate}} per student who submits or completes enrollment.').replace('{{rate}}', commissionRate.toLocaleString())}`}
+          {t('partner.commission.rateInfo', 'You earn ₪{{rate}} per student who submits or completes enrollment.').toString().replace('{{rate}}', commissionRate.toLocaleString())}
         </p>
       </div>
 
