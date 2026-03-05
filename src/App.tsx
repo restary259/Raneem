@@ -42,6 +42,15 @@ const ApplyPage = lazy(() => import('./pages/ApplyPage'));
 
 // Lazy-loaded Admin pages
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminCommandCenter = lazy(() => import('./pages/admin/AdminCommandCenter'));
+const AdminPipelinePage = lazy(() => import('./pages/admin/AdminPipelinePage'));
+const AdminTeamPage = lazy(() => import('./pages/admin/AdminTeamPage'));
+const AdminProgramsPage = lazy(() => import('./pages/admin/AdminProgramsPage'));
+const AdminSubmissionsPage = lazy(() => import('./pages/admin/AdminSubmissionsPage'));
+const AdminFinancialsPage = lazy(() => import('./pages/admin/AdminFinancialsPage'));
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
+const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
 // Lazy-loaded Team pages (Phase 3 — placeholder redirects until built)
 const TeamPlaceholderPage = lazy(() => import('./pages/placeholders/TeamPlaceholderPage'));
@@ -145,16 +154,15 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminDashboardPage />} />
-              {/* Phase 2 pages — will be added as built */}
-              <Route path="pipeline" element={<AdminDashboardPage />} />
-              <Route path="team" element={<AdminDashboardPage />} />
-              <Route path="programs" element={<AdminDashboardPage />} />
-              <Route path="submissions" element={<AdminDashboardPage />} />
-              <Route path="financials" element={<AdminDashboardPage />} />
-              <Route path="analytics" element={<AdminDashboardPage />} />
-              <Route path="activity" element={<AdminDashboardPage />} />
-              <Route path="settings" element={<AdminDashboardPage />} />
+              <Route index element={<AdminCommandCenter />} />
+              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="team" element={<AdminTeamPage />} />
+              <Route path="programs" element={<AdminProgramsPage />} />
+              <Route path="submissions" element={<AdminSubmissionsPage />} />
+              <Route path="financials" element={<AdminFinancialsPage />} />
+              <Route path="analytics" element={<AdminAnalyticsPage />} />
+              <Route path="activity" element={<AdminActivityPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}

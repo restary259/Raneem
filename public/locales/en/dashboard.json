@@ -1224,5 +1224,125 @@
     "kickedTitle": "Logged in from another device",
     "kickedDesc": "Your account was logged in from another device or browser. You will be signed out automatically.",
     "ok": "OK"
+  },
+  "nav": {
+    "overview": "Overview",
+    "pipeline": "Pipeline",
+    "team": "Team Members",
+    "programs": "Programs",
+    "submissions": "Submissions",
+    "financials": "Financials",
+    "analytics": "Analytics",
+    "activity": "Live Activity",
+    "settings": "Settings",
+    "today": "Today",
+    "cases": "My Cases",
+    "appointments": "Appointments",
+    "todayAppts": "Today's Appointments",
+    "submitNew": "Submit New Student",
+    "students": "My Students",
+    "myLink": "My Link",
+    "earnings": "Earnings",
+    "checklist": "Checklist",
+    "profile": "My Profile",
+    "documents": "Documents",
+    "visa": "Visa Application",
+    "refer": "Refer a Friend",
+    "contacts": "Important Contacts"
+  },
+  "case": {
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "appointment_scheduled": "Appointment Scheduled",
+      "profile_completion": "Profile Completion",
+      "payment_confirmed": "Payment Confirmed",
+      "submitted": "Submitted",
+      "enrollment_paid": "Enrolled & Paid",
+      "forgotten": "Forgotten Case",
+      "cancelled": "Cancelled"
+    }
+  },
+  "common": {
+    "refresh": "Refresh",
+    "save": "Save",
+    "done": "Done",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "admin": {
+    "commandCenter": {
+      "title": "Command Center",
+      "subtitle": "Real-time overview of all activity",
+      "activeCases": "Active Cases",
+      "submitted": "Submitted",
+      "enrolled": "Enrolled",
+      "forgotten": "Forgotten Cases",
+      "recentActivity": "Recent Activity",
+      "noActivity": "No recent activity",
+      "system": "System",
+      "viewPipeline": "View Pipeline",
+      "viewSubmissions": "Submissions",
+      "manageTeam": "Manage Team",
+      "viewFinancials": "Financials"
+    },
+    "pipeline": {
+      "title": "Application Pipeline",
+      "searchPlaceholder": "Search by name or phone...",
+      "filterTeam": "Filter by team member",
+      "allTeam": "All",
+      "unassigned": "Unassigned",
+      "assign": "Assign",
+      "empty": "Empty"
+    },
+    "team": {
+      "title": "Team Members",
+      "createMember": "Create Member",
+      "fullName": "Full Name",
+      "email": "Email",
+      "role": "Role",
+      "tempPassword": "Temp Password",
+      "createBtn": "Create Account",
+      "noMembers": "No team members yet"
+    },
+    "programs": {
+      "title": "Programs & Accommodations",
+      "programs": "Programs",
+      "accommodations": "Accommodations",
+      "addProgram": "Add Program",
+      "addAccommodation": "Add Accommodation",
+      "type": "Type",
+      "price": "Price",
+      "duration": "Duration",
+      "description": "Description",
+      "freePrice": "Free"
+    },
+    "submissions": {
+      "title": "Submitted Applications",
+      "subtitle": "Cases awaiting enrollment confirmation",
+      "empty": "No submitted cases yet",
+      "markEnrolled": "Mark as Enrolled & Paid"
+    },
+    "financials": {
+      "title": "Financial Dashboard"
+    },
+    "analytics": {
+      "title": "Analytics"
+    },
+    "activity": {
+      "title": "Live Activity Feed",
+      "search": "Search activity..."
+    },
+    "settings": {
+      "title": "Settings",
+      "platform": "Platform",
+      "contacts": "Important Contacts",
+      "platformTitle": "Platform Configuration",
+      "addContact": "Add Contact"
+    }
   }
 }
