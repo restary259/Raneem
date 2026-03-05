@@ -59,6 +59,11 @@ export default function CaseDetailPage() {
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [tempPasswordResult, setTempPasswordResult] = useState<string | null>(null);
+  const [copiedPassword, setCopiedPassword] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
