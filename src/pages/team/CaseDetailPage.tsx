@@ -57,7 +57,7 @@ export default function CaseDetailPage() {
     try {
       const [caseRes, apptRes, subRes, actRes] = await Promise.all([
         supabase.from('cases').select('*').eq('id', id).single(),
-        supabase.from('appointments').select('*').eq('case_id', id).order('scheduled_at', { ascending: false }),
+        supabase.from('appointments').select('*').eq('case_id', id).is('outcome', null).order('scheduled_at', { ascending: false }),
         supabase.from('case_submissions').select('*').eq('case_id', id).maybeSingle(),
         supabase.from('activity_log').select('*').eq('entity_id', id).order('created_at', { ascending: false }).limit(20),
       ]);

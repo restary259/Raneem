@@ -60,11 +60,14 @@ const AdminPipelinePage = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      // Sequential fetch: first get team member IDs, then profiles
+      const rolesRes = await supabase.from('user_roles').select('user_id').eq('role', 'team_member');
+      const teamIds = (rolesRes.data ?? []).map(r => r.user_id);
       const [casesRes, profilesRes] = await Promise.all([
         supabase.from('cases').select('*').not('status', 'in', '("forgotten","cancelled")'),
-        supabase.from('profiles').select('id, full_name, email').in('id',
-          (await supabase.from('user_roles').select('user_id').eq('role', 'team_member')).data?.map(r => r.user_id) || []
-        ),
+        teamIds.length > 0
+          ? supabase.from('profiles').select('id, full_name, email').in('id', teamIds)
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (casesRes.error) throw casesRes.error;
@@ -198,17 +201,14 @@ const AdminPipelinePage = () => {
                                   <SelectValue placeholder={t('admin.pipeline.assign', 'Assign')} />
                                 </div>
                               </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="unassigned">{t('admin.pipeline.unassigned', 'Unassigned')}</SelectItem>
+                               <SelectContent>
+                                 <SelectItem value="unassigned">{t('admin.pipeline.unassigned', 'Unassigned')}</SelectItem>
                                  {teamMembers.map(tm => (
                                    <SelectItem key={tm.id} value={tm.id}>
-                                     <div className="flex flex-col">
-                                       <span className="font-medium">{tm.full_name}</span>
-                                       <span className="text-xs text-muted-foreground">{tm.email}</span>
-                                     </div>
+                                     {tm.full_name} — {tm.email}
                                    </SelectItem>
                                  ))}
-                              </SelectContent>
+                               </SelectContent>
                             </Select>
                           </CardContent>
                         </Card>
