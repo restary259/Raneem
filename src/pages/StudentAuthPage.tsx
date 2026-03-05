@@ -224,24 +224,27 @@ const StudentAuthPage = () => {
 
       <Dialog open={showChangePasswordModal} onOpenChange={async (open) => {
         if (!open) {
-          // Allow closing by signing out (forces fresh login)
           await supabase.auth.signOut();
           setShowChangePasswordModal(false);
         }
       }}>
         <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>يجب تغيير كلمة المرور</DialogTitle>
+            <DialogTitle>{isRTL ? 'يجب تغيير كلمة المرور' : 'Password Change Required'}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
+          <p className="text-sm text-muted-foreground">
+            {isRTL
+              ? 'تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.'
+              : 'Your account was created with a temporary password. Please set a new password to continue.'}
+          </p>
           <div className="space-y-3">
             <div>
-              <Label>كلمة المرور الجديدة</Label>
+              <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
               <Input
                 type="password"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                placeholder="أدخل كلمة مرور جديدة"
+                placeholder={isRTL ? 'أدخل كلمة مرور جديدة' : 'Enter new password'}
               />
               <PasswordStrength password={newPassword} />
             </div>
@@ -250,7 +253,9 @@ const StudentAuthPage = () => {
               onClick={handleChangePassword}
               disabled={changingPassword || !newPassword}
             >
-              {changingPassword ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />جاري...</> : 'تغيير كلمة المرور'}
+              {changingPassword
+                ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{isRTL ? 'جاري...' : 'Saving...'}</>
+                : isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
             </Button>
           </div>
         </DialogContent>

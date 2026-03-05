@@ -79,7 +79,7 @@ const AdminTeamPage = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }),
+        body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Failed to create member');
