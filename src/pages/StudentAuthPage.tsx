@@ -205,10 +205,8 @@ const StudentAuthPage = () => {
           </form>
         </div>
 
-        {/* Footer note */}
-        <p className="text-center text-muted-foreground/50 text-xs mt-6">
-          © {new Date().getFullYear()} DARB Study International
-        </p>
+        {/* Footer note removed for cleaner UI */}
+
       </div>
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
