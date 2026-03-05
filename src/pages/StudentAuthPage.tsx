@@ -83,31 +83,17 @@ const StudentAuthPage = () => {
     setIsLoading(true);
 
     try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-guard`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // Use signInWithPassword directly — this sets the session atomically in the Supabase client,
+      // preventing the "auth session missing" race condition that occurs when using setSession()
+      // after a fetch-based auth-guard response.
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      const result = await resp.json();
-
-      if (!resp.ok) {
-        throw new Error(result.error || t('auth.loginFailed'));
+      if (error) {
+        throw new Error(error.message);
       }
 
-      if (result.session) {
-        if (result.session_nonce) {
-          localStorage.setItem('darb_session_nonce', result.session_nonce);
-        }
-        await supabase.auth.setSession({
-          access_token: result.session.access_token,
-          refresh_token: result.session.refresh_token,
-        });
-        // Force a role refresh so the redirect useEffect fires even if already initialized
+      if (data.session) {
+        // Session is now live in the client — refreshRole will read it correctly
         await refreshRole();
       }
 
