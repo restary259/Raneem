@@ -175,6 +175,43 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
     }
   };
 
+  const BirthdayPicker = ({ label, value, onChange }: { label: string; value: Date | undefined; onChange: (d: Date | undefined) => void }) => {
+    const years = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
+    const months = [
+      { v: '01', l: isAr ? 'يناير' : 'January' }, { v: '02', l: isAr ? 'فبراير' : 'February' },
+      { v: '03', l: isAr ? 'مارس' : 'March' }, { v: '04', l: isAr ? 'أبريل' : 'April' },
+      { v: '05', l: isAr ? 'مايو' : 'May' }, { v: '06', l: isAr ? 'يونيو' : 'June' },
+      { v: '07', l: isAr ? 'يوليو' : 'July' }, { v: '08', l: isAr ? 'أغسطس' : 'August' },
+      { v: '09', l: isAr ? 'سبتمبر' : 'September' }, { v: '10', l: isAr ? 'أكتوبر' : 'October' },
+      { v: '11', l: isAr ? 'نوفمبر' : 'November' }, { v: '12', l: isAr ? 'ديسمبر' : 'December' },
+    ];
+    const selYear = value ? value.getFullYear().toString() : '';
+    const selMonth = value ? String(value.getMonth() + 1).padStart(2, '0') : '';
+    const selDay = value ? String(value.getDate()).padStart(2, '0') : '';
+    const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
+    const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, '0'));
+    const update = (y: string, m: string, d: string) => { if (y && m && d) onChange(new Date(`${y}-${m}-${d}`)); };
+    return (
+      <div>
+        <Label>{label}</Label>
+        <div className="grid grid-cols-3 gap-2 mt-1">
+          <Select value={selYear} onValueChange={v => update(v, selMonth, selDay || '01')}>
+            <SelectTrigger><SelectValue placeholder={isAr ? 'السنة' : 'Year'} /></SelectTrigger>
+            <SelectContent className="max-h-48">{years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={selMonth} onValueChange={v => update(selYear, v, selDay || '01')}>
+            <SelectTrigger><SelectValue placeholder={isAr ? 'الشهر' : 'Month'} /></SelectTrigger>
+            <SelectContent>{months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={selDay} onValueChange={v => update(selYear, selMonth, v)}>
+            <SelectTrigger><SelectValue placeholder={isAr ? 'اليوم' : 'Day'} /></SelectTrigger>
+            <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   const DateField = ({ label, value, onChange }: { label: string; value: Date | undefined; onChange: (d: Date | undefined) => void }) => (
     <div>
       <Label>{label}</Label>
@@ -268,7 +305,7 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <DateField label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
+              <BirthdayPicker label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
               {age !== null && <p className="text-xs text-muted-foreground mt-1">{isAr ? `العمر: ${age} سنة` : `Age: ${age}`}</p>}
             </div>
             <div className="space-y-1">
