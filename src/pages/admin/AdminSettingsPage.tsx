@@ -214,7 +214,7 @@ const AdminSettingsPage = () => {
               <CardHeader><CardTitle className="text-base">{t('admin.settings.platformTitle', 'Platform Configuration')}</CardTitle></CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-1">
-                  <Label>{isRtl ? 'معدل عمولة الشريك (ILS / طالب)' : 'Partner Commission Rate (ILS / student)'}</Label>
+                  <Label>{isRtl ? 'عمولة الشريك لكل طالب مدفوع (مبلغ ثابت - ILS)' : 'Partner Commission Per Student — Fixed Amount (ILS)'}</Label>
                   <Input type="number" value={settings.partner_commission_rate} onChange={e => setSettings(s => s ? { ...s, partner_commission_rate: Number(e.target.value) } : s)} />
                   <p className="text-xs text-muted-foreground">{isRtl ? 'المبلغ المستحق للشريك عن كل طالب مسجل' : 'Amount owed to partner per enrolled student'}</p>
                 </div>

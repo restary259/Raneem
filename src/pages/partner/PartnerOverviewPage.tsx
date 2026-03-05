@@ -1,45 +1,37 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Users, DollarSign, TrendingUp, Link2, ArrowRight, Award } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Award, CheckCircle, Calendar, FileCheck } from 'lucide-react';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { useDirection } from '@/hooks/useDirection';
 
 export default function PartnerOverviewPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({ total: 0, eligible: 0, paid: 0, pendingEarnings: 0 });
-  const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
+  const [commissionRate, setCommissionRate] = useState<number>(500);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation('dashboard');
   const { dir } = useDirection();
   const isAr = i18n.language === 'ar';
 
   const load = useCallback(async (uid: string) => {
-    const [profRes, casesRes, rewardsRes] = await Promise.all([
+    const [profRes, casesRes, settingsRes] = await Promise.all([
       (supabase as any).from('profiles').select('full_name,email').eq('id', uid).maybeSingle(),
-      (supabase as any).from('cases').select('id,full_name,status,created_at').eq('partner_id', uid).order('created_at', { ascending: false }).limit(50),
-      (supabase as any).from('rewards').select('amount,status').eq('user_id', uid),
+      (supabase as any).from('cases').select('id,status,created_at').order('created_at', { ascending: false }),
+      (supabase as any).from('platform_settings').select('partner_commission_rate').limit(1).maybeSingle(),
     ]);
 
     if (profRes.data) setProfile(profRes.data);
-
-    const cases = casesRes.data || [];
-    const rewards = rewardsRes.data || [];
-    const pendingEarnings = rewards.filter((r: any) => r.status === 'pending').reduce((s: number, r: any) => s + Number(r.amount), 0);
-
-    setStats({
-      total: cases.length,
-      eligible: cases.filter((c: any) => c.status !== 'new').length,
-      paid: cases.filter((c: any) => c.status === 'enrollment_paid').length,
-      pendingEarnings,
-    });
-    setRecentLeads(cases.slice(0, 5));
+    setCases(casesRes.data || []);
+    if (settingsRes.data?.partner_commission_rate) {
+      setCommissionRate(Number(settingsRes.data.partner_commission_rate));
+    }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -50,41 +42,74 @@ export default function PartnerOverviewPage() {
     });
   }, [navigate, load]);
 
-  if (!userId) return <DashboardLoading />;
+  if (!userId || isLoading) return <DashboardLoading />;
+
+  const total = cases.length;
+  const contacted = cases.filter(c => !['new'].includes(c.status)).length;
+  const withAppointment = cases.filter(c => ['appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
+  const profileComplete = cases.filter(c => ['profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
+  const paid = cases.filter(c => ['payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
+  const enrolled = cases.filter(c => c.status === 'enrollment_paid').length;
 
   const kpis = [
-    { label: t('partner.kpi.totalStudents', 'Total Students'), value: stats.total, icon: <Users className="h-5 w-5" />, color: 'text-blue-600 bg-blue-50' },
-    { label: t('partner.kpi.eligible', 'Active Cases'), value: stats.eligible, icon: <TrendingUp className="h-5 w-5" />, color: 'text-emerald-600 bg-emerald-50' },
-    { label: t('partner.kpi.paid', 'Paid'), value: stats.paid, icon: <Award className="h-5 w-5" />, color: 'text-purple-600 bg-purple-50' },
-    { label: t('partner.kpi.pendingEarnings', 'Pending Earnings'), value: `₪${stats.pendingEarnings.toLocaleString()}`, icon: <DollarSign className="h-5 w-5" />, color: 'text-amber-600 bg-amber-50' },
+    { label: isAr ? 'إجمالي التسجيلات' : 'Total Registrations', value: total, icon: <Users className="h-5 w-5" />, color: 'text-blue-600 bg-blue-50' },
+    { label: isAr ? 'تم التواصل' : 'Contacted', value: contacted, icon: <CheckCircle className="h-5 w-5" />, color: 'text-sky-600 bg-sky-50' },
+    { label: isAr ? 'لديهم موعد' : 'With Appointment', value: withAppointment, icon: <Calendar className="h-5 w-5" />, color: 'text-purple-600 bg-purple-50' },
+    { label: isAr ? 'ملف مكتمل' : 'Profile Complete', value: profileComplete, icon: <FileCheck className="h-5 w-5" />, color: 'text-yellow-600 bg-yellow-50' },
+    { label: isAr ? 'دفعوا' : 'Paid', value: paid, icon: <DollarSign className="h-5 w-5" />, color: 'text-emerald-600 bg-emerald-50' },
+    { label: isAr ? 'مسجلون' : 'Enrolled', value: enrolled, icon: <Award className="h-5 w-5" />, color: 'text-green-600 bg-green-50' },
   ];
 
   const funnelData = [
-    { name: t('partner.funnel.submitted', 'Submitted'), value: stats.total },
-    { name: t('partner.funnel.active', 'Active'), value: stats.eligible },
-    { name: t('partner.funnel.paid', 'Paid'), value: stats.paid },
+    { name: isAr ? 'تسجيل' : 'Registered', value: total },
+    { name: isAr ? 'تواصل' : 'Contacted', value: contacted },
+    { name: isAr ? 'موعد' : 'Appointment', value: withAppointment },
+    { name: isAr ? 'ملف مكتمل' : 'Profile Done', value: profileComplete },
+    { name: isAr ? 'مدفوع' : 'Paid', value: paid },
+    { name: isAr ? 'مسجل' : 'Enrolled', value: enrolled },
   ];
+
+  const COLORS = ['#3b82f6', '#0ea5e9', '#8b5cf6', '#eab308', '#10b981', '#22c55e'];
+
+  const projectedEarnings = enrolled * commissionRate;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6" dir={dir}>
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          {t('partner.welcome', 'Welcome back')}{profile?.full_name ? `, ${profile.full_name}` : ''}! 👋
+          {isAr ? 'مرحبًا' : 'Welcome back'}{profile?.full_name ? `, ${profile.full_name}` : ''}! 👋
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">{t('partner.subtitle', 'Track your referrals and earnings')}</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {isAr ? 'إحصائيات مباشرة للطلاب المسجلين عبر الموقع' : 'Live analytics for students registered through the website'}
+        </p>
+      </div>
+
+      {/* Projected Earnings Banner */}
+      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            {isAr ? 'الأرباح المتوقعة' : 'Projected Earnings'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isAr
+              ? `${enrolled} طالب مسجل × ${commissionRate} ILS`
+              : `${enrolled} enrolled students × ${commissionRate} ILS`}
+          </p>
+        </div>
+        <p className="text-3xl font-bold text-primary">₪{projectedEarnings.toLocaleString()}</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
-            <CardContent className="p-4">
-              <div className={`inline-flex items-center justify-center w-9 h-9 rounded-lg mb-2 ${kpi.color}`}>
+            <CardContent className="p-3">
+              <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg mb-2 ${kpi.color}`}>
                 {kpi.icon}
               </div>
-              <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+              <p className="text-xl font-bold text-foreground">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground leading-tight mt-0.5">{kpi.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -93,54 +118,48 @@ export default function PartnerOverviewPage() {
       {/* Funnel Chart */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{t('partner.funnel.title', 'Conversion Funnel')}</CardTitle>
+          <CardTitle className="text-base">
+            {isAr ? 'قمع التحويل' : 'Conversion Funnel'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={160}>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={funnelData} layout="vertical">
               <XAxis type="number" hide />
-              <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v: any) => [v, t('partner.funnel.students', 'Students')]} />
-              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+              <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(v: any) => [v, isAr ? 'طالب' : 'Students']} />
+              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                {funnelData.map((_, idx) => (
+                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Button asChild variant="outline" className="h-14 justify-between px-5">
-          <Link to="/partner/link">
-            <span className="flex items-center gap-2"><Link2 className="h-4 w-4" />{t('partner.shareLink', 'Share My Link')}</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="h-14 justify-between px-5">
-          <Link to="/partner/earnings">
-            <span className="flex items-center gap-2"><DollarSign className="h-4 w-4" />{t('partner.requestPayout', 'Request Payout')}</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
-
-      {/* Recent students */}
-      {recentLeads.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">{t('partner.recentStudents', 'Recent Students')}</CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y divide-border">
-            {recentLeads.map((lead) => (
-              <div key={lead.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm text-foreground">{lead.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(lead.created_at).toLocaleDateString(isAr ? 'ar' : 'en-GB')}</p>
-                </div>
-                <Badge variant="outline" className="text-xs capitalize">{lead.status}</Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      {/* Conversion Rate */}
+      {total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'معدل التحويل للدفع' : 'Registration → Paid'}</p>
+              <p className="text-2xl font-bold text-foreground">{Math.round((paid / total) * 100)}%</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'معدل التسجيل الكامل' : 'Registration → Enrolled'}</p>
+              <p className="text-2xl font-bold text-foreground">{Math.round((enrolled / total) * 100)}%</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'عمولة لكل طالب' : 'Commission Per Student'}</p>
+              <p className="text-2xl font-bold text-foreground">₪{commissionRate.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
