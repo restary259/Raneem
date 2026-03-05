@@ -267,15 +267,15 @@ export default function TeamCasesPage() {
               />
               {checkingDuplicate && <p className="text-xs text-muted-foreground mt-1">{isAr ? 'جار التحقق...' : 'Checking...'}</p>}
               {duplicateWarning && (
-                <div className="mt-2 p-3 rounded-lg border border-amber-300 bg-amber-50 text-xs space-y-2">
-                  <p className="font-medium text-amber-800">
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-muted text-xs space-y-2">
+                  <p className="font-medium text-foreground">
                     {isAr ? `⚠️ يوجد ملف بهذا الرقم: ${duplicateWarning.name}` : `⚠️ Existing case: ${duplicateWarning.name} (${duplicateWarning.status})`}
                   </p>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowNew(false); navigate(`/team/cases/${duplicateWarning.id}`); }}>
                       {isAr ? 'عرض الملف' : 'View Case'}
                     </Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs text-amber-700 border-amber-300" onClick={() => handleCreateCase(true)}>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleCreateCase(true)}>
                       {isAr ? 'إنشاء على أي حال' : 'Create Anyway'}
                     </Button>
                   </div>

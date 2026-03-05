@@ -176,7 +176,7 @@ const AdminPipelinePage = () => {
                   ) : (
                     statusCases.map(c => {
                       const days = daysSince(c.last_activity_at);
-                      const isStale = (status === 'new' && days >= 3) || (status === 'contacted' && days >= 5) || c.is_no_show;
+                      const isStale = (status === 'new' && days >= 3) || (status === 'contacted' && days >= 5) || (status === 'appointment_scheduled' && days >= 14) || (status === 'profile_completion' && days >= 7) || c.is_no_show;
                       return (
                         <Card key={c.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${isStale ? 'border-destructive/50' : 'border-border'}`}>
                           <CardContent className="p-3 space-y-2">

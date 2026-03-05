@@ -201,7 +201,7 @@ export default function CaseDetailPage() {
             <div className="text-sm text-muted-foreground">✅ Case submitted — waiting for admin review and enrollment.</div>
           )}
           {caseData.status === 'enrollment_paid' && (
-            <div className="text-sm font-medium text-emerald-700">🎉 Student enrolled! Case complete.</div>
+            <div className="text-sm font-medium text-primary">🎉 Student enrolled! Case complete.</div>
           )}
           {caseData.status === 'forgotten' && (
             <div className="flex items-center justify-between">
