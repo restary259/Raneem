@@ -317,9 +317,9 @@ export default function CaseDetailPage() {
             <p className="text-sm text-muted-foreground">
               Have you reviewed all profile data? This will send the case to admin for enrollment processing.
             </p>
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
-              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-              <p className="text-xs text-amber-700">This action cannot be undone.</p>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-xs text-warning">This action cannot be undone.</p>
             </div>
           </div>
           <DialogFooter>
