@@ -1337,12 +1337,38 @@
       "title": "سجل النشاط المباشر",
       "search": "البحث في النشاط..."
     },
-    "settings": {
-      "title": "الإعدادات",
-      "platform": "المنصة",
-      "contacts": "جهات الاتصال المهمة",
-      "platformTitle": "إعدادات المنصة",
-      "addContact": "إضافة جهة اتصال"
-    }
+      "settings": {
+        "title": "الإعدادات",
+        "platform": "المنصة",
+        "contacts": "جهات الاتصال المهمة",
+        "platformTitle": "إعدادات المنصة",
+        "addContact": "إضافة جهة اتصال"
+      }
+    },
+  "team": {
+    "today": { "title": "اليوم", "schedule": "جدول اليوم", "noAppts": "لا مواعيد اليوم" },
+    "cases": {
+      "title": "الحالات", "new": "حالة جديدة", "myTab": "حالاتي", "unassignedTab": "غير معينة",
+      "allTab": "الكل", "forgottenTab": "المنسية", "create": "إنشاء حالة جديدة",
+      "nameLabel": "الاسم الكامل", "phoneLabel": "رقم الهاتف"
+    },
+    "case": {
+      "nextAction": "الإجراء التالي", "markContacted": "تحديد كـ تم التواصل",
+      "scheduleAppt": "تحديد موعد", "recordOutcome": "تسجيل النتيجة",
+      "appointments": "المواعيد", "activity": "سجل النشاط", "submission": "الطلب",
+      "reactivate": "إعادة تفعيل", "waitingAdmin": "في انتظار مراجعة الإدارة",
+      "enrolled": "تم قبول الطالب! الحالة مكتملة."
+    },
+    "appointments": {
+      "title": "المواعيد", "needOutcome": "تحتاج نتيجة",
+      "today": "اليوم", "upcoming": "القادمة", "past": "المواعيد السابقة"
+    },
+    "submit": {
+      "title": "تقديم طالب جديد", "studentInfo": "بيانات الطالب",
+      "program": "البرنامج والإقامة", "payment": "الدفع",
+      "submitBtn": "تقديم وإنشاء حساب الطالب"
+    },
+    "students": { "title": "الطلاب", "submitted": "مقدّمون", "enrolled": "ملتحقون" },
+    "analytics": { "title": "تحليلاتي", "closedMonth": "مغلقة هذا الشهر", "totalCases": "إجمالي الحالات", "todayAppts": "مواعيد اليوم", "byStatus": "الحالات حسب الحالة" }
   }
 }

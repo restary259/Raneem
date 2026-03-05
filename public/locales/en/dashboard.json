@@ -1337,12 +1337,38 @@
       "title": "Live Activity Feed",
       "search": "Search activity..."
     },
-    "settings": {
-      "title": "Settings",
-      "platform": "Platform",
-      "contacts": "Important Contacts",
-      "platformTitle": "Platform Configuration",
-      "addContact": "Add Contact"
-    }
+      "settings": {
+        "title": "Settings",
+        "platform": "Platform",
+        "contacts": "Important Contacts",
+        "platformTitle": "Platform Configuration",
+        "addContact": "Add Contact"
+      }
+    },
+  "team": {
+    "today": { "title": "Today", "schedule": "Today's Schedule", "noAppts": "No appointments today" },
+    "cases": {
+      "title": "Cases", "new": "New Case", "myTab": "My Cases", "unassignedTab": "Unassigned",
+      "allTab": "All", "forgottenTab": "Forgotten", "create": "Create New Case",
+      "nameLabel": "Full Name", "phoneLabel": "Phone"
+    },
+    "case": {
+      "nextAction": "Next Action", "markContacted": "Mark as Contacted",
+      "scheduleAppt": "Schedule Appointment", "recordOutcome": "Record Outcome",
+      "appointments": "Appointments", "activity": "Activity Log", "submission": "Submission",
+      "reactivate": "Re-activate", "waitingAdmin": "Waiting for admin review",
+      "enrolled": "Student enrolled! Case complete."
+    },
+    "appointments": {
+      "title": "Appointments", "needOutcome": "Need Outcome",
+      "today": "Today", "upcoming": "Upcoming", "past": "Past Appointments"
+    },
+    "submit": {
+      "title": "Submit New Student", "studentInfo": "Student Information",
+      "program": "Program & Accommodation", "payment": "Payment",
+      "submitBtn": "Submit & Create Student Account"
+    },
+    "students": { "title": "Students", "submitted": "Submitted", "enrolled": "Enrolled" },
+    "analytics": { "title": "My Analytics", "closedMonth": "Closed This Month", "totalCases": "Total Cases", "todayAppts": "Today's Appointments", "byStatus": "Cases by Status" }
   }
 }
