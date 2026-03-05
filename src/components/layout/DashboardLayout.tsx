@@ -12,6 +12,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import NotificationBell from '@/components/common/NotificationBell';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
 import {
