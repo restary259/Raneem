@@ -87,6 +87,7 @@
   ],
   "auth": {
     "loginTitle": "تسجيل الدخول",
+    "loginSubtitle": "سجّل دخولك إلى حسابك في DARB",
     "signupTitle": "إنشاء حساب جديد",
     "fullName": "الاسم الكامل *",
     "fullNamePlaceholder": "أدخل اسمك الكامل",
