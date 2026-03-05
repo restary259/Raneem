@@ -200,7 +200,7 @@ const TeamDashboardPage = () => {
       const c = cases.find(cs => cs.id === caseId);
       if (!c) return;
       const updateData: Record<string, any> = { submitted_to_admin_at: new Date().toISOString() };
-      if (canTransition(c.case_status, CaseStatus.SERVICES_FILLED)) updateData.case_status = CaseStatus.SERVICES_FILLED;
+      if (canTransition(c.case_status, CaseStatus.SUBMITTED)) updateData.case_status = CaseStatus.SUBMITTED;
       const lead = leads.find(l => l.id === c.lead_id);
       if (lead && (lead.source_type === 'friend' || lead.source_type === 'family')) updateData.referral_discount = 500;
       const { error } = await (supabase as any).from('student_cases').update(updateData).eq('id', caseId);
