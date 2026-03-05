@@ -20,10 +20,11 @@ import {
   DollarSign, BarChart2, Activity, Settings,
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
   Link2, TrendingUp, ListChecks, User, FileText,
-  Globe, Heart, LogOut, ChevronLeft, ChevronRight,
+  Globe, Heart, LogOut, ChevronLeft, ChevronRight, Home,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NavItem {
   key: string;
@@ -150,6 +151,22 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
               {user && <NotificationBell />}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/')}
+                      className="gap-2 text-muted-foreground hover:text-foreground"
+                    >
+                      <Home className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">{isRtl ? 'الموقع الرئيسي' : 'Main Site'}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isRtl ? 'العودة إلى الموقع الرئيسي' : 'Back to Main Website'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button
                 variant="ghost"
                 size="sm"

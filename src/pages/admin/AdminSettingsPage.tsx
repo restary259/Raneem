@@ -146,32 +146,27 @@ const AdminSettingsPage = () => {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetPassword });
       if (authErr) throw new Error(isRtl ? 'كلمة المرور غير صحيحة' : 'Incorrect password');
 
-      // Get admin IDs to preserve them
-      const { data: adminRoles } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
-      const adminIds = (adminRoles || []).map(r => r.user_id);
-
-      // Purge in FK-safe order
+      // Purge ONLY operational data — keep profiles and user_roles intact
       await supabase.from('documents').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('appointments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('case_submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('case_service_snapshots').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('cases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('rewards').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('commissions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('payout_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('referrals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      // Delete non-admin roles
-      if (adminIds.length > 0) {
-        await supabase.from('user_roles').delete().not('user_id', 'in', `(${adminIds.map(id => `'${id}'`).join(',')})`);
-      }
+      await supabase.from('leads').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      // profiles and user_roles are preserved — all accounts remain intact
 
       // Audit log the purge
       await supabase.rpc('log_user_activity' as any, {
-        p_action: 'SYSTEM_DATA_PURGE',
+        p_action: 'SYSTEM_DATA_PURGE_OPERATIONAL',
         p_target_table: 'system',
-        p_details: `Full system data purge executed by ${user.email}`,
+        p_details: `Operational data purge executed by ${user.email} — accounts preserved`,
       });
 
-      toast({ title: isRtl ? '✅ تم مسح النظام بالكامل' : '✅ System purged successfully' });
+      toast({ title: isRtl ? '✅ تم مسح البيانات التشغيلية — الحسابات محفوظة' : '✅ Operational data purged — all accounts preserved' });
       setShowFinalConfirm(false);
       setResetConfirmText('');
       setResetPassword('');

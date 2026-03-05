@@ -38,6 +38,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<globalThis.File | null>(null);
   const [category, setCategory] = useState('other');
+  const [customDocName, setCustomDocName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,20 +88,27 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
       return;
     }
 
+    // Validate custom name for 'other' category
+    if (category === 'other' && !customDocName.trim()) {
+      toast({ variant: 'destructive', title: t('common.error'), description: t('documents.customNameRequired', { defaultValue: 'Please enter a document name' }) });
+      return;
+    }
+
     setIsUploading(true);
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const filePath = `${userId}/${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage.from('student-documents').upload(filePath, selectedFile);
       if (uploadError) throw uploadError;
+      const displayName = category === 'other' && customDocName.trim() ? customDocName.trim() : selectedFile.name;
       const { error: dbError } = await (supabase as any).from('documents').insert({
-        student_id: userId, file_name: selectedFile.name, file_url: filePath,
+        student_id: userId, file_name: displayName, file_url: filePath,
         file_size: selectedFile.size, file_type: selectedFile.type, category,
         expiry_date: expiryDate || null, notes: notes || null,
       });
       if (dbError) throw dbError;
       toast({ title: t('documents.uploadSuccess'), description: t('documents.uploadSuccessDesc') });
-      setShowUploadModal(false); setSelectedFile(null); setCategory('other'); setExpiryDate(''); setNotes('');
+      setShowUploadModal(false); setSelectedFile(null); setCategory('other'); setCustomDocName(''); setExpiryDate(''); setNotes('');
       fetchDocuments();
     } catch (error: any) {
       toast({ variant: "destructive", title: t('documents.uploadError'), description: error.message });
@@ -211,7 +219,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                 </div>
                 <div className="space-y-2">
                   <Label>{t('documents.category')}</Label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={category} onValueChange={v => { setCategory(v); if (v !== 'other') setCustomDocName(''); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {CATEGORY_KEYS.map(c => (
@@ -220,6 +228,17 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {category === 'other' && (
+                  <div className="space-y-2">
+                    <Label>{t('documents.customDocName', { defaultValue: 'Document Name *' })}</Label>
+                    <Input
+                      value={customDocName}
+                      onChange={e => setCustomDocName(e.target.value)}
+                      placeholder={t('documents.customDocNamePlaceholder', { defaultValue: 'e.g. Birth Certificate, Bank Letter...' })}
+                      required
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>{t('documents.expiryDate')}</Label>
                   <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
