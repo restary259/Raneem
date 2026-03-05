@@ -49,19 +49,30 @@ const StudentAuthPage = () => {
     }
     setChangingPassword(true);
     try {
+      // Ensure session is fresh before updating password
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('انتهت جلستك. يرجى تسجيل الدخول مجدداً.');
+      }
+
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
-      }
+      await supabase
+        .from('profiles')
+        .update({ must_change_password: false })
+        .eq('id', sessionData.session.user.id);
 
       setShowChangePasswordModal(false);
       toast({ title: 'تم تغيير كلمة المرور بنجاح' });
       await refreshRole();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'خطأ', description: err.message });
+      // If session expired, close modal so user can log in again
+      if (err.message.includes('انتهت جلستك') || err.message.includes('session')) {
+        setShowChangePasswordModal(false);
+        await supabase.auth.signOut();
+      }
     } finally {
       setChangingPassword(false);
     }
@@ -224,7 +235,13 @@ const StudentAuthPage = () => {
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
-      <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
+      <Dialog open={showChangePasswordModal} onOpenChange={async (open) => {
+        if (!open) {
+          // Allow closing by signing out (forces fresh login)
+          await supabase.auth.signOut();
+          setShowChangePasswordModal(false);
+        }
+      }}>
         <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>يجب تغيير كلمة المرور</DialogTitle>
