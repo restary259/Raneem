@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, RefreshCw, BookOpen, Home, Clock, BadgeCheck, Pause, Play } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, BookOpen, Home, Clock, BadgeCheck, Pause, Play, Pencil } from 'lucide-react';
 
 interface Program {
   id: string;
@@ -48,6 +48,8 @@ const AdminProgramsPage = () => {
   const [progOpen, setProgOpen] = useState(false);
   const [accomOpen, setAccomOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editProgId, setEditProgId] = useState<string | null>(null);
+  const [editAccomId, setEditAccomId] = useState<string | null>(null);
 
   const [progForm, setProgForm] = useState({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' });
   const [accomForm, setAccomForm] = useState({ name_ar: '', name_en: '', price: '', currency: 'ILS', description: '' });
@@ -75,20 +77,26 @@ const AdminProgramsPage = () => {
     if (!progForm.name_ar || !progForm.name_en) { toast({ variant: 'destructive', description: isRtl ? 'الاسم مطلوب' : 'Name is required' }); return; }
     setSaving(true);
     try {
-      const { error } = await supabase.from('programs').insert({
-        name_ar: progForm.name_ar,
-        name_en: progForm.name_en,
-        type: progForm.type,
-        price: progForm.price ? Number(progForm.price) : null,
-        currency: progForm.currency,
-        duration: progForm.duration || null,
-        description: progForm.description || null,
-      });
-      if (error) throw error;
+      if (editProgId) {
+        const { error } = await supabase.from('programs').update({
+          name_ar: progForm.name_ar, name_en: progForm.name_en, type: progForm.type,
+          price: progForm.price ? Number(progForm.price) : null,
+          currency: progForm.currency, duration: progForm.duration || null, description: progForm.description || null,
+        }).eq('id', editProgId);
+        if (error) throw error;
+        setEditProgId(null);
+      } else {
+        const { error } = await supabase.from('programs').insert({
+          name_ar: progForm.name_ar, name_en: progForm.name_en, type: progForm.type,
+          price: progForm.price ? Number(progForm.price) : null,
+          currency: progForm.currency, duration: progForm.duration || null, description: progForm.description || null,
+        });
+        if (error) throw error;
+      }
       setProgForm({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' });
       setProgOpen(false);
       await fetchAll();
-      toast({ description: isRtl ? 'تم إنشاء البرنامج' : 'Program created' });
+      toast({ description: isRtl ? (editProgId ? 'تم التحديث' : 'تم إنشاء البرنامج') : (editProgId ? 'Program updated' : 'Program created') });
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
@@ -100,23 +108,43 @@ const AdminProgramsPage = () => {
     if (!accomForm.name_ar || !accomForm.name_en) { toast({ variant: 'destructive', description: isRtl ? 'الاسم مطلوب' : 'Name is required' }); return; }
     setSaving(true);
     try {
-      const { error } = await supabase.from('accommodations').insert({
-        name_ar: accomForm.name_ar,
-        name_en: accomForm.name_en,
-        price: accomForm.price ? Number(accomForm.price) : null,
-        currency: accomForm.currency,
-        description: accomForm.description || null,
-      });
-      if (error) throw error;
+      if (editAccomId) {
+        const { error } = await supabase.from('accommodations').update({
+          name_ar: accomForm.name_ar, name_en: accomForm.name_en,
+          price: accomForm.price ? Number(accomForm.price) : null,
+          currency: accomForm.currency, description: accomForm.description || null,
+        }).eq('id', editAccomId);
+        if (error) throw error;
+        setEditAccomId(null);
+      } else {
+        const { error } = await supabase.from('accommodations').insert({
+          name_ar: accomForm.name_ar, name_en: accomForm.name_en,
+          price: accomForm.price ? Number(accomForm.price) : null,
+          currency: accomForm.currency, description: accomForm.description || null,
+        });
+        if (error) throw error;
+      }
       setAccomForm({ name_ar: '', name_en: '', price: '', currency: 'ILS', description: '' });
       setAccomOpen(false);
       await fetchAll();
-      toast({ description: isRtl ? 'تم إنشاء السكن' : 'Accommodation created' });
+      toast({ description: isRtl ? (editAccomId ? 'تم التحديث' : 'تم إنشاء السكن') : (editAccomId ? 'Accommodation updated' : 'Accommodation created') });
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setSaving(false);
     }
+  };
+
+  const openEditProgram = (p: Program) => {
+    setEditProgId(p.id);
+    setProgForm({ name_ar: p.name_ar, name_en: p.name_en, type: p.type, price: p.price?.toString() ?? '', currency: p.currency, duration: p.duration ?? '', description: p.description ?? '' });
+    setProgOpen(true);
+  };
+
+  const openEditAccom = (a: Accommodation) => {
+    setEditAccomId(a.id);
+    setAccomForm({ name_ar: a.name_ar, name_en: a.name_en, price: a.price?.toString() ?? '', currency: a.currency, description: a.description ?? '' });
+    setAccomOpen(true);
   };
 
   const toggleActive = async (table: 'programs' | 'accommodations', id: string, current: boolean) => {
@@ -152,12 +180,12 @@ const AdminProgramsPage = () => {
         {/* ── Programs ── */}
         <TabsContent value="programs" className="space-y-4 mt-4">
           <div className="flex justify-end">
-            <Dialog open={progOpen} onOpenChange={setProgOpen}>
+            <Dialog open={progOpen} onOpenChange={v => { setProgOpen(v); if (!v) { setEditProgId(null); setProgForm({ name_ar: '', name_en: '', type: 'language_school', price: '', currency: 'ILS', duration: '', description: '' }); } }}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />{t('admin.programs.addProgram', 'Add Program')}</Button>
               </DialogTrigger>
               <DialogContent dir={isRtl ? 'rtl' : 'ltr'}>
-                <DialogHeader><DialogTitle>{t('admin.programs.addProgram', 'Add Program')}</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{editProgId ? (isRtl ? 'تعديل البرنامج' : 'Edit Program') : t('admin.programs.addProgram', 'Add Program')}</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>{isRtl ? 'الاسم بالعربية' : 'Arabic Name'}</Label><Input value={progForm.name_ar} onChange={e => setProgForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
@@ -223,6 +251,9 @@ const AdminProgramsPage = () => {
                       )}
                     </div>
                     <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditProgram(p)}>
+                        <Pencil className="h-3 w-3" />{isRtl ? 'تعديل' : 'Edit'}
+                      </Button>
                       <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('programs', p.id, p.is_active)}>
                         {p.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
                       </Button>
@@ -293,6 +324,9 @@ const AdminProgramsPage = () => {
                         )}
                       </div>
                       <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditAccom(a)}>
+                          <Pencil className="h-3 w-3" />{isRtl ? 'تعديل' : 'Edit'}
+                        </Button>
                         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('accommodations', a.id, a.is_active)}>
                           {a.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
                         </Button>
