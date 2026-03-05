@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, BookOpen, Home, Clock, BadgeCheck, Pause, Play } from 'lucide-react';
 
 interface Program {
   id: string;
@@ -179,26 +179,62 @@ const AdminProgramsPage = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <Card><CardContent className="p-0">
-            {loading ? <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div> :
-              programs.length === 0 ? <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'لا توجد برامج' : 'No programs yet'}</div> :
-              <div className="divide-y divide-border">
-                {programs.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="text-sm font-medium">{isRtl ? p.name_ar : p.name_en}</p>
-                      <p className="text-xs text-muted-foreground">{typeLabel(p.type)} · {p.price ? `${p.price} ${p.currency}` : t('admin.programs.freePrice', 'Free')}</p>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div>
+          ) : programs.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'لا توجد برامج' : 'No programs yet'}</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {programs.map(p => (
+                <Card key={p.id} className={`overflow-hidden transition-all hover:shadow-md ${!p.is_active ? 'opacity-60' : ''}`}>
+                  <CardContent className="p-0">
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                            <BookOpen className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground leading-tight truncate">{p.name_en}</p>
+                            <p className="text-xs text-muted-foreground truncate">{p.name_ar}</p>
+                          </div>
+                        </div>
+                        <Badge variant={p.is_active ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                          {p.is_active ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'معطل' : 'Inactive')}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                          <BadgeCheck className="h-3 w-3" />{typeLabel(p.type)}
+                        </span>
+                        {p.price && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                            💰 {p.price.toLocaleString()} {p.currency}
+                          </span>
+                        )}
+                        {p.duration && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400">
+                            <Clock className="h-3 w-3" />{p.duration}
+                          </span>
+                        )}
+                      </div>
+                      {p.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={p.is_active ? 'default' : 'secondary'}>{p.is_active ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'معطل' : 'Inactive')}</Badge>
-                      <Button variant="ghost" size="icon" onClick={() => toggleActive('programs', p.id, p.is_active)}><span className="text-xs">{p.is_active ? '⏸' : '▶'}</span></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteRecord('programs', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('programs', p.id, p.is_active)}>
+                        {p.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => deleteRecord('programs', p.id)}>
+                        <Trash2 className="h-3 w-3" />{isRtl ? 'حذف' : 'Delete'}
+                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            }
-          </CardContent></Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* ── Accommodations ── */}
@@ -222,26 +258,54 @@ const AdminProgramsPage = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <Card><CardContent className="p-0">
-            {loading ? <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div> :
-              accommodations.length === 0 ? <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'لا يوجد سكن' : 'No accommodations yet'}</div> :
-              <div className="divide-y divide-border">
+          <div>
+            {loading ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">Loading...</div>
+            ) : accommodations.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'لا يوجد سكن' : 'No accommodations yet'}</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {accommodations.map(a => (
-                  <div key={a.id} className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="text-sm font-medium">{isRtl ? a.name_ar : a.name_en}</p>
-                      <p className="text-xs text-muted-foreground">{a.price ? `${a.price} ${a.currency}` : t('admin.programs.freePrice', 'Free')}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={a.is_active ? 'default' : 'secondary'}>{a.is_active ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'معطل' : 'Inactive')}</Badge>
-                      <Button variant="ghost" size="icon" onClick={() => toggleActive('accommodations', a.id, a.is_active)}><span className="text-xs">{a.is_active ? '⏸' : '▶'}</span></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteRecord('accommodations', a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </div>
+                  <Card key={a.id} className={`overflow-hidden transition-all hover:shadow-md ${!a.is_active ? 'opacity-60' : ''}`}>
+                    <CardContent className="p-0">
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                              <Home className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground leading-tight truncate">{a.name_en}</p>
+                              <p className="text-xs text-muted-foreground truncate">{a.name_ar}</p>
+                            </div>
+                          </div>
+                          <Badge variant={a.is_active ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                            {a.is_active ? (isRtl ? 'نشط' : 'Active') : (isRtl ? 'معطل' : 'Inactive')}
+                          </Badge>
+                        </div>
+                        {a.price && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                            💰 {a.price.toLocaleString()} {a.currency}/month
+                          </span>
+                        )}
+                        {a.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => toggleActive('accommodations', a.id, a.is_active)}>
+                          {a.is_active ? <><Pause className="h-3 w-3" />{isRtl ? 'إيقاف' : 'Pause'}</> : <><Play className="h-3 w-3" />{isRtl ? 'تفعيل' : 'Activate'}</>}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => deleteRecord('accommodations', a.id)}>
+                          <Trash2 className="h-3 w-3" />{isRtl ? 'حذف' : 'Delete'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            }
-          </CardContent></Card>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
