@@ -95,7 +95,8 @@ const StudentAuthPage = () => {
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token,
         });
-        // AuthContext will pick up the new session via onAuthStateChange → redirect effect fires
+        // Force a role refresh so the redirect useEffect fires even if already initialized
+        await refreshRole();
       }
 
       toast({ title: t('auth.loginSuccess'), description: t('auth.loginSuccessDesc') });

@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('must_change_password')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       return data?.must_change_password ?? false;
     } catch {
       return false;
