@@ -131,15 +131,6 @@ const StudentAuthPage = () => {
           </Link>
         </div>
 
-        {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/25 backdrop-blur-sm mb-4 shadow-lg">
-            <ShieldCheck className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">DARB</h1>
-          <p className="text-muted-foreground text-sm mt-1">{t('auth.loginSubtitle', 'Sign in to your account')}</p>
-        </div>
-
         {/* Card */}
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl p-8">
           <h2 className="text-xl font-semibold text-card-foreground mb-6">{t('auth.loginTitle')}</h2>
