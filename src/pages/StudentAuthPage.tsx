@@ -1,31 +1,25 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@supabase/supabase-js';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 import PasswordResetModal from '@/components/auth/PasswordResetModal';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-const ROLE_TO_PATH: Record<string, string> = {
-  admin: '/admin',
-  team_member: '/team',
-  social_media_partner: '/partner',
-  student: '/student/checklist',
-};
+import { useAuth, ROLE_TO_PATH } from '@/contexts/AuthContext';
 
 const StudentAuthPage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
+  const { initialized, user, role, mustChangePassword, refreshRole } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -33,54 +27,20 @@ const StudentAuthPage = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  // Stable ref so effect never re-runs due to navigate changing
-  const navigateRef = useRef(navigate);
-  useEffect(() => { navigateRef.current = navigate; }, [navigate]);
 
-  const redirectByRole = useCallback(async (userId: string) => {
-    const { data: profile } = await (supabase as any)
-      .from('profiles')
-      .select('must_change_password')
-      .eq('id', userId)
-      .maybeSingle();
+  // Single redirect effect — AuthContext owns all auth state
+  useEffect(() => {
+    if (!initialized) return;
+    if (!user || !role) return;
 
-    if (profile?.must_change_password) {
+    if (mustChangePassword) {
       setShowChangePasswordModal(true);
       return;
     }
 
-    const { data: role } = await supabase.rpc('get_my_role' as any);
-    const path = (role && ROLE_TO_PATH[role as string]) || '/student/checklist';
-    navigateRef.current(path);
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user && isMounted) {
-        setUser(session.user);
-        await redirectByRole(session.user.id);
-      }
-    };
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return;
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => {
-          if (isMounted) redirectByRole(session.user.id);
-        }, 0);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, [redirectByRole]);
+    const path = ROLE_TO_PATH[role] ?? '/student/checklist';
+    navigate(path, { replace: true });
+  }, [initialized, user, role, mustChangePassword, navigate]);
 
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
@@ -94,15 +54,12 @@ const StudentAuthPage = () => {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await (supabase as any).from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
+        await supabase.from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
       }
 
       setShowChangePasswordModal(false);
       toast({ title: 'تم تغيير كلمة المرور بنجاح' });
-
-      if (session) {
-        await redirectByRole(session.user.id);
-      }
+      await refreshRole();
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'خطأ', description: err.message });
     } finally {
@@ -138,6 +95,7 @@ const StudentAuthPage = () => {
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token,
         });
+        // AuthContext will pick up the new session via onAuthStateChange → redirect effect fires
       }
 
       toast({ title: t('auth.loginSuccess'), description: t('auth.loginSuccessDesc') });
