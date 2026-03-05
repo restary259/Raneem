@@ -10,6 +10,12 @@ import { validatePassword } from '@/components/auth/PasswordStrength';
 import PasswordStrength from '@/components/auth/PasswordStrength';
 import { useToast } from '@/hooks/use-toast';
 
+// Step order for existing admin WITH enrolled TOTP:
+//   checking → verify-totp (elevate to AAL2) → force-password (if needed) → done
+//
+// Step order for fresh admin WITHOUT TOTP:
+//   checking → force-password → enroll-totp → done
+
 type GateStep = 'checking' | 'force-password' | 'enroll-totp' | 'verify-totp' | 'done';
 
 interface Props {
@@ -30,6 +36,8 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
   const [totpCode, setTotpCode]       = useState('');
   const [verifyFactorId, setVerifyFactorId] = useState('');
   const [loading, setLoading]         = useState(false);
+  // Track whether we still need to change the password AFTER TOTP verify
+  const [pendingPasswordChange, setPendingPasswordChange] = useState(false);
 
   const startEnrollment = async () => {
     const { data, error } = await supabase.auth.mfa.enroll({
@@ -47,21 +55,47 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
 
   useEffect(() => {
     const check = async () => {
+      // 1. Check must_change_password
       const { data: profile } = await supabase
         .from('profiles').select('must_change_password').eq('id', userId).maybeSingle();
-      if (profile?.must_change_password) { setStep('force-password'); return; }
+      const mustChange = profile?.must_change_password ?? false;
 
+      // 2. Check MFA factors
       const { data: mfaData } = await supabase.auth.mfa.listFactors();
       const verified = (mfaData?.totp ?? []).find(f => f.status === 'verified');
-      if (!verified) { await startEnrollment(); return; }
 
+      // 3. Check current assurance level
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aalData?.currentLevel !== 'aal2') { setVerifyFactorId(verified.id); setStep('verify-totp'); return; }
+      const isAAL2 = aalData?.currentLevel === 'aal2';
 
+      // CRITICAL: If there's an enrolled TOTP factor and we're not yet at AAL2,
+      // we MUST verify TOTP first before any sensitive operation (including password change).
+      if (verified && !isAAL2) {
+        // Remember that we'll need to change password after verification
+        if (mustChange) setPendingPasswordChange(true);
+        setVerifyFactorId(verified.id);
+        setStep('verify-totp');
+        return;
+      }
+
+      // At AAL2 (or no TOTP enrolled at all) — safe to proceed
+      if (mustChange) {
+        setStep('force-password');
+        return;
+      }
+
+      if (!verified) {
+        // No TOTP enrolled and password is fine → enroll now
+        await startEnrollment();
+        return;
+      }
+
+      // All good
       setStep('done');
       onCleared();
     };
     check();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const handlePasswordChange = async () => {
@@ -75,7 +109,6 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
     }
     setLoading(true);
     try {
-      // Re-validate session is still alive before attempting password update
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         toast({ variant: 'destructive', title: 'Session expired', description: 'Please log in again.' });
@@ -85,7 +118,6 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
 
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        // If auth session missing, the session token is stale — sign out and retry
         if (error.message.toLowerCase().includes('session') || error.message.toLowerCase().includes('missing')) {
           toast({ variant: 'destructive', title: 'Session expired', description: 'Please log in again.' });
           await supabase.auth.signOut();
@@ -96,14 +128,14 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
       await supabase.from('profiles').update({ must_change_password: false } as any).eq('id', userId);
       toast({ title: '✅ Password updated' });
 
+      // After password change, check if TOTP is enrolled
       const { data: mfaData } = await supabase.auth.mfa.listFactors();
       const verified = (mfaData?.totp ?? []).find(f => f.status === 'verified');
       if (!verified) {
         await startEnrollment();
       } else {
-        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.currentLevel !== 'aal2') { setVerifyFactorId(verified.id); setStep('verify-totp'); }
-        else { setStep('done'); onCleared(); }
+        setStep('done');
+        onCleared();
       }
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message });
@@ -139,8 +171,21 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
       if (challenge.error) throw challenge.error;
       const { error } = await supabase.auth.mfa.verify({ factorId: verifyFactorId, challengeId: challenge.data.id, code: totpCode });
       if (error) throw error;
-      setStep('done');
-      onCleared();
+
+      // Now at AAL2 — check if we need to force a password change
+      if (pendingPasswordChange) {
+        setStep('force-password');
+      } else {
+        // Also re-check the profile flag in case it was set server-side
+        const { data: profile } = await supabase
+          .from('profiles').select('must_change_password').eq('id', userId).maybeSingle();
+        if (profile?.must_change_password) {
+          setStep('force-password');
+        } else {
+          setStep('done');
+          onCleared();
+        }
+      }
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Invalid code', description: 'Check your authenticator app.' });
       setTotpCode('');
@@ -285,7 +330,7 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
             </div>
             <Button onClick={handleTotpVerify} disabled={loading || totpCode.length !== 6} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
-              Verify & Enter Dashboard
+              Verify & Continue
             </Button>
           </CardContent>
         </Card>
