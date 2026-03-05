@@ -104,31 +104,16 @@ serve(async (req) => {
     }
 
     // --- Multi-device session support ---
-    // Each login creates a NEW session row (no upsert replacing old ones)
     const sessionId = crypto.randomUUID();
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // Generate a short device identifier from user-agent
-    const deviceId = userAgent.substring(0, 80);
-
-    // Insert new session (allows multiple per user)
+    // Insert new session (only columns that exist in the schema)
     await supabaseAdmin.from("active_sessions").insert({
       user_id: data.user.id,
       session_id: sessionId,
       ip_address: ip,
       user_agent: userAgent,
-      device_id: deviceId,
-      last_seen_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
     });
-
-    // Clean up stale sessions older than 7 days for this user
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    await supabaseAdmin
-      .from("active_sessions")
-      .delete()
-      .eq("user_id", data.user.id)
-      .lt("last_seen_at", sevenDaysAgo);
 
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
