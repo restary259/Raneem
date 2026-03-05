@@ -416,13 +416,21 @@ export type Database = {
       cases: {
         Row: {
           assigned_to: string | null
+          bagrut_score: number | null
+          city: string | null
           created_at: string
+          degree_interest: string | null
           discount_amount: number
+          education_level: string | null
+          english_level: string | null
           full_name: string
           id: string
+          intake_notes: string | null
           is_no_show: boolean
           last_activity_at: string
+          math_units: number | null
           partner_id: string | null
+          passport_type: string | null
           phone_number: string
           referred_by: string | null
           source: string
@@ -432,13 +440,21 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          bagrut_score?: number | null
+          city?: string | null
           created_at?: string
+          degree_interest?: string | null
           discount_amount?: number
+          education_level?: string | null
+          english_level?: string | null
           full_name: string
           id?: string
+          intake_notes?: string | null
           is_no_show?: boolean
           last_activity_at?: string
+          math_units?: number | null
           partner_id?: string | null
+          passport_type?: string | null
           phone_number: string
           referred_by?: string | null
           source?: string
@@ -448,13 +464,21 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          bagrut_score?: number | null
+          city?: string | null
           created_at?: string
+          degree_interest?: string | null
           discount_amount?: number
+          education_level?: string | null
+          english_level?: string | null
           full_name?: string
           id?: string
+          intake_notes?: string | null
           is_no_show?: boolean
           last_activity_at?: string
+          math_units?: number | null
           partner_id?: string | null
+          passport_type?: string | null
           phone_number?: string
           referred_by?: string | null
           source?: string
@@ -2116,13 +2140,21 @@ export type Database = {
         Args: never
         Returns: {
           assigned_to: string | null
+          bagrut_score: number | null
+          city: string | null
           created_at: string
+          degree_interest: string | null
           discount_amount: number
+          education_level: string | null
+          english_level: string | null
           full_name: string
           id: string
+          intake_notes: string | null
           is_no_show: boolean
           last_activity_at: string
+          math_units: number | null
           partner_id: string | null
+          passport_type: string | null
           phone_number: string
           referred_by: string | null
           source: string
