@@ -306,6 +306,43 @@ export default function CaseDetailPage() {
           onSuccess={fetchData}
         />
       )}
+
+      {/* Submit to Admin confirmation dialog */}
+      <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Submit Case to Admin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Have you reviewed all profile data? This will send the case to admin for enrollment processing.
+            </p>
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700">This action cannot be undone.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubmitConfirm(false)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                setShowSubmitConfirm(false);
+                await supabase.from('cases').update({ status: 'submitted' }).eq('id', caseData!.id);
+                await supabase.from('case_submissions').update({ submitted_at: new Date().toISOString(), submitted_by: user!.id }).eq('case_id', caseData!.id);
+                await supabase.rpc('log_activity' as any, {
+                  p_actor_id: user!.id, p_actor_name: 'Team Member',
+                  p_action: 'submitted_to_admin', p_entity_type: 'case', p_entity_id: caseData!.id,
+                  p_metadata: {},
+                });
+                fetchData();
+              }}
+              disabled={updatingStatus}
+            >
+              Confirm & Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
