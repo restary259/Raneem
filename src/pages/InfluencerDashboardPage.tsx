@@ -28,13 +28,12 @@ import EarningsPanel from '@/components/influencer/EarningsPanel';
 import ReferralLink from '@/components/influencer/ReferralLink';
 import NotificationBell from '@/components/common/NotificationBell';
 
-type TabId = 'analytics' | 'students' | 'earnings' | 'my-link';
+type TabId = 'analytics' | 'students' | 'earnings';
 
 const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
   { id: 'analytics', icon: BarChart3, labelKey: 'analytics' },
   { id: 'students', icon: Users, labelKey: 'students' },
   { id: 'earnings', icon: DollarSign, labelKey: 'earnings' },
-  { id: 'my-link', icon: Link, labelKey: 'referralLink' },
 ];
 
 const STUDENT_FILTERS = ['all', 'eligible', 'ineligible', 'paid'] as const;
@@ -54,14 +53,15 @@ const InfluencerDashboardPage = () => {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
 
-  // Auth & role check
+  // Auth & role check — accept both 'social_media_partner' (new) and 'influencer' (legacy)
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { navigate('/student-auth'); return; }
 
       const { data: roles } = await (supabase as any)
-        .from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'influencer');
+        .from('user_roles').select('role').eq('user_id', session.user.id)
+        .in('role', ['influencer', 'social_media_partner']);
       if (!roles?.length) {
         toast({ variant: 'destructive', title: t('influencerDash.unauthorized'), description: t('influencerDash.unauthorizedDesc') });
         navigate('/'); return;
@@ -326,8 +326,6 @@ const InfluencerDashboardPage = () => {
             {/* Earnings Tab */}
             {activeTab === 'earnings' && user && <EarningsPanel userId={user.id} />}
 
-            {/* My Link Tab */}
-            {activeTab === 'my-link' && user && <ReferralLink userId={user.id} />}
           </PullToRefresh>
         </main>
 
