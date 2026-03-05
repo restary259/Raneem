@@ -390,6 +390,78 @@ export default function CaseDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Student Account modal */}
+      <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" />Create Student Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Enter the student's email. An invite link will be sent so they can set their own password.</p>
+            <div>
+              <Label>Student Email</Label>
+              <Input
+                type="email"
+                value={studentEmail}
+                onChange={e => setStudentEmail(e.target.value)}
+                placeholder="student@example.com"
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateAccountModal(false)}>Cancel</Button>
+            <Button onClick={handleCreateStudentAccount} disabled={creatingAccount || !studentEmail.trim()}>
+              {creatingAccount ? 'Creating…' : 'Create Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Temp password credentials modal (fallback only) */}
+      <Dialog open={!!tempPasswordResult} onOpenChange={() => setTempPasswordResult(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>✅ Student Account Created</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Share these credentials with the student. The password will not be shown again.</p>
+            <div className="p-3 rounded-lg bg-muted font-mono text-sm select-all break-all">{tempPasswordResult}</div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(tempPasswordResult ?? '');
+                  setCopiedPassword(true);
+                  setTimeout(() => setCopiedPassword(false), 2000);
+                }}
+              >
+                {copiedPassword ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copiedPassword ? 'Copied!' : 'Copy Password'}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  const msg = encodeURIComponent(
+                    `مرحبا ${caseData?.full_name ?? ''},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n📧 البريد: ${caseData?.student_user_id ? '' : ''}\n🔑 كلمة المرور المؤقتة: ${tempPasswordResult}\n\nيرجى تغيير كلمة المرور عند أول دخول.`
+                  );
+                  window.open(`https://wa.me/?text=${msg}`, '_blank');
+                }}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Share via WhatsApp
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setTempPasswordResult(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
