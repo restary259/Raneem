@@ -185,7 +185,7 @@ const AdminProgramsPage = () => {
                 <Button size="sm" className="gap-2"><Plus className="h-4 w-4" />{t('admin.programs.addProgram', 'Add Program')}</Button>
               </DialogTrigger>
               <DialogContent dir={isRtl ? 'rtl' : 'ltr'}>
-                <DialogHeader><DialogTitle>{t('admin.programs.addProgram', 'Add Program')}</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{editProgId ? (isRtl ? 'تعديل البرنامج' : 'Edit Program') : t('admin.programs.addProgram', 'Add Program')}</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>{isRtl ? 'الاسم بالعربية' : 'Arabic Name'}</Label><Input value={progForm.name_ar} onChange={e => setProgForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
