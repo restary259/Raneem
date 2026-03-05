@@ -16,9 +16,10 @@ serve(async (req) => {
     }
 
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
-    const supabaseUser = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", { global: { headers: { Authorization: authHeader } } });
 
-    const { data: userData, error: userError } = await supabaseUser.auth.getUser();
+    // Validate caller using service role key (handles ES256 JWTs)
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -41,49 +42,73 @@ serve(async (req) => {
     }
 
     // Check if student account already exists for this case
-    const { data: existingCase } = await supabaseAdmin.from("cases").select("student_user_id").eq("id", case_id).single();
+    const { data: existingCase } = await supabaseAdmin.from("cases").select("student_user_id, city, education_level, passport_type, degree_interest, intake_notes, full_name, phone_number").eq("id", case_id).single();
     if (existingCase?.student_user_id) {
-      return new Response(JSON.stringify({ success: true, user_id: existingCase.student_user_id, message: "Student account already exists" }), {
+      return new Response(JSON.stringify({ success: true, user_id: existingCase.student_user_id, invited: false, message: "Student account already exists" }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const tempPassword = crypto.randomUUID().slice(0, 12) + "Aa1!";
-
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: student_email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: { full_name: student_full_name, phone_number: student_phone ?? "" },
-    });
-
-    if (createError) {
-      // If user already exists, look them up
-      if (createError.message.includes("already been registered")) {
-        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-        const existingUser = users.find(u => u.email === student_email);
-        if (existingUser) {
-          await supabaseAdmin.from("cases").update({ student_user_id: existingUser.id }).eq("id", case_id);
-          return new Response(JSON.stringify({ success: true, user_id: existingUser.id, message: "Linked existing user" }), {
-            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-      return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const studentId = newUser.user.id;
-
-    // Assign student role
-    await supabaseAdmin.from("user_roles").insert({ user_id: studentId, role: "student" });
-
-    // Update profile
-    await supabaseAdmin.from("profiles").upsert({
-      id: studentId,
+    // Build profile payload from case data
+    const profilePayload = {
       email: student_email,
       full_name: student_full_name,
-      phone_number: student_phone ?? null,
-      must_change_password: true,
+      phone_number: student_phone ?? existingCase?.phone_number ?? null,
+      city: existingCase?.city ?? null,
+      must_change_password: false, // invite flow — student sets own password
+    };
+
+    // --- Try inviteUserByEmail (preferred) ---
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(student_email, {
+      data: { full_name: student_full_name },
+      redirectTo: "https://darb-agency.lovable.app/student-auth",
+    });
+
+    let studentId: string;
+    let usedInvite = true;
+    let tempPassword: string | null = null;
+
+    if (!inviteError && inviteData?.user) {
+      // Invite succeeded
+      studentId = inviteData.user.id;
+    } else {
+      // Fallback: check if user already exists (email already registered)
+      const existingUsersList = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const existingUser = existingUsersList.data?.users?.find((u: any) => u.email === student_email);
+
+      if (existingUser) {
+        studentId = existingUser.id;
+        usedInvite = false;
+      } else {
+        // Create with temp password as last resort
+        tempPassword = Array.from(crypto.getRandomValues(new Uint8Array(9)))
+          .map(b => "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#"[b % 58])
+          .join("") + "Aa1!";
+
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: student_email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { full_name: student_full_name, phone_number: student_phone ?? "" },
+        });
+
+        if (createError) {
+          return new Response(JSON.stringify({ error: createError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        studentId = newUser.user.id;
+        usedInvite = false;
+        profilePayload.must_change_password = true;
+      }
+    }
+
+    // Assign student role (ignore if already exists)
+    await supabaseAdmin.from("user_roles").upsert({ user_id: studentId, role: "student" }, { onConflict: "user_id,role", ignoreDuplicates: true });
+
+    // Upsert profile with all case data
+    await supabaseAdmin.from("profiles").upsert({
+      id: studentId,
+      ...profilePayload,
     });
 
     // Link case to student
@@ -97,16 +122,23 @@ serve(async (req) => {
       p_action: "student_account_created",
       p_entity_type: "case",
       p_entity_id: case_id,
-      p_metadata: { student_email, student_full_name, student_id: studentId },
+      p_metadata: { student_email, student_full_name, student_id: studentId, invite_sent: usedInvite },
     });
 
-    return new Response(JSON.stringify({
+    const responsePayload: Record<string, unknown> = {
       success: true,
       user_id: studentId,
       email: student_email,
-      temp_password: tempPassword,
-      message: "Student account created",
-    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      invited: usedInvite,
+      message: usedInvite ? "Invite email sent to student" : "Student account created with temporary password",
+    };
+
+    // Only return temp_password if we actually generated one (never log it)
+    if (!usedInvite && tempPassword) {
+      responsePayload.temp_password = tempPassword;
+    }
+
+    return new Response(JSON.stringify(responsePayload), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("create-student-from-case error:", e);
     return new Response(JSON.stringify({ error: "Server error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
