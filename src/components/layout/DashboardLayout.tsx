@@ -39,6 +39,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
     { key: 'nav.submissions', icon: FileCheck, href: '/admin/submissions' },
     { key: 'nav.financials', icon: DollarSign, href: '/admin/financials' },
+    { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.analytics', icon: BarChart2, href: '/admin/analytics' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
