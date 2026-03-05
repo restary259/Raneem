@@ -42,9 +42,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
       const { error } = await (supabase as any)
         .from('profiles')
         .update({
-          full_name: editedProfile.full_name,
-          phone_number: editedProfile.phone_number,
-          city: editedProfile.city,
+          // Core fields (full_name, phone_number, city) are agency-managed — excluded from student updates
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
           notes: editedProfile.notes,
