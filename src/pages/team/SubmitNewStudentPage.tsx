@@ -83,9 +83,6 @@ export default function SubmitNewStudentPage() {
     });
   }, []);
 
-  const toggleSubject = (s: string) =>
-    setPreferredSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>, category: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
