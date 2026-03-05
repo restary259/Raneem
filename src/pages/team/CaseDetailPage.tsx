@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Phone, Clock, Calendar, FileText, User, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Phone, Clock, Calendar, FileText, User, AlertTriangle, UserPlus, Copy, Check, MessageCircle } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import AppointmentSchedulerModal from '@/components/team/AppointmentSchedulerModal';
@@ -57,6 +59,11 @@ export default function CaseDetailPage() {
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [tempPasswordResult, setTempPasswordResult] = useState<string | null>(null);
+  const [copiedPassword, setCopiedPassword] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -110,6 +117,37 @@ export default function CaseDetailPage() {
     }
   };
 
+  const handleCreateStudentAccount = async () => {
+    if (!studentEmail.trim() || !caseData) return;
+    setCreatingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session!.access_token}` },
+        body: JSON.stringify({ case_id: caseData.id, student_email: studentEmail.trim(), student_full_name: caseData.full_name, student_phone: caseData.phone_number }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || 'Failed to create account');
+
+      if (result.invited) {
+        toast({ title: '✅ Invite Sent', description: `An invite email was sent to ${studentEmail}` });
+        setShowCreateAccountModal(false);
+      } else if (result.temp_password) {
+        setTempPasswordResult(result.temp_password);
+        setShowCreateAccountModal(false);
+      } else {
+        toast({ title: result.message || 'Account ready' });
+        setShowCreateAccountModal(false);
+      }
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
   const latestAppt = appointments[0];
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
@@ -129,9 +167,17 @@ export default function CaseDetailPage() {
           </div>
         </div>
         <Badge className={STATUS_COLORS[caseData.status] ?? 'bg-muted'}>{caseData.status.replace(/_/g, ' ')}</Badge>
+        {/* Create Student Account button */}
+        {!caseData.student_user_id && ['profile_completion','payment_confirmed','submitted','enrollment_paid'].includes(caseData.status) && (
+          <Button size="sm" variant="outline" className="gap-1" onClick={() => { setStudentEmail(''); setShowCreateAccountModal(true); }}>
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Student Account</span>
+          </Button>
+        )}
+        {caseData.student_user_id && (
+          <Badge variant="secondary" className="gap-1 text-xs"><User className="h-3 w-3" />Account Active</Badge>
+        )}
       </div>
-
-      {/* Stage action block */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Next Action</CardTitle>
@@ -341,6 +387,78 @@ export default function CaseDetailPage() {
             >
               Confirm & Submit
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Student Account modal */}
+      <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="h-5 w-5" />Create Student Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Enter the student's email. An invite link will be sent so they can set their own password.</p>
+            <div>
+              <Label>Student Email</Label>
+              <Input
+                type="email"
+                value={studentEmail}
+                onChange={e => setStudentEmail(e.target.value)}
+                placeholder="student@example.com"
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateAccountModal(false)}>Cancel</Button>
+            <Button onClick={handleCreateStudentAccount} disabled={creatingAccount || !studentEmail.trim()}>
+              {creatingAccount ? 'Creating…' : 'Create Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Temp password credentials modal (fallback only) */}
+      <Dialog open={!!tempPasswordResult} onOpenChange={() => setTempPasswordResult(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>✅ Student Account Created</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Share these credentials with the student. The password will not be shown again.</p>
+            <div className="p-3 rounded-lg bg-muted font-mono text-sm select-all break-all">{tempPasswordResult}</div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(tempPasswordResult ?? '');
+                  setCopiedPassword(true);
+                  setTimeout(() => setCopiedPassword(false), 2000);
+                }}
+              >
+                {copiedPassword ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copiedPassword ? 'Copied!' : 'Copy Password'}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  const msg = encodeURIComponent(
+                    `مرحبا ${caseData?.full_name ?? ''},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n📧 البريد: ${caseData?.student_user_id ? '' : ''}\n🔑 كلمة المرور المؤقتة: ${tempPasswordResult}\n\nيرجى تغيير كلمة المرور عند أول دخول.`
+                  );
+                  window.open(`https://wa.me/?text=${msg}`, '_blank');
+                }}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Share via WhatsApp
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setTempPasswordResult(null)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
