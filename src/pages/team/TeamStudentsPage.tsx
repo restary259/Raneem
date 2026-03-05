@@ -53,22 +53,14 @@ export default function TeamStudentsPage() {
   const [copiedBoth, setCopiedBoth] = useState(false);
 
   const fetchStudents = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
     try {
-      // Get all student role IDs
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'student');
-      if (roleError) throw roleError;
-
-      const userIds = (roleData || []).map(r => r.user_id);
-      if (userIds.length === 0) { setStudents([]); return; }
-
+      // Team members only see students THEY created (created_by = their user ID)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, full_name, email, phone_number, created_at, must_change_password')
-        .in('id', userIds)
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
       if (profileError) throw profileError;
 
@@ -164,8 +156,8 @@ export default function TeamStudentsPage() {
 
       <p className="text-sm text-muted-foreground">
         {isRtl
-          ? 'جميع حسابات الطلاب المنشأة — مستقلة عن الملفات'
-          : 'All created student accounts — independent from cases'}
+          ? 'الحسابات التي أنشأتها — لا يمكنك الوصول إلى بيانات الطلاب الخاصة'
+          : 'Accounts you created — no access to student private data'}
       </p>
 
       {/* Student List */}

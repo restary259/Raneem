@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, User, Trash2, Lock } from 'lucide-react';
+import { Edit, Save, X, User, Trash2 } from 'lucide-react';
 import { Profile } from '@/types/profile';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -25,9 +25,13 @@ type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'receive
 const visaStatusKeys: VisaStatus[] = ['not_applied', 'applied', 'approved', 'rejected', 'received'];
 const eyeColorOptions = ['brown', 'blue', 'green', 'hazel', 'gray', 'other'];
 
+interface ExtendedProfile extends Profile {
+  emergency_contact?: string;
+}
+
 const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState(profile);
+  const [editedProfile, setEditedProfile] = useState<ExtendedProfile>(profile as ExtendedProfile);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -42,7 +46,11 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
       const { error } = await (supabase as any)
         .from('profiles')
         .update({
-          // Core fields (full_name, phone_number, city) are agency-managed — excluded from student updates
+          // Student-editable fields
+          phone_number: editedProfile.phone_number,
+          city: editedProfile.city,
+          emergency_contact: editedProfile.emergency_contact,
+          arrival_date: editedProfile.arrival_date,
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
           notes: editedProfile.notes,
@@ -108,16 +116,25 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            {/* Agency-managed read-only notice */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border border-border mb-4">
-              <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-              <p className="text-xs text-muted-foreground">{t('profile.agencyManagedNotice', 'Core fields (name, phone, city) are managed by the DARB team and cannot be edited.')}</p>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><Label>{t('profile.fullName')}</Label><Input value={editedProfile.full_name} disabled readOnly className="bg-muted cursor-not-allowed" /></div>
               <div><Label>{t('profile.email')}</Label><Input value={editedProfile.email} disabled readOnly /></div>
-              <div><Label>{t('profile.phone')}</Label><Input value={editedProfile.phone_number || ''} disabled readOnly className="bg-muted cursor-not-allowed" /></div>
-              <div><Label>{t('profile.city')}</Label><Input value={editedProfile.city || ''} disabled readOnly className="bg-muted cursor-not-allowed" /></div>
+              <div>
+                <Label>{t('profile.phone', 'Phone Number')}</Label>
+                <Input value={editedProfile.phone_number || ''} onChange={e => setEditedProfile({ ...editedProfile, phone_number: e.target.value })} disabled={!isEditing} placeholder="+972..." />
+              </div>
+              <div>
+                <Label>{t('profile.cityOfBirth', 'City of Birth')}</Label>
+                <Input value={editedProfile.city || ''} onChange={e => setEditedProfile({ ...editedProfile, city: e.target.value })} disabled={!isEditing} />
+              </div>
+              <div>
+                <Label>{t('profile.emergencyContact', 'Emergency Contact Number')}</Label>
+                <Input value={(editedProfile as ExtendedProfile).emergency_contact || ''} onChange={e => setEditedProfile({ ...editedProfile, emergency_contact: e.target.value })} disabled={!isEditing} placeholder="+972..." />
+              </div>
+              <div>
+                <Label>{t('profile.arrivalDate', 'Date of Arrival in Germany')}</Label>
+                <Input type="date" value={editedProfile.arrival_date || ''} onChange={e => setEditedProfile({ ...editedProfile, arrival_date: e.target.value })} disabled={!isEditing} />
+              </div>
               <div>
                 <Label>{t('profile.gender', 'Gender')}</Label>
                 <Select value={editedProfile.gender || ''} onValueChange={v => setEditedProfile({ ...editedProfile, gender: v })} disabled={!isEditing}>
@@ -193,11 +210,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                     </Badge>
                     <span className="text-xs text-muted-foreground">{t('profile.visaAdminOnly', 'Updated by admin only')}</span>
                   </div>
-                </div>
-                <div>
-                  <Label>{t('profile.arrivalDate', 'Arrival Date in Germany')}</Label>
-                  <Input type="date" value={editedProfile.arrival_date || ''} disabled readOnly className="bg-muted" />
-                  <span className="text-xs text-muted-foreground">{t('profile.arrivalDateAdminOnly', 'Set by admin')}</span>
                 </div>
               </div>
             </div>
