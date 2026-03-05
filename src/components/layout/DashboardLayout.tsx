@@ -162,9 +162,10 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-16 md:pb-0">
             <Outlet />
           </main>
+          <MobileBottomNav role={role} />
         </div>
       </div>
     </SidebarProvider>
