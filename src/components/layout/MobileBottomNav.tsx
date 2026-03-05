@@ -22,7 +22,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
     { key: 'nav.pipeline', icon: GitBranch, href: '/admin/pipeline' },
-    { key: 'nav.team', icon: Users, href: '/admin/team' },
+    { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.financials', icon: DollarSign, href: '/admin/financials' },
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
   ],
