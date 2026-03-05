@@ -39,7 +39,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   // Wrap admin routes with security gate (TOTP 2FA)
   if (role === 'admin') {
-    return <AdminSecurityGate>{children}</AdminSecurityGate>;
+    return (
+      <AdminSecurityGate userId={user.id} onCleared={() => {}}>
+        {children}
+      </AdminSecurityGate>
+    );
   }
 
   return <>{children}</>;
