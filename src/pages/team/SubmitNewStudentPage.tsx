@@ -338,7 +338,7 @@ export default function SubmitNewStudentPage() {
             <div className="grid md:grid-cols-3 gap-4">
               <div><Label>{isAr ? 'مدينة الميلاد' : 'City of Birth'}</Label><Input value={cityOfBirth} onChange={e => setCityOfBirth(e.target.value)} /></div>
               <div className="md:col-span-2">
-                <DateField label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
+                <BirthdayPicker label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
                 {age !== null && (
                   <p className="text-xs text-muted-foreground mt-1">{isAr ? `العمر: ${age} سنة` : `Age: ${age} years`}</p>
                 )}
