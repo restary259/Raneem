@@ -1356,9 +1356,11 @@ export type Database = {
           consent_version: string | null
           country: string | null
           created_at: string
+          created_by: string | null
           criminal_record_details: string | null
           date_of_birth: string | null
           email: string
+          emergency_contact: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           eye_color: string | null
@@ -1399,9 +1401,11 @@ export type Database = {
           consent_version?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
           email?: string
+          emergency_contact?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           eye_color?: string | null
@@ -1442,9 +1446,11 @@ export type Database = {
           consent_version?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
           email?: string
+          emergency_contact?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           eye_color?: string | null
