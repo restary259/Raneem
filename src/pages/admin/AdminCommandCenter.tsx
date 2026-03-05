@@ -161,7 +161,7 @@ const AdminCommandCenter = () => {
       )}
 
       {/* KPI Tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi) => (
           <Card
             key={kpi.label}
