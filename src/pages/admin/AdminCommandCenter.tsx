@@ -160,6 +160,18 @@ const AdminCommandCenter = () => {
         </div>
       )}
 
+      {/* SLA Breach Alert */}
+      {counts.sla_breaches > 0 && (
+        <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors" onClick={() => navigate('/admin/pipeline')}>
+          <Clock className="h-5 w-5 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">
+            {isRtl
+              ? `⏱️ يوجد ${counts.sla_breaches} حالة تجاوزت مهلة الاستجابة — انقر لعرضها`
+              : `⏱️ ${counts.sla_breaches} case${counts.sla_breaches > 1 ? 's' : ''} have breached SLA thresholds — click to review`}
+          </p>
+        </div>
+      )}
+
       {/* KPI Tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi) => (
