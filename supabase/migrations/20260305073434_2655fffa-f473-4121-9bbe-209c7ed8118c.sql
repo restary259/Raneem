@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Partner can view their cases" ON public.cases; CREATE POLICY "Partner can view all cases" ON public.cases FOR SELECT USING (has_role(auth.uid(), 'social_media_partner'::app_role));
