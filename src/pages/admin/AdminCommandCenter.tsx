@@ -91,7 +91,7 @@ const AdminCommandCenter = () => {
       onClick: () => navigate('/admin/pipeline'),
     },
     {
-      label: t('admin.commandCenter.submitted', 'Submitted This Month'),
+      label: t('admin.commandCenter.submitted', 'Submitted'),
       value: counts.submitted,
       icon: ClipboardCheck,
       color: 'text-blue-500',
@@ -105,6 +105,14 @@ const AdminCommandCenter = () => {
       color: 'text-green-600',
       bg: 'bg-green-600/10',
       onClick: () => navigate('/admin/submissions'),
+    },
+    {
+      label: t('admin.commandCenter.slaBreaches', 'SLA Breaches'),
+      value: counts.sla_breaches,
+      icon: Clock,
+      color: counts.sla_breaches > 0 ? 'text-amber-600' : 'text-muted-foreground',
+      bg: counts.sla_breaches > 0 ? 'bg-amber-600/10' : 'bg-muted',
+      onClick: () => navigate('/admin/pipeline'),
     },
     {
       label: t('admin.commandCenter.forgotten', 'Forgotten Cases'),
