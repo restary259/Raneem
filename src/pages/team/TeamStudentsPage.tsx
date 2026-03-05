@@ -427,7 +427,7 @@ export default function TeamStudentsPage() {
               <Label className="text-xs text-muted-foreground">{isRtl ? 'كلمة المرور المؤقتة (أعطها للطالب الآن)' : 'Temporary Password — give to student now'}</Label>
               <div className="p-3 rounded-lg bg-muted font-mono text-sm select-all break-all mt-1 border border-border">{tempPwResult?.password}</div>
             </div>
-            <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">{isRtl ? 'لن تُعرض كلمة المرور مرة أخرى. انسخها الآن.' : 'Password will not be shown again. Copy it now.'}</p>
+            <p className="text-xs text-warning-foreground bg-warning/10 p-2 rounded border border-warning/20">{isRtl ? 'لن تُعرض كلمة المرور مرة أخرى. انسخها الآن.' : 'Password will not be shown again. Copy it now.'}</p>
             <div className="flex gap-2">
               <Button
                 variant="outline" size="sm" className="flex-1 gap-1"
@@ -441,7 +441,7 @@ export default function TeamStudentsPage() {
                 {copiedPw ? (isRtl ? 'تم النسخ' : 'Copied!') : (isRtl ? 'نسخ' : 'Copy')}
               </Button>
               <Button
-                size="sm" className="flex-1 gap-1 bg-green-600 hover:bg-green-700 text-white"
+                size="sm" className="flex-1 gap-1 bg-[hsl(142,76%,36%)] hover:bg-[hsl(142,76%,30%)] text-white"
                 onClick={() => {
                   const msg = encodeURIComponent(
                     `مرحبا ${tempPwResult?.name ?? ''},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n📧 ${tempPwResult?.email}\n🔑 كلمة المرور المؤقتة: ${tempPwResult?.password}\n\nيرجى تغيير كلمة المرور عند أول دخول.`
