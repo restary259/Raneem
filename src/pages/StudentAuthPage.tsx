@@ -151,35 +151,34 @@ const StudentAuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-4 relative overflow-hidden">
-      {/* Background decorative elements */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-background p-4 relative overflow-hidden">
+      {/* Background decorative glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-blue-500/8 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-blue-900/20 blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/30 backdrop-blur-sm mb-4 shadow-lg shadow-blue-500/10">
-            <ShieldCheck className="h-8 w-8 text-blue-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/25 backdrop-blur-sm mb-4 shadow-lg">
+            <ShieldCheck className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">DARB</h1>
-          <p className="text-blue-300/80 text-sm mt-1">{t('auth.loginSubtitle', 'Sign in to your account')}</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">DARB</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('auth.loginSubtitle', 'Sign in to your account')}</p>
         </div>
 
-        {/* Frosted glass card */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/40 p-8">
-          <h2 className="text-xl font-semibold text-white mb-6">{t('auth.loginTitle')}</h2>
+        {/* Card */}
+        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl p-8">
+          <h2 className="text-xl font-semibold text-card-foreground mb-6">{t('auth.loginTitle')}</h2>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-blue-200/90 text-sm font-medium">
+              <Label htmlFor="email" className="text-foreground/90 text-sm font-medium">
                 {t('auth.email')}
               </Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400/60" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -187,26 +186,26 @@ const StudentAuthPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="ps-10 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-blue-400/60 focus:bg-white/10 transition-all"
+                  className="ps-10 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-blue-200/90 text-sm font-medium">
+                <Label htmlFor="password" className="text-foreground/90 text-sm font-medium">
                   {t('auth.password')}
                 </Label>
                 <button
                   type="button"
                   onClick={() => setShowResetModal(true)}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
                 >
                   {t('auth.forgotPassword')}
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400/60" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -214,12 +213,12 @@ const StudentAuthPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="ps-10 pe-10 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-blue-400/60 focus:bg-white/10 transition-all"
+                  className="ps-10 pe-10 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-blue-400/60 hover:text-blue-300 transition-colors"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -228,7 +227,7 @@ const StudentAuthPage = () => {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:shadow-blue-500/35 hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full font-semibold py-2.5 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -242,7 +241,7 @@ const StudentAuthPage = () => {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-white/30 text-xs mt-6">
+        <p className="text-center text-muted-foreground/50 text-xs mt-6">
           © {new Date().getFullYear()} DARB Study International
         </p>
       </div>
@@ -250,25 +249,24 @@ const StudentAuthPage = () => {
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
       <Dialog open={showChangePasswordModal} onOpenChange={() => {}}>
-        <DialogContent className="max-w-sm bg-slate-900 border-white/10 text-white" onPointerDownOutside={e => e.preventDefault()}>
+        <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle className="text-white">يجب تغيير كلمة المرور</DialogTitle>
+            <DialogTitle>يجب تغيير كلمة المرور</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-blue-200/70">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
+          <p className="text-sm text-muted-foreground">تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.</p>
           <div className="space-y-3">
             <div>
-              <Label className="text-blue-200/90">كلمة المرور الجديدة</Label>
+              <Label>كلمة المرور الجديدة</Label>
               <Input
                 type="password"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 placeholder="أدخل كلمة مرور جديدة"
-                className="bg-white/8 border-white/15 text-white placeholder:text-white/30"
               />
               <PasswordStrength password={newPassword} />
             </div>
             <Button
-              className="w-full bg-blue-600 hover:bg-blue-500"
+              className="w-full"
               onClick={handleChangePassword}
               disabled={changingPassword || !newPassword}
             >
