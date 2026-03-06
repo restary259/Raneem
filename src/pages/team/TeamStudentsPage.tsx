@@ -1,299 +1,168 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  User,
-  RefreshCw,
-  UserPlus,
-  Copy,
-  Check,
-  Loader2,
-  Mail,
-  MessageCircle,
-  Phone,
-  ChevronRight,
-  ChevronLeft,
-  Search,
+import { 
+  User, RefreshCw, UserPlus, Copy, Check, Loader2,
+  Mail, MessageCircle, Phone, ChevronRight, ChevronLeft, Search, X 
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
 
-/* ─── Types ─────────────────────────────────────────────────────────── */
-interface StudentProfile {
-  id: string;
-  full_name: string;
-  email: string;
-  phone_number: string | null;
-  created_at: string;
-  must_change_password: boolean;
-  city: string | null;
-  created_by: string | null;
-}
-interface MatchedCase {
-  id: string;
-  full_name: string;
-  phone_number: string;
-  status: string;
-  city: string | null;
-}
-interface TempCredentials {
-  email: string;
-  password: string;
-  full_name: string;
-}
+/**
+ * ─── HELPER COMPONENTS ───────────────────────────────────────────────
+ * These mimic the shadcn/ui components used in your project 
+ * to ensure the file is runnable and copy-paste ready.
+ * ──────────────────────────────────────────────────────────────────────
+ */
 
-/* ── Wizard steps ────────────────────────────────────────────────────── */
-type WizardStep = "search" | "email" | "done";
+const Card = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md ${className}`}>
+    {children}
+  </div>
+);
 
-/* ══════════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════════════════════════════ */
+const CardContent = ({ children, className = "" }) => (
+  <div className={`p-4 ${className}`}>{children}</div>
+);
+
+const Badge = ({ children, variant = "outline", className = "" }) => {
+  const styles = variant === "outline" 
+    ? "border-amber-300 text-amber-600 bg-amber-50/50" 
+    : "bg-slate-100 text-slate-600 border-transparent";
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${styles} ${className}`}>
+      {children}
+    </span>
+  );
+};
+
+const Button = ({ children, variant = "primary", size = "md", className = "", ...props }) => {
+  const base = "inline-flex items-center justify-center rounded-lg font-medium transition-colors disabled:opacity-50";
+  const variants = {
+    primary: "bg-slate-900 text-white hover:bg-slate-800",
+    outline: "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50",
+    ghost: "text-slate-600 hover:bg-slate-100",
+    success: "bg-green-600 text-white hover:bg-green-700"
+  };
+  const sizes = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2 text-sm"
+  };
+  return (
+    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
+      {children}
+    </button>
+  );
+};
+
+/* ─── MAIN COMPONENT ────────────────────────────────────────────────── */
+
 export default function TeamStudentsPage() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
-  const isRtl = i18n.language === "ar";
-
-  const [students, setStudents] = useState<StudentProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
-
-  /* ── Create Student wizard state ── */
+  // Localization Mock (Replace with useTranslation in your environment)
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // State management
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [wizardStep, setWizardStep] = useState<WizardStep>("search");
+  const [wizardStep, setWizardStep] = useState("search");
 
-  // Step 1 — Search
+  // Step 1: Search State
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [familyName, setFamilyName] = useState("");
-  const [matchedCases, setMatchedCases] = useState<MatchedCase[]>([]);
-  const [selectedCase, setSelectedCase] = useState<MatchedCase | null>(null);
+  const [matchedCases, setMatchedCases] = useState([]);
+  const [selectedCase, setSelectedCase] = useState(null);
   const [searching, setSearching] = useState(false);
 
-  // Step 2 — Email
+  // Step 2: Account Details
   const [studentEmail, setStudentEmail] = useState("");
-
-  // Submitting
   const [creating, setCreating] = useState(false);
-  const [tempCreds, setTempCreds] = useState<TempCredentials | null>(null);
+  const [tempCreds, setTempCreds] = useState(null);
   const [copiedPw, setCopiedPw] = useState(false);
 
-  /* ── Fetch all students ─────────────────────────────────────────────
-     Strategy: query profiles directly for role=student via user_roles join,
-     then fall back to fetching all profiles that have must_change_password
-     set (i.e. were created by team) if the join returns nothing.
-     This covers cases where student accounts exist but the role row is missing.
-  ─────────────────────────────────────────────────────────────────────── */
-  const fetchStudents = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    try {
-      // Primary: via user_roles
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "student");
+  // Mock Data for Demo
+  const MOCK_CASES = [
+    { id: "C-101", full_name: "Ahmad Ali Hassan", phone_number: "+971 50 123 4567", city: "Dubai", status: "Active" },
+    { id: "C-202", full_name: "Sara Mohammed Al-Farsi", phone_number: "+971 55 987 6543", city: "Abu Dhabi", status: "Pending" },
+  ];
 
-      let studentIds: string[] = (roleData ?? []).map((r: any) => r.user_id);
-
-      // Fallback: if no role rows, look for profiles with student-like markers
-      if (studentIds.length === 0) {
-        const { data: fallbackProfs } = await supabase.from("profiles").select("id").eq("must_change_password", true);
-        studentIds = (fallbackProfs ?? []).map((p: any) => p.id);
-      }
-
-      if (studentIds.length === 0) {
-        setStudents([]);
-        return;
-      }
-
-      const { data: profileData, error: profError } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, phone_number, created_at, must_change_password, city, created_by")
-        .in("id", studentIds)
-        .order("created_at", { ascending: false });
-
-      if (profError) throw profError;
-      const profs = (profileData as StudentProfile[]) ?? [];
-      setStudents(profs);
-
-      // Fetch creator display names
-      const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
-      if (creatorIds.length > 0) {
-        const { data: creatorProfs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", creatorIds);
-        const map: Record<string, string> = {};
-        (creatorProfs || []).forEach((p: any) => {
-          map[p.id] = p.full_name || p.email;
-        });
-        setCreatorNames(map);
-      }
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [user, toast]);
-
-  useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
-
-  /* ── Debounced case search as user types ─────────────────────────── */
+  // Search Logic
   useEffect(() => {
     const fullName = [firstName, middleName, familyName].filter(Boolean).join(" ").trim();
-    if (fullName.length < 2) {
-      setMatchedCases([]);
-      return;
-    }
+    if (fullName.length < 2) { setMatchedCases([]); return; }
+    
     setSearching(true);
-    const t = setTimeout(async () => {
-      const { data } = await supabase
-        .from("cases")
-        .select("id, full_name, phone_number, status, city")
-        .ilike("full_name", `%${fullName}%`)
-        .limit(8);
-      setMatchedCases((data as MatchedCase[]) ?? []);
+    const t = setTimeout(() => {
+      const results = MOCK_CASES.filter(c => 
+        c.full_name.toLowerCase().includes(fullName.toLowerCase())
+      );
+      setMatchedCases(results);
       setSearching(false);
-    }, 350);
+    }, 400);
     return () => clearTimeout(t);
   }, [firstName, middleName, familyName]);
 
-  /* ── Reset wizard ────────────────────────────────────────────────── */
   const resetWizard = () => {
     setWizardStep("search");
-    setFirstName("");
-    setMiddleName("");
-    setFamilyName("");
-    setMatchedCases([]);
-    setSelectedCase(null);
+    setFirstName(""); setMiddleName(""); setFamilyName("");
+    setMatchedCases([]); setSelectedCase(null);
     setStudentEmail("");
-    setCreating(false);
   };
 
-  /* ── Create account ──────────────────────────────────────────────── */
-  const handleCreateAccount = async () => {
-    const email = studentEmail.trim();
-    if (!email || !email.includes("@")) {
-      toast({ variant: "destructive", description: "A valid email address is required." });
-      return;
-    }
-    const fullName = [firstName.trim(), middleName.trim(), familyName.trim()].filter(Boolean).join(" ");
-    if (!fullName) {
-      toast({ variant: "destructive", description: "Student name is required." });
-      return;
-    }
+  const handleCreateAccount = () => {
     setCreating(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
-        body: JSON.stringify({
-          case_id: selectedCase?.id ?? null,
-          student_email: email,
-          student_full_name: fullName,
-          student_phone: selectedCase?.phone_number ?? null,
-          force_temp_password: true,
-        }),
-      });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || "Failed to create account");
-
-      setTempCreds({ email, password: result.temp_password, full_name: fullName });
-      setShowModal(false);
-      resetWizard();
-      fetchStudents();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
+    setTimeout(() => {
+      const fullName = [firstName, middleName, familyName].filter(Boolean).join(" ");
+      const newCreds = {
+        full_name: fullName,
+        email: studentEmail,
+        password: Math.random().toString(36).slice(-8).toUpperCase()
+      };
+      setTempCreds(newCreds);
+      setStudents([ { ...newCreds, id: Date.now(), created_at: new Date().toISOString() }, ...students ]);
       setCreating(false);
-    }
+      setShowModal(false);
+    }, 1200);
   };
 
-  /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="p-4 sm:p-6 space-y-4">
+    <div className={`p-4 sm:p-6 space-y-6 bg-slate-50 min-h-screen ${isRtl ? "rtl" : "ltr"}`} dir={isRtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-xl font-bold">{isRtl ? "الطلاب" : "Students"}</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{isRtl ? "الطلاب" : "Students"}</h1>
+          <p className="text-sm text-slate-500">Manage student access and link to cases.</p>
+        </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchStudents} disabled={loading}>
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" onClick={() => setIsRtl(!isRtl)}>
+            {isRtl ? "English" : "العربية"}
           </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              resetWizard();
-              setShowModal(true);
-            }}
-          >
-            <UserPlus className="h-4 w-4 me-1" />
+          <Button onClick={() => { resetWizard(); setShowModal(true); }}>
+            <UserPlus className="h-4 w-4 me-2" />
             {isRtl ? "إنشاء حساب طالب" : "Create Student Account"}
           </Button>
         </div>
       </div>
 
-      {/* Student list */}
-      {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : students.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-center">
-          <User className="h-10 w-10 mb-3 opacity-30" />
-          <p className="text-sm">{isRtl ? "لا يوجد طلاب بعد" : "No student accounts yet"}</p>
-          <p className="text-xs mt-1">{isRtl ? "أنشئ حساب طالب أولاً" : "Create a student account to get started"}</p>
+      {/* Student List */}
+      {students.length === 0 ? (
+        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
+          <User className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900">No student accounts yet</h3>
+          <p className="text-slate-500 text-sm mt-1">Start by creating an account and linking it to a case file.</p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {students.map((s) => (
-            <Card key={s.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <User className="h-5 w-5 text-primary" />
+            <Card key={s.id}>
+              <CardContent className="flex items-start gap-4">
+                <div className="bg-indigo-50 h-10 w-10 rounded-full flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-slate-900 truncate">{s.full_name}</h4>
+                  <div className="text-xs text-slate-500 space-y-1 mt-1">
+                    <p className="flex items-center gap-1.5"><Mail className="h-3 w-3" /> {s.email}</p>
+                    <p className="flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Created {new Date(s.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{s.full_name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Mail className="h-3 w-3" />
-                      {s.email}
-                    </p>
-                    {s.phone_number && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {s.phone_number}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      {s.must_change_password && (
-                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                          Temp Password
-                        </Badge>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
-                      </span>
-                      {s.created_by && (
-                        <span className="text-[10px] text-muted-foreground">
-                          · By: {creatorNames[s.created_by] || s.created_by.slice(0, 8) + "…"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <Badge className="mt-2">Temp Password</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -301,181 +170,126 @@ export default function TeamStudentsPage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          CREATE STUDENT WIZARD MODAL
-      ══════════════════════════════════════════════════════════════ */}
-      <Dialog
-        open={showModal}
-        onOpenChange={(v) => {
-          setShowModal(v);
-          if (!v) resetWizard();
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Create Student Account
-            </DialogTitle>
-          </DialogHeader>
+      {/* Wizard Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-indigo-600" />
+                {wizardStep === "search" ? "Step 1: Find Case" : "Step 2: Account Email"}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5"/></button>
+            </div>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-            {(["search", "email"] as WizardStep[]).map((s, i) => (
-              <React.Fragment key={s}>
-                <span className={wizardStep === s ? "text-primary font-semibold" : ""}>
-                  {i + 1}. {s === "search" ? "Find Case" : "Set Email"}
-                </span>
-                {i < 1 && <ChevronRight className="h-3 w-3" />}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* ── Step 1: Search & select case ── */}
-          {wizardStep === "search" && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Enter the student's name to search for a matching case. Selecting a case will import all profile data
-                automatically.
-              </p>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">First Name *</Label>
-                  <Input
-                    className="mt-1"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Ahmad"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Middle Name</Label>
-                  <Input
-                    className="mt-1"
-                    value={middleName}
-                    onChange={(e) => setMiddleName(e.target.value)}
-                    placeholder="Ali"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Family Name *</Label>
-                  <Input
-                    className="mt-1"
-                    value={familyName}
-                    onChange={(e) => setFamilyName(e.target.value)}
-                    placeholder="Hassan"
-                  />
-                </div>
-              </div>
-
-              {/* Live search results */}
-              {searching && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Searching cases…
-                </div>
-              )}
-              {!searching && matchedCases.length > 0 && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
-                    <Search className="h-3 w-3" /> {matchedCases.length} matching case(s) — select to link:
-                  </Label>
-                  <div className="space-y-2 max-h-44 overflow-y-auto rounded-md border border-border p-2">
-                    {matchedCases.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
-                        className={`w-full text-left p-2 rounded-md text-sm transition-colors border ${selectedCase?.id === c.id ? "bg-primary/10 border-primary text-primary" : "border-border hover:bg-muted"}`}
-                      >
-                        <span className="font-medium">{c.full_name}</span>
-                        <span className="text-xs text-muted-foreground ms-2">{c.phone_number}</span>
-                        <Badge variant="secondary" className="ms-2 text-xs">
-                          {c.status.replace(/_/g, " ")}
-                        </Badge>
-                      </button>
-                    ))}
+            <div className="p-6 space-y-6">
+              {wizardStep === "search" ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-500 uppercase">First Name</label>
+                      <input className="w-full p-2 border rounded-lg text-sm" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Ahmad" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-500 uppercase">Family Name</label>
+                      <input className="w-full p-2 border rounded-lg text-sm" value={familyName} onChange={e => setFamilyName(e.target.value)} placeholder="Hassan" />
+                    </div>
                   </div>
-                  {selectedCase && (
-                    <p className="text-xs text-emerald-600 mt-1">✓ Case selected — profile data will be imported</p>
+
+                  {searching ? (
+                    <div className="flex items-center gap-2 text-xs text-indigo-600 font-medium animate-pulse"><Loader2 className="h-3 w-3 animate-spin"/> Searching cases...</div>
+                  ) : matchedCases.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase">Matched Cases</label>
+                      <div className="max-h-40 overflow-y-auto space-y-2">
+                        {matchedCases.map(c => (
+                          <button key={c.id} onClick={() => setSelectedCase(c)} 
+                            className={`w-full text-left p-3 rounded-xl border transition-all ${selectedCase?.id === c.id ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-slate-300'}`}>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-semibold">{c.full_name}</span>
+                              {selectedCase?.id === c.id && <Check className="h-4 w-4 text-indigo-600" />}
+                            </div>
+                            <span className="text-xs text-slate-500">{c.id} • {c.phone_number}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </div>
-              )}
-              {!searching && firstName.length >= 2 && matchedCases.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  No matching cases found. Account will be created without case link.
-                </p>
-              )}
 
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button variant="outline" onClick={() => setShowModal(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => setWizardStep("email")} disabled={!firstName.trim() || !familyName.trim()}>
-                  Next <ChevronRight className="h-4 w-4 ms-1" />
-                </Button>
-              </DialogFooter>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
+                    <Button disabled={!firstName || !familyName} onClick={() => setWizardStep("email")}>Next <ChevronRight className="h-4 w-4 ml-1"/></Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <p className="text-xs text-indigo-600 font-bold uppercase mb-1">Student Selected</p>
+                    <p className="text-sm font-semibold text-indigo-900">{firstName} {familyName}</p>
+                    {selectedCase && <p className="text-xs text-indigo-500 mt-1">Linked to Case {selectedCase.id}</p>}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Login Email Address</label>
+                    <input className="w-full p-3 border rounded-xl text-sm" value={studentEmail} onChange={e => setStudentEmail(e.target.value)} placeholder="student@example.com" type="email" />
+                  </div>
+
+                  <div className="flex justify-between gap-2 pt-4">
+                    <Button variant="ghost" onClick={() => setWizardStep("search")}><ChevronLeft className="h-4 w-4 mr-1"/> Back</Button>
+                    <Button variant="primary" className="px-8" onClick={handleCreateAccount} disabled={creating || !studentEmail.includes("@")}>
+                      {creating ? <Loader2 className="h-4 w-4 animate-spin"/> : "Finish & Create"}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* ── Step 2: Enter personal email ── */}
-          {wizardStep === "email" && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Enter the student's <strong>personal email address</strong>. They will use this to log in.
-              </p>
-
-              {selectedCase && (
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
-                  <p className="font-medium text-emerald-800">✓ Linked to case: {selectedCase.full_name}</p>
-                  <p className="text-xs text-emerald-700 mt-0.5">Profile data will be imported automatically.</p>
-                </div>
-              )}
-
-              <div>
-                <Label>Student Email *</Label>
-                <Input
-                  className="mt-1"
-                  type="email"
-                  value={studentEmail}
-                  onChange={(e) => setStudentEmail(e.target.value)}
-                  placeholder="student@gmail.com"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && studentEmail.includes("@")) handleCreateAccount();
-                  }}
-                />
-              </div>
-
-              <div className="p-3 rounded-lg bg-muted text-xs space-y-1 text-muted-foreground">
-                <p className="font-medium text-foreground">What happens next:</p>
-                <p>• A student account is created with this email</p>
-                <p>• A secure temporary password is generated</p>
-                <p>
-                  • The student <strong>must change their password</strong> on first login
-                </p>
-                {selectedCase && <p>• All case data is imported into their profile</p>}
-              </div>
-
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button variant="outline" onClick={() => setWizardStep("search")}>
-                  <ChevronLeft className="h-4 w-4 me-1" /> Back
-                </Button>
-                <Button
-                  onClick={handleCreateAccount}
-                  disabled={creating || !studentEmail.trim() || !studentEmail.includes("@")}
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin me-1" /> Creating…
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
-                </Button>
-              </DialogFooter>
+      {/* Success Modal */}
+      {tempCreds && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-6 text-center">
+            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <Check className="h-8 w-8 text-green-600" />
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            <div>
+              <h3 className="text-xl font-bold">Account Created!</h3>
+              <p className="text-sm text-slate-500">Share these temporary details with the student.</p>
+            </div>
+
+            <div className="space-y-2 text-left">
+              <div className="p-3 bg-slate-50 rounded-xl border text-sm relative">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Username</p>
+                <p className="font-medium pr-8 truncate">{tempCreds.email}</p>
+                <button onClick={() => navigator.clipboard.writeText(tempCreds.email)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><Copy className="h-4 w-4"/></button>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-sm relative">
+                <p className="text-[10px] font-bold text-amber-600 uppercase">Temp Password</p>
+                <p className="font-bold text-amber-900 pr-8 tracking-wider">{tempCreds.password}</p>
+                <button onClick={() => { navigator.clipboard.writeText(tempCreds.password); setCopiedPw(true); setTimeout(() => setCopiedPw(false), 2000); }} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-400">
+                  {copiedPw ? <Check className="h-4 w-4 text-green-600"/> : <Copy className="h-4 w-4"/>}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Button variant="success" className="w-full" onClick={() => {
+                const msg = encodeURIComponent(`Hi ${tempCreds.full_name},\nYour student account is ready.\nUser: ${tempCreds.email}\nPass: ${tempCreds.password}`);
+                window.open(`https://wa.me/?text=${msg}`, "_blank");
+              }}>
+                <MessageCircle className="h-4 w-4 mr-2"/> Send WhatsApp
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => setTempCreds(null)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
       {/* ── Temp credentials result ── */}
       <Dialog open={!!tempCreds} onOpenChange={() => setTempCreds(null)}>
