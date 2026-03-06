@@ -107,7 +107,7 @@ export default function AdminSpreadsheetPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const activeColumns = columns.filter(c => c.selected);
-  const filteredRows = filterMonth
+  const filteredRows = filterMonth !== 'all'
     ? rows.filter(r => r.intake_month?.startsWith(filterMonth))
     : rows;
 
