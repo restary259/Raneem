@@ -25,7 +25,18 @@ import {
   Pencil,
   Check,
   X,
+  Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 
@@ -152,6 +163,35 @@ function InfoRow({
   );
 }
 
+/* ── Info row that always renders (shows "—" when value is null) ── */
+function InfoRowAlways({
+  icon: Icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number | null | undefined;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-border last:border-0">
+      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+        {value != null && value !== "" ? (
+          <p className={`text-sm font-semibold ${highlight ? "text-primary" : "text-foreground"}`}>{String(value)}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground/50 italic">Not filled — click Edit Info to add</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Chip selector button (edit mode) ── */
 function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -187,6 +227,8 @@ const AdminPipelinePage = () => {
   const [editMode, setEditMode] = useState(false);
   const [draft, setDraft] = useState<EditDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
@@ -291,6 +333,28 @@ const AdminPipelinePage = () => {
       toast({ variant: "destructive", description: err.message });
     } finally {
       setSaving(false);
+    }
+  };
+
+  /* ── delete case ── */
+  const deleteCase = async () => {
+    if (!selectedCase) return;
+    setDeleting(true);
+    try {
+      await supabase.from("documents").delete().eq("case_id", selectedCase.id);
+      await supabase.from("appointments").delete().eq("case_id", selectedCase.id);
+      await supabase.from("case_submissions").delete().eq("case_id", selectedCase.id);
+      const { error } = await supabase.from("cases").delete().eq("id", selectedCase.id);
+      if (error) throw error;
+      toast({ description: "Case deleted" });
+      setSelectedCase(null);
+      setShowDeleteConfirm(false);
+      setEditMode(false);
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -616,18 +680,42 @@ const AdminPipelinePage = () => {
                             label="Education Level"
                             value={educationLabel(selectedCase.education_level)}
                           />
-                          <InfoRow
-                            icon={Languages}
-                            label="English Units"
-                            value={selectedCase.english_units != null ? `${selectedCase.english_units} units` : null}
-                            highlight
-                          />
-                          <InfoRow
-                            icon={Calculator}
-                            label="Math Units"
-                            value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
-                            highlight
-                          />
+                          {/* Always show EN + MA rows for bagrut — display "—" if missing so admin knows to fill it */}
+                          {selectedCase.education_level === "bagrut" ? (
+                            <>
+                              <InfoRowAlways
+                                icon={Languages}
+                                label="English Units"
+                                value={
+                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                }
+                                highlight
+                              />
+                              <InfoRowAlways
+                                icon={Calculator}
+                                label="Math Units"
+                                value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                                highlight
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <InfoRow
+                                icon={Languages}
+                                label="English Units"
+                                value={
+                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                }
+                                highlight
+                              />
+                              <InfoRow
+                                icon={Calculator}
+                                label="Math Units"
+                                value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                                highlight
+                              />
+                            </>
+                          )}
                           <InfoRow icon={Languages} label="English Proficiency" value={selectedCase.english_level} />
                         </div>
                       </section>
@@ -826,6 +914,16 @@ const AdminPipelinePage = () => {
                       <Check className="h-4 w-4" />
                       {saving ? "Saving…" : "Save Changes"}
                     </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full h-10 gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={deleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete This Case
+                    </Button>
                   </section>
                 )}
 
@@ -886,6 +984,31 @@ const AdminPipelinePage = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" /> Delete Case
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete the case for <strong>{selectedCase?.full_name}</strong>? This
+              will also delete all appointments, submissions, and documents. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteCase}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Yes, Delete Case"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
