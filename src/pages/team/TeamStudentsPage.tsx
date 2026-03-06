@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -23,6 +24,12 @@ import {
   Eye,
   EyeOff,
   Shield,
+  Phone,
+  MapPin,
+  Calendar,
+  BookOpen,
+  Globe,
+  ChevronRight,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +41,17 @@ interface StudentProfile {
   phone_number: string | null;
   created_at: string;
   must_change_password: boolean;
+  city: string | null;
+  country: string | null;
+  intake_month: string | null;
+  university_name: string | null;
+  visa_status: string | null;
+  nationality: string | null;
+  passport_number: string | null;
+  passport_expiry: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  notes: string | null;
 }
 
 interface TempCredentials {
@@ -41,6 +59,14 @@ interface TempCredentials {
   password: string;
   full_name: string;
 }
+
+const VISA_STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> = {
+  not_applied: { en: "Not Applied", ar: "لم يتقدم", color: "bg-gray-100 text-gray-700" },
+  in_progress: { en: "In Progress", ar: "قيد المعالجة", color: "bg-blue-100 text-blue-700" },
+  approved: { en: "Approved", ar: "موافق عليه", color: "bg-green-100 text-green-700" },
+  rejected: { en: "Rejected", ar: "مرفوض", color: "bg-red-100 text-red-700" },
+  expired: { en: "Expired", ar: "منتهي الصلاحية", color: "bg-orange-100 text-orange-700" },
+};
 
 export default function TeamStudentsPage() {
   const { user } = useAuth();
@@ -50,6 +76,10 @@ export default function TeamStudentsPage() {
 
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Profile sheet
+  const [selected, setSelected] = useState<StudentProfile | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -67,14 +97,14 @@ export default function TeamStudentsPage() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      // Team members only see students THEY created (created_by = their user ID)
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id, full_name, email, phone_number, created_at, must_change_password")
+        .select(
+          "id, full_name, email, phone_number, created_at, must_change_password, city, country, intake_month, university_name, visa_status, nationality, passport_number, passport_expiry, emergency_contact_name, emergency_contact_phone, notes",
+        )
         .eq("created_by", user.id)
         .order("created_at", { ascending: false });
       if (profileError) throw profileError;
-
       setStudents((profileData as StudentProfile[]) ?? []);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -86,6 +116,11 @@ export default function TeamStudentsPage() {
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
+
+  const openProfile = (s: StudentProfile) => {
+    setSelected(s);
+    setSheetOpen(true);
+  };
 
   const handleCreate = async () => {
     if (!createEmail.trim()) {
@@ -99,18 +134,11 @@ export default function TeamStudentsPage() {
       } = await supabase.auth.getSession();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-standalone`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session!.access_token}`,
-        },
-        body: JSON.stringify({
-          email: createEmail.trim(),
-          full_name: createName.trim() || undefined,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
+        body: JSON.stringify({ email: createEmail.trim(), full_name: createName.trim() || undefined }),
       });
       const result = await resp.json();
       if (!resp.ok) {
-        // Keep modal open on 409 so user can change the email
         toast({
           variant: "destructive",
           description: result.error || (isRtl ? "فشل إنشاء الحساب" : "Failed to create account"),
@@ -118,7 +146,6 @@ export default function TeamStudentsPage() {
         setCreating(false);
         return;
       }
-
       setShowCreateModal(false);
       setCreateEmail("");
       setCreateName("");
@@ -151,6 +178,8 @@ export default function TeamStudentsPage() {
     }
   };
 
+  const visaStatus = selected?.visa_status ? VISA_STATUS_LABELS[selected.visa_status] : null;
+
   return (
     <div className="p-6 space-y-4 max-w-4xl mx-auto">
       {/* Header */}
@@ -176,8 +205,8 @@ export default function TeamStudentsPage() {
 
       <p className="text-sm text-muted-foreground">
         {isRtl
-          ? "الحسابات التي أنشأتها — لا يمكنك الوصول إلى بيانات الطلاب الخاصة"
-          : "Accounts you created — no access to student private data"}
+          ? "الحسابات التي أنشأتها — انقر على أي طالب لعرض ملفه"
+          : "Accounts you created — click any student to view their profile"}
       </p>
 
       {/* Student List */}
@@ -196,7 +225,11 @@ export default function TeamStudentsPage() {
       ) : (
         <div className="space-y-2">
           {students.map((s) => (
-            <Card key={s.id} className="border-border">
+            <Card
+              key={s.id}
+              className="border-border cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
+              onClick={() => openProfile(s)}
+            >
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -209,6 +242,12 @@ export default function TeamStudentsPage() {
                         <Mail className="h-3 w-3" />
                         {s.email}
                       </span>
+                      {s.phone_number && (
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {s.phone_number}
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
@@ -227,12 +266,184 @@ export default function TeamStudentsPage() {
                     <Shield className="h-3 w-3" />
                     {isRtl ? "طالب" : "Student"}
                   </Badge>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* ── Student Profile Sheet ── */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {selected && (
+            <>
+              <SheetHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <SheetTitle className="text-lg">{selected.full_name || selected.email}</SheetTitle>
+                    <p className="text-sm text-muted-foreground">{selected.email}</p>
+                  </div>
+                </div>
+
+                {/* Status badges */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selected.must_change_password && (
+                    <Badge variant="outline" className="text-xs gap-1 border-amber-300 text-amber-700 bg-amber-50">
+                      <KeyRound className="h-3 w-3" />
+                      {isRtl ? "يجب تغيير كلمة المرور" : "Must change password"}
+                    </Badge>
+                  )}
+                  {visaStatus && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${visaStatus.color}`}>
+                      {isRtl ? visaStatus.ar : visaStatus.en}
+                    </span>
+                  )}
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Shield className="h-3 w-3" />
+                    {isRtl ? "طالب" : "Student"}
+                  </Badge>
+                </div>
+              </SheetHeader>
+
+              <div className="space-y-5 pt-2">
+                {/* Contact Info */}
+                <section>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? "معلومات التواصل" : "Contact Information"}
+                  </p>
+                  <div className="space-y-2.5">
+                    <InfoRow
+                      icon={<Mail className="h-4 w-4" />}
+                      label={isRtl ? "البريد الإلكتروني" : "Email"}
+                      value={selected.email}
+                    />
+                    <InfoRow
+                      icon={<Phone className="h-4 w-4" />}
+                      label={isRtl ? "رقم الهاتف" : "Phone"}
+                      value={selected.phone_number}
+                    />
+                    <InfoRow
+                      icon={<MapPin className="h-4 w-4" />}
+                      label={isRtl ? "المدينة" : "City"}
+                      value={selected.city}
+                    />
+                    <InfoRow
+                      icon={<Globe className="h-4 w-4" />}
+                      label={isRtl ? "الدولة" : "Country"}
+                      value={selected.country}
+                    />
+                    <InfoRow
+                      icon={<Globe className="h-4 w-4" />}
+                      label={isRtl ? "الجنسية" : "Nationality"}
+                      value={selected.nationality}
+                    />
+                  </div>
+                </section>
+
+                <Separator />
+
+                {/* Academic Info */}
+                <section>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? "المعلومات الأكاديمية" : "Academic Information"}
+                  </p>
+                  <div className="space-y-2.5">
+                    <InfoRow
+                      icon={<BookOpen className="h-4 w-4" />}
+                      label={isRtl ? "الجامعة" : "University"}
+                      value={selected.university_name}
+                    />
+                    <InfoRow
+                      icon={<Calendar className="h-4 w-4" />}
+                      label={isRtl ? "شهر الالتحاق" : "Intake Month"}
+                      value={selected.intake_month}
+                    />
+                  </div>
+                </section>
+
+                <Separator />
+
+                {/* Passport Info */}
+                <section>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? "معلومات جواز السفر" : "Passport Information"}
+                  </p>
+                  <div className="space-y-2.5">
+                    <InfoRow
+                      icon={<Shield className="h-4 w-4" />}
+                      label={isRtl ? "رقم جواز السفر" : "Passport Number"}
+                      value={selected.passport_number}
+                    />
+                    <InfoRow
+                      icon={<Calendar className="h-4 w-4" />}
+                      label={isRtl ? "تاريخ انتهاء الجواز" : "Passport Expiry"}
+                      value={
+                        selected.passport_expiry ? format(new Date(selected.passport_expiry), "dd MMM yyyy") : null
+                      }
+                    />
+                  </div>
+                </section>
+
+                <Separator />
+
+                {/* Emergency Contact */}
+                <section>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? "جهة الاتصال في حالات الطوارئ" : "Emergency Contact"}
+                  </p>
+                  <div className="space-y-2.5">
+                    <InfoRow
+                      icon={<User className="h-4 w-4" />}
+                      label={isRtl ? "الاسم" : "Name"}
+                      value={selected.emergency_contact_name}
+                    />
+                    <InfoRow
+                      icon={<Phone className="h-4 w-4" />}
+                      label={isRtl ? "رقم الهاتف" : "Phone"}
+                      value={selected.emergency_contact_phone}
+                    />
+                  </div>
+                </section>
+
+                {selected.notes && (
+                  <>
+                    <Separator />
+                    <section>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                        {isRtl ? "ملاحظات" : "Notes"}
+                      </p>
+                      <p className="text-sm text-foreground bg-muted rounded-lg p-3 leading-relaxed">
+                        {selected.notes}
+                      </p>
+                    </section>
+                  </>
+                )}
+
+                <Separator />
+
+                {/* Meta */}
+                <section>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRtl ? "معلومات الحساب" : "Account Info"}
+                  </p>
+                  <div className="space-y-2.5">
+                    <InfoRow
+                      icon={<Clock className="h-4 w-4" />}
+                      label={isRtl ? "تاريخ الإنشاء" : "Created"}
+                      value={format(new Date(selected.created_at), "dd MMM yyyy, HH:mm")}
+                    />
+                  </div>
+                </section>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* ── Create Student Account Modal ── */}
       <Dialog
@@ -252,14 +463,12 @@ export default function TeamStudentsPage() {
               {isRtl ? "إنشاء حساب طالب جديد" : "Create Student Account"}
             </DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
               {isRtl
                 ? "سيتم إنشاء كلمة مرور مؤقتة آمنة وعرضها لك فوراً."
                 : "A secure temporary password will be generated and shown immediately."}
             </p>
-
             <div className="space-y-2">
               <Label htmlFor="create-email">{isRtl ? "البريد الإلكتروني *" : "Email *"}</Label>
               <Input
@@ -272,7 +481,6 @@ export default function TeamStudentsPage() {
                 dir="ltr"
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="create-name">{isRtl ? "الاسم الكامل (اختياري)" : "Full Name (optional)"}</Label>
               <Input
@@ -284,7 +492,6 @@ export default function TeamStudentsPage() {
               />
             </div>
           </div>
-
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowCreateModal(false)} disabled={creating}>
               {isRtl ? "إلغاء" : "Cancel"}
@@ -311,7 +518,6 @@ export default function TeamStudentsPage() {
               {isRtl ? "تم إنشاء الحساب بنجاح ✓" : "Student Account Created ✓"}
             </DialogTitle>
           </DialogHeader>
-
           {tempCreds && (
             <div className="space-y-4 py-2">
               <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
@@ -319,7 +525,6 @@ export default function TeamStudentsPage() {
                   ? "احفظ هذه البيانات الآن — كلمة المرور لن تُعرض مرة أخرى."
                   : "Save these credentials now — the password will not be shown again."}
               </div>
-
               <div className="space-y-3">
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -327,16 +532,13 @@ export default function TeamStudentsPage() {
                   </p>
                   <p className="font-medium text-sm">{tempCreds.full_name}</p>
                 </div>
-
                 <Separator />
-
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {isRtl ? "البريد الإلكتروني" : "Email"}
                   </p>
                   <p className="font-mono text-sm bg-muted px-3 py-2 rounded-lg select-all">{tempCreds.email}</p>
                 </div>
-
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {isRtl ? "كلمة المرور المؤقتة" : "Temporary Password"}
@@ -356,7 +558,6 @@ export default function TeamStudentsPage() {
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-col gap-2 pt-2">
                 <Button
                   variant="outline"
@@ -388,6 +589,29 @@ export default function TeamStudentsPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Helper component for a single info row
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null | undefined }) {
+  if (!value)
+    return (
+      <div className="flex items-start gap-2.5">
+        <span className="text-muted-foreground/40 mt-0.5 shrink-0">{icon}</span>
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-sm text-muted-foreground/50 italic">—</p>
+        </div>
+      </div>
+    );
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-primary/60 mt-0.5 shrink-0">{icon}</span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-foreground">{value}</p>
+      </div>
     </div>
   );
 }
