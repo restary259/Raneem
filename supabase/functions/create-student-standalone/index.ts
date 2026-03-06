@@ -33,7 +33,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Team member or admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { email, full_name } = await req.json();
+    const { email, full_name, case_id, created_by } = await req.json();
 
     if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
