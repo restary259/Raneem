@@ -297,7 +297,7 @@ export default function ProfileCompletionForm({
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
         insurance_price: selectedIns?.price ?? 0,
-        extra_data,
+        extra_data: extraData,
       };
       if (insuranceId) upsertPayload.insurance_id = insuranceId;
 
