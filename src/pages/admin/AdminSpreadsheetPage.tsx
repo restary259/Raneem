@@ -52,7 +52,7 @@ export default function AdminSpreadsheetPage() {
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [columns, setColumns] = useState<Column[]>(ALL_COLUMNS);
-  const [filterMonth, setFilterMonth] = useState('');
+  const [filterMonth, setFilterMonth] = useState('all');
   const [showColConfig, setShowColConfig] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
