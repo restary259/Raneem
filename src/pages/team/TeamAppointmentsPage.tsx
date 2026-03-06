@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -48,12 +47,11 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  Calendar as CalIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 
-/* ─── Types ─────────────────────────────────────────────────────────── */
+/* ── Types ─────────────────────────────────────────────────────────── */
 interface Appointment {
   id: string;
   case_id: string;
@@ -63,18 +61,19 @@ interface Appointment {
   outcome: string | null;
   case?: { full_name: string; phone_number: string; status: string };
 }
-
 interface Case {
   id: string;
   full_name: string;
   phone_number: string;
 }
 
-/* ─── Constants ──────────────────────────────────────────────────────── */
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
+/* ── Constants ──────────────────────────────────────────────────────── */
+const WORK_START = 8; // 8 am
+const WORK_END = 20; // 8 pm (last bookable slot = 19:xx)
+const HOURS = Array.from({ length: WORK_END - WORK_START }, (_, i) => i + WORK_START);
 type CalendarView = "day" | "week" | "month";
 
-/* ─── Status styles ──────────────────────────────────────────────────── */
+/* ── Status helpers ─────────────────────────────────────────────────── */
 const apptStyle = (outcome: string | null) => {
   if (!outcome)
     return {
@@ -109,15 +108,17 @@ const apptStyle = (outcome: string | null) => {
       icon: <RefreshCw className="h-2.5 w-2.5" />,
     };
   return {
-    bg: "bg-slate-50 border-slate-200 text-slate-800",
+    bg: "bg-slate-50  border-slate-200  text-slate-800",
     dot: "bg-slate-400",
     badge: "bg-slate-100 text-slate-600",
     label: outcome,
-    icon: <CalIcon className="h-2.5 w-2.5" />,
+    icon: <CalendarIcon className="h-2.5 w-2.5" />,
   };
 };
 
-/* ─── Main Component ─────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════════════ */
 export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -125,15 +126,16 @@ export default function TeamAppointmentsPage() {
   const { i18n } = useTranslation("dashboard");
   const isAr = i18n.language === "ar";
 
+  /* ── Data ── */
   const [appts, setAppts] = useState<Appointment[]>([]);
+  const [myCases, setMyCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* ── Calendar ── */
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>("week");
-  const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
-  const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
-  const [myCases, setMyCases] = useState<Case[]>([]);
 
-  /* Modal state */
+  /* ── New / Edit modal ── */
   const [showModal, setShowModal] = useState(false);
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
   const [newDate, setNewDate] = useState<Date | undefined>();
@@ -145,20 +147,23 @@ export default function TeamAppointmentsPage() {
   const [useManualName, setUseManualName] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  /* DnD state */
+  /* ── Detail modal ── */
+  const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
+
+  /* ── Delete ── */
+  const [deletingAppt, setDeletingAppt] = useState<Appointment | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  /* ── Drag & Drop ── */
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
   const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
   const [confirmingMove, setConfirmingMove] = useState(false);
-  // Track whether a drag actually started so click doesn't fire after drag
-  const didDragRef = useRef(false);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set to true the moment dragStart fires; cleared after dragEnd
+  const wasDraggedRef = useRef(false);
 
-  /* Delete state */
-  const [deletingAppt, setDeletingAppt] = useState<Appointment | null>(null);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  /* ─── Data ──────────────────────────────────────────────────────────── */
+  /* ══ DATA FETCHING ═══════════════════════════════════════════════════ */
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -188,7 +193,84 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
   }, [fetchMyCases]);
 
-  /* ─── Modal helpers ─────────────────────────────────────────────────── */
+  /* ══ DRAG & DROP ═════════════════════════════════════════════════════ */
+  // Called from ApptBlock's onDragStart
+  const handleDragStart = (e: React.DragEvent, apptId: string) => {
+    wasDraggedRef.current = true;
+    setDraggingId(apptId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    // Enforce working hours safeguard
+    if (hour < WORK_START || hour >= WORK_END) {
+      e.dataTransfer.dropEffect = "none";
+      return;
+    }
+    e.dataTransfer.dropEffect = "move";
+    setDragOverSlot({ day, hour });
+  };
+
+  const handleDrop = (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    if (!draggingId) return;
+
+    // Working hours safeguard
+    if (hour < WORK_START || hour >= WORK_END) {
+      toast({ variant: "destructive", description: "Appointments can only be scheduled between 8 am and 8 pm." });
+      setDraggingId(null);
+      setDragOverSlot(null);
+      return;
+    }
+
+    const appt = appts.find((a) => a.id === draggingId);
+    if (!appt) return;
+
+    const newDt = new Date(day);
+    newDt.setHours(hour, 0, 0, 0);
+    const orig = parseISO(appt.scheduled_at);
+    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
+      setDraggingId(null);
+      setDragOverSlot(null);
+      return;
+    }
+
+    // Show confirmation before saving
+    setPendingMove({ appt, newDate: newDt });
+    setDraggingId(null);
+    setDragOverSlot(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverSlot(null);
+    // Clear the flag after a tick so the upcoming click handler (if any) sees it
+    setTimeout(() => {
+      wasDraggedRef.current = false;
+    }, 0);
+  };
+
+  const confirmMove = async () => {
+    if (!pendingMove) return;
+    setConfirmingMove(true);
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ scheduled_at: pendingMove.newDate.toISOString() })
+        .eq("id", pendingMove.appt.id);
+      if (error) throw error;
+      toast({ title: "Rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      setPendingMove(null);
+      fetchAppts();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setConfirmingMove(false);
+    }
+  };
+
+  /* ══ MODAL HELPERS ═══════════════════════════════════════════════════ */
   const openNew = (date?: Date, hour?: number) => {
     setEditingAppt(null);
     const d = date ? new Date(date) : new Date();
@@ -217,12 +299,7 @@ export default function TeamAppointmentsPage() {
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingAppt(null);
-  };
-
-  /* ─── Save ──────────────────────────────────────────────────────────── */
+  /* ══ SAVE ════════════════════════════════════════════════════════════ */
   const handleSave = async () => {
     if (!newDate) {
       toast({ variant: "destructive", description: "Please select a date" });
@@ -236,11 +313,19 @@ export default function TeamAppointmentsPage() {
       toast({ variant: "destructive", description: "Please enter a student name" });
       return;
     }
+
+    // Working hours validation
+    const [hh] = newTime.split(":").map(Number);
+    if (hh < WORK_START || hh >= WORK_END) {
+      toast({ variant: "destructive", description: "Appointments must be between 8 am and 8 pm." });
+      return;
+    }
+
     setSaving(true);
     try {
-      const [hh, mm] = newTime.split(":").map(Number);
+      const [h, m] = newTime.split(":").map(Number);
       const dt = new Date(newDate);
-      dt.setHours(hh, mm, 0, 0);
+      dt.setHours(h, m, 0, 0);
 
       if (editingAppt) {
         const { error } = await supabase
@@ -257,7 +342,7 @@ export default function TeamAppointmentsPage() {
       } else {
         let caseId = newCaseId;
         if (useManualName && manualName.trim()) {
-          const { data: caseData, error: caseErr } = await supabase
+          const { data: cd, error: ce } = await supabase
             .from("cases")
             .insert({
               full_name: manualName.trim(),
@@ -267,8 +352,8 @@ export default function TeamAppointmentsPage() {
             })
             .select("id")
             .single();
-          if (caseErr) throw caseErr;
-          caseId = (caseData as any).id;
+          if (ce) throw ce;
+          caseId = (cd as any).id;
         }
         const { error } = await supabase.from("appointments").insert({
           case_id: caseId,
@@ -287,7 +372,8 @@ export default function TeamAppointmentsPage() {
         }
         toast({ title: "Appointment created" });
       }
-      closeModal();
+      setShowModal(false);
+      setEditingAppt(null);
       fetchAppts();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -296,7 +382,7 @@ export default function TeamAppointmentsPage() {
     }
   };
 
-  /* ─── Delete ────────────────────────────────────────────────────────── */
+  /* ══ DELETE ══════════════════════════════════════════════════════════ */
   const handleDelete = async () => {
     if (!deletingAppt) return;
     setConfirmingDelete(true);
@@ -314,63 +400,7 @@ export default function TeamAppointmentsPage() {
     }
   };
 
-  /* ─── Drag & Drop ───────────────────────────────────────────────────── */
-  const handleDragStart = (e: React.DragEvent, apptId: string) => {
-    didDragRef.current = true;
-    setDraggingId(apptId);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverSlot({ day, hour });
-  };
-
-  const handleDrop = (e: React.DragEvent, day: Date, hour: number) => {
-    e.preventDefault();
-    if (!draggingId) return;
-    const appt = appts.find((a) => a.id === draggingId);
-    if (!appt) return;
-    const newDt = new Date(day);
-    newDt.setHours(hour, 0, 0, 0);
-    const orig = parseISO(appt.scheduled_at);
-    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
-      setDraggingId(null);
-      setDragOverSlot(null);
-      return;
-    }
-    // Show confirmation — do NOT save yet
-    setPendingMove({ appt, newDate: newDt });
-    setDraggingId(null);
-    setDragOverSlot(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggingId(null);
-    setDragOverSlot(null);
-  };
-
-  const confirmMove = async () => {
-    if (!pendingMove) return;
-    setConfirmingMove(true);
-    try {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ scheduled_at: pendingMove.newDate.toISOString() })
-        .eq("id", pendingMove.appt.id);
-      if (error) throw error;
-      toast({ title: "Rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
-      setPendingMove(null);
-      fetchAppts();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setConfirmingMove(false);
-    }
-  };
-
-  /* ─── Navigation ────────────────────────────────────────────────────── */
+  /* ══ NAVIGATION ══════════════════════════════════════════════════════ */
   const navigatePrev = () => {
     if (view === "day") setCurrentDate((d) => subDays(d, 1));
     else if (view === "week") setCurrentDate((d) => subWeeks(d, 1));
@@ -382,25 +412,21 @@ export default function TeamAppointmentsPage() {
     else setCurrentDate((d) => addMonths(d, 1));
   };
 
-  /* ─── Calendar helpers ──────────────────────────────────────────────── */
+  /* ══ CALENDAR HELPERS ════════════════════════════════════════════════ */
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentDate, { weekStartsOn: 0 }),
     end: endOfWeek(currentDate, { weekStartsOn: 0 }),
   });
-
-  const getApptsForSlot = (day: Date, hour: number) =>
-    appts.filter((a) => {
-      const d = parseISO(a.scheduled_at);
-      return isSameDay(d, day) && getHours(d) === hour;
-    });
-
-  const getApptsForDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
-
   const monthWeeks = eachWeekOfInterval(
     { start: startOfMonth(currentDate), end: endOfMonth(currentDate) },
     { weekStartsOn: 0 },
   );
-
+  const getSlot = (day: Date, hour: number) =>
+    appts.filter((a) => {
+      const d = parseISO(a.scheduled_at);
+      return isSameDay(d, day) && getHours(d) === hour;
+    });
+  const getDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
   const headerLabel =
     view === "day"
       ? format(currentDate, "EEEE, MMMM d, yyyy")
@@ -408,61 +434,34 @@ export default function TeamAppointmentsPage() {
         ? `${format(weekDays[0], "MMM d")} – ${format(weekDays[6], "MMM d, yyyy")}`
         : format(currentDate, "MMMM yyyy");
 
-  /* ─── Appointment block component ───────────────────────────────────── */
+  /* ══ APPOINTMENT BLOCK ═══════════════════════════════════════════════
+     - draggable is ALWAYS true (browser handles the hold-to-drag naturally)
+     - click opens detail ONLY if no drag occurred (wasDraggedRef guard)
+  ═══════════════════════════════════════════════════════════════════════ */
   const ApptBlock = ({ appt, compact = false }: { appt: Appointment; compact?: boolean }) => {
     const s = apptStyle(appt.outcome);
-    const blockRef = useRef<HTMLDivElement>(null);
-    const isDraggable = useRef(false);
-    const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const onMouseDown = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      isDraggable.current = false;
-      didDragRef.current = false;
-      pressTimer.current = setTimeout(() => {
-        isDraggable.current = true;
-        if (blockRef.current) blockRef.current.setAttribute("draggable", "true");
-      }, 300);
-    };
-
-    const onMouseUp = () => {
-      if (pressTimer.current) clearTimeout(pressTimer.current);
-      // Reset draggable after a tick so dragend can fire first
-      setTimeout(() => {
-        if (blockRef.current) blockRef.current.setAttribute("draggable", "false");
-        isDraggable.current = false;
-      }, 50);
-    };
-
-    const onClickBlock = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (didDragRef.current) return; // drag happened, don't open detail
-      setSelectedAppt(appt);
-    };
-
     return (
       <div
-        ref={blockRef}
-        draggable={false}
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
+        draggable
         onDragStart={(e) => {
           e.stopPropagation();
-          if (isDraggable.current) handleDragStart(e, appt.id);
-          else e.preventDefault();
+          handleDragStart(e, appt.id);
         }}
         onDragEnd={(e) => {
           e.stopPropagation();
           handleDragEnd();
-          onMouseUp();
         }}
-        onClick={onClickBlock}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (wasDraggedRef.current) return; // came from a drag, ignore
+          setSelectedAppt(appt);
+        }}
         className={cn(
           "rounded-lg border select-none transition-all duration-150",
           s.bg,
           draggingId === appt.id
             ? "opacity-40 scale-95 cursor-grabbing"
-            : "cursor-pointer hover:shadow-sm hover:scale-[1.01]",
+            : "cursor-grab hover:shadow-sm hover:scale-[1.01] active:cursor-grabbing",
           compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
         )}
       >
@@ -481,10 +480,10 @@ export default function TeamAppointmentsPage() {
     );
   };
 
-  /* ─── Render ─────────────────────────────────────────────────────────── */
+  /* ══ RENDER ══════════════════════════════════════════════════════════ */
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* ══ HEADER ══ */}
+      {/* ── HEADER ── */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigatePrev}>
@@ -508,7 +507,6 @@ export default function TeamAppointmentsPage() {
             Today
           </Button>
         </div>
-
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
             {(["day", "week", "month"] as CalendarView[]).map((v) => (
@@ -556,7 +554,7 @@ export default function TeamAppointmentsPage() {
               </div>
             </div>
             {HOURS.map((hour) => {
-              const slotAppts = getApptsForSlot(currentDate, hour);
+              const slotAppts = getSlot(currentDate, hour);
               const isOver = dragOverSlot && isSameDay(dragOverSlot.day, currentDate) && dragOverSlot.hour === hour;
               return (
                 <div
@@ -593,6 +591,7 @@ export default function TeamAppointmentsPage() {
       {!loading && view === "week" && (
         <div className="flex-1 overflow-auto">
           <div className="min-w-[700px]">
+            {/* Day headers */}
             <div
               className="sticky top-0 z-10 bg-background border-b border-border grid"
               style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
@@ -622,6 +621,7 @@ export default function TeamAppointmentsPage() {
                 </div>
               ))}
             </div>
+            {/* Hour rows */}
             {HOURS.map((hour) => (
               <div
                 key={hour}
@@ -632,7 +632,7 @@ export default function TeamAppointmentsPage() {
                   {format(new Date().setHours(hour, 0, 0, 0), "h a")}
                 </div>
                 {weekDays.map((day) => {
-                  const slotAppts = getApptsForSlot(day, hour);
+                  const slotAppts = getSlot(day, hour);
                   const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
                   return (
                     <div
@@ -684,15 +684,14 @@ export default function TeamAppointmentsPage() {
             return (
               <div key={weekStart.toISOString()} className="grid grid-cols-7 border-t border-border/40">
                 {wDays.map((day) => {
-                  const dayAppts = getApptsForDay(day);
-                  const isCurrentMonth = isSameMonth(day, currentDate);
+                  const dayAppts = getDay(day);
                   const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
                   return (
                     <div
                       key={day.toISOString()}
                       className={cn(
                         "min-h-[100px] border-r border-border/30 last:border-r-0 p-1.5 transition-colors cursor-pointer",
-                        !isCurrentMonth && "opacity-35 bg-muted/10",
+                        !isSameMonth(day, currentDate) && "opacity-35 bg-muted/10",
                         isToday(day) && "bg-violet-50/40",
                         isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
                       )}
@@ -735,7 +734,15 @@ export default function TeamAppointmentsPage() {
       )}
 
       {/* ══ NEW / EDIT MODAL ══ */}
-      <Dialog open={showModal} onOpenChange={closeModal}>
+      <Dialog
+        open={showModal}
+        onOpenChange={(v) => {
+          if (!v) {
+            setShowModal(false);
+            setEditingAppt(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
@@ -804,7 +811,7 @@ export default function TeamAppointmentsPage() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal", !newDate && "text-muted-foreground")}
+                      className={cn("w-full justify-start font-normal", !newDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="me-2 h-4 w-4" />
                       {newDate ? format(newDate, "MMM d, yyyy") : "Pick date"}
@@ -822,8 +829,16 @@ export default function TeamAppointmentsPage() {
                 </Popover>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Time</Label>
-                <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Time <span className="text-muted-foreground/60 normal-case font-normal">(8 am – 8 pm)</span>
+                </Label>
+                <Input
+                  type="time"
+                  value={newTime}
+                  min="08:00"
+                  max="19:59"
+                  onChange={(e) => setNewTime(e.target.value)}
+                />
               </div>
             </div>
 
@@ -873,7 +888,14 @@ export default function TeamAppointmentsPage() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={closeModal} type="button">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                setShowModal(false);
+                setEditingAppt(null);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving} type="button">
@@ -913,7 +935,6 @@ export default function TeamAppointmentsPage() {
                       </div>
                     </div>
                   </DialogHeader>
-
                   <div className="space-y-2.5 text-sm">
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <CalendarIcon className="h-4 w-4 shrink-0 text-primary/70" />
@@ -934,7 +955,6 @@ export default function TeamAppointmentsPage() {
                       </div>
                     )}
                   </div>
-
                   <DialogFooter className="flex-col gap-2 sm:flex-row">
                     <div className="flex gap-2 flex-1">
                       <Button
@@ -978,35 +998,6 @@ export default function TeamAppointmentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ══ DELETE CONFIRM ══ */}
-      <Dialog
-        open={!!deletingAppt}
-        onOpenChange={(v) => {
-          if (!v) setDeletingAppt(null);
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Delete Appointment?</DialogTitle>
-          </DialogHeader>
-          {deletingAppt && (
-            <p className="text-sm text-muted-foreground">
-              Remove the appointment with <strong>{(deletingAppt.case as any)?.full_name}</strong> on{" "}
-              {format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a")}? This cannot be undone.
-            </p>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingAppt(null)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
-              {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* ══ RESCHEDULE CONFIRM ══ */}
       <Dialog
         open={!!pendingMove}
@@ -1038,6 +1029,35 @@ export default function TeamAppointmentsPage() {
             <Button onClick={confirmMove} disabled={confirmingMove}>
               {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
               Confirm Reschedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══ DELETE CONFIRM ══ */}
+      <Dialog
+        open={!!deletingAppt}
+        onOpenChange={(v) => {
+          if (!v) setDeletingAppt(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Appointment?</DialogTitle>
+          </DialogHeader>
+          {deletingAppt && (
+            <p className="text-sm text-muted-foreground">
+              Remove the appointment with <strong>{(deletingAppt.case as any)?.full_name}</strong> on{" "}
+              {format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a")}? This cannot be undone.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingAppt(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
+              {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
