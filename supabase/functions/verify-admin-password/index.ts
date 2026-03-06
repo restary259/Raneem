@@ -80,15 +80,14 @@ serve(async (req) => {
       });
 
     if (signInError || !signInData?.user) {
-      // Log the failed attempt to admin_audit_log
-      await supabaseAdmin.rpc("log_activity", {
-        p_actor_id: callerId,
-        p_actor_name: callerEmail ?? "Unknown",
-        p_action: "admin_password_verify_failed",
-        p_entity_type: "admin",
-        p_entity_id: callerId,
-        p_metadata: { ip: req.headers.get("x-forwarded-for") ?? "unknown" },
-      }).catch(() => {}); // Non-fatal
+      // Log the failed attempt — non-fatal, correct column names
+      await supabaseAdmin.from("admin_audit_log").insert({
+        admin_id: callerId,
+        action: "admin_password_verify_failed",
+        target_table: "profiles",
+        target_id: callerId,
+        details: JSON.stringify({ ip: req.headers.get("x-forwarded-for") ?? "unknown" }),
+      }).catch((e: unknown) => console.warn("audit log warn:", e));
 
       return json({ error: "Wrong password" }, 401);
     }
@@ -97,24 +96,18 @@ serve(async (req) => {
     await supabaseAuth.auth.signOut().catch(() => {});
 
     // Generate a signed view token
-    // We use a simple approach: store a UUID in admin_audit_log with an expiry
-    // The client sends this token back when fetching sensitive data
     const viewToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 120_000).toISOString(); // 2 minutes
 
-    // Store the token in a lightweight way using supabase KV pattern
-    // We insert a row into admin_audit_log tagged as a view_token grant
+    // ── Non-fatal audit log (correct column names: target_table, details) ──
+    // admin_audit_log schema: admin_id, action, target_table (text), target_id (text), details (text)
     await supabaseAdmin.from("admin_audit_log").insert({
       admin_id: callerId,
       action: "view_token_issued",
-      target_type: "sensitive_profile",
+      target_table: "profiles",
       target_id: callerId,
-      metadata: {
-        view_token: viewToken,
-        expires_at: expiresAt,
-        used: false,
-      },
-    }).throwOnError();
+      details: JSON.stringify({ view_token: viewToken, expires_at: expiresAt }),
+    }).catch((e: unknown) => console.warn("audit log warn:", e));
 
     // Log the successful verification
     await supabaseAdmin.rpc("log_activity", {
