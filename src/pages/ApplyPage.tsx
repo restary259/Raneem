@@ -490,7 +490,7 @@ const ApplyPage: React.FC = () => {
                               onClick={() => setEnglishUnits(u)}
                               className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
                                 englishUnits === u
-                                  ? "bg-primary text-primary-foreground border-primary"
+                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
                                   : "bg-card border-border hover:border-primary/40"
                               }`}
                             >
@@ -498,6 +498,11 @@ const ApplyPage: React.FC = () => {
                             </button>
                           ))}
                         </div>
+                        {!englishUnits && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isAr ? "الرجاء اختيار عدد وحدات الإنجليزي" : "Please select your English units"}
+                          </p>
+                        )}
                       </FieldGroup>
                       <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                         <div className="flex gap-2">
@@ -508,7 +513,7 @@ const ApplyPage: React.FC = () => {
                               onClick={() => setMathUnits(u)}
                               className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
                                 mathUnits === u
-                                  ? "bg-primary text-primary-foreground border-primary"
+                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
                                   : "bg-card border-border hover:border-primary/40"
                               }`}
                             >
@@ -516,6 +521,11 @@ const ApplyPage: React.FC = () => {
                             </button>
                           ))}
                         </div>
+                        {!mathUnits && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isAr ? "الرجاء اختيار عدد وحدات الرياضيات" : "Please select your Math units"}
+                          </p>
+                        )}
                       </FieldGroup>
                     </>
                   )}
