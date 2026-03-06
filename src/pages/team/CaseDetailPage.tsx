@@ -224,9 +224,9 @@ export default function CaseDetailPage() {
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
       ]);
       if (caseRes.error) throw caseRes.error;
-      setCaseData(caseRes.data as Case);
+      setCaseData(caseRes.data as unknown as Case);
       setAppointments((apptRes.data as Appointment[]) ?? []);
-      setSubmission(subRes.data as Submission | null);
+      setSubmission(subRes.data as unknown as Submission | null);
       const { data: docsData } = await supabase
         .from("documents")
         .select("*")
