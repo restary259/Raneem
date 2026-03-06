@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth, AppRole } from "@/contexts/AuthContext";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import NotificationBell from "@/components/common/NotificationBell";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 import {
   SidebarProvider,

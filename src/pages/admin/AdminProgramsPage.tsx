@@ -129,7 +129,7 @@ const AdminProgramsPage = () => {
         db.from("accommodations").select("*").order("name_en"),
         db.from("insurances").select("*").order("tier"),
       ]);
-      setPrograms((pRes.data || []) as Program[]);
+      setPrograms((pRes.data || []) as unknown as Program[]);
       setSchools((sRes.data || []) as School[]);
       setAccommodations((aRes.data || []) as Accommodation[]);
       setInsurances((iRes.data || []) as Insurance[]);
