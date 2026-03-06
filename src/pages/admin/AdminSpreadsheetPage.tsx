@@ -52,7 +52,7 @@ export default function AdminSpreadsheetPage() {
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [columns, setColumns] = useState<Column[]>(ALL_COLUMNS);
-  const [filterMonth, setFilterMonth] = useState('');
+  const [filterMonth, setFilterMonth] = useState('all');
   const [showColConfig, setShowColConfig] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -107,7 +107,7 @@ export default function AdminSpreadsheetPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const activeColumns = columns.filter(c => c.selected);
-  const filteredRows = filterMonth
+  const filteredRows = filterMonth !== 'all'
     ? rows.filter(r => r.intake_month?.startsWith(filterMonth))
     : rows;
 
@@ -175,11 +175,11 @@ export default function AdminSpreadsheetPage() {
               <SelectValue placeholder="All months" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All months</SelectItem>
+              <SelectItem value="all">All months</SelectItem>
               {MONTH_OPTIONS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          {filterMonth && <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMonth('')}>Clear</Button>}
+          {filterMonth !== 'all' && <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMonth('all')}>Clear</Button>}
         </div>
         <span className="text-xs text-muted-foreground ms-auto">{filteredRows.length} students</span>
       </div>
