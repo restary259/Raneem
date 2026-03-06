@@ -1,124 +1,143 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  RefreshCw,
-  Search,
   User,
-  Loader2,
+  RefreshCw,
+  UserPlus,
   Copy,
   Check,
-  Eye,
-  EyeOff,
-  Plus,
-  GraduationCap,
-  Phone,
+  Loader2,
   Mail,
-  UserPlus,
-  CheckCircle2,
-  X,
   MessageCircle,
+  Phone,
+  ChevronRight,
+  ChevronLeft,
+  Search,
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
-/* ─── Types ─────────────────────────────────────────────────────── */
-interface StudentRecord {
+/* ─── Types ─────────────────────────────────────────────────────────── */
+interface StudentProfile {
   id: string;
   full_name: string;
   email: string;
   phone_number: string | null;
   created_at: string;
-  city: string | null;
   must_change_password: boolean;
+  city: string | null;
   created_by: string | null;
 }
-
-interface CaseMatch {
+interface MatchedCase {
   id: string;
   full_name: string;
   phone_number: string;
   status: string;
   city: string | null;
-  education_level: string | null;
+}
+interface TempCredentials {
+  email: string;
+  password: string;
+  full_name: string;
 }
 
-/* ─── Main Page ─────────────────────────────────────────────────── */
+/* ── Wizard steps ────────────────────────────────────────────────────── */
+type WizardStep = "search" | "email" | "done";
+
+/* ══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════════════ */
 export default function TeamStudentsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
 
-  const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [students, setStudents] = useState<StudentProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
 
-  /* ── Create modal state ── */
-  const [showCreate, setShowCreate] = useState(false);
+  /* ── Create Student wizard state ── */
+  const [showModal, setShowModal] = useState(false);
+  const [wizardStep, setWizardStep] = useState<WizardStep>("search");
 
-  /* Step 1: case search */
-  const [nameQuery, setNameQuery] = useState("");
-  const [caseResults, setCaseResults] = useState<CaseMatch[]>([]);
-  const [searchingCases, setSearchingCases] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<CaseMatch | null>(null);
-
-  /* Step 2: fill names */
+  // Step 1 — Search
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [familyName, setFamilyName] = useState("");
+  const [matchedCases, setMatchedCases] = useState<MatchedCase[]>([]);
+  const [selectedCase, setSelectedCase] = useState<MatchedCase | null>(null);
+  const [searching, setSearching] = useState(false);
 
-  /* Step 3: email + create */
-  const [email, setEmail] = useState("");
+  // Step 2 — Email
+  const [studentEmail, setStudentEmail] = useState("");
+
+  // Submitting
   const [creating, setCreating] = useState(false);
+  const [tempCreds, setTempCreds] = useState<TempCredentials | null>(null);
+  const [copiedPw, setCopiedPw] = useState(false);
 
-  /* Success state */
-  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
-  const [showPw, setShowPw] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  /* ── Fetch students created by this team member ── */
+  /* ── Fetch all students ─────────────────────────────────────────────
+     Strategy: query profiles directly for role=student via user_roles join,
+     then fall back to fetching all profiles that have must_change_password
+     set (i.e. were created by team) if the join returns nothing.
+     This covers cases where student accounts exist but the role row is missing.
+  ─────────────────────────────────────────────────────────────────────── */
   const fetchStudents = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     setLoading(true);
     try {
-      // Get student role users
+      // Primary: via user_roles
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("user_id")
         .eq("role", "student");
-      if (roleError) throw roleError;
 
-      const userIds = (roleData || []).map((r) => r.user_id);
-      if (userIds.length === 0) {
+      let studentIds: string[] = (roleData ?? []).map((r: any) => r.user_id);
+
+      // Fallback: if no role rows, look for profiles with student-like markers
+      if (studentIds.length === 0) {
+        const { data: fallbackProfs } = await supabase.from("profiles").select("id").eq("must_change_password", true);
+        studentIds = (fallbackProfs ?? []).map((p: any) => p.id);
+      }
+
+      if (studentIds.length === 0) {
         setStudents([]);
-        setLoading(false);
         return;
       }
 
-      // Team members see only students they created
-      const { data, error } = await supabase
+      const { data: profileData, error: profError } = await supabase
         .from("profiles")
-        .select("id, full_name, email, phone_number, created_at, city, must_change_password, created_by")
-        .in("id", userIds)
-        .eq("created_by", user.id)
+        .select("id, full_name, email, phone_number, created_at, must_change_password, city, created_by")
+        .in("id", studentIds)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setStudents((data as StudentRecord[]) ?? []);
+      if (profError) throw profError;
+      const profs = (profileData as StudentProfile[]) ?? [];
+      setStudents(profs);
+
+      // Fetch creator display names
+      const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
+      if (creatorIds.length > 0) {
+        const { data: creatorProfs } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", creatorIds);
+        const map: Record<string, string> = {};
+        (creatorProfs || []).forEach((p: any) => {
+          map[p.id] = p.full_name || p.email;
+        });
+        setCreatorNames(map);
+      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -130,102 +149,72 @@ export default function TeamStudentsPage() {
     fetchStudents();
   }, [fetchStudents]);
 
-  /* ── Case search as user types name ── */
-  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleNameQueryChange = (val: string) => {
-    setNameQuery(val);
-    setSelectedCase(null);
-    if (searchDebounce.current) clearTimeout(searchDebounce.current);
-    if (val.trim().length < 2) {
-      setCaseResults([]);
+  /* ── Debounced case search as user types ─────────────────────────── */
+  useEffect(() => {
+    const fullName = [firstName, middleName, familyName].filter(Boolean).join(" ").trim();
+    if (fullName.length < 2) {
+      setMatchedCases([]);
       return;
     }
-    setSearchingCases(true);
-    searchDebounce.current = setTimeout(async () => {
-      try {
-        const { data } = await supabase
-          .from("cases")
-          .select("id, full_name, phone_number, status, city, education_level")
-          .ilike("full_name", `%${val.trim()}%`)
-          .eq("assigned_to", user!.id)
-          .is("student_user_id", null)
-          .limit(8);
-        setCaseResults((data as CaseMatch[]) ?? []);
-      } catch {
-        setCaseResults([]);
-      } finally {
-        setSearchingCases(false);
-      }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("cases")
+        .select("id, full_name, phone_number, status, city")
+        .ilike("full_name", `%${fullName}%`)
+        .limit(8);
+      setMatchedCases((data as MatchedCase[]) ?? []);
+      setSearching(false);
     }, 350);
-  };
+    return () => clearTimeout(t);
+  }, [firstName, middleName, familyName]);
 
-  /* Select a case → pre-fill name parts */
-  const selectCase = (c: CaseMatch) => {
-    setSelectedCase(c);
-    setCaseResults([]);
-    setNameQuery(c.full_name);
-    // Split full_name into parts
-    const parts = c.full_name.trim().split(/\s+/);
-    setFirstName(parts[0] ?? "");
-    setMiddleName(parts.length === 3 ? parts[1] : "");
-    setLastName(parts.length >= 2 ? parts[parts.length - 1] : "");
-  };
-
-  /* Reset modal */
-  const resetModal = () => {
-    setNameQuery("");
-    setCaseResults([]);
-    setSelectedCase(null);
+  /* ── Reset wizard ────────────────────────────────────────────────── */
+  const resetWizard = () => {
+    setWizardStep("search");
     setFirstName("");
     setMiddleName("");
-    setLastName("");
-    setEmail("");
-    setCredentials(null);
-    setShowPw(false);
-    setCopied(false);
+    setFamilyName("");
+    setMatchedCases([]);
+    setSelectedCase(null);
+    setStudentEmail("");
+    setCreating(false);
   };
 
-  const openCreate = () => {
-    resetModal();
-    setShowCreate(true);
-  };
-
-  /* ── Create account ── */
-  const handleCreate = async () => {
-    const full = [firstName.trim(), middleName.trim(), lastName.trim()].filter(Boolean).join(" ");
-    if (!full) {
-      toast({ variant: "destructive", description: "Please enter at least a first and last name." });
+  /* ── Create account ──────────────────────────────────────────────── */
+  const handleCreateAccount = async () => {
+    const email = studentEmail.trim();
+    if (!email || !email.includes("@")) {
+      toast({ variant: "destructive", description: "A valid email address is required." });
       return;
     }
-    if (!email.trim() || !email.includes("@")) {
-      toast({ variant: "destructive", description: "Please enter a valid email address." });
+    const fullName = [firstName.trim(), middleName.trim(), familyName.trim()].filter(Boolean).join(" ");
+    if (!fullName) {
+      toast({ variant: "destructive", description: "Student name is required." });
       return;
     }
-
     setCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-standalone`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session!.access_token}`,
-          },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            full_name: full,
-            case_id: selectedCase?.id ?? null,
-            created_by: user!.id,
-          }),
-        }
-      );
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
+        body: JSON.stringify({
+          case_id: selectedCase?.id ?? null,
+          student_email: email,
+          student_full_name: fullName,
+          student_phone: selectedCase?.phone_number ?? null,
+          force_temp_password: true,
+        }),
+      });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || "Failed to create account");
 
-      setCredentials({ email: email.trim().toLowerCase(), password: result.temp_password });
+      setTempCreds({ email, password: result.temp_password, full_name: fullName });
+      setShowModal(false);
+      resetWizard();
       fetchStudents();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -234,112 +223,77 @@ export default function TeamStudentsPage() {
     }
   };
 
-  const copyCredentials = async () => {
-    if (!credentials) return;
-    const waMsg = isRtl
-      ? `مرحباً ${[firstName, lastName].filter(Boolean).join(" ")} 👋\n\nتم إنشاء حسابك في منصة DARB.\n\n📧 البريد الإلكتروني: ${credentials.email}\n🔐 كلمة المرور المؤقتة: ${credentials.password}\n\nيرجى تسجيل الدخول وتغيير كلمة المرور فور الدخول.\n\nرابط الدخول: https://darb-agency.lovable.app/student-auth`
-      : `Hello ${[firstName, lastName].filter(Boolean).join(" ")} 👋\n\nYour DARB account has been created.\n\n📧 Email: ${credentials.email}\n🔐 Temporary Password: ${credentials.password}\n\nPlease log in and change your password immediately.\n\nLogin: https://darb-agency.lovable.app/student-auth`;
-    await navigator.clipboard.writeText(waMsg);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const filtered = students.filter((s) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      s.full_name?.toLowerCase().includes(q) ||
-      s.email?.toLowerCase().includes(q) ||
-      (s.phone_number || "").includes(q)
-    );
-  });
-
-  /* ─── RENDER ─────────────────────────────────────────────────── */
+  /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="p-6 space-y-5 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">
-            {isRtl ? "طلابي" : "My Students"}
-          </h1>
-          <Badge variant="secondary" className="text-xs">
-            {students.length}
-          </Badge>
-        </div>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h1 className="text-xl font-bold">{isRtl ? "الطلاب" : "Students"}</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
+          <Button variant="outline" size="sm" onClick={fetchStudents} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
-            {isRtl ? "تحديث" : "Refresh"}
           </Button>
-          <Button size="sm" onClick={openCreate} className="gap-2">
-            <UserPlus className="h-4 w-4" />
+          <Button
+            size="sm"
+            onClick={() => {
+              resetWizard();
+              setShowModal(true);
+            }}
+          >
+            <UserPlus className="h-4 w-4 me-1" />
             {isRtl ? "إنشاء حساب طالب" : "Create Student Account"}
           </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder={isRtl ? "بحث بالاسم أو البريد..." : "Search by name or email..."}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="ps-9"
-        />
-      </div>
-
-      {/* List */}
+      {/* Student list */}
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
-          ))}
+        <div className="flex items-center justify-center h-32">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium mb-1">{isRtl ? "لا يوجد طلاب" : "No students yet"}</p>
-          <p className="text-sm">
-            {isRtl ? "انقر على «إنشاء حساب طالب» للبدء" : "Click «Create Student Account» to get started"}
-          </p>
+      ) : students.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-center">
+          <User className="h-10 w-10 mb-3 opacity-30" />
+          <p className="text-sm">{isRtl ? "لا يوجد طلاب بعد" : "No student accounts yet"}</p>
+          <p className="text-xs mt-1">{isRtl ? "أنشئ حساب طالب أولاً" : "Create a student account to get started"}</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((s) => (
-            <Card key={s.id} className="border-border hover:shadow-sm transition-shadow">
-              <CardContent className="p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <User className="h-4 w-4 text-primary" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {students.map((s) => (
+            <Card key={s.id} className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{s.full_name || s.email}</p>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {s.email}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{s.full_name}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Mail className="h-3 w-3" />
+                      {s.email}
+                    </p>
+                    {s.phone_number && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {s.phone_number}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {s.must_change_password && (
+                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                          Temp Password
+                        </Badge>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
                       </span>
-                      {s.phone_number && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {s.phone_number}
+                      {s.created_by && (
+                        <span className="text-[10px] text-muted-foreground">
+                          · By: {creatorNames[s.created_by] || s.created_by.slice(0, 8) + "…"}
                         </span>
                       )}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {s.must_change_password && (
-                    <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50">
-                      {isRtl ? "بانتظار تغيير كلمة المرور" : "Awaiting PW change"}
-                    </Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(s.created_at), "dd MMM yyyy")}
-                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -347,219 +301,263 @@ export default function TeamStudentsPage() {
         </div>
       )}
 
-      {/* ── Create Student Account Dialog ── */}
+      {/* ══════════════════════════════════════════════════════════════
+          CREATE STUDENT WIZARD MODAL
+      ══════════════════════════════════════════════════════════════ */}
       <Dialog
-        open={showCreate}
-        onOpenChange={(open) => {
-          if (!open) { resetModal(); setShowCreate(false); }
+        open={showModal}
+        onOpenChange={(v) => {
+          setShowModal(v);
+          if (!v) resetWizard();
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-primary" />
-              {isRtl ? "إنشاء حساب طالب" : "Create Student Account"}
+              <UserPlus className="h-5 w-5" />
+              Create Student Account
             </DialogTitle>
           </DialogHeader>
 
-          {credentials ? (
-            /* ── SUCCESS STATE ── */
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-2 text-emerald-600">
-                <CheckCircle2 className="h-5 w-5" />
-                <p className="font-semibold">{isRtl ? "تم إنشاء الحساب بنجاح!" : "Account created successfully!"}</p>
-              </div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground">{isRtl ? "البريد الإلكتروني" : "Email"}</Label>
-                  <p className="font-mono text-sm mt-0.5">{credentials.email}</p>
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">{isRtl ? "كلمة المرور المؤقتة" : "Temporary Password"}</Label>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <p className="font-mono text-sm flex-1">
-                      {showPw ? credentials.password : "•".repeat(credentials.password.length)}
-                    </p>
-                    <button onClick={() => setShowPw(!showPw)} className="text-muted-foreground hover:text-foreground">
-                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                  {isRtl
-                    ? "⚠️ سيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول"
-                    : "⚠️ Student will be required to change password on first login"}
-                </p>
-              </div>
-              <Button className="w-full gap-2" variant="outline" onClick={copyCredentials}>
-                {copied
-                  ? <><Check className="h-4 w-4 text-emerald-600" />{isRtl ? "تم النسخ!" : "Copied!"}</>
-                  : <><MessageCircle className="h-4 w-4" />{isRtl ? "نسخ رسالة واتساب" : "Copy WhatsApp Message"}</>
-                }
-              </Button>
-              <Button
-                className="w-full"
-                onClick={() => { resetModal(); setShowCreate(false); }}
-              >
-                {isRtl ? "إغلاق" : "Done"}
-              </Button>
-            </div>
-          ) : (
-            /* ── FORM STATE ── */
-            <div className="space-y-5 py-2">
-              {/* Step 1: Case Search */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">
-                  {isRtl ? "١. ابحث عن القضية (اختياري)" : "1. Search for a Case (Optional)"}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {isRtl
-                    ? "اكتب اسم الطالب للبحث في قضاياك المعيّنة وسيتم ملء البيانات تلقائياً"
-                    : "Type the student's name to search your assigned cases — data will auto-fill"}
-                </p>
-                <div className="relative">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="ps-9 pe-9"
-                    placeholder={isRtl ? "ابحث باسم الطالب..." : "Search student name..."}
-                    value={nameQuery}
-                    onChange={(e) => handleNameQueryChange(e.target.value)}
-                  />
-                  {searchingCases && (
-                    <Loader2 className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                  )}
-                  {selectedCase && !searchingCases && (
-                    <button
-                      onClick={() => { setSelectedCase(null); setNameQuery(""); setCaseResults([]); setFirstName(""); setMiddleName(""); setLastName(""); }}
-                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
+          {/* Step indicator */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+            {(["search", "email"] as WizardStep[]).map((s, i) => (
+              <React.Fragment key={s}>
+                <span className={wizardStep === s ? "text-primary font-semibold" : ""}>
+                  {i + 1}. {s === "search" ? "Find Case" : "Set Email"}
+                </span>
+                {i < 1 && <ChevronRight className="h-3 w-3" />}
+              </React.Fragment>
+            ))}
+          </div>
 
-                {/* Case dropdown results */}
-                {caseResults.length > 0 && !selectedCase && (
-                  <div className="border rounded-xl shadow-sm overflow-hidden bg-background">
-                    {caseResults.map((c) => (
+          {/* ── Step 1: Search & select case ── */}
+          {wizardStep === "search" && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the student's name to search for a matching case. Selecting a case will import all profile data
+                automatically.
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">First Name *</Label>
+                  <Input
+                    className="mt-1"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Ahmad"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Middle Name</Label>
+                  <Input
+                    className="mt-1"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    placeholder="Ali"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Family Name *</Label>
+                  <Input
+                    className="mt-1"
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                    placeholder="Hassan"
+                  />
+                </div>
+              </div>
+
+              {/* Live search results */}
+              {searching && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Searching cases…
+                </div>
+              )}
+              {!searching && matchedCases.length > 0 && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
+                    <Search className="h-3 w-3" /> {matchedCases.length} matching case(s) — select to link:
+                  </Label>
+                  <div className="space-y-2 max-h-44 overflow-y-auto rounded-md border border-border p-2">
+                    {matchedCases.map((c) => (
                       <button
                         key={c.id}
-                        className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-start border-b last:border-0"
-                        onClick={() => selectCase(c)}
+                        onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
+                        className={`w-full text-left p-2 rounded-md text-sm transition-colors border ${selectedCase?.id === c.id ? "bg-primary/10 border-primary text-primary" : "border-border hover:bg-muted"}`}
                       >
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <User className="h-3.5 w-3.5 text-primary" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm">{c.full_name}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-muted-foreground">{c.phone_number}</span>
-                            {c.city && <span className="text-xs text-muted-foreground">· {c.city}</span>}
-                            <Badge variant="outline" className="text-xs h-4 px-1">{c.status}</Badge>
-                          </div>
-                        </div>
+                        <span className="font-medium">{c.full_name}</span>
+                        <span className="text-xs text-muted-foreground ms-2">{c.phone_number}</span>
+                        <Badge variant="secondary" className="ms-2 text-xs">
+                          {c.status.replace(/_/g, " ")}
+                        </Badge>
                       </button>
                     ))}
                   </div>
-                )}
-
-                {/* Selected case chip */}
-                {selectedCase && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-primary">{selectedCase.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{selectedCase.phone_number} · Case ID: {selectedCase.id.slice(0, 8)}…</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Step 2: Name fields */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">
-                  {isRtl ? "٢. اسم الطالب (كما في جواز السفر)" : "2. Student Name (as in passport)"}
-                </Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">{isRtl ? "الاسم الأول" : "First"}</Label>
-                    <Input
-                      className="mt-1"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder={isRtl ? "الأول" : "First"}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">{isRtl ? "الأوسط" : "Middle"}</Label>
-                    <Input
-                      className="mt-1"
-                      value={middleName}
-                      onChange={(e) => setMiddleName(e.target.value)}
-                      placeholder={isRtl ? "الأوسط" : "Middle"}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">{isRtl ? "الأخير" : "Last"}</Label>
-                    <Input
-                      className="mt-1"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder={isRtl ? "الأخير" : "Last"}
-                    />
-                  </div>
+                  {selectedCase && (
+                    <p className="text-xs text-emerald-600 mt-1">✓ Case selected — profile data will be imported</p>
+                  )}
                 </div>
-                {(firstName || lastName) && (
-                  <p className="text-xs text-muted-foreground">
-                    {isRtl ? "الاسم الكامل:" : "Full name:"}{" "}
-                    <span className="font-medium text-foreground">
-                      {[firstName, middleName, lastName].filter(Boolean).join(" ")}
-                    </span>
-                  </p>
-                )}
-              </div>
+              )}
+              {!searching && firstName.length >= 2 && matchedCases.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No matching cases found. Account will be created without case link.
+                </p>
+              )}
 
-              {/* Step 3: Email */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">
-                  {isRtl ? "٣. البريد الإلكتروني" : "3. Email Address"}
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    className="ps-9"
-                    placeholder="student@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs text-muted-foreground bg-muted/60 rounded-lg p-3">
-                {isRtl
-                  ? "سيتم إنشاء كلمة مرور مؤقتة وسيُطلب من الطالب تغييرها عند أول تسجيل دخول."
-                  : "A temporary password will be generated. The student will be required to change it on first login."}
-              </p>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setShowModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => setWizardStep("email")} disabled={!firstName.trim() || !familyName.trim()}>
+                  Next <ChevronRight className="h-4 w-4 ms-1" />
+                </Button>
+              </DialogFooter>
             </div>
           )}
 
-          {!credentials && (
-            <DialogFooter>
+          {/* ── Step 2: Enter personal email ── */}
+          {wizardStep === "email" && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the student's <strong>personal email address</strong>. They will use this to log in.
+              </p>
+
+              {selectedCase && (
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
+                  <p className="font-medium text-emerald-800">✓ Linked to case: {selectedCase.full_name}</p>
+                  <p className="text-xs text-emerald-700 mt-0.5">Profile data will be imported automatically.</p>
+                </div>
+              )}
+
+              <div>
+                <Label>Student Email *</Label>
+                <Input
+                  className="mt-1"
+                  type="email"
+                  value={studentEmail}
+                  onChange={(e) => setStudentEmail(e.target.value)}
+                  placeholder="student@gmail.com"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && studentEmail.includes("@")) handleCreateAccount();
+                  }}
+                />
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted text-xs space-y-1 text-muted-foreground">
+                <p className="font-medium text-foreground">What happens next:</p>
+                <p>• A student account is created with this email</p>
+                <p>• A secure temporary password is generated</p>
+                <p>
+                  • The student <strong>must change their password</strong> on first login
+                </p>
+                {selectedCase && <p>• All case data is imported into their profile</p>}
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setWizardStep("search")}>
+                  <ChevronLeft className="h-4 w-4 me-1" /> Back
+                </Button>
+                <Button
+                  onClick={handleCreateAccount}
+                  disabled={creating || !studentEmail.trim() || !studentEmail.includes("@")}
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin me-1" /> Creating…
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Temp credentials result ── */}
+      <Dialog open={!!tempCreds} onOpenChange={() => setTempCreds(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>✅ Student Account Created</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Share these credentials with the student. The password will <strong>not</strong> be shown again. The
+              student must change it on first login.
+            </p>
+            {tempCreds && (
+              <div className="space-y-2">
+                <div className="p-3 rounded-lg bg-muted text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Student</p>
+                  <p className="font-semibold">{tempCreds.full_name}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted font-mono text-sm space-y-1">
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <div className="flex items-center gap-2">
+                    <p className="flex-1 break-all">{tempCreds.email}</p>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(tempCreds.email)}
+                      className="shrink-0 p-1 rounded hover:bg-border"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 font-mono text-sm space-y-1">
+                  <p className="text-xs text-amber-700">Temporary Password (show once)</p>
+                  <div className="flex items-center gap-2">
+                    <p className="flex-1 break-all select-all text-amber-900 font-bold">{tempCreds.password}</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(tempCreds.password);
+                        setCopiedPw(true);
+                        setTimeout(() => setCopiedPw(false), 2000);
+                      }}
+                      className="shrink-0 p-1 rounded hover:bg-amber-100"
+                    >
+                      {copiedPw ? (
+                        <Check className="h-3.5 w-3.5 text-green-600" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5 text-amber-700" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => { resetModal(); setShowCreate(false); }}
-                disabled={creating}
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  if (tempCreds)
+                    navigator.clipboard.writeText(`Email: ${tempCreds.email}\nPassword: ${tempCreds.password}`);
+                }}
               >
-                {isRtl ? "إلغاء" : "Cancel"}
+                <Copy className="h-4 w-4 me-1" /> Copy Both
               </Button>
-              <Button onClick={handleCreate} disabled={creating} className="gap-2">
-                {creating && <Loader2 className="h-4 w-4 animate-spin" />}
-                <Plus className="h-4 w-4" />
-                {isRtl ? "إنشاء الحساب" : "Create Account"}
+              <Button
+                size="sm"
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  if (!tempCreds) return;
+                  const msg = encodeURIComponent(
+                    `مرحبا ${tempCreds.full_name},\nبيانات تسجيل الدخول:\n🔗 darb.agency/student-auth\n📧 ${tempCreds.email}\n🔑 ${tempCreds.password}\nيرجى تغيير كلمة المرور عند أول دخول.`,
+                  );
+                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                }}
+              >
+                <MessageCircle className="h-4 w-4 me-1" /> WhatsApp
               </Button>
-            </DialogFooter>
-          )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setTempCreds(null)}>Done</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
