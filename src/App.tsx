@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -27,86 +26,86 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 
 // Lazy-loaded public pages
-const PartnershipPage = lazy(() => import('./pages/PartnershipPage'));
-const EducationalProgramsPage = lazy(() => import('./pages/EducationalProgramsPage'));
-const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
-const BroadcastPage = lazy(() => import('./pages/BroadcastPage'));
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
-const QuizPage = lazy(() => import('./pages/QuizPage'));
-const AIAdvisorPage = lazy(() => import('./pages/AIAdvisorPage'));
-const CostCalculatorPage = lazy(() => import('./pages/CostCalculatorPage'));
-const CurrencyConverterPage = lazy(() => import('./pages/CurrencyConverterPage'));
-const BagrutCalculatorPage = lazy(() => import('./pages/BagrutCalculatorPage'));
-const LebenslaufBuilderPage = lazy(() => import('./pages/LebenslaufBuilderPage'));
-const ApplyPage = lazy(() => import('./pages/ApplyPage'));
+const PartnershipPage = lazy(() => import("./pages/PartnershipPage"));
+const EducationalProgramsPage = lazy(() => import("./pages/EducationalProgramsPage"));
+const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const BroadcastPage = lazy(() => import("./pages/BroadcastPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const QuizPage = lazy(() => import("./pages/QuizPage"));
+const AIAdvisorPage = lazy(() => import("./pages/AIAdvisorPage"));
+const CostCalculatorPage = lazy(() => import("./pages/CostCalculatorPage"));
+const CurrencyConverterPage = lazy(() => import("./pages/CurrencyConverterPage"));
+const BagrutCalculatorPage = lazy(() => import("./pages/BagrutCalculatorPage"));
+const LebenslaufBuilderPage = lazy(() => import("./pages/LebenslaufBuilderPage"));
+const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 
 // Lazy-loaded Admin pages
-const AdminStudentsPage = lazy(() => import('./pages/admin/AdminStudentsPage'));
-const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const AdminCommandCenter = lazy(() => import('./pages/admin/AdminCommandCenter'));
-const AdminPipelinePage = lazy(() => import('./pages/admin/AdminPipelinePage'));
-const AdminTeamPage = lazy(() => import('./pages/admin/AdminTeamPage'));
-const AdminProgramsPage = lazy(() => import('./pages/admin/AdminProgramsPage'));
-const AdminSubmissionsPage = lazy(() => import('./pages/admin/AdminSubmissionsPage'));
-const AdminFinancialsPage = lazy(() => import('./pages/admin/AdminFinancialsPage'));
-const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
-const AdminActivityPage = lazy(() => import('./pages/admin/AdminActivityPage'));
-const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
-
+const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AdminCommandCenter = lazy(() => import("./pages/admin/AdminCommandCenter"));
+const AdminPipelinePage = lazy(() => import("./pages/admin/AdminPipelinePage"));
+const AdminTeamPage = lazy(() => import("./pages/admin/AdminTeamPage"));
+const AdminProgramsPage = lazy(() => import("./pages/admin/AdminProgramsPage"));
+const AdminSubmissionsPage = lazy(() => import("./pages/admin/AdminSubmissionsPage"));
+const AdminFinancialsPage = lazy(() => import("./pages/admin/AdminFinancialsPage"));
+const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
+const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminSpreadsheetPage = lazy(() => import("./pages/admin/AdminSpreadsheetPage"));
 // Team pages (Phase 3)
-const TeamTodayPage = lazy(() => import('./pages/team/TeamTodayPage'));
-const TeamCasesPage = lazy(() => import('./pages/team/TeamCasesPage'));
-const CaseDetailPage = lazy(() => import('./pages/team/CaseDetailPage'));
-const TeamAppointmentsPage = lazy(() => import('./pages/team/TeamAppointmentsPage'));
-const SubmitNewStudentPage = lazy(() => import('./pages/team/SubmitNewStudentPage'));
-const TeamStudentsPage = lazy(() => import('./pages/team/TeamStudentsPage'));
-const TeamStudentProfilePage = lazy(() => import('./pages/team/TeamStudentProfilePage'));
-const TeamAnalyticsPage = lazy(() => import('./pages/team/TeamAnalyticsPage'));
+const TeamTodayPage = lazy(() => import("./pages/team/TeamTodayPage"));
+const TeamCasesPage = lazy(() => import("./pages/team/TeamCasesPage"));
+const CaseDetailPage = lazy(() => import("./pages/team/CaseDetailPage"));
+const TeamAppointmentsPage = lazy(() => import("./pages/team/TeamAppointmentsPage"));
+const SubmitNewStudentPage = lazy(() => import("./pages/team/SubmitNewStudentPage"));
+const TeamStudentsPage = lazy(() => import("./pages/team/TeamStudentsPage"));
+const TeamStudentProfilePage = lazy(() => import("./pages/team/TeamStudentProfilePage"));
+const TeamAnalyticsPage = lazy(() => import("./pages/team/TeamAnalyticsPage"));
 
 // Partner pages (Phase 5)
-const PartnerOverviewPage = lazy(() => import('./pages/partner/PartnerOverviewPage'));
-const PartnerLinkPage = lazy(() => import('./pages/partner/PartnerLinkPage'));
-const PartnerStudentsPage = lazy(() => import('./pages/partner/PartnerStudentsPage'));
-const PartnerEarningsPage = lazy(() => import('./pages/partner/PartnerEarningsPage'));
+const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
+const PartnerLinkPage = lazy(() => import("./pages/partner/PartnerLinkPage"));
+const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPage"));
+const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
 
 // Student pages (Phase 5)
-const StudentChecklistPage = lazy(() => import('./pages/student/StudentChecklistPage'));
-const StudentProfilePage = lazy(() => import('./pages/student/StudentProfilePage'));
-const StudentDocumentsPage = lazy(() => import('./pages/student/StudentDocumentsPage'));
-const StudentVisaPage = lazy(() => import('./pages/student/StudentVisaPage'));
-const StudentReferPage = lazy(() => import('./pages/student/StudentReferPage'));
-const StudentContactsPage = lazy(() => import('./pages/student/StudentContactsPage'));
+const StudentChecklistPage = lazy(() => import("./pages/student/StudentChecklistPage"));
+const StudentProfilePage = lazy(() => import("./pages/student/StudentProfilePage"));
+const StudentDocumentsPage = lazy(() => import("./pages/student/StudentDocumentsPage"));
+const StudentVisaPage = lazy(() => import("./pages/student/StudentVisaPage"));
+const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
+const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useSessionTimeout();
-  
+
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation("dashboard");
 
   // Global safety net for unhandled promise rejections
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled promise rejection:', event.reason);
+      console.error("Unhandled promise rejection:", event.reason);
       event.preventDefault();
     };
-    window.addEventListener('unhandledrejection', handler);
-    return () => window.removeEventListener('unhandledrejection', handler);
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
   }, []);
 
   useEffect(() => {
-    const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    const dir = i18n.language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = dir;
-    
+
     registerServiceWorker();
 
     // SPA Redirect for original Lovable URL
-    const redirectPath = sessionStorage.getItem('redirectPath');
+    const redirectPath = sessionStorage.getItem("redirectPath");
     if (redirectPath) {
-      sessionStorage.removeItem('redirectPath');
+      sessionStorage.removeItem("redirectPath");
       const searchParams = new URLSearchParams(location.search);
       const queryString = searchParams.toString();
       const fullPath = queryString ? `${redirectPath}?${queryString}` : redirectPath;
@@ -119,16 +118,17 @@ const App = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  const dir = i18n.language === "ar" ? "rtl" : "ltr";
 
   // Hide all distractions on the apply page
-  const isApplyPage = location.pathname === '/apply';
+  const isApplyPage = location.pathname === "/apply";
 
   // Paths that use DashboardLayout (no bottom nav / chat)
-  const isDashboardPath = location.pathname.startsWith('/admin') ||
-    location.pathname.startsWith('/team') ||
-    location.pathname.startsWith('/partner') ||
-    location.pathname.startsWith('/student');
+  const isDashboardPath =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/team") ||
+    location.pathname.startsWith("/partner") ||
+    location.pathname.startsWith("/student");
 
   return (
     <TooltipProvider>
@@ -165,7 +165,7 @@ const App = () => {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <DashboardLayout role="admin" />
                 </ProtectedRoute>
               }
@@ -186,7 +186,7 @@ const App = () => {
             <Route
               path="/team"
               element={
-                <ProtectedRoute allowedRoles={['team_member']}>
+                <ProtectedRoute allowedRoles={["team_member"]}>
                   <DashboardLayout role="team_member" />
                 </ProtectedRoute>
               }
@@ -206,7 +206,7 @@ const App = () => {
             <Route
               path="/partner"
               element={
-                <ProtectedRoute allowedRoles={['social_media_partner']}>
+                <ProtectedRoute allowedRoles={["social_media_partner"]}>
                   <DashboardLayout role="social_media_partner" />
                 </ProtectedRoute>
               }
@@ -221,7 +221,7 @@ const App = () => {
             <Route
               path="/student"
               element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={["student"]}>
                   <DashboardLayout role="student" />
                 </ProtectedRoute>
               }
@@ -251,7 +251,7 @@ const App = () => {
       </div>
     </TooltipProvider>
   );
-}
+};
 
 const AppWithProviders = () => (
   <QueryClientProvider client={queryClient}>
