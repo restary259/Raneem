@@ -1,25 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format, differenceInYears } from 'date-fns';
-import { CalendarIcon, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format, differenceInYears, addMonths } from "date-fns";
+import { CalendarIcon, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
-interface Program { id: string; name_en: string; name_ar: string; type: string; }
-interface Accommodation { id: string; name_en: string; name_ar: string; price: number | null; currency: string; }
-
-const PREFERRED_SUBJECTS = ['math', 'english', 'science', 'german', 'arabic', 'computer_science', 'art', 'other'];
-const ACCOMMODATION_TYPES = ['single', 'double', 'hall'];
-const ACCOMMODATION_CATEGORIES = ['A', 'B+', 'B', 'C', 'D', 'E'];
+interface Program {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  type: string;
+  duration_in_months: number | null;
+  fixed_start_day_of_month: number | null;
+  lessons_per_week: number | null;
+  price: number | null;
+  currency: string;
+}
+interface School {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  city: string | null;
+}
+interface Accommodation {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  price: number | null;
+  currency: string;
+  school_id: string | null;
+}
+interface Insurance {
+  id: string;
+  name: string;
+  tier: string;
+  price: number;
+  currency: string;
+}
 
 interface CaseData {
   city?: string | null;
@@ -41,74 +65,118 @@ interface Props {
   onSuccess: () => void;
 }
 
-type FormStep = 'a' | 'b';
+type FormStep = "a" | "b";
 
-export default function ProfileCompletionForm({ caseId, actorId, actorName, existingData, caseData: cd, onSuccess }: Props) {
+export default function ProfileCompletionForm({
+  caseId,
+  actorId,
+  actorName,
+  existingData,
+  caseData: cd,
+  onSuccess,
+}: Props) {
   const { toast } = useToast();
-  const { i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { i18n } = useTranslation("dashboard");
+  const isAr = i18n.language === "ar";
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [insurances, setInsurances] = useState<Insurance[]>([]);
   const [saving, setSaving] = useState(false);
-  const [formStep, setFormStep] = useState<FormStep>('a');
+  const [formStep, setFormStep] = useState<FormStep>("a");
 
-  // Section A — Student Identity (pre-fill from case row if available)
   const ex = existingData ?? {};
-  const [firstName, setFirstName] = useState((ex.first_name as string) ?? '');
-  const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? '');
-  const [lastName, setLastName] = useState((ex.last_name as string) ?? '');
-  const [email, setEmail] = useState((ex.student_email as string) ?? '');
-  const [phone, setPhone] = useState((ex.student_phone as string) ?? '');
-  const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? '');
-  const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? '');
-  const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? '');
-  const [street, setStreet] = useState((ex.street as string) ?? '');
-  const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? '');
-  const [postcode, setPostcode] = useState((ex.postcode as string) ?? '');
-  // Pre-fill city from case row if not in existingData
-  const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? '');
+
+  // Section A — Student Identity
+  const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
+  const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
+  const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
+  const [email, setEmail] = useState((ex.student_email as string) ?? "");
+  const [phone, setPhone] = useState((ex.student_phone as string) ?? "");
+  const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
+  const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? "");
+  const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
+  const [street, setStreet] = useState((ex.street as string) ?? "");
+  const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? "");
+  const [postcode, setPostcode] = useState((ex.postcode as string) ?? "");
+  const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? "");
   const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
-  const [gender, setGender] = useState((ex.gender as string) ?? '');
+  const [gender, setGender] = useState((ex.gender as string) ?? "");
 
   // Section B — Program & Accommodation
-  const [programId, setProgramId] = useState((ex.program_id as string) ?? '');
-  const [school, setSchool] = useState((ex.school as string) ?? '');
-  const [arrivalDate, setArrivalDate] = useState<Date | undefined>(ex.arrival_date ? new Date(ex.arrival_date as string) : undefined);
-  const [courseStart, setCourseStart] = useState<Date | undefined>(ex.course_start ? new Date(ex.course_start as string) : undefined);
-  const [courseEnd, setCourseEnd] = useState<Date | undefined>(ex.course_end ? new Date(ex.course_end as string) : undefined);
-  const [accommodationType, setAccommodationType] = useState((ex.accommodation_type as string) ?? '');
-  const [accommodationCategory, setAccommodationCategory] = useState((ex.accommodation_category as string) ?? '');
-  const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? '');
-  const [preferredSubjects, setPreferredSubjects] = useState<string[]>((ex.preferred_subjects as string[]) ?? []);
-  const [serviceFee, setServiceFee] = useState((ex.service_fee as string) ?? '');
+  const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
+  const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
+  const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
+  const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
+  const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
+    ex.arrival_date ? new Date(ex.arrival_date as string) : undefined,
+  );
+  const [courseStart, setCourseStart] = useState<Date | undefined>(
+    ex.course_start ? new Date(ex.course_start as string) : undefined,
+  );
+  const [courseEnd, setCourseEnd] = useState<Date | undefined>(
+    ex.course_end ? new Date(ex.course_end as string) : undefined,
+  );
+  const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
 
   const age = dob ? differenceInYears(new Date(), dob) : null;
-  const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+  const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
+
+  // Derived: filter accommodations by selected school
+  const filteredAccommodations = accommodations.filter((a) => a.school_id === schoolId);
+
+  // Derived: selected program
+  const selectedProgram = programs.find((p) => p.id === programId);
+  const selectedAccom = accommodations.find((a) => a.id === accommodationId);
+  const selectedIns = insurances.find((i) => i.id === insuranceId);
+
+  // Auto end date calculation
+  useEffect(() => {
+    if (selectedProgram?.duration_in_months && courseStart) {
+      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
+    }
+  }, [selectedProgram, courseStart]);
+
+  // Auto start date from fixed_start_day + startMonth
+  useEffect(() => {
+    if (selectedProgram?.fixed_start_day_of_month && startMonth) {
+      const [y, m] = startMonth.split("-").map(Number);
+      const d = new Date(y, m - 1, selectedProgram.fixed_start_day_of_month);
+      setCourseStart(d);
+    }
+  }, [selectedProgram, startMonth]);
+
+  // Reset accommodation when school changes
+  useEffect(() => {
+    setAccommodationId("");
+  }, [schoolId]);
 
   useEffect(() => {
     Promise.all([
-      supabase.from('programs').select('id, name_en, name_ar, type').eq('is_active', true).order('name_en'),
-      supabase.from('accommodations').select('id, name_en, name_ar, price, currency').eq('is_active', true),
-    ]).then(([{ data: progs }, { data: accs }]) => {
+      supabase
+        .from("programs")
+        .select(
+          "id, name_en, name_ar, type, duration_in_months, fixed_start_day_of_month, lessons_per_week, price, currency",
+        )
+        .eq("is_active", true)
+        .order("name_en"),
+      supabase.from("schools").select("id, name_en, name_ar, city").eq("is_active", true).order("name_en"),
+      supabase.from("accommodations").select("id, name_en, name_ar, price, currency, school_id").eq("is_active", true),
+      supabase.from("insurances").select("id, name, tier, price, currency").eq("is_active", true).order("tier"),
+    ]).then(([{ data: progs }, { data: schs }, { data: accs }, { data: ins }]) => {
       setPrograms(progs ?? []);
+      setSchools(schs ?? []);
       setAccommodations(accs ?? []);
+      setInsurances(ins ?? []);
     });
   }, []);
 
-  const toggleSubject = (s: string) =>
-    setPreferredSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-
-  const validateSectionA = () => {
-    if (!firstName.trim() || !lastName.trim()) {
-      toast({ variant: 'destructive', description: isAr ? 'الاسم الأول والأخير مطلوبان' : 'First and last name are required' });
-      return false;
-    }
-    return true;
-  };
-
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
-      toast({ variant: 'destructive', description: isAr ? 'الاسم الأول والأخير مطلوبان' : 'First and last name are required' });
+      toast({
+        variant: "destructive",
+        description: isAr ? "الاسم الأول والأخير مطلوبان" : "First and last name are required",
+      });
       return;
     }
     setSaving(true);
@@ -122,314 +190,490 @@ export default function ProfileCompletionForm({ caseId, actorId, actorName, exis
         emergency_contact_name: emergencyName,
         emergency_contact_phone: emergencyPhone,
         city_of_birth: cityOfBirth,
-        street, house_no: houseNo, postcode, city,
-        date_of_birth: dob ? format(dob, 'yyyy-MM-dd') : null,
+        street,
+        house_no: houseNo,
+        postcode,
+        city,
+        date_of_birth: dob ? format(dob, "yyyy-MM-dd") : null,
         age,
         gender,
         program_id: programId || null,
+        school_id: schoolId || null,
         accommodation_id: accommodationId || null,
-        school,
-        arrival_date: arrivalDate ? format(arrivalDate, 'yyyy-MM-dd') : null,
-        course_start: courseStart ? format(courseStart, 'yyyy-MM-dd') : null,
-        course_end: courseEnd ? format(courseEnd, 'yyyy-MM-dd') : null,
-        accommodation_type: accommodationType,
-        accommodation_category: accommodationCategory,
-        preferred_subjects: preferredSubjects,
-        service_fee: serviceFee,
+        insurance_id: insuranceId || null,
+        arrival_date: arrivalDate ? format(arrivalDate, "yyyy-MM-dd") : null,
+        course_start: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
+        course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        start_month: startMonth || null,
       };
 
-      // Upsert case_submissions with all data
-      const { error } = await supabase.from('case_submissions').upsert({
-        case_id: caseId,
-        program_id: programId || null,
-        accommodation_id: accommodationId || null,
-        program_start_date: courseStart ? format(courseStart, 'yyyy-MM-dd') : null,
-        program_end_date: courseEnd ? format(courseEnd, 'yyyy-MM-dd') : null,
-        service_fee: parseFloat(serviceFee) || 0,
-        extra_data: extraData,
-      }, { onConflict: 'case_id' });
+      const { error } = await supabase.from("case_submissions").upsert(
+        {
+          case_id: caseId,
+          program_id: programId || null,
+          accommodation_id: accommodationId || null,
+          insurance_id: insuranceId || null,
+          program_start_date: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
+          program_end_date: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+          service_fee: 0,
+          program_price: selectedProgram?.price ?? 0,
+          accommodation_price: selectedAccom?.price ?? 0,
+          insurance_price: selectedIns?.price ?? 0,
+          extra_data: extraData,
+        },
+        { onConflict: "case_id" },
+      );
       if (error) throw error;
 
-      // Update case full_name and phone
-      await supabase.from('cases').update({
-        full_name: fullName || undefined,
-        phone_number: phone || undefined,
-        status: 'profile_completion',
-      }).eq('id', caseId);
+      await supabase
+        .from("cases")
+        .update({
+          full_name: fullName || undefined,
+          phone_number: phone || undefined,
+          status: "profile_completion",
+        })
+        .eq("id", caseId);
 
-      await supabase.rpc('log_activity' as any, {
+      await supabase.rpc("log_activity" as any, {
         p_actor_id: actorId,
         p_actor_name: actorName,
-        p_action: 'profile_filled',
-        p_entity_type: 'case',
+        p_action: "profile_filled",
+        p_entity_type: "case",
         p_entity_id: caseId,
         p_metadata: { full_name: fullName },
       });
 
-      toast({ title: isAr ? 'تم حفظ الملف الشخصي' : 'Profile saved' });
+      toast({ title: isAr ? "تم حفظ الملف الشخصي" : "Profile saved" });
       onSuccess();
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setSaving(false);
     }
   };
 
-  const BirthdayPicker = ({ label, value, onChange }: { label: string; value: Date | undefined; onChange: (d: Date | undefined) => void }) => {
+  const BirthdayPicker = ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: Date | undefined;
+    onChange: (d: Date | undefined) => void;
+  }) => {
     const years = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
     const months = [
-      { v: '01', l: isAr ? 'يناير' : 'January' }, { v: '02', l: isAr ? 'فبراير' : 'February' },
-      { v: '03', l: isAr ? 'مارس' : 'March' }, { v: '04', l: isAr ? 'أبريل' : 'April' },
-      { v: '05', l: isAr ? 'مايو' : 'May' }, { v: '06', l: isAr ? 'يونيو' : 'June' },
-      { v: '07', l: isAr ? 'يوليو' : 'July' }, { v: '08', l: isAr ? 'أغسطس' : 'August' },
-      { v: '09', l: isAr ? 'سبتمبر' : 'September' }, { v: '10', l: isAr ? 'أكتوبر' : 'October' },
-      { v: '11', l: isAr ? 'نوفمبر' : 'November' }, { v: '12', l: isAr ? 'ديسمبر' : 'December' },
+      { v: "01", l: "January" },
+      { v: "02", l: "February" },
+      { v: "03", l: "March" },
+      { v: "04", l: "April" },
+      { v: "05", l: "May" },
+      { v: "06", l: "June" },
+      { v: "07", l: "July" },
+      { v: "08", l: "August" },
+      { v: "09", l: "September" },
+      { v: "10", l: "October" },
+      { v: "11", l: "November" },
+      { v: "12", l: "December" },
     ];
-    const selYear = value ? value.getFullYear().toString() : '';
-    const selMonth = value ? String(value.getMonth() + 1).padStart(2, '0') : '';
-    const selDay = value ? String(value.getDate()).padStart(2, '0') : '';
+    const selYear = value ? value.getFullYear().toString() : "";
+    const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
+    const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
     const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
-    const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, '0'));
-    const update = (y: string, m: string, d: string) => { if (y && m && d) onChange(new Date(`${y}-${m}-${d}`)); };
+    const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
+    const update = (y: string, m: string, d: string) => {
+      if (y && m && d) onChange(new Date(`${y}-${m}-${d}`));
+    };
     return (
       <div>
         <Label>{label}</Label>
         <div className="grid grid-cols-3 gap-2 mt-1">
-          <Select value={selYear} onValueChange={v => update(v, selMonth, selDay || '01')}>
-            <SelectTrigger><SelectValue placeholder={isAr ? 'السنة' : 'Year'} /></SelectTrigger>
-            <SelectContent className="max-h-48">{years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+          <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
+            <SelectTrigger>
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent className="max-h-48">
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-          <Select value={selMonth} onValueChange={v => update(selYear, v, selDay || '01')}>
-            <SelectTrigger><SelectValue placeholder={isAr ? 'الشهر' : 'Month'} /></SelectTrigger>
-            <SelectContent>{months.map(m => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}</SelectContent>
+          <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
+            <SelectTrigger>
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((m) => (
+                <SelectItem key={m.v} value={m.v}>
+                  {m.l}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-          <Select value={selDay} onValueChange={v => update(selYear, selMonth, v)}>
-            <SelectTrigger><SelectValue placeholder={isAr ? 'اليوم' : 'Day'} /></SelectTrigger>
-            <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+          <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Day" />
+            </SelectTrigger>
+            <SelectContent className="max-h-48">
+              {days.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
+        {value && (
+          <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), value)} years</p>
+        )}
       </div>
     );
   };
 
-  const DateField = ({ label, value, onChange }: { label: string; value: Date | undefined; onChange: (d: Date | undefined) => void }) => (
+  const DatePickerField = ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: Date | undefined;
+    onChange: (d: Date | undefined) => void;
+  }) => (
     <div>
       <Label>{label}</Label>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className={cn('w-full justify-start text-left font-normal mt-1', !value && 'text-muted-foreground')}>
+          <Button
+            variant="outline"
+            className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
+          >
             <CalendarIcon className="me-2 h-4 w-4" />
-            {value ? format(value, 'PP') : (isAr ? 'اختر التاريخ' : 'Pick date')}
+            {value ? format(value, "PP") : "Pick date"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 z-50" align="start">
-          <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={onChange}
+            initialFocus
+            className="p-3 pointer-events-auto"
+          />
         </PopoverContent>
       </Popover>
     </div>
   );
 
+  // Generate month options for next 24 months
+  const monthOptions = Array.from({ length: 24 }, (_, i) => {
+    const d = addMonths(new Date(), i);
+    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
+  });
+
   return (
-    <div className="space-y-4">
-      {/* Step indicator */}
-      <div className="flex items-center gap-2 mb-2">
+    <div className="space-y-6">
+      {/* Step Tabs */}
+      <div className="flex gap-2">
         <button
-          onClick={() => setFormStep('a')}
-          className={cn('flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
-            formStep === 'a' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          onClick={() => setFormStep("a")}
+          className={cn(
+            "flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors border",
+            formStep === "a"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border text-muted-foreground hover:bg-muted",
           )}
         >
-          A — {isAr ? 'معلومات الطالب' : 'Student Info'}
+          A — Student Info
         </button>
-        <ChevronRight className="h-3 w-3 text-muted-foreground" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground self-center shrink-0" />
         <button
-          onClick={() => { if (validateSectionA()) setFormStep('b'); }}
-          className={cn('flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors',
-            formStep === 'b' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          onClick={() => {
+            if (firstName && lastName) setFormStep("b");
+          }}
+          className={cn(
+            "flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors border",
+            formStep === "b"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border text-muted-foreground hover:bg-muted",
           )}
         >
-          B — {isAr ? 'البرنامج والإقامة' : 'Program & Accommodation'}
+          B — Program & Accommodation
         </button>
       </div>
 
-      {/* ── Section A ── */}
-      {formStep === 'a' && (
+      {/* ── SECTION A ── */}
+      {formStep === "a" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'الاسم الأول *' : 'First Name *'}</Label>
-              <Input value={firstName} onChange={e => setFirstName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'الاسم الأوسط' : 'Middle Name'}</Label>
-              <Input value={middleName} onChange={e => setMiddleName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'الاسم الأخير *' : 'Last Name *'}</Label>
-              <Input value={lastName} onChange={e => setLastName(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'البريد الإلكتروني' : 'Email'}</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="student@email.com" />
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'الهاتف' : 'Phone'}</Label>
-              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+972..." />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'جهة اتصال الطوارئ' : 'Emergency Contact'}</Label>
-              <Input value={emergencyName} onChange={e => setEmergencyName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'هاتف الطوارئ' : 'Emergency Phone'}</Label>
-              <Input value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">{isAr ? 'العنوان' : 'Address'}</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="col-span-2 space-y-1"><Label>{isAr ? 'الشارع' : 'Street'}</Label><Input value={street} onChange={e => setStreet(e.target.value)} /></div>
-              <div className="space-y-1"><Label>{isAr ? 'رقم المنزل' : 'House No.'}</Label><Input value={houseNo} onChange={e => setHouseNo(e.target.value)} /></div>
-              <div className="space-y-1"><Label>{isAr ? 'الرمز البريدي' : 'Postcode'}</Label><Input value={postcode} onChange={e => setPostcode(e.target.value)} /></div>
-              <div className="col-span-2 space-y-1"><Label>{isAr ? 'المدينة' : 'City'}</Label><Input value={city} onChange={e => setCity(e.target.value)} /></div>
-              <div className="col-span-2 space-y-1"><Label>{isAr ? 'مدينة الميلاد' : 'City of Birth'}</Label><Input value={cityOfBirth} onChange={e => setCityOfBirth(e.target.value)} /></div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <BirthdayPicker label={isAr ? 'تاريخ الميلاد' : 'Date of Birth'} value={dob} onChange={setDob} />
-              {age !== null && <p className="text-xs text-muted-foreground mt-1">{isAr ? `العمر: ${age} سنة` : `Age: ${age}`}</p>}
+              <Label>First Name *</Label>
+              <Input className="mt-1" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'الجنس' : 'Gender'}</Label>
+            <div>
+              <Label>Middle Name</Label>
+              <Input className="mt-1" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Last Name *</Label>
+              <Input className="mt-1" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <BirthdayPicker label="Date of Birth *" value={dob} onChange={setDob} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">{isAr ? 'ذكر' : 'Male'}</SelectItem>
-                  <SelectItem value="female">{isAr ? 'أنثى' : 'Female'}</SelectItem>
-                  <SelectItem value="other">{isAr ? 'آخر' : 'Other'}</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>City of Birth</Label>
+              <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
+            </div>
           </div>
-
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Email</Label>
+              <Input className="mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input className="mt-1" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Address</Label>
+            <div className="grid grid-cols-3 gap-2 mt-1">
+              <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
+              <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
+              <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+            </div>
+            <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Emergency Contact Name</Label>
+              <Input className="mt-1" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Emergency Contact Phone</Label>
+              <Input className="mt-1" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+            </div>
+          </div>
           <div className="flex justify-end">
-            <Button onClick={() => { if (validateSectionA()) setFormStep('b'); }}>
-              {isAr ? 'التالي' : 'Next'} <ChevronRight className="h-4 w-4 ms-1" />
+            <Button
+              onClick={() => {
+                if (!firstName.trim() || !lastName.trim()) {
+                  toast({ variant: "destructive", description: "First and last name are required" });
+                  return;
+                }
+                setFormStep("b");
+              }}
+            >
+              Next <ChevronRight className="h-4 w-4 ms-1" />
             </Button>
           </div>
         </div>
       )}
 
-      {/* ── Section B ── */}
-      {formStep === 'b' && (
+      {/* ── SECTION B ── */}
+      {formStep === "b" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'البرنامج' : 'Program'}</Label>
-              <Select value={programId} onValueChange={setProgramId}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر البرنامج' : 'Select program'} /></SelectTrigger>
-                <SelectContent>
-                  {programs.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{isAr ? p.name_ar : p.name_en}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'المدرسة' : 'School'}</Label>
-              <Select value={school} onValueChange={setSchool}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر المدرسة' : 'Select school'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="F+U Academy of Languages">F+U Academy of Languages</SelectItem>
-                  <SelectItem value="Alpha Aktiv">Alpha Aktiv</SelectItem>
-                  <SelectItem value="GO Academy">GO Academy</SelectItem>
-                  <SelectItem value="VICTORIA Academy">VICTORIA Academy</SelectItem>
-                  <SelectItem value="other">{isAr ? 'أخرى' : 'Other'}</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Program */}
+          <div>
+            <Label>Language Program *</Label>
+            <Select value={programId} onValueChange={setProgramId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select program" />
+              </SelectTrigger>
+              <SelectContent>
+                {programs.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name_en}
+                    {p.lessons_per_week && ` · ${p.lessons_per_week} lessons/wk`}
+                    {p.duration_in_months && ` · ${p.duration_in_months} months`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedProgram && (
+              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex flex-wrap gap-3">
+                {selectedProgram.lessons_per_week && <span>📚 {selectedProgram.lessons_per_week} lessons/week</span>}
+                {selectedProgram.duration_in_months && (
+                  <span>⏱ {selectedProgram.duration_in_months} months duration</span>
+                )}
+                {selectedProgram.price && (
+                  <span>
+                    💰 {selectedProgram.price.toLocaleString()} {selectedProgram.currency}
+                  </span>
+                )}
+                {selectedProgram.fixed_start_day_of_month && (
+                  <span>📅 Starts day {selectedProgram.fixed_start_day_of_month} of month</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Intake Month → auto sets start date */}
+          <div>
+            <Label>Intake Month</Label>
+            <Select value={startMonth} onValueChange={setStartMonth}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select intake month" />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Start / End dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <DatePickerField label="Course Start Date" value={courseStart} onChange={setCourseStart} />
+            <div>
+              <Label>Course End Date</Label>
+              <div
+                className={cn(
+                  "mt-1 flex items-center h-10 px-3 rounded-md border text-sm",
+                  courseEnd ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {courseEnd
+                  ? format(courseEnd, "PP")
+                  : selectedProgram?.duration_in_months
+                    ? "Auto-calculated"
+                    : "Pick start date first"}
+              </div>
+              {selectedProgram?.duration_in_months && courseEnd && (
+                <p className="text-xs text-emerald-600 mt-1">
+                  ✓ Auto-calculated from {selectedProgram.duration_in_months} month duration
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <DateField label={isAr ? 'تاريخ الوصول' : 'Arrival Date'} value={arrivalDate} onChange={setArrivalDate} />
-            <DateField label={isAr ? 'بداية الدورة' : 'Course Start'} value={courseStart} onChange={setCourseStart} />
-            <DateField label={isAr ? 'نهاية الدورة' : 'Course End'} value={courseEnd} onChange={setCourseEnd} />
+          {/* School → Accommodation cascade */}
+          <div>
+            <Label>School</Label>
+            <Select value={schoolId} onValueChange={setSchoolId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select school" />
+              </SelectTrigger>
+              <SelectContent>
+                {schools.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name_en}
+                    {s.city && ` — ${s.city}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'الإقامة' : 'Accommodation'}</Label>
-              <Select value={accommodationId} onValueChange={setAccommodationId}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر الإقامة' : 'Select accommodation'} /></SelectTrigger>
+          {schoolId && (
+            <div>
+              <Label>Accommodation</Label>
+              <Select
+                value={accommodationId}
+                onValueChange={setAccommodationId}
+                disabled={filteredAccommodations.length === 0}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue
+                    placeholder={
+                      filteredAccommodations.length === 0 ? "No accommodations for this school" : "Select accommodation"
+                    }
+                  />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{isAr ? 'بدون إقامة' : 'None'}</SelectItem>
-                  {accommodations.map(a => (
+                  {filteredAccommodations.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
-                      {isAr ? a.name_ar : a.name_en} {a.price ? `(${a.price} ${a.currency})` : ''}
+                      {a.name_en}
+                      {a.price ? ` — ${a.price.toLocaleString()} ${a.currency}/mo` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {selectedAccom?.price && (
+                <p className="text-xs text-emerald-600 mt-1">
+                  💰 {selectedAccom.price.toLocaleString()} {selectedAccom.currency} / month
+                </p>
+              )}
             </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'نوع الإقامة' : 'Accommodation Type'}</Label>
-              <Select value={accommodationType} onValueChange={setAccommodationType}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">{isAr ? 'فردي' : 'Single'}</SelectItem>
-                  <SelectItem value="double">{isAr ? 'مزدوج' : 'Double'}</SelectItem>
-                  <SelectItem value="hall">{isAr ? 'سكن جماعي' : 'Hall'}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          )}
+
+          {/* Insurance */}
+          <div>
+            <Label>Insurance</Label>
+            <Select value={insuranceId} onValueChange={setInsuranceId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select insurance plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {insurances.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name} ({i.tier}) — {i.price.toLocaleString()} {i.currency}/mo
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>{isAr ? 'فئة الإقامة' : 'Accommodation Category'}</Label>
-              <Select value={accommodationCategory} onValueChange={setAccommodationCategory}>
-                <SelectTrigger><SelectValue placeholder={isAr ? 'اختر' : 'Select'} /></SelectTrigger>
-                <SelectContent>
-                  {ACCOMMODATION_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>{isAr ? 'رسوم الخدمة (ILS)' : 'Service Fee (ILS)'}</Label>
-              <Input type="number" value={serviceFee} onChange={e => setServiceFee(e.target.value)} placeholder="0" />
-            </div>
-          </div>
+          {/* Arrival date */}
+          <DatePickerField label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">{isAr ? 'المواد المفضلة' : 'Preferred Subjects'}</Label>
-            <div className="flex flex-wrap gap-2">
-              {PREFERRED_SUBJECTS.map(s => (
-                <label key={s} className="flex items-center gap-1.5 cursor-pointer">
-                  <Checkbox
-                    checked={preferredSubjects.includes(s)}
-                    onCheckedChange={() => toggleSubject(s)}
-                  />
-                  <span className="text-xs capitalize">{s.replace(/_/g, ' ')}</span>
-                </label>
-              ))}
+          {/* Cost Summary */}
+          {(selectedProgram?.price || selectedAccom?.price || selectedIns?.price) && (
+            <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm space-y-1">
+              <p className="font-medium text-foreground mb-2">Cost Summary</p>
+              {selectedProgram?.price && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Program</span>
+                  <span className="font-medium text-foreground">
+                    {selectedProgram.price.toLocaleString()} {selectedProgram.currency}
+                  </span>
+                </div>
+              )}
+              {selectedAccom?.price && selectedProgram?.duration_in_months && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Accommodation ({selectedProgram.duration_in_months} mo)</span>
+                  <span className="font-medium text-foreground">
+                    {(selectedAccom.price * selectedProgram.duration_in_months).toLocaleString()}{" "}
+                    {selectedAccom.currency}
+                  </span>
+                </div>
+              )}
+              {selectedIns?.price && selectedProgram?.duration_in_months && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Insurance ({selectedProgram.duration_in_months} mo)</span>
+                  <span className="font-medium text-foreground">
+                    {(selectedIns.price * selectedProgram.duration_in_months).toLocaleString()} {selectedIns.currency}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center justify-between pt-2">
-            <Button variant="outline" onClick={() => setFormStep('a')}>
-              <ChevronLeft className="h-4 w-4 me-1" />{isAr ? 'السابق' : 'Back'}
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setFormStep("a")}>
+              <ChevronLeft className="h-4 w-4 me-1" /> Back
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{isAr ? 'جاري الحفظ...' : 'Saving...'}</> : (isAr ? 'حفظ الملف الشخصي' : 'Save Profile')}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
+              {isAr ? "حفظ الملف الشخصي" : "Save Profile"}
             </Button>
           </div>
         </div>
