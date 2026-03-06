@@ -1,61 +1,65 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Users, Search } from 'lucide-react';
-import DashboardLoading from '@/components/dashboard/DashboardLoading';
-import { useDirection } from '@/hooks/useDirection';
+import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Users, Search } from "lucide-react";
+import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { useDirection } from "@/hooks/useDirection";
 
 const STATUS_COLORS: Record<string, string> = {
-  new:                   'bg-muted text-muted-foreground',
-  contacted:             'bg-blue-100 text-blue-800',
-  appointment_scheduled: 'bg-purple-100 text-purple-800',
-  profile_completion:    'bg-yellow-100 text-yellow-800',
-  payment_confirmed:     'bg-amber-100 text-amber-800',
-  submitted:             'bg-cyan-100 text-cyan-800',
-  enrollment_paid:       'bg-green-100 text-green-800',
-  cancelled:             'bg-red-100 text-red-800',
+  new: "bg-muted text-muted-foreground",
+  contacted: "bg-blue-100 text-blue-800",
+  appointment_scheduled: "bg-purple-100 text-purple-800",
+  profile_completion: "bg-yellow-100 text-yellow-800",
+  payment_confirmed: "bg-amber-100 text-amber-800",
+  submitted: "bg-cyan-100 text-cyan-800",
+  enrollment_paid: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
 };
 
 const FRIENDLY_LABELS: Record<string, { en: string; ar: string }> = {
-  new:                   { en: 'New',                     ar: 'جديد' },
-  contacted:             { en: 'Contacted',               ar: 'تم التواصل' },
-  appointment_scheduled: { en: 'Appointment Scheduled',   ar: 'موعد محدد' },
-  profile_completion:    { en: 'Profile Complete',        ar: 'ملف مكتمل' },
-  payment_confirmed:     { en: 'Payment Received',        ar: 'تم الدفع' },
-  submitted:             { en: 'Submitted for Enrollment',ar: 'مقدم للتسجيل' },
-  enrollment_paid:       { en: 'Enrolled',                ar: 'مسجل ✅' },
-  cancelled:             { en: 'Cancelled',               ar: 'ملغي' },
+  new: { en: "New", ar: "جديد" },
+  contacted: { en: "Contacted", ar: "تم التواصل" },
+  appointment_scheduled: { en: "Appointment Scheduled", ar: "موعد محدد" },
+  profile_completion: { en: "Profile Complete", ar: "ملف مكتمل" },
+  payment_confirmed: { en: "Payment Received", ar: "تم الدفع" },
+  submitted: { en: "Submitted for Enrollment", ar: "مقدم للتسجيل" },
+  enrollment_paid: { en: "Enrolled", ar: "مسجل ✅" },
+  cancelled: { en: "Cancelled", ar: "ملغي" },
 };
 
 export default function PartnerStudentsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [cases, setCases] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
-  const isAr = i18n.language === 'ar';
+  const isAr = i18n.language === "ar";
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (uid: string) => {
     const { data } = await (supabase as any)
-      .from('cases')
-      .select('id,full_name,status,created_at,source')
-      .order('created_at', { ascending: false });
+      .from("cases")
+      .select("id,full_name,status,created_at,source")
+      .eq("partner_id", uid)
+      .order("created_at", { ascending: false });
     setCases(data || []);
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
+      if (!session?.user) {
+        navigate("/student-auth");
+        return;
+      }
       setUserId(session.user.id);
-      load();
+      load(session.user.id);
     });
   }, [navigate, load]);
 
@@ -68,22 +72,22 @@ export default function PartnerStudentsPage() {
   };
 
   // First name only for privacy
-  const firstNameOnly = (full: string) => full?.split(' ')[0] || '—';
+  const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
   const filtered = cases.filter((c) => {
     const matchSearch = !search || firstNameOnly(c.full_name).toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || c.status === statusFilter;
+    const matchStatus = statusFilter === "all" || c.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const statuses = [...new Set(cases.map(c => c.status))];
+  const statuses = [...new Set(cases.map((c) => c.status))];
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" />
-          {isAr ? 'الطلاب المسجلون' : 'Registered Students'}
+          {isAr ? "الطلاب المسجلون" : "Registered Students"}
           <span className="text-base font-normal text-muted-foreground">({cases.length})</span>
         </h1>
       </div>
@@ -92,7 +96,7 @@ export default function PartnerStudentsPage() {
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={isAr ? 'بحث بالاسم...' : 'Search by first name...'}
+          placeholder={isAr ? "بحث بالاسم..." : "Search by first name..."}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ps-9"
@@ -102,18 +106,18 @@ export default function PartnerStudentsPage() {
       {/* Status filter chips */}
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => setStatusFilter('all')}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${statusFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-muted-foreground border-border hover:border-primary/50'}`}
+          onClick={() => setStatusFilter("all")}
+          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${statusFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"}`}
         >
-          {isAr ? 'الكل' : 'All'} ({cases.length})
+          {isAr ? "الكل" : "All"} ({cases.length})
         </button>
-        {statuses.map(s => (
+        {statuses.map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s === statusFilter ? 'all' : s)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${statusFilter === s ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-muted-foreground border-border hover:border-primary/50'}`}
+            onClick={() => setStatusFilter(s === statusFilter ? "all" : s)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"}`}
           >
-            {statusLabel(s)} ({cases.filter(c => c.status === s).length})
+            {statusLabel(s)} ({cases.filter((c) => c.status === s).length})
           </button>
         ))}
       </div>
@@ -122,26 +126,29 @@ export default function PartnerStudentsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            {isAr ? 'لا يوجد طلاب مطابقون' : 'No matching students'}
+            {isAr ? "لا يوجد طلاب مطابقون" : "No matching students"}
           </CardContent>
         </Card>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           {/* Header */}
           <div className="grid grid-cols-3 bg-muted/50 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            <span>{isAr ? 'الاسم' : 'First Name'}</span>
-            <span>{isAr ? 'تاريخ التسجيل' : 'Registration Date'}</span>
-            <span>{isAr ? 'المرحلة الحالية' : 'Current Stage'}</span>
+            <span>{isAr ? "الاسم" : "First Name"}</span>
+            <span>{isAr ? "تاريخ التسجيل" : "Registration Date"}</span>
+            <span>{isAr ? "المرحلة الحالية" : "Current Stage"}</span>
           </div>
           {/* Rows */}
           <div className="divide-y divide-border bg-background">
             {filtered.map((c) => (
-              <div key={c.id} className="grid grid-cols-3 items-center px-4 py-3 text-sm hover:bg-muted/30 transition-colors">
+              <div
+                key={c.id}
+                className="grid grid-cols-3 items-center px-4 py-3 text-sm hover:bg-muted/30 transition-colors"
+              >
                 <span className="font-medium text-foreground">{firstNameOnly(c.full_name)}</span>
                 <span className="text-muted-foreground text-xs">
-                  {new Date(c.created_at).toLocaleDateString(isAr ? 'ar' : 'en-GB')}
+                  {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
                 </span>
-                <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || 'bg-muted text-muted-foreground'}`}>
+                <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>
                   {statusLabel(c.status)}
                 </Badge>
               </div>
@@ -152,8 +159,8 @@ export default function PartnerStudentsPage() {
 
       <p className="text-xs text-muted-foreground text-center">
         {isAr
-          ? '* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب'
-          : '* First names only shown to protect student privacy'}
+          ? "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب"
+          : "* First names only shown to protect student privacy"}
       </p>
     </div>
   );
