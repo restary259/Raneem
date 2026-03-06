@@ -47,7 +47,6 @@ import {
   Plus,
   Loader2,
   Clock,
-  GripVertical,
   Phone,
   ExternalLink,
   Trash2,
@@ -111,6 +110,107 @@ function apptClasses(outcome: string | null, isPast: boolean) {
   if (outcome === "delayed") return "bg-amber-100 text-amber-800 border-amber-300";
   if (isPast) return "bg-orange-100 text-orange-800 border-orange-400 ring-1 ring-orange-300";
   return "bg-indigo-100 text-indigo-800 border-indigo-300";
+}
+
+// ── ApptBlock: single click = open detail, long press = drag ───────────────
+function ApptBlock({
+  appt,
+  compact,
+  onOpen,
+  onDragStart,
+  onDragEnd,
+  isDragging,
+}: {
+  appt: Appointment;
+  compact: boolean;
+  onOpen: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+}) {
+  const isPast = new Date(appt.scheduled_at) < new Date();
+  const name = (appt.case as any)?.full_name ?? appt.guest_name ?? "—";
+  const pressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didDrag = React.useRef(false);
+  const elRef = React.useRef<HTMLDivElement>(null);
+
+  // Long press enables draggable after 400ms hold
+  const [draggable, setDraggable] = React.useState(false);
+
+  const startPress = () => {
+    didDrag.current = false;
+    pressTimer.current = setTimeout(() => {
+      setDraggable(true);
+      didDrag.current = true;
+      // Trigger native drag immediately after setting draggable
+      if (elRef.current) {
+        const evt = new MouseEvent("mousedown", { bubbles: true });
+        // Just mark as drag-ready — browser drag will fire on next mousemove
+      }
+    }, 350);
+  };
+
+  const cancelPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+
+  const handleMouseUp = () => {
+    cancelPress();
+    if (!didDrag.current) {
+      // Short tap — open detail
+      onOpen();
+    }
+    setDraggable(false);
+    didDrag.current = false;
+  };
+
+  const handleDragStartInner = (e: React.DragEvent) => {
+    e.stopPropagation();
+    onDragStart(e);
+  };
+
+  const handleDragEndInner = () => {
+    setDraggable(false);
+    didDrag.current = false;
+    onDragEnd();
+  };
+
+  return (
+    <div
+      ref={elRef}
+      draggable={draggable}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        startPress();
+      }}
+      onMouseUp={(e) => {
+        e.stopPropagation();
+        handleMouseUp();
+      }}
+      onMouseLeave={cancelPress}
+      onDragStart={handleDragStartInner}
+      onDragEnd={handleDragEndInner}
+      className={cn(
+        "rounded border leading-tight select-none transition-opacity hover:shadow-sm",
+        compact ? "text-[10px] p-1 mb-0.5" : "text-xs p-1.5 mb-1",
+        apptClasses(appt.outcome, isPast),
+        isDragging && "opacity-40",
+        draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+      )}
+    >
+      <div className="font-semibold truncate">{name}</div>
+      {!compact && (
+        <div className="flex items-center gap-1 opacity-70 mt-0.5">
+          <Clock className="h-2.5 w-2.5" />
+          {format(parseISO(appt.scheduled_at), "h:mm a")} · {appt.duration_minutes}m
+        </div>
+      )}
+      {compact && <div className="opacity-70">{format(parseISO(appt.scheduled_at), "h:mm a")}</div>}
+      {isPast && !appt.outcome && !compact && (
+        <div className="text-[9px] font-bold text-orange-700 mt-0.5">⚠ Needs outcome</div>
+      )}
+    </div>
+  );
 }
 
 export default function TeamAppointmentsPage() {
@@ -408,43 +508,17 @@ export default function TeamAppointmentsPage() {
                       </div>
                     </div>
                   )}
-                  {slotAppts.map((a) => {
-                    const isPast = new Date(a.scheduled_at) < new Date();
-                    return (
-                      <div
-                        key={a.id}
-                        draggable
-                        onDragStart={(e) => {
-                          e.stopPropagation();
-                          handleDragStart(e, a.id);
-                        }}
-                        onDragEnd={handleDragEnd}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedAppt(a);
-                        }}
-                        className={cn(
-                          "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing border leading-tight select-none transition-opacity hover:shadow-sm",
-                          apptClasses(a.outcome, isPast),
-                          draggingId === a.id && "opacity-40",
-                        )}
-                      >
-                        <div className="flex items-center gap-0.5">
-                          <GripVertical className="h-2.5 w-2.5 opacity-40 shrink-0" />
-                          <span className="font-semibold truncate">
-                            {(a.case as any)?.full_name ?? (a as any).guest_name ?? "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-0.5 opacity-70 mt-0.5">
-                          <Clock className="h-2.5 w-2.5" />
-                          {format(parseISO(a.scheduled_at), "h:mm a")} · {a.duration_minutes}m
-                        </div>
-                        {isPast && !a.outcome && (
-                          <div className="text-[9px] font-bold text-orange-700 mt-0.5">⚠ Needs outcome</div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {slotAppts.map((a) => (
+                    <ApptBlock
+                      key={a.id}
+                      appt={a}
+                      compact={days.length > 3}
+                      onOpen={() => setSelectedAppt(a)}
+                      onDragStart={(e) => handleDragStart(e, a.id)}
+                      onDragEnd={handleDragEnd}
+                      isDragging={draggingId === a.id}
+                    />
+                  ))}
                 </div>
               );
             })}
@@ -560,26 +634,15 @@ export default function TeamAppointmentsPage() {
                           {dayAppts.slice(0, 3).map((a) => {
                             const isPast = new Date(a.scheduled_at) < new Date();
                             return (
-                              <div
+                              <ApptBlock
                                 key={a.id}
-                                draggable
-                                onDragStart={(e) => {
-                                  e.stopPropagation();
-                                  handleDragStart(e, a.id);
-                                }}
+                                appt={a}
+                                compact={true}
+                                onOpen={() => setSelectedAppt(a)}
+                                onDragStart={(e) => handleDragStart(e, a.id)}
                                 onDragEnd={handleDragEnd}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedAppt(a);
-                                }}
-                                className={cn(
-                                  "text-[9px] px-1 py-0.5 rounded mb-0.5 truncate cursor-grab border font-medium leading-tight",
-                                  apptClasses(a.outcome, isPast),
-                                )}
-                              >
-                                {format(parseISO(a.scheduled_at), "h:mm")}{" "}
-                                {(a.case as any)?.full_name ?? (a as any).guest_name ?? "—"}
-                              </div>
+                                isDragging={draggingId === a.id}
+                              />
                             );
                           })}
                           {dayAppts.length > 3 && (
