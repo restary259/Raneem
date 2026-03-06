@@ -671,7 +671,11 @@ export default function SubmitNewStudentPage() {
                 Accommodation{" "}
                 {!schoolId && <span className="text-muted-foreground text-xs">(select a school first)</span>}
               </Label>
-              <Select value={accommodationId} onValueChange={setAccommodationId} disabled={filteredAccoms.length === 0}>
+              <Select
+                value={accommodationId || "__none__"}
+                onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)}
+                disabled={filteredAccoms.length === 0}
+              >
                 <SelectTrigger className="mt-1">
                   <SelectValue
                     placeholder={
@@ -684,7 +688,7 @@ export default function SubmitNewStudentPage() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {filteredAccoms.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
                       {isAr ? a.name_ar : a.name_en}
