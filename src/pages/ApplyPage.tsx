@@ -83,31 +83,9 @@ const ApplyPage: React.FC = () => {
     },
   ]);
 
-  // Referral
-  const [sourceType, setSourceType] = useState("organic");
-  const [sourceId, setSourceId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const ref = searchParams.get("ref");
-    if (ref) {
-      localStorage.setItem("darb_ref", ref);
-    }
-    const savedRef = ref || localStorage.getItem("darb_ref");
-    if (savedRef) {
-      const validateRef = async () => {
-        try {
-          const { data } = await supabase.rpc("validate_influencer_ref", { ref_id: savedRef });
-          if (data === true) {
-            setSourceType("influencer");
-            setSourceId(savedRef);
-          }
-        } catch (err) {
-          console.error("validate_influencer_ref failed:", err);
-        }
-      };
-      validateRef();
-    }
-  }, [searchParams]);
+  // Source tracking (no referral links — partner cases are linked by admin)
+  const sourceType = "organic";
+  const sourceId: string | null = null;
 
   const isValidPhone = (p: string) => {
     const cleaned = p.replace(/[\s\-()]/g, "");
@@ -140,6 +118,31 @@ const ApplyPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (loading) return;
+
+    // ── CRITICAL: Validate English units for bagrut applicants (bug fix) ──
+    if (educationLevel === "bagrut" && !englishUnits) {
+      toast({
+        title: isAr ? "الرجاء اختيار وحدات الإنجليزي" : "English Units Required",
+        description: isAr
+          ? "يجب اختيار عدد وحدات الإنجليزي قبل الإرسال"
+          : "Please go back to step 2 and select your English units",
+        variant: "destructive",
+      });
+      setStep(2);
+      return;
+    }
+    if (educationLevel === "bagrut" && !mathUnits) {
+      toast({
+        title: isAr ? "الرجاء اختيار وحدات الرياضيات" : "Math Units Required",
+        description: isAr
+          ? "يجب اختيار عدد وحدات الرياضيات قبل الإرسال"
+          : "Please go back to step 2 and select your Math units",
+        variant: "destructive",
+      });
+      setStep(2);
+      return;
+    }
+
     setLoading(true);
 
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -156,7 +159,7 @@ const ApplyPage: React.FC = () => {
           full_name: fullName.trim(),
           phone_number: phone.trim(),
           source: "apply_page",
-          partner_id: sourceType === "influencer" ? sourceId : null,
+          partner_id: null,
           city: city.trim() || null,
           education_level: educationLevel || null,
           bagrut_score: null,
@@ -212,7 +215,7 @@ const ApplyPage: React.FC = () => {
                 full_name: c.name.trim(),
                 phone_number: c.phone.trim(),
                 source: "apply_page",
-                partner_id: sourceType === "influencer" ? sourceId : null,
+                partner_id: null,
                 city: c.city.trim() || null,
                 education_level: c.education || null,
                 passport_type: c.passportType || null,
@@ -305,11 +308,6 @@ const ApplyPage: React.FC = () => {
                     : "📩 We will contact you within 24 to 48 hours via WhatsApp"}
                 </p>
               </div>
-              {sourceId && (
-                <p className="text-xs text-muted-foreground/60">
-                  {isAr ? `كود المصدر: ${sourceId.slice(0, 8)}...` : `Ref: ${sourceId.slice(0, 8)}...`}
-                </p>
-              )}
               <div className="flex flex-col gap-3">
                 <a href="https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold">
