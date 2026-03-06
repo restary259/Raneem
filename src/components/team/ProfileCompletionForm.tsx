@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format, differenceInYears, addMonths } from "date-fns";
-import { CalendarIcon, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { CalendarIcon, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -69,7 +69,14 @@ interface Props {
   onSuccess: () => void;
 }
 
-type FormStep = "a" | "b";
+const STEPS = [
+  { key: "personal", label: "Personal Info" },
+  { key: "contact", label: "Contact Details" },
+  { key: "program", label: "Program" },
+  { key: "accommodation", label: "Accommodation" },
+  { key: "review", label: "Review & Save" },
+] as const;
+type StepKey = (typeof STEPS)[number]["key"];
 
 export default function ProfileCompletionForm({
   caseId,
@@ -88,31 +95,36 @@ export default function ProfileCompletionForm({
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [insurances, setInsurances] = useState<Insurance[]>([]);
   const [saving, setSaving] = useState(false);
-  const [formStep, setFormStep] = useState<FormStep>("a");
+  const [step, setStep] = useState<StepKey>("personal");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const ex = existingData ?? {};
+  // Normalise: SubmitNewStudent saves "email"/"phone", ProfileCompletion uses "student_email"/"student_phone"
+  const readEmail = (ex.student_email ?? ex.email ?? "") as string;
+  const readPhone = (ex.student_phone ?? ex.phone ?? "") as string;
 
-  // Section A
+  // ── Personal Info ──
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
   const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
   const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
-  const [email, setEmail] = useState((ex.student_email as string) ?? "");
-  const [phone, setPhone] = useState((ex.student_phone as string) ?? "");
+  const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
+  const [gender, setGender] = useState((ex.gender as string) ?? "");
+  const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
+
+  // ── Contact ──
+  const [email, setEmail] = useState(readEmail);
+  const [phone, setPhone] = useState(readPhone);
   const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
   const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? "");
-  const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
   const [street, setStreet] = useState((ex.street as string) ?? "");
   const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? "");
   const [postcode, setPostcode] = useState((ex.postcode as string) ?? "");
   const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? "");
-  const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
-  const [gender, setGender] = useState((ex.gender as string) ?? "");
 
-  // Section B
+  // ── Program ──
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
-  const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
-  const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
+  const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
   const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
     ex.arrival_date ? new Date(ex.arrival_date as string) : undefined,
   );
@@ -122,23 +134,26 @@ export default function ProfileCompletionForm({
   const [courseEnd, setCourseEnd] = useState<Date | undefined>(
     ex.course_end ? new Date(ex.course_end as string) : undefined,
   );
-  const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
+
+  // ── Accommodation ──
+  const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
+  const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
 
   const age = dob ? differenceInYears(new Date(), dob) : null;
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const selectedProgram = programs.find((p) => p.id === programId);
-  const filteredAccommodations = accommodations.filter((a) => a.school_id === schoolId);
+  const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const selectedIns = insurances.find((i) => i.id === insuranceId);
 
-  // Auto end date from program duration
+  // Auto end-date from program duration
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
       setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
-  // Auto start from fixed day + intake month
+  // Auto start from fixed start day + intake month
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
@@ -156,27 +171,76 @@ export default function ProfileCompletionForm({
       const results = (await Promise.all([
         db
           .from("programs")
-          .select(
-            "id, name_en, name_ar, type, duration_in_months, fixed_start_day_of_month, lessons_per_week, price, currency",
-          )
+          .select("id,name_en,name_ar,type,duration_in_months,fixed_start_day_of_month,lessons_per_week,price,currency")
           .eq("is_active", true)
           .order("name_en"),
-        db.from("schools").select("id, name_en, name_ar, city").eq("is_active", true).order("name_en"),
-        db.from("accommodations").select("id, name_en, name_ar, price, currency, school_id").eq("is_active", true),
-        db.from("insurances").select("id, name, tier, price, currency").eq("is_active", true).order("tier"),
+        db.from("schools").select("id,name_en,name_ar,city").eq("is_active", true).order("name_en"),
+        db.from("accommodations").select("id,name_en,name_ar,price,currency,school_id").eq("is_active", true),
+        db.from("insurances").select("id,name,tier,price,currency").eq("is_active", true).order("tier"),
       ])) as any[];
-      setPrograms((results[0].data ?? []) as Program[]);
-      setSchools((results[1].data ?? []) as School[]);
-      setAccommodations((results[2].data ?? []) as Accommodation[]);
-      setInsurances((results[3].data ?? []) as Insurance[]);
+      setPrograms(results[0].data ?? []);
+      setSchools(results[1].data ?? []);
+      setAccommodations(results[2].data ?? []);
+      setInsurances(results[3].data ?? []);
     })();
   }, []);
 
+  // ── Validation per step ──────────────────────────────────────────────
+  const validate = (s: StepKey): Record<string, string> => {
+    const e: Record<string, string> = {};
+    if (s === "personal") {
+      if (!firstName.trim()) e.firstName = "First name is required";
+      if (!lastName.trim()) e.lastName = "Last name is required";
+    }
+    if (s === "contact") {
+      if (!email.trim() || !email.includes("@")) e.email = "Valid email is required";
+      if (!phone.trim()) e.phone = "Phone number is required";
+    }
+    return e;
+  };
+
+  const goTo = (target: StepKey) => {
+    const idx = STEPS.findIndex((s) => s.key === target);
+    const currentIdx = STEPS.findIndex((s) => s.key === step);
+    if (idx > currentIdx) {
+      // Validate current step before advancing
+      const errs = validate(step);
+      if (Object.keys(errs).length > 0) {
+        setErrors(errs);
+        toast({ variant: "destructive", description: "Please fill in the required fields before continuing." });
+        return;
+      }
+      setErrors({});
+    } else {
+      setErrors({});
+    }
+    setStep(target);
+  };
+
+  const goNext = () => {
+    const idx = STEPS.findIndex((s) => s.key === step);
+    if (idx < STEPS.length - 1) goTo(STEPS[idx + 1].key);
+  };
+
+  const goBack = () => {
+    const idx = STEPS.findIndex((s) => s.key === step);
+    if (idx > 0) {
+      setErrors({});
+      setStep(STEPS[idx - 1].key);
+    }
+  };
+
+  // ── Save ─────────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!firstName.trim() || !lastName.trim()) {
+    // Final validation of required steps
+    const personalErrs = validate("personal");
+    const contactErrs = validate("contact");
+    const allErrs = { ...personalErrs, ...contactErrs };
+    if (Object.keys(allErrs).length > 0) {
+      setErrors(allErrs);
       toast({
         variant: "destructive",
-        description: isAr ? "الاسم الأول والأخير مطلوبان" : "First and last name are required",
+        description: "Some required fields are missing. Please go back and fill them in.",
       });
       return;
     }
@@ -243,7 +307,7 @@ export default function ProfileCompletionForm({
         p_metadata: { full_name: fullName },
       });
 
-      toast({ title: isAr ? "تم حفظ الملف الشخصي" : "Profile saved" });
+      toast({ title: "Profile saved successfully" });
       onSuccess();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -252,7 +316,7 @@ export default function ProfileCompletionForm({
     }
   };
 
-  // Birthday dropdowns
+  // ── Sub-components ────────────────────────────────────────────────────
   const BirthdayPicker = ({
     label,
     value,
@@ -333,7 +397,7 @@ export default function ProfileCompletionForm({
     );
   };
 
-  const DatePickerField = ({
+  const DatePick = ({
     label,
     value,
     onChange,
@@ -367,60 +431,80 @@ export default function ProfileCompletionForm({
     </div>
   );
 
+  const Field = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
+    <div>
+      <Label className={error ? "text-destructive" : ""}>
+        {label}
+        {error ? " *" : ""}
+      </Label>
+      {children}
+      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+    </div>
+  );
+
   const monthOptions = Array.from({ length: 24 }, (_, i) => {
     const d = addMonths(new Date(), i);
     return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
   });
 
+  const stepIdx = STEPS.findIndex((s) => s.key === step);
+  const isLastStep = stepIdx === STEPS.length - 1;
+  const isFirstStep = stepIdx === 0;
+
   return (
-    <div className="space-y-6">
-      {/* Step tabs */}
-      <div className="flex gap-2 items-center">
-        <button
-          onClick={() => setFormStep("a")}
-          className={cn(
-            "flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors border",
-            formStep === "a"
-              ? "bg-primary text-primary-foreground border-primary"
-              : "border-border text-muted-foreground hover:bg-muted",
-          )}
-        >
-          A — Student Info
-        </button>
-        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-        <button
-          onClick={() => {
-            if (firstName && lastName) setFormStep("b");
-          }}
-          className={cn(
-            "flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors border",
-            formStep === "b"
-              ? "bg-primary text-primary-foreground border-primary"
-              : "border-border text-muted-foreground hover:bg-muted",
-          )}
-        >
-          B — Program & Accommodation
-        </button>
+    <div className="space-y-5">
+      {/* ── Step indicator ── */}
+      <div className="flex items-center gap-1">
+        {STEPS.map((s, i) => {
+          const done = i < stepIdx;
+          const current = s.key === step;
+          return (
+            <React.Fragment key={s.key}>
+              <button
+                onClick={() => goTo(s.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+                  current
+                    ? "bg-primary text-primary-foreground"
+                    : done
+                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                )}
+              >
+                {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{i + 1}</span>}
+                <span className="hidden sm:inline">{s.label}</span>
+              </button>
+              {i < STEPS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
+            </React.Fragment>
+          );
+        })}
       </div>
 
-      {/* ── SECTION A ── */}
-      {formStep === "a" && (
+      {/* ══ STEP 1: Personal Info ══ */}
+      {step === "personal" && (
         <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Personal Information</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div>
-              <Label>First Name *</Label>
-              <Input className="mt-1" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            </div>
+            <Field label="First Name" error={errors.firstName}>
+              <Input
+                className={cn("mt-1", errors.firstName && "border-destructive")}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </Field>
             <div>
               <Label>Middle Name</Label>
               <Input className="mt-1" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
             </div>
-            <div>
-              <Label>Last Name *</Label>
-              <Input className="mt-1" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </div>
+            <Field label="Last Name" error={errors.lastName}>
+              <Input
+                className={cn("mt-1", errors.lastName && "border-destructive")}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </Field>
           </div>
-          <BirthdayPicker label="Date of Birth *" value={dob} onChange={setDob} />
+          <BirthdayPicker label="Date of Birth" value={dob} onChange={setDob} />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Gender</Label>
@@ -431,6 +515,7 @@ export default function ProfileCompletionForm({
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -439,24 +524,31 @@ export default function ProfileCompletionForm({
               <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ══ STEP 2: Contact Details ══ */}
+      {step === "contact" && (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Details</h3>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Email</Label>
-              <Input className="mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <Label>Phone</Label>
-              <Input className="mt-1" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-          </div>
-          <div>
-            <Label>Address</Label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
-              <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
-              <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
-            </div>
-            <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+            <Field label="Email" error={errors.email}>
+              <Input
+                className={cn("mt-1", errors.email && "border-destructive")}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="student@email.com"
+              />
+            </Field>
+            <Field label="Phone" error={errors.phone}>
+              <Input
+                className={cn("mt-1", errors.phone && "border-destructive")}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+972..."
+              />
+            </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -468,26 +560,22 @@ export default function ProfileCompletionForm({
               <Input className="mt-1" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button
-              onClick={() => {
-                if (!firstName.trim() || !lastName.trim()) {
-                  toast({ variant: "destructive", description: "First and last name are required" });
-                  return;
-                }
-                setFormStep("b");
-              }}
-            >
-              Next <ChevronRight className="h-4 w-4 ms-1" />
-            </Button>
+          <div>
+            <Label>Address</Label>
+            <div className="grid grid-cols-3 gap-2 mt-1">
+              <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
+              <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
+              <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+            </div>
+            <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
         </div>
       )}
 
-      {/* ── SECTION B ── */}
-      {formStep === "b" && (
+      {/* ══ STEP 3: Program ══ */}
+      {step === "program" && (
         <div className="space-y-4">
-          {/* Program */}
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Program</h3>
           <div>
             <Label>Language Program</Label>
             <Select value={programId} onValueChange={setProgramId}>
@@ -519,8 +607,6 @@ export default function ProfileCompletionForm({
               </div>
             )}
           </div>
-
-          {/* Intake month */}
           <div>
             <Label>Intake Month</Label>
             <Select value={startMonth} onValueChange={setStartMonth}>
@@ -536,10 +622,8 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-
-          {/* Start / End */}
           <div className="grid grid-cols-2 gap-3">
-            <DatePickerField label="Course Start Date" value={courseStart} onChange={setCourseStart} />
+            <DatePick label="Course Start Date" value={courseStart} onChange={setCourseStart} />
             <div>
               <Label>Course End Date</Label>
               <div
@@ -557,8 +641,6 @@ export default function ProfileCompletionForm({
               )}
             </div>
           </div>
-
-          {/* School → Accommodation cascade */}
           <div>
             <Label>School</Label>
             <Select value={schoolId} onValueChange={setSchoolId}>
@@ -575,40 +657,49 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
+          <DatePick label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
+        </div>
+      )}
 
-          {schoolId && (
-            <div>
-              <Label>Accommodation</Label>
-              <Select
-                value={accommodationId}
-                onValueChange={setAccommodationId}
-                disabled={filteredAccommodations.length === 0}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue
-                    placeholder={
-                      filteredAccommodations.length === 0 ? "No accommodations for this school" : "Select accommodation"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredAccommodations.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name_en}
-                      {a.price ? ` — ${a.price.toLocaleString()} ${a.currency}/mo` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedAccom?.price && (
-                <p className="text-xs text-emerald-600 mt-1">
-                  💰 {selectedAccom.price.toLocaleString()} {selectedAccom.currency}/month
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Insurance */}
+      {/* ══ STEP 4: Accommodation ══ */}
+      {step === "accommodation" && (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            Accommodation & Insurance
+          </h3>
+          <div>
+            <Label>
+              Accommodation{" "}
+              {!schoolId && <span className="text-muted-foreground text-xs">(select a school first)</span>}
+            </Label>
+            <Select value={accommodationId} onValueChange={setAccommodationId} disabled={filteredAccoms.length === 0}>
+              <SelectTrigger className="mt-1">
+                <SelectValue
+                  placeholder={
+                    filteredAccoms.length === 0
+                      ? schoolId
+                        ? "No accommodations for this school"
+                        : "Select a school first"
+                      : "Select accommodation"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {filteredAccoms.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name_en}
+                    {a.price ? ` — ${a.price.toLocaleString()} ${a.currency}/mo` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedAccom?.price && (
+              <p className="text-xs text-emerald-600 mt-1">
+                💰 {selectedAccom.price.toLocaleString()} {selectedAccom.currency}/month
+              </p>
+            )}
+          </div>
           <div>
             <Label>Insurance (optional)</Label>
             <Select value={insuranceId} onValueChange={setInsuranceId}>
@@ -625,14 +716,9 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-
-          {/* Arrival */}
-          <DatePickerField label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
-
-          {/* Cost summary */}
           {(selectedProgram?.price || selectedAccom?.price || selectedIns?.price) && (
-            <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm space-y-1">
-              <p className="font-medium text-foreground mb-2">Cost Summary</p>
+            <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm space-y-1.5">
+              <p className="font-semibold text-foreground mb-2">Cost Summary</p>
               {selectedProgram?.price && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Program</span>
@@ -660,19 +746,61 @@ export default function ProfileCompletionForm({
               )}
             </div>
           )}
-
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setFormStep("a")}>
-              <ChevronLeft className="h-4 w-4 me-1" />
-              Back
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />}
-              {isAr ? "حفظ الملف الشخصي" : "Save Profile"}
-            </Button>
-          </div>
         </div>
       )}
+
+      {/* ══ STEP 5: Review & Save ══ */}
+      {step === "review" && (
+        <div className="space-y-3">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Review & Save</h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {[
+              ["Full Name", fullName || "—"],
+              ["Date of Birth", dob ? format(dob, "PP") : "—"],
+              ["Gender", gender || "—"],
+              ["City of Birth", cityOfBirth || "—"],
+              ["Email", email || "—"],
+              ["Phone", phone || "—"],
+              ["Emergency Contact", emergencyName ? `${emergencyName} · ${emergencyPhone}` : "—"],
+              ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
+              ["Program", selectedProgram?.name_en || "—"],
+              ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
+              ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
+              ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
+              ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
+              ["Accommodation", selectedAccom?.name_en || "—"],
+              ["Insurance", selectedIns?.name || "—"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex flex-col gap-0.5 p-2 rounded-lg bg-muted/30">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</span>
+                <span className="text-sm font-medium truncate">{v}</span>
+              </div>
+            ))}
+          </div>
+          {Object.keys(validate("personal")).length > 0 || Object.keys(validate("contact")).length > 0 ? (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+              ⚠ Some required fields are missing. Please go back and complete them.
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* ── Navigation ── */}
+      <div className="flex justify-between pt-2 border-t border-border">
+        <Button variant="outline" onClick={goBack} disabled={isFirstStep}>
+          <ChevronLeft className="h-4 w-4 me-1" /> Back
+        </Button>
+        {isLastStep ? (
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />}
+            Save Profile
+          </Button>
+        ) : (
+          <Button onClick={goNext}>
+            Next <ChevronRight className="h-4 w-4 ms-1" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
