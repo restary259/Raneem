@@ -58,11 +58,12 @@ import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 
 interface Appointment {
   id: string;
-  case_id: string;
+  case_id: string | null;
   scheduled_at: string;
   duration_minutes: number;
   notes: string | null;
   outcome: string | null;
+  guest_name?: string | null;
   case?: { full_name: string; phone_number: string; status: string } | null;
 }
 
@@ -135,14 +136,14 @@ export default function TeamAppointmentsPage() {
   const [newDuration, setNewDuration] = useState("60");
   const [newNotes, setNewNotes] = useState("");
   const [newCaseId, setNewCaseId] = useState("");
+  const [newGuestName, setNewGuestName] = useState("");
+  const [useGuestName, setUseGuestName] = useState(false);
   const [myCases, setMyCases] = useState<Case[]>([]);
   const [creating, setCreating] = useState(false);
 
   // Drag-and-drop
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
-  const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
-  const [confirmingMove, setConfirmingMove] = useState(false);
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const fetchAppts = useCallback(async () => {
@@ -184,45 +185,35 @@ export default function TeamAppointmentsPage() {
     e.dataTransfer.dropEffect = "move";
     setDragOverSlot({ day, hour });
   };
-  const handleDrop = (e: React.DragEvent, day: Date, hour: number) => {
+  const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
     if (!draggingId) return;
     const appt = appts.find((a) => a.id === draggingId);
+    setDraggingId(null);
+    setDragOverSlot(null);
     if (!appt) return;
     const newDt = new Date(day);
     newDt.setHours(hour, 0, 0, 0);
     const orig = parseISO(appt.scheduled_at);
-    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
-      setDraggingId(null);
-      setDragOverSlot(null);
-      return;
+    if (isSameDay(newDt, orig) && getHours(orig) === hour) return;
+    // Optimistic update
+    setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: newDt.toISOString() } : a)));
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ scheduled_at: newDt.toISOString() })
+        .eq("id", appt.id);
+      if (error) throw error;
+      toast({ title: format(newDt, "EEE, MMM d 'at' h:mm a") });
+    } catch (err: any) {
+      // Revert on failure
+      setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: appt.scheduled_at } : a)));
+      toast({ variant: "destructive", description: err.message });
     }
-    setPendingMove({ appt, newDate: newDt });
-    setDraggingId(null);
-    setDragOverSlot(null);
   };
   const handleDragEnd = () => {
     setDraggingId(null);
     setDragOverSlot(null);
-  };
-
-  const confirmMove = async () => {
-    if (!pendingMove) return;
-    setConfirmingMove(true);
-    try {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ scheduled_at: pendingMove.newDate.toISOString() })
-        .eq("id", pendingMove.appt.id);
-      if (error) throw error;
-      toast({ title: "Appointment rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
-      setPendingMove(null);
-      fetchAppts();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setConfirmingMove(false);
-    }
   };
 
   // ── Navigation ──────────────────────────────────────────────────────────────
@@ -279,12 +270,22 @@ export default function TeamAppointmentsPage() {
     setNewDuration("60");
     setNewNotes("");
     setNewCaseId("");
+    setNewGuestName("");
+    setUseGuestName(false);
   };
 
   // ── Create ──────────────────────────────────────────────────────────────────
   const handleCreate = async () => {
-    if (!newCaseId || !newDateStr) {
-      toast({ variant: "destructive", description: "Select a case and date" });
+    if (!newDateStr) {
+      toast({ variant: "destructive", description: "Select a date" });
+      return;
+    }
+    if (!useGuestName && !newCaseId) {
+      toast({ variant: "destructive", description: "Select a case or enter a name" });
+      return;
+    }
+    if (useGuestName && !newGuestName.trim()) {
+      toast({ variant: "destructive", description: "Enter a name for the appointment" });
       return;
     }
     setCreating(true);
@@ -292,19 +293,23 @@ export default function TeamAppointmentsPage() {
       const [hh, mm] = newTime.split(":").map(Number);
       const dt = new Date(newDateStr);
       dt.setHours(hh, mm, 0, 0);
-      const { error } = await supabase.from("appointments").insert({
-        case_id: newCaseId,
+      const payload: any = {
         team_member_id: user!.id,
         scheduled_at: dt.toISOString(),
         duration_minutes: parseInt(newDuration),
         notes: newNotes || null,
-      });
+        case_id: useGuestName ? null : newCaseId,
+        guest_name: useGuestName ? newGuestName.trim() : null,
+      };
+      const { error } = await supabase.from("appointments").insert(payload);
       if (error) throw error;
-      await supabase
-        .from("cases")
-        .update({ status: "appointment_scheduled" })
-        .eq("id", newCaseId)
-        .eq("status", "contacted");
+      if (!useGuestName && newCaseId) {
+        await supabase
+          .from("cases")
+          .update({ status: "appointment_scheduled" })
+          .eq("id", newCaseId)
+          .eq("status", "contacted");
+      }
       toast({ title: "Appointment created" });
       setShowNew(false);
       resetNewForm();
@@ -426,7 +431,9 @@ export default function TeamAppointmentsPage() {
                       >
                         <div className="flex items-center gap-0.5">
                           <GripVertical className="h-2.5 w-2.5 opacity-40 shrink-0" />
-                          <span className="font-semibold truncate">{(a.case as any)?.full_name ?? "—"}</span>
+                          <span className="font-semibold truncate">
+                            {(a.case as any)?.full_name ?? (a as any).guest_name ?? "—"}
+                          </span>
                         </div>
                         <div className="flex items-center gap-0.5 opacity-70 mt-0.5">
                           <Clock className="h-2.5 w-2.5" />
@@ -570,7 +577,8 @@ export default function TeamAppointmentsPage() {
                                   apptClasses(a.outcome, isPast),
                                 )}
                               >
-                                {format(parseISO(a.scheduled_at), "h:mm")} {(a.case as any)?.full_name}
+                                {format(parseISO(a.scheduled_at), "h:mm")}{" "}
+                                {(a.case as any)?.full_name ?? (a as any).guest_name ?? "—"}
                               </div>
                             );
                           })}
@@ -604,28 +612,50 @@ export default function TeamAppointmentsPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Case */}
+            {/* Case / guest toggle */}
             <div>
-              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Case <span className="text-destructive">*</span>
-              </Label>
-              <Select value={newCaseId} onValueChange={setNewCaseId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select case…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {myCases.length === 0 ? (
-                    <div className="py-3 text-center text-sm text-muted-foreground">No cases assigned</div>
-                  ) : (
-                    myCases.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="font-medium">{c.full_name}</span>
-                        <span className="ms-1.5 text-muted-foreground text-xs">{c.phone_number}</span>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {useGuestName ? "Name" : "Case"} <span className="text-destructive">*</span>
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseGuestName((v) => !v);
+                    setNewCaseId("");
+                    setNewGuestName("");
+                  }}
+                  className="text-xs text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  {useGuestName ? "← Link to case" : "No case? Enter name →"}
+                </button>
+              </div>
+              {useGuestName ? (
+                <Input
+                  value={newGuestName}
+                  onChange={(e) => setNewGuestName(e.target.value)}
+                  placeholder="e.g. Ahmad Karimi"
+                  autoFocus
+                />
+              ) : (
+                <Select value={newCaseId} onValueChange={setNewCaseId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select case…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {myCases.length === 0 ? (
+                      <div className="py-3 text-center text-sm text-muted-foreground">No cases assigned</div>
+                    ) : (
+                      myCases.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          <span className="font-medium">{c.full_name}</span>
+                          <span className="ms-1.5 text-muted-foreground text-xs">{c.phone_number}</span>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Date — native input (clean, keyboard-friendly) */}
@@ -749,7 +779,7 @@ export default function TeamAppointmentsPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
-              <span>{(selectedAppt?.case as any)?.full_name ?? "—"}</span>
+              <span>{(selectedAppt?.case as any)?.full_name ?? (selectedAppt as any)?.guest_name ?? "—"}</span>
               {selectedAppt?.outcome ? (
                 <Badge className={cn("text-xs", apptClasses(selectedAppt.outcome, false))}>
                   {selectedAppt.outcome.replace(/_/g, " ")}
@@ -813,10 +843,12 @@ export default function TeamAppointmentsPage() {
               <Trash2 className="h-3.5 w-3.5 me-1" /> Delete
             </Button>
 
-            {/* View Case */}
-            <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt?.case_id}`)}>
-              <ExternalLink className="h-3.5 w-3.5 me-1" /> Case
-            </Button>
+            {/* View Case — only if linked to a case */}
+            {selectedAppt?.case_id && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
+                <ExternalLink className="h-3.5 w-3.5 me-1" /> Case
+              </Button>
+            )}
 
             {/* Record Outcome */}
             {selectedAppt && !selectedAppt.outcome && (
@@ -830,42 +862,6 @@ export default function TeamAppointmentsPage() {
                 Record Outcome
               </Button>
             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── DRAG CONFIRM ───────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!pendingMove}
-        onOpenChange={(v) => {
-          if (!v) setPendingMove(null);
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Reschedule Appointment?</DialogTitle>
-          </DialogHeader>
-          {pendingMove && (
-            <div className="text-sm space-y-3">
-              <p className="text-muted-foreground">
-                Move <strong>{(pendingMove.appt.case as any)?.full_name}</strong> to:
-              </p>
-              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 font-semibold text-center">
-                {format(pendingMove.newDate, "EEEE, MMM d 'at' h:mm a")}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Was: {format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a")}
-              </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingMove(null)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmMove} disabled={confirmingMove}>
-              {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
-              Confirm
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
