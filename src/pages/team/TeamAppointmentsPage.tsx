@@ -148,6 +148,11 @@ export default function TeamAppointmentsPage() {
   /* DnD state */
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
+  const [confirmingMove, setConfirmingMove] = useState(false);
+  // Track whether a drag actually started so click doesn't fire after drag
+  const didDragRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Delete state */
   const [deletingAppt, setDeletingAppt] = useState<Appointment | null>(null);
@@ -311,6 +316,7 @@ export default function TeamAppointmentsPage() {
 
   /* ─── Drag & Drop ───────────────────────────────────────────────────── */
   const handleDragStart = (e: React.DragEvent, apptId: string) => {
+    didDragRef.current = true;
     setDraggingId(apptId);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -321,7 +327,7 @@ export default function TeamAppointmentsPage() {
     setDragOverSlot({ day, hour });
   };
 
-  const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
+  const handleDrop = (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
     if (!draggingId) return;
     const appt = appts.find((a) => a.id === draggingId);
@@ -334,26 +340,34 @@ export default function TeamAppointmentsPage() {
       setDragOverSlot(null);
       return;
     }
-    // Optimistic update
-    setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: newDt.toISOString() } : a)));
+    // Show confirmation — do NOT save yet
+    setPendingMove({ appt, newDate: newDt });
     setDraggingId(null);
     setDragOverSlot(null);
-    try {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ scheduled_at: newDt.toISOString() })
-        .eq("id", appt.id);
-      if (error) throw error;
-      toast({ title: "Rescheduled", description: format(newDt, "EEE, MMM d 'at' h:mm a") });
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-      fetchAppts();
-    }
   };
 
   const handleDragEnd = () => {
     setDraggingId(null);
     setDragOverSlot(null);
+  };
+
+  const confirmMove = async () => {
+    if (!pendingMove) return;
+    setConfirmingMove(true);
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ scheduled_at: pendingMove.newDate.toISOString() })
+        .eq("id", pendingMove.appt.id);
+      if (error) throw error;
+      toast({ title: "Rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      setPendingMove(null);
+      fetchAppts();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setConfirmingMove(false);
+    }
   };
 
   /* ─── Navigation ────────────────────────────────────────────────────── */
@@ -397,22 +411,58 @@ export default function TeamAppointmentsPage() {
   /* ─── Appointment block component ───────────────────────────────────── */
   const ApptBlock = ({ appt, compact = false }: { appt: Appointment; compact?: boolean }) => {
     const s = apptStyle(appt.outcome);
+    const blockRef = useRef<HTMLDivElement>(null);
+    const isDraggable = useRef(false);
+    const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const onMouseDown = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      isDraggable.current = false;
+      didDragRef.current = false;
+      pressTimer.current = setTimeout(() => {
+        isDraggable.current = true;
+        if (blockRef.current) blockRef.current.setAttribute("draggable", "true");
+      }, 300);
+    };
+
+    const onMouseUp = () => {
+      if (pressTimer.current) clearTimeout(pressTimer.current);
+      // Reset draggable after a tick so dragend can fire first
+      setTimeout(() => {
+        if (blockRef.current) blockRef.current.setAttribute("draggable", "false");
+        isDraggable.current = false;
+      }, 50);
+    };
+
+    const onClickBlock = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (didDragRef.current) return; // drag happened, don't open detail
+      setSelectedAppt(appt);
+    };
+
     return (
       <div
-        draggable
+        ref={blockRef}
+        draggable={false}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
         onDragStart={(e) => {
           e.stopPropagation();
-          handleDragStart(e, appt.id);
+          if (isDraggable.current) handleDragStart(e, appt.id);
+          else e.preventDefault();
         }}
-        onDragEnd={handleDragEnd}
-        onClick={(e) => {
+        onDragEnd={(e) => {
           e.stopPropagation();
-          setSelectedAppt(appt);
+          handleDragEnd();
+          onMouseUp();
         }}
+        onClick={onClickBlock}
         className={cn(
-          "rounded-lg border cursor-grab active:cursor-grabbing select-none transition-all duration-150",
+          "rounded-lg border select-none transition-all duration-150",
           s.bg,
-          draggingId === appt.id ? "opacity-40 scale-95" : "hover:shadow-sm hover:scale-[1.01]",
+          draggingId === appt.id
+            ? "opacity-40 scale-95 cursor-grabbing"
+            : "cursor-pointer hover:shadow-sm hover:scale-[1.01]",
           compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
         )}
       >
@@ -952,6 +1002,42 @@ export default function TeamAppointmentsPage() {
             <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
               {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══ RESCHEDULE CONFIRM ══ */}
+      <Dialog
+        open={!!pendingMove}
+        onOpenChange={(v) => {
+          if (!v) setPendingMove(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reschedule Appointment?</DialogTitle>
+          </DialogHeader>
+          {pendingMove && (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                Move <strong>{(pendingMove.appt.case as any)?.full_name}</strong> to:
+              </p>
+              <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 font-semibold text-center text-base">
+                {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Previously: {format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a")}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingMove(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmMove} disabled={confirmingMove}>
+              {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              Confirm Reschedule
             </Button>
           </DialogFooter>
         </DialogContent>
