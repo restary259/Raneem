@@ -22,6 +22,7 @@ interface PartnerOverride {
   partner_id: string;
   commission_amount: number;
   notes: string | null;
+  show_all_cases: boolean | null; // null = inherit global, true = all cases, false = apply/contact only
   partner_name?: string;
 }
 
@@ -50,7 +51,12 @@ export default function CommissionSettingsPanel() {
   const [saving, setSaving] = useState(false);
 
   // Override form state
-  const [newPartnerOverride, setNewPartnerOverride] = useState({ partner_id: "", amount: "", notes: "" });
+  const [newPartnerOverride, setNewPartnerOverride] = useState({
+    partner_id: "",
+    amount: "",
+    notes: "",
+    show_all_cases: null as boolean | null,
+  });
   const [newTeamOverride, setNewTeamOverride] = useState({ team_member_id: "", amount: "", notes: "" });
 
   const fetchData = useCallback(async () => {
@@ -158,12 +164,13 @@ export default function CommissionSettingsPanel() {
           partner_id: newPartnerOverride.partner_id,
           commission_amount: parseInt(newPartnerOverride.amount),
           notes: newPartnerOverride.notes || null,
+          show_all_cases: newPartnerOverride.show_all_cases,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "partner_id" },
       );
       if (error) throw error;
-      setNewPartnerOverride({ partner_id: "", amount: "", notes: "" });
+      setNewPartnerOverride({ partner_id: "", amount: "", notes: "", show_all_cases: null });
       toast({ description: "Partner override saved ✓" });
       fetchData();
     } catch (err: any) {
@@ -354,6 +361,18 @@ export default function CommissionSettingsPanel() {
                   <Badge variant="secondary" className="font-mono">
                     ₪{ov.commission_amount.toLocaleString()}
                   </Badge>
+                  <Badge
+                    variant={
+                      ov.show_all_cases === true ? "default" : ov.show_all_cases === false ? "outline" : "secondary"
+                    }
+                    className="text-xs whitespace-nowrap"
+                  >
+                    {ov.show_all_cases === true
+                      ? "👁 All Cases"
+                      : ov.show_all_cases === false
+                        ? "🔒 Apply/Contact Only"
+                        : "⚙️ Global Default"}
+                  </Badge>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -403,6 +422,40 @@ export default function CommissionSettingsPanel() {
                 onChange={(e) => setNewPartnerOverride((p) => ({ ...p, notes: e.target.value }))}
               />
             </div>
+
+            {/* Visibility override */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                <Eye className="h-3.5 w-3.5" /> Case Visibility for this Partner
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "null", label: "⚙️ Global Default", desc: "Follow platform setting" },
+                  { value: "true", label: "👁 All Cases", desc: "See every case in system" },
+                  { value: "false", label: "🔒 Apply/Contact Only", desc: "Only their sourced cases" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      setNewPartnerOverride((p) => ({
+                        ...p,
+                        show_all_cases: opt.value === "null" ? null : opt.value === "true",
+                      }))
+                    }
+                    className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
+                      String(newPartnerOverride.show_all_cases) === opt.value
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <p className="font-semibold">{opt.label}</p>
+                    <p className="opacity-70 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Button
               size="sm"
               onClick={addPartnerOverride}
