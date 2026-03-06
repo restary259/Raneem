@@ -663,7 +663,11 @@ export default function ProfileCompletionForm({
                 <span className="text-muted-foreground text-xs">(select a school on the previous step first)</span>
               )}
             </Label>
-            <Select value={accommodationId} onValueChange={setAccommodationId} disabled={filteredAccoms.length === 0}>
+            <Select
+              value={accommodationId || "__none__"}
+              onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)}
+              disabled={filteredAccoms.length === 0}
+            >
               <SelectTrigger className="mt-1">
                 <SelectValue
                   placeholder={
@@ -676,7 +680,7 @@ export default function ProfileCompletionForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="__none__">None</SelectItem>
                 {filteredAccoms.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.name_en}
@@ -693,12 +697,12 @@ export default function ProfileCompletionForm({
           </div>
           <div>
             <Label>Insurance (optional)</Label>
-            <Select value={insuranceId} onValueChange={setInsuranceId}>
+            <Select value={insuranceId || "__none__"} onValueChange={(v) => setInsuranceId(v === "__none__" ? "" : v)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="__none__">None</SelectItem>
                 {insurances.map((i) => (
                   <SelectItem key={i.id} value={i.id}>
                     {i.name} ({i.tier}) — {i.price.toLocaleString()} {i.currency}/mo
