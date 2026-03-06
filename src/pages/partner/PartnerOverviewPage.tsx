@@ -49,16 +49,22 @@ export default function PartnerOverviewPage() {
     if (profRes.data) setProfile(profRes.data);
 
     const rate = settingsRes.data?.partner_commission_rate ?? 500;
-    const showAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
+    const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     setCommissions(commissionsRes.data || []);
 
-    // Check per-partner commission override
+    // Check per-partner override (commission + visibility)
     const { data: override } = await (supabase as any)
       .from("partner_commission_overrides")
-      .select("commission_amount")
+      .select("commission_amount,show_all_cases")
       .eq("partner_id", uid)
       .maybeSingle();
     setCommissionRate(Number(override?.commission_amount ?? rate));
+
+    // Visibility: per-partner override takes priority, then global setting
+    const showAll =
+      override?.show_all_cases !== null && override?.show_all_cases !== undefined
+        ? override.show_all_cases
+        : globalShowAll;
 
     // Fetch cases
     let query = (supabase as any)
