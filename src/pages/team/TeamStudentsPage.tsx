@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus, User, Mail, Phone, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import CreateStudentWizard from "@/components/CreateStudentWizard";
 
 interface StudentProfile {
   id: string;
