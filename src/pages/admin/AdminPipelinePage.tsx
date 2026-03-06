@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -23,10 +22,14 @@ import {
   Calculator,
   Languages,
   Briefcase,
+  Pencil,
+  Check,
   X,
 } from "lucide-react";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
+
+/* ─────────────────────────── constants ─────────────────────────── */
 
 const STATUSES = [
   "new",
@@ -52,18 +55,28 @@ const STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> =
   enrollment_paid: { en: "Enrolled", ar: "مسجل", color: "bg-green-100 text-green-800 border-green-200" },
 };
 
-const PASSPORT_LABELS: Record<string, string> = {
-  israeli_blue: "Israeli Blue Passport",
-  israeli_red: "Israeli Red Passport (family reunification)",
-  other: "Other",
-};
+const PASSPORT_OPTIONS = [
+  { value: "israeli_blue", label: "Israeli Blue Passport" },
+  { value: "israeli_red", label: "Israeli Red Passport (family reunification)" },
+  { value: "other", label: "Other" },
+];
 
-const EDUCATION_LABELS: Record<string, string> = {
-  bagrut: "Bagrut (תעודת בגרות)",
-  bachelor: "Bachelor (תואר ראשון)",
-  master: "Master (תואר שני)",
-  other: "Other",
-};
+const EDUCATION_OPTIONS = [
+  { value: "bagrut", label: "Bagrut (תעודת בגרות)" },
+  { value: "bachelor", label: "Bachelor (תואר ראשון)" },
+  { value: "master", label: "Master (תואר שני)" },
+  { value: "other", label: "Other" },
+];
+
+const UNIT_OPTIONS = ["3", "4", "5"];
+
+const PROFICIENCY_OPTIONS = [
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+];
+
+/* ─────────────────────────── types ─────────────────────────── */
 
 interface Case {
   id: string;
@@ -76,7 +89,6 @@ interface Case {
   created_at: string;
   is_no_show: boolean;
   assignee_name?: string;
-  // Apply page fields
   city: string | null;
   education_level: string | null;
   bagrut_score: number | null;
@@ -94,9 +106,27 @@ interface TeamMember {
   email: string;
 }
 
+interface EditDraft {
+  city: string;
+  passport_type: string;
+  education_level: string;
+  english_units: string;
+  math_units: string;
+  english_level: string;
+  degree_interest: string;
+  intake_notes: string;
+}
+
+/* ─────────────────────────── helpers ─────────────────────────── */
+
 const daysSince = (ts: string) => Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
 
-/* ── Small info row helper ─────────────────────────── */
+const passportLabel = (v: string | null) =>
+  PASSPORT_OPTIONS.find((o) => o.value === v)?.label ?? v?.replace(/_/g, " ") ?? "—";
+
+const educationLabel = (v: string | null) => EDUCATION_OPTIONS.find((o) => o.value === v)?.label ?? v ?? "—";
+
+/* ── Read-only info row ── */
 function InfoRow({
   icon: Icon,
   label,
@@ -122,7 +152,25 @@ function InfoRow({
   );
 }
 
-/* ── Main component ────────────────────────────────── */
+/* ── Chip selector button (edit mode) ── */
+function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+        active
+          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          : "bg-card border-border hover:border-primary/50 text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ─────────────────────────── main component ─────────────────────────── */
+
 const AdminPipelinePage = () => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
@@ -135,9 +183,12 @@ const AdminPipelinePage = () => {
   const [filterTeam, setFilterTeam] = useState("all");
   const [assigning, setAssigning] = useState<string | null>(null);
 
-  // Sheet state
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [draft, setDraft] = useState<EditDraft | null>(null);
+  const [saving, setSaving] = useState(false);
 
+  /* ── fetch data ── */
   const fetchData = useCallback(async () => {
     try {
       const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
@@ -148,28 +199,19 @@ const AdminPipelinePage = () => {
           ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
-
       if (casesRes.error) throw casesRes.error;
-
       const profileMap: Record<string, string> = {};
       (profilesRes.data || []).forEach((p) => {
         profileMap[p.id] = p.full_name;
       });
-
       const enriched = (casesRes.data || []).map((c) => ({
         ...c,
         assignee_name: c.assigned_to ? profileMap[c.assigned_to] : undefined,
       }));
-
       setCases(enriched);
       setTeamMembers((profilesRes.data || []).map((p) => ({ id: p.id, full_name: p.full_name, email: p.email || "" })));
-
-      // Keep selected case in sync if it's open
-      setSelectedCase((prev) => {
-        if (!prev) return null;
-        const updated = enriched.find((c) => c.id === prev.id);
-        return updated ?? null;
-      });
+      // keep sheet in sync after refresh
+      setSelectedCase((prev) => (prev ? (enriched.find((c) => c.id === prev.id) ?? null) : null));
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -182,6 +224,7 @@ const AdminPipelinePage = () => {
   }, [fetchData]);
   useRealtimeSubscription("cases", fetchData, true);
 
+  /* ── assign ── */
   const assignCase = async (caseId: string, userId: string | null) => {
     setAssigning(caseId);
     try {
@@ -199,6 +242,59 @@ const AdminPipelinePage = () => {
     }
   };
 
+  /* ── sheet open ── */
+  const openCase = (c: Case) => {
+    setSelectedCase(c);
+    setEditMode(false);
+    setDraft(null);
+  };
+
+  /* ── start edit ── */
+  const startEdit = (c: Case) => {
+    setDraft({
+      city: c.city ?? "",
+      passport_type: c.passport_type ?? "",
+      education_level: c.education_level ?? "",
+      english_units: c.english_units != null ? String(c.english_units) : "",
+      math_units: c.math_units != null ? String(c.math_units) : "",
+      english_level: c.english_level ?? "",
+      degree_interest: c.degree_interest ?? "",
+      intake_notes: c.intake_notes ?? "",
+    });
+    setEditMode(true);
+  };
+
+  /* ── save edits to DB ── */
+  const saveEdit = async () => {
+    if (!selectedCase || !draft) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({
+          city: draft.city.trim() || null,
+          passport_type: draft.passport_type || null,
+          education_level: draft.education_level || null,
+          english_units: draft.english_units ? parseInt(draft.english_units) : null,
+          math_units: draft.math_units ? parseInt(draft.math_units) : null,
+          english_level: draft.english_level || null,
+          degree_interest: draft.degree_interest.trim() || null,
+          intake_notes: draft.intake_notes.trim() || null,
+        })
+        .eq("id", selectedCase.id);
+      if (error) throw error;
+      toast({ description: "Info saved successfully ✓" });
+      setEditMode(false);
+      setDraft(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ── filter ── */
   const filtered = cases.filter((c) => {
     const matchSearch =
       !search || c.full_name.toLowerCase().includes(search.toLowerCase()) || c.phone_number.includes(search);
@@ -211,13 +307,12 @@ const AdminPipelinePage = () => {
   const label = (status: string) => (isRtl ? STATUS_LABELS[status]?.ar : STATUS_LABELS[status]?.en);
 
   const sourceMeta: Record<string, { label: string; cls: string }> = {
-    apply_page: { label: isRtl ? "تطبيق" : "Apply", cls: "bg-blue-100 text-blue-700" },
-    contact_form: { label: isRtl ? "نموذج" : "Form", cls: "bg-yellow-100 text-yellow-700" },
-    manual: { label: isRtl ? "يدوي" : "Manual", cls: "bg-secondary text-secondary-foreground" },
-    submit_new_student: { label: isRtl ? "تسجيل" : "Enroll", cls: "bg-purple-100 text-purple-700" },
+    apply_page: { label: "Apply", cls: "bg-blue-100 text-blue-700" },
+    contact_form: { label: "Form", cls: "bg-yellow-100 text-yellow-700" },
+    manual: { label: "Manual", cls: "bg-secondary text-secondary-foreground" },
+    submit_new_student: { label: "Enroll", cls: "bg-purple-100 text-purple-700" },
   };
 
-  /* ── has any apply-page info ── */
   const hasApplyInfo = (c: Case) =>
     c.city ||
     c.education_level ||
@@ -228,6 +323,9 @@ const AdminPipelinePage = () => {
     c.degree_interest ||
     c.intake_notes;
 
+  const isBagrut = (draft?.education_level ?? selectedCase?.education_level) === "bagrut";
+
+  /* ════════════════════════ render ════════════════════════ */
   return (
     <div className="p-6 space-y-4 max-w-full">
       {/* Header */}
@@ -252,11 +350,11 @@ const AdminPipelinePage = () => {
         </div>
         <Select value={filterTeam} onValueChange={setFilterTeam}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={t("admin.pipeline.filterTeam", "Filter by team member")} />
+            <SelectValue placeholder="Filter by team member" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("admin.pipeline.allTeam", "All")}</SelectItem>
-            <SelectItem value="unassigned">{t("admin.pipeline.unassigned", "Unassigned")}</SelectItem>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
             {teamMembers.map((tm) => (
               <SelectItem key={tm.id} value={tm.id}>
                 {tm.full_name} — {tm.email}
@@ -266,7 +364,7 @@ const AdminPipelinePage = () => {
         </Select>
       </div>
 
-      {/* Kanban Board */}
+      {/* ── Kanban ── */}
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
           {STATUSES.map((status) => {
@@ -288,7 +386,7 @@ const AdminPipelinePage = () => {
                     ))
                   ) : statusCases.length === 0 ? (
                     <div className="h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">{t("admin.pipeline.empty", "Empty")}</p>
+                      <p className="text-xs text-muted-foreground">Empty</p>
                     </div>
                   ) : (
                     statusCases.map((c) => {
@@ -310,7 +408,7 @@ const AdminPipelinePage = () => {
                         <Card
                           key={c.id}
                           className={`cursor-pointer hover:shadow-md hover:border-primary/40 transition-all duration-150 ${borderClass}`}
-                          onClick={() => setSelectedCase(c)}
+                          onClick={() => openCase(c)}
                         >
                           <CardContent className="p-3 space-y-2">
                             <div className="flex items-start justify-between gap-2">
@@ -321,7 +419,7 @@ const AdminPipelinePage = () => {
                                 </span>
                                 {(isRedStale || isOrangeStale) && (
                                   <AlertTriangle
-                                    className={`h-3.5 w-3.5 shrink-0 ${isRedStale ? "text-destructive" : "text-orange-500"}`}
+                                    className={`h-3.5 w-3.5 ${isRedStale ? "text-destructive" : "text-orange-500"}`}
                                   />
                                 )}
                               </div>
@@ -336,23 +434,23 @@ const AdminPipelinePage = () => {
                               </p>
                             ) : (
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
-                                {isRtl ? "غير معيَّن" : "Unassigned"}
+                                Unassigned
                               </span>
                             )}
 
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {isRtl ? `${days} يوم` : `${days}d`}
-                              </div>
+                                {days}d
+                              </span>
                               {hasApplyInfo(c) && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                  {isRtl ? "بيانات" : "Has info"}
+                                  Has info
                                 </span>
                               )}
                             </div>
 
-                            {/* Prevent click from bubbling on the select */}
+                            {/* Assignment dropdown — stop propagation so click doesn't open sheet */}
                             <div onClick={(e) => e.stopPropagation()}>
                               <Select
                                 value={c.assigned_to || "unassigned"}
@@ -362,13 +460,11 @@ const AdminPipelinePage = () => {
                                 <SelectTrigger className="h-7 text-xs">
                                   <div className="flex items-center gap-1">
                                     <User className="h-3 w-3" />
-                                    <SelectValue placeholder={t("admin.pipeline.assign", "Assign")} />
+                                    <SelectValue placeholder="Assign" />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="unassigned">
-                                    {t("admin.pipeline.unassigned", "Unassigned")}
-                                  </SelectItem>
+                                  <SelectItem value="unassigned">Unassigned</SelectItem>
                                   {teamMembers.map((tm) => (
                                     <SelectItem key={tm.id} value={tm.id}>
                                       {tm.full_name} — {tm.email}
@@ -389,18 +485,23 @@ const AdminPipelinePage = () => {
         </div>
       </div>
 
-      {/* ── Case Info Sheet ─────────────────────────────── */}
+      {/* ══════════════════ Case Detail Sheet ══════════════════ */}
       <Sheet
         open={!!selectedCase}
         onOpenChange={(open) => {
-          if (!open) setSelectedCase(null);
+          if (!open) {
+            setSelectedCase(null);
+            setEditMode(false);
+            setDraft(null);
+          }
         }}
       >
         <SheetContent className="w-full sm:max-w-md overflow-y-auto" side="right">
           {selectedCase && (
             <>
-              <SheetHeader className="pb-4">
-                <div className="flex items-start justify-between gap-3">
+              {/* ── Sheet header ── */}
+              <SheetHeader className="pb-4 border-b border-border mb-5">
+                <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <SheetTitle className="text-lg font-bold truncate">{selectedCase.full_name}</SheetTitle>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -409,25 +510,56 @@ const AdminPipelinePage = () => {
                       >
                         {STATUS_LABELS[selectedCase.status]?.en ?? selectedCase.status}
                       </span>
-                      {selectedCase.source && (
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded font-medium ${(sourceMeta[selectedCase.source] ?? { cls: "bg-muted text-muted-foreground" }).cls}`}
-                        >
-                          {(sourceMeta[selectedCase.source] ?? { label: selectedCase.source }).label}
-                        </span>
-                      )}
+                      {selectedCase.source &&
+                        (() => {
+                          const s = sourceMeta[selectedCase.source] ?? {
+                            label: selectedCase.source,
+                            cls: "bg-muted text-muted-foreground",
+                          };
+                          return <span className={`text-xs px-2 py-0.5 rounded font-medium ${s.cls}`}>{s.label}</span>;
+                        })()}
                     </div>
                   </div>
+
+                  {/* Edit / Save / Cancel */}
+                  {!editMode ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 shrink-0 mt-0.5"
+                      onClick={() => startEdit(selectedCase)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit Info
+                    </Button>
+                  ) : (
+                    <div className="flex gap-1.5 shrink-0 mt-0.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="px-2"
+                        onClick={() => {
+                          setEditMode(false);
+                          setDraft(null);
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" className="gap-1.5 bg-primary" onClick={saveEdit} disabled={saving}>
+                        <Check className="h-3.5 w-3.5" />
+                        {saving ? "Saving…" : "Save"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </SheetHeader>
 
-              <div className="space-y-5">
-                {/* ── Contact ── */}
+              <div className="space-y-6">
+                {/* ── CONTACT ── always read-only ── */}
                 <section>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Contact</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Contact</p>
                   <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
                     <InfoRow icon={Phone} label="Phone / WhatsApp" value={selectedCase.phone_number} />
-                    <InfoRow icon={MapPin} label="City" value={selectedCase.city} />
+                    {!editMode && <InfoRow icon={MapPin} label="City" value={selectedCase.city} />}
                     <InfoRow
                       icon={Clock}
                       label="Submitted"
@@ -436,119 +568,271 @@ const AdminPipelinePage = () => {
                   </div>
                 </section>
 
-                {/* ── Identity ── */}
-                {selectedCase.passport_type && (
-                  <section>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Identity</p>
-                    <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
-                      <InfoRow
-                        icon={Globe}
-                        label="Passport Type"
-                        value={
-                          PASSPORT_LABELS[selectedCase.passport_type] ?? selectedCase.passport_type.replace(/_/g, " ")
-                        }
-                      />
-                    </div>
-                  </section>
+                {/* ══ VIEW MODE ══ */}
+                {!editMode && (
+                  <>
+                    {selectedCase.passport_type && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Identity
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4">
+                          <InfoRow
+                            icon={Globe}
+                            label="Passport Type"
+                            value={passportLabel(selectedCase.passport_type)}
+                          />
+                        </div>
+                      </section>
+                    )}
+
+                    {(selectedCase.education_level ||
+                      selectedCase.english_units != null ||
+                      selectedCase.math_units != null ||
+                      selectedCase.english_level) && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Education
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
+                          <InfoRow
+                            icon={BookOpen}
+                            label="Education Level"
+                            value={educationLabel(selectedCase.education_level)}
+                          />
+                          <InfoRow
+                            icon={Languages}
+                            label="English Units"
+                            value={selectedCase.english_units != null ? `${selectedCase.english_units} units` : null}
+                            highlight
+                          />
+                          <InfoRow
+                            icon={Calculator}
+                            label="Math Units"
+                            value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                            highlight
+                          />
+                          <InfoRow icon={Languages} label="English Proficiency" value={selectedCase.english_level} />
+                        </div>
+                      </section>
+                    )}
+
+                    {selectedCase.degree_interest && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Preferences
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4">
+                          <InfoRow
+                            icon={Briefcase}
+                            label="Preferred Major / Degree"
+                            value={selectedCase.degree_interest}
+                          />
+                        </div>
+                      </section>
+                    )}
+
+                    {selectedCase.intake_notes && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Notes
+                        </p>
+                        <div className="rounded-xl border border-border bg-card p-4">
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedCase.intake_notes}</p>
+                        </div>
+                      </section>
+                    )}
+
+                    {!hasApplyInfo(selectedCase) && (
+                      <div className="rounded-xl border-2 border-dashed border-border p-6 text-center">
+                        <GraduationCap className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                        <p className="text-sm font-medium text-muted-foreground">No application info yet</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">
+                          Click <strong>Edit Info</strong> above to fill in details manually.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {/* ── Education ── */}
-                {(selectedCase.education_level ||
-                  selectedCase.english_units != null ||
-                  selectedCase.math_units != null ||
-                  selectedCase.english_level ||
-                  selectedCase.bagrut_score != null) && (
-                  <section>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Education Background
+                {/* ══ EDIT MODE ══ */}
+                {editMode && draft && (
+                  <section className="space-y-5">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                      Edit Application Info
                     </p>
-                    <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
-                      <InfoRow
-                        icon={BookOpen}
-                        label="Education Level"
-                        value={
-                          selectedCase.education_level
-                            ? (EDUCATION_LABELS[selectedCase.education_level] ?? selectedCase.education_level)
-                            : null
-                        }
-                      />
-                      <InfoRow
-                        icon={Languages}
-                        label="English Units"
-                        value={selectedCase.english_units != null ? `${selectedCase.english_units} units` : null}
-                        highlight
-                      />
-                      <InfoRow
-                        icon={Calculator}
-                        label="Math Units"
-                        value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
-                        highlight
-                      />
-                      <InfoRow icon={Languages} label="English Proficiency" value={selectedCase.english_level} />
-                      <InfoRow
-                        icon={GraduationCap}
-                        label="Bagrut Score"
-                        value={selectedCase.bagrut_score != null ? String(selectedCase.bagrut_score) : null}
+
+                    {/* City */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" /> City
+                      </label>
+                      <Input
+                        value={draft.city}
+                        onChange={(e) => setDraft((d) => d && { ...d, city: e.target.value })}
+                        placeholder="e.g. Haifa"
+                        className="h-10"
                       />
                     </div>
-                  </section>
-                )}
 
-                {/* ── Preferences ── */}
-                {selectedCase.degree_interest && (
-                  <section>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Preferences
-                    </p>
-                    <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
-                      <InfoRow icon={Briefcase} label="Preferred Major / Degree" value={selectedCase.degree_interest} />
+                    {/* Passport Type */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5" /> Passport Type
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {PASSPORT_OPTIONS.map((o) => (
+                          <ChipBtn
+                            key={o.value}
+                            active={draft.passport_type === o.value}
+                            onClick={() => setDraft((d) => d && { ...d, passport_type: o.value })}
+                          >
+                            {o.label}
+                          </ChipBtn>
+                        ))}
+                      </div>
                     </div>
-                  </section>
-                )}
 
-                {/* ── Notes ── */}
-                {selectedCase.intake_notes && (
-                  <section>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Intake Notes
-                    </p>
-                    <div className="rounded-xl border border-border bg-card p-4">
-                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                        {selectedCase.intake_notes}
-                      </p>
+                    {/* Education Level */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5" /> Education Level
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {EDUCATION_OPTIONS.map((o) => (
+                          <ChipBtn
+                            key={o.value}
+                            active={draft.education_level === o.value}
+                            onClick={() =>
+                              setDraft(
+                                (d) =>
+                                  d && {
+                                    ...d,
+                                    education_level: o.value,
+                                    english_units: "",
+                                    math_units: "",
+                                    english_level: "",
+                                  },
+                              )
+                            }
+                          >
+                            {o.label}
+                          </ChipBtn>
+                        ))}
+                      </div>
                     </div>
-                  </section>
-                )}
 
-                {/* Empty state */}
-                {!hasApplyInfo(selectedCase) && (
-                  <div className="rounded-xl border border-dashed border-border p-6 text-center">
-                    <GraduationCap className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                    <p className="text-sm text-muted-foreground">No application info submitted yet.</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">
-                      This lead came through a non-apply-page source.
-                    </p>
-                  </div>
+                    {/* Bagrut: English + Math units */}
+                    {isBagrut && (
+                      <>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                            <Languages className="h-3.5 w-3.5" /> English Units
+                          </label>
+                          <div className="flex gap-2">
+                            {UNIT_OPTIONS.map((u) => (
+                              <ChipBtn
+                                key={u}
+                                active={draft.english_units === u}
+                                onClick={() => setDraft((d) => d && { ...d, english_units: u })}
+                              >
+                                {u}
+                              </ChipBtn>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                            <Calculator className="h-3.5 w-3.5" /> Math Units
+                          </label>
+                          <div className="flex gap-2">
+                            {UNIT_OPTIONS.map((u) => (
+                              <ChipBtn
+                                key={u}
+                                active={draft.math_units === u}
+                                onClick={() => setDraft((d) => d && { ...d, math_units: u })}
+                              >
+                                {u}
+                              </ChipBtn>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Higher-ed: English proficiency */}
+                    {(draft.education_level === "bachelor" || draft.education_level === "master") && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                          <Languages className="h-3.5 w-3.5" /> English Proficiency
+                        </label>
+                        <div className="flex gap-2">
+                          {PROFICIENCY_OPTIONS.map((o) => (
+                            <ChipBtn
+                              key={o.value}
+                              active={draft.english_level === o.value}
+                              onClick={() => setDraft((d) => d && { ...d, english_level: o.value })}
+                            >
+                              {o.label}
+                            </ChipBtn>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preferred Major */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5" /> Preferred Major / Degree
+                      </label>
+                      <Input
+                        value={draft.degree_interest}
+                        onChange={(e) => setDraft((d) => d && { ...d, degree_interest: e.target.value })}
+                        placeholder="e.g. Engineering, Medicine..."
+                        className="h-10"
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80">Intake Notes</label>
+                      <textarea
+                        value={draft.intake_notes}
+                        onChange={(e) => setDraft((d) => d && { ...d, intake_notes: e.target.value })}
+                        placeholder="Any notes about this student..."
+                        rows={3}
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      />
+                    </div>
+
+                    <Button className="w-full h-10 gap-2" onClick={saveEdit} disabled={saving}>
+                      <Check className="h-4 w-4" />
+                      {saving ? "Saving…" : "Save Changes"}
+                    </Button>
+                  </section>
                 )}
 
                 <Separator />
 
-                {/* ── Assign Team Member ── */}
+                {/* ── Assign team member ── */}
                 <section>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
                     Assign to Team Member
                   </p>
+
                   {selectedCase.assignee_name && (
-                    <div className="flex items-center gap-2 mb-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                        <User className="h-3.5 w-3.5 text-primary" />
+                    <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                        <User className="h-4 w-4 text-primary" />
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Currently assigned to</p>
-                        <p className="text-sm font-semibold text-foreground">{selectedCase.assignee_name}</p>
+                        <p className="text-sm font-bold">{selectedCase.assignee_name}</p>
                       </div>
                     </div>
                   )}
+
                   <div onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={selectedCase.assigned_to || "unassigned"}
@@ -567,8 +851,8 @@ const AdminPipelinePage = () => {
                         </SelectItem>
                         {teamMembers.map((tm) => (
                           <SelectItem key={tm.id} value={tm.id}>
-                            <div className="flex flex-col">
-                              <span>{tm.full_name}</span>
+                            <div className="flex flex-col py-0.5">
+                              <span className="font-medium">{tm.full_name}</span>
                               <span className="text-xs text-muted-foreground">{tm.email}</span>
                             </div>
                           </SelectItem>
@@ -576,6 +860,7 @@ const AdminPipelinePage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
                   {assigning === selectedCase.id && (
                     <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">Assigning…</p>
                   )}
