@@ -12,6 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
+// Bypass Supabase generated types for new tables/columns
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase as unknown as any;
+
 interface Program {
   id: string;
   name_en: string;
@@ -122,20 +126,19 @@ export default function ProfileCompletionForm({
 
   const age = dob ? differenceInYears(new Date(), dob) : null;
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-
-  const filteredAccommodations = accommodations.filter((a) => a.school_id === schoolId);
   const selectedProgram = programs.find((p) => p.id === programId);
+  const filteredAccommodations = accommodations.filter((a) => a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const selectedIns = insurances.find((i) => i.id === insuranceId);
 
-  // Auto end date
+  // Auto end date from program duration
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
       setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
-  // Auto start from fixed day + month
+  // Auto start from fixed day + intake month
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
@@ -143,32 +146,30 @@ export default function ProfileCompletionForm({
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
-  // Reset accommodation on school change
+  // Reset accommodation when school changes
   useEffect(() => {
     setAccommodationId("");
   }, [schoolId]);
 
-  // Cast supabase to any for new tables
-  const db = supabase as any;
-
   useEffect(() => {
-    Promise.all([
-      supabase
-        .from("programs")
-        .select(
-          "id, name_en, name_ar, type, duration_in_months, fixed_start_day_of_month, lessons_per_week, price, currency",
-        )
-        .eq("is_active", true)
-        .order("name_en"),
-      db.from("schools").select("id, name_en, name_ar, city").eq("is_active", true).order("name_en"),
-      db.from("accommodations").select("id, name_en, name_ar, price, currency, school_id").eq("is_active", true),
-      db.from("insurances").select("id, name, tier, price, currency").eq("is_active", true).order("tier"),
-    ]).then(([{ data: progs }, { data: schs }, { data: accs }, { data: ins }]: any[]) => {
-      setPrograms((progs ?? []) as Program[]);
-      setSchools((schs ?? []) as School[]);
-      setAccommodations((accs ?? []) as Accommodation[]);
-      setInsurances((ins ?? []) as Insurance[]);
-    });
+    (async () => {
+      const results = (await Promise.all([
+        db
+          .from("programs")
+          .select(
+            "id, name_en, name_ar, type, duration_in_months, fixed_start_day_of_month, lessons_per_week, price, currency",
+          )
+          .eq("is_active", true)
+          .order("name_en"),
+        db.from("schools").select("id, name_en, name_ar, city").eq("is_active", true).order("name_en"),
+        db.from("accommodations").select("id, name_en, name_ar, price, currency, school_id").eq("is_active", true),
+        db.from("insurances").select("id, name, tier, price, currency").eq("is_active", true).order("tier"),
+      ])) as any[];
+      setPrograms((results[0].data ?? []) as Program[]);
+      setSchools((results[1].data ?? []) as School[]);
+      setAccommodations((results[2].data ?? []) as Accommodation[]);
+      setInsurances((results[3].data ?? []) as Insurance[]);
+    })();
   }, []);
 
   const handleSave = async () => {
@@ -219,14 +220,12 @@ export default function ProfileCompletionForm({
         insurance_price: selectedIns?.price ?? 0,
         extra_data: extraData,
       };
-
-      // Add insurance_id if column exists (after migration)
       if (insuranceId) upsertPayload.insurance_id = insuranceId;
 
-      const { error } = await supabase.from("case_submissions").upsert(upsertPayload, { onConflict: "case_id" });
+      const { error } = await db.from("case_submissions").upsert(upsertPayload, { onConflict: "case_id" });
       if (error) throw error;
 
-      await supabase
+      await db
         .from("cases")
         .update({
           full_name: fullName || undefined,
@@ -253,6 +252,7 @@ export default function ProfileCompletionForm({
     }
   };
 
+  // Birthday dropdowns
   const BirthdayPicker = ({
     label,
     value,
@@ -374,8 +374,8 @@ export default function ProfileCompletionForm({
 
   return (
     <div className="space-y-6">
-      {/* Step Tabs */}
-      <div className="flex gap-2">
+      {/* Step tabs */}
+      <div className="flex gap-2 items-center">
         <button
           onClick={() => setFormStep("a")}
           className={cn(
@@ -387,7 +387,7 @@ export default function ProfileCompletionForm({
         >
           A — Student Info
         </button>
-        <ChevronRight className="h-5 w-5 text-muted-foreground self-center shrink-0" />
+        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
         <button
           onClick={() => {
             if (firstName && lastName) setFormStep("b");
@@ -520,7 +520,7 @@ export default function ProfileCompletionForm({
             )}
           </div>
 
-          {/* Intake Month */}
+          {/* Intake month */}
           <div>
             <Label>Intake Month</Label>
             <Select value={startMonth} onValueChange={setStartMonth}>
@@ -537,7 +537,7 @@ export default function ProfileCompletionForm({
             </Select>
           </div>
 
-          {/* Start / End dates */}
+          {/* Start / End */}
           <div className="grid grid-cols-2 gap-3">
             <DatePickerField label="Course Start Date" value={courseStart} onChange={setCourseStart} />
             <div>
@@ -610,10 +610,10 @@ export default function ProfileCompletionForm({
 
           {/* Insurance */}
           <div>
-            <Label>Insurance</Label>
+            <Label>Insurance (optional)</Label>
             <Select value={insuranceId} onValueChange={setInsuranceId}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select insurance (optional)" />
+                <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">None</SelectItem>
@@ -626,10 +626,10 @@ export default function ProfileCompletionForm({
             </Select>
           </div>
 
-          {/* Arrival date */}
+          {/* Arrival */}
           <DatePickerField label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
 
-          {/* Cost Summary */}
+          {/* Cost summary */}
           {(selectedProgram?.price || selectedAccom?.price || selectedIns?.price) && (
             <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm space-y-1">
               <p className="font-medium text-foreground mb-2">Cost Summary</p>
@@ -667,7 +667,7 @@ export default function ProfileCompletionForm({
               Back
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
+              {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />}
               {isAr ? "حفظ الملف الشخصي" : "Save Profile"}
             </Button>
           </div>
