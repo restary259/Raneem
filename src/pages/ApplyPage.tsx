@@ -140,60 +140,100 @@ const ApplyPage: React.FC = () => {
   const handleSubmit = async () => {
     if (loading) return;
     setLoading(true);
+
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const caseUrl = `https://${projectId}.supabase.co/functions/v1/create-case-from-apply`;
+
     try {
-      // Submit main lead
-      const { error } = await supabase.rpc("insert_lead_from_apply", {
-        p_full_name: fullName.trim(),
-        p_phone: phone.trim(),
-        p_passport_type: passportType || null,
-        p_english_units: englishUnits ? parseInt(englishUnits) : null,
-        p_math_units: mathUnits ? parseInt(mathUnits) : null,
-        p_education_level: educationLevel || null,
-        p_german_level: null,
-        p_source_type: sourceType,
-        p_source_id: sourceId,
-        p_preferred_major: preferredMajor || null,
-      } as any);
-      if (error) {
-        console.error("[ApplyPage] insert_lead_from_apply error:", error);
-        throw error;
+      // ── MAIN APPLICANT ──────────────────────────────────────────
+      // 1. Create the case (this is what shows in the pipeline — do this first)
+      const caseResp = await fetch(caseUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: anonKey },
+        body: JSON.stringify({
+          full_name: fullName.trim(),
+          phone_number: phone.trim(),
+          source: "apply_page",
+          partner_id: sourceType === "influencer" ? sourceId : null,
+          city: city.trim() || null,
+          education_level: educationLevel || null,
+          bagrut_score: null,
+          english_level: englishProficiency || null,
+          math_units: mathUnits ? parseInt(mathUnits) : null,
+          passport_type: passportType || null,
+          degree_interest: fieldOfStudy || null,
+        }),
+      });
+      const caseResult = await caseResp.json();
+      if (!caseResp.ok && caseResp.status !== 409) {
+        console.error("[ApplyPage] Case creation failed:", caseResult);
+        throw new Error(caseResult.error || "Failed to create case");
       }
-      console.log("[ApplyPage] Main lead created for:", phone.trim());
+      if (caseResp.status === 409) {
+        console.log("[ApplyPage] Duplicate phone — case already exists");
+      } else {
+        console.log("[ApplyPage] Main case created:", caseResult.case_id);
+      }
 
-      // Create a case for the main applicant
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      // 2. Also save lead data (non-critical — don't throw if it fails)
       try {
-        const caseResp = await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: anonKey },
-          body: JSON.stringify({
-            full_name: fullName.trim(),
-            phone_number: phone.trim(),
-            source: "apply_page",
-            partner_id: sourceType === "influencer" ? sourceId : null,
-            city: city.trim() || null,
-            education_level: educationLevel || null,
-            bagrut_score: null,
-            english_level: englishProficiency || null,
-            math_units: mathUnits ? parseInt(mathUnits) : null,
-            passport_type: passportType || null,
-            degree_interest: fieldOfStudy || null,
-          }),
-        });
-        if (caseResp.status === 409) {
-          console.log("[ApplyPage] Duplicate phone detected — case already exists");
-        }
-      } catch (caseErr) {
-        console.warn("[ApplyPage] case creation warning:", caseErr);
+        const { error: leadErr } = await supabase.rpc("insert_lead_from_apply", {
+          p_full_name: fullName.trim(),
+          p_phone: phone.trim(),
+          p_passport_type: passportType || null,
+          p_english_units: englishUnits ? parseInt(englishUnits) : null,
+          p_math_units: mathUnits ? parseInt(mathUnits) : null,
+          p_education_level: educationLevel || null,
+          p_german_level: null,
+          p_source_type: sourceType,
+          p_source_id: sourceId,
+          p_preferred_major: preferredMajor || null,
+        } as any);
+        if (leadErr) console.warn("[ApplyPage] Lead RPC warning (non-critical):", leadErr.message);
+        else console.log("[ApplyPage] Main lead saved for:", phone.trim());
+      } catch (leadErr: any) {
+        console.warn("[ApplyPage] Lead RPC failed (non-critical):", leadErr.message);
       }
 
-      // Submit each companion as a full separate lead + case
-      // FIX: previously companions only got a lead, not a case — so they never appeared in the pipeline
+      // ── COMPANIONS ──────────────────────────────────────────────
       if (hasCompanions) {
         for (const c of companions) {
-          if (c.name.trim() && c.phone.trim()) {
-            // Create companion lead
+          if (!c.name.trim() || !c.phone.trim()) continue;
+
+          // 1. Create companion case (primary — must succeed)
+          try {
+            const compCaseResp = await fetch(caseUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", apikey: anonKey },
+              body: JSON.stringify({
+                full_name: c.name.trim(),
+                phone_number: c.phone.trim(),
+                source: "apply_page",
+                partner_id: sourceType === "influencer" ? sourceId : null,
+                city: c.city.trim() || null,
+                education_level: c.education || null,
+                passport_type: c.passportType || null,
+                math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
+                bagrut_score: null,
+                english_level: null,
+                degree_interest: c.preferredMajor.trim() || null,
+              }),
+            });
+            const compCaseResult = await compCaseResp.json();
+            if (compCaseResp.status === 409) {
+              console.log("[ApplyPage] Companion duplicate — case exists:", c.phone.trim());
+            } else if (!compCaseResp.ok) {
+              console.error("[ApplyPage] Companion case failed:", compCaseResult.error);
+            } else {
+              console.log("[ApplyPage] Companion case created:", compCaseResult.case_id);
+            }
+          } catch (compCaseErr: any) {
+            console.error("[ApplyPage] Companion case error:", compCaseErr.message);
+          }
+
+          // 2. Save companion lead (non-critical)
+          try {
             const { error: cErr } = await supabase.rpc("insert_lead_from_apply", {
               p_full_name: c.name.trim(),
               p_phone: c.phone.trim(),
@@ -208,39 +248,10 @@ const ApplyPage: React.FC = () => {
               p_source_type: sourceType,
               p_source_id: sourceId,
             } as any);
-            if (cErr) console.error("[ApplyPage] Companion lead error:", cErr);
-            else console.log("[ApplyPage] Companion lead created for:", c.phone.trim());
-
-            // Create companion case so they appear in the pipeline
-            try {
-              const companionCaseResp = await fetch(
-                `https://${projectId}.supabase.co/functions/v1/create-case-from-apply`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", apikey: anonKey },
-                  body: JSON.stringify({
-                    full_name: c.name.trim(),
-                    phone_number: c.phone.trim(),
-                    source: "apply_page",
-                    partner_id: sourceType === "influencer" ? sourceId : null,
-                    city: c.city.trim() || null,
-                    education_level: c.education || null,
-                    passport_type: c.passportType || null,
-                    math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
-                    bagrut_score: null,
-                    english_level: null,
-                    degree_interest: c.preferredMajor.trim() || null,
-                  }),
-                },
-              );
-              if (companionCaseResp.status === 409) {
-                console.log("[ApplyPage] Companion duplicate — case already exists:", c.phone.trim());
-              } else {
-                console.log("[ApplyPage] Companion case created for:", c.phone.trim());
-              }
-            } catch (companionCaseErr) {
-              console.warn("[ApplyPage] Companion case creation warning:", companionCaseErr);
-            }
+            if (cErr) console.warn("[ApplyPage] Companion lead warning (non-critical):", cErr.message);
+            else console.log("[ApplyPage] Companion lead saved:", c.phone.trim());
+          } catch (cLeadErr: any) {
+            console.warn("[ApplyPage] Companion lead error (non-critical):", cLeadErr.message);
           }
         }
       }
