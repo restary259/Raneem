@@ -80,23 +80,25 @@ export default function TeamStudentsPage() {
   const [tempCreds, setTempCreds] = useState(null);
   const [copiedPw, setCopiedPw] = useState(false);
 
-  // Mock Data for Demo
-  const MOCK_CASES = [
-    { id: "C-101", full_name: "Ahmad Ali Hassan", phone_number: "+971 50 123 4567", city: "Dubai", status: "Active" },
-    {
-      id: "C-202",
-      full_name: "Sara Mohammed Al-Farsi",
-      phone_number: "+971 55 987 6543",
-      city: "Abu Dhabi",
-      status: "Pending",
-    },
-    { id: "C-303", full_name: "Raneem Gmeel Dawahade", phone_number: "0525260547", city: "Amman", status: "submitted" },
-  ];
-
-  // Search Logic based on typed names
+  // ─── INIT FETCH: LOAD EXISTING STUDENTS ─────────────────────────────
   useEffect(() => {
-    // If a case is already selected and its name matches the inputs, don't trigger a new search
+    const fetchStudents = async () => {
+      try {
+        // TODO: REAL API CALL HERE to fetch existing students on page load
+        // const { data, error } = await supabase.from('students').select('*');
+        // if (data) setStudents(data);
+      } catch (error) {
+        console.error("Failed to fetch students", error);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  // ─── DEBOUNCED LIVE SEARCH ──────────────────────────────────────────
+  useEffect(() => {
     const currentFullName = [firstName, middleName, familyName].filter(Boolean).join(" ").trim();
+
+    // Prevent fetching if we just clicked a case to auto-fill
     if (selectedCase && selectedCase.full_name.toLowerCase() === currentFullName.toLowerCase()) {
       return;
     }
@@ -106,23 +108,35 @@ export default function TeamStudentsPage() {
       return;
     }
 
-    setSearching(true);
-    const t = setTimeout(() => {
-      const results = MOCK_CASES.filter(
-        (c) =>
-          c.full_name.toLowerCase().includes(currentFullName.toLowerCase()) || c.phone_number.includes(currentFullName),
-      );
-      setMatchedCases(results);
-      setSearching(false);
-    }, 400);
-    return () => clearTimeout(t);
+    const searchCases = async () => {
+      setSearching(true);
+      try {
+        // TODO: REAL API CALL HERE to search cases by name or phone
+        // Example Supabase query:
+        // const { data, error } = await supabase
+        //   .from('cases')
+        //   .select('id, full_name, phone_number, city, status')
+        //   .ilike('full_name', `%${currentFullName}%`);
+        // if (data) setMatchedCases(data);
+
+        // Temporarily empty until you plug in your API
+        setMatchedCases([]);
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setSearching(false);
+      }
+    };
+
+    // Debounce the fetch so it doesn't spam your database on every keystroke
+    const debounceTimer = setTimeout(searchCases, 400);
+    return () => clearTimeout(debounceTimer);
   }, [firstName, middleName, familyName, selectedCase]);
 
   // Handle when a case is clicked
   const handleCaseSelect = (c) => {
     setSelectedCase(c);
 
-    // Auto-fill the inputs with the selected case's name
     const nameParts = c.full_name.split(" ");
     if (nameParts.length >= 3) {
       setFirstName(nameParts[0]);
@@ -149,22 +163,38 @@ export default function TeamStudentsPage() {
     setStudentEmail("");
   };
 
-  const handleCreateAccount = () => {
+  // ─── CREATE ACCOUNT SUBMISSION ──────────────────────────────────────
+  const handleCreateAccount = async () => {
     setCreating(true);
-    setTimeout(() => {
-      // In a real app, you would send `selectedCase.id` to your backend here
+    try {
+      const generatedPassword = Math.random().toString(36).slice(-8).toUpperCase();
+
+      // TODO: REAL API CALL HERE to create the user auth and insert student record
+      // 1. Create Auth User:
+      // await supabase.auth.admin.createUser({ email: studentEmail, password: generatedPassword })
+      // 2. Insert into DB:
+      // const { data } = await supabase.from('students').insert({ case_id: selectedCase.id, email: studentEmail, ... })
+
+      // Data to pass to the success modal
       const newCreds = {
         full_name: selectedCase.full_name,
         email: studentEmail,
-        password: Math.random().toString(36).slice(-8).toUpperCase(),
+        password: generatedPassword, // Show only once
         case_id: selectedCase.id,
         phone: selectedCase.phone_number,
       };
+
       setTempCreds(newCreds);
+
+      // Optimistically update the UI list with the new student
       setStudents([{ ...newCreds, id: Date.now(), created_at: new Date().toISOString() }, ...students]);
-      setCreating(false);
       setShowModal(false);
-    }, 1200);
+    } catch (error) {
+      console.error("Failed to create account:", error);
+      // Handle error state here (e.g., show a toast notification)
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -296,33 +326,37 @@ export default function TeamStudentsPage() {
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       {searching ? (
                         <span className="flex items-center gap-1 text-indigo-600">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Searching...
+                          <Loader2 className="h-3 w-3 animate-spin" /> Searching cases...
                         </span>
-                      ) : (
+                      ) : matchedCases.length > 0 ? (
                         <span>🔍 {matchedCases.length} matching case(s) — select to link:</span>
-                      )}
+                      ) : firstName.length > 1 ? (
+                        <span>Type to search existing cases...</span>
+                      ) : null}
                     </div>
 
-                    <div className="max-h-48 overflow-y-auto space-y-2">
-                      {matchedCases.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => handleCaseSelect(c)}
-                          className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${
-                            selectedCase?.id === c.id
-                              ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
-                              : "border-slate-200 hover:border-slate-300"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-slate-900">{c.full_name}</span>
-                            <span className="text-xs text-slate-500">{c.phone_number}</span>
-                            <Badge variant={c.status === "submitted" ? "default" : "outline"}>{c.status}</Badge>
-                          </div>
-                          {selectedCase?.id === c.id && <Check className="h-4 w-4 text-indigo-600" />}
-                        </button>
-                      ))}
-                    </div>
+                    {matchedCases.length > 0 && (
+                      <div className="max-h-48 overflow-y-auto space-y-2">
+                        {matchedCases.map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => handleCaseSelect(c)}
+                            className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${
+                              selectedCase?.id === c.id
+                                ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
+                                : "border-slate-200 hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-medium text-slate-900">{c.full_name}</span>
+                              <span className="text-xs text-slate-500">{c.phone_number}</span>
+                              <Badge variant={c.status === "submitted" ? "default" : "outline"}>{c.status}</Badge>
+                            </div>
+                            {selectedCase?.id === c.id && <Check className="h-4 w-4 text-indigo-600" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {selectedCase && (
                       <p className="text-xs font-medium text-emerald-600 flex items-center gap-1 mt-2">
@@ -382,7 +416,7 @@ export default function TeamStudentsPage() {
         </div>
       )}
 
-      {/* Success Modal (Kept your original design) */}
+      {/* Success Modal */}
       {tempCreds && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-6 text-center">
@@ -429,7 +463,9 @@ export default function TeamStudentsPage() {
                   const msg = encodeURIComponent(
                     `مرحبا ${tempCreds.full_name},\nبيانات تسجيل الدخول:\n🔗 darb.agency/student-auth\n📧 ${tempCreds.email}\n🔑 ${tempCreds.password}\nيرجى تغيير كلمة المرور عند أول دخول.`,
                   );
-                  window.open(`https://wa.me/${tempCreds.phone.replace(/[^0-9]/g, "")}?text=${msg}`, "_blank");
+                  // Default to empty string if phone is missing to prevent crash
+                  const safePhone = tempCreds.phone ? tempCreds.phone.replace(/[^0-9]/g, "") : "";
+                  window.open(`https://wa.me/${safePhone}?text=${msg}`, "_blank");
                 }}
               >
                 <MessageCircle className="h-4 w-4 mr-2" /> Send WhatsApp
