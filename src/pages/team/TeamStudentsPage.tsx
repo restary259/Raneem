@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus, User, Mail, Phone, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import CreateStudentWizard from "@/components/CreateStudentWizard";
 
 interface StudentProfile {
   id: string;
@@ -97,7 +96,7 @@ export default function TeamStudentsPage() {
           <Button variant="outline" size="icon" onClick={fetchStudents} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <CreateStudentWizard onStudentCreated={fetchStudents} />
+          <Button onClick={fetchStudents} disabled={loading}><UserPlus className="h-4 w-4 me-1" />{isRtl ? "إضافة طالب" : "Add Student"}</Button>
         </div>
       </div>
 
