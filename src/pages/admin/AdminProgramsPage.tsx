@@ -71,10 +71,13 @@ interface Insurance {
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
 
+// Bypass Supabase generated types for new tables/columns (run `supabase gen types` after migration)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase as unknown as any;
+
 const AdminProgramsPage = () => {
   const { i18n } = useTranslation("dashboard");
   const { toast } = useToast();
-  const isRtl = i18n.language === "ar";
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
@@ -117,22 +120,19 @@ const AdminProgramsPage = () => {
   });
   const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
 
-  // Use (supabase as any) for new tables not yet in generated types
-  const db = supabase as any;
-
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [pRes, sRes, aRes, iRes] = await Promise.all([
-        supabase.from("programs").select("*").order("created_at", { ascending: false }),
+      const results = (await Promise.all([
+        db.from("programs").select("*").order("created_at", { ascending: false }),
         db.from("schools").select("*").order("name_en"),
         db.from("accommodations").select("*").order("name_en"),
         db.from("insurances").select("*").order("tier"),
-      ]);
-      setPrograms((pRes.data || []) as unknown as Program[]);
-      setSchools((sRes.data || []) as School[]);
-      setAccommodations((aRes.data || []) as Accommodation[]);
-      setInsurances((iRes.data || []) as Insurance[]);
+      ])) as any[];
+      setPrograms((results[0].data ?? []) as Program[]);
+      setSchools((results[1].data ?? []) as School[]);
+      setAccommodations((results[2].data ?? []) as Accommodation[]);
+      setInsurances((results[3].data ?? []) as Insurance[]);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -144,7 +144,6 @@ const AdminProgramsPage = () => {
     fetchAll();
   }, [fetchAll]);
 
-  // ── Programs ──
   const saveProgram = async () => {
     if (!progForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -164,14 +163,8 @@ const AdminProgramsPage = () => {
         duration_in_months: progForm.duration_in_months ? Number(progForm.duration_in_months) : null,
         fixed_start_day_of_month: progForm.fixed_start_day_of_month ? Number(progForm.fixed_start_day_of_month) : null,
       };
-      if (editProgId) {
-        await supabase
-          .from("programs")
-          .update(payload as any)
-          .eq("id", editProgId);
-      } else {
-        await supabase.from("programs").insert(payload as any);
-      }
+      if (editProgId) await db.from("programs").update(payload).eq("id", editProgId);
+      else await db.from("programs").insert(payload);
       setProgOpen(false);
       setEditProgId(null);
       setProgForm(emptyProgForm);
@@ -184,7 +177,6 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Schools ──
   const saveSchool = async () => {
     if (!schoolForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -198,11 +190,8 @@ const AdminProgramsPage = () => {
         city: schoolForm.city || null,
         country: schoolForm.country,
       };
-      if (editSchoolId) {
-        await db.from("schools").update(payload).eq("id", editSchoolId);
-      } else {
-        await db.from("schools").insert(payload);
-      }
+      if (editSchoolId) await db.from("schools").update(payload).eq("id", editSchoolId);
+      else await db.from("schools").insert(payload);
       setSchoolOpen(false);
       setEditSchoolId(null);
       setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany" });
@@ -215,7 +204,6 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Accommodations ──
   const saveAccom = async () => {
     if (!accomForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -231,11 +219,8 @@ const AdminProgramsPage = () => {
         description: accomForm.description || null,
         school_id: accomForm.school_id || null,
       };
-      if (editAccomId) {
-        await db.from("accommodations").update(payload).eq("id", editAccomId);
-      } else {
-        await db.from("accommodations").insert(payload);
-      }
+      if (editAccomId) await db.from("accommodations").update(payload).eq("id", editAccomId);
+      else await db.from("accommodations").insert(payload);
       setAccomOpen(false);
       setEditAccomId(null);
       setAccomForm({ name_ar: "", name_en: "", price: "", currency: "EUR", description: "", school_id: "" });
@@ -248,7 +233,6 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Insurance ──
   const saveIns = async () => {
     if (!insForm.name) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -262,11 +246,8 @@ const AdminProgramsPage = () => {
         price: Number(insForm.price) || 0,
         currency: insForm.currency,
       };
-      if (editInsId) {
-        await db.from("insurances").update(payload).eq("id", editInsId);
-      } else {
-        await db.from("insurances").insert(payload);
-      }
+      if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
+      else await db.from("insurances").insert(payload);
       setInsOpen(false);
       setEditInsId(null);
       setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
@@ -285,8 +266,8 @@ const AdminProgramsPage = () => {
   };
 
   const deleteRecord = async (table: string, id: string) => {
-    const { error } = await db.from(table).delete().eq("id", id);
-    if (error) toast({ variant: "destructive", description: error.message });
+    const res = await db.from(table).delete().eq("id", id);
+    if (res.error) toast({ variant: "destructive", description: res.error.message });
     else fetchAll();
   };
 
@@ -355,7 +336,6 @@ const AdminProgramsPage = () => {
           <TabsTrigger value="insurance">Insurance</TabsTrigger>
         </TabsList>
 
-        {/* ── Programs ── */}
         <TabsContent value="programs" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -440,7 +420,7 @@ const AdminProgramsPage = () => {
                       <Input
                         value={progForm.duration}
                         onChange={(e) => setProgForm((f) => ({ ...f, duration: e.target.value }))}
-                        placeholder="e.g. 6 months"
+                        placeholder="6 months"
                       />
                     </div>
                   </div>
@@ -519,7 +499,7 @@ const AdminProgramsPage = () => {
                           <BadgeCheck className="h-3 w-3 me-1" />
                           {p.type.replace("_", " ")}
                         </span>
-                        {p.price && (
+                        {p.price != null && (
                           <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                             💰 {p.price.toLocaleString()} {p.currency}
                           </span>
@@ -590,7 +570,6 @@ const AdminProgramsPage = () => {
           )}
         </TabsContent>
 
-        {/* ── Schools ── */}
         <TabsContent value="schools" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -720,7 +699,6 @@ const AdminProgramsPage = () => {
           </div>
         </TabsContent>
 
-        {/* ── Accommodations ── */}
         <TabsContent value="accommodations" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -769,7 +747,7 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Linked School *</Label>
+                    <Label>Linked School</Label>
                     <Select
                       value={accomForm.school_id}
                       onValueChange={(v) => setAccomForm((f) => ({ ...f, school_id: v }))}
@@ -851,7 +829,7 @@ const AdminProgramsPage = () => {
                           )}
                         </div>
                       </div>
-                      {a.price && (
+                      {a.price != null && (
                         <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                           💰 {a.price.toLocaleString()} {a.currency}/mo
                         </span>
@@ -901,7 +879,6 @@ const AdminProgramsPage = () => {
           </div>
         </TabsContent>
 
-        {/* ── Insurance ── */}
         <TabsContent value="insurance" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
