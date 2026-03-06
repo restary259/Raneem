@@ -1,21 +1,43 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  RefreshCw, Search, User, Mail, Phone, GraduationCap,
-  FileText, Download, Trash2, Upload, KeyRound, Copy, Check, Eye, EyeOff,
-  Shield, Clock, Loader2, Save, Edit3, X, AlertCircle
-} from 'lucide-react';
-import { format } from 'date-fns';
+  RefreshCw,
+  Search,
+  User,
+  Mail,
+  Phone,
+  GraduationCap,
+  FileText,
+  Download,
+  Trash2,
+  Upload,
+  KeyRound,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
+  Shield,
+  Clock,
+  Loader2,
+  Save,
+  Edit3,
+  X,
+  AlertCircle,
+  Lock,
+  Unlock,
+} from "lucide-react";
+import { format } from "date-fns";
 
 interface StudentRecord {
   id: string;
@@ -45,14 +67,259 @@ interface CreatorInfo {
   [userId: string]: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PasswordGate
+// Shows a password input and calls verify-admin-password edge function.
+// Returns a view_token on success (2-min TTL).
+// ─────────────────────────────────────────────────────────────────────────────
+const PasswordGate = ({
+  isRtl,
+  onSuccess,
+  onCancel,
+}: {
+  isRtl: boolean;
+  onSuccess: (token: string) => void;
+  onCancel: () => void;
+}) => {
+  const { toast } = useToast();
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  const handleVerify = async () => {
+    if (!password) return;
+    setVerifying(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Session expired");
+
+      const resp = await supabase.functions.invoke("verify-admin-password", {
+        body: { password },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (resp.error || !resp.data?.view_token) {
+        throw new Error(resp.data?.error || "Verification failed");
+      }
+
+      onSuccess(resp.data.view_token);
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "Wrong password" });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+        <Lock className="h-5 w-5 text-amber-600 shrink-0" />
+        <p className="text-sm text-amber-800">
+          {isRtl
+            ? "يتطلب عرض هذه البيانات الحساسة التحقق من كلمة المرور."
+            : "Viewing sensitive student data requires password verification."}
+        </p>
+      </div>
+
+      <div>
+        <Label className="text-xs">{isRtl ? "كلمة المرور" : "Admin Password"}</Label>
+        <div className="relative mt-1">
+          <Input
+            type={showPw ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleVerify();
+            }}
+            placeholder={isRtl ? "أدخل كلمة المرور" : "Enter your password"}
+            className="pe-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPw(!showPw)}
+            className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onCancel} disabled={verifying}>
+          {isRtl ? "إلغاء" : "Cancel"}
+        </Button>
+        <Button className="flex-1 gap-2" onClick={handleVerify} disabled={!password || verifying}>
+          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4" />}
+          {verifying ? (isRtl ? "جارٍ التحقق..." : "Verifying...") : isRtl ? "تأكيد" : "Verify"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SelectiveDeleteDialog
+// Allows admin to choose categories to delete and mode (soft/hard).
+// ─────────────────────────────────────────────────────────────────────────────
+const SelectiveDeleteDialog = ({
+  student,
+  isRtl,
+  onClose,
+  onDeleted,
+}: {
+  student: StudentRecord;
+  isRtl: boolean;
+  onClose: () => void;
+  onDeleted: () => void;
+}) => {
+  const { toast } = useToast();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [mode, setMode] = useState<"soft" | "hard">("soft");
+  const [password, setPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const CATEGORIES = [
+    { id: "contact_info", label: isRtl ? "معلومات الاتصال" : "Contact Information" },
+    { id: "documents", label: isRtl ? "المستندات" : "Documents" },
+    { id: "case", label: isRtl ? "الملف والتقديمات" : "Case & Submissions" },
+  ];
+
+  const toggleCat = (id: string) =>
+    setCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+
+  const handleDelete = async () => {
+    if (!categories.length) {
+      toast({ variant: "destructive", description: "Select at least one category." });
+      return;
+    }
+    if (mode === "hard" && !password) {
+      toast({ variant: "destructive", description: "Password required for hard delete." });
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Session expired");
+
+      const resp = await supabase.functions.invoke("selective-delete", {
+        body: { student_id: student.id, categories, mode, password: mode === "hard" ? password : undefined },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (resp.error || !resp.data?.success) {
+        throw new Error(resp.data?.error || "Delete failed");
+      }
+
+      toast({
+        title: isRtl ? "تم الحذف" : "Deleted",
+        description: resp.data.message,
+      });
+      onDeleted();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          {isRtl ? "اختر ما تريد حذفه" : "Select Categories to Delete"}
+        </p>
+        <div className="space-y-2">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.id} className="flex items-center gap-3 p-2.5 border rounded-lg hover:bg-muted/30">
+              <Checkbox id={cat.id} checked={categories.includes(cat.id)} onCheckedChange={() => toggleCat(cat.id)} />
+              <Label htmlFor={cat.id} className="cursor-pointer text-sm flex-1">
+                {cat.label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          {isRtl ? "نوع الحذف" : "Delete Mode"}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setMode("soft")}
+            className={`p-3 rounded-xl border text-sm text-left transition-all ${
+              mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"
+            }`}
+          >
+            <p className="font-medium">{isRtl ? "ناعم" : "Soft Delete"}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isRtl ? "قابل للاسترجاع" : "Hidden but recoverable"}
+            </p>
+          </button>
+          <button
+            onClick={() => setMode("hard")}
+            className={`p-3 rounded-xl border text-sm text-left transition-all ${
+              mode === "hard" ? "border-destructive bg-destructive/5 font-medium" : "border-border"
+            }`}
+          >
+            <p className="font-medium text-destructive">{isRtl ? "صعب" : "Hard Delete"}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isRtl ? "غير قابل للتراجع" : "Permanent — irreversible"}
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {mode === "hard" && (
+        <div className="space-y-2">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+            <p>
+              {isRtl
+                ? "الحذف الصعب يدمر البيانات نهائياً. أدخل كلمة مرورك للتأكيد."
+                : "Hard delete permanently destroys data. Enter your admin password to confirm."}
+            </p>
+          </div>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={isRtl ? "كلمة المرور" : "Admin password"}
+          />
+        </div>
+      )}
+
+      <div className="flex gap-2 pt-2">
+        <Button variant="outline" className="flex-1" onClick={onClose} disabled={deleting}>
+          {isRtl ? "إلغاء" : "Cancel"}
+        </Button>
+        <Button
+          variant="destructive"
+          className="flex-1 gap-2"
+          onClick={handleDelete}
+          disabled={!categories.length || deleting}
+        >
+          {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          {deleting ? (isRtl ? "جارٍ الحذف..." : "Deleting...") : isRtl ? "حذف" : "Delete"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export default function AdminStudentsPage() {
   const { toast } = useToast();
-  const { i18n } = useTranslation('dashboard');
-  const isRtl = i18n.language === 'ar';
+  const { i18n } = useTranslation("dashboard");
+  const isRtl = i18n.language === "ar";
 
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [creatorNames, setCreatorNames] = useState<CreatorInfo>({});
 
   // Detail sheet
@@ -68,8 +335,8 @@ export default function AdminStudentsPage() {
   // Document upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadCategory, setUploadCategory] = useState('other');
-  const [customDocName, setCustomDocName] = useState('');
+  const [uploadCategory, setUploadCategory] = useState("other");
+  const [customDocName, setCustomDocName] = useState("");
 
   // Reset password
   const [showResetDialog, setShowResetDialog] = useState(false);
@@ -78,66 +345,109 @@ export default function AdminStudentsPage() {
   const [showResetPw, setShowResetPw] = useState(false);
   const [copiedReset, setCopiedReset] = useState(false);
 
+  // ✅ NEW: Password gate for sensitive profile view
+  const [showPasswordGate, setShowPasswordGate] = useState(false);
+  const [viewToken, setViewToken] = useState<string | null>(null);
+  const [pendingStudent, setPendingStudent] = useState<StudentRecord | null>(null);
+
+  // ✅ NEW: Selective delete dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
+
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'student');
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "student");
       if (roleError) throw roleError;
 
-      const userIds = (roleData || []).map(r => r.user_id);
-      if (userIds.length === 0) { setStudents([]); setLoading(false); return; }
+      const userIds = (roleData || []).map((r: any) => r.user_id);
+      if (userIds.length === 0) {
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
 
       const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date')
-        .in('id', userIds)
-        .order('created_at', { ascending: false });
+        .from("profiles")
+        .select(
+          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+        )
+        .in("id", userIds)
+        .is("deleted_at", null) // ✅ Respect soft-delete
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       const profs = (profileData as StudentRecord[]) ?? [];
       setStudents(profs);
 
       // Fetch creator names
-      const creatorIds = [...new Set(profs.map(p => p.created_by).filter(Boolean) as string[])];
+      const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
       if (creatorIds.length > 0) {
         const { data: creatorProfs } = await supabase
-          .from('profiles')
-          .select('id, full_name, email')
-          .in('id', creatorIds);
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", creatorIds);
         const map: CreatorInfo = {};
-        (creatorProfs || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
+        (creatorProfs || []).forEach((p: any) => {
+          map[p.id] = p.full_name || p.email;
+        });
         setCreatorNames(map);
       }
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
-  useEffect(() => { fetchStudents(); }, [fetchStudents]);
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // ✅ CHANGED: Clicking a student card now shows password gate first
+  const handleCardClick = (s: StudentRecord) => {
+    if (viewToken) {
+      // Already verified — open directly
+      openStudent(s);
+    } else {
+      setPendingStudent(s);
+      setShowPasswordGate(true);
+    }
+  };
+
+  const handleGateSuccess = (token: string) => {
+    setViewToken(token);
+    setShowPasswordGate(false);
+    // Auto-expire the token after 2 min
+    setTimeout(() => setViewToken(null), 120_000);
+    if (pendingStudent) {
+      openStudent(pendingStudent);
+      setPendingStudent(null);
+    }
+  };
 
   const openStudent = async (s: StudentRecord) => {
     setSelected(s);
     setEditing(false);
     setEditForm({
       full_name: s.full_name,
-      phone_number: s.phone_number || '',
-      city: s.city || '',
-      emergency_contact: s.emergency_contact || '',
-      arrival_date: s.arrival_date || '',
+      phone_number: s.phone_number || "",
+      city: s.city || "",
+      emergency_contact: s.emergency_contact || "",
+      arrival_date: s.arrival_date || "",
     });
     setDocs([]);
     setDocsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('documents')
-        .select('id, file_name, file_url, category, created_at, file_type, file_size, notes')
-        .eq('student_id', s.id)
-        .order('created_at', { ascending: false });
+        .from("documents")
+        .select("id, file_name, file_url, category, created_at, file_type, file_size, notes")
+        .eq("student_id", s.id)
+        .is("deleted_at", null) // ✅ Respect soft-delete
+        .order("created_at", { ascending: false });
       if (error) throw error;
       setDocs((data as Document[]) ?? []);
     } catch (err: any) {
@@ -152,7 +462,7 @@ export default function AdminStudentsPage() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
           full_name: editForm.full_name,
           phone_number: editForm.phone_number || null,
@@ -161,15 +471,15 @@ export default function AdminStudentsPage() {
           arrival_date: editForm.arrival_date || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', selected.id);
+        .eq("id", selected.id);
       if (error) throw error;
-      toast({ description: isRtl ? 'تم حفظ التغييرات' : 'Changes saved' });
+      toast({ description: isRtl ? "تم حفظ التغييرات" : "Changes saved" });
       setEditing(false);
       const updated = { ...selected, ...editForm };
       setSelected(updated as StudentRecord);
-      setStudents(prev => prev.map(s => s.id === selected.id ? { ...s, ...editForm } as StudentRecord : s));
+      setStudents((prev) => prev.map((s) => (s.id === selected.id ? ({ ...s, ...editForm } as StudentRecord) : s)));
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setSaving(false);
     }
@@ -178,73 +488,65 @@ export default function AdminStudentsPage() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selected) return;
-
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = file.name.split(".").pop();
       const path = `${selected.id}/${Date.now()}.${ext}`;
-
       const { error: uploadError } = await supabase.storage
-        .from('student-documents')
+        .from("student-documents")
         .upload(path, file, { upsert: false });
       if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('student-documents')
-        .getPublicUrl(path);
-
-      const displayName = uploadCategory === 'other' && customDocName.trim()
-        ? customDocName.trim()
-        : file.name;
-
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          student_id: selected.id,
-          file_name: displayName,
-          file_url: urlData.publicUrl,
-          category: uploadCategory,
-          file_type: file.type,
-          file_size: file.size,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id,
-          is_visible_to_student: true,
-        });
+      const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(path);
+      const displayName = uploadCategory === "other" && customDocName.trim() ? customDocName.trim() : file.name;
+      const { error: dbError } = await supabase.from("documents").insert({
+        student_id: selected.id,
+        file_name: displayName,
+        file_url: urlData.publicUrl,
+        category: uploadCategory,
+        file_type: file.type,
+        file_size: file.size,
+        uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+        is_visible_to_student: true,
+      });
       if (dbError) throw dbError;
-
-      toast({ description: isRtl ? 'تم رفع الملف' : 'File uploaded' });
-      setCustomDocName('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      // Reload docs
-      const { data } = await supabase.from('documents').select('*').eq('student_id', selected.id).order('created_at', { ascending: false });
+      toast({ description: isRtl ? "تم رفع الملف" : "File uploaded" });
+      setCustomDocName("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      const { data } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("student_id", selected.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
       setDocs((data as Document[]) ?? []);
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteDoc = async (doc: Document) => {
-    if (!confirm(isRtl ? 'هل أنت متأكد من حذف هذا الملف؟' : 'Delete this document?')) return;
+    if (!confirm(isRtl ? "هل أنت متأكد من حذف هذا الملف؟" : "Delete this document?")) return;
     try {
-      // Extract storage path from URL
-      const urlParts = doc.file_url.split('/student-documents/');
+      const urlParts = doc.file_url.split("/student-documents/");
       if (urlParts[1]) {
-        await supabase.storage.from('student-documents').remove([urlParts[1]]);
+        await supabase.storage.from("student-documents").remove([urlParts[1]]);
       }
-      await supabase.from('documents').delete().eq('id', doc.id);
-      setDocs(prev => prev.filter(d => d.id !== doc.id));
-      toast({ description: isRtl ? 'تم حذف الملف' : 'Document deleted' });
+      // Soft delete the document record
+      await supabase.from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast({ description: isRtl ? "تم حذف الملف" : "Document deleted" });
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     }
   };
 
   const handleDownloadDoc = (doc: Document) => {
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = doc.file_url;
     a.download = doc.file_name;
-    a.target = '_blank';
+    a.target = "_blank";
     a.click();
   };
 
@@ -252,26 +554,25 @@ export default function AdminStudentsPage() {
     if (!selected) return;
     setResetting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-student-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session!.access_token}`,
-          },
-          body: JSON.stringify({ user_id: selected.id }),
-        }
-      );
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-student-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session!.access_token}`,
+        },
+        body: JSON.stringify({ user_id: selected.id }),
+      });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed');
+      if (!resp.ok) throw new Error(result.error || "Failed");
       setShowResetDialog(false);
       setShowResetPw(false);
       setResetCreds({ email: selected.email, password: result.temp_password });
       fetchStudents();
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setResetting(false);
     }
@@ -285,23 +586,21 @@ export default function AdminStudentsPage() {
   };
 
   const formatBytes = (bytes: number | null) => {
-    if (!bytes) return '';
+    if (!bytes) return "";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const filtered = students.filter(s => {
+  const filtered = students.filter((s) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      s.full_name.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q) ||
-      (s.phone_number || '').includes(q)
+      s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q)
     );
   });
 
-  const DOC_CATEGORIES = ['passport', 'certificate', 'visa', 'financial', 'application', 'other'];
+  const DOC_CATEGORIES = ["passport", "certificate", "visa", "financial", "application", "other"];
 
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto">
@@ -309,24 +608,32 @@ export default function AdminStudentsPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">
-            {isRtl ? 'إدارة الطلاب' : 'Student Management'}
-          </h1>
-          <Badge variant="secondary" className="text-xs">{students.length}</Badge>
+          <h1 className="text-2xl font-bold text-foreground">{isRtl ? "إدارة الطلاب" : "Student Management"}</h1>
+          <Badge variant="secondary" className="text-xs">
+            {students.length}
+          </Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          {isRtl ? 'تحديث' : 'Refresh'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {viewToken && (
+            <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+              <Unlock className="h-3 w-3" />
+              {isRtl ? "تم التحقق" : "Verified (2 min)"}
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            {isRtl ? "تحديث" : "Refresh"}
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={isRtl ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
+          placeholder={isRtl ? "بحث بالاسم أو البريد..." : "Search by name or email..."}
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="ps-9"
         />
       </div>
@@ -334,11 +641,11 @@ export default function AdminStudentsPage() {
       {/* Table header */}
       {!loading && filtered.length > 0 && (
         <div className="hidden md:grid grid-cols-5 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <span>{isRtl ? 'الطالب' : 'Student'}</span>
-          <span>{isRtl ? 'البريد' : 'Email'}</span>
-          <span>{isRtl ? 'الهاتف' : 'Phone'}</span>
-          <span>{isRtl ? 'تاريخ الإنشاء' : 'Created'}</span>
-          <span>{isRtl ? 'أنشئ بواسطة' : 'Created By'}</span>
+          <span>{isRtl ? "الطالب" : "Student"}</span>
+          <span>{isRtl ? "البريد" : "Email"}</span>
+          <span>{isRtl ? "الهاتف" : "Phone"}</span>
+          <span>{isRtl ? "تاريخ الإنشاء" : "Created"}</span>
+          <span>{isRtl ? "أنشئ بواسطة" : "Created By"}</span>
         </div>
       )}
 
@@ -352,15 +659,15 @@ export default function AdminStudentsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>{isRtl ? 'لا يوجد طلاب مسجلون' : 'No registered students found'}</p>
+          <p>{isRtl ? "لا يوجد طلاب مسجلون" : "No registered students found"}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(s => (
+          {filtered.map((s) => (
             <Card
               key={s.id}
               className="cursor-pointer hover:shadow-md transition-shadow border-border"
-              onClick={() => openStudent(s)}
+              onClick={() => handleCardClick(s)}
             >
               <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
@@ -370,10 +677,14 @@ export default function AdminStudentsPage() {
                   <p className="font-medium text-sm truncate">{s.full_name || s.email}</p>
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{s.email}</p>
-                <p className="text-xs text-muted-foreground">{s.phone_number || '—'}</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(s.created_at), 'dd MMM yyyy')}</p>
+                <p className="text-xs text-muted-foreground">{s.phone_number || "—"}</p>
+                <p className="text-xs text-muted-foreground">{format(new Date(s.created_at), "dd MMM yyyy")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.created_by ? (creatorNames[s.created_by] || s.created_by.slice(0, 8) + '...') : (isRtl ? 'تسجيل ذاتي' : 'Self-registered')}
+                  {s.created_by
+                    ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..."
+                    : isRtl
+                      ? "تسجيل ذاتي"
+                      : "Self-registered"}
                 </p>
               </CardContent>
               {/* Mobile */}
@@ -387,15 +698,51 @@ export default function AdminStudentsPage() {
                     <p className="text-xs text-muted-foreground">{s.email}</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground shrink-0">{format(new Date(s.created_at), 'dd MMM yy')}</p>
+                <p className="text-xs text-muted-foreground shrink-0">{format(new Date(s.created_at), "dd MMM yy")}</p>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
+      {/* ── Password Gate Dialog ── */}
+      <Dialog
+        open={showPasswordGate}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowPasswordGate(false);
+            setPendingStudent(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              {isRtl ? "تحقق من الهوية" : "Verify Identity"}
+            </DialogTitle>
+          </DialogHeader>
+          <PasswordGate
+            isRtl={isRtl}
+            onSuccess={handleGateSuccess}
+            onCancel={() => {
+              setShowPasswordGate(false);
+              setPendingStudent(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* ── Student Detail Sheet ── */}
-      <Sheet open={!!selected} onOpenChange={open => { if (!open) { setSelected(null); setEditing(false); } }}>
+      <Sheet
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelected(null);
+            setEditing(false);
+          }
+        }}
+      >
         <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
           {selected && (
             <>
@@ -411,21 +758,32 @@ export default function AdminStudentsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {isRtl ? 'معلومات الطالب' : 'Student Information'}
+                      {isRtl ? "معلومات الطالب" : "Student Information"}
                     </p>
                     {!editing ? (
-                      <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1 h-7 text-xs">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditing(true)}
+                        className="gap-1 h-7 text-xs"
+                      >
                         <Edit3 className="h-3 w-3" />
-                        {isRtl ? 'تعديل' : 'Edit'}
+                        {isRtl ? "تعديل" : "Edit"}
                       </Button>
                     ) : (
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="h-7 text-xs gap-1">
-                          <X className="h-3 w-3" />{isRtl ? 'إلغاء' : 'Cancel'}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditing(false)}
+                          className="h-7 text-xs gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          {isRtl ? "إلغاء" : "Cancel"}
                         </Button>
                         <Button size="sm" onClick={handleSave} disabled={saving} className="h-7 text-xs gap-1">
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                          {isRtl ? 'حفظ' : 'Save'}
+                          {isRtl ? "حفظ" : "Save"}
                         </Button>
                       </div>
                     )}
@@ -433,37 +791,73 @@ export default function AdminStudentsPage() {
 
                   {editing ? (
                     <div className="space-y-3">
+                      {[
+                        { label: isRtl ? "الاسم الكامل" : "Full Name", key: "full_name" },
+                        { label: isRtl ? "رقم الهاتف" : "Phone Number", key: "phone_number" },
+                        { label: isRtl ? "مدينة الميلاد" : "City of Birth", key: "city" },
+                        { label: isRtl ? "رقم الطوارئ" : "Emergency Contact", key: "emergency_contact" },
+                      ].map(({ label, key }) => (
+                        <div key={key}>
+                          <Label className="text-xs">{label}</Label>
+                          <Input
+                            value={(editForm as any)[key] || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.value }))}
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      ))}
                       <div>
-                        <Label className="text-xs">{isRtl ? 'الاسم الكامل' : 'Full Name'}</Label>
-                        <Input value={editForm.full_name || ''} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))} className="mt-1 h-9 text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{isRtl ? 'رقم الهاتف' : 'Phone Number'}</Label>
-                        <Input value={editForm.phone_number || ''} onChange={e => setEditForm(f => ({ ...f, phone_number: e.target.value }))} className="mt-1 h-9 text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{isRtl ? 'مدينة الميلاد' : 'City of Birth'}</Label>
-                        <Input value={editForm.city || ''} onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))} className="mt-1 h-9 text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{isRtl ? 'رقم الطوارئ' : 'Emergency Contact'}</Label>
-                        <Input value={editForm.emergency_contact || ''} onChange={e => setEditForm(f => ({ ...f, emergency_contact: e.target.value }))} className="mt-1 h-9 text-sm" placeholder={isRtl ? 'رقم هاتف الطوارئ' : 'Emergency phone number'} />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{isRtl ? 'تاريخ الوصول إلى ألمانيا' : 'Arrival Date in Germany'}</Label>
-                        <Input type="date" value={editForm.arrival_date || ''} onChange={e => setEditForm(f => ({ ...f, arrival_date: e.target.value }))} className="mt-1 h-9 text-sm" />
+                        <Label className="text-xs">{isRtl ? "تاريخ الوصول" : "Arrival Date"}</Label>
+                        <Input
+                          type="date"
+                          value={editForm.arrival_date || ""}
+                          onChange={(e) => setEditForm((f) => ({ ...f, arrival_date: e.target.value }))}
+                          className="mt-1 h-9 text-sm"
+                        />
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-2.5 text-sm">
                       {[
-                        { icon: <Mail className="h-3.5 w-3.5" />, label: isRtl ? 'البريد' : 'Email', value: selected.email },
-                        { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? 'الهاتف' : 'Phone', value: selected.phone_number || '—' },
-                        { icon: <Shield className="h-3.5 w-3.5" />, label: isRtl ? 'مدينة الميلاد' : 'City of Birth', value: selected.city || '—' },
-                        { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? 'رقم الطوارئ' : 'Emergency Contact', value: selected.emergency_contact || '—' },
-                        { icon: <Clock className="h-3.5 w-3.5" />, label: isRtl ? 'تاريخ الوصول' : 'Arrival Date', value: selected.arrival_date ? format(new Date(selected.arrival_date), 'PPP') : '—' },
-                        { icon: <Clock className="h-3.5 w-3.5" />, label: isRtl ? 'تاريخ الإنشاء' : 'Created', value: format(new Date(selected.created_at), 'PPP') },
-                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? 'أنشئ بواسطة' : 'Created By', value: selected.created_by ? (creatorNames[selected.created_by] || selected.created_by.slice(0, 8)) : (isRtl ? 'تسجيل ذاتي' : 'Self-registered') },
+                        {
+                          icon: <Mail className="h-3.5 w-3.5" />,
+                          label: isRtl ? "البريد" : "Email",
+                          value: selected.email,
+                        },
+                        {
+                          icon: <Phone className="h-3.5 w-3.5" />,
+                          label: isRtl ? "الهاتف" : "Phone",
+                          value: selected.phone_number || "—",
+                        },
+                        {
+                          icon: <Shield className="h-3.5 w-3.5" />,
+                          label: isRtl ? "مدينة الميلاد" : "City of Birth",
+                          value: selected.city || "—",
+                        },
+                        {
+                          icon: <Phone className="h-3.5 w-3.5" />,
+                          label: isRtl ? "رقم الطوارئ" : "Emergency Contact",
+                          value: selected.emergency_contact || "—",
+                        },
+                        {
+                          icon: <Clock className="h-3.5 w-3.5" />,
+                          label: isRtl ? "تاريخ الوصول" : "Arrival Date",
+                          value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
+                        },
+                        {
+                          icon: <Clock className="h-3.5 w-3.5" />,
+                          label: isRtl ? "تاريخ الإنشاء" : "Created",
+                          value: format(new Date(selected.created_at), "PPP"),
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "أنشئ بواسطة" : "Created By",
+                          value: selected.created_by
+                            ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8)
+                            : isRtl
+                              ? "تسجيل ذاتي"
+                              : "Self-registered",
+                        },
                       ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
@@ -480,17 +874,32 @@ export default function AdminStudentsPage() {
                 {/* Admin Actions */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? 'إجراءات الأدمن' : 'Admin Actions'}
+                    {isRtl ? "إجراءات الأدمن" : "Admin Actions"}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 w-full"
-                    onClick={() => setShowResetDialog(true)}
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    {isRtl ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 w-full"
+                      onClick={() => setShowResetDialog(true)}
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
+                    </Button>
+                    {/* ✅ NEW: Selective delete button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 w-full text-destructive hover:bg-destructive/5 border-destructive/30"
+                      onClick={() => {
+                        setDeleteTarget(selected);
+                        setShowDeleteDialog(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {isRtl ? "حذف انتقائي" : "Selective Delete"}
+                    </Button>
+                  </div>
                 </div>
 
                 <Separator />
@@ -498,28 +907,30 @@ export default function AdminStudentsPage() {
                 {/* Document Upload */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? 'رفع مستند جديد' : 'Upload New Document'}
+                    {isRtl ? "رفع مستند جديد" : "Upload New Document"}
                   </p>
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs">{isRtl ? 'نوع المستند' : 'Category'}</Label>
+                      <Label className="text-xs">{isRtl ? "نوع المستند" : "Category"}</Label>
                       <select
                         value={uploadCategory}
-                        onChange={e => setUploadCategory(e.target.value)}
+                        onChange={(e) => setUploadCategory(e.target.value)}
                         className="mt-1 w-full h-9 rounded-xl border border-input bg-background px-3 text-sm"
                       >
-                        {DOC_CATEGORIES.map(c => (
-                          <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                        {DOC_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c.charAt(0).toUpperCase() + c.slice(1)}
+                          </option>
                         ))}
                       </select>
                     </div>
-                    {uploadCategory === 'other' && (
+                    {uploadCategory === "other" && (
                       <div>
-                        <Label className="text-xs">{isRtl ? 'اسم المستند' : 'Document Name'}</Label>
+                        <Label className="text-xs">{isRtl ? "اسم المستند" : "Document Name"}</Label>
                         <Input
                           value={customDocName}
-                          onChange={e => setCustomDocName(e.target.value)}
-                          placeholder={isRtl ? 'مثال: شهادة الميلاد' : 'e.g., Birth Certificate'}
+                          onChange={(e) => setCustomDocName(e.target.value)}
+                          placeholder={isRtl ? "مثال: شهادة الميلاد" : "e.g., Birth Certificate"}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
@@ -541,7 +952,13 @@ export default function AdminStudentsPage() {
                         onClick={() => fileInputRef.current?.click()}
                       >
                         {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploading ? (isRtl ? 'جار الرفع...' : 'Uploading...') : (isRtl ? 'اختر ملف للرفع' : 'Choose file to upload')}
+                        {uploading
+                          ? isRtl
+                            ? "جار الرفع..."
+                            : "Uploading..."
+                          : isRtl
+                            ? "اختر ملف للرفع"
+                            : "Choose file to upload"}
                       </Button>
                     </div>
                   </div>
@@ -552,7 +969,7 @@ export default function AdminStudentsPage() {
                 {/* Documents List */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? 'المستندات' : 'Documents'} ({docs.length})
+                    {isRtl ? "المستندات" : "Documents"} ({docs.length})
                   </p>
                   {docsLoading ? (
                     <div className="flex items-center justify-center py-6">
@@ -560,19 +977,26 @@ export default function AdminStudentsPage() {
                     </div>
                   ) : docs.length === 0 ? (
                     <p className="text-xs text-muted-foreground py-2">
-                      {isRtl ? 'لا توجد مستندات بعد' : 'No documents yet'}
+                      {isRtl ? "لا توجد مستندات بعد" : "No documents yet"}
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {docs.map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted text-xs">
+                      {docs.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted text-xs"
+                        >
                           <div className="flex items-center gap-2 min-w-0">
                             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                             <div className="min-w-0">
                               <p className="truncate font-medium">{doc.file_name}</p>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <Badge variant="outline" className="text-xs capitalize px-1 py-0">{doc.category.replace(/_/g, ' ')}</Badge>
-                                {doc.file_size && <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>}
+                                <Badge variant="outline" className="text-xs capitalize px-1 py-0">
+                                  {doc.category.replace(/_/g, " ")}
+                                </Badge>
+                                {doc.file_size && (
+                                  <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -582,7 +1006,6 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDownloadDoc(doc)}
-                              title={isRtl ? 'تحميل' : 'Download'}
                             >
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
@@ -591,7 +1014,6 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDeleteDoc(doc)}
-                              title={isRtl ? 'حذف' : 'Delete'}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
@@ -607,13 +1029,55 @@ export default function AdminStudentsPage() {
         </SheetContent>
       </Sheet>
 
+      {/* ── Selective Delete Dialog ── */}
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowDeleteDialog(false);
+            setDeleteTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              {isRtl ? "حذف انتقائي" : "Selective Delete"}
+              {deleteTarget && <span className="text-foreground font-normal text-sm"> — {deleteTarget.full_name}</span>}
+            </DialogTitle>
+          </DialogHeader>
+          {deleteTarget && (
+            <SelectiveDeleteDialog
+              student={deleteTarget}
+              isRtl={isRtl}
+              onClose={() => {
+                setShowDeleteDialog(false);
+                setDeleteTarget(null);
+              }}
+              onDeleted={() => {
+                setShowDeleteDialog(false);
+                setDeleteTarget(null);
+                setSelected(null);
+                fetchStudents();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* ── Reset Password Confirm ── */}
-      <Dialog open={showResetDialog} onOpenChange={open => { if (!open) setShowResetDialog(false); }}>
+      <Dialog
+        open={showResetDialog}
+        onOpenChange={(open) => {
+          if (!open) setShowResetDialog(false);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-600" />
-              {isRtl ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+              {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
@@ -623,23 +1087,28 @@ export default function AdminStudentsPage() {
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowResetDialog(false)} disabled={resetting}>
-              {isRtl ? 'إلغاء' : 'Cancel'}
+              {isRtl ? "إلغاء" : "Cancel"}
             </Button>
             <Button onClick={handleResetPassword} disabled={resetting} variant="destructive" className="gap-2">
               {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              {isRtl ? 'إعادة التعيين' : 'Reset'}
+              {isRtl ? "إعادة التعيين" : "Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── New Password Result ── */}
-      <Dialog open={!!resetCreds} onOpenChange={open => { if (!open) setResetCreds(null); }}>
+      <Dialog
+        open={!!resetCreds}
+        onOpenChange={(open) => {
+          if (!open) setResetCreds(null);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Shield className="h-5 w-5" />
-              {isRtl ? 'بيانات الدخول الجديدة' : 'New Login Credentials'}
+              {isRtl ? "بيانات الدخول الجديدة" : "New Login Credentials"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 p-3 rounded-lg bg-muted border border-border font-mono text-sm">
@@ -648,9 +1117,9 @@ export default function AdminStudentsPage() {
               <span>{resetCreds?.email}</span>
             </div>
             <div className="flex justify-between items-center gap-2">
-              <span className="text-muted-foreground text-xs">{isRtl ? 'كلمة المرور' : 'Password'}</span>
+              <span className="text-muted-foreground text-xs">{isRtl ? "كلمة المرور" : "Password"}</span>
               <div className="flex items-center gap-2">
-                <span className="font-bold">{showResetPw ? resetCreds?.password : '••••••••'}</span>
+                <span className="font-bold">{showResetPw ? resetCreds?.password : "••••••••"}</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowResetPw(!showResetPw)}>
                   {showResetPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
@@ -660,12 +1129,14 @@ export default function AdminStudentsPage() {
           <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20">
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800 dark:text-amber-200">
-              {isRtl ? 'شارك هذه البيانات مع الطالب عبر واتساب فورًا. لن تتمكن من رؤيتها مجددًا.' : "Share these credentials with the student immediately. They won't be shown again."}
+              {isRtl
+                ? "شارك هذه البيانات مع الطالب فورًا. لن تتمكن من رؤيتها مجددًا."
+                : "Share these credentials with the student immediately. They won't be shown again."}
             </p>
           </div>
           <Button className="w-full gap-2" onClick={copyResetCreds}>
             {copiedReset ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copiedReset ? (isRtl ? 'تم النسخ!' : 'Copied!') : (isRtl ? 'نسخ البيانات' : 'Copy Credentials')}
+            {copiedReset ? (isRtl ? "تم النسخ!" : "Copied!") : isRtl ? "نسخ البيانات" : "Copy Credentials"}
           </Button>
         </DialogContent>
       </Dialog>
