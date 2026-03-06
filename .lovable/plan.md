@@ -1,51 +1,17 @@
 
-# Fix: Students Tab Crash in Influencer Dashboard
-
-## Root Cause
-
-In `src/pages/InfluencerDashboardPage.tsx`, the `getTimerInfo()` function has two possible return shapes:
-
-1. **When commission is already received** — returns `{ commissionReceived: true }` — **no `paidDate` property**
-2. **Normal case** — returns `{ elapsed, remaining, ready, unlockDate, paidDate, commissionReceived: false }`
-
-Then on line ~278 this code runs unconditionally:
+## Problem
+In `src/pages/admin/AdminSpreadsheetPage.tsx`, line ~116:
 ```tsx
-{timerInfo && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(...)}  // 💥 CRASHES when paidDate is undefined
-  </span>
-)}
+<SelectItem value="">All months</SelectItem>
 ```
+Radix UI `Select` throws a runtime error when a `SelectItem` has `value=""` (empty string is reserved for clearing selection). This crashes the entire page via ErrorBoundary.
 
-When an influencer has a reward already marked as `paid`, `getTimerInfo` returns `{ commissionReceived: true }` with no `paidDate`, so `timerInfo.paidDate.toLocaleDateString()` throws a TypeError and the entire Students tab crashes with an error boundary.
+## Fix (single file change)
+Replace the empty-string sentinel with `"all"` and update the 3 places that reference it:
 
-## Fix — One file, one line
+1. `<SelectItem value="">` → `<SelectItem value="all">`
+2. `filterMonth` clear button: `setFilterMonth('')` → `setFilterMonth('all')`  
+3. `filteredRows` filter condition: `filterMonth ? rows.filter(...)` → `filterMonth !== 'all' ? rows.filter(...)`
+4. Initial state: `useState('')` → `useState('all')`
 
-**File**: `src/pages/InfluencerDashboardPage.tsx`
-
-Guard the `paidDate` access with optional chaining:
-
-**Before (line ~278):**
-```tsx
-{timerInfo && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
-  </span>
-)}
-```
-
-**After:**
-```tsx
-{timerInfo && timerInfo.paidDate && (
-  <span className="text-muted-foreground">
-    {timerInfo.paidDate.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB')}
-  </span>
-)}
-```
-
-This is a one-character guard — `timerInfo && timerInfo.paidDate &&` — that prevents the crash when the timer object has no `paidDate` (i.e. commission was already paid out early).
-
-## What Does NOT Change
-- No business logic, no commission logic, no trigger, no other files
-- The `commissionReceived` display still works perfectly — it just won't try to render a date next to it
-- All other tabs (Analytics, Earnings, My Link) are completely untouched
+This is a minimal, targeted fix in one file with no structural changes.
