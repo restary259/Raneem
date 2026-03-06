@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
 import {
   SidebarProvider,
   Sidebar,
@@ -10,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   useSidebar,
-
+} from "@/components/ui/sidebar";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
