@@ -1576,3 +1576,66 @@
     "contacts": "التواصل"
   }
 }
+{
+  "nav": {
+    "overview": "الرئيسية",
+    "pipeline": "خط الأنابيب",
+    "team": "الفريق",
+    "programs": "البرامج",
+    "submissions": "التقديمات",
+    "financials": "المالية",
+    "analytics": "التحليلات",
+    "activity": "النشاط",
+    "settings": "الإعدادات",
+    "today": "اليوم",
+    "cases": "الملفات",
+    "appointments": "المواعيد",
+    "todayAppts": "اليوم",
+    "submitNew": "جديد",
+    "students": "الطلاب",
+    "myLink": "رابطي",
+    "earnings": "الأرباح",
+    "checklist": "المتطلبات",
+    "profile": "الملف",
+    "documents": "الوثائق",
+    "visa": "التأشيرة",
+    "refer": "إحالة",
+    "contacts": "التواصل",
+    "spreadsheet": "جدول البيانات"
+  },
+  "admin": {
+    "tabs": {
+      "spreadsheet": "جدول البيانات"
+    },
+    "passwordVerify": {
+      "title": "تحقق من الهوية",
+      "description": "أدخل كلمة المرور للمتابعة في هذا الإجراء الحساس.",
+      "password": "كلمة المرور",
+      "placeholder": "أدخل كلمة المرور",
+      "cancel": "إلغاء",
+      "confirm": "تأكيد",
+      "verifying": "جارٍ التحقق...",
+      "verifyFailed": "فشل التحقق",
+      "wrongPassword": "كلمة المرور غير صحيحة",
+      "userNotFound": "المستخدم غير موجود"
+    }
+  },
+  "common": {
+    "error": "خطأ",
+    "loading": "جار التحميل...",
+    "loadError": "فشل تحميل البيانات",
+    "retry": "حاول مرة أخرى",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "noData": "لا توجد بيانات",
+    "lastRefreshed": "تم التحديث منذ {{time}}",
+    "justNow": "الآن",
+    "refresh": "تحديث",
+    "done": "تم",
+    "success": "نجاح"
+  }
+}
