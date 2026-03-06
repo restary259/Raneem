@@ -419,4 +419,50 @@ export default function ProfileCompletionForm({
               type="date"
               className="mt-1"
               value={dob ? format(dob, "yyyy-MM-dd") : ""}
-              onChange={(e) => setDob
+              onChange={(e) => setDob(e.target.value ? new Date(e.target.value) : undefined)}
+              placeholder="YYYY-MM-DD"
+            />
+            {dob && (
+              <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), dob)} years</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FieldWrap label="Gender">
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </FieldWrap>
+            <div>
+              <Label>City of Birth</Label>
+              <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step navigation */}
+      <div className="flex justify-between mt-5">
+        {!isFirstStep && (
+          <Button variant="outline" onClick={goBack}>
+            Back
+          </Button>
+        )}
+        {!isLastStep && <Button onClick={goNext}>Next</Button>}
+        {isLastStep && (
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="animate-spin h-4 w-4 me-2" /> : null}
+            Save
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
