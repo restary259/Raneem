@@ -41,6 +41,7 @@ const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
+const AdminSpreadsheetPage = lazy(() => import("./pages/admin/AdminSpreadsheetPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminCommandCenter = lazy(() => import("./pages/admin/AdminCommandCenter"));
 const AdminPipelinePage = lazy(() => import("./pages/admin/AdminPipelinePage"));
@@ -51,7 +52,7 @@ const AdminFinancialsPage = lazy(() => import("./pages/admin/AdminFinancialsPage
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
-const AdminSpreadsheetPage = lazy(() => import("./pages/admin/AdminSpreadsheetPage"));
+
 // Team pages (Phase 3)
 const TeamTodayPage = lazy(() => import("./pages/team/TeamTodayPage"));
 const TeamCasesPage = lazy(() => import("./pages/team/TeamCasesPage"));
