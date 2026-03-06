@@ -1,859 +1,1022 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { useDirection } from "@/hooks/useDirection";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  RefreshCw,
+  Search,
+  User,
+  Clock,
+  AlertTriangle,
+  Phone,
+  MapPin,
+  BookOpen,
+  GraduationCap,
+  Globe,
+  Calculator,
+  Languages,
+  Briefcase,
+  Pencil,
+  Check,
+  X,
+  Trash2,
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { formatDistanceToNow } from "date-fns";
 
-const PASSPORT_TYPES = [
-  { value: "israeli_blue", label: "جواز أزرق (إسرائيلي)", labelEn: "Israeli Blue Passport" },
-  { value: "israeli_red", label: "جواز أحمر (لم الشمل)", labelEn: "Israeli Red Passport" },
-  { value: "other", label: "أخرى", labelEn: "Other" },
+/* ─────────────────────────── constants ─────────────────────────── */
+
+const STATUSES = [
+  "new",
+  "contacted",
+  "appointment_scheduled",
+  "profile_completion",
+  "payment_confirmed",
+  "submitted",
+  "enrollment_paid",
 ];
 
-const EDUCATION_LEVELS = [
-  { value: "bagrut", label: "بجروت (תעודת בגרות)", labelEn: "Bagrut (תעודת בגרות)" },
-  { value: "bachelor", label: "بكالوريوس (תואר ראשון)", labelEn: "Bachelor (תואר ראשון)" },
-  { value: "master", label: "ماجستير (תואר שני)", labelEn: "Master (תואר שני)" },
-  { value: "other", label: "أخرى", labelEn: "Other" },
+const STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> = {
+  new: { en: "New", ar: "جديد", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  contacted: { en: "Contacted", ar: "تم التواصل", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  appointment_scheduled: {
+    en: "Appointment",
+    ar: "موعد محدد",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+  },
+  profile_completion: { en: "Profile", ar: "استكمال الملف", color: "bg-orange-100 text-orange-800 border-orange-200" },
+  payment_confirmed: { en: "Payment Confirmed", ar: "تأكيد الدفع", color: "bg-teal-100 text-teal-800 border-teal-200" },
+  submitted: { en: "Submitted", ar: "تم التقديم", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
+  enrollment_paid: { en: "Enrolled", ar: "مسجل", color: "bg-green-100 text-green-800 border-green-200" },
+};
+
+const PASSPORT_OPTIONS = [
+  { value: "israeli_blue", label: "Israeli Blue Passport" },
+  { value: "israeli_red", label: "Israeli Red Passport (family reunification)" },
+  { value: "other", label: "Other" },
+];
+
+const EDUCATION_OPTIONS = [
+  { value: "bagrut", label: "Bagrut (תעודת בגרות)" },
+  { value: "bachelor", label: "Bachelor (תואר ראשון)" },
+  { value: "master", label: "Master (תואר שני)" },
+  { value: "other", label: "Other" },
 ];
 
 const UNIT_OPTIONS = ["3", "4", "5"];
 
-const APPLYING_WITH_OPTIONS = [
-  { value: "alone", label: "لا", labelEn: "No" },
-  { value: "one", label: "نعم، مع شخص واحد", labelEn: "Yes, with 1 person" },
-  { value: "multiple", label: "نعم، مع أكثر من شخص", labelEn: "Yes, with 2+ people" },
+const PROFICIENCY_OPTIONS = [
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
 ];
 
-const ApplyPage: React.FC = () => {
-  const { t, i18n } = useTranslation("landing");
-  const { dir, isRtl } = useDirection();
+/* ─────────────────────────── types ─────────────────────────── */
+
+interface Case {
+  id: string;
+  full_name: string;
+  phone_number: string;
+  status: string;
+  source: string;
+  assigned_to: string | null;
+  last_activity_at: string;
+  created_at: string;
+  is_no_show: boolean;
+  assignee_name?: string;
+  city: string | null;
+  education_level: string | null;
+  bagrut_score: number | null;
+  english_level: string | null;
+  english_units: number | null;
+  math_units: number | null;
+  passport_type: string | null;
+  degree_interest: string | null;
+  intake_notes: string | null;
+}
+
+interface TeamMember {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
+interface EditDraft {
+  city: string;
+  passport_type: string;
+  education_level: string;
+  english_units: string;
+  math_units: string;
+  english_level: string;
+  degree_interest: string;
+  intake_notes: string;
+}
+
+/* ─────────────────────────── helpers ─────────────────────────── */
+
+const daysSince = (ts: string) => Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+
+const passportLabel = (v: string | null) =>
+  PASSPORT_OPTIONS.find((o) => o.value === v)?.label ?? v?.replace(/_/g, " ") ?? "—";
+
+const educationLabel = (v: string | null) => EDUCATION_OPTIONS.find((o) => o.value === v)?.label ?? v ?? "—";
+
+/* ── Read-only info row ── */
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number | null | undefined;
+  highlight?: boolean;
+}) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-border last:border-0">
+      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+        <p className={`text-sm font-semibold ${highlight ? "text-primary" : "text-foreground"}`}>{String(value)}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Info row that always renders (shows "—" when value is null) ── */
+function InfoRowAlways({
+  icon: Icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number | null | undefined;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-border last:border-0">
+      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+        {value != null && value !== "" ? (
+          <p className={`text-sm font-semibold ${highlight ? "text-primary" : "text-foreground"}`}>{String(value)}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground/50 italic">Not filled — click Edit Info to add</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Chip selector button (edit mode) ── */
+function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+        active
+          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          : "bg-card border-border hover:border-primary/50 text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ─────────────────────────── main component ─────────────────────────── */
+
+const AdminPipelinePage = () => {
+  const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
-  const isAr = i18n.language === "ar";
+  const isRtl = i18n.language === "ar";
 
-  const [step, setStep] = useState(1);
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [cases, setCases] = useState<Case[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterTeam, setFilterTeam] = useState("all");
+  const [assigning, setAssigning] = useState<string | null>(null);
 
-  // Step 1 — Identity
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [passportType, setPassportType] = useState("");
-  const [city, setCity] = useState("");
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [draft, setDraft] = useState<EditDraft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  // Step 2 — Education
-  const [educationLevel, setEducationLevel] = useState("");
-  const [englishUnits, setEnglishUnits] = useState("");
-  const [mathUnits, setMathUnits] = useState("");
-  const [fieldOfStudy, setFieldOfStudy] = useState("");
-  const [englishProficiency, setEnglishProficiency] = useState("");
-
-  // Step 3 — Major
-  const [preferredMajor, setPreferredMajor] = useState("");
-
-  // Step 4 — Companion
-  const [applyingWith, setApplyingWith] = useState("alone");
-  const [companions, setCompanions] = useState<
-    Array<{
-      name: string;
-      phone: string;
-      passportType: string;
-      city: string;
-      education: string;
-      englishUnits: string;
-      mathUnits: string;
-      preferredMajor: string;
-    }>
-  >([
-    {
-      name: "",
-      phone: "",
-      passportType: "",
-      city: "",
-      education: "",
-      englishUnits: "",
-      mathUnits: "",
-      preferredMajor: "",
-    },
-  ]);
-
-  // Source tracking (no referral links — partner cases are linked by admin)
-  const sourceType = "organic";
-  const sourceId: string | null = null;
-
-  const isValidPhone = (p: string) => {
-    const cleaned = p.replace(/[\s\-()]/g, "");
-    return /^05\d{8}$/.test(cleaned) || /^\+9725\d{8}$/.test(cleaned) || /^\+?\d{7,15}$/.test(cleaned);
-  };
-  const [phoneError, setPhoneError] = useState("");
-
-  const handlePhoneChange = (val: string) => {
-    setPhone(val);
-    if (val.trim() && !isValidPhone(val)) {
-      setPhoneError(
-        isAr
-          ? "رقم هاتف غير صالح (مثال: 0501234567 أو +491234567890)"
-          : "Invalid phone number (e.g. 0501234567 or +491234567890)",
-      );
-    } else {
-      setPhoneError("");
-    }
-  };
-
-  const showBagrut = educationLevel === "bagrut";
-  const showHigherEd = educationLevel === "bachelor" || educationLevel === "master";
-  const hasCompanions = applyingWith !== "alone";
-
-  const canGoNext = () => {
-    if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
-    if (step === 2 && showBagrut) return !!englishUnits && !!mathUnits;
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (loading) return;
-
-    // ── CRITICAL: Validate English units for bagrut applicants (bug fix) ──
-    if (educationLevel === "bagrut" && !englishUnits) {
-      toast({
-        title: isAr ? "الرجاء اختيار وحدات الإنجليزي" : "English Units Required",
-        description: isAr
-          ? "يجب اختيار عدد وحدات الإنجليزي قبل الإرسال"
-          : "Please go back to step 2 and select your English units",
-        variant: "destructive",
-      });
-      setStep(2);
-      return;
-    }
-    if (educationLevel === "bagrut" && !mathUnits) {
-      toast({
-        title: isAr ? "الرجاء اختيار وحدات الرياضيات" : "Math Units Required",
-        description: isAr
-          ? "يجب اختيار عدد وحدات الرياضيات قبل الإرسال"
-          : "Please go back to step 2 and select your Math units",
-        variant: "destructive",
-      });
-      setStep(2);
-      return;
-    }
-
-    setLoading(true);
-
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const caseUrl = `https://${projectId}.supabase.co/functions/v1/create-case-from-apply`;
-
+  /* ── fetch data ── */
+  const fetchData = useCallback(async () => {
     try {
-      // ── MAIN APPLICANT ──────────────────────────────────────────
-      // 1. Create the case (this is what shows in the pipeline — do this first)
-      const payload = {
-        full_name: fullName.trim(),
-        phone_number: phone.trim(),
-        source: "apply_page",
-        partner_id: null,
-        city: city.trim() || null,
-        education_level: educationLevel || null,
-        bagrut_score: null,
-        english_level: englishProficiency || null,
-        english_units: englishUnits ? parseInt(englishUnits) : null,
-        math_units: mathUnits ? parseInt(mathUnits) : null,
-        passport_type: passportType || null,
-        degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
-      };
-      console.log("[ApplyPage] ▶ Sending payload:", JSON.stringify(payload));
-
-      const caseResp = await fetch(caseUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: anonKey },
-        body: JSON.stringify(payload),
+      const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
+      const teamIds = (rolesRes.data ?? []).map((r) => r.user_id);
+      const [casesRes, profilesRes] = await Promise.all([
+        supabase.from("cases").select("*").not("status", "in", '("forgotten","cancelled")'),
+        teamIds.length > 0
+          ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (casesRes.error) throw casesRes.error;
+      const profileMap: Record<string, string> = {};
+      (profilesRes.data || []).forEach((p) => {
+        profileMap[p.id] = p.full_name;
       });
-      const caseResult = await caseResp.json();
-      console.log("[ApplyPage] ◀ Response status:", caseResp.status, "body:", JSON.stringify(caseResult));
-      if (!caseResp.ok && caseResp.status !== 409) {
-        console.error("[ApplyPage] Case creation failed:", caseResult);
-        throw new Error(caseResult.error || "Failed to create case");
-      }
-      if (caseResp.status === 409) {
-        console.log("[ApplyPage] Duplicate phone — case already exists");
-      } else {
-        console.log("[ApplyPage] Main case created:", caseResult.case_id);
-      }
-
-      // 2. Also save lead data (non-critical — don't throw if it fails)
-      try {
-        const { error: leadErr } = await supabase.rpc("insert_lead_from_apply", {
-          p_full_name: fullName.trim(),
-          p_phone: phone.trim(),
-          p_passport_type: passportType || null,
-          p_english_units: englishUnits ? parseInt(englishUnits) : null,
-          p_math_units: mathUnits ? parseInt(mathUnits) : null,
-          p_education_level: educationLevel || null,
-          p_german_level: null,
-          p_source_type: sourceType,
-          p_source_id: sourceId,
-          p_preferred_major: preferredMajor || null,
-        } as any);
-        if (leadErr) console.warn("[ApplyPage] Lead RPC warning (non-critical):", leadErr.message);
-        else console.log("[ApplyPage] Main lead saved for:", phone.trim());
-      } catch (leadErr: any) {
-        console.warn("[ApplyPage] Lead RPC failed (non-critical):", leadErr.message);
-      }
-
-      // ── COMPANIONS ──────────────────────────────────────────────
-      if (hasCompanions) {
-        for (const c of companions) {
-          if (!c.name.trim() || !c.phone.trim()) continue;
-
-          // 1. Create companion case (primary — must succeed)
-          try {
-            const compCaseResp = await fetch(caseUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", apikey: anonKey },
-              body: JSON.stringify({
-                full_name: c.name.trim(),
-                phone_number: c.phone.trim(),
-                source: "apply_page",
-                partner_id: null,
-                city: c.city.trim() || null,
-                education_level: c.education || null,
-                passport_type: c.passportType || null,
-                math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
-                english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
-                bagrut_score: null,
-                english_level: null,
-                degree_interest: c.preferredMajor.trim() || null,
-              }),
-            });
-            const compCaseResult = await compCaseResp.json();
-            if (compCaseResp.status === 409) {
-              console.log("[ApplyPage] Companion duplicate — case exists:", c.phone.trim());
-            } else if (!compCaseResp.ok) {
-              console.error("[ApplyPage] Companion case failed:", compCaseResult.error);
-            } else {
-              console.log("[ApplyPage] Companion case created:", compCaseResult.case_id);
-            }
-          } catch (compCaseErr: any) {
-            console.error("[ApplyPage] Companion case error:", compCaseErr.message);
-          }
-
-          // 2. Save companion lead (non-critical)
-          try {
-            const { error: cErr } = await supabase.rpc("insert_lead_from_apply", {
-              p_full_name: c.name.trim(),
-              p_phone: c.phone.trim(),
-              p_passport_type: c.passportType || null,
-              p_city: c.city.trim() || null,
-              p_preferred_city: c.city.trim() || null,
-              p_education_level: c.education || null,
-              p_english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
-              p_math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
-              p_preferred_major: c.preferredMajor.trim() || null,
-              p_german_level: null,
-              p_source_type: sourceType,
-              p_source_id: sourceId,
-            } as any);
-            if (cErr) console.warn("[ApplyPage] Companion lead warning (non-critical):", cErr.message);
-            else console.log("[ApplyPage] Companion lead saved:", c.phone.trim());
-          } catch (cLeadErr: any) {
-            console.warn("[ApplyPage] Companion lead error (non-critical):", cLeadErr.message);
-          }
-        }
-      }
-
-      setSubmitted(true);
-      setTimeout(() => {
-        window.open("https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo", "_blank");
-      }, 5000);
+      const enriched = (casesRes.data || []).map((c) => ({
+        ...c,
+        assignee_name: c.assigned_to ? profileMap[c.assigned_to] : undefined,
+      }));
+      setCases(enriched);
+      setTeamMembers((profilesRes.data || []).map((p) => ({ id: p.id, full_name: p.full_name, email: p.email || "" })));
+      // keep sheet in sync after refresh
+      setSelectedCase((prev) => (prev ? (enriched.find((c) => c.id === prev.id) ?? null) : null));
     } catch (err: any) {
-      console.error("[ApplyPage] Submission failed:", err);
-      toast({
-        title: t("apply.error", "حدث خطأ، حاول مرة أخرى"),
-        description: err?.message || "",
-        variant: "destructive",
-      });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setLoading(false);
     }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  useRealtimeSubscription("cases", fetchData, true);
+
+  /* ── assign ── */
+  const assignCase = async (caseId: string, userId: string | null) => {
+    setAssigning(caseId);
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({ assigned_to: userId || null })
+        .eq("id", caseId);
+      if (error) throw error;
+      await fetchData();
+      toast({ description: isRtl ? "تم التعيين بنجاح" : "Case assigned successfully" });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setAssigning(null);
+    }
   };
 
-  const TOTAL_STEPS = 4;
-  const progressValue = (step / TOTAL_STEPS) * 100;
-  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
-  const BackIcon = isRtl ? ChevronRight : ChevronLeft;
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex flex-col" dir={dir}>
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
-          <ApplyTopBar />
-          <main className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-md text-center space-y-6 animate-fade-in">
-              <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-accent/20 animate-[ping_1.5s_ease-out_infinite]" />
-                <span className="absolute inset-2 rounded-full bg-accent/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
-                <div className="relative w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-scale-in">
-                  <CheckCircle className="h-10 w-10 text-accent" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold">{t("apply.successTitle", "تم استلام بياناتك ✅")}</h2>
-              <p className="text-muted-foreground">
-                {t("apply.successSubtitle", "سيتم التواصل معك عبر واتساب قريباً")}
-              </p>
-              <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-2">
-                <p className="text-sm font-semibold text-foreground">
-                  {isAr
-                    ? "📩 سنتواصل معك خلال 24 إلى 48 ساعة عبر واتساب"
-                    : "📩 We will contact you within 24 to 48 hours via WhatsApp"}
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <a href="https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo" target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground text-base font-semibold">
-                    💬 {isAr ? "انضم لمجموعة واتساب" : "Join WhatsApp Group"}
-                  </Button>
-                </a>
-                <a href="/">
-                  <Button variant="outline" className="w-full h-12 rounded-xl text-base font-semibold">
-                    {t("apply.exploreWebsite", "تصفّح موقعنا")}
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  const stepTitles = [
-    isAr ? "المعلومات الشخصية" : "Personal Information",
-    isAr ? "الخلفية التعليمية" : "Education Background",
-    isAr ? "التخصص المفضل" : "Desired Major",
-    isAr ? "التقديم مع شخص آخر؟" : "Applying with someone?",
-  ];
-
-  const EMPTY_COMPANION = {
-    name: "",
-    phone: "",
-    passportType: "",
-    city: "",
-    education: "",
-    englishUnits: "",
-    mathUnits: "",
-    preferredMajor: "",
+  /* ── sheet open — fetch fresh from DB to avoid stale cache ── */
+  const openCase = async (c: Case) => {
+    setSelectedCase(c); // show immediately with card data
+    setEditMode(false);
+    setDraft(null);
+    // Then fetch full fresh row directly — ensures all columns including english_units
+    const { data } = await supabase.from("cases").select("*").eq("id", c.id).single();
+    if (data) {
+      const assignee_name = c.assignee_name; // preserve enriched field
+      setSelectedCase({ ...data, assignee_name } as Case);
+    }
   };
 
-  const addCompanion = () => {
-    setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]);
+  /* ── start edit ── */
+  const startEdit = (c: Case) => {
+    setDraft({
+      city: c.city ?? "",
+      passport_type: c.passport_type ?? "",
+      education_level: c.education_level ?? "",
+      english_units: c.english_units != null ? String(c.english_units) : "",
+      math_units: c.math_units != null ? String(c.math_units) : "",
+      english_level: c.english_level ?? "",
+      degree_interest: c.degree_interest ?? "",
+      intake_notes: c.intake_notes ?? "",
+    });
+    setEditMode(true);
   };
 
-  const updateCompanion = (index: number, field: string, value: string) => {
-    setCompanions((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
+  /* ── save edits to DB ── */
+  const saveEdit = async () => {
+    if (!selectedCase || !draft) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({
+          city: draft.city.trim() || null,
+          passport_type: draft.passport_type || null,
+          education_level: draft.education_level || null,
+          english_units: draft.english_units ? parseInt(draft.english_units) : null,
+          math_units: draft.math_units ? parseInt(draft.math_units) : null,
+          english_level: draft.english_level || null,
+          degree_interest: draft.degree_interest.trim() || null,
+          intake_notes: draft.intake_notes.trim() || null,
+        })
+        .eq("id", selectedCase.id);
+      if (error) throw error;
+      toast({ description: "Info saved successfully ✓" });
+      setEditMode(false);
+      setDraft(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeCompanion = (index: number) => {
-    setCompanions((prev) => prev.filter((_, i) => i !== index));
+  /* ── delete case ── */
+  const deleteCase = async () => {
+    if (!selectedCase) return;
+    setDeleting(true);
+    try {
+      await supabase.from("documents").delete().eq("case_id", selectedCase.id);
+      await supabase.from("appointments").delete().eq("case_id", selectedCase.id);
+      await supabase.from("case_submissions").delete().eq("case_id", selectedCase.id);
+      const { error } = await supabase.from("cases").delete().eq("id", selectedCase.id);
+      if (error) throw error;
+      toast({ description: "Case deleted" });
+      setSelectedCase(null);
+      setShowDeleteConfirm(false);
+      setEditMode(false);
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setDeleting(false);
+    }
   };
 
+  /* ── filter ── */
+  const filtered = cases.filter((c) => {
+    const matchSearch =
+      !search || c.full_name.toLowerCase().includes(search.toLowerCase()) || c.phone_number.includes(search);
+    const matchTeam =
+      filterTeam === "all" || c.assigned_to === filterTeam || (filterTeam === "unassigned" && !c.assigned_to);
+    return matchSearch && matchTeam;
+  });
+
+  const getCasesForStatus = (status: string) => filtered.filter((c) => c.status === status);
+  const label = (status: string) => (isRtl ? STATUS_LABELS[status]?.ar : STATUS_LABELS[status]?.en);
+
+  const sourceMeta: Record<string, { label: string; cls: string }> = {
+    apply_page: { label: "Apply", cls: "bg-blue-100 text-blue-700" },
+    contact_form: { label: "Form", cls: "bg-yellow-100 text-yellow-700" },
+    manual: { label: "Manual", cls: "bg-secondary text-secondary-foreground" },
+    submit_new_student: { label: "Enroll", cls: "bg-purple-100 text-purple-700" },
+  };
+
+  const hasApplyInfo = (c: Case) =>
+    c.city ||
+    c.education_level ||
+    c.passport_type ||
+    c.english_units != null ||
+    c.math_units != null ||
+    c.english_level ||
+    c.degree_interest ||
+    c.intake_notes;
+
+  const isBagrut = (draft?.education_level ?? selectedCase?.education_level) === "bagrut";
+
+  /* ════════════════════════ render ════════════════════════ */
   return (
-    <div className="min-h-screen flex flex-col" dir={dir}>
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
-        <ApplyTopBar />
-        <main className="flex-1 flex flex-col items-center px-4 py-6 md:py-10 gap-6 max-w-lg mx-auto w-full">
-          {/* Hero */}
-          <section className="text-center space-y-2 animate-fade-in">
-            <h1 className="text-xl md:text-2xl font-bold leading-tight">{t("apply.heroTitle")}</h1>
-            <p className="text-muted-foreground text-sm">{t("apply.heroSubtitle")}</p>
-          </section>
+    <div className="p-6 space-y-4 max-w-full">
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-3 justify-between">
+        <h1 className="text-2xl font-bold text-foreground">{t("admin.pipeline.title", "Application Pipeline")}</h1>
+        <Button variant="outline" size="sm" onClick={fetchData} className="gap-2">
+          <RefreshCw className="h-4 w-4" />
+          {t("common.refresh", "Refresh")}
+        </Button>
+      </div>
 
-          {/* Step Indicators */}
-          <div className="w-full flex items-center gap-1">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                    s < step
-                      ? "bg-accent text-accent-foreground"
-                      : s === step
-                        ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {s < step ? <CheckCircle className="h-4 w-4" /> : s}
-                </div>
-                <span className="text-[9px] text-muted-foreground text-center leading-tight hidden sm:block">
-                  {stepTitles[s - 1]}
-                </span>
-              </div>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("admin.pipeline.searchPlaceholder", "Search by name or phone...")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="ps-9"
+          />
+        </div>
+        <Select value={filterTeam} onValueChange={setFilterTeam}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by team member" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {teamMembers.map((tm) => (
+              <SelectItem key={tm.id} value={tm.id}>
+                {tm.full_name} — {tm.email}
+              </SelectItem>
             ))}
-          </div>
+          </SelectContent>
+        </Select>
+      </div>
 
-          <Progress value={progressValue} className="h-1.5 w-full" />
-
-          {/* Form */}
-          <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
-            <div className="px-5 py-4 border-b border-border bg-muted/30">
-              <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {t("apply.step", "خطوة")} {step} / {TOTAL_STEPS}
-              </p>
-            </div>
-
-            <div className="p-5 space-y-5">
-              {/* Step 1 — Identity */}
-              {step === 1 && (
-                <div className="space-y-4 animate-fade-in">
-                  <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
-                    <Input
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"}
-                      dir={dir}
-                      className="h-11"
-                    />
-                  </FieldGroup>
-                  <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
-                    <Input
-                      value={phone}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                      placeholder="05X-XXXXXXX"
-                      dir="ltr"
-                      type="tel"
-                      className={`h-11 ${phoneError ? "border-destructive" : ""}`}
-                    />
-                    {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
-                  </FieldGroup>
-                  <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
-                    <div className="grid grid-cols-1 gap-2">
-                      {PASSPORT_TYPES.map((pt) => (
-                        <button
-                          key={pt.value}
-                          type="button"
-                          onClick={() => setPassportType(pt.value)}
-                          className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
-                            passportType === pt.value
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"
-                          }`}
-                        >
-                          {isAr ? pt.label : pt.labelEn}
-                        </button>
-                      ))}
-                    </div>
-                  </FieldGroup>
-                  <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
-                    <Input
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"}
-                      dir={dir}
-                      className="h-11"
-                    />
-                  </FieldGroup>
+      {/* ── Kanban ── */}
+      <div className="overflow-x-auto pb-4">
+        <div className="flex gap-4 min-w-max">
+          {STATUSES.map((status) => {
+            const statusCases = getCasesForStatus(status);
+            const meta = STATUS_LABELS[status];
+            return (
+              <div key={status} className="w-64 shrink-0">
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${meta.color}`}>
+                    {label(status)}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-medium">{statusCases.length}</span>
                 </div>
-              )}
 
-              {/* Step 2 — Education */}
-              {step === 2 && (
-                <div className="space-y-4 animate-fade-in">
-                  <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
-                    <div className="grid grid-cols-2 gap-2">
-                      {EDUCATION_LEVELS.map((lvl) => (
-                        <button
-                          key={lvl.value}
-                          type="button"
-                          onClick={() => setEducationLevel(lvl.value)}
-                          className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
-                            educationLevel === lvl.value
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"
-                          }`}
-                        >
-                          {isAr ? lvl.label : lvl.labelEn}
-                        </button>
-                      ))}
+                <div className="space-y-2">
+                  {loading ? (
+                    Array.from({ length: 2 }).map((_, i) => (
+                      <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                    ))
+                  ) : statusCases.length === 0 ? (
+                    <div className="h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Empty</p>
                     </div>
-                  </FieldGroup>
+                  ) : (
+                    statusCases.map((c) => {
+                      const days = daysSince(c.last_activity_at);
+                      const isRedStale = (status === "new" && days >= 3) || c.is_no_show;
+                      const isOrangeStale =
+                        !isRedStale &&
+                        ((status === "contacted" && days >= 5) ||
+                          (status === "appointment_scheduled" && days >= 14) ||
+                          (status === "profile_completion" && days >= 7));
+                      const borderClass = isRedStale
+                        ? "border-destructive/60"
+                        : isOrangeStale
+                          ? "border-orange-400/60"
+                          : "border-border";
+                      const src = sourceMeta[c.source] ?? { label: c.source, cls: "bg-muted text-muted-foreground" };
 
-                  {showBagrut && (
-                    <>
-                      <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
-                        <div className="flex gap-2">
-                          {UNIT_OPTIONS.map((u) => (
-                            <button
-                              key={u}
-                              type="button"
-                              onClick={() => setEnglishUnits(u)}
-                              className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
-                                englishUnits === u
-                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
-                                  : "bg-card border-border hover:border-primary/40"
-                              }`}
-                            >
-                              {u}
-                            </button>
-                          ))}
-                        </div>
-                        {!englishUnits && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {isAr ? "الرجاء اختيار عدد وحدات الإنجليزي" : "Please select your English units"}
-                          </p>
-                        )}
-                      </FieldGroup>
-                      <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
-                        <div className="flex gap-2">
-                          {UNIT_OPTIONS.map((u) => (
-                            <button
-                              key={u}
-                              type="button"
-                              onClick={() => setMathUnits(u)}
-                              className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
-                                mathUnits === u
-                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
-                                  : "bg-card border-border hover:border-primary/40"
-                              }`}
-                            >
-                              {u}
-                            </button>
-                          ))}
-                        </div>
-                        {!mathUnits && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {isAr ? "الرجاء اختيار عدد وحدات الرياضيات" : "Please select your Math units"}
-                          </p>
-                        )}
-                      </FieldGroup>
-                    </>
-                  )}
-
-                  {showHigherEd && (
-                    <>
-                      <FieldGroup label={isAr ? "مجال الدراسة" : "Field of Study"}>
-                        <Input
-                          value={fieldOfStudy}
-                          onChange={(e) => setFieldOfStudy(e.target.value)}
-                          placeholder={isAr ? "مثال: هندسة برمجيات" : "e.g. Software Engineering"}
-                          dir={dir}
-                          className="h-11"
-                        />
-                      </FieldGroup>
-                      <FieldGroup label={isAr ? "مستوى الإنجليزية" : "English Proficiency"}>
-                        <div className="flex gap-2">
-                          {["beginner", "intermediate", "advanced"].map((lvl) => (
-                            <button
-                              key={lvl}
-                              type="button"
-                              onClick={() => setEnglishProficiency(lvl)}
-                              className={`flex-1 py-2.5 rounded-xl border text-xs font-medium transition-all ${
-                                englishProficiency === lvl
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-card border-border hover:border-primary/40"
-                              }`}
-                            >
-                              {isAr
-                                ? ({ beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as any)[lvl]
-                                : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                            </button>
-                          ))}
-                        </div>
-                      </FieldGroup>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Step 3 — Desired Major */}
-              {step === 3 && (
-                <div className="space-y-4 animate-fade-in">
-                  <FieldGroup label={isAr ? "التخصص المفضل" : "Preferred Major"}>
-                    <Input
-                      value={preferredMajor}
-                      onChange={(e) => setPreferredMajor(e.target.value)}
-                      placeholder={isAr ? "اكتب التخصص الذي تريده..." : "Type your desired major..."}
-                      dir={dir}
-                      className="h-11"
-                    />
-                  </FieldGroup>
-                  <p className="text-xs text-muted-foreground">
-                    {isAr
-                      ? "يمكنك تخطي هذه الخطوة إذا لم تكن متأكدًا بعد"
-                      : "You can skip this step if you're not sure yet"}
-                  </p>
-                </div>
-              )}
-
-              {/* Step 4 — Applying with someone? */}
-              {step === 4 && (
-                <div className="space-y-4 animate-fade-in">
-                  <FieldGroup
-                    label={
-                      isAr
-                        ? "هل تتقدم مع فرد من العائلة أو صديق؟"
-                        : "Are you applying with a family member or a friend?"
-                    }
-                  >
-                    <div className="grid grid-cols-1 gap-2">
-                      {APPLYING_WITH_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setApplyingWith(opt.value);
-                            if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]);
-                            if (opt.value === "multiple" && companions.length < 2)
-                              setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]);
-                          }}
-                          className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
-                            applyingWith === opt.value
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"
-                          }`}
+                      return (
+                        <Card
+                          key={c.id}
+                          className={`cursor-pointer hover:shadow-md hover:border-primary/40 transition-all duration-150 ${borderClass}`}
+                          onClick={() => openCase(c)}
                         >
-                          {isAr ? opt.label : opt.labelEn}
-                        </button>
-                      ))}
-                    </div>
-                  </FieldGroup>
+                          <CardContent className="p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-foreground truncate">{c.full_name}</p>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${src.cls}`}>
+                                  {src.label}
+                                </span>
+                                {(isRedStale || isOrangeStale) && (
+                                  <AlertTriangle
+                                    className={`h-3.5 w-3.5 ${isRedStale ? "text-destructive" : "text-orange-500"}`}
+                                  />
+                                )}
+                              </div>
+                            </div>
 
-                  {hasCompanions && (
-                    <div className="space-y-5 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
-                      {companions.map((c, idx) => (
-                        <div key={idx} className="space-y-3">
-                          {companions.length > 1 && (
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold text-foreground/70">
-                                {isAr ? `الشخص ${idx + 1}` : `Person ${idx + 1}`}
+                            <p className="text-xs text-muted-foreground">{c.phone_number}</p>
+
+                            {/* Units badges — shown directly on card */}
+                            {(c.english_units != null || c.math_units != null) && (
+                              <div className="flex items-center gap-1.5">
+                                {c.english_units != null && (
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                                    EN {c.english_units}
+                                  </span>
+                                )}
+                                {c.math_units != null && (
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                                    MA {c.math_units}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {c.assignee_name ? (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {c.assignee_name}
                               </p>
-                              {idx > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeCompanion(idx)}
-                                  className="text-xs text-destructive hover:underline"
-                                >
-                                  {isAr ? "حذف" : "Remove"}
-                                </button>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
+                                Unassigned
+                              </span>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {days}d
+                              </span>
+                              {hasApplyInfo(c) && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                  Has info
+                                </span>
                               )}
                             </div>
-                          )}
 
-                          {/* Name */}
-                          <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
-                            <Input
-                              value={c.name}
-                              onChange={(e) => updateCompanion(idx, "name", e.target.value)}
-                              placeholder={isAr ? "الاسم الكامل" : "Full name"}
-                              dir={dir}
-                              className="h-11"
-                            />
-                          </FieldGroup>
-
-                          {/* Phone */}
-                          <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
-                            <Input
-                              value={c.phone}
-                              onChange={(e) => updateCompanion(idx, "phone", e.target.value)}
-                              placeholder="05X-XXXXXXX"
-                              dir="ltr"
-                              type="tel"
-                              className="h-11"
-                            />
-                          </FieldGroup>
-
-                          {/* Passport Type */}
-                          <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
-                            <div className="grid grid-cols-1 gap-2">
-                              {PASSPORT_TYPES.map((pt) => (
-                                <button
-                                  key={pt.value}
-                                  type="button"
-                                  onClick={() => updateCompanion(idx, "passportType", pt.value)}
-                                  className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${
-                                    c.passportType === pt.value
-                                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                      : "bg-card border-border hover:border-primary/40"
-                                  }`}
-                                >
-                                  {isAr ? pt.label : pt.labelEn}
-                                </button>
-                              ))}
-                            </div>
-                          </FieldGroup>
-
-                          {/* City */}
-                          <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
-                            <Input
-                              value={c.city}
-                              onChange={(e) => updateCompanion(idx, "city", e.target.value)}
-                              placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"}
-                              dir={dir}
-                              className="h-11"
-                            />
-                          </FieldGroup>
-
-                          {/* Education Level */}
-                          <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
-                            <div className="grid grid-cols-2 gap-2">
-                              {EDUCATION_LEVELS.map((lvl) => (
-                                <button
-                                  key={lvl.value}
-                                  type="button"
-                                  onClick={() => updateCompanion(idx, "education", lvl.value)}
-                                  className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${
-                                    c.education === lvl.value
-                                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                      : "bg-card border-border hover:border-primary/40"
-                                  }`}
-                                >
-                                  {isAr ? lvl.label : lvl.labelEn}
-                                </button>
-                              ))}
-                            </div>
-                          </FieldGroup>
-
-                          {/* Bagrut Units */}
-                          {c.education === "bagrut" && (
-                            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
-                              <FieldGroup label={isAr ? "وحدات الإنجليزي" : "English Units"}>
-                                <div className="flex gap-1.5">
-                                  {UNIT_OPTIONS.map((u) => (
-                                    <button
-                                      key={u}
-                                      type="button"
-                                      onClick={() => updateCompanion(idx, "englishUnits", u)}
-                                      className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
-                                        c.englishUnits === u
-                                          ? "bg-primary text-primary-foreground border-primary"
-                                          : "bg-card border-border hover:border-primary/40"
-                                      }`}
-                                    >
-                                      {u}
-                                    </button>
+                            {/* Assignment dropdown — stop propagation so click doesn't open sheet */}
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <Select
+                                value={c.assigned_to || "unassigned"}
+                                onValueChange={(val) => assignCase(c.id, val === "unassigned" ? null : val)}
+                                disabled={assigning === c.id}
+                              >
+                                <SelectTrigger className="h-7 text-xs">
+                                  <div className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />
+                                    <SelectValue placeholder="Assign" />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                                  {teamMembers.map((tm) => (
+                                    <SelectItem key={tm.id} value={tm.id}>
+                                      {tm.full_name} — {tm.email}
+                                    </SelectItem>
                                   ))}
-                                </div>
-                              </FieldGroup>
-                              <FieldGroup label={isAr ? "وحدات الرياضيات" : "Math Units"}>
-                                <div className="flex gap-1.5">
-                                  {UNIT_OPTIONS.map((u) => (
-                                    <button
-                                      key={u}
-                                      type="button"
-                                      onClick={() => updateCompanion(idx, "mathUnits", u)}
-                                      className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${
-                                        c.mathUnits === u
-                                          ? "bg-primary text-primary-foreground border-primary"
-                                          : "bg-card border-border hover:border-primary/40"
-                                      }`}
-                                    >
-                                      {u}
-                                    </button>
-                                  ))}
-                                </div>
-                              </FieldGroup>
+                                </SelectContent>
+                              </Select>
                             </div>
-                          )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-                          {/* Preferred Major */}
-                          <FieldGroup label={isAr ? "التخصص المفضل (اختياري)" : "Preferred Major (optional)"}>
-                            <Input
-                              value={c.preferredMajor}
-                              onChange={(e) => updateCompanion(idx, "preferredMajor", e.target.value)}
-                              placeholder={isAr ? "مثال: هندسة، طب..." : "e.g. Engineering, Medicine..."}
-                              dir={dir}
-                              className="h-11"
-                            />
-                          </FieldGroup>
+      {/* ══════════════════ Case Detail Sheet ══════════════════ */}
+      <Sheet
+        open={!!selectedCase}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedCase(null);
+            setEditMode(false);
+            setDraft(null);
+          }
+        }}
+      >
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto" side="right">
+          {selectedCase && (
+            <>
+              {/* ── Sheet header ── */}
+              <SheetHeader className="pb-4 border-b border-border mb-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <SheetTitle className="text-lg font-bold truncate">{selectedCase.full_name}</SheetTitle>
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_LABELS[selectedCase.status]?.color ?? "bg-muted"}`}
+                      >
+                        {STATUS_LABELS[selectedCase.status]?.en ?? selectedCase.status}
+                      </span>
+                      {selectedCase.source &&
+                        (() => {
+                          const s = sourceMeta[selectedCase.source] ?? {
+                            label: selectedCase.source,
+                            cls: "bg-muted text-muted-foreground",
+                          };
+                          return <span className={`text-xs px-2 py-0.5 rounded font-medium ${s.cls}`}>{s.label}</span>;
+                        })()}
+                    </div>
+                  </div>
 
-                          {idx < companions.length - 1 && <hr className="border-border" />}
-                        </div>
-                      ))}
-
-                      {applyingWith === "multiple" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="w-full rounded-xl"
-                          onClick={addCompanion}
-                        >
-                          {isAr ? "+ إضافة شخص آخر" : "+ Add another person"}
-                        </Button>
-                      )}
+                  {/* Edit / Save / Cancel */}
+                  {!editMode ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 shrink-0 mt-0.5"
+                      onClick={() => startEdit(selectedCase)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit Info
+                    </Button>
+                  ) : (
+                    <div className="flex gap-1.5 shrink-0 mt-0.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="px-2"
+                        onClick={() => {
+                          setEditMode(false);
+                          setDraft(null);
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" className="gap-1.5 bg-primary" onClick={saveEdit} disabled={saving}>
+                        <Check className="h-3.5 w-3.5" />
+                        {saving ? "Saving…" : "Save"}
+                      </Button>
                     </div>
                   )}
                 </div>
-              )}
+              </SheetHeader>
 
-              {/* Navigation */}
-              <div className="flex gap-3 pt-2">
-                {step > 1 && (
-                  <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => setStep((s) => s - 1)}>
-                    <BackIcon className="h-4 w-4" />
-                    {isAr ? "رجوع" : "Back"}
-                  </Button>
+              <div className="space-y-6">
+                {/* ── CONTACT ── always read-only ── */}
+                <section>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Contact</p>
+                  <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
+                    <InfoRow icon={Phone} label="Phone / WhatsApp" value={selectedCase.phone_number} />
+                    {!editMode && <InfoRow icon={MapPin} label="City" value={selectedCase.city} />}
+                    <InfoRow
+                      icon={Clock}
+                      label="Submitted"
+                      value={formatDistanceToNow(new Date(selectedCase.created_at), { addSuffix: true })}
+                    />
+                  </div>
+                </section>
+
+                {/* ══ VIEW MODE ══ */}
+                {!editMode && (
+                  <>
+                    {selectedCase.passport_type && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Identity
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4">
+                          <InfoRow
+                            icon={Globe}
+                            label="Passport Type"
+                            value={passportLabel(selectedCase.passport_type)}
+                          />
+                        </div>
+                      </section>
+                    )}
+
+                    {(selectedCase.education_level ||
+                      selectedCase.english_units != null ||
+                      selectedCase.math_units != null ||
+                      selectedCase.english_level) && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Education
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4 divide-y divide-border">
+                          <InfoRow
+                            icon={BookOpen}
+                            label="Education Level"
+                            value={educationLabel(selectedCase.education_level)}
+                          />
+                          {/* Always show EN + MA rows for bagrut — display "—" if missing so admin knows to fill it */}
+                          {selectedCase.education_level === "bagrut" ? (
+                            <>
+                              <InfoRowAlways
+                                icon={Languages}
+                                label="English Units"
+                                value={
+                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                }
+                                highlight
+                              />
+                              <InfoRowAlways
+                                icon={Calculator}
+                                label="Math Units"
+                                value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                                highlight
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <InfoRow
+                                icon={Languages}
+                                label="English Units"
+                                value={
+                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                }
+                                highlight
+                              />
+                              <InfoRow
+                                icon={Calculator}
+                                label="Math Units"
+                                value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                                highlight
+                              />
+                            </>
+                          )}
+                          <InfoRow icon={Languages} label="English Proficiency" value={selectedCase.english_level} />
+                        </div>
+                      </section>
+                    )}
+
+                    {selectedCase.degree_interest && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Preferences
+                        </p>
+                        <div className="rounded-xl border border-border bg-card px-4">
+                          <InfoRow
+                            icon={Briefcase}
+                            label="Preferred Major / Degree"
+                            value={selectedCase.degree_interest}
+                          />
+                        </div>
+                      </section>
+                    )}
+
+                    {selectedCase.intake_notes && (
+                      <section>
+                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                          Notes
+                        </p>
+                        <div className="rounded-xl border border-border bg-card p-4">
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedCase.intake_notes}</p>
+                        </div>
+                      </section>
+                    )}
+
+                    {!hasApplyInfo(selectedCase) && (
+                      <div className="rounded-xl border-2 border-dashed border-border p-6 text-center">
+                        <GraduationCap className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                        <p className="text-sm font-medium text-muted-foreground">No application info yet</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">
+                          Click <strong>Edit Info</strong> above to fill in details manually.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
-                {step < TOTAL_STEPS ? (
-                  <Button
-                    className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
-                    onClick={() => setStep((s) => s + 1)}
-                    disabled={!canGoNext()}
-                  >
-                    {isAr ? "التالي" : "Next"}
-                    <NextIcon className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
-                    onClick={handleSubmit}
-                    disabled={loading || !canGoNext()}
-                  >
-                    {loading ? "..." : isAr ? "أرسل بياناتي" : "Submit"}
-                  </Button>
+
+                {/* ══ EDIT MODE ══ */}
+                {editMode && draft && (
+                  <section className="space-y-5">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                      Edit Application Info
+                    </p>
+
+                    {/* City */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" /> City
+                      </label>
+                      <Input
+                        value={draft.city}
+                        onChange={(e) => setDraft((d) => d && { ...d, city: e.target.value })}
+                        placeholder="e.g. Haifa"
+                        className="h-10"
+                      />
+                    </div>
+
+                    {/* Passport Type */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5" /> Passport Type
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {PASSPORT_OPTIONS.map((o) => (
+                          <ChipBtn
+                            key={o.value}
+                            active={draft.passport_type === o.value}
+                            onClick={() => setDraft((d) => d && { ...d, passport_type: o.value })}
+                          >
+                            {o.label}
+                          </ChipBtn>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Education Level */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5" /> Education Level
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {EDUCATION_OPTIONS.map((o) => (
+                          <ChipBtn
+                            key={o.value}
+                            active={draft.education_level === o.value}
+                            onClick={() =>
+                              setDraft(
+                                (d) =>
+                                  d && {
+                                    ...d,
+                                    education_level: o.value,
+                                    english_units: "",
+                                    math_units: "",
+                                    english_level: "",
+                                  },
+                              )
+                            }
+                          >
+                            {o.label}
+                          </ChipBtn>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bagrut: English + Math units */}
+                    {isBagrut && (
+                      <>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                            <Languages className="h-3.5 w-3.5" /> English Units
+                          </label>
+                          <div className="flex gap-2">
+                            {UNIT_OPTIONS.map((u) => (
+                              <ChipBtn
+                                key={u}
+                                active={draft.english_units === u}
+                                onClick={() => setDraft((d) => d && { ...d, english_units: u })}
+                              >
+                                {u}
+                              </ChipBtn>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                            <Calculator className="h-3.5 w-3.5" /> Math Units
+                          </label>
+                          <div className="flex gap-2">
+                            {UNIT_OPTIONS.map((u) => (
+                              <ChipBtn
+                                key={u}
+                                active={draft.math_units === u}
+                                onClick={() => setDraft((d) => d && { ...d, math_units: u })}
+                              >
+                                {u}
+                              </ChipBtn>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Higher-ed: English proficiency */}
+                    {(draft.education_level === "bachelor" || draft.education_level === "master") && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                          <Languages className="h-3.5 w-3.5" /> English Proficiency
+                        </label>
+                        <div className="flex gap-2">
+                          {PROFICIENCY_OPTIONS.map((o) => (
+                            <ChipBtn
+                              key={o.value}
+                              active={draft.english_level === o.value}
+                              onClick={() => setDraft((d) => d && { ...d, english_level: o.value })}
+                            >
+                              {o.label}
+                            </ChipBtn>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preferred Major */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5" /> Preferred Major / Degree
+                      </label>
+                      <Input
+                        value={draft.degree_interest}
+                        onChange={(e) => setDraft((d) => d && { ...d, degree_interest: e.target.value })}
+                        placeholder="e.g. Engineering, Medicine..."
+                        className="h-10"
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-foreground/80">Intake Notes</label>
+                      <textarea
+                        value={draft.intake_notes}
+                        onChange={(e) => setDraft((d) => d && { ...d, intake_notes: e.target.value })}
+                        placeholder="Any notes about this student..."
+                        rows={3}
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      />
+                    </div>
+
+                    <Button className="w-full h-10 gap-2" onClick={saveEdit} disabled={saving}>
+                      <Check className="h-4 w-4" />
+                      {saving ? "Saving…" : "Save Changes"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full h-10 gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={deleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete This Case
+                    </Button>
+                  </section>
                 )}
-              </div>
-            </div>
-          </div>
 
-          {/* Trust Badges */}
-          <div className="grid grid-cols-3 gap-2.5 w-full">
-            {[
-              { icon: GraduationCap, label: t("apply.trustBadge1", "استشارة مجانية") },
-              { icon: Shield, label: t("apply.trustBadge2", "مدارس معتمدة") },
-              { icon: Headphones, label: t("apply.trustBadge3", "متابعة حتى التسجيل") },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-1.5 text-center p-3 rounded-xl border border-border bg-card text-xs text-muted-foreground"
-              >
-                <Icon className="h-5 w-5 text-accent" />
-                <span className="leading-tight">{label}</span>
-              </div>
-            ))}
-          </div>
+                <Separator />
 
-          <p className="text-[11px] text-muted-foreground/60 text-center pb-4">
-            Darb Study International © {new Date().getFullYear()}
-          </p>
-        </main>
-      </div>
+                {/* ── Assign team member ── */}
+                <section>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                    Assign to Team Member
+                  </p>
+
+                  {selectedCase.assignee_name && (
+                    <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Currently assigned to</p>
+                        <p className="text-sm font-bold">{selectedCase.assignee_name}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={selectedCase.assigned_to || "unassigned"}
+                      onValueChange={(val) => assignCase(selectedCase.id, val === "unassigned" ? null : val)}
+                      disabled={assigning === selectedCase.id}
+                    >
+                      <SelectTrigger className="w-full h-10">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <SelectValue placeholder="Assign to team member" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">
+                          <span className="text-muted-foreground">Unassigned</span>
+                        </SelectItem>
+                        {teamMembers.map((tm) => (
+                          <SelectItem key={tm.id} value={tm.id}>
+                            <div className="flex flex-col py-0.5">
+                              <span className="font-medium">{tm.full_name}</span>
+                              <span className="text-xs text-muted-foreground">{tm.email}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {assigning === selectedCase.id && (
+                    <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">Assigning…</p>
+                  )}
+                </section>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" /> Delete Case
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete the case for <strong>{selectedCase?.full_name}</strong>? This
+              will also delete all appointments, submissions, and documents. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteCase}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Yes, Delete Case"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-/* --- Sub-components --- */
-
-const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-foreground/80">{label}</label>
-    {children}
-  </div>
-);
-
-const ApplyTopBar = () => <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />;
-
-export default ApplyPage;
+export default AdminPipelinePage;
