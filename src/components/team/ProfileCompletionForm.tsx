@@ -105,18 +105,15 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
     {error && <p className="text-xs text-destructive mt-1">{error}</p>}
   </div>
 );
-
-<div>
-  <Label>Date of Birth</Label>
-  <Input
-    type="date"
-    className="mt-1"
-    value={dob ? format(dob, "yyyy-MM-dd") : ""}
-    onChange={(e) => setDob(e.target.value ? new Date(e.target.value) : undefined)}
-    placeholder="YYYY-MM-DD"
-  />
-  {dob && <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), dob)} years</p>}
-</div>
+const DateOfBirthPick = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: Date | undefined;
+  onChange: (d: Date | undefined) => void;
+}) => {
   const selYear = value ? value.getFullYear().toString() : "";
   const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
   const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
