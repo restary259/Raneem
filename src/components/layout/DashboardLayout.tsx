@@ -10,37 +10,8 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar";
-import NotificationBell from "@/components/common/NotificationBell";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import LanguageSwitcher from "@/components/common/LanguageSwitcher";
-import { useAuth, AppRole } from "@/contexts/AuthContext";
-import {
-  LayoutDashboard,
-  GitBranch,
-  Users,
-  BookOpen,
-  FileCheck,
-  DollarSign,
-  BarChart2,
-  Activity,
-  Settings,
-  CalendarDays,
-  ClipboardList,
-  UserPlus,
-  GraduationCap,
-  Link2,
-  TrendingUp,
-  ListChecks,
-  User,
-  FileText,
-  Globe,
-  Heart,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Home,
-} from "lucide-react";
+
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
