@@ -106,15 +106,15 @@ const ApplyPage: React.FC = () => {
     }
   };
 
+  const showBagrut = educationLevel === "bagrut";
+  const showHigherEd = educationLevel === "bachelor" || educationLevel === "master";
+  const hasCompanions = applyingWith !== "alone";
+
   const canGoNext = () => {
     if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
     if (step === 2 && showBagrut) return !!englishUnits && !!mathUnits;
     return true;
   };
-
-  const showBagrut = educationLevel === "bagrut";
-  const showHigherEd = educationLevel === "bachelor" || educationLevel === "master";
-  const hasCompanions = applyingWith !== "alone";
 
   const handleSubmit = async () => {
     if (loading) return;
