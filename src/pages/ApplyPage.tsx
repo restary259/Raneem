@@ -160,9 +160,10 @@ const ApplyPage: React.FC = () => {
           education_level: educationLevel || null,
           bagrut_score: null,
           english_level: englishProficiency || null,
+          english_units: englishUnits ? parseInt(englishUnits) : null,
           math_units: mathUnits ? parseInt(mathUnits) : null,
           passport_type: passportType || null,
-          degree_interest: fieldOfStudy || null,
+          degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
         }),
       });
       const caseResult = await caseResp.json();
@@ -215,6 +216,7 @@ const ApplyPage: React.FC = () => {
                 education_level: c.education || null,
                 passport_type: c.passportType || null,
                 math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
+                english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
                 bagrut_score: null,
                 english_level: null,
                 degree_interest: c.preferredMajor.trim() || null,
