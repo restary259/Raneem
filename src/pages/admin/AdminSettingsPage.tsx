@@ -276,23 +276,6 @@ const AdminSettingsPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
-                <div className="space-y-1">
-                  <Label>
-                    {isRtl
-                      ? "عمولة الشريك لكل طالب مدفوع (مبلغ ثابت - ILS)"
-                      : "Partner Commission Per Student — Fixed Amount (ILS)"}
-                  </Label>
-                  <Input
-                    type="number"
-                    value={settings.partner_commission_rate}
-                    onChange={(e) =>
-                      setSettings((s) => (s ? { ...s, partner_commission_rate: Number(e.target.value) } : s))
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {isRtl ? "المبلغ المستحق للشريك عن كل طالب مسجل" : "Amount owed to partner per enrolled student"}
-                  </p>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label>{isRtl ? "أيام الحالة الجديدة قبل أن تُنسى" : "New Case Forgotten Days"}</Label>
@@ -315,6 +298,11 @@ const AdminSettingsPage = () => {
                     />
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {isRtl
+                    ? '💡 إعدادات العمولات موجودة في تبويب "العمولات"'
+                    : "💡 Commission settings are in the Commissions tab"}
+                </p>
                 <Button onClick={saveSettings} disabled={saving} className="gap-2">
                   <Save className="h-4 w-4" />
                   {saving ? (isRtl ? "جار الحفظ..." : "Saving...") : t("common.save", "Save Changes")}
