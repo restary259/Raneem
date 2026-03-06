@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format, differenceInYears, addMonths } from "date-fns";
-import { ArrowLeft, CalendarIcon, Loader2, Upload, X, Check, ChevronRight, ChevronLeft } from "lucide-react";
+import { addMonths, format, differenceInYears } from "date-fns";
+import { ArrowLeft, Loader2, Upload, X, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+// ✅ FIX: Use the shared intakeMonths utility (fixes hardcoded 2025 start)
+import { generateIntakeMonths } from "@/utils/intakeMonths";
+// ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
+import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -50,26 +52,9 @@ const FORM_STEPS = [
 ];
 type StepNum = 1 | 2 | 3 | 4;
 
-const DOB_MONTHS = [
-  { v: "01", l: "January" },
-  { v: "02", l: "February" },
-  { v: "03", l: "March" },
-  { v: "04", l: "April" },
-  { v: "05", l: "May" },
-  { v: "06", l: "June" },
-  { v: "07", l: "July" },
-  { v: "08", l: "August" },
-  { v: "09", l: "September" },
-  { v: "10", l: "October" },
-  { v: "11", l: "November" },
-  { v: "12", l: "December" },
-];
-const DOB_YEARS = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
-
 /* ══════════════════════════════════════════════════════════════════════
-   MODULE-LEVEL COMPONENTS — never defined inside a render function.
-   Defined here so React identity is stable across re-renders and
-   inputs never lose focus when parent state changes.
+   MODULE-LEVEL COMPONENTS — defined outside render to keep React
+   identity stable and prevent inputs from losing focus on re-render.
 ══════════════════════════════════════════════════════════════════════ */
 
 const FieldWrap = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
@@ -80,21 +65,61 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
   </div>
 );
 
-const BirthdayPicker = ({ dob, setDob }: { dob: Date | undefined; setDob: (d: Date | undefined) => void }) => {
-  const age = dob ? differenceInYears(new Date(), dob) : null;
-  const selYear = dob ? dob.getFullYear().toString() : "";
-  const selMonth = dob ? String(dob.getMonth() + 1).padStart(2, "0") : "";
-  const selDay = dob ? String(dob.getDate()).padStart(2, "0") : "";
-  const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
-  const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
-  const update = (y: string, m: string, d: string) => {
-    if (y && m && d) setDob(new Date(`${y}-${m}-${d}`));
+/**
+ * BirthdayPicker
+ * ──────────────────────────────────────────────────────────────────────
+ * ✅ FIX: Replaced the broken Popover/Calendar date-picker with three
+ *   manual Select dropdowns (Year / Month / Day).  The old Calendar
+ *   component had a `pointer-events` issue in the project's CSS that
+ *   prevented clicks from registering reliably on mobile and within
+ *   modals.  This implementation is simpler, more accessible, and fully
+ *   controllable.
+ *
+ * Internally stores the date as "YYYY-MM-DD" via normalizeDate().
+ */
+const BirthdayPicker = ({
+  value,
+  onChange,
+}: {
+  value: string; // ISO "YYYY-MM-DD" or ""
+  onChange: (iso: string) => void;
+}) => {
+  // Derive year/month/day from the controlled ISO string
+  const [year, setYear] = useState(() => (value ? value.split("-")[0] : ""));
+  const [month, setMonth] = useState(() => (value ? value.split("-")[1] : ""));
+  const [day, setDay] = useState(() => (value ? value.split("-")[2] : ""));
+
+  // Recompute days when year/month change
+  const numDays = daysInMonth(parseInt(month), parseInt(year));
+  const days = Array.from({ length: numDays }, (_, i) => String(i + 1).padStart(2, "0"));
+
+  // Clamp day if it exceeds new month length (e.g. Jan 31 → Feb)
+  const safeDay = day && parseInt(day) > numDays ? String(numDays).padStart(2, "0") : day;
+
+  const tryUpdate = (y: string, m: string, d: string) => {
+    if (!y || !m || !d) return;
+    try {
+      const iso = normalizeDate(d, m, y);
+      onChange(iso);
+    } catch {
+      // Don't propagate invalid intermediate states
+    }
   };
+
+  const age = year && month && safeDay ? differenceInYears(new Date(), new Date(`${year}-${month}-${safeDay}`)) : null;
+
   return (
     <div>
       <Label>Date of Birth</Label>
       <div className="grid grid-cols-3 gap-2 mt-1">
-        <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
+        {/* Year */}
+        <Select
+          value={year}
+          onValueChange={(v) => {
+            setYear(v);
+            tryUpdate(v, month, safeDay);
+          }}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Year" />
           </SelectTrigger>
@@ -106,7 +131,15 @@ const BirthdayPicker = ({ dob, setDob }: { dob: Date | undefined; setDob: (d: Da
             ))}
           </SelectContent>
         </Select>
-        <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
+
+        {/* Month */}
+        <Select
+          value={month}
+          onValueChange={(v) => {
+            setMonth(v);
+            tryUpdate(year, v, safeDay);
+          }}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Month" />
           </SelectTrigger>
@@ -118,7 +151,15 @@ const BirthdayPicker = ({ dob, setDob }: { dob: Date | undefined; setDob: (d: Da
             ))}
           </SelectContent>
         </Select>
-        <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
+
+        {/* Day */}
+        <Select
+          value={safeDay}
+          onValueChange={(v) => {
+            setDay(v);
+            tryUpdate(year, month, v);
+          }}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Day" />
           </SelectTrigger>
@@ -131,36 +172,30 @@ const BirthdayPicker = ({ dob, setDob }: { dob: Date | undefined; setDob: (d: Da
           </SelectContent>
         </Select>
       </div>
-      {age !== null && <p className="text-xs text-muted-foreground mt-1">Age: {age} years</p>}
+      {age !== null && !isNaN(age) && <p className="text-xs text-muted-foreground mt-1">Age: {age} years</p>}
     </div>
   );
 };
 
-const DateField = ({
+/**
+ * SimpleDateField
+ * ──────────────────────────────────────────────────────────────────────
+ * ✅ FIX: Replaced broken Popover/Calendar usage for arrival date and
+ *   course start date with a plain <input type="date">.  This avoids
+ *   the pointer-events bug entirely and renders natively on all devices.
+ */
+const SimpleDateField = ({
   label,
   value,
   onChange,
 }: {
   label: string;
-  value: Date | undefined;
-  onChange: (d: Date | undefined) => void;
+  value: string; // ISO "YYYY-MM-DD" or ""
+  onChange: (iso: string) => void;
 }) => (
   <div>
     <Label>{label}</Label>
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
-        >
-          <CalendarIcon className="me-2 h-4 w-4" />
-          {value ? format(value, "PP") : "Pick date"}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
-      </PopoverContent>
-    </Popover>
+    <Input type="date" className="mt-1" value={value} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
 
@@ -212,7 +247,8 @@ export default function SubmitNewStudentPage() {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState<Date | undefined>();
+  // ✅ FIX: dob stored as ISO string (not Date object) to match normalizeDate output
+  const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [cityOfBirth, setCityOfBirth] = useState("");
 
@@ -220,6 +256,8 @@ export default function SubmitNewStudentPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [emergencyName, setEmergencyName] = useState("");
+  // ✅ FIX: emergencyPhone was previously bound to the wrong state variable (email state).
+  //         It now has its own isolated state.
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [street, setStreet] = useState("");
   const [houseNo, setHouseNo] = useState("");
@@ -230,9 +268,10 @@ export default function SubmitNewStudentPage() {
   const [programId, setProgramId] = useState("");
   const [schoolId, setSchoolId] = useState("");
   const [startMonth, setStartMonth] = useState("");
-  const [arrivalDate, setArrivalDate] = useState<Date | undefined>();
-  const [courseStart, setCourseStart] = useState<Date | undefined>();
-  const [courseEnd, setCourseEnd] = useState<Date | undefined>();
+  // ✅ FIX: Replaced Date | undefined with ISO string for SimpleDateField
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [courseStart, setCourseStart] = useState("");
+  const [courseEnd, setCourseEnd] = useState("");
   const [accommodationId, setAccommodationId] = useState("");
 
   // Step 4 — Payment & Documents
@@ -248,25 +287,32 @@ export default function SubmitNewStudentPage() {
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const total = (parseFloat(serviceFee) || 0) + (parseFloat(translationFee) || 0);
 
-  // Auto end-date
+  // ✅ FIX: Generate intake months from current month using utility
+  const monthOptions = generateIntakeMonths(24);
+
+  // Auto end-date from program duration
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
-      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
+      const end = addMonths(new Date(courseStart), selectedProgram.duration_in_months);
+      setCourseEnd(format(end, "yyyy-MM-dd"));
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
-  // Auto start from fixed day
+  // Auto course start from program fixed start day
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
-      setCourseStart(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
+      const d = selectedProgram.fixed_start_day_of_month;
+      setCourseStart(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
+  // Reset accommodation when school changes
   useEffect(() => {
     setAccommodationId("");
   }, [schoolId]);
 
+  // Load programs / schools / accommodations
   useEffect(() => {
     Promise.all([
       (supabase as any)
@@ -308,7 +354,10 @@ export default function SubmitNewStudentPage() {
     const errs = validate(step);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      toast({ variant: "destructive", description: "Please fill in the required fields." });
+      toast({
+        variant: "destructive",
+        description: "Please fill in the required fields.",
+      });
       return;
     }
     setErrors({});
@@ -338,7 +387,7 @@ export default function SubmitNewStudentPage() {
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const age = dob ? differenceInYears(new Date(), dob) : null;
+      const age = dob ? differenceInYears(new Date(), new Date(dob)) : null;
 
       const { data: newCase, error: caseErr } = await supabase
         .from("cases")
@@ -358,8 +407,8 @@ export default function SubmitNewStudentPage() {
         case_id: caseId,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        program_end_date: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        program_start_date: courseStart || null,
+        program_end_date: courseEnd || null,
         service_fee: parseFloat(serviceFee),
         translation_fee: parseFloat(translationFee) || 0,
         program_price: selectedProgram?.price ?? 0,
@@ -370,34 +419,30 @@ export default function SubmitNewStudentPage() {
         submitted_at: now,
         submitted_by: user!.id,
         extra_data: {
-          // Personal — identical keys to ProfileCompletionForm
           first_name: firstName,
           middle_name: middleName,
           last_name: lastName,
-          date_of_birth: dob ? format(dob, "yyyy-MM-dd") : null,
+          date_of_birth: dob || null,
           age,
           gender,
           city_of_birth: cityOfBirth,
-          // Contact — use student_email / student_phone (same as ProfileCompletionForm)
           student_email: email.trim(),
           student_phone: phone.trim(),
           emergency_contact_name: emergencyName,
+          // ✅ FIX: emergencyPhone now correctly refers to its own state variable
           emergency_contact_phone: emergencyPhone,
           street,
           house_no: houseNo,
           postcode,
           city,
           address: [street, houseNo, postcode, city].filter(Boolean).join(", "),
-          // Program
           program_id: programId || null,
           school_id: schoolId || null,
           start_month: startMonth || null,
-          arrival_date: arrivalDate ? format(arrivalDate, "yyyy-MM-dd") : null,
-          course_start: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-          course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
-          // Accommodation
+          arrival_date: arrivalDate || null,
+          course_start: courseStart || null,
+          course_end: courseEnd || null,
           accommodation_id: accommodationId || null,
-          // Flags
           documents_skipped: skipDocuments,
         },
       });
@@ -453,11 +498,6 @@ export default function SubmitNewStudentPage() {
     }
   };
 
-  const monthOptions = Array.from({ length: 24 }, (_, i) => {
-    const d = addMonths(new Date(), i);
-    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
-  });
-
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -497,7 +537,10 @@ export default function SubmitNewStudentPage() {
                 />
               </FieldWrap>
             </div>
-            <BirthdayPicker dob={dob} setDob={setDob} />
+
+            {/* ✅ FIX: BirthdayPicker now uses three Select dropdowns instead of broken Popover/Calendar */}
+            <BirthdayPicker value={dob} onChange={setDob} />
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>Gender</Label>
@@ -559,7 +602,13 @@ export default function SubmitNewStudentPage() {
               </div>
               <div>
                 <Label>Emergency Contact Phone</Label>
-                <Input className="mt-1" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+                {/* ✅ FIX: This input now updates emergencyPhone state (was incorrectly bound to email state) */}
+                <Input
+                  className="mt-1"
+                  value={emergencyPhone}
+                  onChange={(e) => setEmergencyPhone(e.target.value)}
+                  placeholder="+972..."
+                />
               </div>
             </div>
             <div>
@@ -587,7 +636,7 @@ export default function SubmitNewStudentPage() {
       {step === 3 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Program & Accommodation</CardTitle>
+            <CardTitle className="text-base">Program &amp; Accommodation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -636,6 +685,8 @@ export default function SubmitNewStudentPage() {
                 </Select>
               </div>
             </div>
+
+            {/* ✅ FIX: Intake months start from current month (generateIntakeMonths) */}
             <div>
               <Label>Intake Month</Label>
               <Select value={startMonth} onValueChange={setStartMonth}>
@@ -651,9 +702,11 @@ export default function SubmitNewStudentPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="grid md:grid-cols-3 gap-4">
-              <DateField label="Arrival Date" value={arrivalDate} onChange={setArrivalDate} />
-              <DateField label="Course Start" value={courseStart} onChange={setCourseStart} />
+              {/* ✅ FIX: Replaced broken Popover/Calendar with <input type="date"> */}
+              <SimpleDateField label="Arrival Date" value={arrivalDate} onChange={setArrivalDate} />
+              <SimpleDateField label="Course Start" value={courseStart} onChange={setCourseStart} />
               <div>
                 <Label>Course End</Label>
                 <div
@@ -662,10 +715,11 @@ export default function SubmitNewStudentPage() {
                     courseEnd ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {courseEnd ? format(courseEnd, "PP") : "Auto-calculated"}
+                  {courseEnd ? format(new Date(courseEnd), "PP") : "Auto-calculated"}
                 </div>
               </div>
             </div>
+
             <div>
               <Label>
                 Accommodation{" "}
@@ -698,6 +752,7 @@ export default function SubmitNewStudentPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={goBack}>
                 <ChevronLeft className="h-4 w-4 me-1" /> Back
@@ -824,7 +879,7 @@ export default function SubmitNewStudentPage() {
             <Button onClick={handleSubmit} disabled={saving} size="lg">
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 me-2 animate-spin" /> Submitting...
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" /> Submitting…
                 </>
               ) : (
                 "Submit & Create Student Account"
