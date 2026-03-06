@@ -40,7 +40,6 @@ interface Program {
   duration_in_months: number | null;
   fixed_start_day_of_month: number | null;
 }
-
 interface School {
   id: string;
   name_en: string;
@@ -50,7 +49,6 @@ interface School {
   is_active: boolean;
   created_at: string;
 }
-
 interface Accommodation {
   id: string;
   name_ar: string;
@@ -61,7 +59,6 @@ interface Accommodation {
   is_active: boolean;
   school_id: string | null;
 }
-
 interface Insurance {
   id: string;
   name: string;
@@ -75,7 +72,7 @@ const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
 
 const AdminProgramsPage = () => {
-  const { t, i18n } = useTranslation("dashboard");
+  const { i18n } = useTranslation("dashboard");
   const { toast } = useToast();
   const isRtl = i18n.language === "ar";
 
@@ -86,20 +83,17 @@ const AdminProgramsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Dialog open states
   const [progOpen, setProgOpen] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [accomOpen, setAccomOpen] = useState(false);
   const [insOpen, setInsOpen] = useState(false);
 
-  // Edit IDs
   const [editProgId, setEditProgId] = useState<string | null>(null);
   const [editSchoolId, setEditSchoolId] = useState<string | null>(null);
   const [editAccomId, setEditAccomId] = useState<string | null>(null);
   const [editInsId, setEditInsId] = useState<string | null>(null);
 
-  // Forms
-  const [progForm, setProgForm] = useState({
+  const emptyProgForm = {
     name_ar: "",
     name_en: "",
     type: "language_school",
@@ -110,7 +104,8 @@ const AdminProgramsPage = () => {
     lessons_per_week: "",
     duration_in_months: "",
     fixed_start_day_of_month: "",
-  });
+  };
+  const [progForm, setProgForm] = useState(emptyProgForm);
   const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
   const [accomForm, setAccomForm] = useState({
     name_ar: "",
@@ -122,19 +117,22 @@ const AdminProgramsPage = () => {
   });
   const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
 
+  // Use (supabase as any) for new tables not yet in generated types
+  const db = supabase as any;
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
       const [pRes, sRes, aRes, iRes] = await Promise.all([
         supabase.from("programs").select("*").order("created_at", { ascending: false }),
-        supabase.from("schools").select("*").order("name_en"),
-        supabase.from("accommodations").select("*").order("name_en"),
-        supabase.from("insurances").select("*").order("tier"),
+        db.from("schools").select("*").order("name_en"),
+        db.from("accommodations").select("*").order("name_en"),
+        db.from("insurances").select("*").order("tier"),
       ]);
-      setPrograms(pRes.data || []);
-      setSchools(sRes.data || []);
-      setAccommodations(aRes.data || []);
-      setInsurances(iRes.data || []);
+      setPrograms((pRes.data || []) as Program[]);
+      setSchools((sRes.data || []) as School[]);
+      setAccommodations((aRes.data || []) as Accommodation[]);
+      setInsurances((iRes.data || []) as Insurance[]);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -146,7 +144,7 @@ const AdminProgramsPage = () => {
     fetchAll();
   }, [fetchAll]);
 
-  // ── Programs CRUD ──
+  // ── Programs ──
   const saveProgram = async () => {
     if (!progForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -167,24 +165,16 @@ const AdminProgramsPage = () => {
         fixed_start_day_of_month: progForm.fixed_start_day_of_month ? Number(progForm.fixed_start_day_of_month) : null,
       };
       if (editProgId) {
-        await supabase.from("programs").update(payload).eq("id", editProgId);
+        await supabase
+          .from("programs")
+          .update(payload as any)
+          .eq("id", editProgId);
       } else {
-        await supabase.from("programs").insert(payload);
+        await supabase.from("programs").insert(payload as any);
       }
       setProgOpen(false);
       setEditProgId(null);
-      setProgForm({
-        name_ar: "",
-        name_en: "",
-        type: "language_school",
-        price: "",
-        currency: "EUR",
-        duration: "",
-        description: "",
-        lessons_per_week: "",
-        duration_in_months: "",
-        fixed_start_day_of_month: "",
-      });
+      setProgForm(emptyProgForm);
       await fetchAll();
       toast({ description: editProgId ? "Program updated" : "Program created" });
     } catch (err: any) {
@@ -194,7 +184,7 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Schools CRUD ──
+  // ── Schools ──
   const saveSchool = async () => {
     if (!schoolForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -209,9 +199,9 @@ const AdminProgramsPage = () => {
         country: schoolForm.country,
       };
       if (editSchoolId) {
-        await supabase.from("schools").update(payload).eq("id", editSchoolId);
+        await db.from("schools").update(payload).eq("id", editSchoolId);
       } else {
-        await supabase.from("schools").insert(payload);
+        await db.from("schools").insert(payload);
       }
       setSchoolOpen(false);
       setEditSchoolId(null);
@@ -225,7 +215,7 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Accommodations CRUD ──
+  // ── Accommodations ──
   const saveAccom = async () => {
     if (!accomForm.name_en) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -242,9 +232,9 @@ const AdminProgramsPage = () => {
         school_id: accomForm.school_id || null,
       };
       if (editAccomId) {
-        await supabase.from("accommodations").update(payload).eq("id", editAccomId);
+        await db.from("accommodations").update(payload).eq("id", editAccomId);
       } else {
-        await supabase.from("accommodations").insert(payload);
+        await db.from("accommodations").insert(payload);
       }
       setAccomOpen(false);
       setEditAccomId(null);
@@ -258,7 +248,7 @@ const AdminProgramsPage = () => {
     }
   };
 
-  // ── Insurance CRUD ──
+  // ── Insurance ──
   const saveIns = async () => {
     if (!insForm.name) {
       toast({ variant: "destructive", description: "Name is required" });
@@ -273,9 +263,9 @@ const AdminProgramsPage = () => {
         currency: insForm.currency,
       };
       if (editInsId) {
-        await supabase.from("insurances").update(payload).eq("id", editInsId);
+        await db.from("insurances").update(payload).eq("id", editInsId);
       } else {
-        await supabase.from("insurances").insert(payload);
+        await db.from("insurances").insert(payload);
       }
       setInsOpen(false);
       setEditInsId(null);
@@ -289,17 +279,13 @@ const AdminProgramsPage = () => {
     }
   };
 
-  const toggleActive = async (
-    table: "programs" | "accommodations" | "schools" | "insurances",
-    id: string,
-    current: boolean,
-  ) => {
-    await supabase.from(table).update({ is_active: !current }).eq("id", id);
+  const toggleActive = async (table: string, id: string, current: boolean) => {
+    await db.from(table).update({ is_active: !current }).eq("id", id);
     fetchAll();
   };
 
-  const deleteRecord = async (table: "programs" | "accommodations" | "schools" | "insurances", id: string) => {
-    const { error } = await supabase.from(table).delete().eq("id", id);
+  const deleteRecord = async (table: string, id: string) => {
+    const { error } = await db.from(table).delete().eq("id", id);
     if (error) toast({ variant: "destructive", description: error.message });
     else fetchAll();
   };
@@ -378,18 +364,7 @@ const AdminProgramsPage = () => {
                 setProgOpen(v);
                 if (!v) {
                   setEditProgId(null);
-                  setProgForm({
-                    name_ar: "",
-                    name_en: "",
-                    type: "language_school",
-                    price: "",
-                    currency: "EUR",
-                    duration: "",
-                    description: "",
-                    lessons_per_week: "",
-                    duration_in_months: "",
-                    fixed_start_day_of_month: "",
-                  });
+                  setProgForm(emptyProgForm);
                 }
               }}
             >
@@ -608,6 +583,9 @@ const AdminProgramsPage = () => {
                   </CardContent>
                 </Card>
               ))}
+              {programs.length === 0 && (
+                <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No programs yet.</p>
+              )}
             </div>
           )}
         </TabsContent>
@@ -737,9 +715,7 @@ const AdminProgramsPage = () => {
               </Card>
             ))}
             {!loading && schools.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">
-                No schools yet. Add one above.
-              </p>
+              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No schools yet.</p>
             )}
           </div>
         </TabsContent>
