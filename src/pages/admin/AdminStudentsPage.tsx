@@ -533,8 +533,8 @@ export default function AdminStudentsPage() {
       if (urlParts[1]) {
         await supabase.storage.from("student-documents").remove([urlParts[1]]);
       }
-      // Soft delete the document record
-      await supabase.from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
+      // Soft delete the document record (cast to any since deleted_at is added by migration)
+      await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast({ description: isRtl ? "تم حذف الملف" : "Document deleted" });
     } catch (err: any) {
