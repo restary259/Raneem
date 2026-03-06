@@ -160,8 +160,6 @@ export default function TeamAppointmentsPage() {
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
   const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
   const [confirmingMove, setConfirmingMove] = useState(false);
-  // Set to true the moment dragStart fires; cleared after dragEnd
-  const wasDraggedRef = useRef(false);
 
   /* ══ DATA FETCHING ═══════════════════════════════════════════════════ */
   const fetchAppts = useCallback(async () => {
@@ -196,7 +194,6 @@ export default function TeamAppointmentsPage() {
   /* ══ DRAG & DROP ═════════════════════════════════════════════════════ */
   // Called from ApptBlock's onDragStart
   const handleDragStart = (e: React.DragEvent, apptId: string) => {
-    wasDraggedRef.current = true;
     setDraggingId(apptId);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -245,10 +242,6 @@ export default function TeamAppointmentsPage() {
   const handleDragEnd = () => {
     setDraggingId(null);
     setDragOverSlot(null);
-    // Clear the flag after a tick so the upcoming click handler (if any) sees it
-    setTimeout(() => {
-      wasDraggedRef.current = false;
-    }, 0);
   };
 
   const confirmMove = async () => {
@@ -435,8 +428,8 @@ export default function TeamAppointmentsPage() {
         : format(currentDate, "MMMM yyyy");
 
   /* ══ APPOINTMENT BLOCK ═══════════════════════════════════════════════
-     - draggable is ALWAYS true (browser handles the hold-to-drag naturally)
-     - click opens detail ONLY if no drag occurred (wasDraggedRef guard)
+     draggable={true} always. Browser guarantees: real drag → no click fires.
+     So onClick safely opens detail with zero extra logic needed.
   ═══════════════════════════════════════════════════════════════════════ */
   const ApptBlock = ({ appt, compact = false }: { appt: Appointment; compact?: boolean }) => {
     const s = apptStyle(appt.outcome);
@@ -453,7 +446,6 @@ export default function TeamAppointmentsPage() {
         }}
         onClick={(e) => {
           e.stopPropagation();
-          if (wasDraggedRef.current) return; // came from a drag, ignore
           setSelectedAppt(appt);
         }}
         className={cn(
