@@ -21,6 +21,7 @@ interface StudentProfile {
   created_at: string;
   must_change_password: boolean;
   city: string | null;
+  created_by: string | null;
 }
 
 interface MatchedCase {
@@ -45,6 +46,7 @@ export default function TeamStudentsPage() {
 
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatorNames, setCreatorNames] = useState<Record<string, string>>({});
 
   // Create student modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -76,10 +78,25 @@ export default function TeamStudentsPage() {
       const studentIds = roleData.map((r: any) => r.user_id);
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, full_name, email, phone_number, created_at, must_change_password, city")
+        .select("id, full_name, email, phone_number, created_at, must_change_password, city, created_by")
         .in("id", studentIds)
         .order("created_at", { ascending: false });
-      setStudents((profileData as StudentProfile[]) ?? []);
+      const profs = (profileData as StudentProfile[]) ?? [];
+      setStudents(profs);
+
+      // Fetch creator names for "Account Created By" display
+      const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
+      if (creatorIds.length > 0) {
+        const { data: creatorProfs } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", creatorIds);
+        const map: Record<string, string> = {};
+        (creatorProfs || []).forEach((p: any) => {
+          map[p.id] = p.full_name || p.email;
+        });
+        setCreatorNames(map);
+      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -227,6 +244,12 @@ export default function TeamStudentsPage() {
                       <span className="text-[10px] text-muted-foreground">
                         {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
                       </span>
+                      {s.created_by && (
+                        <span className="text-[10px] text-muted-foreground">
+                          · {isRtl ? "أنشئ بواسطة" : "By"}:{" "}
+                          {creatorNames[s.created_by] || s.created_by.slice(0, 8) + "…"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
