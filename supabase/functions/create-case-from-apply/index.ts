@@ -124,13 +124,28 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingCase) {
+      // Update the existing case with the new education data (don't discard it)
+      await supabaseAdmin
+        .from("cases")
+        .update({
+          city: city ? stripHtml(String(city)).slice(0, 100) : undefined,
+          education_level: education_level ? String(education_level) : undefined,
+          english_units: cleanEnglishUnits ?? undefined,
+          math_units: cleanMathUnits ?? undefined,
+          english_level: english_level ? String(english_level) : undefined,
+          passport_type: passport_type ? String(passport_type) : undefined,
+          degree_interest: degree_interest ? String(degree_interest) : undefined,
+          bagrut_score: cleanBagrutScore ?? undefined,
+        })
+        .eq("id", existingCase.id);
+
       return new Response(
         JSON.stringify({
           duplicate: true,
           case_id: existingCase.id,
           existing_name: existingCase.full_name,
           existing_status: existingCase.status,
-          message: "A case with this phone number already exists",
+          message: "A case with this phone number already exists — education data updated",
         }),
         {
           status: 409,
