@@ -76,28 +76,10 @@ const STEPS = [
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
 
-const DOB_MONTHS = [
-  { v: "01", l: "January" },
-  { v: "02", l: "February" },
-  { v: "03", l: "March" },
-  { v: "04", l: "April" },
-  { v: "05", l: "May" },
-  { v: "06", l: "June" },
-  { v: "07", l: "July" },
-  { v: "08", l: "August" },
-  { v: "09", l: "September" },
-  { v: "10", l: "October" },
-  { v: "11", l: "November" },
-  { v: "12", l: "December" },
-];
-const DOB_YEARS = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
-
 /* ══════════════════════════════════════════════════════════════════════
    MODULE-LEVEL COMPONENTS
-   Defined outside the parent so they never remount on state changes.
 ══════════════════════════════════════════════════════════════════════ */
 
-/** Inline error wrapper — does NOT contain an <Input>, just wraps children */
 const FieldWrap = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
   <div>
     <Label className={error ? "text-destructive" : ""}>{label}</Label>
@@ -105,68 +87,6 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
     {error && <p className="text-xs text-destructive mt-1">{error}</p>}
   </div>
 );
-const DateOfBirthPick = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: Date | undefined;
-  onChange: (d: Date | undefined) => void;
-}) => {
-  const selYear = value ? value.getFullYear().toString() : "";
-  const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
-  const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
-  const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
-  const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
-  const update = (y: string, m: string, d: string) => {
-    if (y && m && d) onChange(new Date(`${y}-${m}-${d}`));
-  };
-  return (
-    <div>
-      <Label>{label}</Label>
-      <div className="grid grid-cols-3 gap-2 mt-1">
-        <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
-          <SelectContent className="max-h-48">
-            {DOB_YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Month" />
-          </SelectTrigger>
-          <SelectContent>
-            {DOB_MONTHS.map((m) => (
-              <SelectItem key={m.v} value={m.v}>
-                {m.l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Day" />
-          </SelectTrigger>
-          <SelectContent className="max-h-48">
-            {days.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {value && <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), value)} years</p>}
-    </div>
-  );
-};
 
 const DatePick = ({
   label,
@@ -220,8 +140,6 @@ export default function ProfileCompletionForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const ex = existingData ?? {};
-  const readEmail = (ex.student_email ?? ex.email ?? "") as string;
-  const readPhone = (ex.student_phone ?? ex.phone ?? "") as string;
 
   // Personal
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
@@ -232,9 +150,9 @@ export default function ProfileCompletionForm({
   const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
 
   // Contact
-  const [email, setEmail] = useState(readEmail);
-  const [phone, setPhone] = useState(readPhone);
-  const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
+  const [email, setEmail] = useState((ex.student_email ?? ex.email ?? "") as string);
+  const [phone, setPhone] = useState((ex.student_phone ?? ex.phone ?? "") as string);
+  const [emergencyName, setEmergencyName] = useState(""); // explicitly empty
   const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? "");
   const [street, setStreet] = useState((ex.street as string) ?? "");
   const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? "");
@@ -266,22 +184,24 @@ export default function ProfileCompletionForm({
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const selectedIns = insurances.find((i) => i.id === insuranceId);
 
+  /* ── Auto-fill program-related fields ────────────────────────────── */
   useEffect(() => {
-    if (selectedProgram?.duration_in_months && courseStart) {
-      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
-    }
-  }, [selectedProgram?.duration_in_months, courseStart]);
+    if (!programId) return;
 
-  useEffect(() => {
-    if (selectedProgram?.fixed_start_day_of_month && startMonth) {
+    const program = programs.find((p) => p.id === programId);
+    const school = schools.find((s) => s.id === schoolId);
+
+    // Auto Course Start from fixed day + selected month
+    if (program?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
-      setCourseStart(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
+      const start = new Date(y, m - 1, program.fixed_start_day_of_month);
+      setCourseStart(start);
+      setCourseEnd(program.duration_in_months ? addMonths(start, program.duration_in_months) : undefined);
+      const arrival = new Date(start);
+      arrival.setDate(arrival.getDate() - 3); // example: 3 days before start
+      setArrivalDate(arrival);
     }
-  }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
-
-  useEffect(() => {
-    setAccommodationId("");
-  }, [schoolId]);
+  }, [programId, startMonth, schoolId, programs, schools]);
 
   useEffect(() => {
     (async () => {
@@ -344,6 +264,16 @@ export default function ProfileCompletionForm({
       setStep(STEPS[idx - 1].key);
     }
   };
+
+  /* ── Derived ────────────────────────────────────────────────────────── */
+  const monthOptions = Array.from({ length: 24 }, (_, i) => {
+    const d = addMonths(new Date(), i);
+    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
+  });
+
+  const stepIdx = STEPS.findIndex((s) => s.key === step);
+  const isLastStep = stepIdx === STEPS.length - 1;
+  const isFirstStep = stepIdx === 0;
 
   /* ── Save ───────────────────────────────────────────────────────────── */
   const handleSave = async () => {
@@ -427,16 +357,6 @@ export default function ProfileCompletionForm({
     }
   };
 
-  /* ── Derived ────────────────────────────────────────────────────────── */
-  const monthOptions = Array.from({ length: 24 }, (_, i) => {
-    const d = addMonths(new Date(), i);
-    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
-  });
-
-  const stepIdx = STEPS.findIndex((s) => s.key === step);
-  const isLastStep = stepIdx === STEPS.length - 1;
-  const isFirstStep = stepIdx === 0;
-
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="space-y-5">
@@ -491,312 +411,12 @@ export default function ProfileCompletionForm({
               />
             </FieldWrap>
           </div>
-          <DateOfBirthPick label="Date of Birth" value={dob} onChange={setDob} />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Gender</Label>
-              <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>City of Birth</Label>
-              <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ══ STEP 2: Contact Details ══ */}
-      {step === "contact" && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Details</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <FieldWrap label="Email" error={errors.email}>
-              <Input
-                className={cn("mt-1", errors.email && "border-destructive")}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@email.com"
-              />
-            </FieldWrap>
-            <FieldWrap label="Phone" error={errors.phone}>
-              <Input
-                className={cn("mt-1", errors.phone && "border-destructive")}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+972..."
-              />
-            </FieldWrap>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Emergency Contact Name</Label>
-              <Input className="mt-1" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
-            </div>
-            <div>
-              <Label>Emergency Contact Phone</Label>
-              <Input className="mt-1" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
-            </div>
-          </div>
+          {/* Birthday input manual typing */}
           <div>
-            <Label>Address</Label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
-              <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
-              <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
-            </div>
-            <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3"></div>
-        </div>
-      )}
-
-      {/* ══ STEP 3: Program ══ */}
-      {step === "program" && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Program</h3>
-          <div>
-            <Label>Language Program</Label>
-            <Select value={programId} onValueChange={setProgramId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select program" />
-              </SelectTrigger>
-              <SelectContent>
-                {programs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name_en}
-                    {p.lessons_per_week ? ` · ${p.lessons_per_week} lessons/wk` : ""}
-                    {p.duration_in_months ? ` · ${p.duration_in_months}mo` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedProgram && (
-              <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex flex-wrap gap-3">
-                {selectedProgram.lessons_per_week && <span>📚 {selectedProgram.lessons_per_week} lessons/week</span>}
-                {selectedProgram.duration_in_months && <span>⏱ {selectedProgram.duration_in_months} months</span>}
-                {selectedProgram.price && (
-                  <span>
-                    💰 {selectedProgram.price.toLocaleString()} {selectedProgram.currency}
-                  </span>
-                )}
-                {selectedProgram.fixed_start_day_of_month && (
-                  <span>📅 Starts day {selectedProgram.fixed_start_day_of_month}</span>
-                )}
-              </div>
-            )}
-          </div>
-          <div>
-            <Label>Intake Month</Label>
-            <Select value={startMonth} onValueChange={setStartMonth}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select intake month" />
-              </SelectTrigger>
-              <SelectContent>
-                {monthOptions.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <DatePick label="Course Start Date" value={courseStart} onChange={setCourseStart} />
-            <div>
-              <Label>Course End Date</Label>
-              <div
-                className={cn(
-                  "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
-                  courseEnd ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {courseEnd ? format(courseEnd, "PP") : "Auto-calculated"}
-              </div>
-              {selectedProgram?.duration_in_months && courseEnd && (
-                <p className="text-xs text-emerald-600 mt-1">
-                  ✓ Auto from {selectedProgram.duration_in_months}mo duration
-                </p>
-              )}
-            </div>
-          </div>
-          <div>
-            <Label>School</Label>
-            <Select value={schoolId} onValueChange={setSchoolId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select school" />
-              </SelectTrigger>
-              <SelectContent>
-                {schools.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name_en}
-                    {s.city ? ` — ${s.city}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <DatePick label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
-        </div>
-      )}
-
-      {/* ══ STEP 4: Accommodation ══ */}
-      {step === "accommodation" && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-            Accommodation & Insurance
-          </h3>
-          <div>
-            <Label>
-              Accommodation{" "}
-              {!schoolId && (
-                <span className="text-muted-foreground text-xs">(select a school on the previous step first)</span>
-              )}
-            </Label>
-            <Select
-              value={accommodationId || "__none__"}
-              onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)}
-              disabled={filteredAccoms.length === 0}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue
-                  placeholder={
-                    filteredAccoms.length === 0
-                      ? schoolId
-                        ? "No accommodations for this school"
-                        : "Select a school first"
-                      : "Select accommodation"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">None</SelectItem>
-                {filteredAccoms.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.name_en}
-                    {a.price ? ` — ${a.price.toLocaleString()} ${a.currency}/mo` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedAccom?.price && (
-              <p className="text-xs text-emerald-600 mt-1">
-                💰 {selectedAccom.price.toLocaleString()} {selectedAccom.currency}/month
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Insurance (optional)</Label>
-            <Select value={insuranceId || "__none__"} onValueChange={(v) => setInsuranceId(v === "__none__" ? "" : v)}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="None" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">None</SelectItem>
-                {insurances.map((i) => (
-                  <SelectItem key={i.id} value={i.id}>
-                    {i.name} ({i.tier}) — {i.price.toLocaleString()} {i.currency}/mo
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {(selectedProgram?.price || selectedAccom?.price || selectedIns?.price) && (
-            <div className="p-3 rounded-lg bg-muted/50 border border-border text-sm space-y-1.5">
-              <p className="font-semibold text-foreground mb-2">Cost Summary</p>
-              {selectedProgram?.price && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Program</span>
-                  <span className="font-medium text-foreground">
-                    {selectedProgram.price.toLocaleString()} {selectedProgram.currency}
-                  </span>
-                </div>
-              )}
-              {selectedAccom?.price && selectedProgram?.duration_in_months && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Accommodation ({selectedProgram.duration_in_months}mo)</span>
-                  <span className="font-medium text-foreground">
-                    {(selectedAccom.price * selectedProgram.duration_in_months).toLocaleString()}{" "}
-                    {selectedAccom.currency}
-                  </span>
-                </div>
-              )}
-              {selectedIns?.price && selectedProgram?.duration_in_months && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Insurance ({selectedProgram.duration_in_months}mo)</span>
-                  <span className="font-medium text-foreground">
-                    {(selectedIns.price * selectedProgram.duration_in_months).toLocaleString()} {selectedIns.currency}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══ STEP 5: Review ══ */}
-      {step === "review" && (
-        <div className="space-y-3">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Review & Save</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {(
-              [
-                ["Full Name", fullName || "—"],
-                ["Date of Birth", dob ? format(dob, "PP") : "—"],
-                ["Gender", gender || "—"],
-                ["City of Birth", cityOfBirth || "—"],
-                ["Email", email || "—"],
-                ["Phone", phone || "—"],
-                ["Emergency", emergencyName ? `${emergencyName} · ${emergencyPhone}` : "—"],
-                ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
-                ["Program", selectedProgram?.name_en || "—"],
-                ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
-                ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
-                ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
-                ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
-                ["Accommodation", selectedAccom?.name_en || "—"],
-                ["Insurance", selectedIns?.name || "—"],
-              ] as [string, string][]
-            ).map(([k, v]) => (
-              <div key={k} className="flex flex-col gap-0.5 p-2 rounded-lg bg-muted/30">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</span>
-                <span className="text-sm font-medium truncate">{v}</span>
-              </div>
-            ))}
-          </div>
-          {(Object.keys(validate("personal")).length > 0 || Object.keys(validate("contact")).length > 0) && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-              ⚠ Some required fields are missing. Please go back and complete them before saving.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-2 border-t border-border">
-        <Button variant="outline" onClick={goBack} disabled={isFirstStep}>
-          <ChevronLeft className="h-4 w-4 me-1" /> Back
-        </Button>
-        {isLastStep ? (
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />}
-            Save Profile
-          </Button>
-        ) : (
-          <Button onClick={goNext}>
-            Next <ChevronRight className="h-4 w-4 ms-1" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
+            <Label>Date of Birth</Label>
+            <Input
+              type="date"
+              className="mt-1"
+              value={dob ? format(dob, "yyyy-MM-dd") : ""}
+              onChange={(e) => setDob
