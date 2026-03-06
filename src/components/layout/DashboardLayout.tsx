@@ -44,6 +44,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  LayoutDashboard,
+  GitBranch,
+  Users,
+  BookOpen,
+  FileCheck,
+  DollarSign,
+  BarChart2,
+  Activity,
+  Settings,
+  CalendarDays,
+  ClipboardList,
+  UserPlus,
+  GraduationCap,
+  Link2,
+  TrendingUp,
+  ListChecks,
+  User,
+  FileText,
+  Globe,
+  Heart,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Table,
+} from "lucide-react";
 
 interface NavItem {
   key: string;
@@ -60,11 +87,10 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions" },
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students" },
-    { key: "nav.spreadsheet", icon: TableIcon, href: "/admin/spreadsheet" },
+    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet" },
     { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics" },
     { key: "nav.activity", icon: Activity, href: "/admin/activity" },
     { key: "nav.settings", icon: Settings, href: "/admin/settings" },
-    { key: "nav.spreadsheet", icon: FileText, href: "/admin/spreadsheet" },
   ],
   team_member: [
     { key: "nav.today", icon: LayoutDashboard, href: "/team" },
