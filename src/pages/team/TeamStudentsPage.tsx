@@ -355,7 +355,7 @@ export default function TeamStudentsPage() {
                   <div className="space-y-2.5">
                     <InfoRow
                       icon={<BookOpen className="h-4 w-4" />}
-                      label={isRtl ? "الجامعة" : "University"}
+                      label={isRtl ? "مدرسة اللغة" : "Language School"}
                       value={selected.university_name}
                     />
                     <InfoRow
