@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -28,7 +30,6 @@ import {
   AlertTriangle,
   Copy,
   Check,
-  MessageCircle,
   ChevronRight,
   CheckCircle2,
   CalendarClock,
@@ -38,6 +39,9 @@ import {
   Trash2,
   Download,
   StickyNote,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +51,7 @@ import ProfileCompletionForm from "@/components/team/ProfileCompletionForm";
 import PaymentConfirmationForm from "@/components/team/PaymentConfirmationForm";
 import RescheduleDialog from "@/components/team/RescheduleDialog";
 
+/* ─── Types ─────────────────────────────────────────────────────────── */
 interface Case {
   id: string;
   full_name: string;
@@ -102,14 +107,15 @@ interface Document {
   created_at: string;
   notes: string | null;
 }
-interface Activity {
-  id: string;
-  action: string;
-  actor_name: string | null;
-  created_at: string;
-  metadata: Record<string, unknown> | null;
+interface ResolvedNames {
+  programName: string | null;
+  schoolName: string | null;
+  accommodationName: string | null;
+  accommodationPrice: number | null;
+  insuranceName: string | null;
 }
 
+/* ─── Constants ──────────────────────────────────────────────────────── */
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-blue-100 text-blue-800",
   contacted: "bg-yellow-100 text-yellow-800",
@@ -120,7 +126,6 @@ const STATUS_COLORS: Record<string, string> = {
   enrollment_paid: "bg-green-100 text-green-800",
   forgotten: "bg-red-100 text-red-800",
 };
-
 const OUTCOME_COLORS: Record<string, string> = {
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
@@ -128,7 +133,6 @@ const OUTCOME_COLORS: Record<string, string> = {
   delayed: "bg-yellow-100 text-yellow-800",
   no_show: "bg-orange-100 text-orange-800",
 };
-
 const PIPELINE_STAGES = [
   "new",
   "contacted",
@@ -156,7 +160,17 @@ const STRICT_NEXT: Record<string, string> = {
   submitted: "enrollment_paid",
 };
 
-// Copy button component
+// Keys in extra_data that are UUIDs / internal IDs — resolved separately, skip raw display
+const SKIP_EXTRA_KEYS = new Set([
+  "program_id",
+  "school_id",
+  "accommodation_id",
+  "insurance_id",
+  "documents_skipped",
+  "age",
+]);
+
+/* ─── Small reusable components (module-level to prevent focus loss) ── */
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -191,6 +205,60 @@ function AdminNotesCard({ initialNotes }: { caseId: string; initialNotes: string
   );
 }
 
+/* ─── Editable field for Review step ─────────────────────────────────── */
+const EditableField = ({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => void }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const commit = () => {
+    onSave(draft);
+    setEditing(false);
+  };
+  if (editing)
+    return (
+      <div className="space-y-1">
+        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
+        <div className="flex gap-1">
+          <Input
+            className="h-7 text-xs"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            autoFocus
+          />
+          <Button size="sm" className="h-7 px-2" onClick={commit}>
+            <Save className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditing(false)}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+    );
+  return (
+    <div className="group flex flex-col gap-0.5 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-1">
+        <span className="text-sm font-medium flex-1 truncate">{value || "—"}</span>
+        <button
+          onClick={() => {
+            setDraft(value);
+            setEditing(true);
+          }}
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════════════════════════════ */
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -202,18 +270,31 @@ export default function CaseDetailPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [resolved, setResolved] = useState<ResolvedNames>({
+    programName: null,
+    schoolName: null,
+    accommodationName: null,
+    accommodationPrice: null,
+    insuranceName: null,
+  });
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [profileJustSaved, setProfileJustSaved] = useState(false);
+
+  // Edit extra_data in review
+  const [editedExtra, setEditedExtra] = useState<Record<string, string>>({});
+
+  // Dialog states
   const [showScheduler, setShowScheduler] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [rescheduleAppt, setRescheduleAppt] = useState<Appointment | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-  const [profileJustSaved, setProfileJustSaved] = useState(false);
   const [showDeleteCase, setShowDeleteCase] = useState(false);
   const [deletingCase, setDeletingCase] = useState(false);
   const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
   const [deletingAppt, setDeletingAppt] = useState(false);
 
+  /* ── Data fetching ─────────────────────────────────────────────────── */
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
@@ -226,7 +307,47 @@ export default function CaseDetailPage() {
       if (caseRes.error) throw caseRes.error;
       setCaseData(caseRes.data as unknown as Case);
       setAppointments((apptRes.data as Appointment[]) ?? []);
-      setSubmission(subRes.data as unknown as Submission | null);
+      const sub = subRes.data as unknown as Submission | null;
+      setSubmission(sub);
+
+      // Initialise editable copy of extra_data
+      if (sub?.extra_data) {
+        const stringified: Record<string, string> = {};
+        Object.entries(sub.extra_data).forEach(([k, v]) => {
+          stringified[k] = v ? String(v) : "";
+        });
+        setEditedExtra(stringified);
+      }
+
+      // Resolve UUIDs → names
+      if (sub) {
+        const ex = sub.extra_data ?? {};
+        const programId = (sub.program_id || ex.program_id || null) as string | null;
+        const schoolId = (ex.school_id || null) as string | null;
+        const accommodationId = (sub.accommodation_id || ex.accommodation_id || null) as string | null;
+        const insuranceId = (ex.insurance_id || null) as string | null;
+
+        const [progRes, schoolRes, accomRes, insRes] = await Promise.all([
+          programId ? (supabase as any).from("programs").select("name_en").eq("id", programId).maybeSingle() : null,
+          schoolId ? (supabase as any).from("schools").select("name_en").eq("id", schoolId).maybeSingle() : null,
+          accommodationId
+            ? (supabase as any)
+                .from("accommodations")
+                .select("name_en,price,currency")
+                .eq("id", accommodationId)
+                .maybeSingle()
+            : null,
+          insuranceId ? (supabase as any).from("insurances").select("name").eq("id", insuranceId).maybeSingle() : null,
+        ]);
+        setResolved({
+          programName: progRes?.data?.name_en ?? null,
+          schoolName: schoolRes?.data?.name_en ?? null,
+          accommodationName: accomRes?.data?.name_en ?? null,
+          accommodationPrice: accomRes?.data?.price ?? null,
+          insuranceName: insRes?.data?.name ?? null,
+        });
+      }
+
       const { data: docsData } = await supabase
         .from("documents")
         .select("*")
@@ -244,6 +365,7 @@ export default function CaseDetailPage() {
     fetchData();
   }, [fetchData]);
 
+  /* ── Status update ─────────────────────────────────────────────────── */
   const updateStatus = async (newStatus: string, force = false) => {
     if (!caseData) return;
     if (!force) {
@@ -268,6 +390,23 @@ export default function CaseDetailPage() {
     }
   };
 
+  /* ── Save edited extra_data field ──────────────────────────────────── */
+  const saveExtraField = async (key: string, value: string) => {
+    if (!submission) return;
+    const updated = { ...editedExtra, [key]: value };
+    setEditedExtra(updated);
+    // Convert back to original types where possible
+    const merged = { ...(submission.extra_data ?? {}) };
+    merged[key] = value;
+    try {
+      await (supabase as any).from("case_submissions").update({ extra_data: merged }).eq("id", submission.id);
+      toast({ title: "Field updated" });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    }
+  };
+
+  /* ── Delete case ───────────────────────────────────────────────────── */
   const handleDeleteCase = async () => {
     if (!caseData) return;
     setDeletingCase(true);
@@ -286,6 +425,7 @@ export default function CaseDetailPage() {
     }
   };
 
+  /* ── Delete appointment ────────────────────────────────────────────── */
   const handleDeleteAppointment = async () => {
     if (!deleteApptId) return;
     setDeletingAppt(true);
@@ -301,16 +441,26 @@ export default function CaseDetailPage() {
     }
   };
 
-  const latestAppt = appointments[0] ?? null;
+  /* ── Derived ───────────────────────────────────────────────────────── */
   const pendingAppt = appointments.find((a) => !a.outcome) ?? null;
+  const profileIsReady = !!submission;
+  const currentStageIdx = PIPELINE_STAGES.indexOf(caseData?.status ?? "");
+  const isTerminal = caseData?.status === "enrollment_paid" || caseData?.status === "cancelled";
+
+  // Financial summary
+  const programTotal = submission?.program_price ?? 0;
+  const accomTotal = submission?.accommodation_price ?? 0;
+  const insTotal = submission?.insurance_price ?? 0;
+  const serviceFee = submission?.service_fee ?? 0;
+  const translationFee = submission?.translation_fee ?? 0;
+  const grandTotal = programTotal + accomTotal + insTotal + serviceFee + translationFee;
+  const amountPaid = submission?.payment_confirmed ? serviceFee + translationFee : 0;
+  const remaining = grandTotal - amountPaid;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
   if (!caseData) return <div className="p-6 text-muted-foreground">Case not found</div>;
 
-  const profileIsReady = !!submission;
-  const currentStageIdx = PIPELINE_STAGES.indexOf(caseData.status);
-  const isTerminal = caseData.status === "enrollment_paid" || caseData.status === "cancelled";
-
+  /* ── Pipeline bar ──────────────────────────────────────────────────── */
   const PipelineBar = () => (
     <Card className="mb-2">
       <CardContent className="px-4 py-3">
@@ -342,6 +492,7 @@ export default function CaseDetailPage() {
     </Card>
   );
 
+  /* ── Next Action panel ─────────────────────────────────────────────── */
   const renderNextAction = () => {
     const { status } = caseData;
     if (status === "new")
@@ -454,13 +605,19 @@ export default function CaseDetailPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
             <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
-            <p className="text-sm text-emerald-800 font-medium">Payment Confirmed — Submit Case to Admin</p>
+            <p className="text-sm text-emerald-800 font-medium">Payment Confirmed — Review & Submit to Admin</p>
           </div>
           {submission && (
             <div className="text-sm space-y-1 px-1">
-              {submission.program_price > 0 && (
+              {resolved.programName && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Program</span>
+                  <span className="font-medium text-foreground">{resolved.programName}</span>
+                </div>
+              )}
+              {submission.program_price > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Program cost</span>
                   <span className="font-medium text-foreground">{submission.program_price.toLocaleString()} EUR</span>
                 </div>
               )}
@@ -472,10 +629,10 @@ export default function CaseDetailPage() {
                   </span>
                 </div>
               )}
-              {submission.insurance_price > 0 && (
+              {submission.service_fee > 0 && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Insurance</span>
-                  <span className="font-medium text-foreground">{submission.insurance_price.toLocaleString()} EUR</span>
+                  <span>Service fee</span>
+                  <span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
                 </div>
               )}
               {submission.program_start_date && (
@@ -525,11 +682,12 @@ export default function CaseDetailPage() {
     return null;
   };
 
+  /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-4xl mx-auto">
       <PipelineBar />
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-4 flex-wrap">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
@@ -558,7 +716,6 @@ export default function CaseDetailPage() {
               Account Active
             </Badge>
           )}
-          {/* NOTE: Create Student Account is ONLY in the Students page, NOT here */}
           {!isTerminal && (
             <Button
               size="sm"
@@ -573,21 +730,8 @@ export default function CaseDetailPage() {
         </div>
       </div>
 
-      {/* Application Info — hidden if created by team member */}
-      {caseData.created_by_team ? (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" /> Application Info
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <p className="text-sm text-muted-foreground italic">
-              No application info submitted — student did not fill the apply page.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      {/* ── Application Info — only show for cases from the student application form ── */}
+      {!caseData.created_by_team && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -657,9 +801,7 @@ export default function CaseDetailPage() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">
-                No application info submitted — student did not fill the apply page.
-              </p>
+              <p className="text-sm text-muted-foreground italic">No application data recorded.</p>
             )}
           </CardContent>
         </Card>
@@ -667,7 +809,7 @@ export default function CaseDetailPage() {
 
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
-      {/* Student Profile data */}
+      {/* ── Student Profile — resolved names + editable extra_data ── */}
       {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -675,20 +817,52 @@ export default function CaseDetailPage() {
               <User className="h-4 w-4" /> Student Profile
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm">
+          <CardContent className="space-y-4">
+            {/* Resolved lookup names (not raw UUIDs) */}
+            {(resolved.programName || resolved.schoolName || resolved.accommodationName || resolved.insuranceName) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-3 border-b border-border">
+                {resolved.programName && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Program</p>
+                    <p className="text-sm font-medium">{resolved.programName}</p>
+                  </div>
+                )}
+                {resolved.schoolName && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">School</p>
+                    <p className="text-sm font-medium">{resolved.schoolName}</p>
+                  </div>
+                )}
+                {resolved.accommodationName && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Accommodation</p>
+                    <p className="text-sm font-medium">
+                      {resolved.accommodationName}
+                      {resolved.accommodationPrice ? ` — ${resolved.accommodationPrice.toLocaleString()}/mo` : ""}
+                    </p>
+                  </div>
+                )}
+                {resolved.insuranceName && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Insurance</p>
+                    <p className="text-sm font-medium">{resolved.insuranceName}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Editable text fields */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {Object.entries(submission.extra_data).map(([key, val]) => {
-                if (!val || val === "") return null;
+                if (SKIP_EXTRA_KEYS.has(key)) return null;
+                if (!val && val !== 0) return null;
                 const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-                const strVal = String(val);
                 return (
-                  <div key={key} className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">{label}</p>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium text-foreground text-xs">{strVal}</p>
-                      <CopyButton value={strVal} />
-                    </div>
-                  </div>
+                  <EditableField
+                    key={key}
+                    label={label}
+                    value={editedExtra[key] ?? String(val)}
+                    onSave={(v) => saveExtraField(key, v)}
+                  />
                 );
               })}
             </div>
@@ -696,57 +870,73 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* Payment Summary */}
-      {submission &&
-        (submission.program_price > 0 || submission.accommodation_price > 0 || submission.insurance_price > 0) && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CreditCard className="h-4 w-4" /> Payment Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2">
-              {submission.program_price > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Program</span>
-                  <span className="font-medium">{submission.program_price.toLocaleString()} EUR</span>
-                </div>
-              )}
-              {submission.accommodation_price > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Accommodation</span>
-                  <span className="font-medium">{submission.accommodation_price.toLocaleString()} EUR</span>
-                </div>
-              )}
-              {submission.insurance_price > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Insurance</span>
-                  <span className="font-medium">{submission.insurance_price.toLocaleString()} EUR</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>
-                  {(
-                    submission.program_price +
-                    submission.accommodation_price +
-                    submission.insurance_price
-                  ).toLocaleString()}{" "}
-                  EUR
-                </span>
+      {/* ── Financial Summary ── */}
+      {submission && grandTotal > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-4 w-4" /> Financial Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-2">
+            {programTotal > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Program{resolved.programName ? ` (${resolved.programName})` : ""}</span>
+                <span className="font-medium text-foreground">{programTotal.toLocaleString()} EUR</span>
               </div>
+            )}
+            {accomTotal > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Accommodation{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
+                <span className="font-medium text-foreground">{accomTotal.toLocaleString()} EUR</span>
+              </div>
+            )}
+            {insTotal > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Insurance{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
+                <span className="font-medium text-foreground">{insTotal.toLocaleString()} EUR</span>
+              </div>
+            )}
+            {serviceFee > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Service Fee</span>
+                <span className="font-medium text-foreground">{serviceFee.toLocaleString()} ILS</span>
+              </div>
+            )}
+            {translationFee > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Translation Fee</span>
+                <span className="font-medium text-foreground">{translationFee.toLocaleString()} ILS</span>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between font-semibold text-base">
+              <span>Total</span>
+              <span>{grandTotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Amount Paid</span>
+              <span className={amountPaid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}>
+                {amountPaid.toLocaleString()} ILS
+              </span>
+            </div>
+            {remaining > 0 && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Payment Status</span>
-                <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
-                  {submission.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
-                </span>
+                <span className="text-muted-foreground">Remaining</span>
+                <span className="text-amber-600 font-medium">{remaining.toLocaleString()}</span>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+            <div className="flex justify-between pt-1">
+              <span className="text-muted-foreground">Payment Status</span>
+              <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
+                {submission.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Next Action */}
+      {/* ── Next Action ── */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Next Action</CardTitle>
@@ -754,6 +944,7 @@ export default function CaseDetailPage() {
         <CardContent>{renderNextAction()}</CardContent>
       </Card>
 
+      {/* ── Appointments + Course cards ── */}
       <div className="grid md:grid-cols-2 gap-4">
         {caseData.status !== "new" && (
           <Card>
@@ -842,6 +1033,24 @@ export default function CaseDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
+              {resolved.programName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Program</span>
+                  <span className="font-medium">{resolved.programName}</span>
+                </div>
+              )}
+              {resolved.schoolName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">School</span>
+                  <span className="font-medium">{resolved.schoolName}</span>
+                </div>
+              )}
+              {resolved.accommodationName && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Accommodation</span>
+                  <span className="font-medium">{resolved.accommodationName}</span>
+                </div>
+              )}
               {submission.program_start_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Start Date</span>
@@ -878,7 +1087,7 @@ export default function CaseDetailPage() {
         )}
       </div>
 
-      {/* Documents */}
+      {/* ── Documents ── */}
       {documents.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -908,7 +1117,7 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* Modals */}
+      {/* ── Modals ── */}
       {showScheduler && user && (
         <AppointmentSchedulerModal
           open={showScheduler}
@@ -929,6 +1138,7 @@ export default function CaseDetailPage() {
       )}
       <RescheduleDialog appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} refetch={fetchData} />
 
+      {/* Submit confirm */}
       <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -965,6 +1175,7 @@ export default function CaseDetailPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete case */}
       <AlertDialog open={showDeleteCase} onOpenChange={setShowDeleteCase}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -989,6 +1200,7 @@ export default function CaseDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete appointment */}
       <AlertDialog open={!!deleteApptId} onOpenChange={() => setDeleteApptId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
