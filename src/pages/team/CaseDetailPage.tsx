@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Phone,
@@ -41,6 +42,8 @@ import {
   Trash2,
   Download,
   ExternalLink,
+  Pencil,
+  StickyNote,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +160,101 @@ const STRICT_NEXT: Record<string, string> = {
   payment_confirmed: "submitted",
   submitted: "enrollment_paid",
 };
+
+/* ── Admin Notes Card ─────────────────────────────────────────── */
+function AdminNotesCard({
+  caseId,
+  initialNotes,
+  onSaved,
+}: {
+  caseId: string;
+  initialNotes: string | null;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(initialNotes ?? "");
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  // Keep in sync if parent refreshes
+  React.useEffect(() => {
+    setText(initialNotes ?? "");
+  }, [initialNotes]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({ intake_notes: text.trim() || null })
+        .eq("id", caseId);
+      if (error) throw error;
+      toast({ description: "Notes saved ✓" });
+      setEditing(false);
+      onSaved();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <StickyNote className="h-4 w-4" /> Admin Notes
+            <span className="text-xs font-normal text-muted-foreground">(visible to team members)</span>
+          </CardTitle>
+          {!editing ? (
+            <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs" onClick={() => setEditing(true)}>
+              <Pencil className="h-3 w-3" /> {initialNotes ? "Edit" : "Add Notes"}
+            </Button>
+          ) : (
+            <div className="flex gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => {
+                  setEditing(false);
+                  setText(initialNotes ?? "");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button size="sm" className="h-7 text-xs gap-1" onClick={save} disabled={saving}>
+                <Check className="h-3 w-3" />
+                {saving ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        {editing ? (
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Write notes for the team member who will handle this case — e.g. student prefers engineering, call in the evening, parent is paying..."
+            rows={4}
+            className="resize-none text-sm"
+            autoFocus
+          />
+        ) : initialNotes ? (
+          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {initialNotes}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">
+            No notes yet. Click "Add Notes" to leave instructions for the team member.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -657,86 +755,90 @@ export default function CaseDetailPage() {
         </div>
       </div>
 
-      {/* Application Info — always shown, all fields from apply page */}
+      {/* Application Info — auto-populated from apply page */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
+          <CardTitle className="text-base flex items-center gap-2">
             <GraduationCap className="h-4 w-4" /> Application Info
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {caseData.city ||
-          caseData.passport_type ||
-          caseData.education_level ||
+          {caseData.education_level ||
           caseData.english_units != null ||
           caseData.math_units != null ||
           caseData.english_level ||
-          caseData.bagrut_score != null ||
+          caseData.passport_type ||
+          caseData.city ||
           caseData.degree_interest ||
-          caseData.intake_notes ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
+          caseData.bagrut_score != null ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
               {caseData.city && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">City</p>
-                  <p className="font-medium">{caseData.city}</p>
+                  <p className="text-sm font-medium">{caseData.city}</p>
                 </div>
               )}
               {caseData.passport_type && (
                 <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">Passport Type</p>
-                  <p className="font-medium">{caseData.passport_type.replace(/_/g, " ")}</p>
+                  <p className="text-xs text-muted-foreground">Passport</p>
+                  <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
                 </div>
               )}
               {caseData.education_level && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">Education Level</p>
-                  <p className="font-medium capitalize">{caseData.education_level}</p>
+                  <p className="text-sm font-medium">
+                    {caseData.education_level === "bagrut"
+                      ? "Bagrut (תעודת בגרות)"
+                      : caseData.education_level === "bachelor"
+                        ? "Bachelor (תואר ראשון)"
+                        : caseData.education_level === "master"
+                          ? "Master (תואר שני)"
+                          : caseData.education_level}
+                  </p>
                 </div>
               )}
               {caseData.english_units != null && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">English Units</p>
-                  <p className="font-bold text-primary text-base">{caseData.english_units}</p>
+                  <p className="text-2xl font-bold text-primary leading-none">{caseData.english_units}</p>
                 </div>
               )}
               {caseData.math_units != null && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">Math Units</p>
-                  <p className="font-bold text-primary text-base">{caseData.math_units}</p>
+                  <p className="text-2xl font-bold text-primary leading-none">{caseData.math_units}</p>
                 </div>
               )}
               {caseData.english_level && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">English Proficiency</p>
-                  <p className="font-medium capitalize">{caseData.english_level}</p>
+                  <p className="text-sm font-medium capitalize">{caseData.english_level}</p>
                 </div>
               )}
               {caseData.bagrut_score != null && (
                 <div className="space-y-0.5">
                   <p className="text-xs text-muted-foreground">Bagrut Score</p>
-                  <p className="font-medium">{caseData.bagrut_score}</p>
+                  <p className="text-2xl font-bold text-primary leading-none">{caseData.bagrut_score}</p>
                 </div>
               )}
               {caseData.degree_interest && (
                 <div className="space-y-0.5 col-span-2 sm:col-span-3">
                   <p className="text-xs text-muted-foreground">Preferred Major / Degree</p>
-                  <p className="font-medium">{caseData.degree_interest}</p>
-                </div>
-              )}
-              {caseData.intake_notes && (
-                <div className="space-y-0.5 col-span-2 sm:col-span-3">
-                  <p className="text-xs text-muted-foreground">Notes</p>
-                  <p className="text-sm bg-muted/40 rounded-lg px-3 py-2 whitespace-pre-wrap">
-                    {caseData.intake_notes}
-                  </p>
+                  <p className="text-sm font-medium">{caseData.degree_interest}</p>
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No application info submitted yet.</p>
+            <p className="text-sm text-muted-foreground italic">
+              No application info submitted — student did not fill the apply page.
+            </p>
           )}
         </CardContent>
       </Card>
+
+      {/* Admin Notes */}
+      <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
       {/* Full Student Profile — shown when profile data exists */}
       {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (
