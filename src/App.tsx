@@ -180,6 +180,7 @@ const App = () => {
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
+              <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}
