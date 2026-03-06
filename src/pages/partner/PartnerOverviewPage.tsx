@@ -1,42 +1,86 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, DollarSign, TrendingUp, Award, CheckCircle, Calendar, FileCheck } from 'lucide-react';
-import DashboardLoading from '@/components/dashboard/DashboardLoading';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
-import { useDirection } from '@/hooks/useDirection';
+import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard } from "lucide-react";
+import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { useDirection } from "@/hooks/useDirection";
+
+const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: string }> = {
+  new: { label: "New", labelAr: "جديد", color: "bg-slate-100 text-slate-700" },
+  contacted: { label: "Contacted", labelAr: "تم التواصل", color: "bg-blue-100 text-blue-700" },
+  appointment_scheduled: { label: "Appointment", labelAr: "موعد", color: "bg-purple-100 text-purple-700" },
+  profile_completion: { label: "Profile Filling", labelAr: "إكمال الملف", color: "bg-yellow-100 text-yellow-700" },
+  payment_confirmed: { label: "Paid", labelAr: "مدفوع", color: "bg-emerald-100 text-emerald-700" },
+  submitted: { label: "Submitted", labelAr: "مُقدَّم", color: "bg-green-100 text-green-700" },
+  enrollment_paid: { label: "Enrolled", labelAr: "مسجل", color: "bg-teal-100 text-teal-700" },
+  rejected: { label: "Rejected", labelAr: "مرفوض", color: "bg-red-100 text-red-700" },
+  cancelled: { label: "Cancelled", labelAr: "ملغي", color: "bg-gray-100 text-gray-500" },
+};
+
+const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
+const ENROLLED_STATUSES = ["enrollment_paid"];
 
 export default function PartnerOverviewPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [cases, setCases] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
-  const isAr = i18n.language === 'ar';
+  const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const [profRes, casesRes, settingsRes] = await Promise.all([
-      (supabase as any).from('profiles').select('full_name,email').eq('id', uid).maybeSingle(),
-      (supabase as any).from('cases').select('id,status,created_at').order('created_at', { ascending: false }),
-      (supabase as any).from('platform_settings').select('partner_commission_rate').limit(1).maybeSingle(),
+    const [profRes, settingsRes, commissionsRes] = await Promise.all([
+      (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
+      (supabase as any)
+        .from("platform_settings")
+        .select("partner_commission_rate,partner_dashboard_show_all_cases")
+        .limit(1)
+        .maybeSingle(),
+      (supabase as any).from("commission_transactions").select("*").eq("partner_id", uid),
     ]);
 
     if (profRes.data) setProfile(profRes.data);
-    setCases(casesRes.data || []);
-    if (settingsRes.data?.partner_commission_rate) {
-      setCommissionRate(Number(settingsRes.data.partner_commission_rate));
+
+    const rate = settingsRes.data?.partner_commission_rate ?? 500;
+    const showAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
+    setCommissions(commissionsRes.data || []);
+
+    // Check per-partner commission override
+    const { data: override } = await (supabase as any)
+      .from("partner_commission_overrides")
+      .select("commission_amount")
+      .eq("partner_id", uid)
+      .maybeSingle();
+    setCommissionRate(Number(override?.commission_amount ?? rate));
+
+    // Fetch cases
+    let query = (supabase as any)
+      .from("cases")
+      .select("id,full_name,status,source,created_at,education_level,degree_interest")
+      .order("created_at", { ascending: false });
+
+    if (!showAll) {
+      query = query.in("source", ["apply_page", "contact_form"]);
     }
+
+    const { data: casesData } = await query;
+    setCases(casesData || []);
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
+      if (!session?.user) {
+        navigate("/student-auth");
+        return;
+      }
       setUserId(session.user.id);
       load(session.user.id);
     });
@@ -45,68 +89,84 @@ export default function PartnerOverviewPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const total = cases.length;
-  const contacted = cases.filter(c => !['new'].includes(c.status)).length;
-  const withAppointment = cases.filter(c => ['appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
-  const profileComplete = cases.filter(c => ['profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
-  const paid = cases.filter(c => ['payment_confirmed', 'submitted', 'enrollment_paid'].includes(c.status)).length;
-  const enrolled = cases.filter(c => c.status === 'enrollment_paid').length;
+  const paid = cases.filter((c) => PAID_STATUSES.includes(c.status)).length;
+  const enrolled = cases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
+  const totalEarned = commissions.reduce((sum, c) => sum + (c.partner_commission_ils || 0), 0);
 
   const kpis = [
-    { label: isAr ? 'إجمالي التسجيلات' : 'Total Registrations', value: total, icon: <Users className="h-5 w-5" />, color: 'text-blue-600 bg-blue-50' },
-    { label: isAr ? 'تم التواصل' : 'Contacted', value: contacted, icon: <CheckCircle className="h-5 w-5" />, color: 'text-sky-600 bg-sky-50' },
-    { label: isAr ? 'لديهم موعد' : 'With Appointment', value: withAppointment, icon: <Calendar className="h-5 w-5" />, color: 'text-purple-600 bg-purple-50' },
-    { label: isAr ? 'ملف مكتمل' : 'Profile Complete', value: profileComplete, icon: <FileCheck className="h-5 w-5" />, color: 'text-yellow-600 bg-yellow-50' },
-    { label: isAr ? 'دفعوا' : 'Paid', value: paid, icon: <DollarSign className="h-5 w-5" />, color: 'text-emerald-600 bg-emerald-50' },
-    { label: isAr ? 'مسجلون' : 'Enrolled', value: enrolled, icon: <Award className="h-5 w-5" />, color: 'text-green-600 bg-green-50' },
+    {
+      label: isAr ? "إجمالي التسجيلات" : "Total Applications",
+      value: total,
+      icon: Users,
+      color: "text-blue-600 bg-blue-50",
+    },
+    {
+      label: isAr ? "حالات مدفوعة" : "Paid Cases",
+      value: paid,
+      icon: CreditCard,
+      color: "text-emerald-600 bg-emerald-50",
+    },
+    { label: isAr ? "مسجلون" : "Enrolled", value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
+    {
+      label: isAr ? "إجمالي الأرباح" : "Total Paid Out",
+      value: `₪${totalEarned.toLocaleString()}`,
+      icon: DollarSign,
+      color: "text-primary bg-primary/10",
+    },
+    {
+      label: isAr ? "أرباح متوقعة" : "Projected Earnings",
+      value: `₪${(paid * commissionRate).toLocaleString()}`,
+      icon: TrendingUp,
+      color: "text-purple-600 bg-purple-50",
+    },
+    {
+      label: isAr ? "عمولة لكل حالة" : "Per Case Commission",
+      value: `₪${commissionRate.toLocaleString()}`,
+      icon: CheckCircle,
+      color: "text-sky-600 bg-sky-50",
+    },
   ];
-
-  const funnelData = [
-    { name: isAr ? 'تسجيل' : 'Registered', value: total },
-    { name: isAr ? 'تواصل' : 'Contacted', value: contacted },
-    { name: isAr ? 'موعد' : 'Appointment', value: withAppointment },
-    { name: isAr ? 'ملف مكتمل' : 'Profile Done', value: profileComplete },
-    { name: isAr ? 'مدفوع' : 'Paid', value: paid },
-    { name: isAr ? 'مسجل' : 'Enrolled', value: enrolled },
-  ];
-
-  const COLORS = ['#3b82f6', '#0ea5e9', '#8b5cf6', '#eab308', '#10b981', '#22c55e'];
-
-  const projectedEarnings = enrolled * commissionRate;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6" dir={dir}>
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6" dir={dir}>
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          {isAr ? 'مرحبًا' : 'Welcome back'}{profile?.full_name ? `, ${profile.full_name}` : ''}! 👋
+          {isAr ? "مرحبًا" : "Welcome"}
+          {profile?.full_name ? `, ${profile.full_name}` : ""}! 👋
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isAr ? 'إحصائيات مباشرة للطلاب المسجلين عبر الموقع' : 'Live analytics for students registered through the website'}
+          {isAr
+            ? "لوحة تحكم الشريك — عرض مباشر للحالات والأرباح"
+            : "Partner Dashboard — live view of cases and commissions"}
         </p>
       </div>
 
-      {/* Projected Earnings Banner */}
-      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between gap-4 flex-wrap">
+      {/* Earnings Banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-foreground">
-            {isAr ? 'الأرباح المتوقعة' : 'Projected Earnings'}
-          </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm font-bold text-foreground">{isAr ? "الأرباح المتوقعة" : "Projected Earnings"}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {isAr
-              ? `${enrolled} طالب مسجل × ${commissionRate} ILS`
-              : `${enrolled} enrolled students × ${commissionRate} ILS`}
+              ? `${paid} حالة مدفوعة × ₪${commissionRate.toLocaleString()}`
+              : `${paid} paid cases × ₪${commissionRate.toLocaleString()}`}
           </p>
+          {totalEarned > 0 && (
+            <p className="text-xs text-emerald-600 mt-1 font-semibold">
+              {isAr ? `تم الصرف: ₪${totalEarned.toLocaleString()}` : `Paid out: ₪${totalEarned.toLocaleString()}`}
+            </p>
+          )}
         </div>
-        <p className="text-3xl font-bold text-primary">₪{projectedEarnings.toLocaleString()}</p>
+        <p className="text-4xl font-black text-primary">₪{(paid * commissionRate).toLocaleString()}</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-3">
-              <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg mb-2 ${kpi.color}`}>
-                {kpi.icon}
+          <Card key={kpi.label} className="border-border">
+            <CardContent className="p-4">
+              <div className={`inline-flex items-center justify-center w-9 h-9 rounded-xl mb-2.5 ${kpi.color}`}>
+                <kpi.icon className="h-4 w-4" />
               </div>
               <p className="text-xl font-bold text-foreground">{kpi.value}</p>
               <p className="text-xs text-muted-foreground leading-tight mt-0.5">{kpi.label}</p>
@@ -115,52 +175,90 @@ export default function PartnerOverviewPage() {
         ))}
       </div>
 
-      {/* Funnel Chart */}
+      {/* Case List */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">
-            {isAr ? 'قمع التحويل' : 'Conversion Funnel'}
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">{isAr ? "قائمة الحالات" : "Case List"}</CardTitle>
+            <Badge variant="secondary" className="ml-auto text-xs">
+              {total}
+            </Badge>
+          </div>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={funnelData} layout="vertical">
-              <XAxis type="number" hide />
-              <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v: any) => [v, isAr ? 'طالب' : 'Students']} />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                {funnelData.map((_, idx) => (
-                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <CardContent className="p-0">
+          {cases.length === 0 ? (
+            <div className="py-12 text-center">
+              <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm">{isAr ? "لا توجد حالات بعد" : "No cases yet"}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                      {isAr ? "الاسم" : "Name"}
+                    </th>
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                      {isAr ? "التخصص" : "Major"}
+                    </th>
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                      {isAr ? "الحالة" : "Status"}
+                    </th>
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                      {isAr ? "العمولة" : "Commission"}
+                    </th>
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                      {isAr ? "التاريخ" : "Date"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cases.map((c) => {
+                    const cfg = STATUS_CONFIG[c.status] || {
+                      label: c.status,
+                      labelAr: c.status,
+                      color: "bg-gray-100 text-gray-600",
+                    };
+                    const isPaid = PAID_STATUSES.includes(c.status);
+                    const commission = commissions.find((cm) => cm.case_id === c.id);
+                    return (
+                      <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">{c.degree_interest || "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
+                            {isAr ? cfg.labelAr : cfg.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {isPaid ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                              <CheckCircle className="h-3 w-3" />
+                              {commission
+                                ? `₪${commission.partner_commission_ils.toLocaleString()}`
+                                : `₪${commissionRate.toLocaleString()} ${isAr ? "(متوقع)" : "(proj.)"}`}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {isAr ? "في الانتظار" : "Pending"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString(isAr ? "ar-SA" : "en-GB")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Conversion Rate */}
-      {total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'معدل التحويل للدفع' : 'Registration → Paid'}</p>
-              <p className="text-2xl font-bold text-foreground">{Math.round((paid / total) * 100)}%</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'معدل التسجيل الكامل' : 'Registration → Enrolled'}</p>
-              <p className="text-2xl font-bold text-foreground">{Math.round((enrolled / total) * 100)}%</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">{isAr ? 'عمولة لكل طالب' : 'Commission Per Student'}</p>
-              <p className="text-2xl font-bold text-foreground">₪{commissionRate.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
