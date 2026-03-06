@@ -427,6 +427,22 @@ const AdminPipelinePage = () => {
 
                             <p className="text-xs text-muted-foreground">{c.phone_number}</p>
 
+                            {/* Units badges — shown directly on card */}
+                            {(c.english_units != null || c.math_units != null) && (
+                              <div className="flex items-center gap-1.5">
+                                {c.english_units != null && (
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                                    EN {c.english_units}
+                                  </span>
+                                )}
+                                {c.math_units != null && (
+                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                                    MA {c.math_units}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             {c.assignee_name ? (
                               <p className="text-xs text-muted-foreground flex items-center gap-1">
                                 <User className="h-3 w-3" />
