@@ -1,487 +1,567 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { format, differenceInYears, addMonths } from "date-fns";
-import { CalendarIcon, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from "react-i18next";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  RefreshCw,
+  Search,
+  User,
+  Loader2,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
+  Plus,
+  GraduationCap,
+  Phone,
+  Mail,
+  UserPlus,
+  CheckCircle2,
+  X,
+  MessageCircle,
+} from "lucide-react";
+import { format } from "date-fns";
 
-const db: any = supabase as unknown as any;
-
-/* ─── Types ─────────────────────────────────────────────────────────── */
-interface Program {
+/* ─── Types ─────────────────────────────────────────────────────── */
+interface StudentRecord {
   id: string;
-  name_en: string;
-  name_ar: string;
-  type: string;
-  duration_in_months: number | null;
-  fixed_start_day_of_month: number | null;
-  lessons_per_week: number | null;
-  price: number | null;
-  currency: string;
-}
-interface School {
-  id: string;
-  name_en: string;
-  name_ar: string;
+  full_name: string;
+  email: string;
+  phone_number: string | null;
+  created_at: string;
   city: string | null;
+  must_change_password: boolean;
+  created_by: string | null;
 }
-interface Accommodation {
+
+interface CaseMatch {
   id: string;
-  name_en: string;
-  name_ar: string;
-  price: number | null;
-  currency: string;
-  school_id: string | null;
-}
-interface Insurance {
-  id: string;
-  name: string;
-  tier: string;
-  price: number;
-  currency: string;
-}
-interface CaseData {
-  city?: string | null;
-  education_level?: string | null;
-  bagrut_score?: number | null;
-  english_level?: string | null;
-  math_units?: number | null;
-  passport_type?: string | null;
-  degree_interest?: string | null;
-  intake_notes?: string | null;
-}
-interface Props {
-  caseId: string;
-  actorId: string;
-  actorName: string;
-  existingData?: Record<string, unknown>;
-  caseData?: CaseData;
-  onSuccess: () => void;
+  full_name: string;
+  phone_number: string;
+  status: string;
+  city: string | null;
+  education_level: string | null;
 }
 
-const STEPS = [
-  { key: "personal", label: "Personal Info" },
-  { key: "contact", label: "Contact Details" },
-  { key: "program", label: "Program" },
-  { key: "accommodation", label: "Accommodation" },
-  { key: "review", label: "Review & Save" },
-] as const;
-type StepKey = (typeof STEPS)[number]["key"];
-
-/* ─── MODULE-LEVEL COMPONENTS ────────────────────────────────────────── */
-const FieldWrap = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
-  <div>
-    <Label className={error ? "text-destructive" : ""}>{label}</Label>
-    {children}
-    {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-  </div>
-);
-
-const DatePick = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: Date | undefined;
-  onChange: (d: Date | undefined) => void;
-}) => (
-  <div>
-    <Label>{label}</Label>
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
-        >
-          <CalendarIcon className="me-2 h-4 w-4" />
-          {value ? format(value, "PP") : "Pick date"}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
-      </PopoverContent>
-    </Popover>
-  </div>
-);
-
-/* ─── MAIN COMPONENT ───────────────────────────────────────────────────── */
-export default function ProfileCompletionForm({
-  caseId,
-  actorId,
-  actorName,
-  existingData,
-  caseData: cd,
-  onSuccess,
-}: Props) {
+/* ─── Main Page ─────────────────────────────────────────────────── */
+export default function TeamStudentsPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { i18n } = useTranslation("dashboard");
+  const isRtl = i18n.language === "ar";
 
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [schools, setSchools] = useState<School[]>([]);
-  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
-  const [insurances, setInsurances] = useState<Insurance[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<StepKey>("personal");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  const ex = existingData ?? {};
+  /* ── Create modal state ── */
+  const [showCreate, setShowCreate] = useState(false);
 
-  // Personal
-  const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
-  const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
-  const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
-  const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
-  const [gender, setGender] = useState((ex.gender as string) ?? "");
-  const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
+  /* Step 1: case search */
+  const [nameQuery, setNameQuery] = useState("");
+  const [caseResults, setCaseResults] = useState<CaseMatch[]>([]);
+  const [searchingCases, setSearchingCases] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<CaseMatch | null>(null);
 
-  // Contact
-  const [email, setEmail] = useState((ex.student_email ?? ex.email ?? "") as string);
-  const [phone, setPhone] = useState((ex.student_phone ?? ex.phone ?? "") as string);
-  const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
-  const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? "");
-  const [street, setStreet] = useState((ex.street as string) ?? "");
-  const [houseNo, setHouseNo] = useState((ex.house_no as string) ?? "");
-  const [postcode, setPostcode] = useState((ex.postcode as string) ?? "");
-  const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? "");
+  /* Step 2: fill names */
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
 
-  // Program
-  const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
-  const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
-  const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
-  const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
-    ex.arrival_date ? new Date(ex.arrival_date as string) : undefined,
-  );
-  const [courseStart, setCourseStart] = useState<Date | undefined>(
-    ex.course_start ? new Date(ex.course_start as string) : undefined,
-  );
-  const [courseEnd, setCourseEnd] = useState<Date | undefined>(
-    ex.course_end ? new Date(ex.course_end as string) : undefined,
-  );
+  /* Step 3: email + create */
+  const [email, setEmail] = useState("");
+  const [creating, setCreating] = useState(false);
 
-  // Accommodation
-  const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
-  const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
+  /* Success state */
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+  const [showPw, setShowPw] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const age = dob ? differenceInYears(new Date(), dob) : null;
-  const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-  const selectedProgram = programs.find((p) => p.id === programId);
-  const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
-  const selectedAccom = accommodations.find((a) => a.id === accommodationId);
-  const selectedIns = insurances.find((i) => i.id === insuranceId);
+  /* ── Fetch students created by this team member ── */
+  const fetchStudents = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      // Get student role users
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "student");
+      if (roleError) throw roleError;
 
-  /* ─── Effects for auto-filling program-related dates ───────────────── */
-  useEffect(() => {
-    if (selectedProgram?.duration_in_months && courseStart) {
-      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
-    }
-  }, [selectedProgram?.duration_in_months, courseStart]);
-
-  useEffect(() => {
-    if (selectedProgram?.fixed_start_day_of_month && startMonth) {
-      const [y, m] = startMonth.split("-").map(Number);
-      setCourseStart(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
-      // Auto arrival date same day as courseStart for simplicity
-      setArrivalDate(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
-    }
-  }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
-
-  useEffect(() => {
-    setAccommodationId("");
-  }, [schoolId]);
-
-  useEffect(() => {
-    (async () => {
-      const results = (await Promise.all([
-        db.from("programs").select("*").eq("is_active", true).order("name_en"),
-        db.from("schools").select("*").eq("is_active", true).order("name_en"),
-        db.from("accommodations").select("*").eq("is_active", true),
-        db.from("insurances").select("*").eq("is_active", true).order("tier"),
-      ])) as any[];
-      setPrograms(results[0].data ?? []);
-      setSchools(results[1].data ?? []);
-      setAccommodations(results[2].data ?? []);
-      setInsurances(results[3].data ?? []);
-    })();
-  }, []);
-
-  /* ─── Validation ───────────────────────────────────────────────────── */
-  const validate = (s: StepKey): Record<string, string> => {
-    const e: Record<string, string> = {};
-    if (s === "personal") {
-      if (!firstName.trim()) e.firstName = "First name is required";
-      if (!lastName.trim()) e.lastName = "Last name is required";
-    }
-    if (s === "contact") {
-      if (!email.trim() || !email.includes("@")) e.email = "Valid email is required";
-      if (!phone.trim()) e.phone = "Phone number is required";
-    }
-    return e;
-  };
-
-  const goTo = (target: StepKey) => {
-    const idx = STEPS.findIndex((s) => s.key === target);
-    const currentIdx = STEPS.findIndex((s) => s.key === step);
-    if (idx > currentIdx) {
-      const errs = validate(step);
-      if (Object.keys(errs).length > 0) {
-        setErrors(errs);
-        toast({ variant: "destructive", description: "Please fill in required fields before continuing." });
+      const userIds = (roleData || []).map((r) => r.user_id);
+      if (userIds.length === 0) {
+        setStudents([]);
+        setLoading(false);
         return;
       }
-      setErrors({});
-    } else setErrors({});
-    setStep(target);
-  };
-  const goNext = () => {
-    const idx = STEPS.findIndex((s) => s.key === step);
-    if (idx < STEPS.length - 1) goTo(STEPS[idx + 1].key);
-  };
-  const goBack = () => {
-    const idx = STEPS.findIndex((s) => s.key === step);
-    if (idx > 0) {
-      setErrors({});
-      setStep(STEPS[idx - 1].key);
-    }
-  };
 
-  const handleSave = async () => {
-    const allErrs = { ...validate("personal"), ...validate("contact") };
-    if (Object.keys(allErrs).length > 0) {
-      setErrors(allErrs);
-      toast({ variant: "destructive", description: "Some required fields are missing." });
-      return;
-    }
-    setSaving(true);
-    try {
-      const extraData = {
-        first_name: firstName,
-        middle_name: middleName,
-        last_name: lastName,
-        student_email: email,
-        student_phone: phone,
-        emergency_contact_name: emergencyName,
-        emergency_contact_phone: emergencyPhone,
-        city_of_birth: cityOfBirth,
-        street,
-        house_no: houseNo,
-        postcode,
-        city,
-        date_of_birth: dob ? format(dob, "yyyy-MM-dd") : null,
-        age,
-        gender,
-        program_id: programId || null,
-        school_id: schoolId || null,
-        accommodation_id: accommodationId || null,
-        insurance_id: insuranceId || null,
-        arrival_date: arrivalDate ? format(arrivalDate, "yyyy-MM-dd") : null,
-        course_start: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
-        start_month: startMonth || null,
-      };
+      // Team members see only students they created
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone_number, created_at, city, must_change_password, created_by")
+        .in("id", userIds)
+        .eq("created_by", user.id)
+        .order("created_at", { ascending: false });
 
-      const upsertPayload: any = {
-        case_id: caseId,
-        program_id: programId || null,
-        accommodation_id: accommodationId || null,
-        program_start_date: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        program_end_date: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
-        service_fee: 0,
-        program_price: selectedProgram?.price ?? 0,
-        accommodation_price: selectedAccom?.price ?? 0,
-        insurance_price: selectedIns?.price ?? 0,
-        extra_data,
-      };
-      if (insuranceId) upsertPayload.insurance_id = insuranceId;
-
-      const { error } = await db.from("case_submissions").upsert(upsertPayload, { onConflict: "case_id" });
       if (error) throw error;
-
-      await db
-        .from("cases")
-        .update({ full_name: fullName, phone_number: phone, status: "profile_completion" })
-        .eq("id", caseId);
-
-      await supabase.rpc("log_activity" as any, {
-        p_actor_id: actorId,
-        p_actor_name: actorName,
-        p_action: "profile_filled",
-        p_entity_type: "case",
-        p_entity_id: caseId,
-        p_metadata: { full_name: fullName },
-      });
-
-      toast({ title: "Profile saved successfully" });
-      onSuccess();
+      setStudents((data as StudentRecord[]) ?? []);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
-      setSaving(false);
+      setLoading(false);
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  /* ── Case search as user types name ── */
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleNameQueryChange = (val: string) => {
+    setNameQuery(val);
+    setSelectedCase(null);
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (val.trim().length < 2) {
+      setCaseResults([]);
+      return;
+    }
+    setSearchingCases(true);
+    searchDebounce.current = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from("cases")
+          .select("id, full_name, phone_number, status, city, education_level")
+          .ilike("full_name", `%${val.trim()}%`)
+          .eq("assigned_to", user!.id)
+          .is("student_user_id", null)
+          .limit(8);
+        setCaseResults((data as CaseMatch[]) ?? []);
+      } catch {
+        setCaseResults([]);
+      } finally {
+        setSearchingCases(false);
+      }
+    }, 350);
+  };
+
+  /* Select a case → pre-fill name parts */
+  const selectCase = (c: CaseMatch) => {
+    setSelectedCase(c);
+    setCaseResults([]);
+    setNameQuery(c.full_name);
+    // Split full_name into parts
+    const parts = c.full_name.trim().split(/\s+/);
+    setFirstName(parts[0] ?? "");
+    setMiddleName(parts.length === 3 ? parts[1] : "");
+    setLastName(parts.length >= 2 ? parts[parts.length - 1] : "");
+  };
+
+  /* Reset modal */
+  const resetModal = () => {
+    setNameQuery("");
+    setCaseResults([]);
+    setSelectedCase(null);
+    setFirstName("");
+    setMiddleName("");
+    setLastName("");
+    setEmail("");
+    setCredentials(null);
+    setShowPw(false);
+    setCopied(false);
+  };
+
+  const openCreate = () => {
+    resetModal();
+    setShowCreate(true);
+  };
+
+  /* ── Create account ── */
+  const handleCreate = async () => {
+    const full = [firstName.trim(), middleName.trim(), lastName.trim()].filter(Boolean).join(" ");
+    if (!full) {
+      toast({ variant: "destructive", description: "Please enter at least a first and last name." });
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      toast({ variant: "destructive", description: "Please enter a valid email address." });
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-standalone`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session!.access_token}`,
+          },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            full_name: full,
+            case_id: selectedCase?.id ?? null,
+            created_by: user!.id,
+          }),
+        }
+      );
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || "Failed to create account");
+
+      setCredentials({ email: email.trim().toLowerCase(), password: result.temp_password });
+      fetchStudents();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setCreating(false);
     }
   };
 
-  const monthOptions = Array.from({ length: 24 }, (_, i) => {
-    const d = addMonths(new Date(), i);
-    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
+  const copyCredentials = async () => {
+    if (!credentials) return;
+    const waMsg = isRtl
+      ? `مرحباً ${[firstName, lastName].filter(Boolean).join(" ")} 👋\n\nتم إنشاء حسابك في منصة DARB.\n\n📧 البريد الإلكتروني: ${credentials.email}\n🔐 كلمة المرور المؤقتة: ${credentials.password}\n\nيرجى تسجيل الدخول وتغيير كلمة المرور فور الدخول.\n\nرابط الدخول: https://darb-agency.lovable.app/student-auth`
+      : `Hello ${[firstName, lastName].filter(Boolean).join(" ")} 👋\n\nYour DARB account has been created.\n\n📧 Email: ${credentials.email}\n🔐 Temporary Password: ${credentials.password}\n\nPlease log in and change your password immediately.\n\nLogin: https://darb-agency.lovable.app/student-auth`;
+    await navigator.clipboard.writeText(waMsg);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const filtered = students.filter((s) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      s.full_name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
+      (s.phone_number || "").includes(q)
+    );
   });
 
-  const stepIdx = STEPS.findIndex((s) => s.key === step);
-  const isLastStep = stepIdx === STEPS.length - 1;
-  const isFirstStep = stepIdx === 0;
-
-  /* ─── RENDER ───────────────────────────────────────────────────────── */
+  /* ─── RENDER ─────────────────────────────────────────────────── */
   return (
-    <div className="space-y-5">
-      {/* Step indicator */}
-      <div className="flex items-center gap-1">
-        {STEPS.map((s, i) => {
-          const done = i < stepIdx;
-          const current = s.key === step;
-          return (
-            <React.Fragment key={s.key}>
-              <button
-                onClick={() => goTo(s.key)}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
-                  current
-                    ? "bg-primary text-primary-foreground"
-                    : done
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80",
-                )}
-              >
-                {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{i + 1}</span>}
-                <span className="hidden sm:inline">{s.label}</span>
-              </button>
-              {i < STEPS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
-            </React.Fragment>
-          );
-        })}
+    <div className="p-6 space-y-5 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">
+            {isRtl ? "طلابي" : "My Students"}
+          </h1>
+          <Badge variant="secondary" className="text-xs">
+            {students.length}
+          </Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            {isRtl ? "تحديث" : "Refresh"}
+          </Button>
+          <Button size="sm" onClick={openCreate} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            {isRtl ? "إنشاء حساب طالب" : "Create Student Account"}
+          </Button>
+        </div>
       </div>
 
-      {/* ─── STEP 1: Personal Info ─────────────────────────── */}
-      {step === "personal" && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Personal Information</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <FieldWrap label="First Name" error={errors.firstName}>
-              <Input
-                className={cn("mt-1", errors.firstName && "border-destructive")}
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-            </FieldWrap>
-            <div>
-              <Label>Middle Name</Label>
-              <Input className="mt-1" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-            </div>
-            <FieldWrap label="Last Name" error={errors.lastName}>
-              <Input
-                className={cn("mt-1", errors.lastName && "border-destructive")}
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-            </FieldWrap>
-          </div>
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={isRtl ? "بحث بالاسم أو البريد..." : "Search by name or email..."}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="ps-9"
+        />
+      </div>
 
-          {/* Birthday: 3 separate input boxes */}
-          <div className="space-y-1">
-            <Label>Date of Birth</Label>
-            <div className="grid grid-cols-3 gap-2 mt-1">
-              {/* Year */}
-              <div className="p-2 border rounded-lg flex flex-col">
-                <span className="text-xs text-muted-foreground mb-1">Year</span>
-                <Input
-                  type="number"
-                  min={1900}
-                  max={new Date().getFullYear()}
-                  placeholder="YYYY"
-                  value={dob ? dob.getFullYear() : ""}
-                  onChange={(e) => {
-                    const y = parseInt(e.target.value);
-                    if (!isNaN(y) && dob) setDob(new Date(y, dob.getMonth(), dob.getDate()));
-                    else if (!isNaN(y)) setDob(new Date(y, 0, 1));
-                  }}
-                />
-              </div>
-              {/* Month */}
-              <div className="p-2 border rounded-lg flex flex-col">
-                <span className="text-xs text-muted-foreground mb-1">Month</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={12}
-                  placeholder="MM"
-                  value={dob ? dob.getMonth() + 1 : ""}
-                  onChange={(e) => {
-                    const m = parseInt(e.target.value);
-                    if (!isNaN(m) && dob) setDob(new Date(dob.getFullYear(), m - 1, dob.getDate()));
-                    else if (!isNaN(m)) setDob(new Date(new Date().getFullYear(), m - 1, 1));
-                  }}
-                />
-              </div>
-              {/* Day */}
-              <div className="p-2 border rounded-lg flex flex-col">
-                <span className="text-xs text-muted-foreground mb-1">Day</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={31}
-                  placeholder="DD"
-                  value={dob ? dob.getDate() : ""}
-                  onChange={(e) => {
-                    const d = parseInt(e.target.value);
-                    if (!isNaN(d) && dob) setDob(new Date(dob.getFullYear(), dob.getMonth(), d));
-                    else if (!isNaN(d)) setDob(new Date(new Date().getFullYear(), 0, d));
-                  }}
-                />
-              </div>
-            </div>
-            {dob && (
-              <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), dob)} years</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <FieldWrap label="Gender">
-              <Select value={gender} onValueChange={(v) => setGender(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </FieldWrap>
-            <FieldWrap label="City of Birth">
-              <Input value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
-            </FieldWrap>
-          </div>
+      {/* List */}
+      {loading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium mb-1">{isRtl ? "لا يوجد طلاب" : "No students yet"}</p>
+          <p className="text-sm">
+            {isRtl ? "انقر على «إنشاء حساب طالب» للبدء" : "Click «Create Student Account» to get started"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((s) => (
+            <Card key={s.id} className="border-border hover:shadow-sm transition-shadow">
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{s.full_name || s.email}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {s.email}
+                      </span>
+                      {s.phone_number && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {s.phone_number}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {s.must_change_password && (
+                    <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50">
+                      {isRtl ? "بانتظار تغيير كلمة المرور" : "Awaiting PW change"}
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(s.created_at), "dd MMM yyyy")}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Other steps omitted for brevity; same as before, only step logic changes remain */}
+      {/* ── Create Student Account Dialog ── */}
+      <Dialog
+        open={showCreate}
+        onOpenChange={(open) => {
+          if (!open) { resetModal(); setShowCreate(false); }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              {isRtl ? "إنشاء حساب طالب" : "Create Student Account"}
+            </DialogTitle>
+          </DialogHeader>
 
-      <div className="flex justify-between mt-6">
-        {!isFirstStep && (
-          <Button variant="outline" onClick={goBack} disabled={saving}>
-            <ChevronLeft className="h-4 w-4 me-1" /> Back
-          </Button>
-        )}
-        <Button onClick={isLastStep ? handleSave : goNext} disabled={saving}>
-          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isLastStep ? "Save" : "Next"} {isLastStep ? "" : <ChevronRight className="h-4 w-4 ms-1" />}
-        </Button>
-      </div>
+          {credentials ? (
+            /* ── SUCCESS STATE ── */
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-2 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="font-semibold">{isRtl ? "تم إنشاء الحساب بنجاح!" : "Account created successfully!"}</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">{isRtl ? "البريد الإلكتروني" : "Email"}</Label>
+                  <p className="font-mono text-sm mt-0.5">{credentials.email}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">{isRtl ? "كلمة المرور المؤقتة" : "Temporary Password"}</Label>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="font-mono text-sm flex-1">
+                      {showPw ? credentials.password : "•".repeat(credentials.password.length)}
+                    </p>
+                    <button onClick={() => setShowPw(!showPw)} className="text-muted-foreground hover:text-foreground">
+                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  {isRtl
+                    ? "⚠️ سيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول"
+                    : "⚠️ Student will be required to change password on first login"}
+                </p>
+              </div>
+              <Button className="w-full gap-2" variant="outline" onClick={copyCredentials}>
+                {copied
+                  ? <><Check className="h-4 w-4 text-emerald-600" />{isRtl ? "تم النسخ!" : "Copied!"}</>
+                  : <><MessageCircle className="h-4 w-4" />{isRtl ? "نسخ رسالة واتساب" : "Copy WhatsApp Message"}</>
+                }
+              </Button>
+              <Button
+                className="w-full"
+                onClick={() => { resetModal(); setShowCreate(false); }}
+              >
+                {isRtl ? "إغلاق" : "Done"}
+              </Button>
+            </div>
+          ) : (
+            /* ── FORM STATE ── */
+            <div className="space-y-5 py-2">
+              {/* Step 1: Case Search */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">
+                  {isRtl ? "١. ابحث عن القضية (اختياري)" : "1. Search for a Case (Optional)"}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isRtl
+                    ? "اكتب اسم الطالب للبحث في قضاياك المعيّنة وسيتم ملء البيانات تلقائياً"
+                    : "Type the student's name to search your assigned cases — data will auto-fill"}
+                </p>
+                <div className="relative">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="ps-9 pe-9"
+                    placeholder={isRtl ? "ابحث باسم الطالب..." : "Search student name..."}
+                    value={nameQuery}
+                    onChange={(e) => handleNameQueryChange(e.target.value)}
+                  />
+                  {searchingCases && (
+                    <Loader2 className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {selectedCase && !searchingCases && (
+                    <button
+                      onClick={() => { setSelectedCase(null); setNameQuery(""); setCaseResults([]); setFirstName(""); setMiddleName(""); setLastName(""); }}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Case dropdown results */}
+                {caseResults.length > 0 && !selectedCase && (
+                  <div className="border rounded-xl shadow-sm overflow-hidden bg-background">
+                    {caseResults.map((c) => (
+                      <button
+                        key={c.id}
+                        className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-start border-b last:border-0"
+                        onClick={() => selectCase(c)}
+                      >
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm">{c.full_name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{c.phone_number}</span>
+                            {c.city && <span className="text-xs text-muted-foreground">· {c.city}</span>}
+                            <Badge variant="outline" className="text-xs h-4 px-1">{c.status}</Badge>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Selected case chip */}
+                {selectedCase && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-primary">{selectedCase.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{selectedCase.phone_number} · Case ID: {selectedCase.id.slice(0, 8)}…</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Step 2: Name fields */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">
+                  {isRtl ? "٢. اسم الطالب (كما في جواز السفر)" : "2. Student Name (as in passport)"}
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">{isRtl ? "الاسم الأول" : "First"}</Label>
+                    <Input
+                      className="mt-1"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder={isRtl ? "الأول" : "First"}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">{isRtl ? "الأوسط" : "Middle"}</Label>
+                    <Input
+                      className="mt-1"
+                      value={middleName}
+                      onChange={(e) => setMiddleName(e.target.value)}
+                      placeholder={isRtl ? "الأوسط" : "Middle"}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">{isRtl ? "الأخير" : "Last"}</Label>
+                    <Input
+                      className="mt-1"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder={isRtl ? "الأخير" : "Last"}
+                    />
+                  </div>
+                </div>
+                {(firstName || lastName) && (
+                  <p className="text-xs text-muted-foreground">
+                    {isRtl ? "الاسم الكامل:" : "Full name:"}{" "}
+                    <span className="font-medium text-foreground">
+                      {[firstName, middleName, lastName].filter(Boolean).join(" ")}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* Step 3: Email */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">
+                  {isRtl ? "٣. البريد الإلكتروني" : "3. Email Address"}
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    className="ps-9"
+                    placeholder="student@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground bg-muted/60 rounded-lg p-3">
+                {isRtl
+                  ? "سيتم إنشاء كلمة مرور مؤقتة وسيُطلب من الطالب تغييرها عند أول تسجيل دخول."
+                  : "A temporary password will be generated. The student will be required to change it on first login."}
+              </p>
+            </div>
+          )}
+
+          {!credentials && (
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => { resetModal(); setShowCreate(false); }}
+                disabled={creating}
+              >
+                {isRtl ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button onClick={handleCreate} disabled={creating} className="gap-2">
+                {creating && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Plus className="h-4 w-4" />
+                {isRtl ? "إنشاء الحساب" : "Create Account"}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
