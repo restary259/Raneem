@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,16 +65,13 @@ interface Appointment {
   guest_name?: string | null;
   case?: { full_name: string; phone_number: string; status: string } | null;
 }
-
 interface Case {
   id: string;
   full_name: string;
   phone_number: string;
 }
 
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am–8pm
-
-// 30-min quick slots for the time picker
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
 const QUICK_TIMES = [
   "08:00",
   "08:30",
@@ -98,21 +95,21 @@ const QUICK_TIMES = [
   "17:30",
   "18:00",
 ];
-
 type CalendarView = "day" | "week" | "month";
 
-// ── Color helpers ────────────────────────────────────────────────────────────
 function apptClasses(outcome: string | null, isPast: boolean) {
   if (outcome === "completed") return "bg-emerald-100 text-emerald-800 border-emerald-300";
   if (outcome === "no_show") return "bg-red-100 text-red-800 border-red-300";
   if (outcome === "cancelled") return "bg-slate-100 text-slate-600 border-slate-300";
   if (outcome === "rescheduled") return "bg-blue-100 text-blue-800 border-blue-300";
-  if (outcome === "delayed") return "bg-amber-100 text-amber-800 border-amber-300";
-  if (isPast) return "bg-orange-100 text-orange-800 border-orange-400 ring-1 ring-orange-300";
+  if (isPast) return "bg-orange-100 text-orange-800 border-orange-400";
   return "bg-indigo-100 text-indigo-800 border-indigo-300";
 }
 
-// ── ApptBlock: single click = open detail, long press = drag ───────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ApptBlock — draggable=true always. We distinguish click vs drag by checking
+// whether dragstart fired before the click event fires.
+// ─────────────────────────────────────────────────────────────────────────────
 function ApptBlock({
   appt,
   compact,
@@ -124,78 +121,40 @@ function ApptBlock({
   appt: Appointment;
   compact: boolean;
   onOpen: () => void;
-  onDragStart: (e: React.DragEvent) => void;
+  onDragStart: (id: string, e: React.DragEvent) => void;
   onDragEnd: () => void;
   isDragging: boolean;
 }) {
   const isPast = new Date(appt.scheduled_at) < new Date();
   const name = (appt.case as any)?.full_name ?? appt.guest_name ?? "—";
-  const pressTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const didDrag = React.useRef(false);
-  const elRef = React.useRef<HTMLDivElement>(null);
-
-  // Long press enables draggable after 400ms hold
-  const [draggable, setDraggable] = React.useState(false);
-
-  const startPress = () => {
-    didDrag.current = false;
-    pressTimer.current = setTimeout(() => {
-      setDraggable(true);
-      didDrag.current = true;
-      // Trigger native drag immediately after setting draggable
-      if (elRef.current) {
-        const evt = new MouseEvent("mousedown", { bubbles: true });
-        // Just mark as drag-ready — browser drag will fire on next mousemove
-      }
-    }, 350);
-  };
-
-  const cancelPress = () => {
-    if (pressTimer.current) clearTimeout(pressTimer.current);
-  };
-
-  const handleMouseUp = () => {
-    cancelPress();
-    if (!didDrag.current) {
-      // Short tap — open detail
-      onOpen();
-    }
-    setDraggable(false);
-    didDrag.current = false;
-  };
-
-  const handleDragStartInner = (e: React.DragEvent) => {
-    e.stopPropagation();
-    onDragStart(e);
-  };
-
-  const handleDragEndInner = () => {
-    setDraggable(false);
-    didDrag.current = false;
-    onDragEnd();
-  };
+  // dragFired is set true when dragstart fires; click handler checks it
+  const dragFired = useRef(false);
 
   return (
     <div
-      ref={elRef}
-      draggable={draggable}
-      onMouseDown={(e) => {
+      draggable
+      onDragStart={(e) => {
+        dragFired.current = true;
         e.stopPropagation();
-        startPress();
+        onDragStart(appt.id, e);
       }}
-      onMouseUp={(e) => {
+      onDragEnd={(e) => {
         e.stopPropagation();
-        handleMouseUp();
+        onDragEnd();
+        // Keep dragFired=true briefly so the click that fires after dragend is ignored
+        setTimeout(() => {
+          dragFired.current = false;
+        }, 50);
       }}
-      onMouseLeave={cancelPress}
-      onDragStart={handleDragStartInner}
-      onDragEnd={handleDragEndInner}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!dragFired.current) onOpen();
+      }}
       className={cn(
-        "rounded border leading-tight select-none transition-opacity hover:shadow-sm",
+        "rounded border leading-tight select-none transition-opacity",
         compact ? "text-[10px] p-1 mb-0.5" : "text-xs p-1.5 mb-1",
         apptClasses(appt.outcome, isPast),
-        isDragging && "opacity-40",
-        draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+        isDragging ? "opacity-30 cursor-grabbing" : "cursor-grab hover:shadow-sm",
       )}
     >
       <div className="font-semibold truncate">{name}</div>
@@ -213,6 +172,7 @@ function ApptBlock({
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -229,9 +189,9 @@ export default function TeamAppointmentsPage() {
   const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // New appointment form
+  // form
   const [showNew, setShowNew] = useState(false);
-  const [newDateStr, setNewDateStr] = useState(""); // "yyyy-MM-dd"
+  const [newDateStr, setNewDateStr] = useState("");
   const [newTime, setNewTime] = useState("10:00");
   const [newDuration, setNewDuration] = useState("60");
   const [newNotes, setNewNotes] = useState("");
@@ -241,11 +201,16 @@ export default function TeamAppointmentsPage() {
   const [myCases, setMyCases] = useState<Case[]>([]);
   const [creating, setCreating] = useState(false);
 
-  // Drag-and-drop
+  // drag
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
+  // keep latest appts accessible inside async dragend without stale closure
+  const apptsRef = useRef(appts);
+  useEffect(() => {
+    apptsRef.current = appts;
+  }, [appts]);
 
-  // ── Data ────────────────────────────────────────────────────────────────────
+  // ── data ────────────────────────────────────────────────────────────────
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -275,48 +240,58 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
   }, [fetchMyCases]);
 
-  // ── Drag handlers ───────────────────────────────────────────────────────────
-  const handleDragStart = (e: React.DragEvent, apptId: string) => {
+  // ── drag handlers ────────────────────────────────────────────────────────
+  const handleDragStart = (apptId: string, e: React.DragEvent) => {
     setDraggingId(apptId);
     e.dataTransfer.effectAllowed = "move";
+    // Set a tiny transparent image so browser ghost doesn't appear
+    const img = new Image();
+    img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+    e.dataTransfer.setDragImage(img, 0, 0);
   };
+
   const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverSlot({ day, hour });
+    setDragOverSlot((prev) => (prev && isSameDay(prev.day, day) && prev.hour === hour ? prev : { day, hour }));
   };
+
   const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
-    if (!draggingId) return;
-    const appt = appts.find((a) => a.id === draggingId);
+    const apptId = draggingId;
     setDraggingId(null);
     setDragOverSlot(null);
+    if (!apptId) return;
+
+    const appt = apptsRef.current.find((a) => a.id === apptId);
     if (!appt) return;
+
     const newDt = new Date(day);
     newDt.setHours(hour, 0, 0, 0);
     const orig = parseISO(appt.scheduled_at);
     if (isSameDay(newDt, orig) && getHours(orig) === hour) return;
-    // Optimistic update
-    setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: newDt.toISOString() } : a)));
+
+    // optimistic
+    setAppts((prev) => prev.map((a) => (a.id === apptId ? { ...a, scheduled_at: newDt.toISOString() } : a)));
     try {
       const { error } = await supabase
         .from("appointments")
         .update({ scheduled_at: newDt.toISOString() })
-        .eq("id", appt.id);
+        .eq("id", apptId);
       if (error) throw error;
-      toast({ title: format(newDt, "EEE, MMM d 'at' h:mm a") });
+      toast({ title: format(newDt, "EEE MMM d · h:mm a") });
     } catch (err: any) {
-      // Revert on failure
-      setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: appt.scheduled_at } : a)));
+      setAppts((prev) => prev.map((a) => (a.id === apptId ? { ...a, scheduled_at: appt.scheduled_at } : a)));
       toast({ variant: "destructive", description: err.message });
     }
   };
+
   const handleDragEnd = () => {
     setDraggingId(null);
     setDragOverSlot(null);
   };
 
-  // ── Navigation ──────────────────────────────────────────────────────────────
+  // ── nav ──────────────────────────────────────────────────────────────────
   const navigatePrev = () => {
     if (view === "day") setCurrentDate((d) => subDays(d, 1));
     else if (view === "week") setCurrentDate((d) => subWeeks(d, 1));
@@ -327,7 +302,6 @@ export default function TeamAppointmentsPage() {
     else if (view === "week") setCurrentDate((d) => addWeeks(d, 1));
     else setCurrentDate((d) => addMonths(d, 1));
   };
-
   const headerLabel = () => {
     if (view === "day") return format(currentDate, "EEEE, MMM d, yyyy");
     if (view === "week") {
@@ -338,7 +312,7 @@ export default function TeamAppointmentsPage() {
     return format(currentDate, "MMMM yyyy");
   };
 
-  // ── Slot helpers ────────────────────────────────────────────────────────────
+  // ── helpers ──────────────────────────────────────────────────────────────
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentDate, { weekStartsOn: 0 }),
     end: endOfWeek(currentDate, { weekStartsOn: 0 }),
@@ -353,17 +327,14 @@ export default function TeamAppointmentsPage() {
     { start: startOfMonth(currentDate), end: endOfMonth(currentDate) },
     { weekStartsOn: 0 },
   );
-
-  // 7 date pills around currentDate for the quick date selector
   const datePills = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), i));
 
-  // ── Open new appt pre-filled ─────────────────────────────────────────────
   const openNew = (day?: Date, hour?: number) => {
+    if (draggingId) return; // don't open form while dragging
     setNewDateStr(format(day ?? new Date(), "yyyy-MM-dd"));
     if (hour !== undefined) setNewTime(`${String(hour).padStart(2, "0")}:00`);
     setShowNew(true);
   };
-
   const resetNewForm = () => {
     setNewDateStr("");
     setNewTime("10:00");
@@ -374,7 +345,7 @@ export default function TeamAppointmentsPage() {
     setUseGuestName(false);
   };
 
-  // ── Create ──────────────────────────────────────────────────────────────────
+  // ── create ───────────────────────────────────────────────────────────────
   const handleCreate = async () => {
     if (!newDateStr) {
       toast({ variant: "destructive", description: "Select a date" });
@@ -385,7 +356,7 @@ export default function TeamAppointmentsPage() {
       return;
     }
     if (useGuestName && !newGuestName.trim()) {
-      toast({ variant: "destructive", description: "Enter a name for the appointment" });
+      toast({ variant: "destructive", description: "Enter a name" });
       return;
     }
     setCreating(true);
@@ -393,15 +364,14 @@ export default function TeamAppointmentsPage() {
       const [hh, mm] = newTime.split(":").map(Number);
       const dt = new Date(newDateStr);
       dt.setHours(hh, mm, 0, 0);
-      const payload: any = {
+      const { error } = await supabase.from("appointments").insert({
         team_member_id: user!.id,
         scheduled_at: dt.toISOString(),
         duration_minutes: parseInt(newDuration),
         notes: newNotes || null,
         case_id: useGuestName ? null : newCaseId,
         guest_name: useGuestName ? newGuestName.trim() : null,
-      };
-      const { error } = await supabase.from("appointments").insert(payload);
+      } as any);
       if (error) throw error;
       if (!useGuestName && newCaseId) {
         await supabase
@@ -421,7 +391,7 @@ export default function TeamAppointmentsPage() {
     }
   };
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
+  // ── delete ───────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteApptId) return;
     setDeleting(true);
@@ -441,11 +411,11 @@ export default function TeamAppointmentsPage() {
 
   const overdueCount = appts.filter((a) => !a.outcome && new Date(a.scheduled_at) < new Date()).length;
 
-  // ── Shared hour-grid (Day + Week) ───────────────────────────────────────────
+  // ── hour grid (day + week) ───────────────────────────────────────────────
   const HourGrid = ({ days }: { days: Date[] }) => (
     <div className="flex-1 overflow-auto">
       <div style={{ minWidth: days.length === 1 ? "320px" : "680px" }}>
-        {/* Day headers */}
+        {/* day headers */}
         <div
           className="grid border-b border-border sticky top-0 bg-background z-10"
           style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}
@@ -474,7 +444,7 @@ export default function TeamAppointmentsPage() {
           ))}
         </div>
 
-        {/* Hour rows */}
+        {/* hour rows */}
         {HOURS.map((hour) => (
           <div
             key={hour}
@@ -485,7 +455,6 @@ export default function TeamAppointmentsPage() {
               {format(new Date().setHours(hour, 0, 0, 0), "h a")}
             </div>
             {days.map((day) => {
-              const slotAppts = getSlotAppts(day, hour);
               const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
               return (
                 <div
@@ -493,28 +462,28 @@ export default function TeamAppointmentsPage() {
                   className={cn(
                     "border-e border-border/40 last:border-e-0 p-0.5 relative transition-colors",
                     isToday(day) && "bg-primary/[0.02]",
-                    isOver && "bg-indigo-50 border-indigo-300",
-                    "hover:bg-muted/30 cursor-pointer",
+                    isOver ? "bg-indigo-100 outline outline-2 outline-indigo-400" : "hover:bg-muted/30",
+                    "cursor-pointer",
                   )}
                   onDragOver={(e) => handleDragOver(e, day, hour)}
-                  onDrop={(e) => handleDrop(e, day, hour)}
                   onDragLeave={() => setDragOverSlot(null)}
+                  onDrop={(e) => handleDrop(e, day, hour)}
                   onClick={() => openNew(day, hour)}
                 >
-                  {isOver && draggingId && (
+                  {isOver && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                      <div className="text-[10px] text-indigo-600 font-medium bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5">
-                        Drop to reschedule
-                      </div>
+                      <span className="text-[10px] font-semibold text-indigo-700 bg-white/80 rounded px-1.5 py-0.5 shadow-sm border border-indigo-200">
+                        {format(day, "EEE d")} · {format(new Date().setHours(hour), "h a")}
+                      </span>
                     </div>
                   )}
-                  {slotAppts.map((a) => (
+                  {getSlotAppts(day, hour).map((a) => (
                     <ApptBlock
                       key={a.id}
                       appt={a}
                       compact={days.length > 3}
                       onOpen={() => setSelectedAppt(a)}
-                      onDragStart={(e) => handleDragStart(e, a.id)}
+                      onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       isDragging={draggingId === a.id}
                     />
@@ -528,9 +497,10 @@ export default function TeamAppointmentsPage() {
     </div>
   );
 
+  // ────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full">
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* header */}
       <div className="sticky top-0 z-20 bg-background border-b border-border px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigatePrev}>
@@ -550,7 +520,6 @@ export default function TeamAppointmentsPage() {
             </span>
           )}
         </div>
-
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-border overflow-hidden text-xs">
             {(["day", "week", "month"] as CalendarView[]).map((v, i) => (
@@ -580,13 +549,8 @@ export default function TeamAppointmentsPage() {
         </div>
       ) : (
         <>
-          {/* ── DAY VIEW ── */}
           {view === "day" && <HourGrid days={[currentDate]} />}
-
-          {/* ── WEEK VIEW ── */}
           {view === "week" && <HourGrid days={weekDays} />}
-
-          {/* ── MONTH VIEW ── */}
           {view === "month" && (
             <div className="flex-1 overflow-auto p-2">
               <div className="grid grid-cols-7 mb-1">
@@ -606,6 +570,7 @@ export default function TeamAppointmentsPage() {
                     {days.map((day) => {
                       const dayAppts = getDayAppts(day);
                       const inMonth = isSameMonth(day, currentDate);
+                      const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
                       return (
                         <div
                           key={day.toISOString()}
@@ -613,14 +578,23 @@ export default function TeamAppointmentsPage() {
                             "min-h-[96px] border-e border-border/40 last:border-e-0 p-1 cursor-pointer transition-colors",
                             !inMonth && "opacity-35 bg-muted/10",
                             isToday(day) && "bg-primary/[0.04]",
-                            "hover:bg-accent/20",
+                            isOver ? "bg-indigo-50 outline outline-2 outline-indigo-400" : "hover:bg-accent/20",
                           )}
                           onDragOver={(e) => {
                             e.preventDefault();
                             setDragOverSlot({ day, hour: 9 });
                           }}
-                          onDrop={(e) => handleDrop(e, day, 9)}
                           onDragLeave={() => setDragOverSlot(null)}
+                          onDrop={(e) =>
+                            handleDrop(
+                              e,
+                              day,
+                              parseISO(
+                                apptsRef.current.find((a) => a.id === draggingId)?.scheduled_at ??
+                                  new Date().toISOString(),
+                              ).getHours(),
+                            )
+                          }
                           onClick={() => openNew(day)}
                         >
                           <div
@@ -631,20 +605,17 @@ export default function TeamAppointmentsPage() {
                           >
                             {format(day, "d")}
                           </div>
-                          {dayAppts.slice(0, 3).map((a) => {
-                            const isPast = new Date(a.scheduled_at) < new Date();
-                            return (
-                              <ApptBlock
-                                key={a.id}
-                                appt={a}
-                                compact={true}
-                                onOpen={() => setSelectedAppt(a)}
-                                onDragStart={(e) => handleDragStart(e, a.id)}
-                                onDragEnd={handleDragEnd}
-                                isDragging={draggingId === a.id}
-                              />
-                            );
-                          })}
+                          {dayAppts.slice(0, 3).map((a) => (
+                            <ApptBlock
+                              key={a.id}
+                              appt={a}
+                              compact={true}
+                              onOpen={() => setSelectedAppt(a)}
+                              onDragStart={handleDragStart}
+                              onDragEnd={handleDragEnd}
+                              isDragging={draggingId === a.id}
+                            />
+                          ))}
                           {dayAppts.length > 3 && (
                             <p className="text-[9px] text-muted-foreground text-center">+{dayAppts.length - 3} more</p>
                           )}
@@ -659,7 +630,7 @@ export default function TeamAppointmentsPage() {
         </>
       )}
 
-      {/* ── NEW APPOINTMENT DIALOG ──────────────────────────────────────────── */}
+      {/* new appt dialog */}
       <Dialog
         open={showNew}
         onOpenChange={(v) => {
@@ -673,9 +644,7 @@ export default function TeamAppointmentsPage() {
           <DialogHeader>
             <DialogTitle className="text-base">New Appointment</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4">
-            {/* Case / guest toggle */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -720,13 +689,10 @@ export default function TeamAppointmentsPage() {
                 </Select>
               )}
             </div>
-
-            {/* Date — native input (clean, keyboard-friendly) */}
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Date <span className="text-destructive">*</span>
               </Label>
-              {/* Quick "this week" pills */}
               <div className="flex gap-1 mb-2 flex-wrap">
                 {datePills.map((d) => (
                   <button
@@ -754,14 +720,12 @@ export default function TeamAppointmentsPage() {
                 className="text-sm"
               />
             </div>
-
-            {/* Time — quick buttons + manual input */}
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Time <span className="text-destructive">*</span>
               </Label>
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {QUICK_TIMES.map((t) => (
+              <div className="grid grid-cols-7 gap-1 mb-1.5">
+                {QUICK_TIMES.slice(0, 14).map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -773,14 +737,29 @@ export default function TeamAppointmentsPage() {
                         : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
                     )}
                   >
-                    {t.replace(":00", "").replace(":30", ":30")}
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1 mb-1.5">
+                {QUICK_TIMES.slice(14).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setNewTime(t)}
+                    className={cn(
+                      "text-[10px] py-1 rounded border font-medium transition-colors",
+                      newTime === t
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
+                    )}
+                  >
+                    {t}
                   </button>
                 ))}
               </div>
               <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="text-sm" />
             </div>
-
-            {/* Duration */}
             <div>
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Duration
@@ -803,8 +782,6 @@ export default function TeamAppointmentsPage() {
                 ))}
               </div>
             </div>
-
-            {/* Notes */}
             <div>
               <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Notes
@@ -818,7 +795,6 @@ export default function TeamAppointmentsPage() {
               />
             </div>
           </div>
-
           <DialogFooter>
             <Button
               variant="outline"
@@ -830,52 +806,47 @@ export default function TeamAppointmentsPage() {
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
-              Create
+              {creating ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}Create
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── APPOINTMENT DETAIL DIALOG ───────────────────────────────────────── */}
+      {/* detail dialog */}
       <Dialog open={!!selectedAppt} onOpenChange={(v) => !v && setSelectedAppt(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <DialogTitle className="flex items-center gap-2 flex-wrap text-base">
               <span>{(selectedAppt?.case as any)?.full_name ?? (selectedAppt as any)?.guest_name ?? "—"}</span>
               {selectedAppt?.outcome ? (
                 <Badge className={cn("text-xs", apptClasses(selectedAppt.outcome, false))}>
                   {selectedAppt.outcome.replace(/_/g, " ")}
                 </Badge>
-              ) : new Date(selectedAppt?.scheduled_at ?? "") < new Date() ? (
+              ) : selectedAppt && new Date(selectedAppt.scheduled_at) < new Date() ? (
                 <Badge className="text-xs bg-orange-100 text-orange-700 border border-orange-300">⚠ Overdue</Badge>
               ) : (
                 <Badge className="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300">Upcoming</Badge>
               )}
             </DialogTitle>
           </DialogHeader>
-
           {selectedAppt && (
             <div className="space-y-3 text-sm">
-              {/* Date & time block */}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
                 <div className="text-center bg-background border border-border rounded-lg px-2 py-1 min-w-[40px]">
                   <div className="text-[10px] text-muted-foreground uppercase font-medium">
                     {format(parseISO(selectedAppt.scheduled_at), "MMM")}
                   </div>
-                  <div className="text-xl font-black leading-none text-foreground">
+                  <div className="text-xl font-black leading-none">
                     {format(parseISO(selectedAppt.scheduled_at), "d")}
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">{format(parseISO(selectedAppt.scheduled_at), "EEEE")}</p>
+                  <p className="font-semibold">{format(parseISO(selectedAppt.scheduled_at), "EEEE")}</p>
                   <p className="text-muted-foreground text-xs">
                     {format(parseISO(selectedAppt.scheduled_at), "h:mm a")} · {selectedAppt.duration_minutes} min
                   </p>
                 </div>
               </div>
-
-              {/* Phone */}
               {(selectedAppt.case as any)?.phone_number && (
                 <a
                   href={`tel:${(selectedAppt.case as any).phone_number}`}
@@ -885,8 +856,6 @@ export default function TeamAppointmentsPage() {
                   <span className="font-medium text-xs">{(selectedAppt.case as any).phone_number}</span>
                 </a>
               )}
-
-              {/* Notes */}
               {selectedAppt.notes && (
                 <p className="text-muted-foreground text-xs bg-muted/30 rounded-lg px-3 py-2 border border-border whitespace-pre-wrap">
                   {selectedAppt.notes}
@@ -894,26 +863,22 @@ export default function TeamAppointmentsPage() {
               )}
             </div>
           )}
-
           <DialogFooter className="flex flex-wrap gap-2 mt-2">
-            {/* Delete — far left */}
             <Button
               variant="ghost"
               size="sm"
               className="text-destructive hover:bg-destructive/10 hover:text-destructive me-auto"
               onClick={() => setDeleteApptId(selectedAppt!.id)}
             >
-              <Trash2 className="h-3.5 w-3.5 me-1" /> Delete
+              <Trash2 className="h-3.5 w-3.5 me-1" />
+              Delete
             </Button>
-
-            {/* View Case — only if linked to a case */}
             {selectedAppt?.case_id && (
               <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
-                <ExternalLink className="h-3.5 w-3.5 me-1" /> Case
+                <ExternalLink className="h-3.5 w-3.5 me-1" />
+                Case
               </Button>
             )}
-
-            {/* Record Outcome */}
             {selectedAppt && !selectedAppt.outcome && (
               <Button
                 size="sm"
@@ -929,12 +894,13 @@ export default function TeamAppointmentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── DELETE CONFIRM ──────────────────────────────────────────────────── */}
+      {/* delete confirm */}
       <AlertDialog open={!!deleteApptId} onOpenChange={(v) => !v && setDeleteApptId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <Trash2 className="h-5 w-5" /> Delete Appointment
+              <Trash2 className="h-5 w-5" />
+              Delete Appointment
             </AlertDialogTitle>
             <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
@@ -951,7 +917,6 @@ export default function TeamAppointmentsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── OUTCOME MODAL ───────────────────────────────────────────────────── */}
       {outcomeApptId && (
         <AppointmentOutcomeModal
           open={!!outcomeApptId}
