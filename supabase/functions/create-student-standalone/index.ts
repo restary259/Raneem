@@ -90,14 +90,38 @@ serve(async (req) => {
       { onConflict: "user_id,role", ignoreDuplicates: true }
     );
 
-    // Create profile
+    // Create profile — prefill from case data if case_id provided
+    let caseCity: string | null = null;
+    let casePhone: string | null = null;
+    if (case_id) {
+      const { data: caseRow } = await supabaseAdmin
+        .from("cases")
+        .select("city, phone_number, education_level, degree_interest, intake_notes")
+        .eq("id", case_id)
+        .maybeSingle();
+      if (caseRow) {
+        caseCity = caseRow.city ?? null;
+        casePhone = caseRow.phone_number ?? null;
+      }
+    }
+
     await supabaseAdmin.from("profiles").upsert({
       id: userId,
       email: cleanEmail,
       full_name: full_name?.trim() || "",
       must_change_password: true,
-      created_by: callerId,
+      created_by: created_by ?? callerId,
+      city: caseCity,
+      phone_number: casePhone,
     });
+
+    // If case_id provided, link student to case
+    if (case_id) {
+      await supabaseAdmin
+        .from("cases")
+        .update({ student_user_id: userId })
+        .eq("id", case_id);
+    }
 
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
@@ -105,7 +129,7 @@ serve(async (req) => {
       action: "create_student_standalone",
       target_id: userId,
       target_table: "profiles",
-      details: `Created standalone student account for ${cleanEmail}`,
+      details: `Created standalone student account for ${cleanEmail}${case_id ? ` (case: ${case_id})` : ""}`,
     });
 
     return new Response(
