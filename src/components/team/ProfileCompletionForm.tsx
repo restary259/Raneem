@@ -491,7 +491,7 @@ export default function ProfileCompletionForm({
               />
             </FieldWrap>
           </div>
-          <BirthdayPicker label="Date of Birth" value={dob} onChange={setDob} />
+          <DateOfBirthPick label="Date of Birth" value={dob} onChange={setDob} />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Gender</Label>
