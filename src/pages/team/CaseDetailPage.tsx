@@ -18,9 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Phone,
@@ -29,7 +26,6 @@ import {
   FileText,
   User,
   AlertTriangle,
-  UserPlus,
   Copy,
   Check,
   MessageCircle,
@@ -41,8 +37,6 @@ import {
   GraduationCap,
   Trash2,
   Download,
-  ExternalLink,
-  Pencil,
   StickyNote,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -74,6 +68,7 @@ interface Case {
   passport_type: string | null;
   degree_interest: string | null;
   intake_notes: string | null;
+  created_by_team: boolean;
 }
 interface Appointment {
   id: string;
@@ -94,6 +89,9 @@ interface Submission {
   payment_confirmed: boolean;
   extra_data: Record<string, unknown> | null;
   submitted_at: string | null;
+  program_price: number;
+  accommodation_price: number;
+  insurance_price: number;
 }
 interface Document {
   id: string;
@@ -131,7 +129,6 @@ const OUTCOME_COLORS: Record<string, string> = {
   no_show: "bg-orange-100 text-orange-800",
 };
 
-// Strict pipeline order
 const PIPELINE_STAGES = [
   "new",
   "contacted",
@@ -150,8 +147,6 @@ const PIPELINE_LABELS: Record<string, string> = {
   submitted: "Submitted",
   enrollment_paid: "Enrolled",
 };
-
-// Allowed forward transitions (strict, sequential)
 const STRICT_NEXT: Record<string, string> = {
   new: "contacted",
   contacted: "appointment_scheduled",
@@ -161,7 +156,23 @@ const STRICT_NEXT: Record<string, string> = {
   submitted: "enrollment_paid",
 };
 
-/* ── Admin Notes Card — READ ONLY for team members ─────────────── */
+// Copy button component
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded hover:bg-muted"
+    >
+      {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+    </button>
+  );
+}
+
 function AdminNotesCard({ initialNotes }: { caseId: string; initialNotes: string | null; onSaved: () => void }) {
   if (!initialNotes) return null;
   return (
@@ -186,13 +197,10 @@ export default function CaseDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { i18n } = useTranslation("dashboard");
-  const isAr = i18n.language === "ar";
 
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [submission, setSubmission] = useState<Submission | null>(null);
-  const [activity, setActivity] = useState<Activity[]>([]);
-  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [showScheduler, setShowScheduler] = useState(false);
@@ -200,14 +208,7 @@ export default function CaseDetailPage() {
   const [rescheduleAppt, setRescheduleAppt] = useState<Appointment | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-  const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
-  const [studentEmail, setStudentEmail] = useState("");
-  const [creatingAccount, setCreatingAccount] = useState(false);
-  const [tempPasswordResult, setTempPasswordResult] = useState<string | null>(null);
-  const [copiedPassword, setCopiedPassword] = useState(false);
   const [profileJustSaved, setProfileJustSaved] = useState(false);
-
-  // Delete confirmations
   const [showDeleteCase, setShowDeleteCase] = useState(false);
   const [deletingCase, setDeletingCase] = useState(false);
   const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
@@ -217,40 +218,21 @@ export default function CaseDetailPage() {
     if (!id || !user) return;
     setLoading(true);
     try {
-      const [caseRes, apptRes, subRes, actRes] = await Promise.all([
+      const [caseRes, apptRes, subRes] = await Promise.all([
         supabase.from("cases").select("*").eq("id", id).single(),
         supabase.from("appointments").select("*").eq("case_id", id).order("scheduled_at", { ascending: false }),
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
-        supabase
-          .from("activity_log")
-          .select("*")
-          .eq("entity_id", id)
-          .order("created_at", { ascending: false })
-          .limit(20),
       ]);
       if (caseRes.error) throw caseRes.error;
       setCaseData(caseRes.data as Case);
       setAppointments((apptRes.data as Appointment[]) ?? []);
       setSubmission(subRes.data as Submission | null);
-      setActivity((actRes.data as Activity[]) ?? []);
-
-      const studentId = (caseRes.data as Case).student_user_id;
-      if (studentId) {
-        const [profRes, docsRes] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", studentId).maybeSingle(),
-          supabase.from("documents").select("*").eq("case_id", id).order("created_at", { ascending: false }),
-        ]);
-        setProfile(profRes.data as Record<string, unknown> | null);
-        setDocuments((docsRes.data as Document[]) ?? []);
-      } else {
-        // Still fetch documents by case_id even without student account
-        const { data: docsData } = await supabase
-          .from("documents")
-          .select("*")
-          .eq("case_id", id)
-          .order("created_at", { ascending: false });
-        setDocuments((docsData as Document[]) ?? []);
-      }
+      const { data: docsData } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("case_id", id)
+        .order("created_at", { ascending: false });
+      setDocuments((docsData as Document[]) ?? []);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -264,13 +246,12 @@ export default function CaseDetailPage() {
 
   const updateStatus = async (newStatus: string, force = false) => {
     if (!caseData) return;
-    // Pipeline guard — only allow strict sequential transitions unless forced
     if (!force) {
       const allowed = STRICT_NEXT[caseData.status];
       if (allowed !== newStatus) {
         toast({
           variant: "destructive",
-          description: `Cannot skip stages. Next allowed stage is: ${allowed?.replace(/_/g, " ") ?? "none"}`,
+          description: `Cannot skip stages. Next allowed: ${allowed?.replace(/_/g, " ") ?? "none"}`,
         });
         return;
       }
@@ -278,14 +259,6 @@ export default function CaseDetailPage() {
     setUpdatingStatus(true);
     try {
       await supabase.from("cases").update({ status: newStatus }).eq("id", caseData.id);
-      await supabase.rpc("log_activity" as any, {
-        p_actor_id: user!.id,
-        p_actor_name: "Team Member",
-        p_action: `status_changed_to_${newStatus}`,
-        p_entity_type: "case",
-        p_entity_id: caseData.id,
-        p_metadata: { from: caseData.status, to: newStatus },
-      });
       toast({ title: `Status updated to ${newStatus.replace(/_/g, " ")}` });
       fetchData();
     } catch (err: any) {
@@ -299,7 +272,6 @@ export default function CaseDetailPage() {
     if (!caseData) return;
     setDeletingCase(true);
     try {
-      // Delete in FK-safe order
       await supabase.from("documents").delete().eq("case_id", caseData.id);
       await supabase.from("appointments").delete().eq("case_id", caseData.id);
       await supabase.from("case_submissions").delete().eq("case_id", caseData.id);
@@ -329,41 +301,6 @@ export default function CaseDetailPage() {
     }
   };
 
-  const handleCreateStudentAccount = async () => {
-    if (!studentEmail.trim() || !caseData) return;
-    setCreatingAccount(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
-        body: JSON.stringify({
-          case_id: caseData.id,
-          student_email: studentEmail.trim(),
-          student_full_name: caseData.full_name,
-          student_phone: caseData.phone_number,
-          force_temp_password: true,
-        }),
-      });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || "Failed to create account");
-      if (result.temp_password) {
-        setTempPasswordResult(result.temp_password);
-        setShowCreateAccountModal(false);
-      } else {
-        toast({ title: result.message || "Account ready" });
-        setShowCreateAccountModal(false);
-      }
-      fetchData();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setCreatingAccount(false);
-    }
-  };
-
   const latestAppt = appointments[0] ?? null;
   const pendingAppt = appointments.find((a) => !a.outcome) ?? null;
 
@@ -374,7 +311,6 @@ export default function CaseDetailPage() {
   const currentStageIdx = PIPELINE_STAGES.indexOf(caseData.status);
   const isTerminal = caseData.status === "enrollment_paid" || caseData.status === "cancelled";
 
-  /* ── Pipeline progress bar ── */
   const PipelineBar = () => (
     <Card className="mb-2">
       <CardContent className="px-4 py-3">
@@ -388,11 +324,7 @@ export default function CaseDetailPage() {
                 {idx > 0 && <div className={`h-0.5 flex-1 min-w-[8px] ${isDone ? "bg-primary" : "bg-border"}`} />}
                 <div className={`flex flex-col items-center gap-0.5 shrink-0 ${isFuture ? "opacity-40" : ""}`}>
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors
-                    ${isDone ? "bg-primary border-primary text-primary-foreground" : ""}
-                    ${isCurrent ? "bg-primary/10 border-primary text-primary" : ""}
-                    ${isFuture ? "bg-muted border-border text-muted-foreground" : ""}
-                  `}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${isDone ? "bg-primary border-primary text-primary-foreground" : ""} ${isCurrent ? "bg-primary/10 border-primary text-primary" : ""} ${isFuture ? "bg-muted border-border text-muted-foreground" : ""}`}
                   >
                     {isDone ? <Check className="h-3.5 w-3.5" /> : idx + 1}
                   </div>
@@ -412,7 +344,6 @@ export default function CaseDetailPage() {
 
   const renderNextAction = () => {
     const { status } = caseData;
-
     if (status === "new")
       return (
         <div className="flex items-center justify-between gap-4">
@@ -427,7 +358,6 @@ export default function CaseDetailPage() {
           </Button>
         </div>
       );
-
     if (status === "contacted")
       return (
         <div className="flex items-center justify-between gap-4">
@@ -440,9 +370,8 @@ export default function CaseDetailPage() {
           </Button>
         </div>
       );
-
     if (status === "appointment_scheduled") {
-      if (pendingAppt) {
+      if (pendingAppt)
         return (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4">
@@ -472,7 +401,6 @@ export default function CaseDetailPage() {
             </div>
           </div>
         );
-      }
       return (
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -485,9 +413,8 @@ export default function CaseDetailPage() {
         </div>
       );
     }
-
     if (status === "profile_completion") {
-      if (!profileIsReady && !profileJustSaved) {
+      if (!profileIsReady && !profileJustSaved)
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-1">
@@ -507,48 +434,22 @@ export default function CaseDetailPage() {
             />
           </div>
         );
-      }
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
             <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
             <p className="text-sm text-green-800 font-medium">Profile Complete — Confirm Payment to Proceed</p>
           </div>
-          {submission && (
-            <div className="text-sm space-y-1 px-1">
-              {submission.service_fee > 0 && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Service Fee</span>
-                  <span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
-                </div>
-              )}
-              {submission.translation_fee > 0 && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Translation</span>
-                  <span className="font-medium text-foreground">{submission.translation_fee.toLocaleString()} ILS</span>
-                </div>
-              )}
-              {submission.program_start_date && (
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Start Date</span>
-                  <span>{submission.program_start_date}</span>
-                </div>
-              )}
-            </div>
-          )}
           <PaymentConfirmationForm
             caseId={caseData.id}
             actorId={user!.id}
             actorName="Team Member"
-            onSuccess={() => {
-              fetchData();
-            }}
+            onSuccess={fetchData}
           />
         </div>
       );
     }
-
-    if (status === "payment_confirmed") {
+    if (status === "payment_confirmed")
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
@@ -557,15 +458,29 @@ export default function CaseDetailPage() {
           </div>
           {submission && (
             <div className="text-sm space-y-1 px-1">
-              {submission.service_fee > 0 && (
+              {submission.program_price > 0 && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Service Fee</span>
-                  <span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
+                  <span>Program</span>
+                  <span className="font-medium text-foreground">{submission.program_price.toLocaleString()} EUR</span>
+                </div>
+              )}
+              {submission.accommodation_price > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Accommodation</span>
+                  <span className="font-medium text-foreground">
+                    {submission.accommodation_price.toLocaleString()} EUR
+                  </span>
+                </div>
+              )}
+              {submission.insurance_price > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Insurance</span>
+                  <span className="font-medium text-foreground">{submission.insurance_price.toLocaleString()} EUR</span>
                 </div>
               )}
               {submission.program_start_date && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Program Start</span>
+                  <span>Start Date</span>
                   <span>{submission.program_start_date}</span>
                 </div>
               )}
@@ -578,8 +493,6 @@ export default function CaseDetailPage() {
           </div>
         </div>
       );
-    }
-
     if (status === "submitted")
       return (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-teal-50 border border-teal-200">
@@ -590,7 +503,6 @@ export default function CaseDetailPage() {
           </div>
         </div>
       );
-
     if (status === "enrollment_paid")
       return (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
@@ -601,23 +513,20 @@ export default function CaseDetailPage() {
           </div>
         </div>
       );
-
     if (status === "forgotten")
       return (
         <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-destructive">This case was marked forgotten. Re-contact if possible.</p>
+          <p className="text-sm text-destructive">This case was marked forgotten.</p>
           <Button variant="outline" onClick={() => updateStatus("contacted", true)}>
             Re-activate
           </Button>
         </div>
       );
-
     return null;
   };
 
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-4xl mx-auto">
-      {/* Pipeline progress bar */}
       <PipelineBar />
 
       {/* Header */}
@@ -635,41 +544,21 @@ export default function CaseDetailPage() {
               <Phone className="h-3 w-3" />
               {caseData.phone_number}
             </a>
+            <CopyButton value={caseData.phone_number} />
             <span>·</span>
             <Clock className="h-3 w-3" />
             {formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}
-            {caseData.city && (
-              <>
-                <span>·</span>
-                <span>{caseData.city}</span>
-              </>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
-          {!caseData.student_user_id &&
-            ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"].includes(caseData.status) && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1"
-                onClick={() => {
-                  setStudentEmail("");
-                  setShowCreateAccountModal(true);
-                }}
-              >
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Create Student Account</span>
-              </Button>
-            )}
           {caseData.student_user_id && (
             <Badge variant="secondary" className="gap-1 text-xs">
               <User className="h-3 w-3" />
               Account Active
             </Badge>
           )}
-          {/* Delete Case button — visible in all non-terminal stages */}
+          {/* NOTE: Create Student Account is ONLY in the Students page, NOT here */}
           {!isTerminal && (
             <Button
               size="sm"
@@ -684,92 +573,101 @@ export default function CaseDetailPage() {
         </div>
       </div>
 
-      {/* Application Info — auto-populated from apply page */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" /> Application Info
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          {caseData.education_level ||
-          caseData.english_units != null ||
-          caseData.math_units != null ||
-          caseData.english_level ||
-          caseData.passport_type ||
-          caseData.city ||
-          caseData.degree_interest ||
-          caseData.bagrut_score != null ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
-              {caseData.city && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">City</p>
-                  <p className="text-sm font-medium">{caseData.city}</p>
-                </div>
-              )}
-              {caseData.passport_type && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">Passport</p>
-                  <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
-                </div>
-              )}
-              {caseData.education_level && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">Education Level</p>
-                  <p className="text-sm font-medium">
-                    {caseData.education_level === "bagrut"
-                      ? "Bagrut (תעודת בגרות)"
-                      : caseData.education_level === "bachelor"
-                        ? "Bachelor (תואר ראשון)"
-                        : caseData.education_level === "master"
-                          ? "Master (תואר שני)"
-                          : caseData.education_level}
-                  </p>
-                </div>
-              )}
-              {caseData.english_units != null && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">English Units</p>
-                  <p className="text-2xl font-bold text-primary leading-none">{caseData.english_units}</p>
-                </div>
-              )}
-              {caseData.math_units != null && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">Math Units</p>
-                  <p className="text-2xl font-bold text-primary leading-none">{caseData.math_units}</p>
-                </div>
-              )}
-              {caseData.english_level && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">English Proficiency</p>
-                  <p className="text-sm font-medium capitalize">{caseData.english_level}</p>
-                </div>
-              )}
-              {caseData.bagrut_score != null && (
-                <div className="space-y-0.5">
-                  <p className="text-xs text-muted-foreground">Bagrut Score</p>
-                  <p className="text-2xl font-bold text-primary leading-none">{caseData.bagrut_score}</p>
-                </div>
-              )}
-              {caseData.degree_interest && (
-                <div className="space-y-0.5 col-span-2 sm:col-span-3">
-                  <p className="text-xs text-muted-foreground">Preferred Major / Degree</p>
-                  <p className="text-sm font-medium">{caseData.degree_interest}</p>
-                </div>
-              )}
-            </div>
-          ) : (
+      {/* Application Info — hidden if created by team member */}
+      {caseData.created_by_team ? (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" /> Application Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
             <p className="text-sm text-muted-foreground italic">
               No application info submitted — student did not fill the apply page.
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" /> Application Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {caseData.education_level ||
+            caseData.english_units != null ||
+            caseData.math_units != null ||
+            caseData.english_level ||
+            caseData.passport_type ||
+            caseData.city ||
+            caseData.degree_interest ||
+            caseData.bagrut_score != null ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
+                {caseData.city && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">City</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-medium">{caseData.city}</p>
+                      <CopyButton value={caseData.city} />
+                    </div>
+                  </div>
+                )}
+                {caseData.passport_type && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Passport</p>
+                    <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
+                  </div>
+                )}
+                {caseData.education_level && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Education Level</p>
+                    <p className="text-sm font-medium">{caseData.education_level}</p>
+                  </div>
+                )}
+                {caseData.english_units != null && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">English Units</p>
+                    <p className="text-2xl font-bold text-primary leading-none">{caseData.english_units}</p>
+                  </div>
+                )}
+                {caseData.math_units != null && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Math Units</p>
+                    <p className="text-2xl font-bold text-primary leading-none">{caseData.math_units}</p>
+                  </div>
+                )}
+                {caseData.english_level && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">English Proficiency</p>
+                    <p className="text-sm font-medium capitalize">{caseData.english_level}</p>
+                  </div>
+                )}
+                {caseData.bagrut_score != null && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Bagrut Score</p>
+                    <p className="text-2xl font-bold text-primary leading-none">{caseData.bagrut_score}</p>
+                  </div>
+                )}
+                {caseData.degree_interest && (
+                  <div className="space-y-0.5 col-span-2 sm:col-span-3">
+                    <p className="text-xs text-muted-foreground">Preferred Major</p>
+                    <p className="text-sm font-medium">{caseData.degree_interest}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No application info submitted — student did not fill the apply page.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Admin Notes */}
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
-      {/* Full Student Profile — shown when profile data exists */}
+      {/* Student Profile data */}
       {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -782,10 +680,14 @@ export default function CaseDetailPage() {
               {Object.entries(submission.extra_data).map(([key, val]) => {
                 if (!val || val === "") return null;
                 const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                const strVal = String(val);
                 return (
                   <div key={key} className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">{label}</p>
-                    <p className="font-medium text-foreground text-xs">{String(val)}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium text-foreground text-xs">{strVal}</p>
+                      <CopyButton value={strVal} />
+                    </div>
                   </div>
                 );
               })}
@@ -794,7 +696,57 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* Next Action Card */}
+      {/* Payment Summary */}
+      {submission &&
+        (submission.program_price > 0 || submission.accommodation_price > 0 || submission.insurance_price > 0) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="h-4 w-4" /> Payment Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              {submission.program_price > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Program</span>
+                  <span className="font-medium">{submission.program_price.toLocaleString()} EUR</span>
+                </div>
+              )}
+              {submission.accommodation_price > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Accommodation</span>
+                  <span className="font-medium">{submission.accommodation_price.toLocaleString()} EUR</span>
+                </div>
+              )}
+              {submission.insurance_price > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Insurance</span>
+                  <span className="font-medium">{submission.insurance_price.toLocaleString()} EUR</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>
+                  {(
+                    submission.program_price +
+                    submission.accommodation_price +
+                    submission.insurance_price
+                  ).toLocaleString()}{" "}
+                  EUR
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment Status</span>
+                <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
+                  {submission.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+      {/* Next Action */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Next Action</CardTitle>
@@ -803,7 +755,6 @@ export default function CaseDetailPage() {
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Appointments — only shown after contacted */}
         {caseData.status !== "new" && (
           <Card>
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -845,7 +796,7 @@ export default function CaseDetailPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-1 shrink-0 flex-wrap">
+                      <div className="flex gap-1 shrink-0">
                         {!a.outcome && (
                           <>
                             <Button
@@ -883,37 +834,30 @@ export default function CaseDetailPage() {
           </Card>
         )}
 
-        {/* Submission / Course Info */}
-        {submission ? (
+        {submission && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Course & Payment
+                <FileText className="h-4 w-4" /> Course & Program
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              {submission.service_fee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service Fee</span>
-                  <span className="font-medium">{submission.service_fee.toLocaleString()} ILS</span>
-                </div>
-              )}
-              {submission.translation_fee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Translation</span>
-                  <span className="font-medium">{submission.translation_fee.toLocaleString()} ILS</span>
-                </div>
-              )}
               {submission.program_start_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Start Date</span>
-                  <span>{submission.program_start_date}</span>
+                  <div className="flex items-center gap-1">
+                    <span>{submission.program_start_date}</span>
+                    <CopyButton value={submission.program_start_date} />
+                  </div>
                 </div>
               )}
               {submission.program_end_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">End Date</span>
-                  <span>{submission.program_end_date}</span>
+                  <div className="flex items-center gap-1">
+                    <span>{submission.program_end_date}</span>
+                    <CopyButton value={submission.program_end_date} />
+                  </div>
                 </div>
               )}
               <Separator />
@@ -931,29 +875,7 @@ export default function CaseDetailPage() {
               )}
             </CardContent>
           </Card>
-        ) : caseData.student_user_id && profile ? (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" /> Student Account
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Name</span>
-                <span>{String(profile.full_name ?? "")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Email</span>
-                <span>{String(profile.email ?? "")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Phone</span>
-                <span>{String(profile.phone_number ?? "")}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
+        )}
       </div>
 
       {/* Documents */}
@@ -986,9 +908,7 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* Activity Log removed — admin only */}
-
-      {/* ── Modals ── */}
+      {/* Modals */}
       {showScheduler && user && (
         <AppointmentSchedulerModal
           open={showScheduler}
@@ -1004,14 +924,11 @@ export default function CaseDetailPage() {
           open={!!outcomeApptId}
           onClose={() => setOutcomeApptId(null)}
           appointmentId={outcomeApptId}
-          onSuccess={() => {
-            fetchData();
-          }}
+          onSuccess={fetchData}
         />
       )}
       <RescheduleDialog appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} refetch={fetchData} />
 
-      {/* Submit to Admin confirmation */}
       <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -1038,14 +955,6 @@ export default function CaseDetailPage() {
                   .from("case_submissions")
                   .update({ submitted_at: new Date().toISOString(), submitted_by: user!.id })
                   .eq("case_id", caseData!.id);
-                await supabase.rpc("log_activity" as any, {
-                  p_actor_id: user!.id,
-                  p_actor_name: "Team Member",
-                  p_action: "submitted_to_admin",
-                  p_entity_type: "case",
-                  p_entity_id: caseData!.id,
-                  p_metadata: {},
-                });
                 fetchData();
               }}
               disabled={updatingStatus}
@@ -1056,87 +965,6 @@ export default function CaseDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Student Account modal */}
-      <Dialog open={showCreateAccountModal} onOpenChange={setShowCreateAccountModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Create Student Account
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Enter the student's email. A temporary password will be generated — give it to the student in person.
-            </p>
-            <div>
-              <Label>Student Email</Label>
-              <Input
-                type="email"
-                value={studentEmail}
-                onChange={(e) => setStudentEmail(e.target.value)}
-                placeholder="student@example.com"
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateAccountModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateStudentAccount} disabled={creatingAccount || !studentEmail.trim()}>
-              {creatingAccount ? "Creating…" : "Create Account"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Temp password credentials modal */}
-      <Dialog open={!!tempPasswordResult} onOpenChange={() => setTempPasswordResult(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>✅ Student Account Created</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Share these credentials with the student in person. The password will not be shown again.
-            </p>
-            <div className="p-3 rounded-lg bg-muted font-mono text-sm select-all break-all">{tempPasswordResult}</div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1"
-                onClick={() => {
-                  navigator.clipboard.writeText(tempPasswordResult ?? "");
-                  setCopiedPassword(true);
-                  setTimeout(() => setCopiedPassword(false), 2000);
-                }}
-              >
-                {copiedPassword ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copiedPassword ? "Copied!" : "Copy"}
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
-                onClick={() => {
-                  const msg = encodeURIComponent(
-                    `مرحبا ${caseData?.full_name ?? ""},\nإليك بيانات تسجيل الدخول لبوابة DARB:\n🔗 darb.agency/login\n🔑 كلمة المرور المؤقتة: ${tempPasswordResult}\n\nيرجى تغيير كلمة المرور عند أول دخول.`,
-                  );
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
-                }}
-              >
-                <MessageCircle className="h-4 w-4" /> WhatsApp
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setTempPasswordResult(null)}>Done</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Case confirmation */}
       <AlertDialog open={showDeleteCase} onOpenChange={setShowDeleteCase}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1145,8 +973,7 @@ export default function CaseDetailPage() {
               Delete Case
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the case for <strong>{caseData.full_name}</strong>? This will permanently
-              delete all appointments, submissions, and documents. This cannot be undone.
+              Are you sure you want to delete the case for <strong>{caseData.full_name}</strong>? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1162,7 +989,6 @@ export default function CaseDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Appointment confirmation */}
       <AlertDialog open={!!deleteApptId} onOpenChange={() => setDeleteApptId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1170,9 +996,7 @@ export default function CaseDetailPage() {
               <Trash2 className="h-5 w-5" />
               Delete Appointment
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this appointment? This cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Are you sure? This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -1181,7 +1005,7 @@ export default function CaseDetailPage() {
               disabled={deletingAppt}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingAppt ? "Deleting…" : "Delete Appointment"}
+              {deletingAppt ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
