@@ -158,6 +158,27 @@ const STRICT_NEXT: Record<string, string> = {
   submitted: "enrollment_paid",
 };
 
+/** Small helper to render a label/value pair, hiding if value is empty */
+function InfoField({
+  label,
+  value,
+  highlight = false,
+  className = "",
+}: {
+  label: string;
+  value: string | null | undefined;
+  highlight?: boolean;
+  className?: string;
+}) {
+  if (!value) return null;
+  return (
+    <div className={`space-y-0.5 ${className}`}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`text-sm font-medium ${highlight ? "text-primary" : "text-foreground"}`}>{value}</p>
+    </div>
+  );
+}
+
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -657,55 +678,69 @@ export default function CaseDetailPage() {
         </div>
       </div>
 
-      {/* Student Info Summary */}
-      {(caseData.degree_interest || caseData.education_level || caseData.passport_type) && (
-        <Card>
-          <CardContent className="p-4 flex flex-wrap gap-4 text-sm">
-            {caseData.degree_interest && (
-              <div>
-                <span className="text-muted-foreground">Degree: </span>
-                <span className="font-medium">{caseData.degree_interest}</span>
-              </div>
-            )}
-            {caseData.education_level && (
-              <div>
-                <span className="text-muted-foreground">Education: </span>
-                <span className="font-medium">{caseData.education_level}</span>
-              </div>
-            )}
-            {caseData.passport_type && (
-              <div>
-                <span className="text-muted-foreground">Passport: </span>
-                <span className="font-medium">{caseData.passport_type.replace(/_/g, " ")}</span>
-              </div>
-            )}
-            {caseData.math_units != null && (
-              <div>
-                <span className="text-muted-foreground">Math Units: </span>
-                <span className="font-medium">{caseData.math_units}</span>
-              </div>
-            )}
-            {caseData.english_units != null && (
-              <div>
-                <span className="text-muted-foreground">English Units: </span>
-                <span className="font-medium">{caseData.english_units}</span>
-              </div>
-            )}
-            {caseData.english_level && (
-              <div>
-                <span className="text-muted-foreground">English Level: </span>
-                <span className="font-medium">{caseData.english_level}</span>
-              </div>
-            )}
+      {/* Application Info — always shown, displays all data from the apply page */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" /> Application Info
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
+            {/* Identity */}
+            <InfoField label="City" value={caseData.city} />
+            <InfoField label="Passport Type" value={caseData.passport_type?.replace(/_/g, " ")} />
+            <InfoField label="Source" value={caseData.source?.replace(/_/g, " ")} />
+
+            {/* Education */}
+            <InfoField label="Education Level" value={caseData.education_level?.replace(/_/g, " ")} />
+            <InfoField
+              label="English Units"
+              value={caseData.english_units != null ? String(caseData.english_units) : null}
+              highlight={caseData.english_units != null}
+            />
+            <InfoField
+              label="Math Units"
+              value={caseData.math_units != null ? String(caseData.math_units) : null}
+              highlight={caseData.math_units != null}
+            />
+            <InfoField label="English Proficiency" value={caseData.english_level} />
+            <InfoField
+              label="Bagrut Score"
+              value={caseData.bagrut_score != null ? String(caseData.bagrut_score) : null}
+            />
+
+            {/* Major */}
+            <InfoField
+              label="Preferred Major / Degree"
+              value={caseData.degree_interest}
+              className="col-span-2 sm:col-span-3"
+            />
+
+            {/* Notes */}
             {caseData.intake_notes && (
-              <div className="w-full">
-                <span className="text-muted-foreground">Notes: </span>
-                <span>{caseData.intake_notes}</span>
+              <div className="col-span-2 sm:col-span-3 space-y-0.5">
+                <p className="text-xs text-muted-foreground">Intake Notes</p>
+                <p className="text-sm text-foreground bg-muted/40 rounded-lg px-3 py-2 whitespace-pre-wrap">
+                  {caseData.intake_notes}
+                </p>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {/* Show placeholder if nothing was filled */}
+          {!caseData.city &&
+            !caseData.passport_type &&
+            !caseData.education_level &&
+            caseData.english_units == null &&
+            caseData.math_units == null &&
+            !caseData.english_level &&
+            !caseData.degree_interest &&
+            !caseData.intake_notes && (
+              <p className="text-sm text-muted-foreground italic">No application info submitted yet.</p>
+            )}
+        </CardContent>
+      </Card>
 
       {/* Full Student Profile — shown when profile data exists */}
       {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (
