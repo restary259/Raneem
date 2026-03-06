@@ -96,7 +96,7 @@ export default function TeamStudentsPage() {
           <Button variant="outline" size="icon" onClick={fetchStudents} disabled={loading}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <CreateStudentWizard onStudentCreated={fetchStudents} />
+          <Button onClick={fetchStudents} disabled={loading}><UserPlus className="h-4 w-4 me-1" />{isRtl ? "إضافة طالب" : "Add Student"}</Button>
         </div>
       </div>
 
