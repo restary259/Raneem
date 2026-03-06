@@ -45,9 +45,11 @@ const Card = ({ children, className = "" }: { children: React.ReactNode; classNa
 const Badge = ({
   children,
   variant = "outline",
+  className = "",
 }: {
   children: React.ReactNode;
   variant?: "outline" | "secondary" | "success";
+  className?: string;
 }) => {
   const styles =
     variant === "outline"
@@ -55,7 +57,9 @@ const Badge = ({
       : variant === "success"
         ? "border-green-300 text-green-700 bg-green-50"
         : "bg-slate-100 text-slate-600 border-transparent";
-  return <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${styles}`}>{children}</span>;
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${styles} ${className}`}>{children}</span>
+  );
 };
 
 const Btn = ({
