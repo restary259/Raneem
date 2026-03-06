@@ -69,8 +69,6 @@ const ApplyPage: React.FC = () => {
       englishUnits: string;
       mathUnits: string;
       preferredMajor: string;
-      englishProficiency: string;
-      fieldOfStudy: string;
     }>
   >([
     {
@@ -82,8 +80,6 @@ const ApplyPage: React.FC = () => {
       englishUnits: "",
       mathUnits: "",
       preferredMajor: "",
-      englishProficiency: "",
-      fieldOfStudy: "",
     },
   ]);
 
@@ -134,6 +130,7 @@ const ApplyPage: React.FC = () => {
 
   const canGoNext = () => {
     if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
+    if (step === 2 && showBagrut) return !!englishUnits && !!mathUnits;
     return true;
   };
 
@@ -222,8 +219,8 @@ const ApplyPage: React.FC = () => {
                 math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
                 english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
                 bagrut_score: null,
-                english_level: c.englishProficiency || null,
-                degree_interest: c.preferredMajor.trim() || c.fieldOfStudy?.trim() || null,
+                english_level: null,
+                degree_interest: c.preferredMajor.trim() || null,
               }),
             });
             const compCaseResult = await compCaseResp.json();
@@ -348,8 +345,6 @@ const ApplyPage: React.FC = () => {
     englishUnits: "",
     mathUnits: "",
     preferredMajor: "",
-    englishProficiency: "",
-    fieldOfStudy: "",
   };
 
   const addCompanion = () => {
@@ -486,7 +481,7 @@ const ApplyPage: React.FC = () => {
 
                   {showBagrut && (
                     <>
-                      <FieldGroup label={isAr ? "وحدات الإنجليزي" : "English Units"}>
+                      <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
                         <div className="flex gap-2">
                           {UNIT_OPTIONS.map((u) => (
                             <button
@@ -504,7 +499,7 @@ const ApplyPage: React.FC = () => {
                           ))}
                         </div>
                       </FieldGroup>
-                      <FieldGroup label={isAr ? "وحدات الرياضيات" : "Math Units"}>
+                      <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                         <div className="flex gap-2">
                           {UNIT_OPTIONS.map((u) => (
                             <button
@@ -744,41 +739,6 @@ const ApplyPage: React.FC = () => {
                                       }`}
                                     >
                                       {u}
-                                    </button>
-                                  ))}
-                                </div>
-                              </FieldGroup>
-                            </div>
-                          )}
-
-                          {/* Higher Education fields */}
-                          {(c.education === "bachelor" || c.education === "master") && (
-                            <div className="space-y-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
-                              <FieldGroup label={isAr ? "مجال الدراسة" : "Field of Study"}>
-                                <Input
-                                  value={c.fieldOfStudy}
-                                  onChange={(e) => updateCompanion(idx, "fieldOfStudy", e.target.value)}
-                                  placeholder={isAr ? "مثال: هندسة برمجيات" : "e.g. Software Engineering"}
-                                  dir={dir}
-                                  className="h-11"
-                                />
-                              </FieldGroup>
-                              <FieldGroup label={isAr ? "مستوى الإنجليزية" : "English Proficiency"}>
-                                <div className="flex gap-2">
-                                  {["beginner", "intermediate", "advanced"].map((lvl) => (
-                                    <button
-                                      key={lvl}
-                                      type="button"
-                                      onClick={() => updateCompanion(idx, "englishProficiency", lvl)}
-                                      className={`flex-1 py-2.5 rounded-xl border text-xs font-medium transition-all ${
-                                        c.englishProficiency === lvl
-                                          ? "bg-primary text-primary-foreground border-primary"
-                                          : "bg-card border-border hover:border-primary/40"
-                                      }`}
-                                    >
-                                      {isAr
-                                        ? ({ beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as any)[lvl]
-                                        : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                                     </button>
                                   ))}
                                 </div>
