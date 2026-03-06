@@ -12,10 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
-// Bypass Supabase generated types for new tables/columns
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
 
+/* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
   id: string;
   name_en: string;
@@ -48,7 +48,6 @@ interface Insurance {
   price: number;
   currency: string;
 }
-
 interface CaseData {
   city?: string | null;
   education_level?: string | null;
@@ -59,7 +58,6 @@ interface CaseData {
   degree_interest?: string | null;
   intake_notes?: string | null;
 }
-
 interface Props {
   caseId: string;
   actorId: string;
@@ -78,6 +76,130 @@ const STEPS = [
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
 
+const DOB_MONTHS = [
+  { v: "01", l: "January" },
+  { v: "02", l: "February" },
+  { v: "03", l: "March" },
+  { v: "04", l: "April" },
+  { v: "05", l: "May" },
+  { v: "06", l: "June" },
+  { v: "07", l: "July" },
+  { v: "08", l: "August" },
+  { v: "09", l: "September" },
+  { v: "10", l: "October" },
+  { v: "11", l: "November" },
+  { v: "12", l: "December" },
+];
+const DOB_YEARS = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
+
+/* ══════════════════════════════════════════════════════════════════════
+   MODULE-LEVEL COMPONENTS
+   Defined outside the parent so they never remount on state changes.
+══════════════════════════════════════════════════════════════════════ */
+
+/** Inline error wrapper — does NOT contain an <Input>, just wraps children */
+const FieldWrap = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
+  <div>
+    <Label className={error ? "text-destructive" : ""}>{label}</Label>
+    {children}
+    {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+  </div>
+);
+
+const BirthdayPicker = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: Date | undefined;
+  onChange: (d: Date | undefined) => void;
+}) => {
+  const selYear = value ? value.getFullYear().toString() : "";
+  const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
+  const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
+  const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
+  const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
+  const update = (y: string, m: string, d: string) => {
+    if (y && m && d) onChange(new Date(`${y}-${m}-${d}`));
+  };
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="grid grid-cols-3 gap-2 mt-1">
+        <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
+          <SelectTrigger>
+            <SelectValue placeholder="Year" />
+          </SelectTrigger>
+          <SelectContent className="max-h-48">
+            {DOB_YEARS.map((y) => (
+              <SelectItem key={y} value={String(y)}>
+                {y}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
+          <SelectTrigger>
+            <SelectValue placeholder="Month" />
+          </SelectTrigger>
+          <SelectContent>
+            {DOB_MONTHS.map((m) => (
+              <SelectItem key={m.v} value={m.v}>
+                {m.l}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Day" />
+          </SelectTrigger>
+          <SelectContent className="max-h-48">
+            {days.map((d) => (
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {value && <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), value)} years</p>}
+    </div>
+  );
+};
+
+const DatePick = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: Date | undefined;
+  onChange: (d: Date | undefined) => void;
+}) => (
+  <div>
+    <Label>{label}</Label>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
+        >
+          <CalendarIcon className="me-2 h-4 w-4" />
+          {value ? format(value, "PP") : "Pick date"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
+      </PopoverContent>
+    </Popover>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════════════ */
 export default function ProfileCompletionForm({
   caseId,
   actorId,
@@ -99,11 +221,10 @@ export default function ProfileCompletionForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const ex = existingData ?? {};
-  // Normalise: SubmitNewStudent saves "email"/"phone", ProfileCompletion uses "student_email"/"student_phone"
   const readEmail = (ex.student_email ?? ex.email ?? "") as string;
   const readPhone = (ex.student_phone ?? ex.phone ?? "") as string;
 
-  // ── Personal Info ──
+  // Personal
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
   const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
   const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
@@ -111,7 +232,7 @@ export default function ProfileCompletionForm({
   const [gender, setGender] = useState((ex.gender as string) ?? "");
   const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
 
-  // ── Contact ──
+  // Contact
   const [email, setEmail] = useState(readEmail);
   const [phone, setPhone] = useState(readPhone);
   const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
@@ -121,7 +242,7 @@ export default function ProfileCompletionForm({
   const [postcode, setPostcode] = useState((ex.postcode as string) ?? "");
   const [city, setCity] = useState((ex.city as string) ?? cd?.city ?? "");
 
-  // ── Program ──
+  // Program
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
   const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
@@ -135,7 +256,7 @@ export default function ProfileCompletionForm({
     ex.course_end ? new Date(ex.course_end as string) : undefined,
   );
 
-  // ── Accommodation ──
+  // Accommodation
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
   const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
 
@@ -146,14 +267,12 @@ export default function ProfileCompletionForm({
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const selectedIns = insurances.find((i) => i.id === insuranceId);
 
-  // Auto end-date from program duration
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
       setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
-  // Auto start from fixed start day + intake month
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
@@ -161,7 +280,6 @@ export default function ProfileCompletionForm({
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
-  // Reset accommodation when school changes
   useEffect(() => {
     setAccommodationId("");
   }, [schoolId]);
@@ -185,7 +303,7 @@ export default function ProfileCompletionForm({
     })();
   }, []);
 
-  // ── Validation per step ──────────────────────────────────────────────
+  /* ── Validation ─────────────────────────────────────────────────────── */
   const validate = (s: StepKey): Record<string, string> => {
     const e: Record<string, string> = {};
     if (s === "personal") {
@@ -203,7 +321,6 @@ export default function ProfileCompletionForm({
     const idx = STEPS.findIndex((s) => s.key === target);
     const currentIdx = STEPS.findIndex((s) => s.key === step);
     if (idx > currentIdx) {
-      // Validate current step before advancing
       const errs = validate(step);
       if (Object.keys(errs).length > 0) {
         setErrors(errs);
@@ -221,7 +338,6 @@ export default function ProfileCompletionForm({
     const idx = STEPS.findIndex((s) => s.key === step);
     if (idx < STEPS.length - 1) goTo(STEPS[idx + 1].key);
   };
-
   const goBack = () => {
     const idx = STEPS.findIndex((s) => s.key === step);
     if (idx > 0) {
@@ -230,17 +346,14 @@ export default function ProfileCompletionForm({
     }
   };
 
-  // ── Save ─────────────────────────────────────────────────────────────
+  /* ── Save ───────────────────────────────────────────────────────────── */
   const handleSave = async () => {
-    // Final validation of required steps
-    const personalErrs = validate("personal");
-    const contactErrs = validate("contact");
-    const allErrs = { ...personalErrs, ...contactErrs };
+    const allErrs = { ...validate("personal"), ...validate("contact") };
     if (Object.keys(allErrs).length > 0) {
       setErrors(allErrs);
       toast({
         variant: "destructive",
-        description: "Some required fields are missing. Please go back and fill them in.",
+        description: "Some required fields are missing. Please go back and complete them.",
       });
       return;
     }
@@ -271,7 +384,6 @@ export default function ProfileCompletionForm({
         course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
         start_month: startMonth || null,
       };
-
       const upsertPayload: any = {
         case_id: caseId,
         program_id: programId || null,
@@ -316,132 +428,7 @@ export default function ProfileCompletionForm({
     }
   };
 
-  // ── Sub-components ────────────────────────────────────────────────────
-  const BirthdayPicker = ({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: Date | undefined;
-    onChange: (d: Date | undefined) => void;
-  }) => {
-    const years = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
-    const months = [
-      { v: "01", l: "January" },
-      { v: "02", l: "February" },
-      { v: "03", l: "March" },
-      { v: "04", l: "April" },
-      { v: "05", l: "May" },
-      { v: "06", l: "June" },
-      { v: "07", l: "July" },
-      { v: "08", l: "August" },
-      { v: "09", l: "September" },
-      { v: "10", l: "October" },
-      { v: "11", l: "November" },
-      { v: "12", l: "December" },
-    ];
-    const selYear = value ? value.getFullYear().toString() : "";
-    const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
-    const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
-    const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
-    const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
-    const update = (y: string, m: string, d: string) => {
-      if (y && m && d) onChange(new Date(`${y}-${m}-${d}`));
-    };
-    return (
-      <div>
-        <Label>{label}</Label>
-        <div className="grid grid-cols-3 gap-2 mt-1">
-          <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
-            <SelectTrigger>
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
-            <SelectContent className="max-h-48">
-              {years.map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
-            <SelectTrigger>
-              <SelectValue placeholder="Month" />
-            </SelectTrigger>
-            <SelectContent>
-              {months.map((m) => (
-                <SelectItem key={m.v} value={m.v}>
-                  {m.l}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Day" />
-            </SelectTrigger>
-            <SelectContent className="max-h-48">
-              {days.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {value && (
-          <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), value)} years</p>
-        )}
-      </div>
-    );
-  };
-
-  const DatePick = ({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: Date | undefined;
-    onChange: (d: Date | undefined) => void;
-  }) => (
-    <div>
-      <Label>{label}</Label>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
-          >
-            <CalendarIcon className="me-2 h-4 w-4" />
-            {value ? format(value, "PP") : "Pick date"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={value}
-            onSelect={onChange}
-            initialFocus
-            className="p-3 pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-
-  const Field = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
-    <div>
-      <Label className={error ? "text-destructive" : ""}>
-        {label}
-        {error ? " *" : ""}
-      </Label>
-      {children}
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-    </div>
-  );
-
+  /* ── Derived ────────────────────────────────────────────────────────── */
   const monthOptions = Array.from({ length: 24 }, (_, i) => {
     const d = addMonths(new Date(), i);
     return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
@@ -451,9 +438,10 @@ export default function ProfileCompletionForm({
   const isLastStep = stepIdx === STEPS.length - 1;
   const isFirstStep = stepIdx === 0;
 
+  /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="space-y-5">
-      {/* ── Step indicator ── */}
+      {/* Step indicator */}
       <div className="flex items-center gap-1">
         {STEPS.map((s, i) => {
           const done = i < stepIdx;
@@ -485,24 +473,24 @@ export default function ProfileCompletionForm({
         <div className="space-y-4">
           <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Personal Information</h3>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="First Name" error={errors.firstName}>
+            <FieldWrap label="First Name" error={errors.firstName}>
               <Input
                 className={cn("mt-1", errors.firstName && "border-destructive")}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
               />
-            </Field>
+            </FieldWrap>
             <div>
               <Label>Middle Name</Label>
               <Input className="mt-1" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
             </div>
-            <Field label="Last Name" error={errors.lastName}>
+            <FieldWrap label="Last Name" error={errors.lastName}>
               <Input
                 className={cn("mt-1", errors.lastName && "border-destructive")}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
-            </Field>
+            </FieldWrap>
           </div>
           <BirthdayPicker label="Date of Birth" value={dob} onChange={setDob} />
           <div className="grid grid-cols-2 gap-3">
@@ -532,7 +520,7 @@ export default function ProfileCompletionForm({
         <div className="space-y-4">
           <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Contact Details</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Email" error={errors.email}>
+            <FieldWrap label="Email" error={errors.email}>
               <Input
                 className={cn("mt-1", errors.email && "border-destructive")}
                 type="email"
@@ -540,15 +528,15 @@ export default function ProfileCompletionForm({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@email.com"
               />
-            </Field>
-            <Field label="Phone" error={errors.phone}>
+            </FieldWrap>
+            <FieldWrap label="Phone" error={errors.phone}>
               <Input
                 className={cn("mt-1", errors.phone && "border-destructive")}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+972..."
               />
-            </Field>
+            </FieldWrap>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -569,6 +557,7 @@ export default function ProfileCompletionForm({
             </div>
             <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
+          <div className="grid grid-cols-2 gap-3"></div>
         </div>
       )}
 
@@ -670,7 +659,9 @@ export default function ProfileCompletionForm({
           <div>
             <Label>
               Accommodation{" "}
-              {!schoolId && <span className="text-muted-foreground text-xs">(select a school first)</span>}
+              {!schoolId && (
+                <span className="text-muted-foreground text-xs">(select a school on the previous step first)</span>
+              )}
             </Label>
             <Select value={accommodationId} onValueChange={setAccommodationId} disabled={filteredAccoms.length === 0}>
               <SelectTrigger className="mt-1">
@@ -749,43 +740,45 @@ export default function ProfileCompletionForm({
         </div>
       )}
 
-      {/* ══ STEP 5: Review & Save ══ */}
+      {/* ══ STEP 5: Review ══ */}
       {step === "review" && (
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Review & Save</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            {[
-              ["Full Name", fullName || "—"],
-              ["Date of Birth", dob ? format(dob, "PP") : "—"],
-              ["Gender", gender || "—"],
-              ["City of Birth", cityOfBirth || "—"],
-              ["Email", email || "—"],
-              ["Phone", phone || "—"],
-              ["Emergency Contact", emergencyName ? `${emergencyName} · ${emergencyPhone}` : "—"],
-              ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
-              ["Program", selectedProgram?.name_en || "—"],
-              ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
-              ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
-              ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
-              ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
-              ["Accommodation", selectedAccom?.name_en || "—"],
-              ["Insurance", selectedIns?.name || "—"],
-            ].map(([k, v]) => (
+            {(
+              [
+                ["Full Name", fullName || "—"],
+                ["Date of Birth", dob ? format(dob, "PP") : "—"],
+                ["Gender", gender || "—"],
+                ["City of Birth", cityOfBirth || "—"],
+                ["Email", email || "—"],
+                ["Phone", phone || "—"],
+                ["Emergency", emergencyName ? `${emergencyName} · ${emergencyPhone}` : "—"],
+                ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
+                ["Program", selectedProgram?.name_en || "—"],
+                ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
+                ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
+                ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
+                ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
+                ["Accommodation", selectedAccom?.name_en || "—"],
+                ["Insurance", selectedIns?.name || "—"],
+              ] as [string, string][]
+            ).map(([k, v]) => (
               <div key={k} className="flex flex-col gap-0.5 p-2 rounded-lg bg-muted/30">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</span>
                 <span className="text-sm font-medium truncate">{v}</span>
               </div>
             ))}
           </div>
-          {Object.keys(validate("personal")).length > 0 || Object.keys(validate("contact")).length > 0 ? (
+          {(Object.keys(validate("personal")).length > 0 || Object.keys(validate("contact")).length > 0) && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-              ⚠ Some required fields are missing. Please go back and complete them.
+              ⚠ Some required fields are missing. Please go back and complete them before saving.
             </div>
-          ) : null}
+          )}
         </div>
       )}
 
-      {/* ── Navigation ── */}
+      {/* Navigation */}
       <div className="flex justify-between pt-2 border-t border-border">
         <Button variant="outline" onClick={goBack} disabled={isFirstStep}>
           <ChevronLeft className="h-4 w-4 me-1" /> Back
