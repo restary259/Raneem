@@ -179,7 +179,7 @@ export default function AdminSpreadsheetPage() {
               {MONTH_OPTIONS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          {filterMonth && <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMonth('')}>Clear</Button>}
+          {filterMonth !== 'all' && <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMonth('all')}>Clear</Button>}
         </div>
         <span className="text-xs text-muted-foreground ms-auto">{filteredRows.length} students</span>
       </div>
