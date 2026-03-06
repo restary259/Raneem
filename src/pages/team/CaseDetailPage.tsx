@@ -161,96 +161,20 @@ const STRICT_NEXT: Record<string, string> = {
   submitted: "enrollment_paid",
 };
 
-/* ── Admin Notes Card ─────────────────────────────────────────── */
-function AdminNotesCard({
-  caseId,
-  initialNotes,
-  onSaved,
-}: {
-  caseId: string;
-  initialNotes: string | null;
-  onSaved: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(initialNotes ?? "");
-  const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
-
-  // Keep in sync if parent refreshes
-  React.useEffect(() => {
-    setText(initialNotes ?? "");
-  }, [initialNotes]);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("cases")
-        .update({ intake_notes: text.trim() || null })
-        .eq("id", caseId);
-      if (error) throw error;
-      toast({ description: "Notes saved ✓" });
-      setEditing(false);
-      onSaved();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setSaving(false);
-    }
-  };
-
+/* ── Admin Notes Card — READ ONLY for team members ─────────────── */
+function AdminNotesCard({ initialNotes }: { caseId: string; initialNotes: string | null; onSaved: () => void }) {
+  if (!initialNotes) return null;
   return (
-    <Card>
+    <Card className="border-amber-200">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <StickyNote className="h-4 w-4" /> Admin Notes
-            <span className="text-xs font-normal text-muted-foreground">(visible to team members)</span>
-          </CardTitle>
-          {!editing ? (
-            <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs" onClick={() => setEditing(true)}>
-              <Pencil className="h-3 w-3" /> {initialNotes ? "Edit" : "Add Notes"}
-            </Button>
-          ) : (
-            <div className="flex gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                onClick={() => {
-                  setEditing(false);
-                  setText(initialNotes ?? "");
-                }}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" className="h-7 text-xs gap-1" onClick={save} disabled={saving}>
-                <Check className="h-3 w-3" />
-                {saving ? "Saving…" : "Save"}
-              </Button>
-            </div>
-          )}
-        </div>
+        <CardTitle className="text-base flex items-center gap-2">
+          <StickyNote className="h-4 w-4 text-amber-600" /> Admin Notes
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        {editing ? (
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Write notes for the team member who will handle this case — e.g. student prefers engineering, call in the evening, parent is paying..."
-            rows={4}
-            className="resize-none text-sm"
-            autoFocus
-          />
-        ) : initialNotes ? (
-          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            {initialNotes}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground italic">
-            No notes yet. Click "Add Notes" to leave instructions for the team member.
-          </p>
-        )}
+        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          {initialNotes}
+        </p>
       </CardContent>
     </Card>
   );
@@ -704,8 +628,13 @@ export default function CaseDetailPage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold truncate">{caseData.full_name}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-            <Phone className="h-3 w-3" />
-            {caseData.phone_number}
+            <a
+              href={`tel:${caseData.phone_number}`}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors font-medium text-xs"
+            >
+              <Phone className="h-3 w-3" />
+              {caseData.phone_number}
+            </a>
             <span>·</span>
             <Clock className="h-3 w-3" />
             {formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}
@@ -874,81 +803,85 @@ export default function CaseDetailPage() {
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Appointments */}
-        <Card>
-          <CardHeader className="pb-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-4 w-4" /> Appointments
-            </CardTitle>
-            {!["submitted", "enrollment_paid"].includes(caseData.status) && (
-              <Button size="sm" variant="outline" onClick={() => setShowScheduler(true)}>
-                + Add
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            {appointments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No appointments yet</p>
-            ) : (
-              <div className="space-y-3">
-                {appointments.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex items-start justify-between gap-2 pb-3 last:pb-0 border-b last:border-b-0 border-border"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium">
-                        {format(new Date(a.scheduled_at), "EEE, MMM d · h:mm a")}
+        {/* Appointments — only shown after contacted */}
+        {caseData.status !== "new" && (
+          <Card>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> Appointments
+              </CardTitle>
+              {!["submitted", "enrollment_paid"].includes(caseData.status) && (
+                <Button size="sm" variant="outline" onClick={() => setShowScheduler(true)}>
+                  + Add
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {appointments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No appointments yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {appointments.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-start justify-between gap-2 pb-3 last:pb-0 border-b last:border-b-0 border-border"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium">
+                          {format(new Date(a.scheduled_at), "EEE, MMM d · h:mm a")}
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          {a.outcome ? (
+                            <Badge
+                              className={`text-xs ${OUTCOME_COLORS[a.outcome] ?? "bg-muted text-muted-foreground"}`}
+                            >
+                              {a.outcome}
+                            </Badge>
+                          ) : (
+                            <Badge className="text-xs bg-primary/10 text-primary border-primary/20">Pending</Badge>
+                          )}
+                          {a.outcome_notes && (
+                            <span className="text-xs text-muted-foreground truncate">{a.outcome_notes}</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        {a.outcome ? (
-                          <Badge className={`text-xs ${OUTCOME_COLORS[a.outcome] ?? "bg-muted text-muted-foreground"}`}>
-                            {a.outcome}
-                          </Badge>
-                        ) : (
-                          <Badge className="text-xs bg-primary/10 text-primary border-primary/20">Pending</Badge>
+                      <div className="flex gap-1 shrink-0 flex-wrap">
+                        {!a.outcome && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs"
+                              onClick={() => setRescheduleAppt(a)}
+                            >
+                              Reschedule
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs"
+                              onClick={() => setOutcomeApptId(a.id)}
+                            >
+                              Outcome
+                            </Button>
+                          </>
                         )}
-                        {a.outcome_notes && (
-                          <span className="text-xs text-muted-foreground truncate">{a.outcome_notes}</span>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeleteApptId(a.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0 flex-wrap">
-                      {!a.outcome && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => setRescheduleAppt(a)}
-                          >
-                            Reschedule
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => setOutcomeApptId(a.id)}
-                          >
-                            Outcome
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
-                        onClick={() => setDeleteApptId(a.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Submission / Course Info */}
         {submission ? (
@@ -1053,36 +986,7 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* Activity log */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4" /> Activity Log
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No activity recorded yet</p>
-          ) : (
-            <div className="space-y-2">
-              {activity.map((a, i) => (
-                <div key={a.id}>
-                  {i > 0 && <Separator />}
-                  <div className="flex items-center justify-between py-1.5">
-                    <div>
-                      <span className="text-sm font-medium">{a.action.replace(/_/g, " ")}</span>
-                      {a.actor_name && <span className="text-xs text-muted-foreground ms-2">by {a.actor_name}</span>}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Activity Log removed — admin only */}
 
       {/* ── Modals ── */}
       {showScheduler && user && (
