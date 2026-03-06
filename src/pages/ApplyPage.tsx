@@ -152,25 +152,29 @@ const ApplyPage: React.FC = () => {
     try {
       // ── MAIN APPLICANT ──────────────────────────────────────────
       // 1. Create the case (this is what shows in the pipeline — do this first)
+      const payload = {
+        full_name: fullName.trim(),
+        phone_number: phone.trim(),
+        source: "apply_page",
+        partner_id: null,
+        city: city.trim() || null,
+        education_level: educationLevel || null,
+        bagrut_score: null,
+        english_level: englishProficiency || null,
+        english_units: englishUnits ? parseInt(englishUnits) : null,
+        math_units: mathUnits ? parseInt(mathUnits) : null,
+        passport_type: passportType || null,
+        degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
+      };
+      console.log("[ApplyPage] ▶ Sending payload:", JSON.stringify(payload));
+
       const caseResp = await fetch(caseUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: anonKey },
-        body: JSON.stringify({
-          full_name: fullName.trim(),
-          phone_number: phone.trim(),
-          source: "apply_page",
-          partner_id: null,
-          city: city.trim() || null,
-          education_level: educationLevel || null,
-          bagrut_score: null,
-          english_level: englishProficiency || null,
-          english_units: englishUnits ? parseInt(englishUnits) : null,
-          math_units: mathUnits ? parseInt(mathUnits) : null,
-          passport_type: passportType || null,
-          degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
-        }),
+        body: JSON.stringify(payload),
       });
       const caseResult = await caseResp.json();
+      console.log("[ApplyPage] ◀ Response status:", caseResp.status, "body:", JSON.stringify(caseResult));
       if (!caseResp.ok && caseResp.status !== 409) {
         console.error("[ApplyPage] Case creation failed:", caseResult);
         throw new Error(caseResult.error || "Failed to create case");
