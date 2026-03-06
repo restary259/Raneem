@@ -284,11 +284,17 @@ const AdminPipelinePage = () => {
     }
   };
 
-  /* ── sheet open ── */
-  const openCase = (c: Case) => {
-    setSelectedCase(c);
+  /* ── sheet open — fetch fresh from DB to avoid stale cache ── */
+  const openCase = async (c: Case) => {
+    setSelectedCase(c); // show immediately with card data
     setEditMode(false);
     setDraft(null);
+    // Then fetch full fresh row directly — ensures all columns including english_units
+    const { data } = await supabase.from("cases").select("*").eq("id", c.id).single();
+    if (data) {
+      const assignee_name = c.assignee_name; // preserve enriched field
+      setSelectedCase({ ...data, assignee_name } as Case);
+    }
   };
 
   /* ── start edit ── */
