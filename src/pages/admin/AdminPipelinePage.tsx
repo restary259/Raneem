@@ -289,11 +289,21 @@ const AdminPipelinePage = () => {
     setSelectedCase(c); // show immediately with card data
     setEditMode(false);
     setDraft(null);
-    // Then fetch full fresh row directly — ensures all columns including english_units
-    const { data } = await supabase.from("cases").select("*").eq("id", c.id).single();
+    // Fetch full fresh row directly — guarantees all columns
+    const { data, error } = await supabase.from("cases").select("*").eq("id", c.id).single();
+    if (error) {
+      console.error("[openCase] fetch error:", error.message);
+      return;
+    }
     if (data) {
-      const assignee_name = c.assignee_name; // preserve enriched field
-      setSelectedCase({ ...data, assignee_name } as Case);
+      console.log(
+        "[openCase] fresh data english_units:",
+        (data as any).english_units,
+        "| math_units:",
+        (data as any).math_units,
+      );
+      const assignee_name = c.assignee_name;
+      setSelectedCase({ ...(data as any), assignee_name } as Case);
     }
   };
 
@@ -673,8 +683,8 @@ const AdminPipelinePage = () => {
                     )}
 
                     {(selectedCase.education_level ||
-                      selectedCase.english_units != null ||
-                      selectedCase.math_units != null ||
+                      (selectedCase.english_units !== null && selectedCase.english_units !== undefined) ||
+                      (selectedCase.math_units !== null && selectedCase.math_units !== undefined) ||
                       selectedCase.english_level) && (
                       <section>
                         <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
@@ -693,14 +703,20 @@ const AdminPipelinePage = () => {
                                 icon={Languages}
                                 label="English Units"
                                 value={
-                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                  selectedCase.english_units !== null && selectedCase.english_units !== undefined
+                                    ? `${selectedCase.english_units} units`
+                                    : null
                                 }
                                 highlight
                               />
                               <InfoRowAlways
                                 icon={Calculator}
                                 label="Math Units"
-                                value={selectedCase.math_units != null ? `${selectedCase.math_units} units` : null}
+                                value={
+                                  selectedCase.math_units !== null && selectedCase.math_units !== undefined
+                                    ? `${selectedCase.math_units} units`
+                                    : null
+                                }
                                 highlight
                               />
                             </>
@@ -819,8 +835,6 @@ const AdminPipelinePage = () => {
                                   d && {
                                     ...d,
                                     education_level: o.value,
-                                    english_units: "",
-                                    math_units: "",
                                     english_level: "",
                                   },
                               )
