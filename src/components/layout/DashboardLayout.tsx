@@ -60,6 +60,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions" },
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students" },
+    { key: "nav.spreadsheet", icon: TableIcon, href: "/admin/spreadsheet" },
     { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics" },
     { key: "nav.activity", icon: Activity, href: "/admin/activity" },
     { key: "nav.settings", icon: Settings, href: "/admin/settings" },
