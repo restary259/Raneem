@@ -6,20 +6,12 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
   format,
@@ -46,133 +38,86 @@ import {
   ChevronRight,
   Plus,
   Loader2,
+  CalendarIcon,
   Clock,
-  Phone,
-  ExternalLink,
+  Pencil,
   Trash2,
+  User,
+  FileText,
+  X,
+  CheckCircle2,
   AlertCircle,
+  RefreshCw,
+  Calendar as CalIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 
+/* ─── Types ─────────────────────────────────────────────────────────── */
 interface Appointment {
   id: string;
-  case_id: string | null;
+  case_id: string;
   scheduled_at: string;
   duration_minutes: number;
   notes: string | null;
   outcome: string | null;
-  guest_name?: string | null;
-  case?: { full_name: string; phone_number: string; status: string } | null;
+  case?: { full_name: string; phone_number: string; status: string };
 }
+
 interface Case {
   id: string;
   full_name: string;
   phone_number: string;
 }
 
+/* ─── Constants ──────────────────────────────────────────────────────── */
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
-const QUICK_TIMES = [
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-];
 type CalendarView = "day" | "week" | "month";
 
-function apptClasses(outcome: string | null, isPast: boolean) {
-  if (outcome === "completed") return "bg-emerald-100 text-emerald-800 border-emerald-300";
-  if (outcome === "no_show") return "bg-red-100 text-red-800 border-red-300";
-  if (outcome === "cancelled") return "bg-slate-100 text-slate-600 border-slate-300";
-  if (outcome === "rescheduled") return "bg-blue-100 text-blue-800 border-blue-300";
-  if (isPast) return "bg-orange-100 text-orange-800 border-orange-400";
-  return "bg-indigo-100 text-indigo-800 border-indigo-300";
-}
+/* ─── Status styles ──────────────────────────────────────────────────── */
+const apptStyle = (outcome: string | null) => {
+  if (!outcome)
+    return {
+      bg: "bg-violet-50 border-violet-200 text-violet-900",
+      dot: "bg-violet-500",
+      badge: "bg-violet-100 text-violet-700",
+      label: "Upcoming",
+      icon: <Clock className="h-2.5 w-2.5" />,
+    };
+  if (outcome === "completed")
+    return {
+      bg: "bg-emerald-50 border-emerald-200 text-emerald-900",
+      dot: "bg-emerald-500",
+      badge: "bg-emerald-100 text-emerald-700",
+      label: "Completed",
+      icon: <CheckCircle2 className="h-2.5 w-2.5" />,
+    };
+  if (outcome === "no_show")
+    return {
+      bg: "bg-rose-50 border-rose-200 text-rose-900",
+      dot: "bg-rose-500",
+      badge: "bg-rose-100 text-rose-700",
+      label: "No Show",
+      icon: <AlertCircle className="h-2.5 w-2.5" />,
+    };
+  if (outcome === "rescheduled" || outcome === "delayed")
+    return {
+      bg: "bg-amber-50 border-amber-200 text-amber-900",
+      dot: "bg-amber-500",
+      badge: "bg-amber-100 text-amber-700",
+      label: "Rescheduled",
+      icon: <RefreshCw className="h-2.5 w-2.5" />,
+    };
+  return {
+    bg: "bg-slate-50 border-slate-200 text-slate-800",
+    dot: "bg-slate-400",
+    badge: "bg-slate-100 text-slate-600",
+    label: outcome,
+    icon: <CalIcon className="h-2.5 w-2.5" />,
+  };
+};
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ApptBlock — draggable=true always. We distinguish click vs drag by checking
-// whether dragstart fired before the click event fires.
-// ─────────────────────────────────────────────────────────────────────────────
-function ApptBlock({
-  appt,
-  compact,
-  onOpen,
-  onDragStart,
-  onDragEnd,
-  isDragging,
-}: {
-  appt: Appointment;
-  compact: boolean;
-  onOpen: () => void;
-  onDragStart: (id: string, e: React.DragEvent) => void;
-  onDragEnd: () => void;
-  isDragging: boolean;
-}) {
-  const isPast = new Date(appt.scheduled_at) < new Date();
-  const name = (appt.case as any)?.full_name ?? appt.guest_name ?? "—";
-  // dragFired is set true when dragstart fires; click handler checks it
-  const dragFired = useRef(false);
-
-  return (
-    <div
-      draggable
-      onDragStart={(e) => {
-        dragFired.current = true;
-        e.stopPropagation();
-        onDragStart(appt.id, e);
-      }}
-      onDragEnd={(e) => {
-        e.stopPropagation();
-        onDragEnd();
-        // Keep dragFired=true briefly so the click that fires after dragend is ignored
-        setTimeout(() => {
-          dragFired.current = false;
-        }, 50);
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!dragFired.current) onOpen();
-      }}
-      className={cn(
-        "rounded border leading-tight select-none transition-opacity",
-        compact ? "text-[10px] p-1 mb-0.5" : "text-xs p-1.5 mb-1",
-        apptClasses(appt.outcome, isPast),
-        isDragging ? "opacity-30 cursor-grabbing" : "cursor-grab hover:shadow-sm",
-      )}
-    >
-      <div className="font-semibold truncate">{name}</div>
-      {!compact && (
-        <div className="flex items-center gap-1 opacity-70 mt-0.5">
-          <Clock className="h-2.5 w-2.5" />
-          {format(parseISO(appt.scheduled_at), "h:mm a")} · {appt.duration_minutes}m
-        </div>
-      )}
-      {compact && <div className="opacity-70">{format(parseISO(appt.scheduled_at), "h:mm a")}</div>}
-      {isPast && !appt.outcome && !compact && (
-        <div className="text-[9px] font-bold text-orange-700 mt-0.5">⚠ Needs outcome</div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─── Main Component ─────────────────────────────────────────────────── */
 export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -186,31 +131,29 @@ export default function TeamAppointmentsPage() {
   const [view, setView] = useState<CalendarView>("week");
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
-  const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [myCases, setMyCases] = useState<Case[]>([]);
 
-  // form
-  const [showNew, setShowNew] = useState(false);
-  const [newDateStr, setNewDateStr] = useState("");
+  /* Modal state */
+  const [showModal, setShowModal] = useState(false);
+  const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
+  const [newDate, setNewDate] = useState<Date | undefined>();
   const [newTime, setNewTime] = useState("10:00");
   const [newDuration, setNewDuration] = useState("60");
   const [newNotes, setNewNotes] = useState("");
   const [newCaseId, setNewCaseId] = useState("");
-  const [newGuestName, setNewGuestName] = useState("");
-  const [useGuestName, setUseGuestName] = useState(false);
-  const [myCases, setMyCases] = useState<Case[]>([]);
-  const [creating, setCreating] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [useManualName, setUseManualName] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // drag
+  /* DnD state */
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
-  // keep latest appts accessible inside async dragend without stale closure
-  const apptsRef = useRef(appts);
-  useEffect(() => {
-    apptsRef.current = appts;
-  }, [appts]);
 
-  // ── data ────────────────────────────────────────────────────────────────
+  /* Delete state */
+  const [deletingAppt, setDeletingAppt] = useState<Appointment | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  /* ─── Data ──────────────────────────────────────────────────────────── */
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -240,49 +183,171 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
   }, [fetchMyCases]);
 
-  // ── drag handlers ────────────────────────────────────────────────────────
-  const handleDragStart = (apptId: string, e: React.DragEvent) => {
+  /* ─── Modal helpers ─────────────────────────────────────────────────── */
+  const openNew = (date?: Date, hour?: number) => {
+    setEditingAppt(null);
+    const d = date ? new Date(date) : new Date();
+    if (hour !== undefined) d.setHours(hour, 0, 0, 0);
+    setNewDate(d);
+    setNewTime(hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "10:00");
+    setNewDuration("60");
+    setNewNotes("");
+    setNewCaseId("");
+    setManualName("");
+    setUseManualName(false);
+    setShowModal(true);
+  };
+
+  const openEdit = (appt: Appointment) => {
+    setEditingAppt(appt);
+    const dt = parseISO(appt.scheduled_at);
+    setNewDate(dt);
+    setNewTime(format(dt, "HH:mm"));
+    setNewDuration(String(appt.duration_minutes));
+    setNewNotes(appt.notes ?? "");
+    setNewCaseId(appt.case_id ?? "");
+    setManualName("");
+    setUseManualName(false);
+    setSelectedAppt(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingAppt(null);
+  };
+
+  /* ─── Save ──────────────────────────────────────────────────────────── */
+  const handleSave = async () => {
+    if (!newDate) {
+      toast({ variant: "destructive", description: "Please select a date" });
+      return;
+    }
+    if (!useManualName && !newCaseId) {
+      toast({ variant: "destructive", description: "Please select a case or enter a student name" });
+      return;
+    }
+    if (useManualName && !manualName.trim()) {
+      toast({ variant: "destructive", description: "Please enter a student name" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const [hh, mm] = newTime.split(":").map(Number);
+      const dt = new Date(newDate);
+      dt.setHours(hh, mm, 0, 0);
+
+      if (editingAppt) {
+        const { error } = await supabase
+          .from("appointments")
+          .update({
+            scheduled_at: dt.toISOString(),
+            duration_minutes: parseInt(newDuration),
+            notes: newNotes || null,
+            ...(newCaseId && !useManualName ? { case_id: newCaseId } : {}),
+          })
+          .eq("id", editingAppt.id);
+        if (error) throw error;
+        toast({ title: "Appointment updated" });
+      } else {
+        let caseId = newCaseId;
+        if (useManualName && manualName.trim()) {
+          const { data: caseData, error: caseErr } = await supabase
+            .from("cases")
+            .insert({
+              full_name: manualName.trim(),
+              assigned_to: user!.id,
+              phone_number: "",
+              status: "appointment_scheduled",
+            })
+            .select("id")
+            .single();
+          if (caseErr) throw caseErr;
+          caseId = (caseData as any).id;
+        }
+        const { error } = await supabase.from("appointments").insert({
+          case_id: caseId,
+          team_member_id: user!.id,
+          scheduled_at: dt.toISOString(),
+          duration_minutes: parseInt(newDuration),
+          notes: newNotes || null,
+        });
+        if (error) throw error;
+        if (!useManualName) {
+          await supabase
+            .from("cases")
+            .update({ status: "appointment_scheduled" })
+            .eq("id", caseId)
+            .eq("status", "contacted");
+        }
+        toast({ title: "Appointment created" });
+      }
+      closeModal();
+      fetchAppts();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ─── Delete ────────────────────────────────────────────────────────── */
+  const handleDelete = async () => {
+    if (!deletingAppt) return;
+    setConfirmingDelete(true);
+    try {
+      const { error } = await supabase.from("appointments").delete().eq("id", deletingAppt.id);
+      if (error) throw error;
+      toast({ title: "Appointment deleted" });
+      setDeletingAppt(null);
+      setSelectedAppt(null);
+      fetchAppts();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setConfirmingDelete(false);
+    }
+  };
+
+  /* ─── Drag & Drop ───────────────────────────────────────────────────── */
+  const handleDragStart = (e: React.DragEvent, apptId: string) => {
     setDraggingId(apptId);
     e.dataTransfer.effectAllowed = "move";
-    // Set a tiny transparent image so browser ghost doesn't appear
-    const img = new Image();
-    img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
-    e.dataTransfer.setDragImage(img, 0, 0);
   };
 
   const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    setDragOverSlot((prev) => (prev && isSameDay(prev.day, day) && prev.hour === hour ? prev : { day, hour }));
+    setDragOverSlot({ day, hour });
   };
 
   const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
     e.preventDefault();
-    const apptId = draggingId;
-    setDraggingId(null);
-    setDragOverSlot(null);
-    if (!apptId) return;
-
-    const appt = apptsRef.current.find((a) => a.id === apptId);
+    if (!draggingId) return;
+    const appt = appts.find((a) => a.id === draggingId);
     if (!appt) return;
-
     const newDt = new Date(day);
     newDt.setHours(hour, 0, 0, 0);
     const orig = parseISO(appt.scheduled_at);
-    if (isSameDay(newDt, orig) && getHours(orig) === hour) return;
-
-    // optimistic
-    setAppts((prev) => prev.map((a) => (a.id === apptId ? { ...a, scheduled_at: newDt.toISOString() } : a)));
+    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
+      setDraggingId(null);
+      setDragOverSlot(null);
+      return;
+    }
+    // Optimistic update
+    setAppts((prev) => prev.map((a) => (a.id === appt.id ? { ...a, scheduled_at: newDt.toISOString() } : a)));
+    setDraggingId(null);
+    setDragOverSlot(null);
     try {
       const { error } = await supabase
         .from("appointments")
         .update({ scheduled_at: newDt.toISOString() })
-        .eq("id", apptId);
+        .eq("id", appt.id);
       if (error) throw error;
-      toast({ title: format(newDt, "EEE MMM d · h:mm a") });
+      toast({ title: "Rescheduled", description: format(newDt, "EEE, MMM d 'at' h:mm a") });
     } catch (err: any) {
-      setAppts((prev) => prev.map((a) => (a.id === apptId ? { ...a, scheduled_at: appt.scheduled_at } : a)));
       toast({ variant: "destructive", description: err.message });
+      fetchAppts();
     }
   };
 
@@ -291,7 +356,7 @@ export default function TeamAppointmentsPage() {
     setDragOverSlot(null);
   };
 
-  // ── nav ──────────────────────────────────────────────────────────────────
+  /* ─── Navigation ────────────────────────────────────────────────────── */
   const navigatePrev = () => {
     if (view === "day") setCurrentDate((d) => subDays(d, 1));
     else if (view === "week") setCurrentDate((d) => subWeeks(d, 1));
@@ -302,621 +367,597 @@ export default function TeamAppointmentsPage() {
     else if (view === "week") setCurrentDate((d) => addWeeks(d, 1));
     else setCurrentDate((d) => addMonths(d, 1));
   };
-  const headerLabel = () => {
-    if (view === "day") return format(currentDate, "EEEE, MMM d, yyyy");
-    if (view === "week") {
-      const s = startOfWeek(currentDate, { weekStartsOn: 0 });
-      const e = endOfWeek(currentDate, { weekStartsOn: 0 });
-      return `${format(s, "MMM d")} – ${format(e, "MMM d, yyyy")}`;
-    }
-    return format(currentDate, "MMMM yyyy");
-  };
 
-  // ── helpers ──────────────────────────────────────────────────────────────
+  /* ─── Calendar helpers ──────────────────────────────────────────────── */
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentDate, { weekStartsOn: 0 }),
     end: endOfWeek(currentDate, { weekStartsOn: 0 }),
   });
-  const getSlotAppts = (day: Date, hour: number) =>
+
+  const getApptsForSlot = (day: Date, hour: number) =>
     appts.filter((a) => {
       const d = parseISO(a.scheduled_at);
       return isSameDay(d, day) && getHours(d) === hour;
     });
-  const getDayAppts = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+
+  const getApptsForDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+
   const monthWeeks = eachWeekOfInterval(
     { start: startOfMonth(currentDate), end: endOfMonth(currentDate) },
     { weekStartsOn: 0 },
   );
-  const datePills = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), i));
 
-  const openNew = (day?: Date, hour?: number) => {
-    if (draggingId) return; // don't open form while dragging
-    setNewDateStr(format(day ?? new Date(), "yyyy-MM-dd"));
-    if (hour !== undefined) setNewTime(`${String(hour).padStart(2, "0")}:00`);
-    setShowNew(true);
-  };
-  const resetNewForm = () => {
-    setNewDateStr("");
-    setNewTime("10:00");
-    setNewDuration("60");
-    setNewNotes("");
-    setNewCaseId("");
-    setNewGuestName("");
-    setUseGuestName(false);
-  };
+  const headerLabel =
+    view === "day"
+      ? format(currentDate, "EEEE, MMMM d, yyyy")
+      : view === "week"
+        ? `${format(weekDays[0], "MMM d")} – ${format(weekDays[6], "MMM d, yyyy")}`
+        : format(currentDate, "MMMM yyyy");
 
-  // ── create ───────────────────────────────────────────────────────────────
-  const handleCreate = async () => {
-    if (!newDateStr) {
-      toast({ variant: "destructive", description: "Select a date" });
-      return;
-    }
-    if (!useGuestName && !newCaseId) {
-      toast({ variant: "destructive", description: "Select a case or enter a name" });
-      return;
-    }
-    if (useGuestName && !newGuestName.trim()) {
-      toast({ variant: "destructive", description: "Enter a name" });
-      return;
-    }
-    setCreating(true);
-    try {
-      const [hh, mm] = newTime.split(":").map(Number);
-      const dt = new Date(newDateStr);
-      dt.setHours(hh, mm, 0, 0);
-      const { error } = await supabase.from("appointments").insert({
-        team_member_id: user!.id,
-        scheduled_at: dt.toISOString(),
-        duration_minutes: parseInt(newDuration),
-        notes: newNotes || null,
-        case_id: useGuestName ? null : newCaseId,
-        guest_name: useGuestName ? newGuestName.trim() : null,
-      } as any);
-      if (error) throw error;
-      if (!useGuestName && newCaseId) {
-        await supabase
-          .from("cases")
-          .update({ status: "appointment_scheduled" })
-          .eq("id", newCaseId)
-          .eq("status", "contacted");
-      }
-      toast({ title: "Appointment created" });
-      setShowNew(false);
-      resetNewForm();
-      fetchAppts();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // ── delete ───────────────────────────────────────────────────────────────
-  const handleDelete = async () => {
-    if (!deleteApptId) return;
-    setDeleting(true);
-    try {
-      const { error } = await supabase.from("appointments").delete().eq("id", deleteApptId);
-      if (error) throw error;
-      toast({ title: "Appointment deleted" });
-      setDeleteApptId(null);
-      setSelectedAppt(null);
-      fetchAppts();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const overdueCount = appts.filter((a) => !a.outcome && new Date(a.scheduled_at) < new Date()).length;
-
-  // ── hour grid (day + week) ───────────────────────────────────────────────
-  const HourGrid = ({ days }: { days: Date[] }) => (
-    <div className="flex-1 overflow-auto">
-      <div style={{ minWidth: days.length === 1 ? "320px" : "680px" }}>
-        {/* day headers */}
-        <div
-          className="grid border-b border-border sticky top-0 bg-background z-10"
-          style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}
-        >
-          <div className="border-e border-border" />
-          {days.map((day) => (
-            <div
-              key={day.toISOString()}
-              className={cn(
-                "py-2 px-1 text-center border-e border-border last:border-e-0",
-                isToday(day) && "bg-primary/5",
-              )}
-            >
-              <div className="text-[11px] text-muted-foreground font-medium">
-                {format(day, days.length === 1 ? "EEEE" : "EEE")}
-              </div>
-              <div
-                className={cn(
-                  "text-sm font-bold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5",
-                  isToday(day) ? "bg-primary text-primary-foreground" : "text-foreground",
-                )}
-              >
-                {format(day, "d")}
-              </div>
-            </div>
-          ))}
+  /* ─── Appointment block component ───────────────────────────────────── */
+  const ApptBlock = ({ appt, compact = false }: { appt: Appointment; compact?: boolean }) => {
+    const s = apptStyle(appt.outcome);
+    return (
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation();
+          handleDragStart(e, appt.id);
+        }}
+        onDragEnd={handleDragEnd}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedAppt(appt);
+        }}
+        className={cn(
+          "rounded-lg border cursor-grab active:cursor-grabbing select-none transition-all duration-150",
+          s.bg,
+          draggingId === appt.id ? "opacity-40 scale-95" : "hover:shadow-sm hover:scale-[1.01]",
+          compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
+        )}
+      >
+        <div className="flex items-center gap-1 min-w-0">
+          <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />
+          <span className="font-semibold truncate">{(appt.case as any)?.full_name ?? "—"}</span>
         </div>
-
-        {/* hour rows */}
-        {HOURS.map((hour) => (
-          <div
-            key={hour}
-            className="grid border-b border-border/40 min-h-[60px]"
-            style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}
-          >
-            <div className="py-1 px-1.5 text-[10px] text-muted-foreground border-e border-border flex items-start pt-2 shrink-0 tabular-nums">
-              {format(new Date().setHours(hour, 0, 0, 0), "h a")}
-            </div>
-            {days.map((day) => {
-              const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={cn(
-                    "border-e border-border/40 last:border-e-0 p-0.5 relative transition-colors",
-                    isToday(day) && "bg-primary/[0.02]",
-                    isOver ? "bg-indigo-100 outline outline-2 outline-indigo-400" : "hover:bg-muted/30",
-                    "cursor-pointer",
-                  )}
-                  onDragOver={(e) => handleDragOver(e, day, hour)}
-                  onDragLeave={() => setDragOverSlot(null)}
-                  onDrop={(e) => handleDrop(e, day, hour)}
-                  onClick={() => openNew(day, hour)}
-                >
-                  {isOver && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                      <span className="text-[10px] font-semibold text-indigo-700 bg-white/80 rounded px-1.5 py-0.5 shadow-sm border border-indigo-200">
-                        {format(day, "EEE d")} · {format(new Date().setHours(hour), "h a")}
-                      </span>
-                    </div>
-                  )}
-                  {getSlotAppts(day, hour).map((a) => (
-                    <ApptBlock
-                      key={a.id}
-                      appt={a}
-                      compact={days.length > 3}
-                      onOpen={() => setSelectedAppt(a)}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      isDragging={draggingId === a.id}
-                    />
-                  ))}
-                </div>
-              );
-            })}
+        {!compact && (
+          <div className="flex items-center gap-1 mt-0.5 opacity-65 pl-2.5">
+            <Clock className="h-2.5 w-2.5 shrink-0" />
+            <span>{format(parseISO(appt.scheduled_at), "h:mm a")}</span>
+            <span className="opacity-70">· {appt.duration_minutes}m</span>
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
-  // ────────────────────────────────────────────────────────────────────────
+  /* ─── Render ─────────────────────────────────────────────────────────── */
   return (
-    <div className="flex flex-col h-full">
-      {/* header */}
-      <div className="sticky top-0 z-20 bg-background border-b border-border px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigatePrev}>
+    <div className="flex flex-col h-full bg-background">
+      {/* ══ HEADER ══ */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigatePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[150px] text-center">{headerLabel()}</span>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigateNext}>
+          <button
+            className="text-sm font-semibold min-w-[200px] text-center hover:text-primary transition-colors"
+            onClick={() => setCurrentDate(new Date())}
+          >
+            {headerLabel}
+          </button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => setCurrentDate(new Date())}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7 px-3 rounded-full"
+            onClick={() => setCurrentDate(new Date())}
+          >
             Today
           </Button>
-          {overdueCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-300 rounded-full px-2 py-0.5">
-              <AlertCircle className="h-3 w-3" />
-              {overdueCount} overdue
-            </span>
-          )}
         </div>
+
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-border overflow-hidden text-xs">
-            {(["day", "week", "month"] as CalendarView[]).map((v, i) => (
+          <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
+            {(["day", "week", "month"] as CalendarView[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={cn(
-                  "px-3 py-1.5 font-medium transition-colors capitalize",
-                  i < 2 && "border-e border-border",
-                  view === v ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground",
+                  "px-3 py-1 text-xs font-medium rounded-full transition-all capitalize",
+                  view === v
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {v}
               </button>
             ))}
           </div>
-          <Button size="sm" onClick={() => openNew()}>
-            <Plus className="h-4 w-4 me-1" />
-            {isAr ? "جديد" : "New"}
+          <Button size="sm" className="gap-1.5 rounded-full px-4 h-8 shadow-sm" onClick={() => openNew()}>
+            <Plus className="h-3.5 w-3.5" />
+            {isAr ? "موعد جديد" : "New Appointment"}
           </Button>
         </div>
       </div>
 
-      {loading ? (
+      {loading && (
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : (
-        <>
-          {view === "day" && <HourGrid days={[currentDate]} />}
-          {view === "week" && <HourGrid days={weekDays} />}
-          {view === "month" && (
-            <div className="flex-1 overflow-auto p-2">
-              <div className="grid grid-cols-7 mb-1">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                  <div
-                    key={d}
-                    className="text-[11px] text-center text-muted-foreground font-semibold py-1 uppercase tracking-wide"
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-              {monthWeeks.map((weekStart) => {
-                const days = eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 0 }) });
-                return (
-                  <div key={weekStart.toISOString()} className="grid grid-cols-7 border-t border-border/40">
-                    {days.map((day) => {
-                      const dayAppts = getDayAppts(day);
-                      const inMonth = isSameMonth(day, currentDate);
-                      const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
-                      return (
-                        <div
-                          key={day.toISOString()}
-                          className={cn(
-                            "min-h-[96px] border-e border-border/40 last:border-e-0 p-1 cursor-pointer transition-colors",
-                            !inMonth && "opacity-35 bg-muted/10",
-                            isToday(day) && "bg-primary/[0.04]",
-                            isOver ? "bg-indigo-50 outline outline-2 outline-indigo-400" : "hover:bg-accent/20",
-                          )}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setDragOverSlot({ day, hour: 9 });
-                          }}
-                          onDragLeave={() => setDragOverSlot(null)}
-                          onDrop={(e) =>
-                            handleDrop(
-                              e,
-                              day,
-                              parseISO(
-                                apptsRef.current.find((a) => a.id === draggingId)?.scheduled_at ??
-                                  new Date().toISOString(),
-                              ).getHours(),
-                            )
-                          }
-                          onClick={() => openNew(day)}
-                        >
-                          <div
-                            className={cn(
-                              "w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold mb-1",
-                              isToday(day) ? "bg-primary text-primary-foreground" : "text-foreground",
-                            )}
-                          >
-                            {format(day, "d")}
-                          </div>
-                          {dayAppts.slice(0, 3).map((a) => (
-                            <ApptBlock
-                              key={a.id}
-                              appt={a}
-                              compact={true}
-                              onOpen={() => setSelectedAppt(a)}
-                              onDragStart={handleDragStart}
-                              onDragEnd={handleDragEnd}
-                              isDragging={draggingId === a.id}
-                            />
-                          ))}
-                          {dayAppts.length > 3 && (
-                            <p className="text-[9px] text-muted-foreground text-center">+{dayAppts.length - 3} more</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
       )}
 
-      {/* new appt dialog */}
-      <Dialog
-        open={showNew}
-        onOpenChange={(v) => {
-          if (!v) {
-            setShowNew(false);
-            resetNewForm();
-          } else setShowNew(true);
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-base">New Appointment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {useGuestName ? "Name" : "Case"} <span className="text-destructive">*</span>
-                </Label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseGuestName((v) => !v);
-                    setNewCaseId("");
-                    setNewGuestName("");
-                  }}
-                  className="text-xs text-primary underline underline-offset-2 hover:no-underline"
-                >
-                  {useGuestName ? "← Link to case" : "No case? Enter name →"}
-                </button>
+      {/* ══ DAY VIEW ══ */}
+      {!loading && view === "day" && (
+        <div className="flex-1 overflow-auto">
+          <div className="min-w-[400px]">
+            <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-2.5">
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
+                  isToday(currentDate) ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                )}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {format(currentDate, "EEEE, MMMM d")}
+                {isToday(currentDate) && <span className="text-xs opacity-80">· Today</span>}
               </div>
-              {useGuestName ? (
-                <Input
-                  value={newGuestName}
-                  onChange={(e) => setNewGuestName(e.target.value)}
-                  placeholder="e.g. Ahmad Karimi"
-                  autoFocus
-                />
-              ) : (
-                <Select value={newCaseId} onValueChange={setNewCaseId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select case…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {myCases.length === 0 ? (
-                      <div className="py-3 text-center text-sm text-muted-foreground">No cases assigned</div>
-                    ) : (
-                      myCases.map((c) => (
+            </div>
+            {HOURS.map((hour) => {
+              const slotAppts = getApptsForSlot(currentDate, hour);
+              const isOver = dragOverSlot && isSameDay(dragOverSlot.day, currentDate) && dragOverSlot.hour === hour;
+              return (
+                <div
+                  key={hour}
+                  className={cn(
+                    "grid border-b border-border/40 min-h-[72px] transition-colors",
+                    isOver ? "bg-violet-50" : "hover:bg-muted/15",
+                  )}
+                  style={{ gridTemplateColumns: "64px 1fr" }}
+                  onDragOver={(e) => handleDragOver(e, currentDate, hour)}
+                  onDrop={(e) => handleDrop(e, currentDate, hour)}
+                  onDragLeave={() => setDragOverSlot(null)}
+                  onClick={() => openNew(currentDate, hour)}
+                >
+                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
+                    {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                  </div>
+                  <div className="p-1.5 cursor-pointer">
+                    {isOver && (
+                      <div className="text-[10px] text-violet-600 font-medium mb-1">Drop to schedule here</div>
+                    )}
+                    {slotAppts.map((a) => (
+                      <ApptBlock key={a.id} appt={a} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ WEEK VIEW ══ */}
+      {!loading && view === "week" && (
+        <div className="flex-1 overflow-auto">
+          <div className="min-w-[700px]">
+            <div
+              className="sticky top-0 z-10 bg-background border-b border-border grid"
+              style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
+            >
+              <div className="border-r border-border/40" />
+              {weekDays.map((day) => (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    "py-2 px-1 text-center border-r border-border/40 last:border-r-0",
+                    isToday(day) && "bg-violet-50/50",
+                  )}
+                >
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{format(day, "EEE")}</div>
+                  <div
+                    className={cn(
+                      "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
+                      isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                    )}
+                    onClick={() => {
+                      setCurrentDate(day);
+                      setView("day");
+                    }}
+                  >
+                    {format(day, "d")}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {HOURS.map((hour) => (
+              <div
+                key={hour}
+                className="grid border-b border-border/30 min-h-[64px]"
+                style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
+              >
+                <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
+                  {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                </div>
+                {weekDays.map((day) => {
+                  const slotAppts = getApptsForSlot(day, hour);
+                  const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        "border-r border-border/30 last:border-r-0 p-0.5 relative transition-colors cursor-pointer",
+                        isToday(day) && "bg-violet-50/25",
+                        isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
+                      )}
+                      onDragOver={(e) => handleDragOver(e, day, hour)}
+                      onDrop={(e) => handleDrop(e, day, hour)}
+                      onDragLeave={() => setDragOverSlot(null)}
+                      onClick={() => openNew(day, hour)}
+                    >
+                      {isOver && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <div className="text-[9px] text-violet-600 font-semibold bg-violet-50 border border-violet-200 rounded-md px-1.5 py-0.5">
+                            Drop here
+                          </div>
+                        </div>
+                      )}
+                      {slotAppts.map((a) => (
+                        <ApptBlock key={a.id} appt={a} />
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══ MONTH VIEW ══ */}
+      {!loading && view === "month" && (
+        <div className="flex-1 overflow-auto p-3">
+          <div className="grid grid-cols-7 mb-1">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+              <div
+                key={d}
+                className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-wide py-1"
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+          {monthWeeks.map((weekStart) => {
+            const wDays = eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 0 }) });
+            return (
+              <div key={weekStart.toISOString()} className="grid grid-cols-7 border-t border-border/40">
+                {wDays.map((day) => {
+                  const dayAppts = getApptsForDay(day);
+                  const isCurrentMonth = isSameMonth(day, currentDate);
+                  const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        "min-h-[100px] border-r border-border/30 last:border-r-0 p-1.5 transition-colors cursor-pointer",
+                        !isCurrentMonth && "opacity-35 bg-muted/10",
+                        isToday(day) && "bg-violet-50/40",
+                        isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
+                      )}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverSlot({ day, hour: 9 });
+                      }}
+                      onDrop={(e) => handleDrop(e, day, 9)}
+                      onDragLeave={() => setDragOverSlot(null)}
+                      onClick={() => openNew(day)}
+                    >
+                      <div
+                        className={cn(
+                          "w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium mb-1 mx-auto transition-colors",
+                          isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentDate(day);
+                          setView("day");
+                        }}
+                      >
+                        {format(day, "d")}
+                      </div>
+                      {dayAppts.slice(0, 3).map((a) => (
+                        <ApptBlock key={a.id} appt={a} compact />
+                      ))}
+                      {dayAppts.length > 3 && (
+                        <p className="text-[9px] text-muted-foreground text-center font-medium mt-0.5">
+                          +{dayAppts.length - 3} more
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ══ NEW / EDIT MODAL ══ */}
+      <Dialog open={showModal} onOpenChange={closeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+              </span>
+              {editingAppt ? "Edit Appointment" : "New Appointment"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-1">
+            {/* Student */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Student</Label>
+              {!useManualName ? (
+                <div className="flex gap-2">
+                  <Select value={newCaseId} onValueChange={setNewCaseId}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select existing case…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {myCases.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           <span className="font-medium">{c.full_name}</span>
-                          <span className="ms-1.5 text-muted-foreground text-xs">{c.phone_number}</span>
+                          {c.phone_number && (
+                            <span className="text-muted-foreground ml-2 text-xs">{c.phone_number}</span>
+                          )}
                         </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    className="shrink-0 text-xs gap-1"
+                    onClick={() => {
+                      setUseManualName(true);
+                      setNewCaseId("");
+                    }}
+                  >
+                    <User className="h-3 w-3" /> Manual
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    className="flex-1"
+                    placeholder="Enter student name…"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    autoFocus
+                  />
+                  <Button variant="ghost" size="icon" type="button" onClick={() => setUseManualName(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               )}
             </div>
-            <div>
-              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Date <span className="text-destructive">*</span>
-              </Label>
-              <div className="flex gap-1 mb-2 flex-wrap">
-                {datePills.map((d) => (
-                  <button
-                    key={d.toISOString()}
-                    type="button"
-                    onClick={() => setNewDateStr(format(d, "yyyy-MM-dd"))}
-                    className={cn(
-                      "flex flex-col items-center px-2 py-1 rounded-lg border text-[10px] font-medium transition-colors min-w-[36px]",
-                      newDateStr === format(d, "yyyy-MM-dd")
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : isToday(d)
-                          ? "border-primary/50 text-primary bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
-                    )}
-                  >
-                    <span className="uppercase">{format(d, "EEE")}</span>
-                    <span className="text-[11px] font-bold">{format(d, "d")}</span>
-                  </button>
-                ))}
+
+            {/* Date & Time */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("w-full justify-start text-left font-normal", !newDate && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="me-2 h-4 w-4" />
+                      {newDate ? format(newDate, "MMM d, yyyy") : "Pick date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={newDate}
+                      onSelect={setNewDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <Input
-                type="date"
-                value={newDateStr}
-                onChange={(e) => setNewDateStr(e.target.value)}
-                className="text-sm"
-              />
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Time</Label>
+                <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
+              </div>
             </div>
-            <div>
-              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Time <span className="text-destructive">*</span>
-              </Label>
-              <div className="grid grid-cols-7 gap-1 mb-1.5">
-                {QUICK_TIMES.slice(0, 14).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setNewTime(t)}
-                    className={cn(
-                      "text-[10px] py-1 rounded border font-medium transition-colors",
-                      newTime === t
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1 mb-1.5">
-                {QUICK_TIMES.slice(14).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setNewTime(t)}
-                    className={cn(
-                      "text-[10px] py-1 rounded border font-medium transition-colors",
-                      newTime === t
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="text-sm" />
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+
+            {/* Duration */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Duration
               </Label>
-              <div className="flex gap-1.5 flex-wrap">
-                {["30", "45", "60", "90", "120"].map((d) => (
+              <div className="flex gap-1.5">
+                {[
+                  ["30", "30m"],
+                  ["45", "45m"],
+                  ["60", "1h"],
+                  ["90", "1.5h"],
+                  ["120", "2h"],
+                ].map(([val, label]) => (
                   <button
-                    key={d}
+                    key={val}
                     type="button"
-                    onClick={() => setNewDuration(d)}
+                    onClick={() => setNewDuration(val)}
                     className={cn(
-                      "px-3 py-1.5 rounded border text-xs font-medium transition-colors",
-                      newDuration === d
+                      "flex-1 py-1.5 rounded-lg border text-xs font-medium transition-all",
+                      newDuration === val
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
+                        : "border-border hover:border-primary/40 hover:bg-muted/50",
                     )}
                   >
-                    {d}m
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
-            <div>
-              <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Notes
+
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                <FileText className="h-3 w-3" /> Notes
               </Label>
               <Textarea
                 value={newNotes}
                 onChange={(e) => setNewNotes(e.target.value)}
-                placeholder="Optional…"
-                rows={2}
-                className="resize-none"
+                placeholder="What was discussed, action items, follow-ups…"
+                rows={3}
+                className="resize-none text-sm"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowNew(false);
-                resetNewForm();
-              }}
-            >
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={closeModal} type="button">
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}Create
+            <Button onClick={handleSave} disabled={saving} type="button">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              {editingAppt ? "Save Changes" : "Create Appointment"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* detail dialog */}
-      <Dialog open={!!selectedAppt} onOpenChange={(v) => !v && setSelectedAppt(null)}>
+      {/* ══ DETAIL MODAL ══ */}
+      <Dialog
+        open={!!selectedAppt && !showModal}
+        onOpenChange={(v) => {
+          if (!v) setSelectedAppt(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          {selectedAppt &&
+            (() => {
+              const s = apptStyle(selectedAppt.outcome);
+              return (
+                <>
+                  <DialogHeader>
+                    <div className="flex items-start gap-3">
+                      <span className={cn("w-2 h-10 rounded-full shrink-0 mt-0.5", s.dot)} />
+                      <div className="flex-1 min-w-0">
+                        <DialogTitle className="truncate">{(selectedAppt.case as any)?.full_name ?? "—"}</DialogTitle>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-1",
+                            s.badge,
+                          )}
+                        >
+                          {s.icon} {s.label}
+                        </span>
+                      </div>
+                    </div>
+                  </DialogHeader>
+
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex items-center gap-2.5 text-muted-foreground">
+                      <CalendarIcon className="h-4 w-4 shrink-0 text-primary/70" />
+                      <span>{format(parseISO(selectedAppt.scheduled_at), "EEEE, MMMM d, yyyy")}</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-muted-foreground">
+                      <Clock className="h-4 w-4 shrink-0 text-primary/70" />
+                      <span>
+                        {format(parseISO(selectedAppt.scheduled_at), "h:mm a")} · {selectedAppt.duration_minutes} min
+                      </span>
+                    </div>
+                    {selectedAppt.notes && (
+                      <div className="bg-muted/40 rounded-lg p-3 border border-border/40">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+                          <FileText className="h-3 w-3" /> Notes
+                        </p>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <DialogFooter className="flex-col gap-2 sm:flex-row">
+                    <div className="flex gap-2 flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-1.5"
+                        onClick={() => openEdit(selectedAppt)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5 gap-1.5"
+                        onClick={() => {
+                          setDeletingAppt(selectedAppt);
+                          setSelectedAppt(null);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </Button>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
+                      View Case
+                    </Button>
+                    {!selectedAppt.outcome && new Date(selectedAppt.scheduled_at) < new Date() && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setOutcomeApptId(selectedAppt.id);
+                          setSelectedAppt(null);
+                        }}
+                      >
+                        Record Outcome
+                      </Button>
+                    )}
+                  </DialogFooter>
+                </>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* ══ DELETE CONFIRM ══ */}
+      <Dialog
+        open={!!deletingAppt}
+        onOpenChange={(v) => {
+          if (!v) setDeletingAppt(null);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 flex-wrap text-base">
-              <span>{(selectedAppt?.case as any)?.full_name ?? (selectedAppt as any)?.guest_name ?? "—"}</span>
-              {selectedAppt?.outcome ? (
-                <Badge className={cn("text-xs", apptClasses(selectedAppt.outcome, false))}>
-                  {selectedAppt.outcome.replace(/_/g, " ")}
-                </Badge>
-              ) : selectedAppt && new Date(selectedAppt.scheduled_at) < new Date() ? (
-                <Badge className="text-xs bg-orange-100 text-orange-700 border border-orange-300">⚠ Overdue</Badge>
-              ) : (
-                <Badge className="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300">Upcoming</Badge>
-              )}
-            </DialogTitle>
+            <DialogTitle>Delete Appointment?</DialogTitle>
           </DialogHeader>
-          {selectedAppt && (
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
-                <div className="text-center bg-background border border-border rounded-lg px-2 py-1 min-w-[40px]">
-                  <div className="text-[10px] text-muted-foreground uppercase font-medium">
-                    {format(parseISO(selectedAppt.scheduled_at), "MMM")}
-                  </div>
-                  <div className="text-xl font-black leading-none">
-                    {format(parseISO(selectedAppt.scheduled_at), "d")}
-                  </div>
-                </div>
-                <div>
-                  <p className="font-semibold">{format(parseISO(selectedAppt.scheduled_at), "EEEE")}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {format(parseISO(selectedAppt.scheduled_at), "h:mm a")} · {selectedAppt.duration_minutes} min
-                  </p>
-                </div>
-              </div>
-              {(selectedAppt.case as any)?.phone_number && (
-                <a
-                  href={`tel:${(selectedAppt.case as any).phone_number}`}
-                  className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 hover:bg-emerald-100 transition-colors"
-                >
-                  <Phone className="h-3.5 w-3.5 shrink-0" />
-                  <span className="font-medium text-xs">{(selectedAppt.case as any).phone_number}</span>
-                </a>
-              )}
-              {selectedAppt.notes && (
-                <p className="text-muted-foreground text-xs bg-muted/30 rounded-lg px-3 py-2 border border-border whitespace-pre-wrap">
-                  {selectedAppt.notes}
-                </p>
-              )}
-            </div>
+          {deletingAppt && (
+            <p className="text-sm text-muted-foreground">
+              Remove the appointment with <strong>{(deletingAppt.case as any)?.full_name}</strong> on{" "}
+              {format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a")}? This cannot be undone.
+            </p>
           )}
-          <DialogFooter className="flex flex-wrap gap-2 mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive me-auto"
-              onClick={() => setDeleteApptId(selectedAppt!.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5 me-1" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingAppt(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
+              {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Delete
             </Button>
-            {selectedAppt?.case_id && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
-                <ExternalLink className="h-3.5 w-3.5 me-1" />
-                Case
-              </Button>
-            )}
-            {selectedAppt && !selectedAppt.outcome && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  setOutcomeApptId(selectedAppt.id);
-                  setSelectedAppt(null);
-                }}
-              >
-                Record Outcome
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* delete confirm */}
-      <AlertDialog open={!!deleteApptId} onOpenChange={(v) => !v && setDeleteApptId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <Trash2 className="h-5 w-5" />
-              Delete Appointment
-            </AlertDialogTitle>
-            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+      {/* Outcome modal */}
       {outcomeApptId && (
         <AppointmentOutcomeModal
           open={!!outcomeApptId}
