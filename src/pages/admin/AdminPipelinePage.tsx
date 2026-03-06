@@ -286,24 +286,19 @@ const AdminPipelinePage = () => {
 
   /* ── sheet open — fetch fresh from DB to avoid stale cache ── */
   const openCase = async (c: Case) => {
-    setSelectedCase(c); // show immediately with card data
     setEditMode(false);
     setDraft(null);
-    // Fetch full fresh row directly — guarantees all columns
+    // Always fetch fresh — never trust the card's cached data
     const { data, error } = await supabase.from("cases").select("*").eq("id", c.id).single();
     if (error) {
       console.error("[openCase] fetch error:", error.message);
+      setSelectedCase(c); // fallback to card data
       return;
     }
     if (data) {
-      console.log(
-        "[openCase] fresh data english_units:",
-        (data as any).english_units,
-        "| math_units:",
-        (data as any).math_units,
-      );
-      const assignee_name = c.assignee_name;
-      setSelectedCase({ ...(data as any), assignee_name } as Case);
+      const fresh = { ...(data as any), assignee_name: c.assignee_name } as Case;
+      console.log("[openCase] english_units =", fresh.english_units, "math_units =", fresh.math_units);
+      setSelectedCase(fresh);
     }
   };
 
@@ -722,11 +717,13 @@ const AdminPipelinePage = () => {
                             </>
                           ) : (
                             <>
-                              <InfoRow
+                              <InfoRowAlways
                                 icon={Languages}
                                 label="English Units"
                                 value={
-                                  selectedCase.english_units != null ? `${selectedCase.english_units} units` : null
+                                  selectedCase.english_units !== null && selectedCase.english_units !== undefined
+                                    ? `${selectedCase.english_units} units`
+                                    : null
                                 }
                                 highlight
                               />
