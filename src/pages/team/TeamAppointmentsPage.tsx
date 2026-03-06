@@ -47,27 +47,22 @@ import {
   Plus,
   Loader2,
   Clock,
+  GripVertical,
   Phone,
   ExternalLink,
   Trash2,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  RotateCcw,
-  UserX,
-  Calendar,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 
 interface Appointment {
   id: string;
-  case_id: string | null;
+  case_id: string;
   scheduled_at: string;
   duration_minutes: number;
   notes: string | null;
   outcome: string | null;
-  guest_name?: string | null;
   case?: { full_name: string; phone_number: string; status: string } | null;
 }
 
@@ -77,8 +72,9 @@ interface Case {
   phone_number: string;
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7am–8pm
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am–8pm
 
+// 30-min quick slots for the time picker
 const QUICK_TIMES = [
   "08:00",
   "08:30",
@@ -105,58 +101,15 @@ const QUICK_TIMES = [
 
 type CalendarView = "day" | "week" | "month";
 
-const OUTCOME_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  completed: { label: "Completed", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-  no_show: { label: "No Show", bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
-  cancelled: { label: "Cancelled", bg: "bg-slate-50", text: "text-slate-600", border: "border-slate-200" },
-  rescheduled: { label: "Rescheduled", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-  delayed: { label: "Delayed", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-};
-
-function apptStyle(outcome: string | null, isPast: boolean) {
-  if (outcome && OUTCOME_CONFIG[outcome]) {
-    const c = OUTCOME_CONFIG[outcome];
-    return { bg: c.bg, text: c.text, border: c.border };
-  }
-  if (isPast && !outcome) {
-    return { bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-400" };
-  }
-  return { bg: "bg-indigo-50", text: "text-indigo-800", border: "border-indigo-300" };
-}
-
-function ApptBlock({ appt, compact = false, onClick }: { appt: Appointment; compact?: boolean; onClick: () => void }) {
-  const isPast = new Date(appt.scheduled_at) < new Date();
-  const style = apptStyle(appt.outcome, isPast);
-  const name = (appt.case as any)?.full_name ?? (appt as any).guest_name ?? "—";
-  const overdue = isPast && !appt.outcome;
-  return (
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={cn(
-        "rounded border leading-tight select-none cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]",
-        compact ? "text-[10px] p-1 mb-0.5" : "text-xs p-1.5 mb-1",
-        style.bg,
-        style.text,
-        style.border,
-        overdue && "ring-1 ring-amber-400",
-      )}
-    >
-      <div className="font-semibold truncate">{name}</div>
-      {!compact && (
-        <div className="flex items-center gap-1 opacity-70 mt-0.5">
-          <Clock className="h-2.5 w-2.5" />
-          {format(parseISO(appt.scheduled_at), "h:mm a")} · {appt.duration_minutes}m
-        </div>
-      )}
-      {compact && <div className="opacity-70">{format(parseISO(appt.scheduled_at), "h:mm a")}</div>}
-      {overdue && !compact && (
-        <div className="mt-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wide">⚠ Needs outcome</div>
-      )}
-    </div>
-  );
+// ── Color helpers ────────────────────────────────────────────────────────────
+function apptClasses(outcome: string | null, isPast: boolean) {
+  if (outcome === "completed") return "bg-emerald-100 text-emerald-800 border-emerald-300";
+  if (outcome === "no_show") return "bg-red-100 text-red-800 border-red-300";
+  if (outcome === "cancelled") return "bg-slate-100 text-slate-600 border-slate-300";
+  if (outcome === "rescheduled") return "bg-blue-100 text-blue-800 border-blue-300";
+  if (outcome === "delayed") return "bg-amber-100 text-amber-800 border-amber-300";
+  if (isPast) return "bg-orange-100 text-orange-800 border-orange-400 ring-1 ring-orange-300";
+  return "bg-indigo-100 text-indigo-800 border-indigo-300";
 }
 
 export default function TeamAppointmentsPage() {
@@ -175,17 +128,23 @@ export default function TeamAppointmentsPage() {
   const [deleteApptId, setDeleteApptId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // New appointment form
   const [showNew, setShowNew] = useState(false);
-  const [newDate, setNewDate] = useState("");
+  const [newDateStr, setNewDateStr] = useState(""); // "yyyy-MM-dd"
   const [newTime, setNewTime] = useState("10:00");
   const [newDuration, setNewDuration] = useState("60");
   const [newNotes, setNewNotes] = useState("");
   const [newCaseId, setNewCaseId] = useState("");
-  const [newGuestName, setNewGuestName] = useState("");
-  const [useGuestName, setUseGuestName] = useState(false);
   const [myCases, setMyCases] = useState<Case[]>([]);
   const [creating, setCreating] = useState(false);
 
+  // Drag-and-drop
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
+  const [confirmingMove, setConfirmingMove] = useState(false);
+
+  // ── Data ────────────────────────────────────────────────────────────────────
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -215,6 +174,58 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
   }, [fetchMyCases]);
 
+  // ── Drag handlers ───────────────────────────────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, apptId: string) => {
+    setDraggingId(apptId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverSlot({ day, hour });
+  };
+  const handleDrop = (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    if (!draggingId) return;
+    const appt = appts.find((a) => a.id === draggingId);
+    if (!appt) return;
+    const newDt = new Date(day);
+    newDt.setHours(hour, 0, 0, 0);
+    const orig = parseISO(appt.scheduled_at);
+    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
+      setDraggingId(null);
+      setDragOverSlot(null);
+      return;
+    }
+    setPendingMove({ appt, newDate: newDt });
+    setDraggingId(null);
+    setDragOverSlot(null);
+  };
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverSlot(null);
+  };
+
+  const confirmMove = async () => {
+    if (!pendingMove) return;
+    setConfirmingMove(true);
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ scheduled_at: pendingMove.newDate.toISOString() })
+        .eq("id", pendingMove.appt.id);
+      if (error) throw error;
+      toast({ title: "Appointment rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      setPendingMove(null);
+      fetchAppts();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setConfirmingMove(false);
+    }
+  };
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
   const navigatePrev = () => {
     if (view === "day") setCurrentDate((d) => subDays(d, 1));
     else if (view === "week") setCurrentDate((d) => subWeeks(d, 1));
@@ -227,7 +238,7 @@ export default function TeamAppointmentsPage() {
   };
 
   const headerLabel = () => {
-    if (view === "day") return format(currentDate, "EEEE, MMMM d, yyyy");
+    if (view === "day") return format(currentDate, "EEEE, MMM d, yyyy");
     if (view === "week") {
       const s = startOfWeek(currentDate, { weekStartsOn: 0 });
       const e = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -236,75 +247,64 @@ export default function TeamAppointmentsPage() {
     return format(currentDate, "MMMM yyyy");
   };
 
+  // ── Slot helpers ────────────────────────────────────────────────────────────
   const weekDays = eachDayOfInterval({
     start: startOfWeek(currentDate, { weekStartsOn: 0 }),
     end: endOfWeek(currentDate, { weekStartsOn: 0 }),
   });
-  const getApptsForSlot = (day: Date, hour: number) =>
+  const getSlotAppts = (day: Date, hour: number) =>
     appts.filter((a) => {
       const d = parseISO(a.scheduled_at);
       return isSameDay(d, day) && getHours(d) === hour;
     });
-  const getApptsForDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+  const getDayAppts = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
   const monthWeeks = eachWeekOfInterval(
     { start: startOfMonth(currentDate), end: endOfMonth(currentDate) },
     { weekStartsOn: 0 },
   );
 
-  const openNew = (date?: Date, hour?: number) => {
-    if (date) setNewDate(format(date, "yyyy-MM-dd"));
+  // 7 date pills around currentDate for the quick date selector
+  const datePills = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), i));
+
+  // ── Open new appt pre-filled ─────────────────────────────────────────────
+  const openNew = (day?: Date, hour?: number) => {
+    setNewDateStr(format(day ?? new Date(), "yyyy-MM-dd"));
     if (hour !== undefined) setNewTime(`${String(hour).padStart(2, "0")}:00`);
     setShowNew(true);
   };
 
   const resetNewForm = () => {
-    setNewDate("");
+    setNewDateStr("");
     setNewTime("10:00");
     setNewDuration("60");
     setNewNotes("");
     setNewCaseId("");
-    setNewGuestName("");
-    setUseGuestName(false);
   };
 
+  // ── Create ──────────────────────────────────────────────────────────────────
   const handleCreate = async () => {
-    if (!newDate) {
-      toast({ variant: "destructive", description: "Please select a date" });
-      return;
-    }
-    if (!useGuestName && !newCaseId) {
-      toast({ variant: "destructive", description: "Select a case or enter a name" });
-      return;
-    }
-    if (useGuestName && !newGuestName.trim()) {
-      toast({ variant: "destructive", description: "Enter a name" });
+    if (!newCaseId || !newDateStr) {
+      toast({ variant: "destructive", description: "Select a case and date" });
       return;
     }
     setCreating(true);
     try {
       const [hh, mm] = newTime.split(":").map(Number);
-      const dt = new Date(newDate);
+      const dt = new Date(newDateStr);
       dt.setHours(hh, mm, 0, 0);
-      const payload: any = {
+      const { error } = await supabase.from("appointments").insert({
+        case_id: newCaseId,
         team_member_id: user!.id,
         scheduled_at: dt.toISOString(),
         duration_minutes: parseInt(newDuration),
         notes: newNotes || null,
-      };
-      if (useGuestName) {
-        payload.guest_name = newGuestName.trim();
-      } else {
-        payload.case_id = newCaseId;
-      }
-      const { error } = await supabase.from("appointments").insert(payload);
+      });
       if (error) throw error;
-      if (!useGuestName && newCaseId) {
-        await supabase
-          .from("cases")
-          .update({ status: "appointment_scheduled" })
-          .eq("id", newCaseId)
-          .eq("status", "contacted");
-      }
+      await supabase
+        .from("cases")
+        .update({ status: "appointment_scheduled" })
+        .eq("id", newCaseId)
+        .eq("status", "contacted");
       toast({ title: "Appointment created" });
       setShowNew(false);
       resetNewForm();
@@ -316,6 +316,7 @@ export default function TeamAppointmentsPage() {
     }
   };
 
+  // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteApptId) return;
     setDeleting(true);
@@ -335,13 +336,14 @@ export default function TeamAppointmentsPage() {
 
   const overdueCount = appts.filter((a) => !a.outcome && new Date(a.scheduled_at) < new Date()).length;
 
-  // Shared hour grid for day + week views
+  // ── Shared hour-grid (Day + Week) ───────────────────────────────────────────
   const HourGrid = ({ days }: { days: Date[] }) => (
     <div className="flex-1 overflow-auto">
-      <div style={{ minWidth: days.length === 1 ? "360px" : "680px" }}>
+      <div style={{ minWidth: days.length === 1 ? "320px" : "680px" }}>
+        {/* Day headers */}
         <div
           className="grid border-b border-border sticky top-0 bg-background z-10"
-          style={{ gridTemplateColumns: `52px repeat(${days.length}, 1fr)` }}
+          style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}
         >
           <div className="border-e border-border" />
           {days.map((day) => (
@@ -366,30 +368,76 @@ export default function TeamAppointmentsPage() {
             </div>
           ))}
         </div>
+
+        {/* Hour rows */}
         {HOURS.map((hour) => (
           <div
             key={hour}
-            className="grid border-b border-border/40 min-h-[56px]"
-            style={{ gridTemplateColumns: `52px repeat(${days.length}, 1fr)` }}
+            className="grid border-b border-border/40 min-h-[60px]"
+            style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}
           >
-            <div className="py-1 px-1.5 text-[10px] text-muted-foreground border-e border-border flex items-start pt-1.5 shrink-0 tabular-nums">
+            <div className="py-1 px-1.5 text-[10px] text-muted-foreground border-e border-border flex items-start pt-2 shrink-0 tabular-nums">
               {format(new Date().setHours(hour, 0, 0, 0), "h a")}
             </div>
             {days.map((day) => {
-              const slotAppts = getApptsForSlot(day, hour);
+              const slotAppts = getSlotAppts(day, hour);
+              const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
               return (
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    "border-e border-border/40 last:border-e-0 p-0.5 relative",
+                    "border-e border-border/40 last:border-e-0 p-0.5 relative transition-colors",
                     isToday(day) && "bg-primary/[0.02]",
-                    "hover:bg-accent/30 cursor-pointer transition-colors",
+                    isOver && "bg-indigo-50 border-indigo-300",
+                    "hover:bg-muted/30 cursor-pointer",
                   )}
+                  onDragOver={(e) => handleDragOver(e, day, hour)}
+                  onDrop={(e) => handleDrop(e, day, hour)}
+                  onDragLeave={() => setDragOverSlot(null)}
                   onClick={() => openNew(day, hour)}
                 >
-                  {slotAppts.map((a) => (
-                    <ApptBlock key={a.id} appt={a} compact={days.length > 3} onClick={() => setSelectedAppt(a)} />
-                  ))}
+                  {isOver && draggingId && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                      <div className="text-[10px] text-indigo-600 font-medium bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5">
+                        Drop to reschedule
+                      </div>
+                    </div>
+                  )}
+                  {slotAppts.map((a) => {
+                    const isPast = new Date(a.scheduled_at) < new Date();
+                    return (
+                      <div
+                        key={a.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(e, a.id);
+                        }}
+                        onDragEnd={handleDragEnd}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAppt(a);
+                        }}
+                        className={cn(
+                          "text-[10px] p-1 rounded mb-0.5 cursor-grab active:cursor-grabbing border leading-tight select-none transition-opacity hover:shadow-sm",
+                          apptClasses(a.outcome, isPast),
+                          draggingId === a.id && "opacity-40",
+                        )}
+                      >
+                        <div className="flex items-center gap-0.5">
+                          <GripVertical className="h-2.5 w-2.5 opacity-40 shrink-0" />
+                          <span className="font-semibold truncate">{(a.case as any)?.full_name ?? "—"}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 opacity-70 mt-0.5">
+                          <Clock className="h-2.5 w-2.5" />
+                          {format(parseISO(a.scheduled_at), "h:mm a")} · {a.duration_minutes}m
+                        </div>
+                        {isPast && !a.outcome && (
+                          <div className="text-[9px] font-bold text-orange-700 mt-0.5">⚠ Needs outcome</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -401,13 +449,13 @@ export default function TeamAppointmentsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-background border-b border-border px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigatePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[140px] text-center">{headerLabel()}</span>
+          <span className="text-sm font-semibold min-w-[150px] text-center">{headerLabel()}</span>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -415,20 +463,22 @@ export default function TeamAppointmentsPage() {
             Today
           </Button>
           {overdueCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-300 rounded-full px-2 py-0.5">
               <AlertCircle className="h-3 w-3" />
               {overdueCount} overdue
             </span>
           )}
         </div>
+
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border border-border overflow-hidden text-xs">
-            {(["day", "week", "month"] as CalendarView[]).map((v) => (
+            {(["day", "week", "month"] as CalendarView[]).map((v, i) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={cn(
-                  "px-3 py-1.5 font-medium transition-colors capitalize border-e border-border last:border-e-0",
+                  "px-3 py-1.5 font-medium transition-colors capitalize",
+                  i < 2 && "border-e border-border",
                   view === v ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground",
                 )}
               >
@@ -438,7 +488,7 @@ export default function TeamAppointmentsPage() {
           </div>
           <Button size="sm" onClick={() => openNew()}>
             <Plus className="h-4 w-4 me-1" />
-            New
+            {isAr ? "جديد" : "New"}
           </Button>
         </div>
       </div>
@@ -449,10 +499,15 @@ export default function TeamAppointmentsPage() {
         </div>
       ) : (
         <>
+          {/* ── DAY VIEW ── */}
           {view === "day" && <HourGrid days={[currentDate]} />}
+
+          {/* ── WEEK VIEW ── */}
           {view === "week" && <HourGrid days={weekDays} />}
+
+          {/* ── MONTH VIEW ── */}
           {view === "month" && (
-            <div className="flex-1 overflow-auto p-3">
+            <div className="flex-1 overflow-auto p-2">
               <div className="grid grid-cols-7 mb-1">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                   <div
@@ -468,21 +523,24 @@ export default function TeamAppointmentsPage() {
                 return (
                   <div key={weekStart.toISOString()} className="grid grid-cols-7 border-t border-border/40">
                     {days.map((day) => {
-                      const dayAppts = getApptsForDay(day);
+                      const dayAppts = getDayAppts(day);
                       const inMonth = isSameMonth(day, currentDate);
                       return (
                         <div
                           key={day.toISOString()}
                           className={cn(
-                            "min-h-[100px] border-e border-border/40 last:border-e-0 p-1 cursor-pointer transition-colors",
+                            "min-h-[96px] border-e border-border/40 last:border-e-0 p-1 cursor-pointer transition-colors",
                             !inMonth && "opacity-35 bg-muted/10",
                             isToday(day) && "bg-primary/[0.04]",
                             "hover:bg-accent/20",
                           )}
-                          onClick={() => {
-                            setView("day");
-                            setCurrentDate(day);
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverSlot({ day, hour: 9 });
                           }}
+                          onDrop={(e) => handleDrop(e, day, 9)}
+                          onDragLeave={() => setDragOverSlot(null)}
+                          onClick={() => openNew(day)}
                         >
                           <div
                             className={cn(
@@ -494,30 +552,30 @@ export default function TeamAppointmentsPage() {
                           </div>
                           {dayAppts.slice(0, 3).map((a) => {
                             const isPast = new Date(a.scheduled_at) < new Date();
-                            const style = apptStyle(a.outcome, isPast);
-                            const name = (a.case as any)?.full_name ?? (a as any).guest_name ?? "—";
                             return (
                               <div
                                 key={a.id}
+                                draggable
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  handleDragStart(e, a.id);
+                                }}
+                                onDragEnd={handleDragEnd}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedAppt(a);
                                 }}
                                 className={cn(
-                                  "text-[9px] px-1 py-0.5 rounded mb-0.5 truncate cursor-pointer border font-medium",
-                                  style.bg,
-                                  style.text,
-                                  style.border,
+                                  "text-[9px] px-1 py-0.5 rounded mb-0.5 truncate cursor-grab border font-medium leading-tight",
+                                  apptClasses(a.outcome, isPast),
                                 )}
                               >
-                                {format(parseISO(a.scheduled_at), "h:mm")} {name}
+                                {format(parseISO(a.scheduled_at), "h:mm")} {(a.case as any)?.full_name}
                               </div>
                             );
                           })}
                           {dayAppts.length > 3 && (
-                            <p className="text-[9px] text-muted-foreground text-center font-medium">
-                              +{dayAppts.length - 3} more
-                            </p>
+                            <p className="text-[9px] text-muted-foreground text-center">+{dayAppts.length - 3} more</p>
                           )}
                         </div>
                       );
@@ -530,7 +588,7 @@ export default function TeamAppointmentsPage() {
         </>
       )}
 
-      {/* New Appointment Dialog */}
+      {/* ── NEW APPOINTMENT DIALOG ──────────────────────────────────────────── */}
       <Dialog
         open={showNew}
         onOpenChange={(v) => {
@@ -540,92 +598,77 @@ export default function TeamAppointmentsPage() {
           } else setShowNew(true);
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              New Appointment
-            </DialogTitle>
+            <DialogTitle className="text-base">New Appointment</DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4">
-            {/* Case / guest toggle */}
+            {/* Case */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <Label>
-                  {useGuestName ? "Guest Name" : "Case"} <span className="text-destructive">*</span>
-                </Label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseGuestName((v) => !v);
-                    setNewCaseId("");
-                    setNewGuestName("");
-                  }}
-                  className="text-xs text-primary underline underline-offset-2 hover:no-underline"
-                >
-                  {useGuestName ? "← Pick from cases" : "No case? Enter name →"}
-                </button>
-              </div>
-              {useGuestName ? (
-                <Input
-                  value={newGuestName}
-                  onChange={(e) => setNewGuestName(e.target.value)}
-                  placeholder="e.g. Ahmad Karimi"
-                  autoFocus
-                />
-              ) : (
-                <Select value={newCaseId} onValueChange={setNewCaseId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select case…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {myCases.length === 0 ? (
-                      <div className="py-3 text-center text-sm text-muted-foreground">No cases assigned</div>
-                    ) : (
-                      myCases.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.full_name}
-                          <span className="ms-1 text-muted-foreground text-xs">{c.phone_number}</span>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              )}
+              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Case <span className="text-destructive">*</span>
+              </Label>
+              <Select value={newCaseId} onValueChange={setNewCaseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select case…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {myCases.length === 0 ? (
+                    <div className="py-3 text-center text-sm text-muted-foreground">No cases assigned</div>
+                  ) : (
+                    myCases.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="font-medium">{c.full_name}</span>
+                        <span className="ms-1.5 text-muted-foreground text-xs">{c.phone_number}</span>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Date */}
+            {/* Date — native input (clean, keyboard-friendly) */}
             <div>
-              <Label className="mb-1 block">
+              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Date <span className="text-destructive">*</span>
               </Label>
-              <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
-            </div>
-
-            {/* Quick time buttons */}
-            <div>
-              <Label className="mb-1.5 block">
-                Time <span className="text-destructive">*</span>
-              </Label>
-              <div className="grid grid-cols-7 gap-1 mb-1.5">
-                {QUICK_TIMES.slice(0, 14).map((t) => (
+              {/* Quick "this week" pills */}
+              <div className="flex gap-1 mb-2 flex-wrap">
+                {datePills.map((d) => (
                   <button
-                    key={t}
+                    key={d.toISOString()}
                     type="button"
-                    onClick={() => setNewTime(t)}
+                    onClick={() => setNewDateStr(format(d, "yyyy-MM-dd"))}
                     className={cn(
-                      "text-[10px] py-1 rounded border font-medium transition-colors",
-                      newTime === t
+                      "flex flex-col items-center px-2 py-1 rounded-lg border text-[10px] font-medium transition-colors min-w-[36px]",
+                      newDateStr === format(d, "yyyy-MM-dd")
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/50 hover:bg-accent text-muted-foreground",
+                        : isToday(d)
+                          ? "border-primary/50 text-primary bg-primary/5"
+                          : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
                     )}
                   >
-                    {t}
+                    <span className="uppercase">{format(d, "EEE")}</span>
+                    <span className="text-[11px] font-bold">{format(d, "d")}</span>
                   </button>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1 mb-1.5">
-                {QUICK_TIMES.slice(14).map((t) => (
+              <Input
+                type="date"
+                value={newDateStr}
+                onChange={(e) => setNewDateStr(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+
+            {/* Time — quick buttons + manual input */}
+            <div>
+              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Time <span className="text-destructive">*</span>
+              </Label>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {QUICK_TIMES.map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -634,19 +677,21 @@ export default function TeamAppointmentsPage() {
                       "text-[10px] py-1 rounded border font-medium transition-colors",
                       newTime === t
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/50 hover:bg-accent text-muted-foreground",
+                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
                     )}
                   >
-                    {t}
+                    {t.replace(":00", "").replace(":30", ":30")}
                   </button>
                 ))}
               </div>
               <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="text-sm" />
             </div>
 
-            {/* Duration quick buttons */}
+            {/* Duration */}
             <div>
-              <Label className="mb-1.5 block">Duration</Label>
+              <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Duration
+              </Label>
               <div className="flex gap-1.5 flex-wrap">
                 {["30", "45", "60", "90", "120"].map((d) => (
                   <button
@@ -657,7 +702,7 @@ export default function TeamAppointmentsPage() {
                       "px-3 py-1.5 rounded border text-xs font-medium transition-colors",
                       newDuration === d
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:border-primary/50 hover:bg-accent text-muted-foreground",
+                        : "border-border hover:border-primary/40 hover:bg-accent text-muted-foreground",
                     )}
                   >
                     {d}m
@@ -668,7 +713,9 @@ export default function TeamAppointmentsPage() {
 
             {/* Notes */}
             <div>
-              <Label className="mb-1 block">Notes</Label>
+              <Label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Notes
+              </Label>
               <Textarea
                 value={newNotes}
                 onChange={(e) => setNewNotes(e.target.value)}
@@ -678,6 +725,7 @@ export default function TeamAppointmentsPage() {
               />
             </div>
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -696,40 +744,45 @@ export default function TeamAppointmentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Appointment detail dialog */}
+      {/* ── APPOINTMENT DETAIL DIALOG ───────────────────────────────────────── */}
       <Dialog open={!!selectedAppt} onOpenChange={(v) => !v && setSelectedAppt(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              {(selectedAppt?.case as any)?.full_name ?? (selectedAppt as any)?.guest_name ?? "—"}
-              {selectedAppt?.outcome && OUTCOME_CONFIG[selectedAppt.outcome] && (
-                <Badge
-                  className={cn(
-                    "text-xs ms-auto",
-                    OUTCOME_CONFIG[selectedAppt.outcome].bg,
-                    OUTCOME_CONFIG[selectedAppt.outcome].text,
-                    OUTCOME_CONFIG[selectedAppt.outcome].border,
-                  )}
-                >
-                  {OUTCOME_CONFIG[selectedAppt.outcome].label}
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
+              <span>{(selectedAppt?.case as any)?.full_name ?? "—"}</span>
+              {selectedAppt?.outcome ? (
+                <Badge className={cn("text-xs", apptClasses(selectedAppt.outcome, false))}>
+                  {selectedAppt.outcome.replace(/_/g, " ")}
                 </Badge>
-              )}
-              {!selectedAppt?.outcome && new Date(selectedAppt?.scheduled_at ?? "") < new Date() && (
-                <Badge className="text-xs ms-auto bg-amber-100 text-amber-700 border-amber-300">⚠ Overdue</Badge>
+              ) : new Date(selectedAppt?.scheduled_at ?? "") < new Date() ? (
+                <Badge className="text-xs bg-orange-100 text-orange-700 border border-orange-300">⚠ Overdue</Badge>
+              ) : (
+                <Badge className="text-xs bg-indigo-100 text-indigo-700 border border-indigo-300">Upcoming</Badge>
               )}
             </DialogTitle>
           </DialogHeader>
+
           {selectedAppt && (
             <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border">
-                <Calendar className="h-4 w-4 text-primary shrink-0" />
+              {/* Date & time block */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
+                <div className="text-center bg-background border border-border rounded-lg px-2 py-1 min-w-[40px]">
+                  <div className="text-[10px] text-muted-foreground uppercase font-medium">
+                    {format(parseISO(selectedAppt.scheduled_at), "MMM")}
+                  </div>
+                  <div className="text-xl font-black leading-none text-foreground">
+                    {format(parseISO(selectedAppt.scheduled_at), "d")}
+                  </div>
+                </div>
                 <div>
-                  <p className="font-medium">{format(parseISO(selectedAppt.scheduled_at), "EEEE, MMMM d, yyyy")}</p>
+                  <p className="font-semibold text-foreground">{format(parseISO(selectedAppt.scheduled_at), "EEEE")}</p>
                   <p className="text-muted-foreground text-xs">
                     {format(parseISO(selectedAppt.scheduled_at), "h:mm a")} · {selectedAppt.duration_minutes} min
                   </p>
                 </div>
               </div>
+
+              {/* Phone */}
               {(selectedAppt.case as any)?.phone_number && (
                 <a
                   href={`tel:${(selectedAppt.case as any).phone_number}`}
@@ -739,14 +792,18 @@ export default function TeamAppointmentsPage() {
                   <span className="font-medium text-xs">{(selectedAppt.case as any).phone_number}</span>
                 </a>
               )}
+
+              {/* Notes */}
               {selectedAppt.notes && (
-                <p className="text-muted-foreground text-xs bg-muted/30 rounded-lg px-3 py-2 border border-border">
+                <p className="text-muted-foreground text-xs bg-muted/30 rounded-lg px-3 py-2 border border-border whitespace-pre-wrap">
                   {selectedAppt.notes}
                 </p>
               )}
             </div>
           )}
-          <DialogFooter className="flex flex-wrap gap-2">
+
+          <DialogFooter className="flex flex-wrap gap-2 mt-2">
+            {/* Delete — far left */}
             <Button
               variant="ghost"
               size="sm"
@@ -755,11 +812,13 @@ export default function TeamAppointmentsPage() {
             >
               <Trash2 className="h-3.5 w-3.5 me-1" /> Delete
             </Button>
-            {selectedAppt?.case_id && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
-                <ExternalLink className="h-3.5 w-3.5 me-1" /> View Case
-              </Button>
-            )}
+
+            {/* View Case */}
+            <Button variant="outline" size="sm" onClick={() => navigate(`/team/cases/${selectedAppt?.case_id}`)}>
+              <ExternalLink className="h-3.5 w-3.5 me-1" /> Case
+            </Button>
+
+            {/* Record Outcome */}
             {selectedAppt && !selectedAppt.outcome && (
               <Button
                 size="sm"
@@ -775,16 +834,50 @@ export default function TeamAppointmentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation */}
+      {/* ── DRAG CONFIRM ───────────────────────────────────────────────────── */}
+      <Dialog
+        open={!!pendingMove}
+        onOpenChange={(v) => {
+          if (!v) setPendingMove(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Reschedule Appointment?</DialogTitle>
+          </DialogHeader>
+          {pendingMove && (
+            <div className="text-sm space-y-3">
+              <p className="text-muted-foreground">
+                Move <strong>{(pendingMove.appt.case as any)?.full_name}</strong> to:
+              </p>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 font-semibold text-center">
+                {format(pendingMove.newDate, "EEEE, MMM d 'at' h:mm a")}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Was: {format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a")}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingMove(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmMove} disabled={confirmingMove}>
+              {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── DELETE CONFIRM ──────────────────────────────────────────────────── */}
       <AlertDialog open={!!deleteApptId} onOpenChange={(v) => !v && setDeleteApptId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" /> Delete Appointment
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This cannot be undone. The appointment will be permanently removed.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -799,6 +892,7 @@ export default function TeamAppointmentsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ── OUTCOME MODAL ───────────────────────────────────────────────────── */}
       {outcomeApptId && (
         <AppointmentOutcomeModal
           open={!!outcomeApptId}
