@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, Copy, CheckCircle2, Share2, ExternalLink } from "lucide-react";
+import { Link2, Copy, CheckCircle2, Share2, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
@@ -17,6 +17,15 @@ export default function PartnerLinkPage() {
   const { toast } = useToast();
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Detect mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -29,6 +38,19 @@ export default function PartnerLinkPage() {
   }, [navigate]);
 
   if (!userId) return <DashboardLoading />;
+
+  // On mobile: show desktop-only message
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 p-6 text-center">
+        <Monitor className="h-12 w-12 text-muted-foreground/40 mb-4" />
+        <h2 className="font-semibold text-foreground mb-2">Desktop Only</h2>
+        <p className="text-sm text-muted-foreground">
+          My Links is available on desktop. Please open DARB on a larger screen to access your referral link.
+        </p>
+      </div>
+    );
+  }
 
   const baseUrl = window.location.origin;
   const refLink = `${baseUrl}/apply?ref=${userId}`;
@@ -71,7 +93,6 @@ export default function PartnerLinkPage() {
         </p>
       </div>
 
-      {/* Link Card */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-5 space-y-4">
           <div className="flex items-center gap-2">
@@ -98,7 +119,6 @@ export default function PartnerLinkPage() {
         </CardContent>
       </Card>
 
-      {/* Tips */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">💡 {t("partner.tipsTitle", "Marketing Tips")}</CardTitle>
