@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { DollarSign, TrendingUp, Award, Clock, Info } from 'lucide-react';
-import DashboardLoading from '@/components/dashboard/DashboardLoading';
-import { useDirection } from '@/hooks/useDirection';
+import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { DollarSign, TrendingUp, Award, Clock, Info } from "lucide-react";
+import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { useDirection } from "@/hooks/useDirection";
 
 // Cases at these statuses generate a partner earning
-const PAID_STATUSES = ['payment_confirmed', 'submitted', 'enrollment_paid'];
+const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
 
 export default function PartnerEarningsPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -17,21 +17,18 @@ export default function PartnerEarningsPage() {
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
-  const isAr = i18n.language === 'ar';
+  const isAr = i18n.language === "ar";
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (uid: string) => {
     const [casesRes, settingsRes] = await Promise.all([
       (supabase as any)
-        .from('cases')
-        .select('id,full_name,status,created_at')
-        .order('created_at', { ascending: false }),
-      (supabase as any)
-        .from('platform_settings')
-        .select('partner_commission_rate')
-        .limit(1)
-        .maybeSingle(),
+        .from("cases")
+        .select("id,full_name,status,created_at")
+        .eq("partner_id", uid)
+        .order("created_at", { ascending: false }),
+      (supabase as any).from("platform_settings").select("partner_commission_rate").limit(1).maybeSingle(),
     ]);
 
     setCases(casesRes.data || []);
@@ -43,21 +40,24 @@ export default function PartnerEarningsPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
+      if (!session?.user) {
+        navigate("/student-auth");
+        return;
+      }
       setUserId(session.user.id);
-      load();
+      load(session.user.id);
     });
   }, [navigate, load]);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
-  const firstNameOnly = (full: string) => full?.split(' ')[0] || '—';
+  const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  const earningCases = cases.filter(c => PAID_STATUSES.includes(c.status));
-  const pipelineCases = cases.filter(c => !PAID_STATUSES.includes(c.status));
+  const earningCases = cases.filter((c) => PAID_STATUSES.includes(c.status));
+  const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
-  const confirmedCases = earningCases.filter(c => c.status === 'enrollment_paid');
-  const pendingCases = earningCases.filter(c => c.status !== 'enrollment_paid');
+  const confirmedCases = earningCases.filter((c) => c.status === "enrollment_paid");
+  const pendingCases = earningCases.filter((c) => c.status !== "enrollment_paid");
 
   const totalEarnings = earningCases.length * commissionRate;
   const confirmedEarnings = confirmedCases.length * commissionRate;
@@ -65,33 +65,31 @@ export default function PartnerEarningsPage() {
 
   const earningStatusLabel = (s: string) => {
     const map: Record<string, { en: string; ar: string }> = {
-      payment_confirmed: { en: 'Payment Received', ar: 'تم الدفع' },
-      submitted:         { en: 'Submitted for Enrollment', ar: 'مقدم للتسجيل' },
-      enrollment_paid:   { en: 'Enrolled ✅', ar: 'مسجل ✅' },
+      payment_confirmed: { en: "Payment Received", ar: "تم الدفع" },
+      submitted: { en: "Submitted for Enrollment", ar: "مقدم للتسجيل" },
+      enrollment_paid: { en: "Enrolled ✅", ar: "مسجل ✅" },
     };
     const entry = map[s];
     return entry ? (isAr ? entry.ar : entry.en) : s;
   };
 
   const earningStatusColor: Record<string, string> = {
-    payment_confirmed: 'bg-amber-100 text-amber-800',
-    submitted:         'bg-cyan-100 text-cyan-800',
-    enrollment_paid:   'bg-green-100 text-green-800',
+    payment_confirmed: "bg-amber-100 text-amber-800",
+    submitted: "bg-cyan-100 text-cyan-800",
+    enrollment_paid: "bg-green-100 text-green-800",
   };
 
-  const paymentStatus = (s: string) => s === 'enrollment_paid'
-    ? (isAr ? 'مؤكد' : 'Confirmed')
-    : (isAr ? 'معلق' : 'Pending');
+  const paymentStatus = (s: string) =>
+    s === "enrollment_paid" ? (isAr ? "مؤكد" : "Confirmed") : isAr ? "معلق" : "Pending";
 
-  const paymentStatusColor = (s: string) => s === 'enrollment_paid'
-    ? 'bg-green-100 text-green-800'
-    : 'bg-yellow-100 text-yellow-800';
+  const paymentStatusColor = (s: string) =>
+    s === "enrollment_paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
       <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
         <DollarSign className="h-6 w-6 text-primary" />
-        {isAr ? 'أرباحي' : 'My Earnings'}
+        {isAr ? "أرباحي" : "My Earnings"}
       </h1>
 
       {/* Commission Rate Info */}
@@ -110,30 +108,36 @@ export default function PartnerEarningsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Award className="h-4 w-4 text-green-600" />
-              <span className="text-xs">{isAr ? 'الإجمالي' : 'Total'}</span>
+              <span className="text-xs">{isAr ? "الإجمالي" : "Total"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{totalEarnings.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{earningCases.length} {isAr ? 'طالب' : 'students'}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {earningCases.length} {isAr ? "طالب" : "students"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <TrendingUp className="h-4 w-4 text-cyan-600" />
-              <span className="text-xs">{isAr ? 'معلق' : 'Pending'}</span>
+              <span className="text-xs">{isAr ? "معلق" : "Pending"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{pendingEarnings.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{pendingCases.length} {isAr ? 'طالب' : 'students'}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {pendingCases.length} {isAr ? "طالب" : "students"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <DollarSign className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs">{isAr ? 'مؤكد' : 'Confirmed'}</span>
+              <span className="text-xs">{isAr ? "مؤكد" : "Confirmed"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{confirmedEarnings.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{confirmedCases.length} {isAr ? 'طالب' : 'students'}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {confirmedCases.length} {isAr ? "طالب" : "students"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -141,36 +145,37 @@ export default function PartnerEarningsPage() {
       {/* Earnings Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">
-            {isAr ? 'تفاصيل الأرباح' : 'Earnings Breakdown'}
-          </CardTitle>
+          <CardTitle className="text-base">{isAr ? "تفاصيل الأرباح" : "Earnings Breakdown"}</CardTitle>
         </CardHeader>
         <CardContent>
           {earningCases.length === 0 ? (
             <p className="text-center text-muted-foreground py-6 text-sm">
-              {isAr ? 'لا يوجد طلاب وصلوا لمرحلة الدفع بعد.' : 'No students have reached the payment stage yet.'}
+              {isAr ? "لا يوجد طلاب وصلوا لمرحلة الدفع بعد." : "No students have reached the payment stage yet."}
             </p>
           ) : (
             <>
               {/* Table header */}
               <div className="grid grid-cols-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 border-b border-border mb-2">
-                <span>{isAr ? 'الطالب' : 'Student'}</span>
-                <span>{isAr ? 'حالة الدفع' : 'Payment Status'}</span>
-                <span>{isAr ? 'المرحلة' : 'Stage'}</span>
-                <span className="text-end">{isAr ? 'العمولة' : 'Commission'}</span>
+                <span>{isAr ? "الطالب" : "Student"}</span>
+                <span>{isAr ? "حالة الدفع" : "Payment Status"}</span>
+                <span>{isAr ? "المرحلة" : "Stage"}</span>
+                <span className="text-end">{isAr ? "العمولة" : "Commission"}</span>
               </div>
-              {earningCases.map(c => (
-                <div key={c.id} className="grid grid-cols-4 items-center py-3 border-b border-border/50 last:border-0 text-sm gap-2">
+              {earningCases.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-4 items-center py-3 border-b border-border/50 last:border-0 text-sm gap-2"
+                >
                   <div>
                     <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleDateString(isAr ? 'ar' : 'en-GB')}
+                      {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
                     </p>
                   </div>
-                  <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>
-                    {paymentStatus(c.status)}
-                  </Badge>
-                  <Badge className={`text-xs w-fit ${earningStatusColor[c.status] || 'bg-muted text-muted-foreground'}`}>
+                  <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>{paymentStatus(c.status)}</Badge>
+                  <Badge
+                    className={`text-xs w-fit ${earningStatusColor[c.status] || "bg-muted text-muted-foreground"}`}
+                  >
                     {earningStatusLabel(c.status)}
                   </Badge>
                   <span className="text-end font-bold text-foreground">₪{commissionRate.toLocaleString()}</span>
@@ -187,7 +192,7 @@ export default function PartnerEarningsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {isAr ? 'في المسار (لم يصلوا للدفع بعد)' : 'In Pipeline (not yet earning)'}
+              {isAr ? "في المسار (لم يصلوا للدفع بعد)" : "In Pipeline (not yet earning)"}
             </CardTitle>
           </CardHeader>
           <CardContent className="divide-y divide-border">
@@ -195,7 +200,7 @@ export default function PartnerEarningsPage() {
               <div key={c.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium text-muted-foreground">{firstNameOnly(c.full_name)}</span>
                 <Badge variant="outline" className="text-xs capitalize">
-                  {c.status.replace(/_/g, ' ')}
+                  {c.status.replace(/_/g, " ")}
                 </Badge>
               </div>
             ))}
@@ -205,8 +210,8 @@ export default function PartnerEarningsPage() {
 
       <p className="text-xs text-muted-foreground text-center">
         {isAr
-          ? '* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب'
-          : '* First names only shown to protect student privacy'}
+          ? "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب"
+          : "* First names only shown to protect student privacy"}
       </p>
     </div>
   );
