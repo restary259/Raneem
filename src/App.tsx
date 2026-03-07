@@ -62,6 +62,7 @@ const SubmitNewStudentPage = lazy(() => import("./pages/team/SubmitNewStudentPag
 const TeamStudentsPage = lazy(() => import("./pages/team/TeamStudentsPage"));
 const TeamStudentProfilePage = lazy(() => import("./pages/team/TeamStudentProfilePage"));
 const TeamAnalyticsPage = lazy(() => import("./pages/team/TeamAnalyticsPage"));
+const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
 
 // Partner pages (Phase 5)
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
@@ -202,6 +203,7 @@ const App = () => {
               <Route path="students" element={<TeamStudentsPage />} />
               <Route path="students/:id" element={<TeamStudentProfilePage />} />
               <Route path="analytics" element={<TeamAnalyticsPage />} />
+              <Route path="bagrut" element={<TeamBagrutConverter />} />
             </Route>
 
             {/* ── Partner Dashboard (/partner/*) ── */}
