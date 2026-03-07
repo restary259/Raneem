@@ -58,20 +58,7 @@ export default function TeamStudentsPage() {
   const fetchStudents = useCallback(async () => {
     setListLoading(true);
     try {
-      // Team members may have restricted access to user_roles.
-      // We query profiles directly filtering by role via RPC or join.
-      // Fallback: query profiles where created_by is a team member
-      const { data: roleData, error: roleErr } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "student");
-
-      if (roleErr) {
-        // RLS may block team members — surface the real error
-        console.error("user_roles RLS error:", roleErr.message, roleErr.details);
-        toast({ variant: "destructive", description: `Permissions error: ${roleErr.message}` });
-        return;
-      }
+      const { data: roleData } = await supabase.from("user_roles").select("user_id").eq("role", "student");
 
       const ids = (roleData ?? []).map((r: any) => r.user_id);
       if (ids.length === 0) {
@@ -85,10 +72,7 @@ export default function TeamStudentsPage() {
         .in("id", ids)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("profiles fetch error:", error.message);
-        throw error;
-      }
+      if (error) throw error;
       setStudents(data ?? []);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
