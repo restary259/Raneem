@@ -83,6 +83,8 @@ export default function TeamStudentsPage() {
         .from("profiles")
         .select("id, full_name, email, created_at")
         .in("id", ids)
+        .not("created_by", "is", null)
+        .is("case_id", null)
         .order("created_at", { ascending: false });
 
       if (error) {
