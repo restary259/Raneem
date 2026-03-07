@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, Copy, CheckCircle2, Share2, Monitor } from "lucide-react";
+import { Link2, Copy, CheckCircle2, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
