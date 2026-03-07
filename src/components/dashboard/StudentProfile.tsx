@@ -30,8 +30,6 @@ interface StudentProfileProps {
 interface ExtendedProfile extends Profile {
   emergency_contact?: string;
   date_of_birth?: string;
-  emergency_contact?: string;
-  date_of_birth?: string;
   home_address?: string; // stored in profiles.country
   german_address?: string; // stored in profiles.german_address (add column via migration)
 }

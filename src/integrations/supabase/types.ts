@@ -491,15 +491,19 @@ export type Database = {
           english_units: number | null
           full_name: string
           id: string
+          influencer_commission: number
           intake_notes: string | null
           is_no_show: boolean
           last_activity_at: string
+          lawyer_commission: number
           math_units: number | null
           origin: string | null
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          referral_discount: number
           referred_by: string | null
+          school_commission: number
           source: string
           status: string
           student_user_id: string | null
@@ -519,15 +523,19 @@ export type Database = {
           english_units?: number | null
           full_name: string
           id?: string
+          influencer_commission?: number
           intake_notes?: string | null
           is_no_show?: boolean
           last_activity_at?: string
+          lawyer_commission?: number
           math_units?: number | null
           origin?: string | null
           partner_id?: string | null
           passport_type?: string | null
           phone_number: string
+          referral_discount?: number
           referred_by?: string | null
+          school_commission?: number
           source?: string
           status?: string
           student_user_id?: string | null
@@ -547,15 +555,19 @@ export type Database = {
           english_units?: number | null
           full_name?: string
           id?: string
+          influencer_commission?: number
           intake_notes?: string | null
           is_no_show?: boolean
           last_activity_at?: string
+          lawyer_commission?: number
           math_units?: number | null
           origin?: string | null
           partner_id?: string | null
           passport_type?: string | null
           phone_number?: string
+          referral_discount?: number
           referred_by?: string | null
+          school_commission?: number
           source?: string
           status?: string
           student_user_id?: string | null
@@ -2541,15 +2553,19 @@ export type Database = {
           english_units: number | null
           full_name: string
           id: string
+          influencer_commission: number
           intake_notes: string | null
           is_no_show: boolean
           last_activity_at: string
+          lawyer_commission: number
           math_units: number | null
           origin: string | null
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          referral_discount: number
           referred_by: string | null
+          school_commission: number
           source: string
           status: string
           student_user_id: string | null
@@ -2621,8 +2637,8 @@ export type Database = {
         Returns: undefined
       }
       record_case_commission: {
-        Args: { p_case_id: string; p_total_payment_ils: number }
-        Returns: Json
+        Args: { p_case_id: string; p_total_payment_ils?: number }
+        Returns: undefined
       }
       request_payout: {
         Args: {
