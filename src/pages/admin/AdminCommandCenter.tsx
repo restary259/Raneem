@@ -37,21 +37,35 @@ const AdminCommandCenter = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    try {
-      const now = new Date();
-      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    // Use Promise.allSettled so a single query failure doesn't blank the whole page
+    const [casesResult, activityResult, forgottenResult] = await Promise.allSettled([
+      supabase.from('cases').select('status, last_activity_at, created_at'),
+      supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(10),
+      supabase.rpc('get_forgotten_cases'),
+    ]);
 
-      const [casesRes, activityRes, forgottenRes] = await Promise.all([
-        supabase.from('cases').select('status, last_activity_at, created_at'),
-        supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(10),
-        supabase.rpc('get_forgotten_cases'),
-      ]);
+    const cases =
+      casesResult.status === 'fulfilled' && !casesResult.value.error
+        ? casesResult.value.data ?? []
+        : [];
 
-      if (casesRes.error) throw casesRes.error;
-      const cases = casesRes.data || [];
+    const activityData =
+      activityResult.status === 'fulfilled' && !activityResult.value.error
+        ? activityResult.value.data ?? []
+        : [];
 
-      // SLA breach detection
-      const slaBreaches = cases.filter(c => {
+    const forgottenData =
+      forgottenResult.status === 'fulfilled' && !forgottenResult.value.error
+        ? forgottenResult.value.data ?? []
+        : [];
+
+    if (casesResult.status === 'rejected') {
+      toast({ variant: 'destructive', description: String(casesResult.reason) });
+    }
+
+    // SLA breach detection — guard against invalid dates
+    const slaBreaches = cases.filter((c: any) => {
+      try {
         const days = Math.floor((Date.now() - new Date(c.last_activity_at).getTime()) / 86400000);
         return (
           (c.status === 'new' && days >= 3) ||
@@ -59,22 +73,21 @@ const AdminCommandCenter = () => {
           (c.status === 'appointment_scheduled' && days >= 14) ||
           (c.status === 'profile_completion' && days >= 7)
         );
-      });
+      } catch {
+        return false;
+      }
+    });
 
-      setCounts({
-        total: cases.filter(c => !['enrollment_paid', 'forgotten'].includes(c.status)).length,
-        submitted: cases.filter(c => c.status === 'submitted').length,
-        enrollment_paid: cases.filter(c => c.status === 'enrollment_paid').length,
-        forgotten: (forgottenRes.data || []).length,
-        sla_breaches: slaBreaches.length,
-      });
+    setCounts({
+      total: cases.filter((c: any) => !['enrollment_paid', 'forgotten'].includes(c.status)).length || 0,
+      submitted: cases.filter((c: any) => c.status === 'submitted').length || 0,
+      enrollment_paid: cases.filter((c: any) => c.status === 'enrollment_paid').length || 0,
+      forgotten: forgottenData.length || 0,
+      sla_breaches: slaBreaches.length || 0,
+    });
 
-      setActivity(activityRes.data || []);
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
-    } finally {
-      setLoading(false);
-    }
+    setActivity(activityData);
+    setLoading(false);
   }, [toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

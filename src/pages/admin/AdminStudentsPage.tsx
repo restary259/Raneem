@@ -1015,11 +1015,13 @@ export default function AdminStudentsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
+                            <CopyButton value={doc.file_url} />
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDownloadDoc(doc)}
+                              title={isRtl ? "تنزيل" : "Download"}
                             >
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
@@ -1028,6 +1030,7 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDeleteDoc(doc)}
+                              title={isRtl ? "حذف" : "Delete"}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
