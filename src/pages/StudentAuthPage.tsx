@@ -1,29 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
-import PasswordResetModal from '@/components/auth/PasswordResetModal';
-import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
-import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth, ROLE_TO_PATH } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate, Link } from "react-router-dom";
+import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
+import PasswordResetModal from "@/components/auth/PasswordResetModal";
+import PasswordStrength, { validatePassword } from "@/components/auth/PasswordStrength";
+import { useTranslation } from "react-i18next";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth, ROLE_TO_PATH } from "@/contexts/AuthContext";
 
 const StudentAuthPage = () => {
   const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
+  const isRTL = i18n.language === "ar";
   const { initialized, user, role, mustChangePassword, refreshRole } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
+  const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,13 +38,17 @@ const StudentAuthPage = () => {
       return;
     }
 
-    const path = ROLE_TO_PATH[role] ?? '/student/checklist';
+    const path = ROLE_TO_PATH[role] ?? "/student/checklist";
     navigate(path, { replace: true });
   }, [initialized, user, role, mustChangePassword, navigate]);
 
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
-      toast({ variant: 'destructive', title: 'كلمة مرور ضعيفة', description: 'يجب أن تحتوي على 10 أحرف على الأقل مع حرف كبير وصغير ورقم' });
+      toast({
+        variant: "destructive",
+        title: "كلمة مرور ضعيفة",
+        description: "يجب أن تحتوي على 10 أحرف على الأقل مع حرف كبير وصغير ورقم",
+      });
       return;
     }
     setChangingPassword(true);
@@ -52,24 +56,28 @@ const StudentAuthPage = () => {
       // Ensure session is fresh before updating password
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        throw new Error('انتهت جلستك. يرجى تسجيل الدخول مجدداً.');
+        throw new Error("انتهت جلستك. يرجى تسجيل الدخول مجدداً.");
       }
 
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      // Update profile FIRST so that when updateUser fires the USER_UPDATED event,
+      // AuthContext re-reads must_change_password as false — preventing a race where
+      // the modal would re-open before refreshRole() corrects the state.
+      await supabase.from("profiles").update({ must_change_password: false }).eq("id", sessionData.session.user.id);
 
-      await supabase
-        .from('profiles')
-        .update({ must_change_password: false })
-        .eq('id', sessionData.session.user.id);
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        // Roll back the profile flag if the password update itself fails
+        await supabase.from("profiles").update({ must_change_password: true }).eq("id", sessionData.session.user.id);
+        throw error;
+      }
 
       setShowChangePasswordModal(false);
-      toast({ title: 'تم تغيير كلمة المرور بنجاح' });
+      toast({ title: "تم تغيير كلمة المرور بنجاح" });
       await refreshRole();
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'خطأ', description: err.message });
+      toast({ variant: "destructive", title: "خطأ", description: err.message });
       // If session expired, close modal so user can log in again
-      if (err.message.includes('انتهت جلستك') || err.message.includes('session')) {
+      if (err.message.includes("انتهت جلستك") || err.message.includes("session")) {
         setShowChangePasswordModal(false);
         await supabase.auth.signOut();
       }
@@ -97,15 +105,15 @@ const StudentAuthPage = () => {
         await refreshRole();
       }
 
-      toast({ title: t('auth.loginSuccess'), description: t('auth.loginSuccessDesc') });
+      toast({ title: t("auth.loginSuccess"), description: t("auth.loginSuccessDesc") });
     } catch (error: any) {
       let errorMessage = error.message;
-      if (error.message.includes('Invalid login credentials')) {
-        errorMessage = t('auth.invalidCredentials');
-      } else if (error.message.includes('Invalid email')) {
-        errorMessage = t('auth.invalidEmail');
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = t("auth.invalidCredentials");
+      } else if (error.message.includes("Invalid email")) {
+        errorMessage = t("auth.invalidEmail");
       }
-      toast({ variant: 'destructive', title: t('auth.errorTitle'), description: errorMessage });
+      toast({ variant: "destructive", title: t("auth.errorTitle"), description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -126,26 +134,28 @@ const StudentAuthPage = () => {
             to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ArrowLeft className={`h-4 w-4 transition-transform group-hover:-translate-x-1 ${isRTL ? 'rotate-180' : ''}`} />
-            {t('auth.backToWebsite', 'Back to main website')}
+            <ArrowLeft
+              className={`h-4 w-4 transition-transform group-hover:-translate-x-1 ${isRTL ? "rotate-180" : ""}`}
+            />
+            {t("auth.backToWebsite", "Back to main website")}
           </Link>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-card-foreground mb-6">{t('auth.loginTitle')}</h2>
+          <h2 className="text-xl font-semibold text-card-foreground mb-6">{t("auth.loginTitle")}</h2>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-foreground/90 text-sm font-medium">
-                {t('auth.email')}
+                {t("auth.email")}
               </Label>
               <div className="relative">
                 <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder={t('auth.emailPlaceholder')}
+                  placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -158,22 +168,22 @@ const StudentAuthPage = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-foreground/90 text-sm font-medium">
-                  {t('auth.password')}
+                  {t("auth.password")}
                 </Label>
                 <button
                   type="button"
                   onClick={() => setShowResetModal(true)}
                   className="text-xs text-primary hover:text-primary/80 transition-colors"
                 >
-                  {t('auth.forgotPassword')}
+                  {t("auth.forgotPassword")}
                 </button>
               </div>
               <div className="relative">
                 <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={t('auth.passwordPlaceholder')}
+                  type={showPassword ? "text" : "password"}
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -198,53 +208,60 @@ const StudentAuthPage = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                  {t('auth.loading')}
+                  {t("auth.loading")}
                 </>
-              ) : t('auth.loginButton')}
+              ) : (
+                t("auth.loginButton")
+              )}
             </Button>
           </form>
         </div>
 
         {/* Footer note removed for cleaner UI */}
-
       </div>
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
 
-      <Dialog open={showChangePasswordModal} onOpenChange={async (open) => {
-        if (!open) {
-          await supabase.auth.signOut();
-          setShowChangePasswordModal(false);
-        }
-      }}>
-        <DialogContent className="max-w-sm" onPointerDownOutside={e => e.preventDefault()}>
+      <Dialog
+        open={showChangePasswordModal}
+        onOpenChange={async (open) => {
+          if (!open) {
+            await supabase.auth.signOut();
+            setShowChangePasswordModal(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>{isRTL ? 'يجب تغيير كلمة المرور' : 'Password Change Required'}</DialogTitle>
+            <DialogTitle>{isRTL ? "يجب تغيير كلمة المرور" : "Password Change Required"}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {isRTL
-              ? 'تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة.'
-              : 'Your account was created with a temporary password. Please set a new password to continue.'}
+              ? "تم إنشاء حسابك بكلمة مرور مؤقتة. يرجى تعيين كلمة مرور جديدة للمتابعة."
+              : "Your account was created with a temporary password. Please set a new password to continue."}
           </p>
           <div className="space-y-3">
             <div>
-              <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+              <Label>{isRTL ? "كلمة المرور الجديدة" : "New Password"}</Label>
               <Input
                 type="password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder={isRTL ? 'أدخل كلمة مرور جديدة' : 'Enter new password'}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={isRTL ? "أدخل كلمة مرور جديدة" : "Enter new password"}
               />
               <PasswordStrength password={newPassword} />
             </div>
-            <Button
-              className="w-full"
-              onClick={handleChangePassword}
-              disabled={changingPassword || !newPassword}
-            >
-              {changingPassword
-                ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{isRTL ? 'جاري...' : 'Saving...'}</>
-                : isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            <Button className="w-full" onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
+              {changingPassword ? (
+                <>
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                  {isRTL ? "جاري..." : "Saving..."}
+                </>
+              ) : isRTL ? (
+                "تغيير كلمة المرور"
+              ) : (
+                "Change Password"
+              )}
             </Button>
           </div>
         </DialogContent>
