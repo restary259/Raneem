@@ -24,7 +24,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Validate caller using service role key (handles ES256 JWTs)
+    // ── Validate caller ────────────────────────────────────────────────
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData?.user) {
@@ -47,6 +47,7 @@ serve(async (req) => {
       });
     }
 
+    // ── Parse request ──────────────────────────────────────────────────
     const { case_id, student_email, student_full_name, student_phone } = await req.json();
 
     if (!case_id || !student_email || !student_full_name) {
@@ -56,7 +57,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student_email)) {
       return new Response(JSON.stringify({ error: "Invalid email format" }), {
         status: 400,
@@ -64,73 +64,106 @@ serve(async (req) => {
       });
     }
 
-    // Check if student account already exists for this case
-    const { data: existingCase } = await supabaseAdmin
+    // ── Fetch full case data ───────────────────────────────────────────
+    // We pull every field that has a corresponding column on profiles so
+    // the student account is pre-populated with as much data as possible.
+    const { data: caseData, error: caseErr } = await supabaseAdmin
       .from("cases")
       .select(
-        "student_user_id, city, education_level, passport_type, degree_interest, intake_notes, full_name, phone_number",
+        `id, student_user_id, full_name, phone_number, city,
+         education_level, passport_type, degree_interest,
+         intake_notes, bagrut_score, english_units, math_units,
+         english_level, source, partner_id, assigned_to,
+         created_at`,
       )
       .eq("id", case_id)
       .single();
-    if (existingCase?.student_user_id) {
+
+    if (caseErr || !caseData) {
+      return new Response(JSON.stringify({ error: "Case not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If account already exists for this case, return early
+    if (caseData.student_user_id) {
       return new Response(
         JSON.stringify({
           success: true,
-          user_id: existingCase.student_user_id,
+          user_id: caseData.student_user_id,
+          email: student_email,
           invited: false,
-          message: "Student account already exists",
+          message: "Student account already exists for this case",
         }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Build profile payload from case data
-    const profilePayload = {
-      email: student_email,
-      full_name: student_full_name,
-      phone_number: student_phone ?? existingCase?.phone_number ?? null,
-      city: existingCase?.city ?? null,
-      must_change_password: true, // always require password change on first login
-    };
+    // ── Fetch case_submission for programme/school dates ──────────────
+    const { data: submission } = await supabaseAdmin
+      .from("case_submissions")
+      .select(
+        `program_id, program_start_date, program_end_date,
+         accommodation_id, service_fee`,
+      )
+      .eq("case_id", case_id)
+      .maybeSingle();
 
-    // ── ACCOUNT CREATION STRATEGY ──────────────────────────────────────────
-    // Always generate a temporary password (never send an email invite).
-    // The admin receives the temp password in the response and shares it
-    // with the student manually. The student MUST change it on first login
-    // (enforced via must_change_password = true on the profile).
-    //
-    // Rationale: invite emails require SMTP configuration that may not always
-    // be available, and the product spec requires the temp-password flow.
+    // ── Resolve intake month from intake_notes or programme start date ─
+    // intake_notes is a free-text field like "2026-05" or "May 2026"
+    // programme start date (YYYY-MM-DD) is more reliable when available
+    let intakeMonth: string | null = null;
+    if (submission?.program_start_date) {
+      // Extract YYYY-MM from ISO date
+      intakeMonth = submission.program_start_date.substring(0, 7);
+    } else if (caseData.intake_notes) {
+      // Try to parse "YYYY-MM" pattern from intake_notes
+      const m = caseData.intake_notes.match(/\d{4}-\d{2}/);
+      if (m) intakeMonth = m[0];
+    }
 
+    // ── Resolve university/school name from programme ─────────────────
+    let universityName: string | null = null;
+    if (submission?.program_id) {
+      const { data: programme } = await supabaseAdmin
+        .from("master_services")
+        .select("school_name, name")
+        .eq("id", submission.program_id)
+        .maybeSingle();
+      if (programme?.school_name) universityName = programme.school_name;
+      else if (programme?.name) universityName = programme.name;
+    }
+
+    // ── Check if auth user already exists ─────────────────────────────
     let studentId: string;
     let tempPassword: string | null = null;
 
-    // Check if user already exists with this email
     const existingUsersList = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    const existingUser = existingUsersList.data?.users?.find((u: any) => u.email === student_email);
+    const existingUser = existingUsersList.data?.users?.find(
+      (u: any) => u.email?.toLowerCase() === student_email.toLowerCase(),
+    );
 
     if (existingUser) {
-      // User already has an auth account — just link the case
+      // Reuse existing auth account — just link it
       studentId = existingUser.id;
     } else {
-      // Generate a secure temporary password:
-      // 12 chars from a safe alphabet + mandatory uppercase, digit, and symbol
-      // so it satisfies any Supabase password policy.
+      // Generate a secure temporary password.
+      // Format: 9 random alphanum chars + "Aa1!" suffix = always passes
+      // Supabase's default password policy (min 6 chars, mixed case, digit).
+      const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
       tempPassword =
         Array.from(crypto.getRandomValues(new Uint8Array(9)))
-          .map((b) => "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"[b % 54])
+          .map((b) => alphabet[b % alphabet.length])
           .join("") + "Aa1!";
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: student_email,
         password: tempPassword,
-        email_confirm: true, // bypass email confirmation — admin handles onboarding
+        email_confirm: true, // skip email verification — admin handles onboarding
         user_metadata: {
           full_name: student_full_name,
-          phone_number: student_phone ?? "",
+          phone_number: student_phone ?? caseData.phone_number ?? "",
         },
       });
 
@@ -144,40 +177,89 @@ serve(async (req) => {
       studentId = newUser.user.id;
     }
 
-    // Assign student role (ignore if already exists)
+    // ── Assign student role ────────────────────────────────────────────
     await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: studentId, role: "student" }, { onConflict: "user_id,role", ignoreDuplicates: true });
 
-    // Upsert profile with all case data
-    await supabaseAdmin.from("profiles").upsert({
+    // ── Upsert profile — export all available case data ───────────────
+    // Only set values that actually exist on the cases record so we don't
+    // overwrite existing profile fields with null.
+    const profileUpsert: Record<string, unknown> = {
       id: studentId,
-      ...profilePayload,
-    });
+      email: student_email,
+      full_name: student_full_name,
+      must_change_password: true,
+      case_id: case_id,
+      created_by: callerId,
+    };
 
-    // Link case to student
+    // Phone
+    const phone = student_phone ?? caseData.phone_number ?? null;
+    if (phone) profileUpsert.phone_number = phone;
+
+    // City
+    if (caseData.city) profileUpsert.city = caseData.city;
+
+    // Intake month
+    if (intakeMonth) profileUpsert.intake_month = intakeMonth;
+
+    // University / school
+    if (universityName) profileUpsert.university_name = universityName;
+
+    // Arrival date — derive from programme start date if available
+    if (submission?.program_start_date) {
+      profileUpsert.arrival_date = submission.program_start_date;
+    }
+
+    // Nationality / passport type from case
+    if (caseData.passport_type) profileUpsert.nationality = caseData.passport_type;
+
+    // Notes — combine degree interest and education level as starter notes
+    const noteParts: string[] = [];
+    if (caseData.education_level) noteParts.push(`Education: ${caseData.education_level}`);
+    if (caseData.degree_interest) noteParts.push(`Interest: ${caseData.degree_interest}`);
+    if (caseData.english_level) noteParts.push(`English: ${caseData.english_level}`);
+    if (noteParts.length > 0) profileUpsert.notes = noteParts.join(" | ");
+
+    await supabaseAdmin.from("profiles").upsert(profileUpsert);
+
+    // ── Link case → student ────────────────────────────────────────────
     await supabaseAdmin.from("cases").update({ student_user_id: studentId }).eq("id", case_id);
 
-    // Audit log
+    // ── Audit log (non-fatal) ─────────────────────────────────────────
     const { data: callerProfile } = await supabaseAdmin
       .from("profiles")
       .select("full_name")
       .eq("id", callerId)
       .single();
-    await supabaseAdmin.rpc("log_activity", {
-      p_actor_id: callerId,
-      p_actor_name: callerProfile?.full_name ?? "Team Member",
-      p_action: "student_account_created",
-      p_entity_type: "case",
-      p_entity_id: case_id,
-      p_metadata: {
-        student_email,
-        student_full_name,
-        student_id: studentId,
-        temp_password_issued: tempPassword !== null,
-      },
-    });
 
+    await supabaseAdmin
+      .rpc("log_activity", {
+        p_actor_id: callerId,
+        p_actor_name: callerProfile?.full_name ?? "Team Member",
+        p_action: "student_account_created",
+        p_entity_type: "case",
+        p_entity_id: case_id,
+        p_metadata: {
+          student_email,
+          student_full_name,
+          student_id: studentId,
+          temp_password_issued: tempPassword !== null,
+          data_exported: {
+            city: !!caseData.city,
+            intake_month: !!intakeMonth,
+            university: !!universityName,
+            arrival_date: !!submission?.program_start_date,
+            phone: !!phone,
+          },
+        },
+      })
+      .catch(() => {
+        /* non-fatal */
+      });
+
+    // ── Response ───────────────────────────────────────────────────────
     const responsePayload: Record<string, unknown> = {
       success: true,
       user_id: studentId,
@@ -185,11 +267,11 @@ serve(async (req) => {
       invited: false,
       message: tempPassword
         ? "Student account created with temporary password"
-        : "Student account linked (existing user)",
+        : "Student account linked to existing user",
     };
 
-    // Only return temp_password if we generated one (never log it)
     if (tempPassword) {
+      // Only returned once — never logged
       responsePayload.temp_password = tempPassword;
     }
 
