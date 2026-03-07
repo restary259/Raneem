@@ -109,6 +109,8 @@ interface Case {
   passport_type: string | null;
   degree_interest: string | null;
   intake_notes: string | null;
+  referred_by: string | null;
+  discount_amount: number;
 }
 
 interface TeamMember {
@@ -386,6 +388,7 @@ const AdminPipelinePage = () => {
     contact_form: { label: "Form", cls: "bg-yellow-100 text-yellow-700" },
     manual: { label: "Manual", cls: "bg-secondary text-secondary-foreground" },
     submit_new_student: { label: "Enroll", cls: "bg-purple-100 text-purple-700" },
+    referral: { label: "Referral", cls: "bg-green-100 text-green-700" },
   };
 
   const hasApplyInfo = (c: Case) =>
@@ -610,6 +613,16 @@ const AdminPipelinePage = () => {
                           return <span className={`text-xs px-2 py-0.5 rounded font-medium ${s.cls}`}>{s.label}</span>;
                         })()}
                     </div>
+                    {/* Referral info row */}
+                    {selectedCase.source === "referral" && (
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        {selectedCase.discount_amount > 0 && (
+                          <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
+                            {isRtl ? "خصم" : "Discount"}: ₪{selectedCase.discount_amount}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Edit / Save / Cancel */}
