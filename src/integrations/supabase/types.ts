@@ -369,6 +369,7 @@ export type Database = {
           accommodation_price: number
           case_id: string
           created_at: string
+          deleted_at: string | null
           enrollment_paid_at: string | null
           enrollment_paid_by: string | null
           extra_data: Json | null
@@ -395,6 +396,7 @@ export type Database = {
           accommodation_price?: number
           case_id: string
           created_at?: string
+          deleted_at?: string | null
           enrollment_paid_at?: string | null
           enrollment_paid_by?: string | null
           extra_data?: Json | null
@@ -421,6 +423,7 @@ export type Database = {
           accommodation_price?: number
           case_id?: string
           created_at?: string
+          deleted_at?: string | null
           enrollment_paid_at?: string | null
           enrollment_paid_by?: string | null
           extra_data?: Json | null
@@ -481,6 +484,7 @@ export type Database = {
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
+          deleted_at: string | null
           discount_amount: number
           education_level: string | null
           english_level: string | null
@@ -491,6 +495,7 @@ export type Database = {
           is_no_show: boolean
           last_activity_at: string
           math_units: number | null
+          origin: string | null
           partner_id: string | null
           passport_type: string | null
           phone_number: string
@@ -507,6 +512,7 @@ export type Database = {
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
+          deleted_at?: string | null
           discount_amount?: number
           education_level?: string | null
           english_level?: string | null
@@ -517,6 +523,7 @@ export type Database = {
           is_no_show?: boolean
           last_activity_at?: string
           math_units?: number | null
+          origin?: string | null
           partner_id?: string | null
           passport_type?: string | null
           phone_number: string
@@ -533,6 +540,7 @@ export type Database = {
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
+          deleted_at?: string | null
           discount_amount?: number
           education_level?: string | null
           english_level?: string | null
@@ -543,6 +551,7 @@ export type Database = {
           is_no_show?: boolean
           last_activity_at?: string
           math_units?: number | null
+          origin?: string | null
           partner_id?: string | null
           passport_type?: string | null
           phone_number?: string
@@ -723,11 +732,51 @@ export type Database = {
         }
         Relationships: []
       }
+      deletion_logs: {
+        Row: {
+          categories: string[]
+          deleted_at: string
+          deleted_by: string
+          id: string
+          mode: string
+          restored_at: string | null
+          restored_by: string | null
+          snapshot_json: Json | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          categories?: string[]
+          deleted_at?: string
+          deleted_by: string
+          id?: string
+          mode?: string
+          restored_at?: string | null
+          restored_by?: string | null
+          snapshot_json?: Json | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          categories?: string[]
+          deleted_at?: string
+          deleted_by?: string
+          id?: string
+          mode?: string
+          restored_at?: string | null
+          restored_by?: string | null
+          snapshot_json?: Json | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           case_id: string | null
           category: string
           created_at: string
+          deleted_at: string | null
           expiry_date: string | null
           file_name: string
           file_size: number | null
@@ -745,6 +794,7 @@ export type Database = {
           case_id?: string | null
           category?: string
           created_at?: string
+          deleted_at?: string | null
           expiry_date?: string | null
           file_name: string
           file_size?: number | null
@@ -762,6 +812,7 @@ export type Database = {
           case_id?: string | null
           category?: string
           created_at?: string
+          deleted_at?: string | null
           expiry_date?: string | null
           file_name?: string
           file_size?: number | null
@@ -1538,6 +1589,7 @@ export type Database = {
           created_by: string | null
           criminal_record_details: string | null
           date_of_birth: string | null
+          deleted_at: string | null
           email: string
           emergency_contact: string | null
           emergency_contact_name: string | null
@@ -1553,6 +1605,7 @@ export type Database = {
           id: string
           influencer_id: string | null
           intake_month: string | null
+          linked_case_id: string | null
           must_change_password: boolean
           nationality: string | null
           notes: string | null
@@ -1583,6 +1636,7 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deleted_at?: string | null
           email?: string
           emergency_contact?: string | null
           emergency_contact_name?: string | null
@@ -1598,6 +1652,7 @@ export type Database = {
           id: string
           influencer_id?: string | null
           intake_month?: string | null
+          linked_case_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -1628,6 +1683,7 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deleted_at?: string | null
           email?: string
           emergency_contact?: string | null
           emergency_contact_name?: string | null
@@ -1643,6 +1699,7 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           intake_month?: string | null
+          linked_case_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -1661,6 +1718,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_case_id_fkey"
             columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_linked_case_id_fkey"
+            columns: ["linked_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["id"]
@@ -2399,6 +2463,7 @@ export type Database = {
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
+          deleted_at: string | null
           discount_amount: number
           education_level: string | null
           english_level: string | null
@@ -2409,6 +2474,7 @@ export type Database = {
           is_no_show: boolean
           last_activity_at: string
           math_units: number | null
+          origin: string | null
           partner_id: string | null
           passport_type: string | null
           phone_number: string
