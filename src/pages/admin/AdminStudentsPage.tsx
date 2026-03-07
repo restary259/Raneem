@@ -48,6 +48,15 @@ interface StudentRecord {
   created_by: string | null;
   emergency_contact: string | null;
   arrival_date: string | null;
+  // Student-filled fields from their own dashboard
+  gender: string | null;
+  date_of_birth: string | null;
+  country: string | null; // home address
+  nationality: string | null;
+  university_name: string | null;
+  intake_month: string | null;
+  notes: string | null;
+  updated_by_student_at: string | null;
 }
 
 interface Document {
@@ -288,7 +297,7 @@ export default function AdminStudentsPage() {
       const { data: profileData, error } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
         )
         .in("id", userIds)
         .not("created_by", "is", null)
@@ -341,7 +350,7 @@ export default function AdminStudentsPage() {
     const { data: freshProfile } = await supabase
       .from("profiles")
       .select(
-        "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+        "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
       )
       .eq("id", s.id)
       .maybeSingle();
@@ -452,7 +461,7 @@ export default function AdminStudentsPage() {
       const { data: confirmed } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
         )
         .eq("id", selected.id)
         .maybeSingle();
@@ -790,6 +799,43 @@ export default function AdminStudentsPage() {
                           icon: <Clock className="h-3.5 w-3.5" />,
                           label: isRtl ? "تاريخ الوصول" : "Arrival Date",
                           value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "الجنس" : "Gender",
+                          value: selected.gender || "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "تاريخ الميلاد" : "Date of Birth",
+                          value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "الجنسية" : "Nationality",
+                          value: selected.nationality || "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "عنوان السكن" : "Home Address",
+                          value: selected.country || "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "الجامعة" : "University",
+                          value: selected.university_name || "—",
+                        },
+                        {
+                          icon: <User className="h-3.5 w-3.5" />,
+                          label: isRtl ? "شهر القبول" : "Intake Month",
+                          value: selected.intake_month || "—",
+                        },
+                        {
+                          icon: <Clock className="h-3.5 w-3.5" />,
+                          label: isRtl ? "آخر تحديث من الطالب" : "Last Updated by Student",
+                          value: selected.updated_by_student_at
+                            ? format(new Date(selected.updated_by_student_at), "PPP")
+                            : "—",
                         },
                         {
                           icon: <Clock className="h-3.5 w-3.5" />,
