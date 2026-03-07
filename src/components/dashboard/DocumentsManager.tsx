@@ -189,18 +189,27 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
   const handleDownload = async (doc: Document) => {
     try {
       const storagePath = toStoragePath(doc.file_url);
-      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60); // 60-second signed URL
+      const { data: signedData, error } = await supabase.storage
+        .from("student-documents")
+        .createSignedUrl(storagePath, 60);
       if (error) throw error;
+
+      // Fetch as blob so browser downloads instead of opening in a new tab
+      const response = await fetch(signedData.signedUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
 
       logDocumentAccess("download", doc.file_name);
 
+      const blobUrl = URL.createObjectURL(blob);
       const a = window.document.createElement("a");
-      a.href = data.signedUrl;
+      a.href = blobUrl;
       a.download = doc.file_name;
       a.style.display = "none";
       window.document.body.appendChild(a);
       a.click();
       window.document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
     } catch (error: any) {
       toast({ variant: "destructive", title: t("documents.downloadError"), description: error.message });
     }
