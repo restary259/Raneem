@@ -1,45 +1,47 @@
-
 project_id = "mzbadxfvxioedzdjxamc"
 
-[functions.send-email]
-verify_jwt = false
-[functions.ai-chat]
-verify_jwt = false
-[functions.push-notify]
-verify_jwt = false
-[functions.auth-guard]
-verify_jwt = false
-[functions.admin-verify]
-verify_jwt = false
-[functions.create-influencer]
-verify_jwt = false
-[functions.get-exchange-rate]
-verify_jwt = false
-[functions.create-team-member]
-verify_jwt = false
-[functions.send-custom-notification]
-verify_jwt = false
-[functions.create-student-account]
-verify_jwt = false
-[functions.send-branded-email]
-verify_jwt = false
-[functions.send-event-email]
-verify_jwt = false
-[functions.send_welcome_email]
-verify_jwt = false
-[functions.admin-weekly-digest]
-verify_jwt = false
-[functions.delete-account]
-verify_jwt = false
-[functions.get-team-members]
-verify_jwt = false
-[functions.admin-mark-paid]
-verify_jwt = false
-[functions.purge-account]
-verify_jwt = false
-[functions.health-check]
-verify_jwt = false
-[functions.admin-early-release]
-verify_jwt = false
-[functions.create-case-from-apply]
-verify_jwt = false
+[functions]
+  [functions.admin-early-release]
+    verify_jwt = false
+  [functions.admin-mark-paid]
+    verify_jwt = false
+  [functions.admin-verify]
+    verify_jwt = false
+  [functions.admin-weekly-digest]
+    verify_jwt = false
+  [functions.ai-chat]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.auth-guard]
+    verify_jwt = false
+  [functions.create-case-from-apply]
+    verify_jwt = false
+  [functions.create-influencer]
+    verify_jwt = false
+  [functions.create-student-account]
+    verify_jwt = false
+  [functions.create-team-member]
+    verify_jwt = false
+  [functions.delete-account]
+    verify_jwt = false
+  [functions.get-exchange-rate]
+    verify_jwt = false
+  [functions.get-team-members]
+    verify_jwt = false
+  [functions.health-check]
+    verify_jwt = false
+  [functions.purge-account]
+    verify_jwt = false
+  [functions.push-notify]
+    verify_jwt = false
+  [functions.send-branded-email]
+    verify_jwt = false
+  [functions.send-custom-notification]
+    verify_jwt = false
+  [functions.send-email]
+    verify_jwt = false
+  [functions.send-event-email]
+    verify_jwt = false
+  [functions.send_welcome_email]
+    verify_jwt = false
