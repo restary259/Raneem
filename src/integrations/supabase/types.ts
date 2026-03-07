@@ -2330,6 +2330,77 @@ export type Database = {
           },
         ]
       }
+      visa_field_values: {
+        Row: {
+          field_id: string
+          id: string
+          student_user_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          field_id: string
+          id?: string
+          student_user_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          field_id?: string
+          id?: string
+          student_user_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_field_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "visa_fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visa_fields: {
+        Row: {
+          created_at: string
+          display_order: number
+          field_key: string
+          field_type: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          label_ar: string
+          label_en: string
+          options_json: Json | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          field_key: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label_ar: string
+          label_en: string
+          options_json?: Json | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          field_key?: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label_ar?: string
+          label_en?: string
+          options_json?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       leads_lawyer_safe: {

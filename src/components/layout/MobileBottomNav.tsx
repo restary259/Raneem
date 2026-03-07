@@ -7,7 +7,7 @@ import {
   LayoutDashboard, GitBranch, Users, BookOpen, FileCheck,
   DollarSign, BarChart2, Activity, Settings,
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
-  Link2, TrendingUp, ListChecks, User, FileText,
+  TrendingUp, ListChecks, User, FileText,
   Globe, Heart,
 } from 'lucide-react';
 
@@ -35,7 +35,6 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   social_media_partner: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
-    { key: 'nav.myLink', icon: Link2, href: '/partner/link' },
     { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
     { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
   ],

@@ -309,11 +309,44 @@
       "title": "الإعدادات",
       "platform": "المنصة",
       "contacts": "جهات الاتصال المهمة",
+      "commissions": "العمولات",
       "platformTitle": "إعدادات المنصة",
       "addContact": "إضافة جهة اتصال"
     },
     "tabs": {
       "spreadsheet": "جدول البيانات"
+    },
+    "students": {
+      "title": "الطلاب",
+      "subtitle": "إدارة حسابات الطلاب",
+      "createAccount": "إنشاء حساب طالب",
+      "searchPlaceholder": "ابحث بالاسم أو البريد...",
+      "noStudents": "لا توجد حسابات طلاب بعد",
+      "noStudentsHint": "أنشئ حساباً وربطه بملف",
+      "verifyTitle": "مطلوب تحقق المشرف",
+      "verifyDesc": "عرض بيانات الطالب الحساسة يتطلب التحقق بكلمة المرور.",
+      "verifying": "جارٍ التحقق...",
+      "verify": "تأكيد",
+      "deleteTitle": "اختر ما تريد حذفه",
+      "deleteMode": "نوع الحذف",
+      "softDelete": "مخفي قابل للاسترجاع",
+      "hardDelete": "دائم وغير قابل للتراجع",
+      "hardDeleteWarning": "الحذف الدائم يمحو البيانات نهائياً. أدخل كلمة المرور للتأكيد.",
+      "contactInfo": "معلومات الاتصال",
+      "documents": "المستندات",
+      "caseAndSubmissions": "الملف والتقديمات",
+      "changessaved": "تم حفظ التغييرات",
+      "fileUploaded": "تم رفع الملف",
+      "fileDeleted": "تم حذف الملف",
+      "confirmDelete": "هل تريد حذف هذا الملف؟",
+      "deleted": "تم الحذف",
+      "resetPassword": "إعادة تعيين كلمة المرور",
+      "tempPasswordTitle": "تم إنشاء كلمة مرور مؤقتة",
+      "tempPasswordWarning": "شاركها مع الطالب. لن تظهر مرة أخرى.",
+      "profileSection": "ملف الطالب",
+      "financialSection": "الملخص المالي",
+      "visaSection": "معلومات التأشيرة",
+      "documentsSection": "المستندات"
     }
   },
   "influencer": {
@@ -714,8 +747,24 @@
     },
     "students": {
       "title": "الطلاب",
-      "submitted": "مقدّمون",
-      "enrolled": "ملتحقون"
+      "subtitle": "إدارة حسابات الطلاب وربطها بالملفات.",
+      "createAccount": "إنشاء حساب طالب",
+      "searchPlaceholder": "ابحث بالاسم أو البريد...",
+      "noStudents": "لا توجد حسابات طلاب بعد",
+      "noStudentsHint": "ابدأ بإنشاء حساب وربطه بملف الطالب.",
+      "successTitle": "تم إنشاء الحساب",
+      "successDesc": "شارك هذه البيانات مع الطالب. كلمة المرور تظهر مرة واحدة فقط.",
+      "tempEmail": "البريد الإلكتروني",
+      "tempPassword": "كلمة المرور المؤقتة",
+      "searchCase": "ابحث باسم الطالب",
+      "firstName": "الاسم الأول",
+      "middleName": "الاسم الأوسط",
+      "familyName": "اسم العائلة",
+      "emailLabel": "البريد الإلكتروني للطالب",
+      "selectCase": "اختر الملف للربط"
+    },
+    "bagrut": {
+      "subtitle": "تحويل درجات البجروت إلى درجات الجامعات الألمانية"
     },
     "analytics": {
       "title": "تحليلاتي",
@@ -856,7 +905,7 @@
     "ok": "حسناً"
   },
   "nav": {
-    "overview": "الرئيسية",
+    "overview": "نظرة عامة",
     "pipeline": "خط الأنابيب",
     "team": "الفريق",
     "programs": "البرامج",
@@ -866,7 +915,7 @@
     "activity": "النشاط",
     "settings": "الإعدادات",
     "today": "اليوم",
-    "cases": "الملفات",
+    "cases": "الحالات",
     "appointments": "المواعيد",
     "todayAppts": "اليوم",
     "submitNew": "جديد",
@@ -875,39 +924,68 @@
     "earnings": "الأرباح",
     "checklist": "المتطلبات",
     "profile": "الملف",
-    "documents": "الوثائق",
-    "visa": "التأشيرة",
+    "documents": "المستندات",
+    "visa": "الفيزا",
     "refer": "إحالة",
-    "contacts": "التواصل",
+    "contacts": "جهات الاتصال",
     "spreadsheet": "جدول البيانات",
-    "bagrut": "محوّل البجروت"
+    "bagrut": "أداة البجروت"
   },
   "case": {
     "status": {
       "new": "جديد",
       "contacted": "تم التواصل",
-      "appointment_scheduled": "تم تحديد موعد",
-      "profile_completion": "استكمال الملف",
+      "appointment_scheduled": "موعد محجوز",
+      "profile_completion": "إكمال الملف",
       "payment_confirmed": "تم تأكيد الدفع",
-      "submitted": "تم التقديم",
+      "submitted": "مقدّم",
       "enrollment_paid": "مسجّل ومدفوع",
-      "forgotten": "حالة منسية",
+      "forgotten": "منسي",
       "cancelled": "ملغى"
+    },
+    "fields": {
+      "street": "الشارع",
+      "houseNo": "رقم المنزل",
+      "postcode": "الرمز البريدي",
+      "city": "المدينة",
+      "country": "البلد",
+      "address": "العنوان",
+      "gender": "الجنس",
+      "firstName": "الاسم الأول",
+      "middleName": "الاسم الأوسط",
+      "lastName": "الاسم الأخير",
+      "dateOfBirth": "تاريخ الميلاد",
+      "arrivalDate": "تاريخ الوصول",
+      "courseStart": "بداية الكورس",
+      "courseEnd": "نهاية الكورس",
+      "startMonth": "شهر البدء",
+      "school": "المدرسة",
+      "program": "البرنامج",
+      "studentEmail": "بريد الطالب",
+      "studentPhone": "هاتف الطالب",
+      "emergencyContact": "جهة الطوارئ",
+      "applicationInfo": "معلومات التقديم",
+      "noApplicationData": "لا توجد بيانات تقديم مسجلة.",
+      "studentProfile": "ملف الطالب",
+      "financialSummary": "الملخص المالي",
+      "serviceFee": "رسوم الخدمة",
+      "total": "الإجمالي",
+      "programLabel": "البرنامج"
     }
   },
   "partner": {
     "earningsTitle": "أرباحي",
     "commission": {
-      "rateInfo": "تكسب ₪{{rate}} عن كل طالب يقدم طلبه أو يكمل التسجيل.",
+      "rateInfo": "تربح ₪{{rate}} لكل طالب يقوم بالتقديم أو إكمال التسجيل.",
       "label": "العمولة"
     },
     "earnings": {
       "totalEarned": "إجمالي الأرباح",
-      "submitted": "قدّموا طلباتهم",
-      "enrolled": "مسجّلون",
+      "submitted": "مقدّم",
+      "enrolled": "مسجّل",
       "breakdown": "تفاصيل العمولة",
-      "noQualifying": "لم يصل أي طالب إلى مرحلة التقديم بعد.",
-      "pending": "في خط الأنابيب (لم يصلوا بعد)"
+      "noQualifying": "لم يصل أي طالب لمرحلة التقديم بعد.",
+      "pending": "قيد الإجراء (لم يتأهل بعد)"
     },
     "status": {
       "new": "جديد",
@@ -915,7 +993,7 @@
       "appointment": "موعد",
       "profile": "ملف",
       "payment": "دفع",
-      "submitted": "تم التقديم",
+      "submitted": "مقدّم",
       "paid": "مسجّل ومدفوع ✅",
       "cancelled": "ملغى"
     },
@@ -929,26 +1007,27 @@
     },
     "funnel": {
       "title": "مسار التحويل",
-      "submitted": "مقدّمون",
-      "active": "نشطون",
+      "submitted": "مقدّم",
+      "active": "نشط",
       "paid": "مدفوع",
       "students": "طلاب"
     },
     "shareLink": "شارك رابطي",
     "requestPayout": "طلب صرف",
-    "recentStudents": "آخر الطلاب",
+    "recentStudents": "الطلاب الجدد",
     "studentsTitle": "طلابي",
-    "searchPlaceholder": "بحث بالاسم...",
-    "noResults": "لا يوجد طلاب مطابقون",
-    "noStudents": "لم تُحِل أي طلاب بعد. شارك رابطك للبدء!",
-    "students_referred": "الطلاب المُحالون",
+    "searchPlaceholder": "ابحث بالاسم...",
+    "noResults": "لا توجد نتائج مطابقة",
+    "noStudents": "لم تتم إحالة أي طالب بعد. شارك رابطك للبدء!",
+    "students_referred": "الطلاب المحالين",
     "payoutRequests": "طلبات الصرف",
-    "lockInfo": "بعض المكافآت محجوزة لمدة {{days}} أيام أخرى."
+    "lockInfo": "بعض المكافآت مقفلة لمدة {{days}} أيام إضافية."
   },
   "visa": {
-    "title": "حالة التأشيرة",
-    "readOnly": "يتم تحديث حالة التأشيرة من قِبل المسؤول المعيّن.",
-    "personalInfo": "معلومات متعلقة بالتأشيرة",
+    "title": "طلب التأشيرة",
+    "subtitle": "تتبع حالة تأشيرتك والوثائق المطلوبة",
+    "readOnly": "حالة التأشيرة تُدار من قِبل المختص المسؤول عنك.",
+    "personalInfo": "معلومات التأشيرة",
     "passport": "رقم جواز السفر",
     "nationality": "الجنسية",
     "arrivalDate": "تاريخ الوصول",
@@ -957,11 +1036,24 @@
     "contactAbroad": "جهة الاتصال في الخارج",
     "outcome": "النتيجة",
     "notes": "ملاحظات",
-    "noApplication": "لا يوجد طلب تأشيرة بعد. سيتم التحديث عند بدء إجراءات التأشيرة."
+    "noApplication": "لا توجد معلومات تأشيرة بعد. سيقوم فريقك بتحديثها عند بدء العملية.",
+    "noData": "لا توجد معلومات تأشيرة بعد. سيقوم فريقك بتحديثها عند بدء العملية.",
+    "adminFields": "حقول التأشيرة",
+    "addField": "إضافة حقل",
+    "fieldLabelEn": "التسمية (إنجليزي)",
+    "fieldLabelAr": "التسمية (عربي)",
+    "fieldType": "نوع الحقل",
+    "fieldTypeText": "نص",
+    "fieldTypeDate": "تاريخ",
+    "fieldTypeSelect": "قائمة منسدلة",
+    "fieldTypeBoolean": "نعم / لا",
+    "required": "إلزامي",
+    "active": "نشط",
+    "saveSuccess": "تم حفظ معلومات التأشيرة"
   },
   "contacts": {
     "title": "جهات الاتصال المهمة",
-    "subtitle": "جهات الاتصال الرئيسية لرحلتك الدراسية",
+    "subtitle": "جهات اتصال رئيسية لرحلتك الدراسية",
     "noContacts": "لا توجد جهات اتصال متاحة بعد.",
     "visitLink": "زيارة",
     "categories": {
@@ -974,18 +1066,31 @@
   "appointment": {
     "outcome": {
       "completed": "مكتمل",
-      "delayed": "متأخر",
+      "delayed": "مؤجل",
       "cancelled": "ملغى",
-      "rescheduled": "أُعيد الجدولة",
+      "rescheduled": "معاد جدولته",
       "no_show": "لم يحضر"
     }
   },
   "student": {
     "refer": {
-      "discount_message": "إحالة صديق أو أحد أفراد الأسرة ستمنحهم خصماً بقيمة 500 شيكل على تسجيلهم."
+      "discount_message": "إحالة صديق أو فرد من العائلة ستمنحهم خصم 500 شيكل على تسجيلهم."
     },
     "checklist": {
-      "title": "قائمة مهامك"
+      "title": "قائمة المتطلبات"
+    }
+  },
+  "settings": {
+    "reset": {
+      "title": "⚠️ مسح البيانات",
+      "subtitle": "حذف البيانات التشغيلية نهائياً. لا يمكن التراجع عن هذا.",
+      "selectCategories": "اختر فئات البيانات للحذف:",
+      "rowCount": "{{count}} سجل",
+      "totalRecords": "الإجمالي: سيتم حذف {{count}} سجل",
+      "passwordPrompt": "أدخل كلمة مرور المشرف للتأكيد:",
+      "confirmButton": "حذف البيانات المحددة",
+      "successMsg": "تم حذف البيانات المحددة بنجاح",
+      "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
     }
   }
 }
