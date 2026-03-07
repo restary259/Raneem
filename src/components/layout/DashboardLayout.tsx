@@ -41,6 +41,7 @@ import {
   ChevronRight,
   Home,
   Table,
+  Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
     { key: "nav.students", icon: GraduationCap, href: "/team/students" },
+    { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
     { key: "nav.analytics", icon: BarChart2, href: "/team/analytics" },
   ],
   social_media_partner: [
