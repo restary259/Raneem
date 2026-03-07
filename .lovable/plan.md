@@ -1,126 +1,119 @@
 
-## Full Production Audit & Fix — DARB Platform
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-This is a large-scale audit covering all 4 dashboards. I will organize it into a manageable set of concrete file changes, prioritized by impact.
+### What was found (full audit)
 
-### Findings Summary
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-**What's already correct:**
-- `NAV_CONFIG` in `DashboardLayout.tsx` has all required entries for all roles
-- `App.tsx` routes all match sidebar entries; `/team/bagrut` → `BagrutConverter` is registered
-- Both `en/dashboard.json` and `ar/dashboard.json` contain all required `nav.*` keys including `nav.bagrut` and `nav.spreadsheet`
-- The `verify-admin-password` edge function uses correct `admin_audit_log` columns with `.catch()` — already correct
-- `AdminStudentsPage` omits `deleted_at` filter with proper comment — already correct
-- `BagrutConverter` uses `bagrutToGermanGrade()` from `gradeConverter.ts`
-- `generateIntakeMonths()` utility exists and is used in `SubmitNewStudentPage`
-- `TeamStudentsPage` create-student flow is functional
-- Partner sidebar is missing `/partner/link` — shows `nav.analytics` for overview instead of `nav.overview`, and has no `nav.myLink` entry
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-**What needs fixing:**
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-1. **Partner Sidebar** — Missing `/partner/link` entry. Current config shows `nav.analytics` as label for `/partner` (overview). Partner `nav.myLink` entry is missing from sidebar nav (it exists only in mobile nav).
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-2. **`CopyButton` component missing** — Referenced in the audit requirements (Section 11) but `src/components/common/CopyButton.tsx` does not exist. Must be created and added to the `AdminStudentsPage` detail sheet.
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-3. **`AdminStudentsPage` — No copy buttons** on student info fields in the detail sheet. Need to wire up `CopyButton` next to each field (email, phone, name, emergency contact, arrival date, created by, case ID, document URLs).
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-4. **`PartnerOverviewPage`** — Hardcoded bilingual strings instead of `t()` calls throughout.
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-5. **`PartnerLinkPage`** — Desktop-only block hides the link on mobile. This is poor UX; on mobile the link should still be copyable (just simpler UI).
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-6. **`TeamStudentsPage`** — Student list uses hardcoded English strings (`"Students"`, `"Manage student accounts..."`, `"Create Student Account"`, etc.) instead of `t()` calls.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
-7. **`AdminCommandCenter`** — Missing loading skeleton for KPIs; values could show `NaN` if data is empty. Needs defensive `|| 0` and skeleton states.
+---
 
-8. **`MobileBottomNav`** — Partner role shows `nav.overview` pointing to `/partner` but there's no `nav.myLink` shortcut on mobile. The `shortLabel` map is fine but `social_media_partner` only has 4 items, which is acceptable.
+### Files to change (batched)
 
-9. **`StudentVisaPage`** — Read-only. Status is not editable by student (correct per spec). No issues.
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-10. **`StudentReferPage`** — Delegates to `ReferralForm` and `ReferralTracker` components which need checking.
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-### Implementation Plan
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-**Phase 1 — New reusable `CopyButton` component**
-- Create `src/components/common/CopyButton.tsx` exactly as specified in Section 11
+**B. Numeric safety (7 component files)**
 
-**Phase 2 — `AdminStudentsPage` — Add copy buttons to detail sheet**
-- In the student info display section (lines ~824–870), add `<CopyButton value={field.value} />` inline with each data row
-- For documents section, add copy URL button next to each document's download button
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
 
-**Phase 3 — Fix Partner sidebar nav label**
-- In `DashboardLayout.tsx`, change `social_media_partner` nav entry for `/partner` from `nav.analytics` to `nav.overview` (it already shows "Overview" in mobile nav; desktop sidebar shows wrong label)
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
 
-**Phase 4 — Fix `PartnerLinkPage` mobile block**
-- Remove the mobile-only restriction. Show a simplified but functional link card on all viewports
+**C. SparklineCard overflow fix**
 
-**Phase 5 — Fix hardcoded strings in `TeamStudentsPage`**
-- Replace hardcoded English strings with `t()` calls using existing `team.students.*` translation keys
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
 
-**Phase 6 — `AdminCommandCenter` defensive null handling**
-- Add `|| 0` guards and loading skeleton cards to prevent `NaN` display
+**D. TeamStudentProfilePage — add translations**
 
-**Phase 7 — UI/UX polish on `AdminStudentsPage` document row**
-- Add file size and upload date display to each document row (already partially there, just needs cleaner presentation)
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
 
-### Files to change
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
 
-```
-NEW:
-  src/components/common/CopyButton.tsx
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
 
-EDIT:
-  src/components/layout/DashboardLayout.tsx
-    → Fix social_media_partner nav: /partner label from nav.analytics → nav.overview
-    → Add nav.myLink entry to partner sidebar
+---
 
-  src/pages/admin/AdminStudentsPage.tsx
-    → Import CopyButton
-    → Add CopyButton next to each detail field
-    → Add CopyButton next to each document URL
-
-  src/pages/partner/PartnerLinkPage.tsx
-    → Remove desktop-only restriction
-    → Show link on all screen sizes
-
-  src/pages/team/TeamStudentsPage.tsx
-    → Replace hardcoded strings with t() calls
-
-  src/pages/admin/AdminCommandCenter.tsx
-    → Add defensive || 0 to all KPI values
-    → Add loading skeletons
-```
-
-### Key Details
-
-**`CopyButton` component** — exact spec from Section 11, uses `navigator.clipboard.writeText`, shows `Check` for 2 seconds then reverts to `Copy`.
-
-**Partner sidebar fix** — The current config has:
-```ts
-social_media_partner: [
-  { key: "nav.analytics", icon: BarChart2, href: "/partner" },  // WRONG LABEL
-  { key: "nav.students",  icon: GraduationCap, href: "/partner/students" },
-  { key: "nav.earnings",  icon: TrendingUp, href: "/partner/earnings" },
-]
-```
-Should be:
-```ts
-social_media_partner: [
-  { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
-  { key: "nav.myLink",   icon: Link2, href: "/partner/link" },
-  { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-  { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
-]
-```
-Both `nav.overview` and `nav.myLink` already exist in both locale files — no locale changes needed.
-
-**CopyButton placement in `AdminStudentsPage`** — Each info row in the read-only view (lines ~864–869) renders as `{icon} {label} {value}`. We add `<CopyButton value={raw_value} />` after the value span. For documents: add next to the existing download button.
-
-**`PartnerLinkPage` mobile fix** — Remove the `if (isMobile)` early return that shows "Desktop Only". The full link card works on mobile; the `navigator.share` API is especially good on mobile.
-
-**`AdminCommandCenter` defensive values** — The `counts` calculation uses `.filter().length` which always returns a number, so `NaN` is not actually possible there. But the `fetchData` runs inside `Promise.all` and if one fails, the whole thing fails. The fix is to use `Promise.allSettled` or individual try/catch per query so partial failures show partial data rather than nothing.
-
-**No locale file changes needed** — Both `nav.*` keys for all required entries already exist in both `en/dashboard.json` and `ar/dashboard.json`.
-
-**No route changes needed** — `App.tsx` already has all routes properly configured.
-
-**No edge function changes needed** — `verify-admin-password`, `create-student-from-case` are both correct per audit spec.
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

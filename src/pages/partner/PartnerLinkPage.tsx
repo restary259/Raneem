@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, Copy, CheckCircle2, Share2, Monitor } from "lucide-react";
+import { Link2, Copy, CheckCircle2, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
@@ -17,15 +17,6 @@ export default function PartnerLinkPage() {
   const { toast } = useToast();
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    // Detect mobile
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -38,19 +29,6 @@ export default function PartnerLinkPage() {
   }, [navigate]);
 
   if (!userId) return <DashboardLoading />;
-
-  // On mobile: show desktop-only message
-  if (isMobile) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 p-6 text-center">
-        <Monitor className="h-12 w-12 text-muted-foreground/40 mb-4" />
-        <h2 className="font-semibold text-foreground mb-2">Desktop Only</h2>
-        <p className="text-sm text-muted-foreground">
-          My Links is available on desktop. Please open DARB on a larger screen to access your referral link.
-        </p>
-      </div>
-    );
-  }
 
   const baseUrl = window.location.origin;
   const refLink = `${baseUrl}/apply?ref=${userId}`;
@@ -79,7 +57,7 @@ export default function PartnerLinkPage() {
   ];
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6" dir={dir}>
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6" dir={dir}>
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Link2 className="h-6 w-6 text-primary" />
@@ -94,12 +72,12 @@ export default function PartnerLinkPage() {
       </div>
 
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-4 sm:p-5 space-y-4">
           <div className="flex items-center gap-2">
             <Input
               value={refLink}
               readOnly
-              className="font-mono text-sm bg-background"
+              className="font-mono text-xs sm:text-sm bg-background"
               onClick={(e) => (e.target as HTMLInputElement).select()}
             />
             <Button size="icon" variant="default" onClick={handleCopy} className="shrink-0">
@@ -107,11 +85,11 @@ export default function PartnerLinkPage() {
             </Button>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1 gap-2" onClick={handleCopy}>
+            <Button variant="outline" className="flex-1 gap-2 min-h-[44px]" onClick={handleCopy}>
               <Copy className="h-4 w-4" />
               {t("partner.copyLink", "Copy Link")}
             </Button>
-            <Button variant="default" className="flex-1 gap-2" onClick={handleShare}>
+            <Button variant="default" className="flex-1 gap-2 min-h-[44px]" onClick={handleShare}>
               <Share2 className="h-4 w-4" />
               {t("partner.shareLink", "Share")}
             </Button>
