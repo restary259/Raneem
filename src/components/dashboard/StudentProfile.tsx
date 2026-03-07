@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, User, Trash2 } from 'lucide-react';
-import { Profile } from '@/types/profile';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Edit, Save, X, User, Trash2 } from "lucide-react";
+import { Profile } from "@/types/profile";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 interface StudentProfileProps {
   profile: Profile;
@@ -21,249 +27,288 @@ interface StudentProfileProps {
   userId: string;
 }
 
-type VisaStatus = 'not_applied' | 'applied' | 'approved' | 'rejected' | 'received';
-const visaStatusKeys: VisaStatus[] = ['not_applied', 'applied', 'approved', 'rejected', 'received'];
-const eyeColorOptions = ['brown', 'blue', 'green', 'hazel', 'gray', 'other'];
-
 interface ExtendedProfile extends Profile {
   emergency_contact?: string;
+  date_of_birth?: string;
+  emergency_contact?: string;
+  date_of_birth?: string;
+  home_address?: string; // stored in profiles.country
+  german_address?: string; // stored in profiles.german_address (add column via migration)
 }
 
 const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<ExtendedProfile>(profile as ExtendedProfile);
+  const [editedProfile, setEditedProfile] = useState<ExtendedProfile>({
+    ...profile,
+    home_address: (profile as any).country ?? "",
+    german_address: (profile as any).german_address ?? "",
+    date_of_birth: (profile as any).date_of_birth ?? "",
+  } as ExtendedProfile);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation("dashboard");
   const navigate = useNavigate();
+
+  const set = (key: keyof ExtendedProfile) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setEditedProfile((p) => ({ ...p, [key]: e.target.value }));
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
       const { error } = await (supabase as any)
-        .from('profiles')
+        .from("profiles")
         .update({
-          // Student-editable fields
           phone_number: editedProfile.phone_number,
-          city: editedProfile.city,
+          city: editedProfile.city, // city of birth
+          country: editedProfile.home_address, // home address
+          german_address: (editedProfile as any).german_address, // German address column
+          date_of_birth: editedProfile.date_of_birth,
           emergency_contact: editedProfile.emergency_contact,
           arrival_date: editedProfile.arrival_date,
+          gender: editedProfile.gender,
           intake_month: editedProfile.intake_month,
           university_name: editedProfile.university_name,
           notes: editedProfile.notes,
-          gender: editedProfile.gender,
-          eye_color: editedProfile.eye_color,
-          has_changed_legal_name: editedProfile.has_changed_legal_name,
-          previous_legal_name: editedProfile.previous_legal_name,
-          has_criminal_record: editedProfile.has_criminal_record,
-          criminal_record_details: editedProfile.criminal_record_details,
-          has_dual_citizenship: editedProfile.has_dual_citizenship,
-          second_passport_country: editedProfile.second_passport_country,
+          updated_by_student_at: new Date().toISOString(),
         })
-        .eq('id', userId);
+        .eq("id", userId);
 
       if (error) throw error;
-      toast({ title: t('profile.updateSuccess'), description: t('profile.updateSuccessDesc') });
+      toast({
+        title: t("profile.updateSuccess", "Saved"),
+        description: t("profile.updateSuccessDesc", "Your profile has been updated."),
+      });
       setIsEditing(false);
       onProfileUpdate(userId);
     } catch (error: any) {
-      toast({ variant: "destructive", title: t('profile.updateError'), description: error.message });
+      toast({ variant: "destructive", title: t("common.error", "Error"), description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE') return;
+    if (deleteConfirmText !== "DELETE") return;
     setIsDeleting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
       });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed to delete account');
+      if (!resp.ok) throw new Error(result.error || "Failed to delete account");
       await supabase.auth.signOut();
-      toast({ title: t('profile.accountDeleted', 'Account Deleted'), description: t('profile.accountDeletedDesc', 'Your account has been permanently deleted.') });
-      navigate('/');
+      toast({ title: t("profile.accountDeleted", "Account Deleted") });
+      navigate("/");
     } catch (error: any) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      toast({ variant: "destructive", description: error.message });
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
   };
 
+  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Section 1: Personal Information */}
+      {/* ── Personal Information ── */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            <CardTitle>{t('profile.personalInfo', 'Personal Information')}</CardTitle>
+            <CardTitle className="text-base">{t("profile.personalInfo", "Personal Information")}</CardTitle>
           </div>
           {!isEditing && (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Edit className="h-4 w-4 me-1" /> {t('profile.edit')}
+              <Edit className="h-4 w-4 me-1" /> {t("profile.edit", "Edit")}
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><Label>{t('profile.fullName')}</Label><Input value={editedProfile.full_name} disabled readOnly className="bg-muted cursor-not-allowed" /></div>
-              <div><Label>{t('profile.email')}</Label><Input value={editedProfile.email} disabled readOnly /></div>
-              <div>
-                <Label>{t('profile.phone', 'Phone Number')}</Label>
-                <Input value={editedProfile.phone_number || ''} onChange={e => setEditedProfile({ ...editedProfile, phone_number: e.target.value })} disabled={!isEditing} placeholder="+972..." />
-              </div>
-              <div>
-                <Label>{t('profile.cityOfBirth', 'City of Birth')}</Label>
-                <Input value={editedProfile.city || ''} onChange={e => setEditedProfile({ ...editedProfile, city: e.target.value })} disabled={!isEditing} />
-              </div>
-              <div>
-                <Label>{t('profile.emergencyContact', 'Emergency Contact Number')}</Label>
-                <Input value={(editedProfile as ExtendedProfile).emergency_contact || ''} onChange={e => setEditedProfile({ ...editedProfile, emergency_contact: e.target.value })} disabled={!isEditing} placeholder="+972..." />
-              </div>
-              <div>
-                <Label>{t('profile.arrivalDate', 'Date of Arrival in Germany')}</Label>
-                <Input type="date" value={editedProfile.arrival_date || ''} onChange={e => setEditedProfile({ ...editedProfile, arrival_date: e.target.value })} disabled={!isEditing} />
-              </div>
-              <div>
-                <Label>{t('profile.gender', 'Gender')}</Label>
-                <Select value={editedProfile.gender || ''} onValueChange={v => setEditedProfile({ ...editedProfile, gender: v })} disabled={!isEditing}>
-                  <SelectTrigger><SelectValue placeholder={t('profile.selectGender', 'Select gender')} /></SelectTrigger>
+              {/* Read-only */}
+              <Field label={t("profile.fullName", "Full Name")}>
+                <Input value={editedProfile.full_name} disabled readOnly className="bg-muted cursor-not-allowed" />
+              </Field>
+              <Field label={t("profile.email", "Email")}>
+                <Input value={editedProfile.email} disabled readOnly className="bg-muted cursor-not-allowed" />
+              </Field>
+
+              {/* Editable personal fields */}
+              <Field label={t("profile.phone", "Phone Number")}>
+                <Input
+                  value={editedProfile.phone_number || ""}
+                  onChange={set("phone_number")}
+                  disabled={!isEditing}
+                  placeholder="+972..."
+                />
+              </Field>
+              <Field label={t("profile.dateOfBirth", "Date of Birth")}>
+                <Input
+                  type="date"
+                  value={(editedProfile as any).date_of_birth || ""}
+                  onChange={set("date_of_birth")}
+                  disabled={!isEditing}
+                />
+              </Field>
+              <Field label={t("profile.gender", "Gender")}>
+                <Select
+                  value={editedProfile.gender || ""}
+                  onValueChange={(v) => setEditedProfile((p) => ({ ...p, gender: v }))}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("profile.selectGender", "Select gender")} />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="male">{t('profile.genderMale', 'Male')}</SelectItem>
-                    <SelectItem value="female">{t('profile.genderFemale', 'Female')}</SelectItem>
+                    <SelectItem value="male">{t("profile.genderMale", "Male")}</SelectItem>
+                    <SelectItem value="female">{t("profile.genderFemale", "Female")}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label>{t('profile.eyeColor', 'Eye Color')}</Label>
-                <Select value={editedProfile.eye_color || ''} onValueChange={v => setEditedProfile({ ...editedProfile, eye_color: v })} disabled={!isEditing}>
-                  <SelectTrigger><SelectValue placeholder={t('profile.selectEyeColor', 'Select eye color')} /></SelectTrigger>
-                  <SelectContent>
-                    {eyeColorOptions.map(c => <SelectItem key={c} value={c}>{t(`profile.eyeColors.${c}`, c.charAt(0).toUpperCase() + c.slice(1))}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              </Field>
+              <Field label={t("profile.cityOfBirth", "City of Birth")}>
+                <Input value={editedProfile.city || ""} onChange={set("city")} disabled={!isEditing} />
+              </Field>
+              <Field label={t("profile.homeAddress", "Home Address")}>
+                <Input
+                  value={(editedProfile as any).home_address || ""}
+                  onChange={set("home_address")}
+                  disabled={!isEditing}
+                  placeholder={t("profile.homeAddressPlaceholder", "Street, City, Country")}
+                />
+              </Field>
+              <Field label={t("profile.germanAddress", "Address in Germany")}>
+                <Input
+                  value={(editedProfile as any).german_address || ""}
+                  onChange={set("german_address")}
+                  disabled={!isEditing}
+                  placeholder={t("profile.germanAddressPlaceholder", "Street, City, Postcode")}
+                />
+              </Field>
+              <Field label={t("profile.emergencyContact", "Emergency Contact")}>
+                <Input
+                  value={(editedProfile as any).emergency_contact || ""}
+                  onChange={set("emergency_contact")}
+                  disabled={!isEditing}
+                  placeholder="+972..."
+                />
+              </Field>
+              <Field label={t("profile.arrivalDate", "Date of Arrival in Germany")}>
+                <Input
+                  type="date"
+                  value={editedProfile.arrival_date || ""}
+                  onChange={set("arrival_date")}
+                  disabled={!isEditing}
+                />
+              </Field>
             </div>
 
-            {/* Legal Fields */}
-            <div className="mt-6 space-y-4 border-t pt-4">
-              <h3 className="font-semibold text-sm text-muted-foreground">{t('profile.legalSection', 'Legal / Visa Information')}</h3>
-              
-              <div className="flex items-center justify-between">
-                <Label>{t('profile.hasChangedLegalName', 'Have you ever changed your legal name?')}</Label>
-                <Switch checked={!!editedProfile.has_changed_legal_name} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_changed_legal_name: v, previous_legal_name: v ? editedProfile.previous_legal_name : '' })} disabled={!isEditing} />
-              </div>
-              {editedProfile.has_changed_legal_name && (
-                <div><Label>{t('profile.previousLegalName', 'Previous Legal Name')}</Label><Input value={editedProfile.previous_legal_name || ''} onChange={e => setEditedProfile({ ...editedProfile, previous_legal_name: e.target.value })} disabled={!isEditing} /></div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <Label>{t('profile.hasCriminalRecord', 'Do you have a criminal record?')}</Label>
-                <Switch checked={!!editedProfile.has_criminal_record} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_criminal_record: v, criminal_record_details: v ? editedProfile.criminal_record_details : '' })} disabled={!isEditing} />
-              </div>
-              {editedProfile.has_criminal_record && (
-                <div><Label>{t('profile.criminalRecordDetails', 'Criminal Record Details')}</Label><Textarea value={editedProfile.criminal_record_details || ''} onChange={e => setEditedProfile({ ...editedProfile, criminal_record_details: e.target.value })} disabled={!isEditing} rows={2} /></div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <Label>{t('profile.hasDualCitizenship', 'Do you have dual citizenship?')}</Label>
-                <Switch checked={!!editedProfile.has_dual_citizenship} onCheckedChange={v => setEditedProfile({ ...editedProfile, has_dual_citizenship: v, second_passport_country: v ? editedProfile.second_passport_country : '' })} disabled={!isEditing} />
-              </div>
-              {editedProfile.has_dual_citizenship && (
-                <div><Label>{t('profile.secondPassportCountry', 'Second Passport Country')}</Label><Input value={editedProfile.second_passport_country || ''} onChange={e => setEditedProfile({ ...editedProfile, second_passport_country: e.target.value })} disabled={!isEditing} /></div>
-              )}
-            </div>
-
-            {/* Application fields within same card */}
-            <div className="mt-6 space-y-4 border-t pt-4">
-              <h3 className="font-semibold text-sm text-muted-foreground">{t('profile.applicationInfo', 'Language School & Application')}</h3>
+            {/* Language School section */}
+            <div className="mt-6 pt-4 border-t space-y-4">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("profile.applicationInfo", "Language School & Application")}
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('profile.languageSchool', 'Language School')}</Label>
-                  <Input value={editedProfile.university_name || ''} onChange={e => setEditedProfile({ ...editedProfile, university_name: e.target.value })} disabled={!isEditing} />
-                </div>
-                <div>
-                  <Label>{t('profile.intakeMonth')}</Label>
-                  <Input value={editedProfile.intake_month || ''} onChange={e => setEditedProfile({ ...editedProfile, intake_month: e.target.value })} disabled={!isEditing} />
-                </div>
-                <div>
-                  <Label>{t('profile.visaStatus')}</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant={
-                      editedProfile.visa_status === 'approved' || editedProfile.visa_status === 'received' ? 'default' :
-                      editedProfile.visa_status === 'rejected' ? 'destructive' : 'secondary'
-                    }>
-                      {editedProfile.visa_status === 'not_applied'
-                        ? t('profile.visaStatuses.pending', 'Pending')
-                        : t(`profile.visaStatuses.${editedProfile.visa_status || 'not_applied'}`)}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{t('profile.visaAdminOnly', 'Updated by admin only')}</span>
-                  </div>
-                </div>
+                <Field label={t("profile.languageSchool", "Language School")}>
+                  <Input
+                    value={editedProfile.university_name || ""}
+                    onChange={set("university_name")}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <Field label={t("profile.intakeMonth", "Intake Month")}>
+                  <Input
+                    value={editedProfile.intake_month || ""}
+                    onChange={set("intake_month")}
+                    disabled={!isEditing}
+                  />
+                </Field>
               </div>
-            </div>
-
-            <div className="mt-4">
-              <Label>{t('profile.notes')}</Label>
-              <Textarea value={editedProfile.notes || ''} onChange={e => setEditedProfile({ ...editedProfile, notes: e.target.value })} disabled={!isEditing} rows={3} />
             </div>
 
             {isEditing && (
-              <div className="flex justify-end gap-2 mt-4">
-                <Button type="button" variant="outline" onClick={() => { setEditedProfile(profile); setIsEditing(false); }} disabled={isLoading}><X className="h-4 w-4" /> {t('profile.cancel')}</Button>
-                <Button type="submit" disabled={isLoading}><Save className="h-4 w-4" /> {t('profile.save')}</Button>
+              <div className="flex justify-end gap-2 mt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditedProfile({ ...profile } as ExtendedProfile);
+                    setIsEditing(false);
+                  }}
+                  disabled={isLoading}
+                >
+                  <X className="h-4 w-4 me-1" /> {t("profile.cancel", "Cancel")}
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  <Save className="h-4 w-4 me-1" /> {t("profile.save", "Save")}
+                </Button>
               </div>
             )}
           </form>
         </CardContent>
       </Card>
 
-      {/* Danger Zone */}
-      <Card className="border-destructive/40">
-        <CardHeader>
-          <CardTitle className="text-destructive flex items-center gap-2 text-base">
+      {/* ── Danger Zone ── */}
+      <Card className="border-destructive/30">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-destructive flex items-center gap-2 text-sm">
             <Trash2 className="h-4 w-4" />
-            {t('profile.dangerZone', 'Danger Zone')}
+            {t("profile.dangerZone", "Danger Zone")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            {t('profile.deleteAccountWarning', 'Permanently delete your account and all associated data. This action cannot be undone.')}
+            {t(
+              "profile.deleteAccountWarning",
+              "Permanently delete your account and all associated data. This cannot be undone.",
+            )}
           </p>
-          <Button variant="destructive" size="sm" onClick={() => { setDeleteConfirmText(''); setShowDeleteDialog(true); }}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setDeleteConfirmText("");
+              setShowDeleteDialog(true);
+            }}
+          >
             <Trash2 className="h-4 w-4 me-2" />
-            {t('profile.deleteAccount', 'Delete Account Permanently')}
+            {t("profile.deleteAccount", "Delete Account Permanently")}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Delete Account Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">
-              {t('profile.deleteAccountTitle', 'Delete Account Permanently')}
+              {t("profile.deleteAccountTitle", "Delete Account Permanently")}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
-                <p>{t('profile.deleteAccountDesc', 'This will permanently delete your account, profile, documents, and all associated data. This cannot be undone.')}</p>
-                <p className="font-medium text-foreground">
-                  {t('profile.typeDelete', 'Type DELETE to confirm:')}
-                </p>
+                <p>{t("profile.deleteAccountDesc", "This will permanently delete your account and all data.")}</p>
+                <p className="font-medium text-foreground">{t("profile.typeDelete", "Type DELETE to confirm:")}</p>
                 <Input
                   value={deleteConfirmText}
-                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="DELETE"
                   className="font-mono"
                 />
@@ -271,13 +316,15 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>
+              {t("common.cancel", "Cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+              disabled={deleteConfirmText !== "DELETE" || isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? t('common.loading') : t('profile.confirmDelete', 'Yes, Delete My Account')}
+              {isDeleting ? t("common.loading", "Loading...") : t("profile.confirmDelete", "Yes, Delete My Account")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
