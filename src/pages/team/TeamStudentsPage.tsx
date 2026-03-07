@@ -17,8 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Badge as ShadBadge } from "@/components/ui/badge";
-import { Card as ShadCard, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface CaseResult {
@@ -108,7 +109,6 @@ export default function TeamStudentsPage() {
   useEffect(() => {
     const fullName = [firstName, middleName, familyName].filter(Boolean).join(" ").trim();
 
-    // Don't re-search if we just selected a case and the name matches
     if (selectedCase && selectedCase.full_name.toLowerCase() === fullName.toLowerCase()) {
       return;
     }
@@ -125,7 +125,7 @@ export default function TeamStudentsPage() {
           .from("cases")
           .select("id, full_name, phone_number, city, status")
           .ilike("full_name", `%${fullName}%`)
-          .is("student_user_id", null) // only cases without an account yet
+          .is("student_user_id", null)
           .order("created_at", { ascending: false })
           .limit(10);
         if (error) throw error;
@@ -212,7 +212,7 @@ export default function TeamStudentsPage() {
       resetWizard();
       await fetchStudents();
 
-      toast({ title: "Student account created", description: result.message });
+      toast({ title: t("team.students.accountCreated", "Student account created"), description: result.message });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -229,73 +229,76 @@ export default function TeamStudentsPage() {
 
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Students</h1>
-          <p className="text-sm text-slate-500">Manage student accounts and link them to cases.</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("team.students.title", "Students")}</h1>
+          <p className="text-sm text-muted-foreground">{t("team.students.subtitle", "Manage student accounts and link them to cases.")}</p>
         </div>
         <div className="flex gap-2">
-          <Btn variant="outline" onClick={fetchStudents} size="sm" title="Refresh">
+          <Button variant="outline" size="sm" onClick={fetchStudents} title={t("common.refresh", "Refresh")}>
             <RefreshCw className="h-4 w-4" />
-          </Btn>
-          <Btn
+          </Button>
+          <Button
             onClick={() => {
               resetWizard();
               setShowModal(true);
             }}
+            className="gap-2"
           >
-            <UserPlus className="h-4 w-4 me-2" />
-            Create Student Account
-          </Btn>
+            <UserPlus className="h-4 w-4" />
+            {t("team.students.createAccount", "Create Student Account")}
+          </Button>
         </div>
       </div>
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <input
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
           value={listSearch}
           onChange={(e) => setListSearch(e.target.value)}
-          placeholder="Search by name or email…"
-          className="w-full border border-slate-200 rounded-xl ps-9 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+          placeholder={t("team.students.searchPlaceholder", "Search by name or email…")}
+          className="ps-9"
         />
       </div>
 
       {/* List */}
       {listLoading ? (
-        <div className="flex items-center justify-center py-16 text-slate-400">
-          <Loader2 className="h-6 w-6 animate-spin me-2" /> Loading…
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin me-2" /> {t("common.loading", "Loading…")}
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-          <User className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900">No student accounts yet</h3>
-          <p className="text-slate-500 text-sm mt-1">Start by creating an account and linking it to a case file.</p>
+        <div className="bg-card border-2 border-dashed border-border rounded-2xl p-12 text-center">
+          <User className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground">{t("team.students.noStudents", "No student accounts yet")}</h3>
+          <p className="text-muted-foreground text-sm mt-1">{t("team.students.noStudentsHint", "Start by creating an account and linking it to a case file.")}</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((s) => (
-            <Card key={s.id} className="p-4 flex items-start gap-3">
-              <div className="bg-indigo-50 h-10 w-10 rounded-full flex items-center justify-center shrink-0">
-                <User className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-slate-900 truncate text-sm">{s.full_name || "—"}</h4>
-                <div className="text-xs text-slate-500 space-y-0.5 mt-1">
-                  <p className="flex items-center gap-1.5 truncate">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    {s.email}
-                  </p>
-                  <p>{format(new Date(s.created_at), "d MMM yyyy")}</p>
+            <Card key={s.id} className="hover:shadow-md transition-shadow cursor-default">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-primary" />
                 </div>
-                {s.linked_case_id && (
-                  <Badge variant="success" className="mt-2">
-                    Linked to case
-                  </Badge>
-                )}
-              </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground truncate text-sm">{s.full_name || "—"}</h4>
+                  <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                    <p className="flex items-center gap-1.5 truncate">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      {s.email}
+                    </p>
+                    <p>{format(new Date(s.created_at), "d MMM yyyy")}</p>
+                  </div>
+                  {s.linked_case_id && (
+                    <Badge variant="secondary" className="mt-2 text-[10px] text-emerald-700 bg-emerald-50 border-emerald-200">
+                      {t("team.students.linkedToCase", "Linked to case")}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -303,66 +306,56 @@ export default function TeamStudentsPage() {
 
       {/* ── Create Wizard Modal ─────────────────────────────────────────── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[500px] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-[500px] overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-indigo-600" />
-                Create Student Account
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-foreground">
+                <UserPlus className="h-5 w-5 text-primary" />
+                {t("team.students.createAccount", "Create Student Account")}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-5">
               {/* Step indicator */}
-              <div className="flex items-center text-sm font-medium text-slate-400">
-                <span className={wizardStep === "search" ? "text-indigo-600 font-bold" : ""}>1. Find Case</span>
+              <div className="flex items-center text-sm font-medium text-muted-foreground">
+                <span className={wizardStep === "search" ? "text-primary font-bold" : ""}>{t("team.students.step1", "1. Find Case")}</span>
                 <ChevronRight className="h-4 w-4 mx-2 opacity-40" />
-                <span className={wizardStep === "email" ? "text-indigo-600 font-bold" : ""}>2. Set Email</span>
+                <span className={wizardStep === "email" ? "text-primary font-bold" : ""}>{t("team.students.step2", "2. Set Email")}</span>
               </div>
 
               {/* ── Step 1: Search ── */}
               {wizardStep === "search" && (
                 <>
-                  <p className="text-sm text-slate-600">
-                    Enter the student's name to search for a matching case. Selecting a case will automatically import
-                    their profile data.
+                  <p className="text-sm text-muted-foreground">
+                    {t("team.students.searchHint", "Enter the student's name to search for a matching case. Selecting a case will automatically import their profile data.")}
                   </p>
 
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       {
-                        label: "First Name *",
+                        label: t("team.students.firstName", "First Name *"),
                         value: firstName,
-                        setter: (v: string) => {
-                          setFirstName(v);
-                          setSelectedCase(null);
-                        },
+                        setter: (v: string) => { setFirstName(v); setSelectedCase(null); },
                       },
                       {
-                        label: "Middle",
+                        label: t("team.students.middleName", "Middle"),
                         value: middleName,
-                        setter: (v: string) => {
-                          setMiddleName(v);
-                          setSelectedCase(null);
-                        },
+                        setter: (v: string) => { setMiddleName(v); setSelectedCase(null); },
                       },
                       {
-                        label: "Family Name *",
+                        label: t("team.students.familyName", "Family Name *"),
                         value: familyName,
-                        setter: (v: string) => {
-                          setFamilyName(v);
-                          setSelectedCase(null);
-                        },
+                        setter: (v: string) => { setFamilyName(v); setSelectedCase(null); },
                       },
                     ].map(({ label, value, setter }) => (
                       <div key={label} className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500">{label}</label>
+                        <label className="text-xs font-bold text-muted-foreground">{label}</label>
                         <input
-                          className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          className="w-full p-2 border border-input rounded-lg text-sm focus:ring-2 focus:ring-ring outline-none bg-background text-foreground"
                           value={value}
                           onChange={(e) => setter(e.target.value)}
                         />
@@ -373,20 +366,22 @@ export default function TeamStudentsPage() {
                   {/* Search status */}
                   <div className="min-h-[24px]">
                     {searching && (
-                      <span className="flex items-center gap-1 text-xs text-indigo-600">
+                      <span className="flex items-center gap-1 text-xs text-primary">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        Searching cases…
+                        {t("team.students.searching", "Searching cases…")}
                       </span>
                     )}
                     {!searching && matchedCases.length > 0 && (
-                      <span className="text-xs text-slate-500">
-                        🔍 {matchedCases.length} matching case(s) — select to link:
+                      <span className="text-xs text-muted-foreground">
+                        🔍 {matchedCases.length} {t("team.students.matchingCases", "matching case(s) — select to link:")}
                       </span>
                     )}
                     {!searching &&
                       matchedCases.length === 0 &&
                       (firstName.length > 1 || familyName.length > 1) &&
-                      !selectedCase && <span className="text-xs text-slate-400">No matching cases found.</span>}
+                      !selectedCase && (
+                        <span className="text-xs text-muted-foreground">{t("team.students.noMatchingCases", "No matching cases found.")}</span>
+                      )}
                   </div>
 
                   {/* Results */}
@@ -396,39 +391,39 @@ export default function TeamStudentsPage() {
                         <button
                           key={c.id}
                           onClick={() => handleCaseSelect(c)}
-                          className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${
+                          className={`w-full text-start p-3 rounded-xl border transition-all flex items-center justify-between ${
                             selectedCase?.id === c.id
-                              ? "border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600"
-                              : "border-slate-200 hover:border-slate-300"
+                              ? "border-primary bg-primary/5 ring-1 ring-primary"
+                              : "border-border hover:border-border/80 bg-card"
                           }`}
                         >
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-slate-900">{c.full_name}</span>
-                            <span className="text-xs text-slate-400">{c.phone_number}</span>
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            <span className="text-sm font-medium text-foreground">{c.full_name}</span>
+                            <span className="text-xs text-muted-foreground">{c.phone_number}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                               {c.status.replace(/_/g, " ")}
                             </span>
                           </div>
-                          {selectedCase?.id === c.id && <Check className="h-4 w-4 text-indigo-600 shrink-0" />}
+                          {selectedCase?.id === c.id && <Check className="h-4 w-4 text-primary shrink-0" />}
                         </button>
                       ))}
                     </div>
                   )}
 
                   {selectedCase && (
-                    <p className="text-xs font-medium text-emerald-600 flex items-center gap-1">
+                    <p className="text-xs font-medium text-emerald-700 flex items-center gap-1">
                       <Check className="h-3 w-3" />
-                      Case selected — profile data will be imported
+                      {t("team.students.caseSelected", "Case selected — profile data will be imported")}
                     </p>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-3 border-t">
-                    <Btn variant="ghost" onClick={() => setShowModal(false)}>
-                      Cancel
-                    </Btn>
-                    <Btn disabled={!selectedCase} onClick={() => setWizardStep("email")}>
-                      Next <ChevronRight className="h-4 w-4 ms-1" />
-                    </Btn>
+                  <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <Button variant="ghost" onClick={() => setShowModal(false)}>
+                      {t("common.cancel", "Cancel")}
+                    </Button>
+                    <Button disabled={!selectedCase} onClick={() => setWizardStep("email")} className="gap-1">
+                      {t("common.next", "Next")} <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
                 </>
               )}
@@ -437,38 +432,37 @@ export default function TeamStudentsPage() {
               {wizardStep === "email" && (
                 <>
                   {/* Selected case summary */}
-                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100 space-y-0.5">
-                    <p className="text-xs text-indigo-600 font-bold uppercase">Linked Case</p>
-                    <p className="text-sm font-semibold text-indigo-900">{selectedCase?.full_name}</p>
-                    <p className="text-xs text-indigo-500">
+                  <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 space-y-0.5">
+                    <p className="text-xs text-primary font-bold uppercase">{t("team.students.linkedCase", "Linked Case")}</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedCase?.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {selectedCase?.phone_number}
                       {selectedCase?.city ? ` • ${selectedCase.city}` : ""}
                     </p>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Student Email Address *</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase">{t("team.students.emailLabel", "Student Email Address *")}</label>
                     <input
-                      className="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full p-3 border border-input rounded-xl text-sm focus:ring-2 focus:ring-ring outline-none bg-background text-foreground"
                       value={studentEmail}
                       onChange={(e) => setStudentEmail(e.target.value)}
                       placeholder="student@example.com"
                       type="email"
                     />
-                    <p className="text-xs text-slate-400">
-                      An invite email will be sent. If email delivery fails, a temporary password will be generated
-                      instead.
+                    <p className="text-xs text-muted-foreground">
+                      {t("team.students.emailHint", "A temporary password will be generated for the student.")}
                     </p>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t">
-                    <Btn variant="ghost" onClick={() => setWizardStep("search")}>
-                      <ChevronLeft className="h-4 w-4 me-1" /> Back
-                    </Btn>
-                    <Btn onClick={handleCreateAccount} disabled={creating || !studentEmail.includes("@")}>
-                      {creating ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : null}
-                      {creating ? "Creating…" : "Create Account"}
-                    </Btn>
+                  <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <Button variant="ghost" onClick={() => setWizardStep("search")} className="gap-1">
+                      <ChevronLeft className="h-4 w-4" /> {t("common.back", "Back")}
+                    </Button>
+                    <Button onClick={handleCreateAccount} disabled={creating || !studentEmail.includes("@")} className="gap-2">
+                      {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      {creating ? t("team.students.creating", "Creating…") : t("team.students.createAccount", "Create Account")}
+                    </Button>
                   </div>
                 </>
               )}
@@ -479,30 +473,30 @@ export default function TeamStudentsPage() {
 
       {/* ── Success Modal ───────────────────────────────────────────────── */}
       {tempCreds && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-2xl shadow-2xl border border-border w-full max-w-sm p-6 space-y-5">
             {/* Icon */}
-            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <Check className="h-8 w-8 text-green-600" />
+            <div className="h-16 w-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+              <Check className="h-8 w-8 text-emerald-600" />
             </div>
 
             {/* Title */}
             <div className="text-center">
-              <h3 className="text-xl font-bold">Account Created!</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="text-xl font-bold text-foreground">{t("team.students.accountCreated", "Account Created!")}</h3>
+              <p className="text-sm text-muted-foreground">
                 {tempCreds.invited
-                  ? "An invite email has been sent to the student."
-                  : "Share these credentials with the student. The password is shown only once."}
+                  ? t("team.students.inviteSent", "An invite email has been sent to the student.")
+                  : t("team.students.shareCredentials", "Share these credentials with the student. The password is shown only once.")}
               </p>
             </div>
 
             {/* Credentials */}
-            <div className="space-y-2 text-left">
+            <div className="space-y-2">
               {/* Email */}
-              <div className="p-3 bg-slate-50 rounded-xl border text-sm flex items-center justify-between gap-2">
+              <div className="p-3 bg-muted rounded-xl border border-border text-sm flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Email</p>
-                  <p className="font-medium truncate">{tempCreds.email}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{t("common.email", "Email")}</p>
+                  <p className="font-medium truncate text-foreground">{tempCreds.email}</p>
                 </div>
                 <button
                   onClick={async () => {
@@ -510,17 +504,17 @@ export default function TeamStudentsPage() {
                     setCopiedEmail(true);
                     setTimeout(() => setCopiedEmail(false), 2000);
                   }}
-                  className="text-slate-400 hover:text-slate-600 shrink-0"
+                  className="text-muted-foreground hover:text-foreground shrink-0"
                 >
-                  {copiedEmail ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copiedEmail ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                 </button>
               </div>
 
-              {/* Password (only if invite failed) */}
+              {/* Password */}
               {!tempCreds.invited && tempCreds.password && (
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-sm flex items-center justify-between gap-2">
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-sm flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-amber-600 uppercase">Temp Password (one-time)</p>
+                    <p className="text-[10px] font-bold text-amber-600 uppercase">{t("team.students.tempPassword", "Temp Password (one-time)")}</p>
                     <p className="font-bold text-amber-900 tracking-wider">{tempCreds.password}</p>
                   </div>
                   <button
@@ -531,21 +525,21 @@ export default function TeamStudentsPage() {
                     }}
                     className="text-amber-500 hover:text-amber-700 shrink-0"
                   >
-                    {copiedPw ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    {copiedPw ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                   </button>
                 </div>
               )}
 
               {tempCreds.invited && (
                 <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-                  ✅ Invite email sent — the student will set their own password.
+                  ✅ {t("team.students.inviteNote", "Invite email sent — the student will set their own password.")}
                 </p>
               )}
             </div>
 
-            <Btn variant="ghost" className="w-full" onClick={() => setTempCreds(null)}>
-              Done
-            </Btn>
+            <Button variant="outline" className="w-full" onClick={() => setTempCreds(null)}>
+              {t("common.done", "Done")}
+            </Button>
           </div>
         </div>
       )}

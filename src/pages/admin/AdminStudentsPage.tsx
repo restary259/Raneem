@@ -827,31 +827,37 @@ export default function AdminStudentsPage() {
                           icon: <Mail className="h-3.5 w-3.5" />,
                           label: isRtl ? "البريد" : "Email",
                           value: selected.email,
+                          rawValue: selected.email,
                         },
                         {
                           icon: <Phone className="h-3.5 w-3.5" />,
                           label: isRtl ? "الهاتف" : "Phone",
                           value: selected.phone_number || "—",
+                          rawValue: selected.phone_number,
                         },
                         {
                           icon: <Shield className="h-3.5 w-3.5" />,
                           label: isRtl ? "مدينة الميلاد" : "City of Birth",
                           value: selected.city || "—",
+                          rawValue: selected.city,
                         },
                         {
                           icon: <Phone className="h-3.5 w-3.5" />,
                           label: isRtl ? "رقم الطوارئ" : "Emergency Contact",
                           value: selected.emergency_contact || "—",
+                          rawValue: selected.emergency_contact,
                         },
                         {
                           icon: <Clock className="h-3.5 w-3.5" />,
                           label: isRtl ? "تاريخ الوصول" : "Arrival Date",
                           value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
+                          rawValue: selected.arrival_date,
                         },
                         {
                           icon: <Clock className="h-3.5 w-3.5" />,
                           label: isRtl ? "تاريخ الإنشاء" : "Created",
                           value: format(new Date(selected.created_at), "PPP"),
+                          rawValue: selected.created_at,
                         },
                         {
                           icon: <User className="h-3.5 w-3.5" />,
@@ -861,12 +867,16 @@ export default function AdminStudentsPage() {
                             : isRtl
                               ? "تسجيل ذاتي"
                               : "Self-registered",
+                          rawValue: selected.created_by
+                            ? creatorNames[selected.created_by] || selected.created_by
+                            : null,
                         },
-                      ].map(({ icon, label, value }) => (
+                      ].map(({ icon, label, value, rawValue }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
                           <span className="text-muted-foreground w-28 shrink-0 text-xs">{label}</span>
-                          <span className="font-medium text-xs break-all">{value}</span>
+                          <span className="font-medium text-xs break-all flex-1">{value}</span>
+                          <CopyButton value={rawValue} />
                         </div>
                       ))}
                     </div>
