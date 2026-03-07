@@ -197,7 +197,11 @@ const AdminCommandCenter = () => {
               <div className={`inline-flex p-2 rounded-lg ${kpi.bg} mb-3`}>
                 <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
               </div>
-              <p className="text-3xl font-bold text-foreground">{loading ? '–' : kpi.value}</p>
+              {loading ? (
+                <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" />
+              ) : (
+                <p className="text-3xl font-bold text-foreground">{kpi.value ?? 0}</p>
+              )}
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
             </CardContent>
           </Card>
