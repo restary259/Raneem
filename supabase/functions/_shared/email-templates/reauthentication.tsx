@@ -8,6 +8,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
   Text,
 } from 'npm:@react-email/components@0.0.22'
@@ -17,17 +18,23 @@ interface ReauthenticationEmailProps {
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="ar" dir="rtl">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>رمز التحقق الخاص بك</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Img
+          src="https://mzbadxfvxioedzdjxamc.supabase.co/storage/v1/object/public/student-documents/email-logo.png"
+          alt="DARB Agency"
+          width="120"
+          height="auto"
+          style={logo}
+        />
+        <Heading style={h1}>تأكيد هويتك</Heading>
+        <Text style={text}>استخدم الرمز أدناه لتأكيد هويتك:</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          هذا الرمز صالح لفترة قصيرة. إذا لم تطلبه، يمكنك تجاهل هذا البريد بأمان.
         </Text>
       </Container>
     </Body>
@@ -36,25 +43,47 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: '"IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", Arial, sans-serif',
+}
+const container = {
+  maxWidth: '520px',
+  margin: '0 auto',
+  padding: '32px 28px',
+  borderRadius: '12px',
+  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
+}
+const logo = { marginBottom: '24px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: 'hsl(222.2, 84%, 4.9%)',
   margin: '0 0 20px',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(215.4, 16.3%, 46.9%)',
+  lineHeight: '1.6',
+  margin: '0 0 16px',
 }
 const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
+  fontFamily: 'Courier, "Courier New", monospace',
+  fontSize: '28px',
   fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  color: 'hsl(222.2, 47.4%, 11.2%)',
+  letterSpacing: '6px',
+  backgroundColor: 'hsl(210, 40%, 96.1%)',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  margin: '0 0 28px',
+  display: 'block',
+  textAlign: 'center' as const,
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = {
+  fontSize: '12px',
+  color: 'hsl(215.4, 16.3%, 60%)',
+  margin: '24px 0 0',
+  borderTop: '1px solid hsl(214.3, 31.8%, 91.4%)',
+  paddingTop: '16px',
+}

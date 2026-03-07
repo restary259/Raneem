@@ -9,6 +9,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Text,
@@ -25,26 +26,31 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="ar" dir="rtl">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>تمت دعوتك للانضمام إلى {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Img
+          src="https://mzbadxfvxioedzdjxamc.supabase.co/storage/v1/object/public/student-documents/email-logo.png"
+          alt="DARB Agency"
+          width="120"
+          height="auto"
+          style={logo}
+        />
+        <Heading style={h1}>تمت دعوتك</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
+          تمت دعوتك للانضمام إلى{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          . انقر على الزر أدناه لقبول الدعوة وإنشاء حسابك.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          قبول الدعوة
         </Button>
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          إذا لم تكن تتوقع هذه الدعوة، يمكنك تجاهل هذا البريد بأمان.
         </Text>
       </Container>
     </Body>
@@ -53,27 +59,47 @@ export const InviteEmail = ({
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: '"IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", Arial, sans-serif',
+}
+const container = {
+  maxWidth: '520px',
+  margin: '0 auto',
+  padding: '32px 28px',
+  borderRadius: '12px',
+  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
+}
+const logo = { marginBottom: '24px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: 'hsl(222.2, 84%, 4.9%)',
   margin: '0 0 20px',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(215.4, 16.3%, 46.9%)',
+  lineHeight: '1.6',
+  margin: '0 0 24px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: 'hsl(222.2, 47.4%, 11.2%)', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  backgroundColor: 'hsl(222.2, 47.4%, 11.2%)',
+  color: 'hsl(210, 40%, 98%)',
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
+  borderRadius: '0.75rem',
+  padding: '13px 24px',
   textDecoration: 'none',
+  display: 'block',
+  textAlign: 'center' as const,
+  marginBottom: '24px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = {
+  fontSize: '12px',
+  color: 'hsl(215.4, 16.3%, 60%)',
+  margin: '24px 0 0',
+  borderTop: '1px solid hsl(214.3, 31.8%, 91.4%)',
+  paddingTop: '16px',
+}
