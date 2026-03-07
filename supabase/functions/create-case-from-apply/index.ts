@@ -44,6 +44,10 @@ Deno.serve(async (req) => {
       partner_id,
       actor_id,
       actor_name,
+      // Referral fields
+      referrer_user_id,
+      referral_id,
+      referral_discount,
       // Extended fields
       city,
       education_level,
@@ -177,6 +181,8 @@ Deno.serve(async (req) => {
         phone_number: cleanPhone,
         source,
         partner_id: validatedPartnerId,
+        referred_by: referrer_user_id ?? null,
+        discount_amount: referral_discount ? Number(referral_discount) : 0,
         status: "new",
         // Extended fields
         city: city ? stripHtml(String(city)).slice(0, 100) : null,
@@ -193,6 +199,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (caseError) throw caseError;
+
+    // Link referral record back to the new case
+    if (referral_id && newCase?.id) {
+      await supabaseAdmin.from("referrals").update({ referred_case_id: newCase.id }).eq("id", referral_id);
+    }
 
     // Log activity
     if (actor_id && actor_name) {
