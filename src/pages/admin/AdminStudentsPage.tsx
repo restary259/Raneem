@@ -335,12 +335,28 @@ export default function AdminStudentsPage() {
     setSelected(s);
     setEditing(false);
     setEditingVisa(false);
+
+    // Always re-fetch the latest profile from DB — the list cache may be stale
+    // (e.g. student filled their own info after admin loaded the page)
+    const { data: freshProfile } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+      )
+      .eq("id", s.id)
+      .maybeSingle();
+
+    const profile: StudentRecord = (freshProfile as StudentRecord) ?? s;
+    setSelected(profile);
+    // Keep the list in sync too
+    setStudents((prev) => prev.map((p) => (p.id === profile.id ? { ...p, ...profile } : p)));
+
     setEditForm({
-      full_name: s.full_name,
-      phone_number: s.phone_number || "",
-      city: s.city || "",
-      emergency_contact: s.emergency_contact || "",
-      arrival_date: s.arrival_date || "",
+      full_name: profile.full_name,
+      phone_number: profile.phone_number || "",
+      city: profile.city || "",
+      emergency_contact: profile.emergency_contact || "",
+      arrival_date: profile.arrival_date || "",
     });
     setDocs([]);
     setDocsLoading(true);
@@ -432,9 +448,17 @@ export default function AdminStudentsPage() {
       if (error) throw error;
       toast({ description: isRtl ? "تم حفظ التغييرات" : "Changes saved" });
       setEditing(false);
-      const updated = { ...selected, ...editForm };
-      setSelected(updated as StudentRecord);
-      setStudents((prev) => prev.map((s) => (s.id === selected.id ? ({ ...s, ...editForm } as StudentRecord) : s)));
+      // Re-fetch from DB to confirm the write landed and update both the sheet and list
+      const { data: confirmed } = await supabase
+        .from("profiles")
+        .select(
+          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
+        )
+        .eq("id", selected.id)
+        .maybeSingle();
+      const saved = (confirmed as StudentRecord) ?? { ...selected, ...editForm };
+      setSelected(saved);
+      setStudents((prev) => prev.map((s) => (s.id === selected.id ? { ...s, ...saved } : s)));
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
