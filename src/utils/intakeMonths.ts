@@ -11,8 +11,8 @@
 import { addMonths, format } from "date-fns";
 
 export interface MonthOption {
-  value: string;  // "YYYY-MM"
-  label: string;  // "March 2026"
+  value: string; // "YYYY-MM"
+  label: string; // "March 2026"
 }
 
 /**
