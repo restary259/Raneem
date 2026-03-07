@@ -48,10 +48,9 @@ interface StudentRecord {
   created_by: string | null;
   emergency_contact: string | null;
   arrival_date: string | null;
-  // Student-filled fields from their own dashboard
   gender: string | null;
   date_of_birth: string | null;
-  country: string | null; // home address
+  country: string | null;
   nationality: string | null;
   university_name: string | null;
   intake_month: string | null;
@@ -59,6 +58,7 @@ interface StudentRecord {
   updated_by_student_at: string | null;
 }
 
+// FIX: Added uploaded_by and uploader_name fields
 interface Document {
   id: string;
   file_name: string;
@@ -68,6 +68,8 @@ interface Document {
   file_type: string | null;
   file_size: number | null;
   notes: string | null;
+  uploaded_by: string | null;
+  uploader_name?: string | null;
 }
 
 interface CreatorInfo {
@@ -76,7 +78,6 @@ interface CreatorInfo {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SelectiveDeleteDialog
-// Allows admin to choose categories to delete and mode (soft/hard).
 // ─────────────────────────────────────────────────────────────────────────────
 const SelectiveDeleteDialog = ({
   student,
@@ -243,7 +244,7 @@ export default function AdminStudentsPage() {
   const [docs, setDocs] = useState<Document[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
 
-  // Visa fields for selected student
+  // Visa fields
   const [visaFields, setVisaFields] = useState<
     Array<{ id: string; label_en: string; label_ar: string; field_type: string; options_json: any[] | null }>
   >([]);
@@ -304,15 +305,10 @@ export default function AdminStudentsPage() {
         .is("case_id", null)
         .order("created_at", { ascending: false });
 
-      // Note: .is("deleted_at", null) is intentionally omitted here.
-      // The deleted_at column is added by migration 20260306_002.
-      // Once that migration has been applied, add .is("deleted_at", null) back.
-
       if (error) throw error;
       const profs = (profileData as StudentRecord[]) ?? [];
       setStudents(profs);
 
-      // Fetch creator names
       const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
       if (creatorIds.length > 0) {
         const { data: creatorProfs } = await supabase
@@ -345,8 +341,6 @@ export default function AdminStudentsPage() {
     setEditing(false);
     setEditingVisa(false);
 
-    // Always re-fetch the latest profile from DB — the list cache may be stale
-    // (e.g. student filled their own info after admin loaded the page)
     const { data: freshProfile } = await supabase
       .from("profiles")
       .select(
@@ -357,7 +351,6 @@ export default function AdminStudentsPage() {
 
     const profile: StudentRecord = (freshProfile as StudentRecord) ?? s;
     setSelected(profile);
-    // Keep the list in sync too
     setStudents((prev) => prev.map((p) => (p.id === profile.id ? { ...p, ...profile } : p)));
 
     setEditForm({
@@ -374,12 +367,12 @@ export default function AdminStudentsPage() {
     setVisaValueIds({});
     setReferralCount(0);
 
-    // Load all data in parallel
     try {
       const [docsRes, fieldsRes, valuesRes, referralRes] = await Promise.all([
+        // FIX: also fetch uploaded_by so we can resolve the uploader's name
         supabase
           .from("documents")
-          .select("id, file_name, file_url, category, created_at, file_type, file_size, notes")
+          .select("id, file_name, file_url, category, created_at, file_type, file_size, notes, uploaded_by")
           .eq("student_id", s.id)
           .order("created_at", { ascending: false }),
         (supabase as any)
@@ -392,7 +385,27 @@ export default function AdminStudentsPage() {
       ]);
 
       if (docsRes.error) throw docsRes.error;
-      setDocs((docsRes.data as Document[]) ?? []);
+      const rawDocs = (docsRes.data as Document[]) ?? [];
+
+      // FIX: Resolve uploader names from profiles
+      const uploaderIds = [...new Set(rawDocs.map((d) => d.uploaded_by).filter(Boolean) as string[])];
+      let uploaderMap: Record<string, string> = {};
+      if (uploaderIds.length > 0) {
+        const { data: uploaderProfs } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", uploaderIds);
+        (uploaderProfs ?? []).forEach((p: any) => {
+          uploaderMap[p.id] = p.full_name || p.email;
+        });
+      }
+
+      setDocs(
+        rawDocs.map((d) => ({
+          ...d,
+          uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null,
+        })),
+      );
 
       if (fieldsRes.data) setVisaFields(fieldsRes.data);
 
@@ -457,7 +470,6 @@ export default function AdminStudentsPage() {
       if (error) throw error;
       toast({ description: isRtl ? "تم حفظ التغييرات" : "Changes saved" });
       setEditing(false);
-      // Re-fetch from DB to confirm the write landed and update both the sheet and list
       const { data: confirmed } = await supabase
         .from("profiles")
         .select(
@@ -502,13 +514,29 @@ export default function AdminStudentsPage() {
       toast({ description: isRtl ? "تم رفع الملف" : "File uploaded" });
       setCustomDocName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-      const { data } = await supabase
+
+      // Re-fetch docs with uploader names
+      const { data: refreshedDocs } = await supabase
         .from("documents")
-        .select("*")
+        .select("id, file_name, file_url, category, created_at, file_type, file_size, notes, uploaded_by")
         .eq("student_id", selected.id)
-        // Note: .is("deleted_at", null) requires migration 20260306_002
         .order("created_at", { ascending: false });
-      setDocs((data as Document[]) ?? []);
+
+      const rawDocs = (refreshedDocs as Document[]) ?? [];
+      const uploaderIds = [...new Set(rawDocs.map((d) => d.uploaded_by).filter(Boolean) as string[])];
+      let uploaderMap: Record<string, string> = {};
+      if (uploaderIds.length > 0) {
+        const { data: uploaderProfs } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", uploaderIds);
+        (uploaderProfs ?? []).forEach((p: any) => {
+          uploaderMap[p.id] = p.full_name || p.email;
+        });
+      }
+      setDocs(
+        rawDocs.map((d) => ({ ...d, uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null })),
+      );
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -523,7 +551,6 @@ export default function AdminStudentsPage() {
       if (urlParts[1]) {
         await supabase.storage.from("student-documents").remove([urlParts[1]]);
       }
-      // Soft delete the document record (cast to any since deleted_at is added by migration)
       await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast({ description: isRtl ? "تم حذف الملف" : "Document deleted" });
@@ -532,12 +559,25 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const handleDownloadDoc = (doc: Document) => {
-    const a = document.createElement("a");
-    a.href = doc.file_url;
-    a.download = doc.file_name;
-    a.target = "_blank";
-    a.click();
+  // FIX: Use signed URL for download (bucket is private, public URLs fail)
+  const handleDownloadDoc = async (doc: Document) => {
+    try {
+      const urlParts = doc.file_url.split("/student-documents/");
+      const storagePath = urlParts[1];
+      if (!storagePath) {
+        window.open(doc.file_url, "_blank");
+        return;
+      }
+      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60); // 60-second signed URL
+      if (error) throw error;
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = doc.file_name;
+      a.target = "_blank";
+      a.click();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: `Download failed: ${err.message}` });
+    }
   };
 
   const handleResetPassword = async () => {
@@ -879,7 +919,6 @@ export default function AdminStudentsPage() {
                       <KeyRound className="h-4 w-4" />
                       {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
                     </Button>
-                    {/* ✅ NEW: Selective delete button */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -1066,20 +1105,30 @@ export default function AdminStudentsPage() {
                   ) : (
                     <div className="space-y-2">
                       {docs.map((doc) => (
+                        // FIX: Updated card to show upload date and uploader name
                         <div
                           key={doc.id}
-                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted text-xs"
+                          className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted text-xs border border-border/50"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <div className="min-w-0">
-                              <p className="truncate font-medium">{doc.file_name}</p>
-                              <div className="flex items-center gap-2 mt-0.5">
+                            <div className="min-w-0 space-y-0.5">
+                              <p className="truncate font-medium text-sm">{doc.file_name}</p>
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="text-xs capitalize px-1 py-0">
                                   {doc.category.replace(/_/g, " ")}
                                 </Badge>
                                 {doc.file_size && (
                                   <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-muted-foreground mt-0.5">
+                                <span>{format(new Date(doc.created_at), "dd MMM yyyy, HH:mm")}</span>
+                                {doc.uploader_name && (
+                                  <span className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />
+                                    {doc.uploader_name}
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -1090,6 +1139,7 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDownloadDoc(doc)}
+                              title={isRtl ? "تحميل" : "Download"}
                             >
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
@@ -1098,6 +1148,7 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDeleteDoc(doc)}
+                              title={isRtl ? "حذف" : "Delete"}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
