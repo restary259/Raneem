@@ -568,17 +568,13 @@ export default function AdminStudentsPage() {
         window.open(doc.file_url, "_blank");
         return;
       }
-      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60);
+      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60); // 60-second signed URL
       if (error) throw error;
-
-      // Append to DOM before clicking — detached anchors are unreliable
       const a = document.createElement("a");
       a.href = data.signedUrl;
       a.download = doc.file_name;
-      a.style.display = "none";
-      document.body.appendChild(a);
+      a.target = "_blank";
       a.click();
-      document.body.removeChild(a);
     } catch (err: any) {
       toast({ variant: "destructive", description: `Download failed: ${err.message}` });
     }
