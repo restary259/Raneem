@@ -309,11 +309,44 @@
       "title": "Settings",
       "platform": "Platform",
       "contacts": "Important Contacts",
+      "commissions": "Commissions",
       "platformTitle": "Platform Configuration",
       "addContact": "Add Contact"
     },
     "tabs": {
       "spreadsheet": "Spreadsheet"
+    },
+    "students": {
+      "title": "Students",
+      "subtitle": "Manage student accounts",
+      "createAccount": "Create Student Account",
+      "searchPlaceholder": "Search by name or email...",
+      "noStudents": "No student accounts yet",
+      "noStudentsHint": "Create an account and link it to a case",
+      "verifyTitle": "Admin Verification Required",
+      "verifyDesc": "Viewing sensitive student data requires password verification.",
+      "verifying": "Verifying...",
+      "verify": "Verify",
+      "deleteTitle": "Select Categories to Delete",
+      "deleteMode": "Delete Mode",
+      "softDelete": "Hidden but recoverable",
+      "hardDelete": "Permanent — irreversible",
+      "hardDeleteWarning": "Hard delete permanently destroys data. Enter your admin password to confirm.",
+      "contactInfo": "Contact Information",
+      "documents": "Documents",
+      "caseAndSubmissions": "Case & Submissions",
+      "changessaved": "Changes saved",
+      "fileUploaded": "File uploaded",
+      "fileDeleted": "Document deleted",
+      "confirmDelete": "Delete this document?",
+      "deleted": "Deleted",
+      "resetPassword": "Reset Password",
+      "tempPasswordTitle": "Temporary Password Generated",
+      "tempPasswordWarning": "Share this with the student. It will not be shown again.",
+      "profileSection": "Student Profile",
+      "financialSection": "Financial Summary",
+      "visaSection": "Visa Information",
+      "documentsSection": "Documents"
     }
   },
   "influencer": {
@@ -343,22 +376,10 @@
       "promoContent": "📦 Promotional Content",
       "marketingTips": "💡 Marketing Tips",
       "assets": {
-        "logo": {
-          "title": "Agency Logo",
-          "desc": "Darb logo in different formats for use in posts"
-        },
-        "instagram": {
-          "title": "Instagram Post Template",
-          "desc": "Ready-made templates for posting on Instagram and TikTok"
-        },
-        "brochure": {
-          "title": "Programs Brochure",
-          "desc": "Comprehensive booklet about study programs in Germany"
-        },
-        "video": {
-          "title": "Promotional Video",
-          "desc": "Short clip for sharing with followers"
-        }
+        "logo": {"title": "Agency Logo","desc": "Darb logo in different formats for use in posts"},
+        "instagram": {"title": "Instagram Post Template","desc": "Ready-made templates for posting on Instagram and TikTok"},
+        "brochure": {"title": "Programs Brochure","desc": "Comprehensive booklet about study programs in Germany"},
+        "video": {"title": "Promotional Video","desc": "Short clip for sharing with followers"}
       },
       "tips": [
         "Use Stories to share your real experience with the agency",
@@ -714,8 +735,24 @@
     },
     "students": {
       "title": "Students",
-      "submitted": "Submitted",
-      "enrolled": "Enrolled"
+      "subtitle": "Manage student accounts and link them to cases.",
+      "createAccount": "Create Student Account",
+      "searchPlaceholder": "Search by name or email...",
+      "noStudents": "No student accounts yet",
+      "noStudentsHint": "Start by creating an account and linking it to a case file.",
+      "successTitle": "Account Created",
+      "successDesc": "Share these credentials with the student. The password is shown only once.",
+      "tempEmail": "Email",
+      "tempPassword": "Temporary Password",
+      "searchCase": "Search by student name",
+      "firstName": "First Name",
+      "middleName": "Middle Name",
+      "familyName": "Family Name",
+      "emailLabel": "Student Email Address",
+      "selectCase": "Select a case to link"
+    },
+    "bagrut": {
+      "subtitle": "Convert Bagrut scores to German university grades"
     },
     "analytics": {
       "title": "My Analytics",
@@ -893,6 +930,35 @@
       "enrollment_paid": "Enrolled & Paid",
       "forgotten": "Forgotten",
       "cancelled": "Cancelled"
+    },
+    "fields": {
+      "street": "Street",
+      "houseNo": "House No.",
+      "postcode": "Postcode",
+      "city": "City",
+      "country": "Country",
+      "address": "Address",
+      "gender": "Gender",
+      "firstName": "First Name",
+      "middleName": "Middle Name",
+      "lastName": "Last Name",
+      "dateOfBirth": "Date of Birth",
+      "arrivalDate": "Arrival Date",
+      "courseStart": "Course Start",
+      "courseEnd": "Course End",
+      "startMonth": "Start Month",
+      "school": "School",
+      "program": "Program",
+      "studentEmail": "Student Email",
+      "studentPhone": "Student Phone",
+      "emergencyContact": "Emergency Contact",
+      "applicationInfo": "Application Info",
+      "noApplicationData": "No application data recorded.",
+      "studentProfile": "Student Profile",
+      "financialSummary": "Financial Summary",
+      "serviceFee": "Service Fee",
+      "total": "Total",
+      "programLabel": "Program"
     }
   },
   "partner": {
@@ -946,9 +1012,10 @@
     "lockInfo": "Some rewards are locked for {{days}} more days."
   },
   "visa": {
-    "title": "Visa Status",
-    "readOnly": "Visa status is updated by your assigned team member.",
-    "personalInfo": "Visa-Relevant Info",
+    "title": "Visa Application",
+    "subtitle": "Track your visa status and required documents",
+    "readOnly": "Visa status is managed by your team member.",
+    "personalInfo": "Visa Information",
     "passport": "Passport Number",
     "nationality": "Nationality",
     "arrivalDate": "Arrival Date",
@@ -957,7 +1024,20 @@
     "contactAbroad": "Contact Abroad",
     "outcome": "Outcome",
     "notes": "Notes",
-    "noApplication": "No visa application on file yet. Your team will update this when the visa process begins."
+    "noApplication": "No visa application on file yet. Your team will update this when the visa process begins.",
+    "noData": "No visa information on file yet. Your team will update this when the process begins.",
+    "adminFields": "Visa Fields",
+    "addField": "Add Field",
+    "fieldLabelEn": "Label (English)",
+    "fieldLabelAr": "Label (Arabic)",
+    "fieldType": "Field Type",
+    "fieldTypeText": "Text",
+    "fieldTypeDate": "Date",
+    "fieldTypeSelect": "Dropdown",
+    "fieldTypeBoolean": "Yes / No",
+    "required": "Required",
+    "active": "Active",
+    "saveSuccess": "Visa info saved"
   },
   "contacts": {
     "title": "Important Contacts",
@@ -986,6 +1066,19 @@
     },
     "checklist": {
       "title": "Your Checklist"
+    }
+  },
+  "settings": {
+    "reset": {
+      "title": "⚠️ Data Reset",
+      "subtitle": "Permanently delete operational data. This cannot be undone.",
+      "selectCategories": "Select data categories to delete:",
+      "rowCount": "{{count}} records",
+      "totalRecords": "Total: {{count}} records will be deleted",
+      "passwordPrompt": "Enter your admin password to confirm:",
+      "confirmButton": "Delete Selected Data",
+      "successMsg": "Selected data deleted successfully",
+      "noneSelected": "Please select at least one category"
     }
   }
 }
