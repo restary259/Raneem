@@ -21,10 +21,7 @@ export const DOB_MONTHS = [
   { v: "12", l: "December" },
 ] as const;
 
-export const DOB_YEARS = Array.from(
-  { length: 2015 - 1940 + 1 },
-  (_, i) => 1940 + i
-).reverse();
+export const DOB_YEARS = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
 
 /**
  * Normalizes day/month/year inputs into ISO 8601 "YYYY-MM-DD" string.
@@ -36,11 +33,7 @@ export const DOB_YEARS = Array.from(
  *   normalizeDate(29, 2, 2023)  → throws "Invalid date"
  *   normalizeDate(31, 4, 2026)  → throws "Invalid date"
  */
-export function normalizeDate(
-  day: string | number,
-  month: string | number,
-  year: string | number
-): string {
+export function normalizeDate(day: string | number, month: string | number, year: string | number): string {
   const d = Number(day);
   const m = Number(month);
   const y = Number(year);
@@ -65,14 +58,8 @@ export function normalizeDate(
   const date = new Date(Date.UTC(y, m - 1, d));
 
   // If JS rolls over (e.g. Feb 30 → Mar 2), the round-trip will differ
-  if (
-    date.getUTCFullYear() !== y ||
-    date.getUTCMonth() !== m - 1 ||
-    date.getUTCDate() !== d
-  ) {
-    throw new Error(
-      `Invalid date: ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y} does not exist`
-    );
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) {
+    throw new Error(`Invalid date: ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y} does not exist`);
   }
 
   return date.toISOString().slice(0, 10); // "YYYY-MM-DD"
