@@ -376,8 +376,11 @@ export default function AdminStudentsPage() {
           "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
         )
         .in("id", userIds)
-        .is("deleted_at", null) // ✅ Respect soft-delete
         .order("created_at", { ascending: false });
+
+      // Note: .is("deleted_at", null) is intentionally omitted here.
+      // The deleted_at column is added by migration 20260306_002.
+      // Once that migration has been applied, add .is("deleted_at", null) back.
 
       if (error) throw error;
       const profs = (profileData as StudentRecord[]) ?? [];
@@ -446,7 +449,7 @@ export default function AdminStudentsPage() {
         .from("documents")
         .select("id, file_name, file_url, category, created_at, file_type, file_size, notes")
         .eq("student_id", s.id)
-        .is("deleted_at", null) // ✅ Respect soft-delete
+        // Note: .is("deleted_at", null) requires migration 20260306_002
         .order("created_at", { ascending: false });
       if (error) throw error;
       setDocs((data as Document[]) ?? []);
@@ -516,7 +519,7 @@ export default function AdminStudentsPage() {
         .from("documents")
         .select("*")
         .eq("student_id", selected.id)
-        .is("deleted_at", null)
+        // Note: .is("deleted_at", null) requires migration 20260306_002
         .order("created_at", { ascending: false });
       setDocs((data as Document[]) ?? []);
     } catch (err: any) {
