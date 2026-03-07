@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CopyButton } from "@/components/common/CopyButton";
 import {
   RefreshCw,
   Search,
@@ -35,8 +34,6 @@ import {
   Edit3,
   X,
   AlertCircle,
-  Lock,
-  Unlock,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -67,97 +64,6 @@ interface Document {
 interface CreatorInfo {
   [userId: string]: string;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PasswordGate
-// Shows a password input and calls verify-admin-password edge function.
-// Returns a view_token on success (2-min TTL).
-// ─────────────────────────────────────────────────────────────────────────────
-const PasswordGate = ({
-  isRtl,
-  onSuccess,
-  onCancel,
-}: {
-  isRtl: boolean;
-  onSuccess: (token: string) => void;
-  onCancel: () => void;
-}) => {
-  const { toast } = useToast();
-  const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-
-  const handleVerify = async () => {
-    if (!password) return;
-    setVerifying(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) throw new Error("Session expired");
-
-      const resp = await supabase.functions.invoke("verify-admin-password", {
-        body: { password },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (resp.error || !resp.data?.view_token) {
-        throw new Error(resp.data?.error || "Verification failed");
-      }
-
-      onSuccess(resp.data.view_token);
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message || "Wrong password" });
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-        <Lock className="h-5 w-5 text-amber-600 shrink-0" />
-        <p className="text-sm text-amber-800">
-          {isRtl
-            ? "يتطلب عرض هذه البيانات الحساسة التحقق من كلمة المرور."
-            : "Viewing sensitive student data requires password verification."}
-        </p>
-      </div>
-
-      <div>
-        <Label className="text-xs">{isRtl ? "كلمة المرور" : "Admin Password"}</Label>
-        <div className="relative mt-1">
-          <Input
-            type={showPw ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleVerify();
-            }}
-            placeholder={isRtl ? "أدخل كلمة المرور" : "Enter your password"}
-            className="pe-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPw(!showPw)}
-            className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onCancel} disabled={verifying}>
-          {isRtl ? "إلغاء" : "Cancel"}
-        </Button>
-        <Button className="flex-1 gap-2" onClick={handleVerify} disabled={!password || verifying}>
-          {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4" />}
-          {verifying ? (isRtl ? "جارٍ التحقق..." : "Verifying...") : isRtl ? "تأكيد" : "Verify"}
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SelectiveDeleteDialog
@@ -346,12 +252,7 @@ export default function AdminStudentsPage() {
   const [showResetPw, setShowResetPw] = useState(false);
   const [copiedReset, setCopiedReset] = useState(false);
 
-  // ✅ NEW: Password gate for sensitive profile view
-  const [showPasswordGate, setShowPasswordGate] = useState(false);
-  const [viewToken, setViewToken] = useState<string | null>(null);
-  const [pendingStudent, setPendingStudent] = useState<StudentRecord | null>(null);
-
-  // ✅ NEW: Selective delete dialog
+  // Selective delete dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
@@ -411,26 +312,8 @@ export default function AdminStudentsPage() {
     fetchStudents();
   }, [fetchStudents]);
 
-  // ✅ CHANGED: Clicking a student card now shows password gate first
   const handleCardClick = (s: StudentRecord) => {
-    if (viewToken) {
-      // Already verified — open directly
-      openStudent(s);
-    } else {
-      setPendingStudent(s);
-      setShowPasswordGate(true);
-    }
-  };
-
-  const handleGateSuccess = (token: string) => {
-    setViewToken(token);
-    setShowPasswordGate(false);
-    // Auto-expire the token after 2 min
-    setTimeout(() => setViewToken(null), 120_000);
-    if (pendingStudent) {
-      openStudent(pendingStudent);
-      setPendingStudent(null);
-    }
+    openStudent(s);
   };
 
   const openStudent = async (s: StudentRecord) => {
@@ -618,12 +501,6 @@ export default function AdminStudentsPage() {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          {viewToken && (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
-              <Unlock className="h-3 w-3" />
-              {isRtl ? "تم التحقق" : "Verified (2 min)"}
-            </div>
-          )}
           <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             {isRtl ? "تحديث" : "Refresh"}
@@ -708,34 +585,6 @@ export default function AdminStudentsPage() {
           ))}
         </div>
       )}
-
-      {/* ── Password Gate Dialog ── */}
-      <Dialog
-        open={showPasswordGate}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowPasswordGate(false);
-            setPendingStudent(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              {isRtl ? "تحقق من الهوية" : "Verify Identity"}
-            </DialogTitle>
-          </DialogHeader>
-          <PasswordGate
-            isRtl={isRtl}
-            onSuccess={handleGateSuccess}
-            onCancel={() => {
-              setShowPasswordGate(false);
-              setPendingStudent(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
 
       {/* ── Student Detail Sheet ── */}
       <Sheet
@@ -827,37 +676,31 @@ export default function AdminStudentsPage() {
                           icon: <Mail className="h-3.5 w-3.5" />,
                           label: isRtl ? "البريد" : "Email",
                           value: selected.email,
-                          rawValue: selected.email,
                         },
                         {
                           icon: <Phone className="h-3.5 w-3.5" />,
                           label: isRtl ? "الهاتف" : "Phone",
                           value: selected.phone_number || "—",
-                          rawValue: selected.phone_number,
                         },
                         {
                           icon: <Shield className="h-3.5 w-3.5" />,
                           label: isRtl ? "مدينة الميلاد" : "City of Birth",
                           value: selected.city || "—",
-                          rawValue: selected.city,
                         },
                         {
                           icon: <Phone className="h-3.5 w-3.5" />,
                           label: isRtl ? "رقم الطوارئ" : "Emergency Contact",
                           value: selected.emergency_contact || "—",
-                          rawValue: selected.emergency_contact,
                         },
                         {
                           icon: <Clock className="h-3.5 w-3.5" />,
                           label: isRtl ? "تاريخ الوصول" : "Arrival Date",
                           value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
-                          rawValue: selected.arrival_date,
                         },
                         {
                           icon: <Clock className="h-3.5 w-3.5" />,
                           label: isRtl ? "تاريخ الإنشاء" : "Created",
                           value: format(new Date(selected.created_at), "PPP"),
-                          rawValue: selected.created_at,
                         },
                         {
                           icon: <User className="h-3.5 w-3.5" />,
@@ -867,16 +710,12 @@ export default function AdminStudentsPage() {
                             : isRtl
                               ? "تسجيل ذاتي"
                               : "Self-registered",
-                          rawValue: selected.created_by
-                            ? creatorNames[selected.created_by] || selected.created_by
-                            : null,
                         },
-                      ].map(({ icon, label, value, rawValue }) => (
+                      ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
                           <span className="text-muted-foreground w-28 shrink-0 text-xs">{label}</span>
-                          <span className="font-medium text-xs break-all flex-1">{value}</span>
-                          <CopyButton value={rawValue} />
+                          <span className="font-medium text-xs break-all">{value}</span>
                         </div>
                       ))}
                     </div>
@@ -1015,13 +854,11 @@ export default function AdminStudentsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            <CopyButton value={doc.file_url} />
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDownloadDoc(doc)}
-                              title={isRtl ? "تنزيل" : "Download"}
                             >
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
@@ -1030,7 +867,6 @@ export default function AdminStudentsPage() {
                               size="icon"
                               className="h-7 w-7"
                               onClick={() => handleDeleteDoc(doc)}
-                              title={isRtl ? "حذف" : "Delete"}
                             >
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
