@@ -21,16 +21,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type DeleteCategory =
-  | "contact_info"
-  | "documents"
-  | "payments"
-  | "case"
-  | "all";
+type DeleteCategory = "contact_info" | "documents" | "payments" | "case" | "all";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,13 +39,12 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     // Validate caller
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } =
-      await supabaseAdmin.auth.getUser(token);
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData?.user) {
       return json({ error: "Invalid token" }, 401);
     }
@@ -84,10 +77,7 @@ serve(async (req) => {
     } = body;
 
     if (!student_id || !categories?.length || !mode) {
-      return json(
-        { error: "student_id, categories[], and mode are required" },
-        400
-      );
+      return json({ error: "student_id, categories[], and mode are required" }, 400);
     }
 
     if (!["soft", "hard"].includes(mode)) {
@@ -99,13 +89,8 @@ serve(async (req) => {
       if (!password) {
         return json({ error: "Password is required for hard delete" }, 400);
       }
-      const supabaseAuth = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-      );
-      const { error: signInError } = await supabaseAuth.auth.signInWithPassword(
-        { email: callerEmail!, password }
-      );
+      const supabaseAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+      const { error: signInError } = await supabaseAuth.auth.signInWithPassword({ email: callerEmail!, password });
       if (signInError) {
         return json({ error: "Incorrect password" }, 401);
       }
@@ -117,18 +102,11 @@ serve(async (req) => {
     const snapshot: Record<string, unknown> = {};
 
     // ── Collect snapshot data ────────────────────────────────────────
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("*")
-      .eq("id", student_id)
-      .single();
+    const { data: profile } = await supabaseAdmin.from("profiles").select("*").eq("id", student_id).single();
     snapshot.profile = profile;
 
     if (includeAll || categories.includes("documents")) {
-      const { data: docs } = await supabaseAdmin
-        .from("documents")
-        .select("*")
-        .eq("student_id", student_id);
+      const { data: docs } = await supabaseAdmin.from("documents").select("*").eq("student_id", student_id);
       snapshot.documents = docs;
     }
 
@@ -141,16 +119,14 @@ serve(async (req) => {
     }
 
     // ── Write deletion log BEFORE any destructive action ─────────────
-    const { error: logError } = await supabaseAdmin
-      .from("deletion_logs")
-      .insert({
-        deleted_by: callerId,
-        target_type: "student",
-        target_id: student_id,
-        categories,
-        mode,
-        snapshot_json: snapshot,
-      });
+    const { error: logError } = await supabaseAdmin.from("deletion_logs").insert({
+      deleted_by: callerId,
+      target_type: "student",
+      target_id: student_id,
+      categories,
+      mode,
+      snapshot_json: snapshot,
+    });
 
     if (logError) {
       console.error("Failed to write deletion log:", logError);
@@ -176,30 +152,18 @@ serve(async (req) => {
       }
 
       if (includeAll || categories.includes("documents")) {
-        await supabaseAdmin
-          .from("documents")
-          .update({ deleted_at: now })
-          .eq("student_id", student_id);
+        await supabaseAdmin.from("documents").update({ deleted_at: now }).eq("student_id", student_id);
         deleted.push("documents");
       }
 
       if (includeAll || categories.includes("case")) {
         // Soft-delete case_submissions linked to this student
-        const { data: cases } = await supabaseAdmin
-          .from("cases")
-          .select("id")
-          .eq("student_user_id", student_id);
+        const { data: cases } = await supabaseAdmin.from("cases").select("id").eq("student_user_id", student_id);
 
         if (cases?.length) {
           const caseIds = cases.map((c: any) => c.id);
-          await supabaseAdmin
-            .from("case_submissions")
-            .update({ deleted_at: now })
-            .in("case_id", caseIds);
-          await supabaseAdmin
-            .from("cases")
-            .update({ deleted_at: now })
-            .in("id", caseIds);
+          await supabaseAdmin.from("case_submissions").update({ deleted_at: now }).in("case_id", caseIds);
+          await supabaseAdmin.from("cases").update({ deleted_at: now }).in("id", caseIds);
         }
         deleted.push("case");
       }
@@ -211,10 +175,7 @@ serve(async (req) => {
 
       if (includeAll || categories.includes("documents")) {
         // Attempt to remove files from storage
-        const { data: docs } = await supabaseAdmin
-          .from("documents")
-          .select("file_url")
-          .eq("student_id", student_id);
+        const { data: docs } = await supabaseAdmin.from("documents").select("file_url").eq("student_id", student_id);
 
         if (docs?.length) {
           const paths = docs
@@ -232,38 +193,23 @@ serve(async (req) => {
           }
         }
 
-        await supabaseAdmin
-          .from("documents")
-          .delete()
-          .eq("student_id", student_id);
+        await supabaseAdmin.from("documents").delete().eq("student_id", student_id);
         deleted.push("documents");
       }
 
       if (includeAll || categories.includes("case")) {
-        const { data: cases } = await supabaseAdmin
-          .from("cases")
-          .select("id")
-          .eq("student_user_id", student_id);
+        const { data: cases } = await supabaseAdmin.from("cases").select("id").eq("student_user_id", student_id);
 
         if (cases?.length) {
           const caseIds = cases.map((c: any) => c.id);
-          await supabaseAdmin
-            .from("case_submissions")
-            .delete()
-            .in("case_id", caseIds);
-          await supabaseAdmin
-            .from("cases")
-            .delete()
-            .in("id", caseIds);
+          await supabaseAdmin.from("case_submissions").delete().in("case_id", caseIds);
+          await supabaseAdmin.from("cases").delete().in("id", caseIds);
         }
         deleted.push("case");
       }
 
       if (includeAll || categories.includes("contact_info")) {
-        await supabaseAdmin
-          .from("profiles")
-          .delete()
-          .eq("id", student_id);
+        await supabaseAdmin.from("profiles").delete().eq("id", student_id);
 
         // Remove auth user — this is irreversible
         await supabaseAdmin.auth.admin.deleteUser(student_id);
@@ -272,14 +218,16 @@ serve(async (req) => {
     }
 
     // Audit log
-    await supabaseAdmin.rpc("log_activity", {
-      p_actor_id: callerId,
-      p_actor_name: callerEmail ?? "Admin",
-      p_action: mode === "hard" ? "student_hard_deleted" : "student_soft_deleted",
-      p_entity_type: "student",
-      p_entity_id: student_id,
-      p_metadata: { categories, deleted },
-    }).catch(() => {});
+    await supabaseAdmin
+      .rpc("log_activity", {
+        p_actor_id: callerId,
+        p_actor_name: callerEmail ?? "Admin",
+        p_action: mode === "hard" ? "student_hard_deleted" : "student_soft_deleted",
+        p_entity_type: "student",
+        p_entity_id: student_id,
+        p_metadata: { categories, deleted },
+      })
+      .catch(() => {});
 
     return json(
       {
@@ -288,7 +236,7 @@ serve(async (req) => {
         deleted,
         message: `${mode} delete completed for: ${deleted.join(", ")}`,
       },
-      200
+      200,
     );
   } catch (e) {
     console.error("selective-delete error:", e);
