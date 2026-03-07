@@ -66,7 +66,6 @@ const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
 
 // Partner pages (Phase 5)
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
-const PartnerLinkPage = lazy(() => import("./pages/partner/PartnerLinkPage"));
 const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPage"));
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
 
@@ -216,7 +215,6 @@ const App = () => {
               }
             >
               <Route index element={<PartnerOverviewPage />} />
-              <Route path="link" element={<PartnerLinkPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
             </Route>
