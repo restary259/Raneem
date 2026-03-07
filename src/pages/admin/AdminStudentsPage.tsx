@@ -234,6 +234,19 @@ export default function AdminStudentsPage() {
   const [docs, setDocs] = useState<Document[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
 
+  // Visa fields for selected student
+  const [visaFields, setVisaFields] = useState<
+    Array<{ id: string; label_en: string; label_ar: string; field_type: string; options_json: any[] | null }>
+  >([]);
+  const [visaValues, setVisaValues] = useState<Record<string, string>>({});
+  const [visaValueIds, setVisaValueIds] = useState<Record<string, string>>({});
+  const [editingVisa, setEditingVisa] = useState(false);
+  const [visaDraft, setVisaDraft] = useState<Record<string, string>>({});
+  const [savingVisa, setSavingVisa] = useState(false);
+
+  // Referral count
+  const [referralCount, setReferralCount] = useState(0);
+
   // Edit mode
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<StudentRecord>>({});
@@ -319,6 +332,7 @@ export default function AdminStudentsPage() {
   const openStudent = async (s: StudentRecord) => {
     setSelected(s);
     setEditing(false);
+    setEditingVisa(false);
     setEditForm({
       full_name: s.full_name,
       phone_number: s.phone_number || "",
@@ -328,19 +342,73 @@ export default function AdminStudentsPage() {
     });
     setDocs([]);
     setDocsLoading(true);
+    setVisaFields([]);
+    setVisaValues({});
+    setVisaValueIds({});
+    setReferralCount(0);
+
+    // Load all data in parallel
     try {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("id, file_name, file_url, category, created_at, file_type, file_size, notes")
-        .eq("student_id", s.id)
-        // Note: .is("deleted_at", null) requires migration 20260306_002
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setDocs((data as Document[]) ?? []);
+      const [docsRes, fieldsRes, valuesRes, referralRes] = await Promise.all([
+        supabase
+          .from("documents")
+          .select("id, file_name, file_url, category, created_at, file_type, file_size, notes")
+          .eq("student_id", s.id)
+          .order("created_at", { ascending: false }),
+        (supabase as any)
+          .from("visa_fields")
+          .select("id, label_en, label_ar, field_type, options_json")
+          .eq("is_active", true)
+          .order("display_order"),
+        (supabase as any).from("visa_field_values").select("id, field_id, value").eq("student_user_id", s.id),
+        (supabase as any).from("referrals").select("id", { count: "exact", head: true }).eq("referrer_user_id", s.id),
+      ]);
+
+      if (docsRes.error) throw docsRes.error;
+      setDocs((docsRes.data as Document[]) ?? []);
+
+      if (fieldsRes.data) setVisaFields(fieldsRes.data);
+
+      const valMap: Record<string, string> = {};
+      const idMap: Record<string, string> = {};
+      (valuesRes.data ?? []).forEach((v: any) => {
+        valMap[v.field_id] = v.value ?? "";
+        idMap[v.field_id] = v.id;
+      });
+      setVisaValues(valMap);
+      setVisaValueIds(idMap);
+      setVisaDraft(valMap);
+
+      setReferralCount(referralRes.count ?? 0);
     } catch (err: any) {
       console.error(err);
     } finally {
       setDocsLoading(false);
+    }
+  };
+
+  const saveVisaValues = async () => {
+    if (!selected) return;
+    setSavingVisa(true);
+    try {
+      const upserts = visaFields.map((f) => ({
+        id: visaValueIds[f.id] ?? undefined,
+        field_id: f.id,
+        student_user_id: selected.id,
+        value: visaDraft[f.id] ?? null,
+        updated_at: new Date().toISOString(),
+      }));
+      const { error } = await (supabase as any)
+        .from("visa_field_values")
+        .upsert(upserts, { onConflict: "field_id,student_user_id" });
+      if (error) throw error;
+      setVisaValues({ ...visaDraft });
+      setEditingVisa(false);
+      toast({ description: isRtl ? "تم حفظ بيانات الفيزا" : "Visa data saved" });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSavingVisa(false);
     }
   };
 
@@ -815,6 +883,97 @@ export default function AdminStudentsPage() {
                       </Button>
                     </div>
                   </div>
+                </div>
+
+                <Separator />
+
+                {/* Visa Field Values */}
+                {visaFields.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {isRtl ? "بيانات الفيزا" : "Visa Information"}
+                      </p>
+                      {!editingVisa ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => {
+                            setVisaDraft({ ...visaValues });
+                            setEditingVisa(true);
+                          }}
+                        >
+                          <Edit3 className="h-3 w-3" /> {isRtl ? "تعديل" : "Edit"}
+                        </Button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={() => setEditingVisa(false)}
+                            disabled={savingVisa}
+                          >
+                            <X className="h-3 w-3" /> {isRtl ? "إلغاء" : "Cancel"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={saveVisaValues}
+                            disabled={savingVisa}
+                          >
+                            {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                            {isRtl ? "حفظ" : "Save"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {visaFields.map((f) => {
+                        const label = isRtl ? f.label_ar : f.label_en;
+                        const val = editingVisa ? (visaDraft[f.id] ?? "") : (visaValues[f.id] ?? "");
+                        const onChange = (v: string) => setVisaDraft((d) => ({ ...d, [f.id]: v }));
+                        if (f.field_type === "boolean")
+                          return (
+                            <div key={f.id} className="flex items-center justify-between py-1 text-xs">
+                              <span className="text-muted-foreground">{label}</span>
+                              <input
+                                type="checkbox"
+                                checked={val === "true"}
+                                onChange={(e) => onChange(e.target.checked ? "true" : "false")}
+                                disabled={!editingVisa}
+                                className="h-4 w-4 rounded"
+                              />
+                            </div>
+                          );
+                        return (
+                          <div key={f.id} className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                            {editingVisa ? (
+                              <Input
+                                value={val}
+                                onChange={(e) => onChange(e.target.value)}
+                                className="h-7 text-xs flex-1"
+                              />
+                            ) : (
+                              <span className="font-medium">{val || "—"}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {visaFields.length > 0 && <Separator />}
+
+                {/* Referral count */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                    {isRtl ? "الإحالات" : "Referrals"}
+                  </span>
+                  <span className="font-bold">{referralCount}</span>
                 </div>
 
                 <Separator />
