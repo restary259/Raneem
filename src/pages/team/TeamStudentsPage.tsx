@@ -14,7 +14,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Badge as ShadBadge } from "@/components/ui/badge";
+import { Card as ShadCard, CardContent } from "@/components/ui/card";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface CaseResult {
@@ -33,66 +37,12 @@ interface StudentRecord {
   linked_case_id: string | null;
 }
 
-/* ─── Helper UI ─────────────────────────────────────────────────────── */
-const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div
-    className={`bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md ${className}`}
-  >
-    {children}
-  </div>
-);
-
-const Badge = ({
-  children,
-  variant = "outline",
-  className = "",
-}: {
-  children: React.ReactNode;
-  variant?: "outline" | "secondary" | "success";
-  className?: string;
-}) => {
-  const styles =
-    variant === "outline"
-      ? "border-amber-300 text-amber-600 bg-amber-50/50"
-      : variant === "success"
-        ? "border-green-300 text-green-700 bg-green-50"
-        : "bg-slate-100 text-slate-600 border-transparent";
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${styles} ${className}`}>{children}</span>
-  );
-};
-
-const Btn = ({
-  children,
-  variant = "primary",
-  size = "md",
-  className = "",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "outline" | "ghost" | "success";
-  size?: "sm" | "md";
-}) => {
-  const base =
-    "inline-flex items-center justify-center rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-  const variants = {
-    primary: "bg-slate-900 text-white hover:bg-slate-800",
-    outline: "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50",
-    ghost: "text-slate-600 hover:bg-slate-100",
-    success: "bg-green-600 text-white hover:bg-green-700",
-  };
-  const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2 text-sm" };
-  return (
-    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-};
-
 /* ═══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════════════ */
 export default function TeamStudentsPage() {
   const { toast } = useToast();
+  const { t } = useTranslation("dashboard");
 
   /* ── List state ─────────────────────────────────────────────────────── */
   const [students, setStudents] = useState<StudentRecord[]>([]);
