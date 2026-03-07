@@ -291,6 +291,8 @@ export default function AdminStudentsPage() {
           "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date",
         )
         .in("id", userIds)
+        .not("created_by", "is", null)
+        .is("case_id", null)
         .order("created_at", { ascending: false });
 
       // Note: .is("deleted_at", null) is intentionally omitted here.
