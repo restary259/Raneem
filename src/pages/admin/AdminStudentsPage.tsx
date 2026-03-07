@@ -563,18 +563,25 @@ export default function AdminStudentsPage() {
   const handleDownloadDoc = async (doc: Document) => {
     try {
       const urlParts = doc.file_url.split("/student-documents/");
-      const storagePath = urlParts[1];
-      if (!storagePath) {
-        window.open(doc.file_url, "_blank");
-        return;
-      }
-      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60); // 60-second signed URL
+      const storagePath = urlParts[1] ?? doc.file_url;
+
+      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60);
       if (error) throw error;
+
+      // Fetch as blob so browser downloads instead of opening in a new tab
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
+
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = data.signedUrl;
+      a.href = blobUrl;
       a.download = doc.file_name;
-      a.target = "_blank";
+      a.style.display = "none";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
     } catch (err: any) {
       toast({ variant: "destructive", description: `Download failed: ${err.message}` });
     }
