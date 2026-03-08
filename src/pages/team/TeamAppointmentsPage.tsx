@@ -576,7 +576,7 @@ export default function TeamAppointmentsPage() {
                   onClick={() => openNew(currentDate, hour)}
                 >
                   <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
-                    {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                    {new Date().setHours(hour, 0, 0, 0) && new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
                   </div>
                   <div className="p-1.5 cursor-pointer">
                     {isOver && (
@@ -635,7 +635,7 @@ export default function TeamAppointmentsPage() {
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
                 <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                  {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
                 </div>
                 {weekDays.map((day) => {
                   const slotAppts = getSlot(day, hour);
