@@ -962,7 +962,7 @@ export default function TeamAppointmentsPage() {
                     {selectedAppt.notes && (
                       <div className="bg-muted/40 rounded-lg p-3 border border-border/40">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
-                          <FileText className="h-3 w-3" /> Notes
+                          <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
                         </p>
                         <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
                       </div>
@@ -976,7 +976,7 @@ export default function TeamAppointmentsPage() {
                         className="flex-1 gap-1.5"
                         onClick={() => openEdit(selectedAppt)}
                       >
-                        <Pencil className="h-3.5 w-3.5" /> Edit
+                        <Pencil className="h-3.5 w-3.5" /> {t("team.appointments.btnEdit")}
                       </Button>
                       <Button
                         variant="outline"
@@ -987,11 +987,11 @@ export default function TeamAppointmentsPage() {
                           setSelectedAppt(null);
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                        <Trash2 className="h-3.5 w-3.5" /> {t("team.appointments.btnDelete")}
                       </Button>
                     </div>
                     <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
-                      View Case
+                      {t("team.appointments.btnViewCase")}
                     </Button>
                     {!selectedAppt.outcome && new Date(selectedAppt.scheduled_at) < new Date() && (
                       <Button
@@ -1001,7 +1001,7 @@ export default function TeamAppointmentsPage() {
                           setSelectedAppt(null);
                         }}
                       >
-                        Record Outcome
+                        {t("team.appointments.btnRecordOutcome")}
                       </Button>
                     )}
                   </DialogFooter>
@@ -1018,30 +1018,30 @@ export default function TeamAppointmentsPage() {
           if (!v) setPendingMove(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir="ltr">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>Reschedule Appointment?</DialogTitle>
+            <DialogTitle>{t("team.appointments.rescheduleTitle")}</DialogTitle>
           </DialogHeader>
           {pendingMove && (
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                Move <strong>{(pendingMove.appt.case as any)?.full_name}</strong> to:
+                {t("team.appointments.rescheduleMoveText", { name: (pendingMove.appt.case as any)?.full_name })}
               </p>
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 font-semibold text-center text-base">
                 {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Previously: {format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a")}
+                {t("team.appointments.rescheduleOldDate", { date: format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a") })}
               </p>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingMove(null)}>
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={confirmMove} disabled={confirmingMove}>
               {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              Confirm Reschedule
+              {t("team.appointments.btnConfirmReschedule")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1054,23 +1054,25 @@ export default function TeamAppointmentsPage() {
           if (!v) setDeletingAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir="ltr">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>Delete Appointment?</DialogTitle>
+            <DialogTitle>{t("team.appointments.deleteTitle")}</DialogTitle>
           </DialogHeader>
           {deletingAppt && (
             <p className="text-sm text-muted-foreground">
-              Remove the appointment with <strong>{(deletingAppt.case as any)?.full_name}</strong> on{" "}
-              {format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a")}? This cannot be undone.
+              {t("team.appointments.deleteBody", {
+                name: (deletingAppt.case as any)?.full_name,
+                date: format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a"),
+              })}
             </p>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingAppt(null)}>
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
               {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              Delete
+              {t("team.appointments.btnConfirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>
