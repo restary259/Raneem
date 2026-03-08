@@ -688,39 +688,48 @@ export default function CaseDetailPage() {
       <PipelineBar />
 
       {/* ── Header ── */}
-      <div className="flex items-start gap-3 flex-wrap" dir="ltr">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 mt-0.5">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{caseData.full_name}</h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-            <a
-              href={`tel:${caseData.phone_number}`}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors font-medium text-xs"
-            >
-              <Phone className="h-3 w-3" />
-              {caseData.phone_number}
-            </a>
-            <CopyButton value={caseData.phone_number} />
-            <span>·</span>
-            <Clock className="h-3 w-3 shrink-0" />
-            <span dir="ltr" className="inline-block whitespace-nowrap">{formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}</span>
-          </div>
+      <div className="space-y-2" dir="ltr">
+        {/* Row 1: back + name */}
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 -ms-2">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0 flex-1">{caseData.full_name}</h1>
         </div>
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
-          {caseData.student_user_id && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              <User className="h-3 w-3" />
-              {t("case.detail.accountActive")}
-            </Badge>
-          )}
+
+        {/* Row 2: phone + timestamp */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap ps-1">
+          <a
+            href={`tel:${caseData.phone_number}`}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors font-medium text-xs shrink-0"
+          >
+            <Phone className="h-3 w-3" />
+            {caseData.phone_number}
+          </a>
+          <CopyButton value={caseData.phone_number} />
+          <span className="text-muted-foreground/40">·</span>
+          <Clock className="h-3 w-3 shrink-0" />
+          <span dir="ltr" className="inline-block whitespace-nowrap text-xs">
+            {formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}
+          </span>
+        </div>
+
+        {/* Row 3: status badges + delete */}
+        <div className="flex items-center gap-2 flex-wrap justify-between ps-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
+            {caseData.student_user_id && (
+              <Badge variant="secondary" className="gap-1 text-xs">
+                <User className="h-3 w-3" />
+                {t("case.detail.accountActive")}
+              </Badge>
+            )}
+          </div>
           {!isTerminal && (
             <Button
               size="sm"
               variant="outline"
-              className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground shrink-0"
               onClick={() => setShowDeleteCase(true)}
             >
               <Trash2 className="h-4 w-4" />
