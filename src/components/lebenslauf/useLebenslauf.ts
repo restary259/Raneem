@@ -36,7 +36,7 @@ export const useLebenslauf = () => {
 
   const clearAll = useCallback(() => {
     setData(createEmptyCVData());
-    localStorage.removeItem(STORAGE_KEY);
+    // Do NOT remove the saved draft — user should still be able to load it back
   }, []);
 
   const handlePrint = useCallback(() => {
