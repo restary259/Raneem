@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, Award, Clock, Info } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 // Cases at these statuses generate a partner earning
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];

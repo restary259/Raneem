@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Users, Search } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-muted text-muted-foreground",
@@ -43,11 +44,35 @@ export default function PartnerStudentsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const { data } = await (supabase as any)
+    // 1. Fetch per-partner visibility override
+    const { data: override } = await (supabase as any)
+      .from("partner_commission_overrides")
+      .select("show_all_cases")
+      .eq("partner_id", uid)
+      .maybeSingle();
+
+    // 2. Build cases query based on visibility:
+    //    true  → all cases
+    //    false → apply_page / contact_form only
+    //    null  → only cases where partner_id = uid (referral)
+    let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,created_at,source")
-      .eq("partner_id", uid)
       .order("created_at", { ascending: false });
+
+    if (override !== null && override !== undefined) {
+      if (override.show_all_cases === false) {
+        query = query.in("source", ["apply_page", "contact_form"]);
+      } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
+        query = query.eq("partner_id", uid);
+      }
+      // show_all_cases === true → no extra filter
+    } else {
+      // No override row at all → default: apply_page / contact_form
+      query = query.in("source", ["apply_page", "contact_form"]);
+    }
+
+    const { data } = await query;
     setCases(data || []);
     setIsLoading(false);
   }, []);
@@ -62,6 +87,10 @@ export default function PartnerStudentsPage() {
       load(session.user.id);
     });
   }, [navigate, load]);
+
+  // Real-time: refetch when cases or partner overrides change
+  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
