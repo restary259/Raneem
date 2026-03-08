@@ -38,7 +38,7 @@ export default function PartnerStudentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
@@ -71,7 +71,6 @@ export default function PartnerStudentsPage() {
     return isAr ? entry.ar : entry.en;
   };
 
-  // First name only for privacy
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
   const filtered = cases.filter((c) => {
@@ -87,7 +86,7 @@ export default function PartnerStudentsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" />
-          {isAr ? "الطلاب المسجلون" : "Registered Students"}
+          {t("partner.registeredStudents")}
           <span className="text-base font-normal text-muted-foreground">({cases.length})</span>
         </h1>
       </div>
@@ -96,7 +95,7 @@ export default function PartnerStudentsPage() {
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={isAr ? "بحث بالاسم..." : "Search by first name..."}
+          placeholder={t("partner.searchByFirstName")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ps-9"
@@ -109,7 +108,7 @@ export default function PartnerStudentsPage() {
           onClick={() => setStatusFilter("all")}
           className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${statusFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:border-primary/50"}`}
         >
-          {isAr ? "الكل" : "All"} ({cases.length})
+          {t("partner.all")} ({cases.length})
         </button>
         {statuses.map((s) => (
           <button
@@ -126,16 +125,16 @@ export default function PartnerStudentsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            {isAr ? "لا يوجد طلاب مطابقون" : "No matching students"}
+            {t("partner.noMatchingStudents")}
           </CardContent>
         </Card>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           {/* Header */}
           <div className="grid grid-cols-3 bg-muted/50 px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            <span>{isAr ? "الاسم" : "First Name"}</span>
-            <span>{isAr ? "تاريخ التسجيل" : "Registration Date"}</span>
-            <span>{isAr ? "المرحلة الحالية" : "Current Stage"}</span>
+            <span>{t("partner.colName")}</span>
+            <span>{t("partner.colDate")}</span>
+            <span>{t("partner.colStage")}</span>
           </div>
           {/* Rows */}
           <div className="divide-y divide-border bg-background">
@@ -158,9 +157,7 @@ export default function PartnerStudentsPage() {
       )}
 
       <p className="text-xs text-muted-foreground text-center">
-        {isAr
-          ? "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب"
-          : "* First names only shown to protect student privacy"}
+        {t("partner.privacyNote")}
       </p>
     </div>
   );
