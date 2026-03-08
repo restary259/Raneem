@@ -340,7 +340,7 @@ export default function AdminSpreadsheetPage() {
                 key={col.key}
                 className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
               >
-                <Checkbox id={col.key} checked={col.selected} onCheckedChange={() => toggleColumn(col.key)} />
+                <Checkbox id={col.key} checked={selectedKeys.has(col.key)} onCheckedChange={() => toggleColumn(col.key)} />
                 <Label htmlFor={col.key} className="text-sm cursor-pointer flex-1">
                   {col.label}
                 </Label>
@@ -352,12 +352,12 @@ export default function AdminSpreadsheetPage() {
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => setColumns(ALL_COLUMNS.map((c) => ({ ...c, selected: true })))}
+              onClick={() => setSelectedKeys(new Set(columns.map(c => c.key)))}
             >
-              Select All
+              {t("admin.spreadsheet.selectAll")}
             </Button>
             <Button size="sm" className="flex-1" onClick={() => setShowColConfig(false)}>
-              Done
+              {t("admin.spreadsheet.done")}
             </Button>
           </div>
         </DialogContent>
