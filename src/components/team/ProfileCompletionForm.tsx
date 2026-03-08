@@ -377,16 +377,16 @@ export default function ProfileCompletionForm({
         house_no: houseNo,
         postcode,
         city,
-        date_of_birth: dob ? format(dob, "yyyy-MM-dd") : null,
+        date_of_birth: dob || null,
         age,
         gender,
         program_id: programId || null,
         school_id: schoolId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        arrival_date: arrivalDate ? format(arrivalDate, "yyyy-MM-dd") : null,
-        course_start: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        arrival_date: arrivalDate || null,
+        course_start: courseStart || null,
+        course_end: courseEnd || null,
         start_month: startMonth || null,
       };
       const upsertPayload: any = {
@@ -617,7 +617,7 @@ export default function ProfileCompletionForm({
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <DatePick label="Course Start Date" value={courseStart} onChange={setCourseStart} />
+            <DateField label="Course Start Date" value={courseStart} onChange={setCourseStart} />
             <div>
               <Label>Course End Date</Label>
               <div
@@ -626,7 +626,7 @@ export default function ProfileCompletionForm({
                   courseEnd ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                {courseEnd ? format(courseEnd, "PP") : "Auto-calculated"}
+                {courseEnd || "Auto-calculated"}
               </div>
               {selectedProgram?.duration_in_months && courseEnd && (
                 <p className="text-xs text-emerald-600 mt-1">
@@ -651,7 +651,7 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-          <DatePick label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
+          <DateField label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
         </div>
       )}
 
