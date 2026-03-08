@@ -655,7 +655,7 @@ export default function TeamAppointmentsPage() {
                       {isOver && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                           <div className="text-[9px] text-violet-600 font-semibold bg-violet-50 border border-violet-200 rounded-md px-1.5 py-0.5">
-                            Drop here
+                            {t("team.appointments.dropHere")}
                           </div>
                         </div>
                       )}
