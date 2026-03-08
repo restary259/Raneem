@@ -74,13 +74,14 @@ const HOURS = Array.from({ length: WORK_END - WORK_START }, (_, i) => i + WORK_S
 type CalendarView = "day" | "week" | "month";
 
 /* ── Status helpers ─────────────────────────────────────────────────── */
+// Returns a labelKey (i18n key) rather than a raw string so callers can use t(s.labelKey)
 const apptStyle = (outcome: string | null) => {
   if (!outcome)
     return {
       bg: "bg-violet-50 border-violet-200 text-violet-900",
       dot: "bg-violet-500",
       badge: "bg-violet-100 text-violet-700",
-      label: "Upcoming",
+      labelKey: "team.appointments.statusUpcoming",
       icon: <Clock className="h-2.5 w-2.5" />,
     };
   if (outcome === "completed")
@@ -88,7 +89,7 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-emerald-50 border-emerald-200 text-emerald-900",
       dot: "bg-emerald-500",
       badge: "bg-emerald-100 text-emerald-700",
-      label: "Completed",
+      labelKey: "team.appointments.statusCompleted",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
     };
   if (outcome === "no_show")
@@ -96,7 +97,7 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-rose-50 border-rose-200 text-rose-900",
       dot: "bg-rose-500",
       badge: "bg-rose-100 text-rose-700",
-      label: "No Show",
+      labelKey: "team.appointments.statusNoShow",
       icon: <AlertCircle className="h-2.5 w-2.5" />,
     };
   if (outcome === "rescheduled" || outcome === "delayed")
@@ -104,14 +105,14 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-amber-50 border-amber-200 text-amber-900",
       dot: "bg-amber-500",
       badge: "bg-amber-100 text-amber-700",
-      label: "Rescheduled",
+      labelKey: "team.appointments.statusRescheduled",
       icon: <RefreshCw className="h-2.5 w-2.5" />,
     };
   return {
     bg: "bg-slate-50  border-slate-200  text-slate-800",
     dot: "bg-slate-400",
     badge: "bg-slate-100 text-slate-600",
-    label: outcome,
+    labelKey: outcome,
     icon: <CalendarIcon className="h-2.5 w-2.5" />,
   };
 };
