@@ -18,8 +18,8 @@ interface Props {
 /** Stage 1: Confirms payment received → moves case to payment_confirmed */
 export default function PaymentConfirmationForm({ caseId, actorId, actorName, onSuccess }: Props) {
   const { toast } = useToast();
-  const { i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t, i18n } = useTranslation('dashboard');
+  const isRtl = i18n.language === 'ar';
   const [serviceFee, setServiceFee] = useState('');
   const [translationFee, setTranslationFee] = useState('0');
   const [paymentReceived, setPaymentReceived] = useState(false);
@@ -29,18 +29,17 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
 
   const handleConfirm = async () => {
     if (!paymentReceived) {
-      toast({ variant: 'destructive', description: isAr ? 'يجب تأكيد استلام الدفع' : 'You must confirm payment was received' });
+      toast({ variant: 'destructive', description: t('team.payment.mustConfirm') });
       return;
     }
     if (!serviceFee || parseFloat(serviceFee) <= 0) {
-      toast({ variant: 'destructive', description: isAr ? 'رسوم الخدمة يجب أن تكون أكبر من صفر' : 'Service fee must be greater than 0' });
+      toast({ variant: 'destructive', description: t('team.payment.feeRequired') });
       return;
     }
     setSaving(true);
     try {
       const now = new Date().toISOString();
 
-      // Upsert case_submissions with payment info
       const { error: subErr } = await supabase.from('case_submissions').upsert({
         case_id: caseId,
         service_fee: parseFloat(serviceFee),
@@ -51,7 +50,6 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       }, { onConflict: 'case_id' });
       if (subErr) throw subErr;
 
-      // Move case to payment_confirmed (NOT submitted yet — that's a separate step)
       const { error: caseErr } = await supabase.from('cases').update({ status: 'payment_confirmed' }).eq('id', caseId);
       if (caseErr) throw caseErr;
 
@@ -64,7 +62,7 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
         p_metadata: { service_fee: serviceFee, translation_fee: translationFee },
       });
 
-      toast({ title: isAr ? 'تم تأكيد الدفع' : 'Payment confirmed' });
+      toast({ title: t('team.payment.confirmed') });
       onSuccess();
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
@@ -76,39 +74,37 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        {isAr ? 'أدخل مبالغ الخدمة وأكد استلام الدفع من الطالب.' : 'Enter service amounts and confirm payment has been received from the student.'}
+        {t('team.payment.confirmDesc')}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label>{isAr ? 'رسوم الخدمة (شيكل) *' : 'Service Fee (ILS) *'}</Label>
+          <Label>{t('team.payment.serviceFeeLabel')}</Label>
           <Input type="number" min="0" step="100" value={serviceFee} onChange={e => setServiceFee(e.target.value)} placeholder="e.g. 5000" />
         </div>
         <div className="space-y-1">
-          <Label>{isAr ? 'رسوم الترجمة (شيكل)' : 'Translation Fee (ILS)'}</Label>
+          <Label>{t('team.payment.translationFeeLabel')}</Label>
           <Input type="number" min="0" step="50" value={translationFee} onChange={e => setTranslationFee(e.target.value)} placeholder="0" />
         </div>
       </div>
 
       {total > 0 && (
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border">
-          <span className="text-sm font-medium">{isAr ? 'الإجمالي' : 'Total'}</span>
-          <span className="text-lg font-bold text-primary">{total.toLocaleString()} ILS</span>
+          <span className="text-sm font-medium">{t('team.payment.total')}</span>
+          <span className="text-lg font-bold text-primary">{total.toLocaleString('en-US')} ILS</span>
         </div>
       )}
 
       <div className="flex items-start gap-3 p-3 rounded-lg border border-border">
         <Checkbox id="payment_received" checked={paymentReceived} onCheckedChange={v => setPaymentReceived(v === true)} />
         <Label htmlFor="payment_received" className="cursor-pointer text-sm leading-tight">
-          {isAr
-            ? `أؤكد استلام مبلغ ${total.toLocaleString()} شيكل بالكامل`
-            : `I confirm that payment of ${total.toLocaleString()} ILS has been received in full.`}
+          {t('team.payment.confirmCheckbox', { amount: total.toLocaleString('en-US') })}
         </Label>
       </div>
 
       <Button onClick={handleConfirm} disabled={saving || !paymentReceived} className="w-full">
         {saving
-          ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{isAr ? 'جار الحفظ...' : 'Saving...'}</>
-          : (isAr ? 'تأكيد الدفع' : 'Confirm Payment Received')}
+          ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('team.payment.confirming')}</>
+          : t('team.payment.confirmBtn')}
       </Button>
     </div>
   );

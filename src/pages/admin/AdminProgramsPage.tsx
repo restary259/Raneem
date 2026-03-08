@@ -71,12 +71,12 @@ interface Insurance {
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
 
-// Bypass Supabase generated types for new tables/columns (run `supabase gen types` after migration)
+// Bypass Supabase generated types for new tables/columns
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
 
 const AdminProgramsPage = () => {
-  const { i18n } = useTranslation("dashboard");
+  const { t } = useTranslation("dashboard");
   const { toast } = useToast();
 
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -146,7 +146,7 @@ const AdminProgramsPage = () => {
 
   const saveProgram = async () => {
     if (!progForm.name_en) {
-      toast({ variant: "destructive", description: "Name is required" });
+      toast({ variant: "destructive", description: t('admin.programs.nameRequired') });
       return;
     }
     setSaving(true);
@@ -169,7 +169,7 @@ const AdminProgramsPage = () => {
       setEditProgId(null);
       setProgForm(emptyProgForm);
       await fetchAll();
-      toast({ description: editProgId ? "Program updated" : "Program created" });
+      toast({ description: editProgId ? t('admin.programs.programUpdated') : t('admin.programs.programCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -179,7 +179,7 @@ const AdminProgramsPage = () => {
 
   const saveSchool = async () => {
     if (!schoolForm.name_en) {
-      toast({ variant: "destructive", description: "Name is required" });
+      toast({ variant: "destructive", description: t('admin.programs.nameRequired') });
       return;
     }
     setSaving(true);
@@ -196,7 +196,7 @@ const AdminProgramsPage = () => {
       setEditSchoolId(null);
       setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany" });
       await fetchAll();
-      toast({ description: editSchoolId ? "School updated" : "School created" });
+      toast({ description: editSchoolId ? t('admin.programs.schoolUpdated') : t('admin.programs.schoolCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -206,7 +206,7 @@ const AdminProgramsPage = () => {
 
   const saveAccom = async () => {
     if (!accomForm.name_en) {
-      toast({ variant: "destructive", description: "Name is required" });
+      toast({ variant: "destructive", description: t('admin.programs.nameRequired') });
       return;
     }
     setSaving(true);
@@ -225,7 +225,7 @@ const AdminProgramsPage = () => {
       setEditAccomId(null);
       setAccomForm({ name_ar: "", name_en: "", price: "", currency: "EUR", description: "", school_id: "" });
       await fetchAll();
-      toast({ description: editAccomId ? "Accommodation updated" : "Accommodation created" });
+      toast({ description: editAccomId ? t('admin.programs.accomUpdated') : t('admin.programs.accomCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -235,7 +235,7 @@ const AdminProgramsPage = () => {
 
   const saveIns = async () => {
     if (!insForm.name) {
-      toast({ variant: "destructive", description: "Name is required" });
+      toast({ variant: "destructive", description: t('admin.programs.nameRequired') });
       return;
     }
     setSaving(true);
@@ -252,7 +252,7 @@ const AdminProgramsPage = () => {
       setEditInsId(null);
       setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
       await fetchAll();
-      toast({ description: editInsId ? "Insurance updated" : "Insurance created" });
+      toast({ description: editInsId ? t('admin.programs.insUpdated') : t('admin.programs.insCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -322,7 +322,7 @@ const AdminProgramsPage = () => {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Programs & Catalog</h1>
+        <h1 className="text-2xl font-bold">{t('admin.programs.title')}</h1>
         <Button variant="outline" size="sm" onClick={fetchAll}>
           <RefreshCw className="h-4 w-4" />
         </Button>
@@ -330,12 +330,13 @@ const AdminProgramsPage = () => {
 
       <Tabs defaultValue="programs">
         <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="programs">Programs</TabsTrigger>
-          <TabsTrigger value="schools">Schools</TabsTrigger>
-          <TabsTrigger value="accommodations">Accommodations</TabsTrigger>
-          <TabsTrigger value="insurance">Insurance</TabsTrigger>
+          <TabsTrigger value="programs">{t('admin.programs.tabPrograms')}</TabsTrigger>
+          <TabsTrigger value="schools">{t('admin.programs.tabSchools')}</TabsTrigger>
+          <TabsTrigger value="accommodations">{t('admin.programs.tabAccommodations')}</TabsTrigger>
+          <TabsTrigger value="insurance">{t('admin.programs.tabInsurance')}</TabsTrigger>
         </TabsList>
 
+        {/* Programs Tab */}
         <TabsContent value="programs" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -351,24 +352,24 @@ const AdminProgramsPage = () => {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Program
+                  {t('admin.programs.addProgram')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>{editProgId ? "Edit Program" : "Add Program"}</DialogTitle>
+                  <DialogTitle>{editProgId ? t('admin.programs.editProgram') : t('admin.programs.addProgram')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>English Name *</Label>
+                      <Label>{t('admin.programs.labelNameEn')}</Label>
                       <Input
                         value={progForm.name_en}
                         onChange={(e) => setProgForm((f) => ({ ...f, name_en: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Arabic Name</Label>
+                      <Label>{t('admin.programs.labelNameAr')}</Label>
                       <Input
                         value={progForm.name_ar}
                         onChange={(e) => setProgForm((f) => ({ ...f, name_ar: e.target.value }))}
@@ -377,15 +378,15 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Type</Label>
+                    <Label>{t('admin.programs.labelType')}</Label>
                     <Select value={progForm.type} onValueChange={(v) => setProgForm((f) => ({ ...f, type: v }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {PROGRAM_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t.replace("_", " ")}
+                        {PROGRAM_TYPES.map((tp) => (
+                          <SelectItem key={tp} value={tp}>
+                            {tp.replace("_", " ")}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -393,7 +394,7 @@ const AdminProgramsPage = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <Label>Price</Label>
+                      <Label>{t('admin.programs.labelPrice')}</Label>
                       <Input
                         type="number"
                         value={progForm.price}
@@ -401,7 +402,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Currency</Label>
+                      <Label>{t('admin.programs.labelCurrency')}</Label>
                       <Select
                         value={progForm.currency}
                         onValueChange={(v) => setProgForm((f) => ({ ...f, currency: v }))}
@@ -416,7 +417,7 @@ const AdminProgramsPage = () => {
                       </Select>
                     </div>
                     <div className="space-y-1">
-                      <Label>Duration (text)</Label>
+                      <Label>{t('admin.programs.labelDuration')}</Label>
                       <Input
                         value={progForm.duration}
                         onChange={(e) => setProgForm((f) => ({ ...f, duration: e.target.value }))}
@@ -426,7 +427,7 @@ const AdminProgramsPage = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <Label>Lessons/Week</Label>
+                      <Label>{t('admin.programs.labelLessonsWeek')}</Label>
                       <Input
                         type="number"
                         value={progForm.lessons_per_week}
@@ -435,7 +436,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Duration (months)</Label>
+                      <Label>{t('admin.programs.labelDurationMonths')}</Label>
                       <Input
                         type="number"
                         value={progForm.duration_in_months}
@@ -444,7 +445,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Fixed Start Day</Label>
+                      <Label>{t('admin.programs.labelFixedStartDay')}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -456,21 +457,21 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Description</Label>
+                    <Label>{t('admin.programs.labelDescription')}</Label>
                     <Input
                       value={progForm.description}
                       onChange={(e) => setProgForm((f) => ({ ...f, description: e.target.value }))}
                     />
                   </div>
                   <Button className="w-full" onClick={saveProgram} disabled={saving}>
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading…</div>
+            <div className="p-8 text-center text-muted-foreground">{t('admin.programs.loading')}</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {programs.map((p) => (
@@ -491,7 +492,7 @@ const AdminProgramsPage = () => {
                           </div>
                         </div>
                         <Badge variant={p.is_active ? "default" : "secondary"} className="shrink-0 text-xs">
-                          {p.is_active ? "Active" : "Inactive"}
+                          {p.is_active ? t('admin.programs.statusActive') : t('admin.programs.statusInactive')}
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -501,7 +502,7 @@ const AdminProgramsPage = () => {
                         </span>
                         {p.price != null && (
                           <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            💰 {p.price.toLocaleString()} {p.currency}
+                            💰 {p.price.toLocaleString('en-US')} {p.currency}
                           </span>
                         )}
                         {p.duration_in_months && (
@@ -512,12 +513,12 @@ const AdminProgramsPage = () => {
                         )}
                         {p.lessons_per_week && (
                           <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-xs text-purple-700">
-                            {p.lessons_per_week} lessons/wk
+                            {p.lessons_per_week} {t('admin.programs.lessonsWk')}
                           </span>
                         )}
                         {p.fixed_start_day_of_month && (
                           <span className="inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-xs text-orange-700">
-                            Starts day {p.fixed_start_day_of_month}
+                            {t('admin.programs.startsDay', { day: p.fixed_start_day_of_month })}
                           </span>
                         )}
                       </div>
@@ -530,7 +531,7 @@ const AdminProgramsPage = () => {
                         onClick={() => openEditProgram(p)}
                       >
                         <Pencil className="h-3 w-3" />
-                        Edit
+                        {t('admin.programs.btnEdit')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -541,12 +542,12 @@ const AdminProgramsPage = () => {
                         {p.is_active ? (
                           <>
                             <Pause className="h-3 w-3" />
-                            Pause
+                            {t('admin.programs.btnPause')}
                           </>
                         ) : (
                           <>
                             <Play className="h-3 w-3" />
-                            Activate
+                            {t('admin.programs.btnActivate')}
                           </>
                         )}
                       </Button>
@@ -557,19 +558,20 @@ const AdminProgramsPage = () => {
                         onClick={() => deleteRecord("programs", p.id)}
                       >
                         <Trash2 className="h-3 w-3" />
-                        Delete
+                        {t('admin.programs.btnDelete')}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
               {programs.length === 0 && (
-                <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No programs yet.</p>
+                <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
               )}
             </div>
           )}
         </TabsContent>
 
+        {/* Schools Tab */}
         <TabsContent value="schools" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -585,24 +587,24 @@ const AdminProgramsPage = () => {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add School
+                  {t('admin.programs.addSchool')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editSchoolId ? "Edit School" : "Add School"}</DialogTitle>
+                  <DialogTitle>{editSchoolId ? t('admin.programs.editSchool') : t('admin.programs.addSchool')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>English Name *</Label>
+                      <Label>{t('admin.programs.labelNameEn')}</Label>
                       <Input
                         value={schoolForm.name_en}
                         onChange={(e) => setSchoolForm((f) => ({ ...f, name_en: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Arabic Name</Label>
+                      <Label>{t('admin.programs.labelNameAr')}</Label>
                       <Input
                         value={schoolForm.name_ar}
                         onChange={(e) => setSchoolForm((f) => ({ ...f, name_ar: e.target.value }))}
@@ -612,7 +614,7 @@ const AdminProgramsPage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>City</Label>
+                      <Label>{t('admin.programs.labelCity')}</Label>
                       <Input
                         value={schoolForm.city}
                         onChange={(e) => setSchoolForm((f) => ({ ...f, city: e.target.value }))}
@@ -620,7 +622,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Country</Label>
+                      <Label>{t('admin.programs.labelCountry')}</Label>
                       <Input
                         value={schoolForm.country}
                         onChange={(e) => setSchoolForm((f) => ({ ...f, country: e.target.value }))}
@@ -628,7 +630,7 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <Button className="w-full" onClick={saveSchool} disabled={saving}>
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
                 </div>
               </DialogContent>
@@ -654,13 +656,13 @@ const AdminProgramsPage = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {accommodations.filter((a) => a.school_id === s.id).length} accommodation(s) linked
+                      {t('admin.programs.accommodationsLinked', { count: accommodations.filter((a) => a.school_id === s.id).length })}
                     </p>
                   </div>
                   <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditSchool(s)}>
                       <Pencil className="h-3 w-3" />
-                      Edit
+                      {t('admin.programs.btnEdit')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -671,12 +673,12 @@ const AdminProgramsPage = () => {
                       {s.is_active ? (
                         <>
                           <Pause className="h-3 w-3" />
-                          Pause
+                          {t('admin.programs.btnPause')}
                         </>
                       ) : (
                         <>
                           <Play className="h-3 w-3" />
-                          Activate
+                          {t('admin.programs.btnActivate')}
                         </>
                       )}
                     </Button>
@@ -687,18 +689,19 @@ const AdminProgramsPage = () => {
                       onClick={() => deleteRecord("schools", s.id)}
                     >
                       <Trash2 className="h-3 w-3" />
-                      Delete
+                      {t('admin.programs.btnDelete')}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
             {!loading && schools.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No schools yet.</p>
+              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noSchools')}</p>
             )}
           </div>
         </TabsContent>
 
+        {/* Accommodations Tab */}
         <TabsContent value="accommodations" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -721,24 +724,24 @@ const AdminProgramsPage = () => {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Accommodation
+                  {t('admin.programs.addAccommodation')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editAccomId ? "Edit Accommodation" : "Add Accommodation"}</DialogTitle>
+                  <DialogTitle>{editAccomId ? t('admin.programs.editAccommodation') : t('admin.programs.addAccommodation')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>English Name *</Label>
+                      <Label>{t('admin.programs.labelNameEn')}</Label>
                       <Input
                         value={accomForm.name_en}
                         onChange={(e) => setAccomForm((f) => ({ ...f, name_en: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Arabic Name</Label>
+                      <Label>{t('admin.programs.labelNameAr')}</Label>
                       <Input
                         value={accomForm.name_ar}
                         onChange={(e) => setAccomForm((f) => ({ ...f, name_ar: e.target.value }))}
@@ -747,13 +750,13 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Linked School</Label>
+                    <Label>{t('admin.programs.labelLinkedSchool')}</Label>
                     <Select
                       value={accomForm.school_id}
                       onValueChange={(v) => setAccomForm((f) => ({ ...f, school_id: v }))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select school" />
+                        <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {schools
@@ -768,7 +771,7 @@ const AdminProgramsPage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>Price / month</Label>
+                      <Label>{t('admin.programs.labelPriceMonth')}</Label>
                       <Input
                         type="number"
                         value={accomForm.price}
@@ -776,7 +779,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Currency</Label>
+                      <Label>{t('admin.programs.labelCurrency')}</Label>
                       <Select
                         value={accomForm.currency}
                         onValueChange={(v) => setAccomForm((f) => ({ ...f, currency: v }))}
@@ -792,14 +795,14 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Description</Label>
+                    <Label>{t('admin.programs.labelDescription')}</Label>
                     <Input
                       value={accomForm.description}
                       onChange={(e) => setAccomForm((f) => ({ ...f, description: e.target.value }))}
                     />
                   </div>
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
                 </div>
               </DialogContent>
@@ -831,7 +834,7 @@ const AdminProgramsPage = () => {
                       </div>
                       {a.price != null && (
                         <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                          💰 {a.price.toLocaleString()} {a.currency}/mo
+                          💰 {a.price.toLocaleString('en-US')} {a.currency}/mo
                         </span>
                       )}
                       {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
@@ -839,7 +842,7 @@ const AdminProgramsPage = () => {
                     <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
                       <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditAccom(a)}>
                         <Pencil className="h-3 w-3" />
-                        Edit
+                        {t('admin.programs.btnEdit')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -850,12 +853,12 @@ const AdminProgramsPage = () => {
                         {a.is_active ? (
                           <>
                             <Pause className="h-3 w-3" />
-                            Pause
+                            {t('admin.programs.btnPause')}
                           </>
                         ) : (
                           <>
                             <Play className="h-3 w-3" />
-                            Activate
+                            {t('admin.programs.btnActivate')}
                           </>
                         )}
                       </Button>
@@ -866,7 +869,7 @@ const AdminProgramsPage = () => {
                         onClick={() => deleteRecord("accommodations", a.id)}
                       >
                         <Trash2 className="h-3 w-3" />
-                        Delete
+                        {t('admin.programs.btnDelete')}
                       </Button>
                     </div>
                   </CardContent>
@@ -874,11 +877,12 @@ const AdminProgramsPage = () => {
               );
             })}
             {!loading && accommodations.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No accommodations yet.</p>
+              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noAccommodations')}</p>
             )}
           </div>
         </TabsContent>
 
+        {/* Insurance Tab */}
         <TabsContent value="insurance" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Dialog
@@ -894,16 +898,16 @@ const AdminProgramsPage = () => {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Insurance
+                  {t('admin.programs.addInsurance')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editInsId ? "Edit Insurance" : "Add Insurance"}</DialogTitle>
+                  <DialogTitle>{editInsId ? t('admin.programs.editInsurance') : t('admin.programs.addInsurance')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div className="space-y-1">
-                    <Label>Name *</Label>
+                    <Label>{t('admin.programs.labelName')}</Label>
                     <Input
                       value={insForm.name}
                       onChange={(e) => setInsForm((f) => ({ ...f, name: e.target.value }))}
@@ -911,15 +915,15 @@ const AdminProgramsPage = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>Tier</Label>
+                    <Label>{t('admin.programs.labelTier')}</Label>
                     <Select value={insForm.tier} onValueChange={(v) => setInsForm((f) => ({ ...f, tier: v }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {INSURANCE_TIERS.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t.charAt(0).toUpperCase() + t.slice(1)}
+                        {INSURANCE_TIERS.map((tp) => (
+                          <SelectItem key={tp} value={tp}>
+                            {tp.charAt(0).toUpperCase() + tp.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -927,7 +931,7 @@ const AdminProgramsPage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>Price / month</Label>
+                      <Label>{t('admin.programs.labelPriceMonth')}</Label>
                       <Input
                         type="number"
                         value={insForm.price}
@@ -935,7 +939,7 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Currency</Label>
+                      <Label>{t('admin.programs.labelCurrency')}</Label>
                       <Select
                         value={insForm.currency}
                         onValueChange={(v) => setInsForm((f) => ({ ...f, currency: v }))}
@@ -951,7 +955,7 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <Button className="w-full" onClick={saveIns} disabled={saving}>
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
                 </div>
               </DialogContent>
@@ -977,13 +981,13 @@ const AdminProgramsPage = () => {
                       </div>
                     </div>
                     <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                      💰 {ins.price.toLocaleString()} {ins.currency}/mo
+                      💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditIns(ins)}>
                       <Pencil className="h-3 w-3" />
-                      Edit
+                      {t('admin.programs.btnEdit')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -994,12 +998,12 @@ const AdminProgramsPage = () => {
                       {ins.is_active ? (
                         <>
                           <Pause className="h-3 w-3" />
-                          Pause
+                          {t('admin.programs.btnPause')}
                         </>
                       ) : (
                         <>
                           <Play className="h-3 w-3" />
-                          Activate
+                          {t('admin.programs.btnActivate')}
                         </>
                       )}
                     </Button>
@@ -1010,14 +1014,14 @@ const AdminProgramsPage = () => {
                       onClick={() => deleteRecord("insurances", ins.id)}
                     >
                       <Trash2 className="h-3 w-3" />
-                      Delete
+                      {t('admin.programs.btnDelete')}
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
             {!loading && insurances.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">No insurance plans yet.</p>
+              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noInsurance')}</p>
             )}
           </div>
         </TabsContent>

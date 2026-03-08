@@ -10,8 +10,7 @@ const isInAppBrowser = () => {
 
 const InAppBrowserBanner = () => {
   const [visible, setVisible] = useState(false);
-  const { i18n } = useTranslation();
-  const isAr = i18n.language === 'ar';
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     if (isInAppBrowser() && !sessionStorage.getItem('inapp-dismissed')) {
@@ -30,17 +29,19 @@ const InAppBrowserBanner = () => {
 
   if (!visible) return null;
 
+  const isRtl = i18n.language === 'ar';
+
   return (
-    <div className="fixed top-0 inset-x-0 z-[9999] bg-accent text-accent-foreground px-4 py-2.5 flex items-center justify-between gap-2 text-sm shadow-md" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="fixed top-0 inset-x-0 z-[9999] bg-accent text-accent-foreground px-4 py-2.5 flex items-center justify-between gap-2 text-sm shadow-md" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <ExternalLink className="w-4 h-4 shrink-0" />
         <span className="truncate">
-          {isAr ? 'للحصول على أفضل تجربة، افتح في Safari أو Chrome' : 'For the best experience, open in Safari or Chrome'}
+          {t('inAppBannerText')}
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button onClick={copyLink} className="underline text-xs whitespace-nowrap">
-          {isAr ? 'نسخ الرابط' : 'Copy link'}
+          {t('copyLink')}
         </button>
         <button onClick={dismiss} aria-label="Close">
           <X className="w-4 h-4" />

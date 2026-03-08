@@ -155,27 +155,10 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/student-auth");
-  };
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background" dir={isRtl ? "rtl" : "ltr"}>
-        <Sidebar collapsible="icon" side={isRtl ? "right" : "left"}>
-          <SidebarNav role={role} />
-        </Sidebar>
-
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Top header */}
-          <header className="h-14 flex items-center justify-between px-4 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-            <SidebarTrigger className="h-8 w-8" />
-
-            <div className="flex items-center gap-2">
+...
+          <div className="flex items-center gap-2">
               <LanguageSwitcher />
               {user && <NotificationBell />}
               <TooltipProvider>
@@ -188,10 +171,10 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                       className="gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <Home className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs">{isRtl ? "الموقع الرئيسي" : "Main Site"}</span>
+                      <span className="hidden sm:inline text-xs">{t('nav.mainSite')}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{isRtl ? "العودة إلى الموقع الرئيسي" : "Back to Main Website"}</TooltipContent>
+                  <TooltipContent>{t('nav.backToMainSite')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <Button

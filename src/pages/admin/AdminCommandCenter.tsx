@@ -139,9 +139,7 @@ const AdminCommandCenter = () => {
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
-    return isRtl
-      ? d.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
-      : d.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+    return d.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
   };
 
   return (

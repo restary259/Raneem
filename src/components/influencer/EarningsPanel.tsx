@@ -32,7 +32,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
   const [ibanInput, setIbanInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
-  const isAr = i18n.language === 'ar';
 
   const safeQuery = async (queryBuilder: any): Promise<{ data: any; error: any }> => {
     try {
@@ -95,19 +94,19 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   const saveBankDetails = async () => {
     if (!bankNameInput.trim()) {
-      toast({ variant: 'destructive', title: isAr ? 'يرجى إدخال اسم البنك' : 'Please enter bank name' });
+      toast({ variant: 'destructive', title: t('influencer.earnings.bankNameRequired') });
       return;
     }
     if (!branchInput.trim() || !/^\d{2,4}$/.test(branchInput.trim())) {
-      toast({ variant: 'destructive', title: isAr ? 'رقم فرع غير صالح (2-4 أرقام)' : 'Invalid branch number (2-4 digits)' });
+      toast({ variant: 'destructive', title: t('influencer.earnings.invalidBranch') });
       return;
     }
     if (!accountNumberInput.trim() || !/^\d{4,12}$/.test(accountNumberInput.trim())) {
-      toast({ variant: 'destructive', title: isAr ? 'رقم حساب غير صالح' : 'Invalid account number (4-12 digits)' });
+      toast({ variant: 'destructive', title: t('influencer.earnings.invalidAccount') });
       return;
     }
     if (ibanInput.trim() && !validateIBAN(ibanInput.trim())) {
-      toast({ variant: 'destructive', title: isAr ? 'رقم IBAN غير صالح' : 'Invalid IBAN — please check the number and try again' });
+      toast({ variant: 'destructive', title: t('influencer.earnings.invalidIban') });
       return;
     }
 
@@ -124,7 +123,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
     if (error) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     } else {
-      toast({ title: isAr ? 'تم حفظ بيانات البنك' : 'Bank details saved' });
+      toast({ title: t('influencer.earnings.bankSaved') });
       setShowBankModal(false);
       fetchData();
     }
@@ -143,7 +142,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         if (data) studentNames = data.map((r: any) => r.referred_name);
       }
 
-      // Silent RPC call — creates admin-side payout request for tracking
       const paymentMethod = hasBankDetails
         ? `Bank: ${profile?.bank_name} / Branch: ${profile?.bank_branch} / Account: ${profile?.bank_account_number}`
         : 'Via WhatsApp';
@@ -162,11 +160,10 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         return;
       }
 
-      // Build pre-filled WhatsApp message
-      const userName = profile?.full_name || (isAr ? 'المستخدم' : 'User');
-      const msgAr = `طلب سحب رصيد | Payout Request\nالاسم: ${userName}\nالمبلغ المستحق: ${availableAmount.toLocaleString()} ₪\nعدد الطلاب: ${eligibleRewards.length}`;
-      const msgEn = `Payout Request\nName: ${userName}\nAmount: ${availableAmount.toLocaleString()} ₪\nStudents: ${eligibleRewards.length}`;
-      const message = isAr ? msgAr : msgEn;
+      const userName = profile?.full_name || t('influencer.earnings.defaultUserName');
+      const msgAr = `طلب سحب رصيد | Payout Request\nالاسم: ${userName}\nالمبلغ المستحق: ${availableAmount.toLocaleString('en-US')} ₪\nعدد الطلاب: ${eligibleRewards.length}`;
+      const msgEn = `Payout Request\nName: ${userName}\nAmount: ${availableAmount.toLocaleString('en-US')} ₪\nStudents: ${eligibleRewards.length}`;
+      const message = i18n.language === 'ar' ? msgAr : msgEn;
       const waUrl = `https://wa.me/message/IVC4VCAEJ6TBD1?text=${encodeURIComponent(message)}`;
 
       fetchData();
@@ -174,7 +171,7 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       const win = window.open(waUrl, '_blank');
       if (!win || win.closed) window.location.href = waUrl;
 
-      toast({ title: isAr ? 'تم إرسال الطلب!' : 'Request submitted!' });
+      toast({ title: t('influencer.earnings.requestSubmitted') });
     } finally {
       setSubmitting(false);
     }
@@ -195,7 +192,6 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
 
   const statusColor = (s: string) => s === 'paid' ? 'default' : s === 'rejected' ? 'destructive' : 'secondary';
 
-  // Button eligibility
   const isReady = eligibleRewards.length > 0 && availableAmount >= minThreshold;
   const hasPendingRequest = payoutRequests.some(p => p.status === 'pending');
 
@@ -205,32 +201,32 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-emerald-600"><DollarSign className="h-6 w-6 text-white" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.totalEarnings')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.totalEarnings')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-amber-500"><Clock className="h-6 w-6 text-white" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-primary"><CheckCircle className="h-6 w-6 text-primary-foreground" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('influencer.earnings.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
       </div>
 
-      {/* Optional bank details banner (soft, not a blocker) */}
+      {/* Optional bank details banner */}
       {!hasBankDetails && (
         <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium">{isAr ? 'أضف بيانات حسابك البنكي لتسريع عملية الدفع (اختياري)' : 'Add your bank account details to speed up payment (optional)'}</p>
+            <p className="text-sm font-medium">{t('influencer.earnings.bankBanner')}</p>
           </div>
           <Button size="sm" variant="outline" onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setIbanInput(profile?.iban || ''); setShowBankModal(true); }}>
-            <CreditCard className="h-4 w-4 me-1" />{isAr ? 'إضافة' : 'Add'}
+            <CreditCard className="h-4 w-4 me-1" />{t('influencer.earnings.bankAdd')}
           </Button>
         </div>
       )}
 
-      {/* Primary action: Request via WhatsApp */}
+      {/* Primary action */}
       <div className="flex flex-wrap items-center gap-3">
         <Button
           onClick={handleWhatsAppRequest}
@@ -239,11 +235,10 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         >
           <MessageCircle className="h-4 w-4 me-2" />
           {submitting
-            ? (isAr ? 'جارٍ الإرسال...' : 'Sending...')
-            : (isAr ? 'طلب سحب عبر واتساب' : 'Request Payout via WhatsApp')}
+            ? t('influencer.earnings.sending')
+            : t('influencer.earnings.requestPayoutWA')}
         </Button>
 
-        {/* Optional: add/edit bank details when already saved */}
         {hasBankDetails && (
           <Button
             variant="ghost"
@@ -251,13 +246,12 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
             className="text-muted-foreground"
             onClick={() => { setBankNameInput(profile?.bank_name || ''); setBranchInput(profile?.bank_branch || ''); setAccountNumberInput(profile?.bank_account_number || ''); setIbanInput(profile?.iban || ''); setShowBankModal(true); }}
           >
-            <CreditCard className="h-4 w-4 me-1" />{isAr ? 'تعديل بيانات البنك' : 'Edit bank details'}
+            <CreditCard className="h-4 w-4 me-1" />{t('influencer.earnings.editBankDetails')}
           </Button>
         )}
 
-        {/* Contextual status badges */}
         {hasPendingRequest && (
-          <Badge variant="secondary" className="text-xs">⏳ {isAr ? 'طلب قيد الانتظار' : 'Request pending'}</Badge>
+          <Badge variant="secondary" className="text-xs">⏳ {t('influencer.earnings.requestPending')}</Badge>
         )}
         {!hasPendingRequest && availableAmount > 0 && availableAmount < minThreshold && (
           <Badge variant="secondary" className="text-xs">🔒 {t('influencer.earnings.minThreshold', { amount: minThreshold })}</Badge>
@@ -265,9 +259,9 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         {!hasPendingRequest && eligibleRewards.length === 0 && availableAmount === 0 && rewards.length > 0 && (() => {
           const allPaid = rewards.every(r => r.status === 'paid' || r.status === 'cancelled');
           if (allPaid) {
-            return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">✅ {isAr ? 'تم استلام جميع العمولات' : 'All commissions received'}</Badge>;
+            return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">✅ {t('influencer.earnings.allReceived')}</Badge>;
           }
-          return <Badge variant="secondary" className="text-xs">⏱ {isAr ? 'المكافآت قيد قفل 20 يوم' : '20-day lock active'}</Badge>;
+          return <Badge variant="secondary" className="text-xs">⏱ {t('influencer.earnings.lockActive')}</Badge>;
         })()}
       </div>
 
@@ -281,10 +275,10 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
                 {payoutRequests.map(r => (
                   <div key={r.id} className="p-3 rounded-lg border space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold">{Number(r.amount).toLocaleString()} ₪</span>
+                      <span className="font-bold">{Number(r.amount).toLocaleString('en-US')} ₪</span>
                       <Badge variant={statusColor(r.status) as any}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString('en-US')}</p>
                     {r.status === 'pending' && <Button size="sm" variant="ghost" onClick={() => cancelRequest(r.id)}><XCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.cancel')}</Button>}
                     {r.status === 'rejected' && r.reject_reason && <p className="text-xs text-destructive">{r.reject_reason}</p>}
                   </div>
@@ -302,9 +296,9 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
                   <tbody>
                     {payoutRequests.map(r => (
                       <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                        <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString('en-US')} ₪</td>
                         <td className="px-4 py-3"><Badge variant={statusColor(r.status) as any}>{String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
-                        <td className="px-4 py-3 text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{new Date(r.requested_at).toLocaleDateString('en-US')}</td>
                         <td className="px-4 py-3">
                           {r.status === 'pending' && <Button size="sm" variant="ghost" onClick={() => cancelRequest(r.id)}><XCircle className="h-3.5 w-3.5 me-1" />{t('admin.payouts.cancel')}</Button>}
                           {r.status === 'rejected' && r.reject_reason && <span className="text-xs text-destructive">{r.reject_reason}</span>}
@@ -319,34 +313,34 @@ const EarningsPanel: React.FC<EarningsPanelProps> = ({ userId, role = 'influence
         </Card>
       )}
 
-      {/* Optional Israeli Bank Account Modal */}
+      {/* Israeli Bank Account Modal */}
       <Dialog open={showBankModal} onOpenChange={setShowBankModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{isAr ? 'بيانات الحساب البنكي الإسرائيلي' : 'Israeli Bank Account Details'}</DialogTitle>
+            <DialogTitle>{t('influencer.earnings.bankModalTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>{isAr ? 'اسم البنك' : 'Bank Name'}</Label>
-              <Input value={bankNameInput} onChange={e => setBankNameInput(e.target.value)} placeholder={isAr ? 'مثال: בנק הפועלים' : 'e.g. Bank Hapoalim'} className="mt-1" />
+              <Label>{t('influencer.earnings.bankName')}</Label>
+              <Input value={bankNameInput} onChange={e => setBankNameInput(e.target.value)} placeholder="e.g. Bank Hapoalim" className="mt-1" />
             </div>
             <div>
-              <Label>{isAr ? 'رقم الفرع' : 'Branch Number'}</Label>
-              <Input value={branchInput} onChange={e => setBranchInput(e.target.value)} placeholder={isAr ? 'مثال: 690' : 'e.g. 690'} dir="ltr" className="mt-1 font-mono" maxLength={4} />
+              <Label>{t('influencer.earnings.bankBranch')}</Label>
+              <Input value={branchInput} onChange={e => setBranchInput(e.target.value)} placeholder="e.g. 690" dir="ltr" className="mt-1 font-mono" maxLength={4} />
             </div>
             <div>
-              <Label>{isAr ? 'رقم الحساب' : 'Account Number'}</Label>
-              <Input value={accountNumberInput} onChange={e => setAccountNumberInput(e.target.value)} placeholder={isAr ? 'مثال: 123456' : 'e.g. 123456'} dir="ltr" className="mt-1 font-mono" maxLength={12} />
+              <Label>{t('influencer.earnings.bankAccount')}</Label>
+              <Input value={accountNumberInput} onChange={e => setAccountNumberInput(e.target.value)} placeholder="e.g. 123456" dir="ltr" className="mt-1 font-mono" maxLength={12} />
             </div>
             <div>
-              <Label>{isAr ? 'رقم IBAN (اختياري)' : 'IBAN (optional)'}</Label>
+              <Label>{t('influencer.earnings.bankIban')}</Label>
               <Input value={ibanInput} onChange={e => setIbanInput(e.target.value.toUpperCase())} placeholder="IL620108000000099999999" dir="ltr" className="mt-1 font-mono" maxLength={34} />
-              <p className="text-xs text-muted-foreground mt-1">{isAr ? 'سيتم التحقق من صحة الرقم تلقائياً' : 'Checksum will be validated automatically'}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('influencer.earnings.bankIbanHint')}</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBankModal(false)}>{isAr ? 'إلغاء' : 'Cancel'}</Button>
-            <Button onClick={saveBankDetails}>{isAr ? 'حفظ' : 'Save'}</Button>
+            <Button variant="outline" onClick={() => setShowBankModal(false)}>{t('influencer.earnings.bankCancel')}</Button>
+            <Button onClick={saveBankDetails}>{t('influencer.earnings.bankSaveBtn')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
