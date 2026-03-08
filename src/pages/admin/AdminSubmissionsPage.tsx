@@ -13,6 +13,7 @@ import { RefreshCw, CheckCircle2, ChevronRight, Download, FileText, User, Lock, 
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { CopyButton } from "@/components/common/CopyButton";
 
 interface SubmittedCase {
   id: string;
