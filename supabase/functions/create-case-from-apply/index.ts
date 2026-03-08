@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
           message: "A case with this phone number already exists — education data updated",
         }),
         {
-          status: 409,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );
