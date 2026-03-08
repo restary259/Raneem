@@ -106,6 +106,12 @@ const Contact = () => {
             full_name: fullName.trim(),
             phone_number: phone.trim(),
             source: 'contact_form',
+            city: city.trim() || null,
+            education_level: educationLevel || null,
+            passport_type: passportType || null,
+            english_units: englishUnits ? parseInt(englishUnits) : null,
+            math_units: mathUnits ? parseInt(mathUnits) : null,
+            degree_interest: preferredMajor.trim() || null,
           }),
         });
         if (!resp.ok && resp.status !== 409) {
