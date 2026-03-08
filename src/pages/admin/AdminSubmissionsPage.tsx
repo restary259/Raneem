@@ -280,41 +280,108 @@ const AdminSubmissionsPage = () => {
         </Button>
       </div>
 
+      {/* Subtabs */}
+      <div className="flex gap-2 border-b border-border pb-0">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 transition-colors ${
+            activeTab === "pending"
+              ? "bg-background text-foreground border-border"
+              : "text-muted-foreground border-transparent hover:text-foreground"
+          }`}
+        >
+          {t("admin.submissions.tabPending", "Pending Review")}
+          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+            {cases.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("completed")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 transition-colors ${
+            activeTab === "completed"
+              ? "bg-background text-foreground border-border"
+              : "text-muted-foreground border-transparent hover:text-foreground"
+          }`}
+        >
+          {t("admin.submissions.tabCompleted", "Completed")}
+          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"}`}>
+            {completedCases.length}
+          </span>
+        </button>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
               {t("common.loading")}
             </div>
-          ) : cases.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              {t("admin.submissions.empty", "No submitted cases yet")}
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {cases.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => setSelected(c)}
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{c.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
-                      {fmt(c.submission?.submitted_at || null)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-end">
-                      <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
-                      <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+          ) : activeTab === "pending" ? (
+            cases.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                {t("admin.submissions.empty", "No submitted cases yet")}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {cases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelected(c)}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
+                        {fmt(c.submission?.submitted_at || null)}
+                      </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-3">
+                      <div className="text-end">
+                        <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
+                        <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          ) : (
+            completedCases.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                {t("admin.submissions.emptyCompleted", "No completed cases yet")}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {completedCases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelected(c)}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.phone_number} · {t("admin.submissions.enrolledOn")}:{" "}
+                        {fmt(c.submission?.enrollment_paid_at || null)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 border hidden sm:flex">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {t("admin.submissions.tabCompleted")}
+                      </Badge>
+                      <div className="text-end">
+                        <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
+                        <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </CardContent>
       </Card>
