@@ -464,7 +464,7 @@ const AdminPipelinePage = () => {
                     ))
                   ) : statusCases.length === 0 ? (
                     <div className="h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Empty</p>
+                      <p className="text-xs text-muted-foreground">{t('admin.pipeline.emptyColumn')}</p>
                     </div>
                   ) : (
                     statusCases.map((c) => {
@@ -528,7 +528,7 @@ const AdminPipelinePage = () => {
                               </p>
                             ) : (
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
-                                Unassigned
+                                {t('admin.pipeline.unassigned')}
                               </span>
                             )}
 
@@ -539,7 +539,7 @@ const AdminPipelinePage = () => {
                               </span>
                               {hasApplyInfo(c) && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                  Has info
+                                  {t('admin.pipeline.hasInfo')}
                                 </span>
                               )}
                             </div>
@@ -554,11 +554,11 @@ const AdminPipelinePage = () => {
                                 <SelectTrigger className="h-7 text-xs">
                                   <div className="flex items-center gap-1">
                                     <User className="h-3 w-3" />
-                                    <SelectValue placeholder="Assign" />
+                                    <SelectValue placeholder={t('admin.pipeline.assignPlaceholder')} />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                                  <SelectItem value="unassigned">{t('admin.pipeline.unassigned')}</SelectItem>
                                   {teamMembers.map((tm) => (
                                     <SelectItem key={tm.id} value={tm.id}>
                                       {tm.full_name} — {tm.email}
@@ -602,7 +602,7 @@ const AdminPipelinePage = () => {
                       <span
                         className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_LABELS[selectedCase.status]?.color ?? "bg-muted"}`}
                       >
-                        {STATUS_LABELS[selectedCase.status]?.en ?? selectedCase.status}
+                        {label(selectedCase.status)}
                       </span>
                       {selectedCase.source &&
                         (() => {
@@ -618,7 +618,7 @@ const AdminPipelinePage = () => {
                       <div className="flex items-center gap-2 flex-wrap mt-1">
                         {selectedCase.discount_amount > 0 && (
                           <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
-                            {isRtl ? "خصم" : "Discount"}: ₪{selectedCase.discount_amount}
+                            {t('admin.pipeline.discount')}: ₪{selectedCase.discount_amount}
                           </span>
                         )}
                       </div>
