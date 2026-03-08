@@ -61,20 +61,24 @@ export default function PartnerOverviewPage() {
       .maybeSingle();
     setCommissionRate(Number(override?.commission_amount ?? rate));
 
-    // Visibility: per-partner override takes priority, then global setting
-    const showAll =
-      override?.show_all_cases !== null && override?.show_all_cases !== undefined
-        ? override.show_all_cases
-        : globalShowAll;
-
-    // Fetch cases
+    // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
     let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,source,created_at,education_level,degree_interest")
       .order("created_at", { ascending: false });
 
-    if (!showAll) {
-      query = query.in("source", ["apply_page", "contact_form"]);
+    if (override !== null && override !== undefined) {
+      if (override.show_all_cases === false) {
+        query = query.in("source", ["apply_page", "contact_form"]);
+      } else if (override.show_all_cases === null) {
+        query = query.eq("partner_id", uid);
+      }
+      // show_all_cases === true → no filter (show everything)
+    } else {
+      // No override row at all → fall back to global setting
+      if (!globalShowAll) {
+        query = query.in("source", ["apply_page", "contact_form"]);
+      }
     }
 
     const { data: casesData } = await query;

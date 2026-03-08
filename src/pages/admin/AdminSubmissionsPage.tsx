@@ -187,6 +187,26 @@ const AdminSubmissionsPage = () => {
     setMarking(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+
+      // Bug fix: if there's a partner commission configured but no partner_id on the case,
+      // look up the single partner account and link it so record_case_commission can attribute
+      // the reward correctly (cases from apply_page/contact_form have partner_id = null).
+      if (splitPreview.partnerCommission > 0 && !selected.partner_id) {
+        const { data: partnerOverride } = await (supabase as any)
+          .from("partner_commission_overrides")
+          .select("partner_id")
+          .limit(1)
+          .maybeSingle();
+        if (partnerOverride?.partner_id) {
+          await supabase
+            .from("cases")
+            .update({ partner_id: partnerOverride.partner_id })
+            .eq("id", selected.id);
+          // Reflect in local state so the audit log is accurate
+          selected.partner_id = partnerOverride.partner_id;
+        }
+      }
+
       // Call admin-mark-paid edge function to trigger record_case_commission automatically
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
         method: "POST",
