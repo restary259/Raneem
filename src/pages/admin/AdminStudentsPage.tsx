@@ -280,7 +280,7 @@ export default function AdminStudentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
   const PROFILE_SELECT =
-    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at";
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
 
   // ── FIX 2: Remove over-restrictive filters — show ALL students ──
   const fetchStudents = useCallback(async () => {
