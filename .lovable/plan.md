@@ -1,102 +1,119 @@
 
-## Deep Scan Results: Complete Database Audit
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### What the DB actually contains right now
+### What was found (full audit)
 
-```text
-TABLE: cases (8 rows)
-──────────────────────────────────────────────────────────────────
-ID prefix   | Full Name              | Phone        | Source              | Status               | partner_id
-11eb5171    | Test Contact Form      | 0529999001   | contact_form        | new                  | NULL ✅ visible to partner
-83465706    | rasr                   | 05252603257  | apply_page          | new                  | NULL ✅ visible to partner
-20470d87    | raneme                 | 05252605477  | apply_page          | new                  | NULL ✅ visible to partner
-bf811bb8    | raneem gmeel dawahde   | 0525260547   | apply_page          | submitted            | NULL ✅ visible to partner
-0d9bb8b6    | test raya              | 0525260547   | manual              | appointment_scheduled| NULL ✅ visible to partner (same phone!)
-52c0cfb1    | ASDAS                  | 0525260547   | manual              | new                  | NULL ✅ visible to partner
-4311d085    | rane as dsa dasd       | 0525260546   | submit_new_student  | submitted            | NULL ✅ visible to partner
-8268b99d    | rasr                   | 0525260549   | referral            | new                  | NULL NOT in pool mode
-──────────────────────────────────────────────────────────────────
-```
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-### 3 Issues Confirmed
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-**Issue 1 — The "test rayan contact" lead was BLOCKED by a pre-existing referral case (root bug)**
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-Timeline:
-1. Phone `0525260549` → first created at 11:26 as `source='referral'` case ("rasr")
-2. At 12:20, contact form submitted for **different person** "test rayan contact" with same phone
-3. Edge function `create-case-from-apply` checks for `phone_number = 0525260549` — finds the referral case
-4. Returns `duplicate: true` — **no new case created**
-5. But the legacy `insert_lead_from_apply` RPC DID run and created a lead in the `leads` table (source_type = contact_form)
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-**Result:** "test rayan contact" exists only as a `leads` row, NOT in `cases`. The admin pipeline will never see them.
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-**Issue 2 — Duplicate phone number on 3 different cases (0525260547)**
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-Three cases all share phone `0525260547`:
-- `raneem gmeel dawahde` — apply_page, submitted
-- `test raya` — manual, appointment_scheduled  
-- `ASDAS` — manual, new
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-This is data pollution from test data but the edge function currently allows manual and team-submitted cases to bypass the deduplication check. The check only runs in `create-case-from-apply`, not when team creates manually.
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-**Issue 3 — One lead is an orphan with no matching case**
-
-`test rayan contact` (phone: `0525260549`) exists in `leads` table with `source_type=contact_form` but its only "matched" case is the UNRELATED referral case with the same phone number. This person was effectively lost.
-
----
-
-### Fix Plan
-
-**No DB migration needed.** All fixes are in the edge function and one data repair.
-
-#### Fix A — `create-case-from-apply/index.ts`: Stop blocking new contact_form submissions when the existing case has a DIFFERENT source
-
-Current logic:
-```js
-// Blocks on ANY existing case with same phone
-if (existingCase) { return duplicate: true }
-```
-
-Fixed logic:
-```js
-// Only block if the existing case is also a contact_form/apply_page submission
-// (same person re-submitting). If the existing case is referral/manual/etc., 
-// create the new contact_form case anyway (different flow, could be different person).
-if (existingCase && ['contact_form', 'apply_page'].includes(existingCase.source)) {
-  return duplicate: true
-}
-// If existingCase.source is 'referral' or 'manual', still create the new case
-```
-
-This prevents false duplicate detection across different submission flows.
-
-#### Fix B — Data Repair: Create the missing case for "test rayan contact"
-
-The contact_form lead `test rayan contact` (phone: `0525260549`) was blocked by the referral case but is a real lead. We need to insert their case into the `cases` table manually via the Lovable Cloud database.
-
-Data to insert:
-```sql
-INSERT INTO public.cases (full_name, phone_number, source, status)
-VALUES ('test rayan contact', '0525260549', 'contact_form', 'new');
-```
-
-This is a data insert (not a schema migration), so it uses the insert tool.
-
-#### Fix C — Admin Pipeline: Add a warning badge for cases with duplicate phone numbers
-
-The pipeline currently has 3 cases sharing `0525260547`. While this is test data, in production this is dangerous — a team member could advance the wrong case. Add a `⚠️ Duplicate Phone` badge on the case card when another case shares the same phone number.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-### Files to change
+### Files to change (batched)
 
-| What | Where | Type |
-|------|-------|------|
-| Fix duplicate detection logic | `supabase/functions/create-case-from-apply/index.ts` | Edge function edit |
-| Insert orphan case | DB data repair | Insert query |
-| Add duplicate phone warning badge | `src/pages/admin/AdminPipelinePage.tsx` | UI fix |
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-### Summary of what "went missing"
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-Only **1 real case was lost** due to the previous bug: "test rayan contact" (phone 0525260549). It was blocked because another person with the same phone had a referral case. All other cases (contact_form "Test Contact Form" = phone 0529999001) ARE correctly in the system and visible to the partner dashboard.
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

@@ -371,6 +371,13 @@ const AdminPipelinePage = () => {
     }
   };
 
+  /* ── duplicate phone detection ── */
+  const phoneCount = cases.reduce<Record<string, number>>((acc, c) => {
+    acc[c.phone_number] = (acc[c.phone_number] ?? 0) + 1;
+    return acc;
+  }, {});
+  const hasDuplicatePhone = (c: Case) => phoneCount[c.phone_number] > 1;
+
   /* ── filter ── */
   const filtered = cases.filter((c) => {
     const matchSearch =
@@ -504,6 +511,14 @@ const AdminPipelinePage = () => {
                             </div>
 
                             <p className="text-xs text-muted-foreground">{c.phone_number}</p>
+
+                            {/* Duplicate phone warning */}
+                            {hasDuplicatePhone(c) && (
+                              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 border border-amber-300 w-fit">
+                                <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
+                                <span className="text-[10px] font-semibold text-amber-700">Duplicate Phone</span>
+                              </div>
+                            )}
 
                             {/* Units badges — shown directly on card */}
                             {(c.english_units != null || c.math_units != null) && (
