@@ -88,24 +88,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Log activity
-    await supabaseAdmin.rpc("log_activity", {
-      p_actor_id: user.id,
-      p_actor_name: "Admin",
-      p_action: "case_marked_paid",
-      p_entity_type: "cases",
-      p_entity_id: case_id,
-      p_metadata: { paid_at: now, total_payment_ils },
-    });
+    // Log activity (best-effort — FK on actor_id may not resolve for service-role inserts)
+    try {
+      await supabaseAdmin.rpc("log_activity", {
+        p_actor_id: user.id,
+        p_actor_name: "Admin",
+        p_action: "case_marked_paid",
+        p_entity_type: "cases",
+        p_entity_id: case_id,
+        p_metadata: { paid_at: now, total_payment_ils },
+      });
+    } catch (_) { /* non-fatal */ }
 
-    // Audit log
-    await supabaseAdmin.from("admin_audit_log").insert({
-      admin_id: user.id,
-      action: "admin_mark_paid",
-      target_id: case_id,
-      target_table: "cases",
-      details: `Admin marked case as enrollment_paid at ${now}`,
-    });
+    // Audit log (best-effort)
+    try {
+      await supabaseAdmin.from("admin_audit_log").insert({
+        admin_id: user.id,
+        action: "admin_mark_paid",
+        target_id: case_id,
+        target_table: "cases",
+        details: `Admin marked case as enrollment_paid at ${now}`,
+      });
+    } catch (_) { /* non-fatal */ }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
