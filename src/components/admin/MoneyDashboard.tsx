@@ -174,7 +174,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     const paidCases = cases.filter(c => c.paid_at);
     const totalServiceFees = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
     const totalSchoolComm = paidCases.reduce((s, c) => s + (Number(c.school_commission) || 0), 0);
-    const totalTranslation = paidCases.reduce((s, c) => s + (Number(c.translation_fee) || 0), 0);
     const totalInfluencerComm = paidCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
     const totalLawyerComm = paidCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
     const totalReferralDiscount = paidCases.reduce((s, c) => s + (Number(c.referral_discount) || 0), 0);
