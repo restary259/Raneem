@@ -303,7 +303,7 @@ export default function AdminStudentsPage() {
         .from("profiles")
         .select(PROFILE_SELECT)
         .in("id", userIds)
-        // Removed .not("created_by","is",null) and .is("case_id",null) — those were hiding valid students
+        .not("created_by", "is", null)   // Only manually-provisioned accounts
         .order("created_at", { ascending: false });
 
       if (error) throw error;
