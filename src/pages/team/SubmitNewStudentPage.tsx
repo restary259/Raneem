@@ -500,11 +500,11 @@ export default function SubmitNewStudentPage() {
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/team/cases")}>
+      <div className="flex items-center gap-2 min-w-0">
+        <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate("/team/cases")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">{isAr ? "تسجيل طالب جديد" : "Submit New Student"}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold min-w-0 flex-1 truncate">{isAr ? "تسجيل طالب جديد" : "Submit New Student"}</h1>
       </div>
 
       <StepBar step={step} />
@@ -612,7 +612,7 @@ export default function SubmitNewStudentPage() {
             </div>
             <div>
               <Label>Address</Label>
-              <div className="grid grid-cols-3 gap-2 mt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
                 <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
                 <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
                 <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />

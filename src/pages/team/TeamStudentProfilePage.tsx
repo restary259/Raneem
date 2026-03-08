@@ -42,12 +42,16 @@ export default function TeamStudentProfilePage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/team/students')}><ArrowLeft className="h-4 w-4" /></Button>
-        <h1 className="text-2xl font-bold">{caseData.full_name as string}</h1>
-        <Badge className={caseData.status === 'enrollment_paid' ? 'bg-green-100 text-green-800' : 'bg-teal-100 text-teal-800'}>
-          {(caseData.status as string).replace(/_/g, ' ')}
-        </Badge>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate('/team/students')}><ArrowLeft className="h-4 w-4" /></Button>
+          <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0 flex-1">{caseData.full_name as string}</h1>
+        </div>
+        <div className="ps-1">
+          <Badge className={caseData.status === 'enrollment_paid' ? 'bg-green-100 text-green-800' : 'bg-teal-100 text-teal-800'}>
+            {(caseData.status as string).replace(/_/g, ' ')}
+          </Badge>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
