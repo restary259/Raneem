@@ -115,7 +115,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   };
 
   // Net profit: service_fee + school_commission (all ILS) minus all expenses
-  const getNetProfit = (c: any) => (c.service_fee || 0) + (c.school_commission || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0) - (c.translation_fee || 0);
+  const getNetProfit = (c: any) => (c.service_fee || 0) + (c.school_commission || 0) - (c.influencer_commission || 0) - (c.lawyer_commission || 0) - (c.referral_discount || 0);
 
   const bulkExportPDF = () => {
     const headers = [t('admin.ready.fullName', 'Full Name'), t('admin.ready.email', 'Email'), t('admin.ready.phone', 'Phone'), t('admin.ready.passportNumber', 'Passport'), t('admin.ready.nationality', 'Nationality'), t('admin.ready.destinationCity', 'City'), t('admin.ready.schoolLabel', 'School'), t('admin.ready.intensiveCourse', 'Course'), t('admin.students.status', 'Status')];
@@ -206,9 +206,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                   <div className="mt-2 flex gap-3 text-xs text-muted-foreground flex-wrap">
                     <span>{t('cases.serviceFee')}: {c.service_fee} ₪</span>
                     <span>{t('cases.netProfit')}: <span className={getNetProfit(c) >= 0 ? 'text-emerald-700 font-bold' : 'text-red-600 font-bold'}>{getNetProfit(c)} ₪</span></span>
-                    {c.has_translation_service && c.translation_fee > 0 && (
-                      <span>📄 {t('cases.translationFee')}: {c.translation_fee} ₪</span>
-                    )}
                   </div>
                 )}
               </CardContent>
