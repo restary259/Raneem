@@ -36,6 +36,9 @@ export default function PartnerOverviewPage() {
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
+  // Tracks whether partner is in "Apply/Contact Only" pool mode (no override row also = pool mode)
+  const [isPoolMode, setIsPoolMode] = useState(false);
+
   const load = useCallback(async (uid: string) => {
     const [profRes, settingsRes, overrideRes] = await Promise.all([
       (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
@@ -58,7 +61,21 @@ export default function PartnerOverviewPage() {
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? rate));
 
-    // Fetch rewards (actual paid commissions) — replaces defunct commission_transactions
+    // Determine commission pool mode:
+    // "pool mode" = partner earns on ALL visible agency cases (not just partner_id = uid)
+    // This applies when: no override row, OR override.show_all_cases === false
+    // "attribution mode" = only cases where partner_id === uid earn commission
+    // This applies when: show_all_cases === true OR show_all_cases === null (referral only)
+    let poolMode = false;
+    if (override === null || override === undefined) {
+      // No override → default agency pool behaviour
+      poolMode = !globalShowAll;
+    } else {
+      poolMode = override.show_all_cases === false;
+    }
+    setIsPoolMode(poolMode);
+
+    // Fetch rewards (actual paid commissions)
     const { data: rewardsData, error: rewardsErr } = await (supabase as any)
       .from("rewards")
       .select("amount,status,created_at,admin_notes")
@@ -68,7 +85,6 @@ export default function PartnerOverviewPage() {
     setCommissions(rewardsData || []);
 
     // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
-    // Always fetch partner_id to correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
@@ -79,15 +95,12 @@ export default function PartnerOverviewPage() {
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null) {
-        // Referral Cases Only: peer student-to-student referrals (source='referral')
         query = query.eq("source", "referral");
       }
-      // show_all_cases === true → no filter (show everything)
+      // show_all_cases === true → no filter
     } else {
-      // No override row at all → fall back to global setting
       if (!globalShowAll) {
         query = query.in("source", PARTNER_SOURCES);
       }
