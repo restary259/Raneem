@@ -68,8 +68,8 @@ export default function PartnerStudentsPage() {
         // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
-        // Partner-attributed only: cases linked to this partner via their referral link
-        query = query.eq("partner_id", uid);
+        // Referral Cases Only: peer student-to-student referrals (source='referral')
+        query = query.eq("source", "referral");
       }
       // show_all_cases === true → no extra filter (show everything)
     } else {
