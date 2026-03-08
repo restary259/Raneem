@@ -1,119 +1,122 @@
+## Bug Analysis: Visibility Mode Logic is Semantically Wrong
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+### What the three modes are SUPPOSED to mean (from CommissionSettingsPanel.tsx):
 
-### What was found (full audit)
+```
+true  → "All Cases" — sees everything
+false → "Apply / Contact Only" — only auto-generated leads
+null  → "Referral Cases Only" — only cases that came through referral links from student dashboards 
+```
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+### The actual bug — two separate problems:
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+**Problem 1: `null` mode (Referral Cases Only) checks the wrong column**
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+Current code in all 3 partner pages:
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+```js
+} else if (override.show_all_cases === null) {
+  query = query.eq("partner_id", uid);  // ← WRONG
+}
+```
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+This checks `cases.partner_id = partner_user_id`. But `partner_id` on a case is only set when:
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+- A case comes in via a partner's referral link (e.g. `?ref=partnerID` on the apply page)
+- Admin manually links a partner
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+Student-to-student referrals (`source='referral'`) have:
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
+- `source = 'referral'`
+- `referred_by = <student_who_referred>` (NOT the social media partner)
+- `partner_id = NULL`
 
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+So **"Referral Cases Only"** should correctly mean: cases where `partner_id = uid` (partner-attributed cases via the partner's own link), which is the ONLY correct interpretation for the social media partner context. The current DB query IS correct for that intent — `partner_id = uid`.
 
----
+**But the real bug is in the `false` mode (Apply/Contact Only):**
 
-### Files to change (batched)
+```js
+if (override.show_all_cases === false) {
+  query = query.in("source", PARTNER_SOURCES);
+  // PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"]
+}
+```
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+This includes `"referral"` in the source filter. But `source='referral'` cases are student-to-student referrals — they have a `referred_by` (student) set, not a `partner_id`. These should NOT appear under "Apply / Contact Only" mode because the user said: **"referrals are ONLY cases created by students using their student dashboard"** — meaning they are a separate category entirely.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+**Problem 2: `show_all_cases = true` should not count referral-source cases toward partner commission**
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+When a partner is in "All Cases" mode, they see referral cases too — but `source='referral'` cases were created by students (peer referrals), not by the social media partner. The partner should NOT earn a commission on those cases, yet the Earnings page counts all visible cases.
 
-**B. Numeric safety (7 component files)**
+### The correct source semantics:
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+```
+apply_page          → Student applied via the public apply form (no partner link)
+submit_new_student  → Team member submitted manually
+manual              → Admin created manually
+referral            → Student referred another student from their dashboard (peer referral)
+                      → these have referred_by = student_id, NOT partner_id
+                      → partner earns NOTHING on these
+                      → show_all_cases=false should NOT include these
+```
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
+Cases WHERE partner earns commission:
 
-**C. SparklineCard overflow fix**
+- Any case where `partner_id = this_partner_id` (regardless of source)
 
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+### What needs to change:
 
-**D. TeamStudentProfilePage — add translations**
+**Fix 1 — Remove `"referral"` from the `PARTNER_SOURCES` filter list (all 3 partner pages)**
 
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+`PARTNER_SOURCES` is used in the `show_all_cases=false` branch. Removing `"referral"` ensures the partner sees only auto-generated agency leads, not student peer referrals:
 
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
+```js
+const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
+// "referral" removed — these are peer student referrals, not partner-generated
+```
 
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**Fix 2 — `show_all_cases = null` branch should filter to `partner_id = uid` (already correct) but needs clear comments**
 
----
+The current `query.eq("partner_id", uid)` is semantically correct for "cases attributed directly to this partner". Keep it, just add clarity.
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+**Fix 3 — Earnings calculation: only count cases where `partner_id = uid` as commission-generating**
+
+Currently `earningCases = cases.filter(c => PAID_STATUSES.includes(c.status))` — this counts ALL visible cases including peer referrals and unattributed cases.
+
+The earnings should split into:
+
+- **Attributed cases** (where `partner_id = uid`) → earns `commissionRate` each when paid
+- **Visible-only cases** (no `partner_id`) → shows in pipeline tracker, no commission
+
+Fix in `PartnerEarningsPage`: also select `partner_id` in the query, then:
+
+```js
+const commissionCases = cases.filter(c => c.partner_id === userId);
+const earningCases = commissionCases.filter(c => PAID_STATUSES.includes(c.status));
+// non-commission cases still show in pipeline but show ₪0 commission
+```
+
+Same fix in `PartnerOverviewPage`:
+
+```js
+const commissionCases = cases.filter(c => c.partner_id === userId);
+const paid = commissionCases.filter(c => PAID_STATUSES.includes(c.status)).length;
+// projectedEarnings = paid * commissionRate (only attributed paid cases)
+```
+
+### Files to change: 3 files, no DB migration
+
+
+| File                      | Change                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `PartnerStudentsPage.tsx` | Remove `"referral"` from `PARTNER_SOURCES`; add `partner_id` to select; display commission badge only on attributed cases           |
+| `PartnerEarningsPage.tsx` | Remove `"referral"` from `PARTNER_SOURCES`; add `partner_id` to select; filter commission calculation to `partner_id = userId` only |
+| `PartnerOverviewPage.tsx` | Remove `"referral"` from `PARTNER_SOURCES`; add `partner_id` to select; compute KPIs based on attributed cases only                 |
+
+
+### Visual impact:
+
+- Students page: referral cases no longer appear under "Apply/Contact Only" mode ✓
+- Earnings page: only cases with `partner_id = partner_uid` show a commission amount; other visible cases show "No commission" in pipeline ✓
+- Overview KPIs: "Projected Earnings" based on attributed+paid cases only ✓
+- "Referral Cases Only" mode: correctly shows only cases linked to this partner via partner link ✓
