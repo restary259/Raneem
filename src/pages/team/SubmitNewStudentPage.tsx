@@ -782,16 +782,7 @@ export default function SubmitNewStudentPage() {
                     onChange={(e) => setServiceFee(e.target.value)}
                   />
                 </FieldWrap>
-                <div>
-                  <Label>Translation Fee (ILS)</Label>
-                  <Input
-                    className="mt-1"
-                    type="number"
-                    min="0"
-                    value={translationFee}
-                    onChange={(e) => setTranslationFee(e.target.value)}
-                  />
-                </div>
+               </div>
               </div>
               {total > 0 && (
                 <div className="flex justify-between p-3 rounded-lg bg-muted text-sm font-medium">
