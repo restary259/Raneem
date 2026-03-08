@@ -73,27 +73,33 @@ const Contact = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
       if (honeypot) return { success: true };
-      const { error } = await supabase.rpc('insert_lead_from_apply', {
-        p_full_name: fullName.trim(),
-        p_phone: phone.trim(),
-        p_passport_type: passportType || null,
-        p_city: city.trim() || null,
-        p_education_level: educationLevel || null,
-        p_german_level: 'beginner',
-        p_preferred_city: city.trim() || null,
-        p_accommodation: false,
-        p_source_type: 'contact_form',
-        p_english_units: englishUnits ? parseInt(englishUnits) : null,
-        p_math_units: mathUnits ? parseInt(mathUnits) : null,
-        p_preferred_major: preferredMajor.trim() || null,
-      } as any);
-      if (error) throw new Error(error.message);
 
-      // Also create a case in the unified pipeline so team can see it
+      // Save lead (non-critical — duplicate phone is acceptable)
+      try {
+        const { error } = await supabase.rpc('insert_lead_from_apply', {
+          p_full_name: fullName.trim(),
+          p_phone: phone.trim(),
+          p_passport_type: passportType || null,
+          p_city: city.trim() || null,
+          p_education_level: educationLevel || null,
+          p_german_level: 'beginner',
+          p_preferred_city: city.trim() || null,
+          p_accommodation: false,
+          p_source_type: 'contact_form',
+          p_english_units: englishUnits ? parseInt(englishUnits) : null,
+          p_math_units: mathUnits ? parseInt(mathUnits) : null,
+          p_preferred_major: preferredMajor.trim() || null,
+        } as any);
+        if (error) console.warn('[Contact] lead RPC warning (non-critical):', error.message);
+      } catch (leadErr: any) {
+        console.warn('[Contact] lead RPC failed (non-critical):', leadErr.message);
+      }
+
+      // Also create a case in the unified pipeline (409 = duplicate = OK)
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
+        const resp = await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
           body: JSON.stringify({
@@ -102,6 +108,9 @@ const Contact = () => {
             source: 'contact_form',
           }),
         });
+        if (!resp.ok && resp.status !== 409) {
+          console.warn('[Contact] case creation warning:', resp.status);
+        }
       } catch (caseErr) {
         console.warn('[Contact] case creation warning:', caseErr);
       }
