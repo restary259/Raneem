@@ -1,136 +1,119 @@
 
-## Root Causes — Full Diagnosis
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### Issue 1: Conversion Funnel chart squished (critical, visible in screenshot)
-`AdminAnalyticsPage.tsx` uses a **vertical `BarChart` with `layout="vertical"`** and a fixed height of `300px` for **9 bars**. That gives only ~33px per bar row — not enough space for the Arabic Y-axis labels which are longer (e.g., "موعد محجوز"). The chart appears to have all labels stacked on top of each other.
+### What was found (full audit)
 
-**Root cause**: `height={300}` is too short for 9 labels + Y-axis width is `80px` in RTL which is insufficient for Arabic strings like "ملف" and "تقديم". Also `isRtl` makes the chart try to put margin on wrong side.
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-**Fix**:
-- Increase height to `380px`
-- Increase `yAxisWidth` from `80` to `130` in RTL
-- Add `minPointSize={4}` so zero-value bars still show a sliver
-- Add `overflow="visible"` on the `ResponsiveContainer`
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-### Issue 2: "Avg days per stage" X-axis Arabic labels overlap
-The bottom BarChart (`avgDays`) uses `<XAxis dataKey="name" tick={{ fontSize: 10 }}` with no `angle` or `height`. For 7 Arabic labels like "موعد محجوز" at `fontSize: 10`, these will overlap each other at mobile widths.
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-**Fix**:
-- Add `angle={-25}` `textAnchor="end"` `height={60}` to XAxis
-- Or switch to vertical layout like the funnel chart
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-### Issue 3: Missing `admin.analytics` keys in AR locale used by `AdminOverview.tsx`
-`AdminOverview.tsx` calls `t('admin.analytics.slaWarnings')`, `t('admin.analytics.monthlyBreakdown')`, `t('admin.analytics.revenue')`, `t('admin.analytics.teamComm')`, `t('admin.analytics.infComm')`, `t('admin.analytics.teamPerformance')`, `t('admin.analytics.influencerPerformance')`, `t('admin.analytics.leadsGenerated')`, `t('admin.analytics.name')`, `t('admin.analytics.assigned')`, `t('admin.analytics.paid')`, `t('admin.analytics.commission')`, `t('admin.analytics.funnelTitle')`.
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-Checking the AR locale `admin.analytics` section (lines 458–482), only basic keys exist. Missing:
-- `slaWarnings` → "تحذيرات SLA"
-- `monthlyBreakdown` → "التوزيع الشهري"
-- `revenue` → "الإيرادات"
-- `teamComm` → "عمولة الفريق"
-- `infComm` → "عمولة الوكيل"
-- `teamPerformance` → "أداء الفريق"
-- `influencerPerformance` → "أداء الوكلاء"
-- `leadsGenerated` → "عملاء محالون"
-- `name` → "الاسم"
-- `assigned` → "معيّن"
-- `paid` → "مدفوع"
-- `commission` → "العمولة"
-- `funnelTitle` (from AdminOverview `t('admin.overview.funnelTitle')`) → missing in `admin.overview` section
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-Also `admin.overview` section needs:
-- `funnelTitle` → "مسار العملاء"
-- `newLeadsToday` → "عملاء جدد اليوم"
-- `totalLabel` → "الإجمالي"
-- `eligiblePct` → "نسبة المؤهلين"
-- `conversionRate` → "معدل التحويل"
-- `converted` → "تحويل"
-- `revenueThisMonth` → "إيرادات الشهر"
-- `activeCases` → "ملفات نشطة"
-- `totalStudents` → "إجمالي الطلاب"
-- `agents` → "الوكلاء"
-- `totalPayments` → "إجمالي المدفوعات"
-- `newMessages` → "رسائل جديدة"
-- `newThisMonth` → "جديد هذا الشهر"
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-### Issue 4: Missing `kpi` keys in AR locale for `KPIAnalytics.tsx`
-`KPIAnalytics.tsx` uses `t('kpi.conversionFunnel')`, `t('kpi.revenueTrend')`, `t('kpi.agentPerformance')`, `t('kpi.clients')`, `t('kpi.paidLabel')`, `t('kpi.exportRevenue')`, `t('kpi.exportLeads')`, `t('kpi.exportCases')`.
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-Checking the AR locale `kpi` section (line 833–847), missing:
-- `conversionFunnel` → "مسار التحويل"
-- `revenueTrend` → "منحنى الإيرادات"
-- `paidLabel` → "مدفوع"
-- `exportRevenue` → "تصدير الإيرادات"
-- `exportLeads` → "تصدير العملاء"
-- `exportCases` → "تصدير الملفات"
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
-### Issue 5: `KPIAnalytics` conversion funnel chart — X-axis with Arabic labels not angled
-The funnel `BarChart` in `KPIAnalytics.tsx` uses `<XAxis angle={-20} height={60}>` — angling is good, but Arabic characters rotate in unexpected directions. With RTL + angle -20 the labels still overlap. Should use `height={70}` and `fontSize: 9`.
+---
 
-### Issue 6: `AdminAnalyticsPage` — no RTL-aware chart direction
-Recharts doesn't natively flip bar charts for RTL. The funnel vertical bar chart has `margin={{ left: 8, right: 0 }}` in RTL but the Y-axis (labels) are on the left in Recharts always. For Arabic RTL, the label side should be adjusted via `orientation="right"` on `YAxis` when `isRtl`.
+### Files to change (batched)
 
-## Files to Edit
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-| File | Change |
-|---|---|
-| `src/pages/admin/AdminAnalyticsPage.tsx` | Fix funnel chart height, yAxisWidth, RTL orientation, avg chart X-axis angle |
-| `src/components/admin/KPIAnalytics.tsx` | Fix funnel X-axis angle/height for Arabic labels |
-| `public/locales/ar/dashboard.json` | Add missing `admin.analytics.*`, `admin.overview.*`, and `kpi.*` keys |
-| `public/locales/en/dashboard.json` | Add corresponding EN keys for parity |
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-## Exact Changes
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-### `AdminAnalyticsPage.tsx`
-```tsx
-// Funnel chart: height 300→380, yAxisWidth 80→130 RTL / 110 LTR
-// Add YAxis orientation="right" when isRtl
-// Add minPointSize={4} on Bar
+**B. Numeric safety (7 component files)**
 
-// AvgDays chart: add angle={-25} textAnchor="end" height={65} to XAxis
-```
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
 
-### `public/locales/ar/dashboard.json` — add to `admin.analytics`:
-```json
-"slaWarnings": "تحذيرات SLA",
-"monthlyBreakdown": "التوزيع الشهري",
-"revenue": "الإيرادات",
-"teamComm": "عمولة الفريق",
-"infComm": "عمولة الوكيل",
-"teamPerformance": "أداء الفريق",
-"influencerPerformance": "أداء الوكلاء",
-"leadsGenerated": "عملاء محالون",
-"name": "الاسم",
-"assigned": "معيّن",
-"paid": "مدفوع",
-"commission": "العمولة"
-```
-Add to `admin.overview`:
-```json
-"funnelTitle": "مسار العملاء",
-"newLeadsToday": "عملاء جدد اليوم",
-"totalLabel": "الإجمالي",
-"eligiblePct": "نسبة المؤهلين",
-"conversionRate": "معدل التحويل",
-"converted": "تحويل",
-"revenueThisMonth": "إيرادات الشهر",
-"activeCases": "ملفات نشطة",
-"totalStudents": "إجمالي الطلاب",
-"agents": "الوكلاء",
-"totalPayments": "إجمالي المدفوعات",
-"newMessages": "رسائل جديدة",
-"newThisMonth": "جديد هذا الشهر"
-```
-Add to `kpi`:
-```json
-"conversionFunnel": "مسار التحويل",
-"revenueTrend": "منحنى الإيرادات",
-"paidLabel": "مدفوع",
-"exportRevenue": "تصدير الإيرادات",
-"exportLeads": "تصدير العملاء",
-"exportCases": "تصدير الملفات"
-```
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
 
-### `public/locales/en/dashboard.json` — add matching EN keys for parity
-Same structure with English values.
+**C. SparklineCard overflow fix**
 
-**4 files touched total. No backend, logic, or component structure changes.**
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

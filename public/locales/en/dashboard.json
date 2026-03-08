@@ -478,7 +478,20 @@
       "sourceApplyPage": "Apply Page",
       "sourceManual": "Manual",
       "sourceDirect": "Direct Submit",
-      "sourcePartner": "Partner"
+      "sourcePartner": "Partner",
+      "slaWarnings": "SLA Warnings",
+      "monthlyBreakdown": "Monthly Breakdown",
+      "revenue": "Revenue",
+      "teamComm": "Team Commission",
+      "infComm": "Agent Commission",
+      "teamPerformance": "Team Performance",
+      "influencerPerformance": "Agent Performance",
+      "leadsGenerated": "Leads Generated",
+      "name": "Name",
+      "assigned": "Assigned",
+      "paid": "Paid",
+      "commission": "Commission",
+      "funnelTitle": "Client Funnel"
     },
     "commission": {
       "globalRates": "Global Commission Rates",
@@ -748,7 +761,13 @@
     "clients": "Clients",
     "quality": "Quality",
     "conversion": "Conversion",
-    "costPerStudent": "Cost/Student"
+    "costPerStudent": "Cost/Student",
+    "conversionFunnel": "Conversion Funnel",
+    "revenueTrend": "Revenue Trend",
+    "paidLabel": "Paid",
+    "exportRevenue": "Export Revenue",
+    "exportLeads": "Export Leads",
+    "exportCases": "Export Cases"
   },
   "lawyer": {
     "hi": "Hi",

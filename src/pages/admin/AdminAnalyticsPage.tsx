@@ -70,7 +70,7 @@ const AdminAnalyticsPage = () => {
     return { name: statusLabels[s], avg: Math.round(avg) };
   });
 
-  const yAxisWidth = isRtl ? 80 : 100;
+  const yAxisWidth = isRtl ? 130 : 110;
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
@@ -90,9 +90,9 @@ const AdminAnalyticsPage = () => {
           { label: t('admin.analytics.kpiConversion'), value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
         ].map((kpi, i) => (
           <Card key={i}>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-              <p className="text-2xl font-bold">{kpi.value}</p>
+            <CardContent className="p-4 min-h-[80px]">
+              <p className="text-xs text-muted-foreground mb-1 line-clamp-2 leading-tight">{kpi.label}</p>
+              <p className="text-xl font-bold truncate min-w-0">{kpi.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -103,25 +103,26 @@ const AdminAnalyticsPage = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={380} style={{ overflow: 'visible' }}>
               <BarChart
                 data={funnelData}
                 layout="vertical"
-                margin={{ top: 4, bottom: 4, left: isRtl ? 8 : 0, right: isRtl ? 0 : 8 }}
+                margin={{ top: 4, bottom: 4, left: isRtl ? 4 : 0, right: isRtl ? 0 : 4 }}
               >
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
                   dataKey="name"
                   width={yAxisWidth}
+                  orientation={isRtl ? 'right' : 'left'}
                   tick={{ fontSize: 11, fill: 'currentColor' }}
-                  tickMargin={4}
+                  tickMargin={6}
                 />
                 <Tooltip
                   formatter={(v) => [v, t('admin.analytics.tooltipCases')]}
                   contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
                 />
-                <Bar dataKey="count" radius={4}>
+                <Bar dataKey="count" radius={4} minPointSize={4}>
                   {funnelData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Bar>
               </BarChart>
@@ -137,7 +138,7 @@ const AdminAnalyticsPage = () => {
               <p className="text-center text-muted-foreground text-sm py-8">{t('admin.analytics.noData')}</p>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
                       data={sourceData}
@@ -174,15 +175,22 @@ const AdminAnalyticsPage = () => {
         <Card className="md:col-span-2">
           <CardHeader><CardTitle className="text-base">{t('admin.analytics.avgDaysPerStage')}</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={avgDays} margin={{ top: 4, bottom: 4 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'currentColor' }} />
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={avgDays} margin={{ top: 4, bottom: 50, left: 0, right: 0 }}>
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
+                  angle={-30}
+                  textAnchor="end"
+                  height={70}
+                  interval={0}
+                />
                 <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
                 <Tooltip
                   formatter={(v) => [`${v} ${t('admin.analytics.tooltipDays')}`, '']}
                   contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
                 />
-                <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} />
+                <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} minPointSize={4} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
