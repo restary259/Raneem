@@ -6,21 +6,11 @@ const DOCS_CACHE = 'darb-docs-cache';
 const FONT_CACHE = 'darb-fonts-cache';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache immediately
+// Assets to cache immediately — only real files, NOT SPA routes (they 404 on cache.addAll)
 const STATIC_CACHE_URLS = [
   '/',
   '/offline.html',
   '/manifest.json',
-  '/about',
-  '/services',
-  '/educational-destinations',
-  '/educational-programs',
-  '/contact',
-  '/partnership',
-  '/quiz',
-  '/resources',
-  '/student-auth',
-  '/ai-advisor'
 ];
 
 // Install event

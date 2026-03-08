@@ -77,7 +77,14 @@ const StudentVisaPage = lazy(() => import("./pages/student/StudentVisaPage"));
 const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
 const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 10 * 60_000,
+    },
+  },
+});
 
 const App = () => {
   useSessionTimeout();
