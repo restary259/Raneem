@@ -762,19 +762,19 @@ export default function TeamAppointmentsPage() {
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <CalendarIcon className="h-3.5 w-3.5 text-primary" />
               </span>
-              {editingAppt ? "Edit Appointment" : "New Appointment"}
+              {editingAppt ? t("team.appointments.editTitle") : t("team.appointments.newTitle")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-1">
             {/* Student */}
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Student</Label>
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelStudent")}</Label>
               {!useManualName ? (
                 <div className="flex gap-2">
                   <Select value={newCaseId} onValueChange={setNewCaseId}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select existing case…" />
+                      <SelectValue placeholder={t("team.appointments.placeholderCase")} />
                     </SelectTrigger>
                     <SelectContent>
                       {myCases.map((c) => (
@@ -797,14 +797,14 @@ export default function TeamAppointmentsPage() {
                       setNewCaseId("");
                     }}
                   >
-                    <User className="h-3 w-3" /> Manual
+                    <User className="h-3 w-3" /> {t("team.appointments.manualBtn")}
                   </Button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <Input
                     className="flex-1"
-                    placeholder="Enter student name…"
+                    placeholder={t("team.appointments.placeholderManualName")}
                     value={manualName}
                     onChange={(e) => setManualName(e.target.value)}
                     autoFocus
@@ -819,7 +819,7 @@ export default function TeamAppointmentsPage() {
             {/* Date & Time */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Date</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelDate")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -827,7 +827,7 @@ export default function TeamAppointmentsPage() {
                       className={cn("w-full justify-start font-normal", !newDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="me-2 h-4 w-4" />
-                      {newDate ? format(newDate, "MMM d, yyyy") : "Pick date"}
+                      {newDate ? format(newDate, "MMM d, yyyy") : t("team.appointments.placeholderDate")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -843,7 +843,7 @@ export default function TeamAppointmentsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Time <span className="text-muted-foreground/60 normal-case font-normal">(8 am – 8 pm)</span>
+                  {t("team.appointments.labelTime")} <span className="text-muted-foreground/60 normal-case font-normal">{t("team.appointments.labelTimeRange")}</span>
                 </Label>
                 <Input
                   type="time"
@@ -858,7 +858,7 @@ export default function TeamAppointmentsPage() {
             {/* Duration */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Duration
+                {t("team.appointments.labelDuration")}
               </Label>
               <div className="flex gap-1.5">
                 {[
@@ -888,12 +888,12 @@ export default function TeamAppointmentsPage() {
             {/* Notes */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                <FileText className="h-3 w-3" /> Notes
+                <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
               </Label>
               <Textarea
                 value={newNotes}
                 onChange={(e) => setNewNotes(e.target.value)}
-                placeholder="What was discussed, action items, follow-ups…"
+                placeholder={t("team.appointments.placeholderNotes")}
                 rows={3}
                 className="resize-none text-sm"
               />
@@ -909,11 +909,11 @@ export default function TeamAppointmentsPage() {
                 setEditingAppt(null);
               }}
             >
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving} type="button">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              {editingAppt ? "Save Changes" : "Create Appointment"}
+              {editingAppt ? t("team.appointments.btnSaveChanges") : t("team.appointments.btnCreate")}
             </Button>
           </DialogFooter>
         </DialogContent>
