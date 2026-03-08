@@ -112,14 +112,14 @@ export default function TeamTodayPage() {
             </div>
             <div className="space-y-2">
               {overdueAppts.map((a) => (
-                <div key={a.id} className="flex items-center justify-between text-sm">
-                  <span>
+                  <div key={a.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 flex-1 truncate">
                     {(a.case as any)?.full_name} —{" "}
-                    <span dir="ltr" className="inline-block">
-                      {new Date(a.scheduled_at).toLocaleString(isAr ? "ar-SA" : "en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    <span dir="ltr" className="inline-block whitespace-nowrap">
+                      {new Date(a.scheduled_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                     </span>
                   </span>
-                  <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
+                  <Button size="sm" variant="destructive" className="shrink-0" onClick={() => setOutcomeApptId(a.id)}>
                     {isAr ? "تسجيل" : "Record"}
                   </Button>
                 </div>
