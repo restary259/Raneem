@@ -143,13 +143,13 @@ const PIPELINE_STAGES = [
   "enrollment_paid",
 ];
 const PIPELINE_LABELS: Record<string, string> = {
-  new: "New",
-  contacted: "Contacted",
-  appointment_scheduled: "Appointment",
-  profile_completion: "Profile",
-  payment_confirmed: "Payment",
-  submitted: "Submitted",
-  enrollment_paid: "Enrolled",
+  new: "case.status.new",
+  contacted: "case.status.contacted",
+  appointment_scheduled: "case.status.appointment_scheduled",
+  profile_completion: "case.status.profile_completion",
+  payment_confirmed: "case.status.payment_confirmed",
+  submitted: "case.status.submitted",
+  enrollment_paid: "case.status.enrollment_paid",
 };
 const STRICT_NEXT: Record<string, string> = {
   new: "contacted",
