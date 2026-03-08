@@ -73,9 +73,12 @@ export default function PartnerOverviewPage() {
       .select("id,full_name,status,source,created_at,education_level,degree_interest")
       .order("created_at", { ascending: false });
 
+    // All case sources that should be visible to partners
+    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"];
+
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        query = query.in("source", ["apply_page", "contact_form"]);
+        query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null) {
         query = query.eq("partner_id", uid);
       }
@@ -83,7 +86,7 @@ export default function PartnerOverviewPage() {
     } else {
       // No override row at all → fall back to global setting
       if (!globalShowAll) {
-        query = query.in("source", ["apply_page", "contact_form"]);
+        query = query.in("source", PARTNER_SOURCES);
       }
     }
 

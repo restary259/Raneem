@@ -142,12 +142,18 @@ const AdminSubmissionsPage = () => {
     try {
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
         (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
-        c.partner_id ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle() : Promise.resolve({ data: null }),
+        // CRITICAL FIX: Always fetch the configured partner override regardless of case.partner_id.
+        // Cases from apply_page/submit_new_student have partner_id=null but the partner commission
+        // must still show correctly so the auto-link in markEnrolled can fire.
+        c.partner_id
+          ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle()
+          : (supabase as any).from("partner_commission_overrides").select("commission_amount").limit(1).maybeSingle(),
         c.assigned_to ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle() : Promise.resolve({ data: null }),
       ]);
       const globalPartner = (settRes.data as any)?.partner_commission_rate ?? 500;
       const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
-      const partnerCommission = partnerOvRes.data?.commission_amount ?? (c.partner_id ? globalPartner : 0);
+      // Always use the override amount if found; otherwise use global rate (never 0)
+      const partnerCommission = partnerOvRes.data?.commission_amount ?? globalPartner;
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
       setSplitPreview({
         serviceFee: fee,
