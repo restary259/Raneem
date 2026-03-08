@@ -33,7 +33,6 @@ export default defineConfig(({ mode }) => ({
           'vendor-date': ['date-fns'],
           'vendor-mapbox': ['mapbox-gl'],
           'vendor-pdf': ['jspdf', 'jspdf-autotable', 'exceljs'],
-          'vendor-3d': ['@react-three/fiber'],
         }
       }
     }
