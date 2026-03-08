@@ -637,7 +637,7 @@ export default function AdminStudentsPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">{isRtl ? "إدارة الطلاب" : "Student Management"}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("admin.students.managementTitle")}</h1>
           <Badge variant="secondary" className="text-xs">
             {students.length}
           </Badge>
@@ -645,7 +645,7 @@ export default function AdminStudentsPage() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
             <RefreshCw className="h-4 w-4" />
-            {isRtl ? "تحديث" : "Refresh"}
+            {t("admin.students.refresh")}
           </Button>
         </div>
       </div>
@@ -654,7 +654,7 @@ export default function AdminStudentsPage() {
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={isRtl ? "بحث بالاسم أو البريد..." : "Search by name or email..."}
+          placeholder={t("admin.students.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ps-9"
