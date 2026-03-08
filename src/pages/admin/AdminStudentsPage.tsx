@@ -223,7 +223,7 @@ const SelectiveDeleteDialog = ({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminStudentsPage() {
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
 
   const [students, setStudents] = useState<StudentRecord[]>([]);
