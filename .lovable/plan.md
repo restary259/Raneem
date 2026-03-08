@@ -1,119 +1,79 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Audit Report Summary — What Needs to Change in `src/data/majorsData.ts`
 
-### What was found (full audit)
-
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
-
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
-
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
-
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
-
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
-
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
-
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
-
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
-
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+The PDF is a 20-page cross-reference audit with 6 CRITICAL errors, 5 MODERATE corrections, and several INFO additions. Here is the exact field-by-field change plan:
 
 ---
 
-### Files to change (batched)
+### CRITICAL FIXES (6 issues)
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**1. Medicine — Bagrut NC conversion error**
+- `requiredBackground` / `arab48Notes` (AR + EN): Change "بجروت فوق 90 = أقل من 1.5 ألماني" → "بجروت 90 ≈ درجة ألمانية 1.67. للحصول على درجة أقل من 1.5 تحتاج بجروت 93-94+"
+- Same fix in EN: "Bagrut 90 ≈ German 1.67. To achieve German grade below 1.5, you need Bagrut 93–94+"
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+**2. Space Engineering — ESA headquarters wrong**
+- `careerOpportunities` (AR): Remove "ESA (وكالة الفضاء الأوروبية) مقرها في ألمانيا" → "تستضيف ألمانيا مركز عمليات الفضاء التابع لوكالة الفضاء الأوروبية (ESOC) في دارمشتات. المقر الرئيسي لوكالة الفضاء الأوروبية في باريس، فرنسا"
+- EN: Change "ESA (European Space Agency) is headquartered in Germany" → "Germany hosts ESA's space operations center (ESOC) in Darmstadt. ESA headquarters is in Paris, France"
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+**3. Law — all 3 sub-majors duration wrong**
+- `international-law`, `criminal-law`, `commercial-law`: `duration`/`durationEN` show "6 فصول دراسية" / "6 semesters"
+- Fix to: "Jura/Staatsexamen: 9-10+ فصول دراسية | LL.B. الدولي: 6 فصول" / "Jura (Staatsexamen): 9–10+ semesters. LL.B. international programs: 6 semesters"
+- Also update `detailedDescription` for each to clarify Staatsexamen vs LL.B. path
 
-**B. Numeric safety (7 component files)**
+**4. Physiotherapy — missing Ausbildung distinction**
+- `detailedDescription` (AR): Add prominent note that physiotherapy in Germany is PRIMARILY a 3-year Ausbildung, not a university bachelor's. University BSc programs exist but are rare.
+- EN: Same. Update `arab48Notes` to clarify the two paths.
+- `duration`: Change to "3 سنوات تدريب مهني (Ausbildung) أو 6 فصول جامعية" / "3-year Ausbildung (vocational) or 6-semester university BSc (limited)"
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+**5. Nursing — missing Ausbildung distinction**
+- Same as physiotherapy: add prominent Ausbildung vs. university BSc note
+- `careerOpportunities` (AR+EN): Change "فرص عمل مضمونة 100%" → remove "100%" and replace with "شح حاد في الممرضين يجعل إيجاد العمل سهلاً جداً" / "Germany's severe nursing shortage makes job-finding very easy"
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
-
-**C. SparklineCard overflow fix**
-
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**6. Studienkolleg threshold — all affected majors**
+All majors that say "لا يتطلب Studienkolleg إذا كان المعدل فوق 60" need to be updated to "القبول المباشر يتطلب عادةً بجروت 80+. الطلاب بمعدل أقل سيحتاجون Studienkolleg على الأرجح"
+Affected: `public-health` (arab48Notes), `physiotherapy` (arab48Notes), `nursing` (arab48Notes), `biomedical-engineering` (arab48Notes — says 65 but now needs clarification)
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### MODERATE FIXES (5 issues)
+
+**7. Medicine starting salary** — `careerOpportunities`: Change "4,500–5,500 يورو شهرياً" → "3,800–4,400 يورو شهرياً (Assistenzarzt طبقاً لـ TV-Ärzte)"
+
+**8. Dentistry starting salary** — `careerOpportunities`: Change "4,000–5,000 يورو" → "3,500–4,200 يورو"
+
+**9. Medicine duration** — `duration`/`durationEN`: Change "12 فصل دراسي + سنة تدريب" → "12 فصل دراسي (6 سنوات) شاملاً السنة العملية" / "12 semesters (6 years) including the Praktisches Jahr"
+
+**10. Engineering duration** — All engineering programs (computer-engineering, aerospace-engineering, space-engineering, chemical-engineering, mechanical-engineering, civil-engineering, electrical-it, renewable-energy, software-engineering, industrial-engineering): Update `durationEN` from "6 semesters" → "6–7 semesters"
+
+**11. Business/Economics W-Kurs missing** — In all business/economics/management majors (`business-administration`, `economics`, `international-business`, `entrepreneurship`): add W-Kurs mention to arab48Notes and Studienkolleg guidance
+
+---
+
+### INFO ADDITIONS (3 key additions)
+
+These appear in affected `arab48Notes` fields:
+- Add to medicine/dentistry notes: "ملاحظة: اختبار البسيكومتري الإسرائيلي (PET) غير مطلوب للتقديم للجامعات الألمانية"
+- Add to medicine/all health: "الطلاب الإسرائيليون لا يحتاجون شهادة APS (تُطلب فقط من الصينيين والفيتناميين)"
+- Add to most majors: "معظم الجامعات تتطلب التقديم عبر uni-assist.de — قدّم مبكراً"
+
+---
+
+### File to Change
+- **Single file**: `src/data/majorsData.ts`
+- **No component changes** needed — all corrections are data-only
+
+### Approach
+Edit `majorsData.ts` field by field. The file is 403 lines. The majors are mostly on single long lines (each entry is one `{ ... }` object). I'll use targeted line replacements for each affected major's specific fields, keeping all correct data untouched.
+
+### Affected Majors (by id):
+1. `medicine` — duration, salary, NC note, Bagrut threshold
+2. `dentistry` — salary, NC note  
+3. `physiotherapy` — duration, Ausbildung note, Studienkolleg threshold
+4. `nursing` — duration, Ausbildung note, "100% guarantee" removal
+5. `public-health` — Studienkolleg threshold (arab48Notes)
+6. `space-engineering` — ESA HQ correction
+7. `international-law` — duration (6→9-10+)
+8. `criminal-law` — duration (6→9-10+)
+9. `commercial-law` (if exists) — duration
+10. All engineering majors — duration 6→6-7 semesters
+11. All business majors — add W-Kurs mention
