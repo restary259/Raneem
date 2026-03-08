@@ -3,14 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format, differenceInYears, addMonths } from "date-fns";
-import { CalendarIcon, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { format, addMonths } from "date-fns";
+import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
@@ -76,22 +75,6 @@ const STEPS = [
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
 
-const DOB_MONTHS = [
-  { v: "01", l: "January" },
-  { v: "02", l: "February" },
-  { v: "03", l: "March" },
-  { v: "04", l: "April" },
-  { v: "05", l: "May" },
-  { v: "06", l: "June" },
-  { v: "07", l: "July" },
-  { v: "08", l: "August" },
-  { v: "09", l: "September" },
-  { v: "10", l: "October" },
-  { v: "11", l: "November" },
-  { v: "12", l: "December" },
-];
-const DOB_YEARS = Array.from({ length: 2015 - 1940 + 1 }, (_, i) => 1940 + i).reverse();
-
 /* ══════════════════════════════════════════════════════════════════════
    MODULE-LEVEL COMPONENTS
    Defined outside the parent so they never remount on state changes.
@@ -106,94 +89,116 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
   </div>
 );
 
+/**
+ * Fixed BirthdayPicker — ISO string based, independent partial state.
+ * Selecting Year does NOT pre-fill Day to "01" until user explicitly picks a day.
+ */
 const BirthdayPicker = ({
   label,
   value,
   onChange,
 }: {
   label: string;
-  value: Date | undefined;
-  onChange: (d: Date | undefined) => void;
+  value: string; // ISO "YYYY-MM-DD" or ""
+  onChange: (iso: string) => void;
 }) => {
-  const selYear = value ? value.getFullYear().toString() : "";
-  const selMonth = value ? String(value.getMonth() + 1).padStart(2, "0") : "";
-  const selDay = value ? String(value.getDate()).padStart(2, "0") : "";
-  const daysInMonth = selYear && selMonth ? new Date(parseInt(selYear), parseInt(selMonth), 0).getDate() : 31;
-  const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, "0"));
-  const update = (y: string, m: string, d: string) => {
-    if (y && m && d) onChange(new Date(`${y}-${m}-${d}`));
+  const parsed = parseISODate(value);
+  const [selYear, setSelYear] = useState(parsed.year);
+  const [selMonth, setSelMonth] = useState(parsed.month);
+  const [selDay, setSelDay] = useState(parsed.day);
+
+  // Sync inward when value prop changes externally
+  useEffect(() => {
+    const p = parseISODate(value);
+    setSelYear(p.year);
+    setSelMonth(p.month);
+    setSelDay(p.day);
+  }, [value]);
+
+  const numDays = daysInMonth(Number(selMonth), Number(selYear));
+  const days = Array.from({ length: numDays }, (_, i) => String(i + 1).padStart(2, "0"));
+
+  const tryEmit = (y: string, m: string, d: string) => {
+    if (!y || !m || !d) return;
+    try {
+      onChange(normalizeDate(d, m, y));
+    } catch {
+      // invalid combo — wait for user to correct
+    }
   };
+
+  const handleYear = (y: string) => {
+    setSelYear(y);
+    tryEmit(y, selMonth, selDay);
+  };
+  const handleMonth = (m: string) => {
+    setSelMonth(m);
+    // Clamp day if out of range for new month
+    const maxD = daysInMonth(Number(m), Number(selYear));
+    const clampedDay = selDay && Number(selDay) > maxD ? String(maxD).padStart(2, "0") : selDay;
+    if (clampedDay !== selDay) setSelDay(clampedDay);
+    tryEmit(selYear, m, clampedDay);
+  };
+  const handleDay = (d: string) => {
+    setSelDay(d);
+    tryEmit(selYear, selMonth, d);
+  };
+
+  const age = ageFromISO(value);
   return (
     <div>
       <Label>{label}</Label>
       <div className="grid grid-cols-3 gap-2 mt-1">
-        <Select value={selYear} onValueChange={(v) => update(v, selMonth, selDay || "01")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
+        <Select value={selYear} onValueChange={handleYear}>
+          <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
           <SelectContent className="max-h-48">
             {DOB_YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
+              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={selMonth} onValueChange={(v) => update(selYear, v, selDay || "01")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Month" />
-          </SelectTrigger>
+        <Select value={selMonth} onValueChange={handleMonth}>
+          <SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger>
           <SelectContent>
             {DOB_MONTHS.map((m) => (
-              <SelectItem key={m.v} value={m.v}>
-                {m.l}
-              </SelectItem>
+              <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={selDay} onValueChange={(v) => update(selYear, selMonth, v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Day" />
-          </SelectTrigger>
+        <Select value={selDay} onValueChange={handleDay}>
+          <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
           <SelectContent className="max-h-48">
             {days.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
+              <SelectItem key={d} value={d}>{d}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-      {value && <p className="text-xs text-muted-foreground mt-1">Age: {differenceInYears(new Date(), value)} years</p>}
+      {age !== null && (
+        <p className="text-xs text-muted-foreground mt-1">Age: {age} years</p>
+      )}
     </div>
   );
 };
 
-const DatePick = ({
+/** Simple date input using native <input type="date"> — no pointer-event issues in modals */
+const DateField = ({
   label,
   value,
   onChange,
 }: {
   label: string;
-  value: Date | undefined;
-  onChange: (d: Date | undefined) => void;
+  value: string; // ISO "YYYY-MM-DD" or ""
+  onChange: (iso: string) => void;
 }) => (
   <div>
     <Label>{label}</Label>
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn("w-full justify-start text-left font-normal mt-1", !value && "text-muted-foreground")}
-        >
-          <CalendarIcon className="me-2 h-4 w-4" />
-          {value ? format(value, "PP") : "Pick date"}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
-      </PopoverContent>
-    </Popover>
+    <Input
+      type="date"
+      className="mt-1"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
   </div>
 );
 
@@ -228,7 +233,7 @@ export default function ProfileCompletionForm({
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
   const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
   const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
-  const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
+  const [dob, setDob] = useState<string>((ex.date_of_birth as string) ?? "");
   const [gender, setGender] = useState((ex.gender as string) ?? "");
   const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
 
@@ -246,21 +251,15 @@ export default function ProfileCompletionForm({
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
   const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
-  const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
-    ex.arrival_date ? new Date(ex.arrival_date as string) : undefined,
-  );
-  const [courseStart, setCourseStart] = useState<Date | undefined>(
-    ex.course_start ? new Date(ex.course_start as string) : undefined,
-  );
-  const [courseEnd, setCourseEnd] = useState<Date | undefined>(
-    ex.course_end ? new Date(ex.course_end as string) : undefined,
-  );
+  const [arrivalDate, setArrivalDate] = useState<string>((ex.arrival_date as string) ?? "");
+  const [courseStart, setCourseStart] = useState<string>((ex.course_start as string) ?? "");
+  const [courseEnd, setCourseEnd] = useState<string>((ex.course_end as string) ?? "");
 
   // Accommodation
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
   const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
 
-  const age = dob ? differenceInYears(new Date(), dob) : null;
+  const age = ageFromISO(dob);
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const selectedProgram = programs.find((p) => p.id === programId);
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
@@ -269,14 +268,20 @@ export default function ProfileCompletionForm({
 
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
-      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
+      // courseStart is ISO string; add months and format back to ISO
+      const startDate = new Date(courseStart);
+      if (!isNaN(startDate.getTime())) {
+        const endDate = addMonths(startDate, selectedProgram.duration_in_months);
+        setCourseEnd(format(endDate, "yyyy-MM-dd"));
+      }
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
-      setCourseStart(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
+      const d = String(selectedProgram.fixed_start_day_of_month).padStart(2, "0");
+      setCourseStart(`${y}-${String(m).padStart(2, "0")}-${d}`);
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
@@ -372,24 +377,24 @@ export default function ProfileCompletionForm({
         house_no: houseNo,
         postcode,
         city,
-        date_of_birth: dob ? format(dob, "yyyy-MM-dd") : null,
+        date_of_birth: dob || null,
         age,
         gender,
         program_id: programId || null,
         school_id: schoolId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        arrival_date: arrivalDate ? format(arrivalDate, "yyyy-MM-dd") : null,
-        course_start: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        course_end: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        arrival_date: arrivalDate || null,
+        course_start: courseStart || null,
+        course_end: courseEnd || null,
         start_month: startMonth || null,
       };
       const upsertPayload: any = {
         case_id: caseId,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        program_end_date: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        program_start_date: courseStart || null,
+        program_end_date: courseEnd || null,
         service_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
@@ -612,7 +617,7 @@ export default function ProfileCompletionForm({
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <DatePick label="Course Start Date" value={courseStart} onChange={setCourseStart} />
+            <DateField label="Course Start Date" value={courseStart} onChange={setCourseStart} />
             <div>
               <Label>Course End Date</Label>
               <div
@@ -621,7 +626,7 @@ export default function ProfileCompletionForm({
                   courseEnd ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                {courseEnd ? format(courseEnd, "PP") : "Auto-calculated"}
+                {courseEnd || "Auto-calculated"}
               </div>
               {selectedProgram?.duration_in_months && courseEnd && (
                 <p className="text-xs text-emerald-600 mt-1">
@@ -646,7 +651,7 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-          <DatePick label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
+          <DateField label="Arrival Date in Germany" value={arrivalDate} onChange={setArrivalDate} />
         </div>
       )}
 
@@ -752,7 +757,7 @@ export default function ProfileCompletionForm({
             {(
               [
                 ["Full Name", fullName || "—"],
-                ["Date of Birth", dob ? format(dob, "PP") : "—"],
+                ["Date of Birth", dob || "—"],
                 ["Gender", gender || "—"],
                 ["City of Birth", cityOfBirth || "—"],
                 ["Email", email || "—"],
@@ -761,9 +766,9 @@ export default function ProfileCompletionForm({
                 ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
                 ["Program", selectedProgram?.name_en || "—"],
                 ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
-                ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
-                ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
-                ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
+                ["Course Start", courseStart || "—"],
+                ["Course End", courseEnd || "—"],
+                ["Arrival Date", arrivalDate || "—"],
                 ["Accommodation", selectedAccom?.name_en || "—"],
                 ["Insurance", selectedIns?.name || "—"],
               ] as [string, string][]
