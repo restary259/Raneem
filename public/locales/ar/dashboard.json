@@ -856,7 +856,13 @@
     "clients": "عملاء",
     "quality": "جودة",
     "conversion": "تحويل",
-    "costPerStudent": "تكلفة/طالب"
+    "costPerStudent": "تكلفة/طالب",
+    "conversionFunnel": "مسار التحويل",
+    "revenueTrend": "منحنى الإيرادات",
+    "paidLabel": "مدفوع",
+    "exportRevenue": "تصدير الإيرادات",
+    "exportLeads": "تصدير العملاء",
+    "exportCases": "تصدير الملفات"
   },
   "lawyer": {
     "hi": "مرحبًا",
