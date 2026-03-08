@@ -4,7 +4,7 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import PartnershipHero from "@/components/partnership/PartnershipHero";
 import WhyJoinUs from "@/components/partnership/WhyJoinUs";
-import CommissionCalculator from "@/components/partnership/CommissionCalculator";
+
 import NewHowItWorks from "@/components/partnership/NewHowItWorks";
 import AgentToolkit from "@/components/partnership/AgentToolkit";
 import TrustSection from "@/components/partnership/TrustSection";
