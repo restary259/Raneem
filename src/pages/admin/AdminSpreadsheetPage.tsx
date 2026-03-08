@@ -214,8 +214,8 @@ export default function AdminSpreadsheetPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold">Student Spreadsheet</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Configurable view of all student applications</p>
+          <h1 className="text-xl font-bold">{t("admin.spreadsheet.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("admin.spreadsheet.subtitle")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={fetchData}>
@@ -223,11 +223,11 @@ export default function AdminSpreadsheetPage() {
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowColConfig(true)}>
             <Settings2 className="h-4 w-4 me-1" />
-            Columns
+            {t("admin.spreadsheet.columns")}
           </Button>
           <Button size="sm" onClick={exportPDF}>
             <Download className="h-4 w-4 me-1" />
-            Export PDF
+            {t("admin.spreadsheet.exportPDF")}
           </Button>
         </div>
       </div>
@@ -236,13 +236,13 @@ export default function AdminSpreadsheetPage() {
       <div className="flex items-center gap-3 flex-wrap p-3 rounded-lg bg-muted/40 border border-border">
         <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex items-center gap-2">
-          <Label className="text-sm whitespace-nowrap">Intake Month:</Label>
+          <Label className="text-sm whitespace-nowrap">{t("admin.spreadsheet.intakeMonth")}</Label>
           <Select value={filterMonth} onValueChange={setFilterMonth}>
             <SelectTrigger className="w-48 h-8 text-sm">
-              <SelectValue placeholder="All months" />
+              <SelectValue placeholder={t("admin.spreadsheet.allMonths")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All months</SelectItem>
+              <SelectItem value="all">{t("admin.spreadsheet.allMonths")}</SelectItem>
               {/* ✅ FIX: MONTH_OPTIONS now starts from current month, not 2025-01 */}
               {MONTH_OPTIONS.map((m) => (
                 <SelectItem key={m.value} value={m.value}>
@@ -253,23 +253,23 @@ export default function AdminSpreadsheetPage() {
           </Select>
           {filterMonth !== "all" && (
             <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMonth("all")}>
-              Clear
+              {t("admin.spreadsheet.clear")}
             </Button>
           )}
         </div>
-        <span className="text-xs text-muted-foreground ms-auto">{filteredRows.length} students</span>
+        <span className="text-xs text-muted-foreground ms-auto">{filteredRows.length} {t("admin.spreadsheet.studentsCount")}</span>
       </div>
 
       {/* Table */}
       <div className="rounded-lg border border-border overflow-auto">
         {loading ? (
-          <div className="p-12 text-center text-muted-foreground text-sm">Loading…</div>
+          <div className="p-12 text-center text-muted-foreground text-sm">{t("admin.spreadsheet.loading")}</div>
         ) : filteredRows.length === 0 ? (
           <div className="p-12 text-center">
             <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
             <p className="text-sm text-muted-foreground">
-              No students found
-              {filterMonth !== "all" ? ` for intake month ${filterMonth}` : ""}
+              {t("admin.spreadsheet.noStudents")}
+              {filterMonth !== "all" ? ` ${t("admin.spreadsheet.noStudentsForMonth", { month: filterMonth })}` : ""}
             </p>
           </div>
         ) : (
@@ -328,10 +328,10 @@ export default function AdminSpreadsheetPage() {
       {/* Column configurator */}
       <Dialog open={showColConfig} onOpenChange={setShowColConfig}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
+      <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings2 className="h-4 w-4" />
-              Configure Columns
+              {t("admin.spreadsheet.configColumns")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-80 overflow-y-auto">
