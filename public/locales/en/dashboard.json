@@ -699,6 +699,7 @@
     }
   },
   "common": {
+    "loadMore": "Load more",
     "refresh": "Refresh",
     "save": "Save",
     "done": "Done",
