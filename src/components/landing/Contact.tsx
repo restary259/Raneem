@@ -72,9 +72,9 @@ const Contact = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      if (honeypot) return { success: true };
+      if (honeypot) return { success: true, duplicate: false };
 
-      // Save lead (non-critical — duplicate phone is acceptable)
+      // Save lead in the legacy leads table (non-critical)
       try {
         const { error } = await supabase.rpc('insert_lead_from_apply', {
           p_full_name: fullName.trim(),
@@ -95,7 +95,8 @@ const Contact = () => {
         console.warn('[Contact] lead RPC failed (non-critical):', leadErr.message);
       }
 
-      // Also create a case in the unified pipeline (409 = duplicate = OK)
+      // Create a case in the unified pipeline — check if duplicate
+      let isDuplicate = false;
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -114,20 +115,34 @@ const Contact = () => {
             degree_interest: preferredMajor.trim() || null,
           }),
         });
-        if (!resp.ok && resp.status !== 409) {
+        if (resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          isDuplicate = body?.duplicate === true;
+        } else if (resp.status === 409) {
+          isDuplicate = true;
+        } else {
           console.warn('[Contact] case creation warning:', resp.status);
         }
       } catch (caseErr) {
         console.warn('[Contact] case creation warning:', caseErr);
       }
 
-      return { success: true };
+      return { success: true, duplicate: isDuplicate };
     },
-    onSuccess: () => {
-      toast({
-        title: isAr ? '✅ تم إرسال بياناتك بنجاح!' : '✅ Sent successfully!',
-        description: isAr ? 'شكراً! سيتواصل معك فريقنا قريباً عبر واتساب.' : 'Thank you! Our team will contact you soon via WhatsApp.',
-      });
+    onSuccess: (result) => {
+      if (result.duplicate) {
+        toast({
+          title: isAr ? '📋 بياناتك موجودة لدينا!' : '📋 We already have your details!',
+          description: isAr
+            ? 'يبدو أن رقمك موجود في نظامنا بالفعل. سيتواصل معك فريقنا قريباً.'
+            : 'Your phone number is already in our system. Our team will reach out soon.',
+        });
+      } else {
+        toast({
+          title: isAr ? '✅ تم إرسال بياناتك بنجاح!' : '✅ Sent successfully!',
+          description: isAr ? 'شكراً! سيتواصل معك فريقنا قريباً عبر واتساب.' : 'Thank you! Our team will contact you soon via WhatsApp.',
+        });
+      }
       // Reset
       setFullName(''); setPhone(''); setPassportType(''); setCity('');
       setEducationLevel(''); setEnglishUnits(''); setMathUnits(''); setPreferredMajor('');

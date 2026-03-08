@@ -36,6 +36,9 @@ export default function PartnerOverviewPage() {
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
+  // Tracks whether partner is in "Apply/Contact Only" pool mode (no override row also = pool mode)
+  const [isPoolMode, setIsPoolMode] = useState(false);
+
   const load = useCallback(async (uid: string) => {
     const [profRes, settingsRes, overrideRes] = await Promise.all([
       (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
@@ -58,7 +61,21 @@ export default function PartnerOverviewPage() {
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? rate));
 
-    // Fetch rewards (actual paid commissions) — replaces defunct commission_transactions
+    // Determine commission pool mode:
+    // "pool mode" = partner earns on ALL visible agency cases (not just partner_id = uid)
+    // This applies when: no override row, OR override.show_all_cases === false
+    // "attribution mode" = only cases where partner_id === uid earn commission
+    // This applies when: show_all_cases === true OR show_all_cases === null (referral only)
+    let poolMode = false;
+    if (override === null || override === undefined) {
+      // No override → default agency pool behaviour
+      poolMode = !globalShowAll;
+    } else {
+      poolMode = override.show_all_cases === false;
+    }
+    setIsPoolMode(poolMode);
+
+    // Fetch rewards (actual paid commissions)
     const { data: rewardsData, error: rewardsErr } = await (supabase as any)
       .from("rewards")
       .select("amount,status,created_at,admin_notes")
@@ -68,7 +85,6 @@ export default function PartnerOverviewPage() {
     setCommissions(rewardsData || []);
 
     // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
-    // Always fetch partner_id to correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
@@ -79,15 +95,12 @@ export default function PartnerOverviewPage() {
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null) {
-        // Referral Cases Only: peer student-to-student referrals (source='referral')
         query = query.eq("source", "referral");
       }
-      // show_all_cases === true → no filter (show everything)
+      // show_all_cases === true → no filter
     } else {
-      // No override row at all → fall back to global setting
       if (!globalShowAll) {
         query = query.in("source", PARTNER_SOURCES);
       }
@@ -118,11 +131,13 @@ export default function PartnerOverviewPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const total = cases.length;
-  // Only cases directly attributed to this partner (partner_id = uid) generate commission
-  // Other visible cases (unattributed agency leads) count toward pipeline totals but not earnings
-  const attributedCases = cases.filter((c) => c.partner_id === userId);
-  const paid = attributedCases.filter((c) => PAID_STATUSES.includes(c.status)).length;
-  const enrolled = attributedCases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
+  // In "pool mode" (Apply/Contact Only or No Override): ALL visible cases earn commission
+  // In "attribution mode" (show_all_cases=true or referral-only): only partner_id=uid cases earn
+  const commissionEligibleCases = isPoolMode
+    ? cases
+    : cases.filter((c) => c.partner_id === userId);
+  const paid = commissionEligibleCases.filter((c) => PAID_STATUSES.includes(c.status)).length;
+  const enrolled = commissionEligibleCases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
   // commissions = rewards rows (approved/paid) — sum their amounts
   const totalEarned = commissions.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
 
@@ -248,11 +263,11 @@ export default function PartnerOverviewPage() {
                     const cfg = STATUS_CONFIG[c.status] || {
                       label: c.status,
                       labelAr: c.status,
-                      color: "bg-gray-100 text-gray-600",
+                      color: "bg-muted text-muted-foreground",
                     };
                     const isPaid = PAID_STATUSES.includes(c.status);
-                    // Commission only applies to cases attributed to this partner
-                    const isAttributed = c.partner_id === userId;
+                    // In pool mode all visible paid cases earn commission; otherwise only attributed ones
+                    const earnsCommission = isPaid && (isPoolMode || c.partner_id === userId);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
@@ -263,15 +278,10 @@ export default function PartnerOverviewPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {isPaid && isAttributed ? (
+                          {earnsCommission ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                               <CheckCircle className="h-3 w-3" />
-                              ₪{commissionRate.toLocaleString()} {t("partner.projLabel")}
-                            </span>
-                          ) : isPaid && !isAttributed ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {t("partner.noCommission", { defaultValue: "No commission" })}
+                              ₪{commissionRate.toLocaleString('en-US')} {t("partner.projLabel")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
