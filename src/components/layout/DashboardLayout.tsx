@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import NotificationBell from "@/components/common/NotificationBell";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import {
@@ -206,7 +207,9 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
           {/* Page content */}
           <main className="flex-1 overflow-auto pb-16 md:pb-0">
-            <Outlet />
+            <TabErrorBoundary>
+              <Outlet />
+            </TabErrorBoundary>
           </main>
           <MobileBottomNav role={role} />
         </div>
