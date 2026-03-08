@@ -448,6 +448,7 @@ const AdminSettingsPage = () => {
                   </div>
                   <Button className="w-full" onClick={createContact} disabled={contactSaving}>
                     {contactSaving ? t('admin.settings.saving') : t("common.save")}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
