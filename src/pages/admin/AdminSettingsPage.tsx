@@ -74,12 +74,28 @@ interface VisaField {
 const CATEGORIES = ["emergency", "medical", "legal", "team", "other"];
 const FIELD_TYPES = ["text", "date", "select", "boolean"];
 
-// Data categories for selective reset
+// Data categories for selective reset.
+// Deletion order within each category matters: child rows first, then parents.
+// Tables that CASCADE-delete from a parent (e.g. case_submissions → cases) are
+// handled automatically by Postgres and do NOT need to be listed separately.
 const RESET_CATEGORIES = [
-  { id: "cases", labelEn: "Cases & Submissions", labelAr: "الملفات والتقديمات", tables: ["cases", "case_submissions", "case_service_snapshots"] },
+  {
+    id: "cases",
+    labelEn: "Cases & Submissions",
+    labelAr: "الملفات والتقديمات",
+    // case_service_snapshots.case_id → student_cases (not cases), so delete it first.
+    // case_submissions cascades from cases, no need to list it explicitly.
+    tables: ["case_service_snapshots", "cases"],
+  },
   { id: "appointments", labelEn: "Appointments", labelAr: "المواعيد", tables: ["appointments"] },
   { id: "documents", labelEn: "Documents", labelAr: "المستندات", tables: ["documents"] },
-  { id: "financial", labelEn: "Financial Records", labelAr: "السجلات المالية", tables: ["rewards", "commissions", "payout_requests"] },
+  {
+    id: "financial",
+    labelEn: "Financial Records",
+    labelAr: "السجلات المالية",
+    // Delete payout_requests before rewards so linked_reward_ids refs are gone first.
+    tables: ["payout_requests", "rewards", "commissions"],
+  },
   { id: "leads", labelEn: "Leads", labelAr: "العملاء المحتملين", tables: ["leads"] },
   { id: "referrals", labelEn: "Referrals", labelAr: "الإحالات", tables: ["referrals"] },
   { id: "activity", labelEn: "Activity Log", labelAr: "سجل النشاط", tables: ["activity_log"] },
