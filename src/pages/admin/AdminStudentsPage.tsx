@@ -751,7 +751,7 @@ export default function AdminStudentsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {isRtl ? "معلومات الطالب" : t("admin.students.studentInfo")}
+                      {t("admin.students.studentInfo")}
                     </p>
                     {!editing ? (
                       <Button

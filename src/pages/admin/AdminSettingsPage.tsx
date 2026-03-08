@@ -402,38 +402,38 @@ const AdminSettingsPage = () => {
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>{isRtl ? "الاسم عربي" : "Arabic Name"}</Label>
+                      <Label>{t('admin.settings.contactFormArabicName')}</Label>
                       <Input value={contactForm.name_ar} onChange={(e) => setContactForm((f) => ({ ...f, name_ar: e.target.value }))} />
                     </div>
                     <div className="space-y-1">
-                      <Label>{isRtl ? "الاسم إنجليزي" : "English Name"}</Label>
+                      <Label>{t('admin.settings.contactFormEnglishName')}</Label>
                       <Input value={contactForm.name_en} onChange={(e) => setContactForm((f) => ({ ...f, name_en: e.target.value }))} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>{isRtl ? "الدور عربي" : "Role AR"}</Label>
+                      <Label>{t('admin.settings.contactFormRoleAr')}</Label>
                       <Input value={contactForm.role_ar} onChange={(e) => setContactForm((f) => ({ ...f, role_ar: e.target.value }))} />
                     </div>
                     <div className="space-y-1">
-                      <Label>{isRtl ? "الدور إنجليزي" : "Role EN"}</Label>
+                      <Label>{t('admin.settings.contactFormRoleEn')}</Label>
                       <Input value={contactForm.role_en} onChange={(e) => setContactForm((f) => ({ ...f, role_en: e.target.value }))} />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? "الهاتف" : "Phone"}</Label>
+                    <Label>{t('admin.settings.contactFormPhone')}</Label>
                     <Input value={contactForm.phone} onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? "البريد الإلكتروني" : "Email"}</Label>
+                    <Label>{t('admin.settings.contactFormEmail')}</Label>
                     <Input value={contactForm.email} onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? "الرابط" : "Link"}</Label>
+                    <Label>{t('admin.settings.contactFormLink')}</Label>
                     <Input value={contactForm.link} onChange={(e) => setContactForm((f) => ({ ...f, link: e.target.value }))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? "الفئة" : "Category"}</Label>
+                    <Label>{t('admin.settings.contactFormCategory')}</Label>
                     <Select value={contactForm.category} onValueChange={(v) => setContactForm((f) => ({ ...f, category: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -442,13 +442,12 @@ const AdminSettingsPage = () => {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? "الترتيب" : "Display Order"}</Label>
+                    <Label>{t('admin.settings.contactFormOrder')}</Label>
                     <Input type="number" value={contactForm.display_order}
                       onChange={(e) => setContactForm((f) => ({ ...f, display_order: e.target.value }))} />
                   </div>
                   <Button className="w-full" onClick={createContact} disabled={contactSaving}>
-                    {contactSaving ? "..." : t("common.save", "Save")}
-                  </Button>
+                    {contactSaving ? t('admin.settings.saving') : t("common.save")}
                 </div>
               </DialogContent>
             </Dialog>
@@ -457,7 +456,7 @@ const AdminSettingsPage = () => {
           <Card>
             <CardContent className="p-0">
               {contacts.length === 0 ? (
-                <p className="p-8 text-center text-sm text-muted-foreground">{isRtl ? "لا توجد جهات اتصال" : "No contacts yet"}</p>
+                <p className="p-8 text-center text-sm text-muted-foreground">{t('admin.settings.noContacts')}</p>
               ) : (
                 <div className="divide-y divide-border">
                   {contacts.map((c) => (
