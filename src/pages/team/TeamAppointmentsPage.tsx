@@ -1009,7 +1009,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setPendingMove(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir="ltr">
           <DialogHeader>
             <DialogTitle>Reschedule Appointment?</DialogTitle>
           </DialogHeader>
@@ -1045,7 +1045,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setDeletingAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir="ltr">
           <DialogHeader>
             <DialogTitle>Delete Appointment?</DialogTitle>
           </DialogHeader>
