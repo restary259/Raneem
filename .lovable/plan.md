@@ -1,80 +1,119 @@
 
-## Full Analysis
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### What currently works ✅
-- Student detail sheet opens, shows profile info, documents list with download, visa fields, referral count
-- Document upload by admin works
-- Selective Delete dialog UI exists and calls `selective-delete` edge function
-- Reset password works
+### What was found (full audit)
 
-### What's broken or missing 🔴
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-**1. Edit form only saves 5 fields, but shows 14 fields in view mode**
-- View mode shows: email, phone, city, emergency_contact, arrival_date, gender, date_of_birth, nationality, country, university_name, intake_month, last_updated, created, created_by
-- Edit form only has inputs for: full_name, phone_number, city, emergency_contact, arrival_date
-- Missing editable fields: **gender, date_of_birth, nationality, country (address), university_name, intake_month, notes**
-- Also `profiles` has more fields: `passport_number`, `passport_expiry`, `emergency_contact_name`, `emergency_contact_phone` — these should be shown/editable too
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-**2. Selective Delete — `deletion_logs` table exists but `selective-delete` edge function writes to it using `cases` table, while the actual student pipeline uses the `cases` table (confirmed). The real issue: the edge function uses `cases` table correctly. BUT the password verification for hard-delete uses `supabaseAuth.auth.signInWithPassword()` with the admin's email — this requires the admin's actual auth password, which IS correct per the user's request. However, the soft delete also tries to delete `case_submissions` which may not exist. Need to verify the `case_submissions` table.**
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-**3. Real-time sync — when student uploads a document or updates profile while admin has the sheet open, the admin panel doesn't refresh.** The sheet fetches data once on open. Need to add a Supabase Realtime subscription inside the sheet so it auto-refreshes when `documents` or `profiles` change for the selected student.
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-**4. `fetchStudents` filters `.not("created_by", "is", null)` AND `.is("case_id", null)` — this means students who self-registered (no `created_by`) OR have a `case_id` are INVISIBLE in admin Students page.** The user says they can see "student test 01" so at least one student shows. But any self-registered students or students linked to cases won't appear. Should remove these filters or make them optional.
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-**5. Visa fields display but are hardcoded as `label_en`/`label_ar` text inputs — select fields with `options_json` don't render as `<select>` dropdowns.** The `field_type` can be `text`, `date`, `select`, `boolean` but only text/boolean is handled; select and date use the text input fallback.
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-### Plan: 5 targeted fixes in `AdminStudentsPage.tsx`
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-#### Fix 1: Expand Edit Form — all profile fields editable
-Add inputs for: gender (select), date_of_birth (date), nationality (text), country/address (text), university_name (text), intake_month (text), notes (textarea), passport_number (text), passport_expiry (date)
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-Update `editForm` initial state in `openStudent()` to include all these fields.
-Update `handleSave()` to write all these fields to `profiles`.
-
-#### Fix 2: Remove over-restrictive fetch filter
-Remove `.not("created_by", "is", null)` and `.is("case_id", null)` from `fetchStudents` — show ALL users with `role = 'student'`. The admin should see every student account regardless of origin.
-
-#### Fix 3: Fix visa field rendering — handle `select` and `date` types
-In the visa fields render block, add cases for `field_type === "select"` (render `<select>` with `options_json`) and `field_type === "date"` (render `<Input type="date">`).
-
-#### Fix 4: Real-time sync for open student sheet
-Add a `useEffect` inside the sheet that subscribes to:
-- `documents` table filtered by `student_id = selected.id` — on INSERT/DELETE, re-fetch docs
-- `profiles` table filtered by `id = selected.id` — on UPDATE, re-fetch profile
-
-This handles both admin-uploads and student self-uploads appearing live.
-
-#### Fix 5: Selective Delete — verify edge function compatibility
-The `selective-delete` edge function writes to `deletion_logs` ✅ and targets `cases` table (the unified table). It uses `student_user_id` column on `cases` — confirmed this column exists on `cases`. The password verification re-signs in with the admin's email+password which is the correct behavior per the user's request.
-
-**One issue**: the edge function uses `cases` with `student_user_id` but it also references `case_submissions` table — need to check if that table exists. If not, that's a silent error. Will add a guard.
-
-Also need to add `deletion_logs` RLS policy for admin inserts (the edge function uses service role key, so RLS is bypassed — this is fine already ✅).
-
-The soft-delete for `contact_info` nulls out `phone_number`, `emergency_contact`, `city` and sets `deleted_at`. The `profiles` table has `deleted_at` column ✅.
-
-**No edge function changes needed** — the selective-delete already correctly uses the admin's password for hard-delete verification.
-
-### Files Changed
-1. **`src/pages/admin/AdminStudentsPage.tsx`** — 5 fixes:
-   - Remove restrictive fetch filters (show all students)
-   - Expand `editForm` + `handleSave` to all profile fields
-   - Expand edit UI to render all fields with appropriate input types
-   - Add real-time subscriptions for docs + profile when sheet is open
-   - Fix visa `select`/`date` field type rendering
-
-No database migrations needed — all profile columns already exist. No edge function changes needed.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-## Summary Table
+### Files to change (batched)
 
-| Issue | Root Cause | Fix |
-|---|---|---|
-| Edit only saves 5 fields | `editForm` state + `handleSave()` incomplete | Add all 9 missing fields to edit form |
-| Self-registered students invisible | `.not("created_by", "is", null)` filter | Remove over-restrictive filter |
-| Student uploads don't appear live for admin | No realtime subscription in sheet | Add Supabase Realtime for `documents` + `profiles` |
-| Visa `select`/`date` fields broken | Only `boolean`/`text` handled | Add `select` and `date` cases to renderer |
-| Selective Delete password unclear | Already correct — uses admin login password | No change needed, just verify works |
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-**1 file changed**: `src/pages/admin/AdminStudentsPage.tsx`
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)
