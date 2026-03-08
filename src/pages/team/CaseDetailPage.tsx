@@ -712,7 +712,7 @@ export default function CaseDetailPage() {
           {caseData.student_user_id && (
             <Badge variant="secondary" className="gap-1 text-xs">
               <User className="h-3 w-3" />
-              Account Active
+              {t("case.detail.accountActive")}
             </Badge>
           )}
           {!isTerminal && (
@@ -723,7 +723,7 @@ export default function CaseDetailPage() {
               onClick={() => setShowDeleteCase(true)}
             >
               <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Delete Case</span>
+              <span className="hidden sm:inline">{t("case.detail.deleteCase")}</span>
             </Button>
           )}
         </div>
@@ -733,8 +733,8 @@ export default function CaseDetailPage() {
       {!caseData.created_by_team && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" /> Application Info
+          <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" /> {t("case.detail.appInfo")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
@@ -749,7 +749,7 @@ export default function CaseDetailPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
                 {caseData.city && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">City</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.cityLabel")}</p>
                     <div className="flex items-center gap-1">
                       <p className="text-sm font-medium">{caseData.city}</p>
                       <CopyButton value={caseData.city} />
@@ -758,31 +758,31 @@ export default function CaseDetailPage() {
                 )}
                 {caseData.passport_type && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Passport</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.passportType")}</p>
                     <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
                   </div>
                 )}
                 {caseData.education_level && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Education Level</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.educationLevel")}</p>
                     <p className="text-sm font-medium">{caseData.education_level}</p>
                   </div>
                 )}
                 {caseData.english_units != null && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">English Units</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.englishUnits")}</p>
                     <p className="text-2xl font-bold text-primary leading-none">{caseData.english_units}</p>
                   </div>
                 )}
                 {caseData.math_units != null && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Math Units</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.mathUnits")}</p>
                     <p className="text-2xl font-bold text-primary leading-none">{caseData.math_units}</p>
                   </div>
                 )}
                 {caseData.english_level && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">English Proficiency</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.englishProficiency")}</p>
                     <p className="text-sm font-medium capitalize">{caseData.english_level}</p>
                   </div>
                 )}
@@ -794,7 +794,7 @@ export default function CaseDetailPage() {
                 )}
                 {caseData.degree_interest && (
                   <div className="space-y-0.5 col-span-2 sm:col-span-3">
-                    <p className="text-xs text-muted-foreground">Preferred Major</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.preferredMajor")}</p>
                     <p className="text-sm font-medium">{caseData.degree_interest}</p>
                   </div>
                 )}
