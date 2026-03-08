@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
         source,
         partner_id: validatedPartnerId,
         referred_by: referrer_user_id ?? null,
-        discount_amount: referral_discount ? Number(referral_discount) : 0,
+        referral_discount: referral_discount ? Number(referral_discount) : 0,
         status: "new",
         // Extended fields
         city: city ? stripHtml(String(city)).slice(0, 100) : null,
