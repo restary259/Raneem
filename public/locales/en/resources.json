@@ -329,16 +329,16 @@
     "title": "Frequently Asked Questions",
     "questions": {
       "costCalculator": {
-        "question": "How do I use the cost calculator?",
-        "answer": "Select a language school, course duration, accommodation type, and additional options. You'll get a comprehensive estimate of all expected first-year costs."
+        "question": "How do I use the Bagrut Calculator?",
+        "answer": "Enter your Bagrut grades and credit units for each subject. You'll instantly get your average and its German equivalent (1.0–4.0) using the Modified Bavarian Formula."
       },
       "exchangeRates": {
         "question": "Are exchange rates up to date?",
         "answer": "Yes, we update exchange rates daily from trusted sources. Rates are indicative and may differ slightly from actual bank rates."
       },
       "accuracy": {
-        "question": "How accurate are the cost estimates?",
-        "answer": "Our estimates are based on verified data from the language schools themselves. We recommend contacting us for customized estimates for your situation."
+        "question": "Is the CV ready for German university applications?",
+        "answer": "Yes! Our templates are designed specifically for German university and employer standards. Choose your template, fill in your details, save a draft at any time, and download a clean watermark-free PDF."
       }
     }
   },
