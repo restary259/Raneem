@@ -29,7 +29,6 @@ const PartnershipPage = () => {
             <main className="flex-grow">
                 <PartnershipHero />
                 <WhyJoinUs />
-                <CommissionCalculator />
                 <NewHowItWorks />
                 <AgentToolkit />
                 <TrustSection />
