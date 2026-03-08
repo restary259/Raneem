@@ -664,11 +664,11 @@ export default function AdminStudentsPage() {
       {/* Table header */}
       {!loading && filtered.length > 0 && (
         <div className="hidden md:grid grid-cols-5 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <span>{isRtl ? "الطالب" : "Student"}</span>
-          <span>{isRtl ? "البريد" : "Email"}</span>
-          <span>{isRtl ? "الهاتف" : "Phone"}</span>
-          <span>{isRtl ? "تاريخ الإنشاء" : "Created"}</span>
-          <span>{isRtl ? "أنشئ بواسطة" : "Created By"}</span>
+          <span>{t("admin.students.colStudent")}</span>
+          <span>{t("admin.students.colEmail")}</span>
+          <span>{t("admin.students.colPhone")}</span>
+          <span>{t("admin.students.colCreated")}</span>
+          <span>{t("admin.students.colCreatedBy")}</span>
         </div>
       )}
 
@@ -682,7 +682,7 @@ export default function AdminStudentsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>{isRtl ? "لا يوجد طلاب مسجلون" : "No registered students found"}</p>
+          <p>{t("admin.students.noRegistered")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -705,9 +705,7 @@ export default function AdminStudentsPage() {
                 <p className="text-xs text-muted-foreground">
                   {s.created_by
                     ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..."
-                    : isRtl
-                      ? "تسجيل ذاتي"
-                      : "Self-registered"}
+                    : t("admin.students.selfRegistered")}
                 </p>
               </CardContent>
               {/* Mobile */}
