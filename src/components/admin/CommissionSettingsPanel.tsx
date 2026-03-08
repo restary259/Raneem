@@ -253,7 +253,7 @@ export default function CommissionSettingsPanel() {
               <p className="text-xs font-semibold text-muted-foreground mb-2">
                 {t("admin.commission.exampleCalc")}
               </p>
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">{t("admin.commission.partner")}</p>
                   <p className="font-bold text-primary">₪{settings.partner_commission_rate.toLocaleString('en-US')}</p>
@@ -300,7 +300,7 @@ export default function CommissionSettingsPanel() {
 
       {/* Save Global Settings */}
       <Button onClick={saveGlobalSettings} disabled={saving} className="w-full sm:w-auto">
-        {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
         {saving ? t("admin.commission.saving") : t("admin.commission.saveCommissionSettings")}
       </Button>
 
@@ -387,7 +387,7 @@ export default function CommissionSettingsPanel() {
               <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <Eye className="h-3.5 w-3.5" /> {t("admin.commission.caseVisibilityLabel")}
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { value: "null", label: t("admin.commission.visGlobalDefault"), desc: t("admin.commission.visGlobalDefaultDesc") },
                   { value: "true", label: t("admin.commission.visAllCases"), desc: t("admin.commission.visAllCasesDesc") },

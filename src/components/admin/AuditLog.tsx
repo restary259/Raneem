@@ -38,7 +38,7 @@ const AuditLog: React.FC<AuditLogProps> = ({ logs }) => {
 
   const FilterBar = () => (
     <div className="flex flex-wrap gap-2 mb-4">
-      <div className="relative flex-1 min-w-[200px]">
+      <div className="relative flex-1 min-w-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={t('admin.audit.searchPlaceholder', { defaultValue: 'Search logs...' })}

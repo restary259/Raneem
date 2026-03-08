@@ -504,7 +504,7 @@ const AdminSettingsPage = () => {
                   {isRtl ? "إضافة حقل" : "Add Field"}
                 </Button>
               </DialogTrigger>
-              <DialogContent dir={isRtl ? "rtl" : "ltr"}>
+              <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{isRtl ? "حقل جديد" : "New Visa Field"}</DialogTitle>
                 </DialogHeader>
@@ -613,16 +613,16 @@ const AdminSettingsPage = () => {
                   {isRtl ? "اختر فئات البيانات:" : "Select data categories:"}
                 </p>
                 {RESET_CATEGORIES.map((cat) => (
-                  <div key={cat.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/30">
+                  <div key={cat.id} className="flex flex-wrap items-center gap-3 p-3 border rounded-lg hover:bg-muted/30">
                     <Checkbox
                       id={`reset-${cat.id}`}
                       checked={resetCategories.includes(cat.id)}
                       onCheckedChange={() => toggleResetCategory(cat.id)}
                     />
-                    <Label htmlFor={`reset-${cat.id}`} className="cursor-pointer flex-1 text-sm">
+                    <Label htmlFor={`reset-${cat.id}`} className="cursor-pointer flex-1 text-sm min-w-0">
                       {isRtl ? cat.labelAr : cat.labelEn}
                     </Label>
-                    <span className="text-xs text-muted-foreground">{cat.tables.join(", ")}</span>
+                    <span className="text-xs text-muted-foreground break-all w-full ps-6 sm:w-auto sm:break-normal sm:ps-0">{cat.tables.join(", ")}</span>
                   </div>
                 ))}
               </div>
@@ -685,7 +685,7 @@ const AdminSettingsPage = () => {
 
       {/* Final confirmation dialog */}
       <AlertDialog open={showFinalConfirm} onOpenChange={setShowFinalConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <ShieldAlert className="h-5 w-5" />
