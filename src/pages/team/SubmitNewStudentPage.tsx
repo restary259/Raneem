@@ -772,7 +772,7 @@ export default function SubmitNewStudentPage() {
               <CardTitle className="text-base">Payment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-1 gap-4">
                 <FieldWrap label="Service Fee (ILS) *" error={errors.serviceFee}>
                   <Input
                     className={cn("mt-1", errors.serviceFee && "border-destructive")}
@@ -782,7 +782,6 @@ export default function SubmitNewStudentPage() {
                     onChange={(e) => setServiceFee(e.target.value)}
                   />
                 </FieldWrap>
-               </div>
               </div>
               {total > 0 && (
                 <div className="flex justify-between p-3 rounded-lg bg-muted text-sm font-medium">
