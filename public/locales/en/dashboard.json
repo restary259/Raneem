@@ -302,7 +302,21 @@
       "deleteCaseDesc": "Are you sure you want to delete the case for {{name}}? This will also remove all appointments, submissions, and documents. This cannot be undone.",
       "discount": "Discount",
       "filterByTeam": "Filter by team member",
-      "statusSaved": "Status updated"
+      "statusSaved": "Status updated",
+      "emptyColumn": "Empty",
+      "hasInfo": "Has info",
+      "btnSave": "Save",
+      "cancel": "Cancel",
+      "deleting": "Deleting…",
+      "confirmDelete": "Yes, Delete Case",
+      "identity": "Identity",
+      "education": "Education",
+      "notes": "Notes",
+      "sourceLabelApply": "Apply",
+      "sourceLabelForm": "Form",
+      "sourceLabelManual": "Manual",
+      "sourceLabelEnroll": "Enroll",
+      "sourceLabelReferral": "Referral"
     },
     "team": {
       "title": "Team Members",
@@ -435,7 +449,16 @@
       "finalConfirmDesc": "{{count}} records will be permanently deleted. This cannot be undone.",
       "deleting": "Deleting...",
       "confirmYesDelete": "Yes, Delete",
-      "incorrectPassword": "Incorrect password"
+      "incorrectPassword": "Incorrect password",
+      "contactFormArabicName": "Arabic Name",
+      "contactFormEnglishName": "English Name",
+      "contactFormRoleAr": "Role (Arabic)",
+      "contactFormRoleEn": "Role (English)",
+      "contactFormPhone": "Phone",
+      "contactFormEmail": "Email",
+      "contactFormLink": "Link",
+      "contactFormCategory": "Category",
+      "contactFormOrder": "Display Order"
     },
     "spreadsheet": {
       "title": "Student Spreadsheet",
@@ -523,7 +546,30 @@
       "timer": "Timer",
       "waitingPeriod": "20-day waiting period not over yet",
       "ready": "Ready",
-      "days": "days"
+      "days": "days",
+      "bankNameRequired": "Please enter bank name",
+      "invalidBranch": "Invalid branch number (2-4 digits)",
+      "invalidAccount": "Invalid account number (4-12 digits)",
+      "invalidIban": "Invalid IBAN — please check the number and try again",
+      "bankSaved": "Bank details saved",
+      "defaultUserName": "User",
+      "requestSubmitted": "Request submitted!",
+      "bankBanner": "Add your bank account details to speed up payment (optional)",
+      "bankAdd": "Add",
+      "sending": "Sending...",
+      "requestPayoutWA": "Request Payout via WhatsApp",
+      "editBankDetails": "Edit bank details",
+      "requestPending": "Request pending",
+      "allReceived": "All commissions received",
+      "lockActive": "20-day lock active",
+      "bankModalTitle": "Israeli Bank Account Details",
+      "bankName": "Bank Name",
+      "bankBranch": "Branch Number",
+      "bankAccount": "Account Number",
+      "bankIban": "IBAN (optional)",
+      "bankIbanHint": "Checksum will be validated automatically",
+      "bankCancel": "Cancel",
+      "bankSaveBtn": "Save"
     },
     "referralLink": {
       "title": "Your Referral Link",
@@ -849,6 +895,36 @@
     }
   },
   "team": {
+    "outcome": {
+      "title": "Record Appointment Outcome",
+      "completed": "Completed",
+      "completedDesc": "Meeting happened — move to profile completion",
+      "delayed": "Delayed",
+      "delayedDesc": "Needs a new date — schedule another appointment",
+      "cancelled": "Cancelled",
+      "cancelledDesc": "Meeting cancelled — return to contacted",
+      "rescheduled": "Rescheduled",
+      "rescheduledDesc": "New date set — create replacement appointment",
+      "noShow": "No Show",
+      "noShowDesc": "Student did not appear — mark as forgotten",
+      "newDateTime": "New Date & Time",
+      "notes": "Notes (optional)",
+      "saveOutcome": "Save Outcome",
+      "recorded": "Outcome recorded",
+      "dateRequired": "Please provide a new date/time"
+    },
+    "payment": {
+      "confirmDesc": "Enter service amounts and confirm payment has been received from the student.",
+      "serviceFeeLabel": "Service Fee (ILS) *",
+      "translationFeeLabel": "Translation Fee (ILS)",
+      "total": "Total",
+      "confirmCheckbox": "I confirm that payment of {{amount}} ILS has been received in full.",
+      "confirmed": "Payment confirmed",
+      "mustConfirm": "You must confirm payment was received",
+      "feeRequired": "Service fee must be greater than 0",
+      "confirming": "Saving...",
+      "confirmBtn": "Confirm Payment Received"
+    },
     "today": {
       "title": "Today",
       "schedule": "Today's Schedule",
@@ -1156,7 +1232,9 @@
     "refer": "Refer",
     "contacts": "Contacts",
     "spreadsheet": "Spreadsheet",
-    "bagrut": "Bagrut Tool"
+    "bagrut": "Bagrut Tool",
+    "mainSite": "Main Site",
+    "backToMainSite": "Back to Main Website"
   },
   "case": {
     "status": {
@@ -1305,7 +1383,8 @@
       "enrolled": "Enrolled",
       "breakdown": "Commission Breakdown",
       "noQualifying": "No students have reached submission stage yet.",
-      "pending": "In Pipeline (not yet qualifying)"
+      "pending": "In Pipeline (not yet qualifying)",
+      "studentCount": "{{count}} students"
     },
     "status": {
       "new": "New",
