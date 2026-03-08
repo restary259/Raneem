@@ -124,7 +124,7 @@ export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { i18n, t } = useTranslation("dashboard");
   const isAr = i18n.language === "ar";
 
   /* ── Data ── */
