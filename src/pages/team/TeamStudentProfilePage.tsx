@@ -66,9 +66,6 @@ export default function TeamStudentProfilePage() {
               {(submission.service_fee as number) > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Service Fee</span><span className="font-medium">{(submission.service_fee as number).toLocaleString()} ILS</span></div>
               )}
-              {(submission.translation_fee as number) > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Translation</span><span className="font-medium">{(submission.translation_fee as number).toLocaleString()} ILS</span></div>
-              )}
               {submission.program_start_date && <div className="flex justify-between"><span className="text-muted-foreground">Start</span><span>{submission.program_start_date as string}</span></div>}
               {submission.program_end_date && <div className="flex justify-between"><span className="text-muted-foreground">End</span><span>{submission.program_end_date as string}</span></div>}
             </CardContent>

@@ -18,14 +18,12 @@ interface Props {
 /** Stage 1: Confirms payment received → moves case to payment_confirmed */
 export default function PaymentConfirmationForm({ caseId, actorId, actorName, onSuccess }: Props) {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation('dashboard');
   const [serviceFee, setServiceFee] = useState('');
-  const [translationFee, setTranslationFee] = useState('0');
   const [paymentReceived, setPaymentReceived] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const total = (parseFloat(serviceFee) || 0) + (parseFloat(translationFee) || 0);
+  const total = parseFloat(serviceFee) || 0;
 
   const handleConfirm = async () => {
     if (!paymentReceived) {
@@ -43,7 +41,7 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       const { error: subErr } = await supabase.from('case_submissions').upsert({
         case_id: caseId,
         service_fee: parseFloat(serviceFee),
-        translation_fee: parseFloat(translationFee) || 0,
+        translation_fee: 0,
         payment_confirmed: true,
         payment_confirmed_at: now,
         payment_confirmed_by: actorId,
@@ -59,7 +57,7 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
         p_action: 'payment_confirmed',
         p_entity_type: 'case',
         p_entity_id: caseId,
-        p_metadata: { service_fee: serviceFee, translation_fee: translationFee },
+        p_metadata: { service_fee: serviceFee },
       });
 
       toast({ title: t('team.payment.confirmed') });
@@ -76,15 +74,9 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       <p className="text-sm text-muted-foreground">
         {t('team.payment.confirmDesc')}
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <Label>{t('team.payment.serviceFeeLabel')}</Label>
-          <Input type="number" min="0" step="100" value={serviceFee} onChange={e => setServiceFee(e.target.value)} placeholder="e.g. 5000" />
-        </div>
-        <div className="space-y-1">
-          <Label>{t('team.payment.translationFeeLabel')}</Label>
-          <Input type="number" min="0" step="50" value={translationFee} onChange={e => setTranslationFee(e.target.value)} placeholder="0" />
-        </div>
+      <div className="space-y-1">
+        <Label>{t('team.payment.serviceFeeLabel')}</Label>
+        <Input type="number" min="0" step="100" value={serviceFee} onChange={e => setServiceFee(e.target.value)} placeholder="e.g. 5000" />
       </div>
 
       {total > 0 && (

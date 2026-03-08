@@ -34,16 +34,15 @@ const AdminFinancialsPage = () => {
       const cases = casesRes.data || [];
 
       const serviceFees = subs.reduce((s, r) => s + (r.service_fee || 0), 0);
-      const translationFees = subs.reduce((s, r) => s + (r.translation_fee || 0), 0);
       const enrolledCount = cases.length;
       const partnerCases = cases.filter(c => !!c.partner_id).length;
       const rate = settingsRes.data?.partner_commission_rate || 500;
       const referralDiscounts = cases.reduce((s, c) => s + (c.discount_amount || 0), 0);
 
       setData({
-        totalRevenue: serviceFees + translationFees,
+        totalRevenue: serviceFees,
         serviceFees,
-        translationFees,
+        translationFees: 0,
         partnerCommission: partnerCases * rate,
         partnerCommissionRate: rate,
         enrolledCount,
@@ -64,7 +63,6 @@ const AdminFinancialsPage = () => {
   const kpis = [
     { label: t('admin.financials.kpiTotalRevenue'), value: `${fmt(data.totalRevenue)} ILS`, icon: TrendingUp, color: 'text-green-600 bg-green-600/10' },
     { label: t('admin.financials.kpiServiceFees'), value: `${fmt(data.serviceFees)} ILS`, icon: DollarSign, color: 'text-primary bg-primary/10' },
-    { label: t('admin.financials.kpiTranslationFees'), value: `${fmt(data.translationFees)} ILS`, icon: DollarSign, color: 'text-blue-600 bg-blue-600/10' },
     { label: t('admin.financials.kpiPartnerCommission'), value: `${fmt(data.partnerCommission)} ILS`, icon: Percent, color: 'text-orange-600 bg-orange-600/10' },
     { label: t('admin.financials.kpiEnrolledStudents'), value: data.enrolledCount.toLocaleString('en-US'), icon: Users, color: 'text-teal-600 bg-teal-600/10' },
     { label: t('admin.financials.kpiReferralDiscounts'), value: `${fmt(data.referralDiscounts)} ILS`, icon: Percent, color: 'text-muted-foreground bg-muted' },

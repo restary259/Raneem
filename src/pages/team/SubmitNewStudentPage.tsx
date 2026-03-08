@@ -276,7 +276,6 @@ export default function SubmitNewStudentPage() {
 
   // Step 4 — Payment & Documents
   const [serviceFee, setServiceFee] = useState("");
-  const [translationFee, setTranslationFee] = useState("0");
   const [paymentReceived, setPaymentReceived] = useState(false);
   const [skipDocuments, setSkipDocuments] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; file: File; category: string }[]>([]);
@@ -285,7 +284,7 @@ export default function SubmitNewStudentPage() {
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-  const total = (parseFloat(serviceFee) || 0) + (parseFloat(translationFee) || 0);
+  const total = parseFloat(serviceFee) || 0;
 
   // ✅ FIX: Generate intake months from current month using utility
   const monthOptions = generateIntakeMonths(24);
@@ -410,7 +409,7 @@ export default function SubmitNewStudentPage() {
         program_start_date: courseStart || null,
         program_end_date: courseEnd || null,
         service_fee: parseFloat(serviceFee),
-        translation_fee: parseFloat(translationFee) || 0,
+        translation_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
         payment_confirmed: true,
@@ -773,7 +772,7 @@ export default function SubmitNewStudentPage() {
               <CardTitle className="text-base">Payment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-1 gap-4">
                 <FieldWrap label="Service Fee (ILS) *" error={errors.serviceFee}>
                   <Input
                     className={cn("mt-1", errors.serviceFee && "border-destructive")}
@@ -783,16 +782,6 @@ export default function SubmitNewStudentPage() {
                     onChange={(e) => setServiceFee(e.target.value)}
                   />
                 </FieldWrap>
-                <div>
-                  <Label>Translation Fee (ILS)</Label>
-                  <Input
-                    className="mt-1"
-                    type="number"
-                    min="0"
-                    value={translationFee}
-                    onChange={(e) => setTranslationFee(e.target.value)}
-                  />
-                </div>
               </div>
               {total > 0 && (
                 <div className="flex justify-between p-3 rounded-lg bg-muted text-sm font-medium">
