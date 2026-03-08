@@ -800,7 +800,7 @@ export default function CaseDetailPage() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">No application data recorded.</p>
+              <p className="text-sm text-muted-foreground italic">{t("case.detail.noAppData")}</p>
             )}
           </CardContent>
         </Card>
@@ -813,7 +813,7 @@ export default function CaseDetailPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" /> Student Profile
+              <User className="h-4 w-4" /> {t("case.detail.studentProfile")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -822,19 +822,19 @@ export default function CaseDetailPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-3 border-b border-border">
                 {resolved.programName && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Program</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.program")}</p>
                     <p className="text-sm font-medium">{resolved.programName}</p>
                   </div>
                 )}
                 {resolved.schoolName && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">School</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.school")}</p>
                     <p className="text-sm font-medium">{resolved.schoolName}</p>
                   </div>
                 )}
                 {resolved.accommodationName && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Accommodation</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.accommodation")}</p>
                     <p className="text-sm font-medium">
                       {resolved.accommodationName}
                       {resolved.accommodationPrice ? ` — ${resolved.accommodationPrice.toLocaleString()}/mo` : ""}
@@ -843,7 +843,7 @@ export default function CaseDetailPage() {
                 )}
                 {resolved.insuranceName && (
                   <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground">Insurance</p>
+                    <p className="text-xs text-muted-foreground">{t("case.detail.insurance")}</p>
                     <p className="text-sm font-medium">{resolved.insuranceName}</p>
                   </div>
                 )}
@@ -874,61 +874,61 @@ export default function CaseDetailPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> Financial Summary
+              <CreditCard className="h-4 w-4" /> {t("case.detail.financialSummary")}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-2">
             {programTotal > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Program{resolved.programName ? ` (${resolved.programName})` : ""}</span>
+                <span>{t("case.detail.program")}{resolved.programName ? ` (${resolved.programName})` : ""}</span>
                 <span className="font-medium text-foreground">{programTotal.toLocaleString()} EUR</span>
               </div>
             )}
             {accomTotal > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Accommodation{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
+                <span>{t("case.detail.accommodation")}{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
                 <span className="font-medium text-foreground">{accomTotal.toLocaleString()} EUR</span>
               </div>
             )}
             {insTotal > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Insurance{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
+                <span>{t("case.detail.insurance")}{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
                 <span className="font-medium text-foreground">{insTotal.toLocaleString()} EUR</span>
               </div>
             )}
             {serviceFee > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Service Fee</span>
+                <span>{t("case.detail.serviceFee")}</span>
                 <span className="font-medium text-foreground">{serviceFee.toLocaleString()} ILS</span>
               </div>
             )}
             {translationFee > 0 && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Translation Fee</span>
+                <span>{t("case.detail.translationFee")}</span>
                 <span className="font-medium text-foreground">{translationFee.toLocaleString()} ILS</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between font-semibold text-base">
-              <span>Total</span>
+              <span>{t("case.detail.total")}</span>
               <span>{grandTotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Amount Paid</span>
+              <span className="text-muted-foreground">{t("case.detail.amountPaid")}</span>
               <span className={amountPaid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}>
                 {amountPaid.toLocaleString()} ILS
               </span>
             </div>
             {remaining > 0 && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Remaining</span>
+                <span className="text-muted-foreground">{t("case.detail.remaining")}</span>
                 <span className="text-amber-600 font-medium">{remaining.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between pt-1">
-              <span className="text-muted-foreground">Payment Status</span>
+              <span className="text-muted-foreground">{t("case.detail.paymentStatus")}</span>
               <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
-                {submission.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
+                {submission.payment_confirmed ? t("case.detail.paymentConfirmed") : t("case.detail.paymentPending")}
               </span>
             </div>
           </CardContent>
@@ -938,7 +938,7 @@ export default function CaseDetailPage() {
       {/* ── Next Action ── */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Next Action</CardTitle>
+          <CardTitle className="text-base">{t("case.detail.nextAction")}</CardTitle>
         </CardHeader>
         <CardContent>{renderNextAction()}</CardContent>
       </Card>
@@ -948,18 +948,18 @@ export default function CaseDetailPage() {
         {caseData.status !== "new" && (
           <Card>
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> Appointments
+            <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> {t("case.detail.appointments")}
               </CardTitle>
               {!["submitted", "enrollment_paid"].includes(caseData.status) && (
                 <Button size="sm" variant="outline" onClick={() => setShowScheduler(true)}>
-                  + Add
+                  {t("case.detail.addAppointment")}
                 </Button>
               )}
             </CardHeader>
             <CardContent>
               {appointments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No appointments yet</p>
+                <p className="text-sm text-muted-foreground">{t("case.detail.noAppointments")}</p>
               ) : (
                 <div className="space-y-3">
                   {appointments.map((a) => (
@@ -979,7 +979,7 @@ export default function CaseDetailPage() {
                               {a.outcome}
                             </Badge>
                           ) : (
-                            <Badge className="text-xs bg-primary/10 text-primary border-primary/20">Pending</Badge>
+                            <Badge className="text-xs bg-primary/10 text-primary border-primary/20">{t("case.detail.pendingOutcome")}</Badge>
                           )}
                           {a.outcome_notes && (
                             <span className="text-xs text-muted-foreground truncate">{a.outcome_notes}</span>
@@ -995,7 +995,7 @@ export default function CaseDetailPage() {
                               className="h-7 text-xs"
                               onClick={() => setRescheduleAppt(a)}
                             >
-                              Reschedule
+                              {t("case.detail.reschedule")}
                             </Button>
                             <Button
                               size="sm"
@@ -1003,7 +1003,7 @@ export default function CaseDetailPage() {
                               className="h-7 text-xs"
                               onClick={() => setOutcomeApptId(a.id)}
                             >
-                              Outcome
+                              {t("case.detail.outcome")}
                             </Button>
                           </>
                         )}
