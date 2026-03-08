@@ -103,10 +103,12 @@ const AdminAnalyticsPage = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={380} style={{ overflow: 'visible' }}>
+            <ResponsiveContainer width="100%" height={500} style={{ overflow: 'visible' }}>
               <BarChart
                 data={funnelData}
                 layout="vertical"
+                barCategoryGap="40%"
+                barSize={20}
                 margin={{ top: 4, bottom: 4, left: isRtl ? 4 : 0, right: isRtl ? 0 : 4 }}
               >
                 <XAxis type="number" hide />
