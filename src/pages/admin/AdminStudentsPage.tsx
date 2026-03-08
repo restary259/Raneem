@@ -1177,14 +1177,14 @@ export default function AdminStudentsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              {isRtl ? "حذف انتقائي" : "Selective Delete"}
+              {t("admin.students.selectiveDeleteTitle")}
               {deleteTarget && <span className="text-foreground font-normal text-sm"> — {deleteTarget.full_name}</span>}
             </DialogTitle>
           </DialogHeader>
           {deleteTarget && (
             <SelectiveDeleteDialog
               student={deleteTarget}
-              isRtl={isRtl}
+              t={t as (key: string, opts?: any) => string}
               onClose={() => {
                 setShowDeleteDialog(false);
                 setDeleteTarget(null);
