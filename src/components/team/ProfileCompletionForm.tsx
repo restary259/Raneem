@@ -233,7 +233,7 @@ export default function ProfileCompletionForm({
   const [firstName, setFirstName] = useState((ex.first_name as string) ?? "");
   const [middleName, setMiddleName] = useState((ex.middle_name as string) ?? "");
   const [lastName, setLastName] = useState((ex.last_name as string) ?? "");
-  const [dob, setDob] = useState<Date | undefined>(ex.date_of_birth ? new Date(ex.date_of_birth as string) : undefined);
+  const [dob, setDob] = useState<string>((ex.date_of_birth as string) ?? "");
   const [gender, setGender] = useState((ex.gender as string) ?? "");
   const [cityOfBirth, setCityOfBirth] = useState((ex.city_of_birth as string) ?? "");
 
@@ -251,15 +251,9 @@ export default function ProfileCompletionForm({
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
   const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
-  const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
-    ex.arrival_date ? new Date(ex.arrival_date as string) : undefined,
-  );
-  const [courseStart, setCourseStart] = useState<Date | undefined>(
-    ex.course_start ? new Date(ex.course_start as string) : undefined,
-  );
-  const [courseEnd, setCourseEnd] = useState<Date | undefined>(
-    ex.course_end ? new Date(ex.course_end as string) : undefined,
-  );
+  const [arrivalDate, setArrivalDate] = useState<string>((ex.arrival_date as string) ?? "");
+  const [courseStart, setCourseStart] = useState<string>((ex.course_start as string) ?? "");
+  const [courseEnd, setCourseEnd] = useState<string>((ex.course_end as string) ?? "");
 
   // Accommodation
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
