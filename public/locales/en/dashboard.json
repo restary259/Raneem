@@ -929,16 +929,6 @@
       "noData": "No data yet",
       "caseCount": "Cases"
     },
-    "kpi": {
-      "activeLeads": "Active Leads",
-      "todayAppts": "Today's Appointments",
-      "paidThisMonth": "Paid This Month",
-      "slaWarnings": "SLA Warnings",
-      "myEarnings": "My Earnings",
-      "totalRevenue": "Total Revenue",
-      "conversionRate": "Conversion Rate",
-      "showRate": "Show Rate"
-    },
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",
     "completeProfile": "Complete Profile",

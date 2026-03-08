@@ -433,12 +433,13 @@ export default function TeamAppointmentsPage() {
       return isSameDay(d, day) && getHours(d) === hour;
     });
   const getDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+  const calLocale = isAr ? "ar-SA" : "en-US";
   const headerLabel =
     view === "day"
-      ? format(currentDate, "EEEE, MMMM d, yyyy")
+      ? currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
       : view === "week"
-        ? `${format(weekDays[0], "MMM d")} – ${format(weekDays[6], "MMM d, yyyy")}`
-        : format(currentDate, "MMMM yyyy");
+        ? `${weekDays[0].toLocaleDateString(calLocale, { month: "short", day: "numeric" })} – ${weekDays[6].toLocaleDateString(calLocale, { month: "short", day: "numeric", year: "numeric" })}`
+        : currentDate.toLocaleDateString(calLocale, { month: "long", year: "numeric" });
 
   /* ══ APPOINTMENT BLOCK ═══════════════════════════════════════════════
      draggable={true} always. Browser guarantees: real drag → no click fires.
@@ -554,7 +555,7 @@ export default function TeamAppointmentsPage() {
                 )}
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {format(currentDate, "EEEE, MMMM d")}
+                {currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric" })}
                 {isToday(currentDate) && <span className="text-xs opacity-80">{t("team.appointments.todayPill")}</span>}
               </div>
             </div>
@@ -575,7 +576,7 @@ export default function TeamAppointmentsPage() {
                   onClick={() => openNew(currentDate, hour)}
                 >
                   <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
-                    {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                    {new Date().setHours(hour, 0, 0, 0) && new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
                   </div>
                   <div className="p-1.5 cursor-pointer">
                     {isOver && (
@@ -610,7 +611,7 @@ export default function TeamAppointmentsPage() {
                     isToday(day) && "bg-violet-50/50",
                   )}
                 >
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{format(day, "EEE")}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{day.toLocaleDateString(calLocale, { weekday: "short" })}</div>
                   <div
                     className={cn(
                       "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
@@ -634,7 +635,7 @@ export default function TeamAppointmentsPage() {
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
                 <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+                  {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
                 </div>
                 {weekDays.map((day) => {
                   const slotAppts = getSlot(day, hour);

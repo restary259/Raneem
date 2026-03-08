@@ -83,14 +83,14 @@ export default function TeamTodayPage() {
   }, [fetchData]);
 
   const totalCases = Object.values(caseCounts).reduce((a, b) => a + b, 0);
-  const dateStr = new Date().toLocaleDateString("en-US", {
+  const dateStr = new Date().toLocaleDateString(isAr ? "ar-SA" : "en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto" dir={isAr ? "rtl" : "ltr"}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{dateStr}</h1>
         <Button onClick={() => navigate("/team/cases")} size="sm">
@@ -114,7 +114,10 @@ export default function TeamTodayPage() {
               {overdueAppts.map((a) => (
                 <div key={a.id} className="flex items-center justify-between text-sm">
                   <span>
-                    {(a.case as any)?.full_name} — {format(new Date(a.scheduled_at), "MMM d, h:mm a")}
+                    {(a.case as any)?.full_name} —{" "}
+                    <span dir="ltr" className="inline-block">
+                      {new Date(a.scheduled_at).toLocaleString(isAr ? "ar-SA" : "en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </span>
                   </span>
                   <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
                     {isAr ? "تسجيل" : "Record"}

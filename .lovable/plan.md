@@ -1,64 +1,119 @@
 
-## Mobile Overflow & Localization Audit — Team Dashboard
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### Screenshots Captured
+### What was found (full audit)
 
-**Page 1: /team (Today)** — "Sunday, March 8" date header is hardcoded English regardless of language  
-**Page 2: /team/cases** — `formatDistanceToNow()` output renders reversed ("minutes ago 34" instead of "34 minutes ago") — layout bug from RTL context  
-**Page 3: /team/students** — Looks good ✅  
-**Page 4: /team/appointments** — "TUE", "MON", "SUN" headers are English; "Mar 8 – Mar 14, 2026" date range is English; "AM 8", "PM 12" time labels are English  
-**Page 5: /team/analytics** — KPI labels show raw key text `lawyer.analytics.closedThisMonth` instead of resolved text — duplicate `kpi` block in JSON corrupts object
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
+
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
+
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-### Root Cause Analysis
+### Files to change (batched)
 
-**Bug 1 — Duplicate `lawyer.kpi` block in both locale files (CRITICAL)**
-`public/locales/en/dashboard.json` has `lawyer.kpi` at line 865 AND line 932. The second block overwrites the first. This causes `lawyer.analytics.closedThisMonth` to silently fail to resolve because JavaScript's `JSON.parse` silently takes the last duplicate key, wiping out any block that came between them. Fix: remove the duplicate `kpi` block (lines 932–941 in EN, same in AR).
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-**Bug 2 — Date header hardcoded to English in TeamTodayPage**
-`TeamTodayPage.tsx` line 86: `new Date().toLocaleDateString("en-US", ...)` — hardcoded `"en-US"` locale. Must use `isAr ? "ar-SA" : "en-US"` and add `dir={isAr ? 'rtl' : 'ltr'}` on the page container.
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-**Bug 3 — `formatDistanceToNow` reversed in RTL in TeamCasesPage**
-`TeamCasesPage.tsx` line 233: `formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })` — date-fns outputs English and in RTL context the "ago" suffix appears at the wrong end visually. Fix: wrap the timestamp span in `dir="ltr"` inline direction so it always reads left-to-right, even inside RTL layout. Same fix needed in `TeamTodayPage.tsx` line 117 where `format(new Date(a.scheduled_at), "MMM d, h:mm a")` produces English month names.
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-**Bug 4 — Appointments calendar: English time labels, day names, date range**
-`TeamAppointmentsPage.tsx`:
-- Line 637: `format(new Date().setHours(hour, 0, 0, 0), "h a")` → produces "8 AM". Fix: use `isAr ? `${hour < 12 ? 'ص' : 'م'} ${hour === 0 ? 12 : hour > 12 ? hour - 12 : hour}`` : `format(..., "h a")``
-- Line 613: `format(day, "EEE")` → "TUE", "MON". Fix: use `day.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { weekday: 'short' })` 
-- Header date range (week/month/day): use locale-aware formatting
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
 
 ---
 
-### Files to Change
-
-| File | Bug Fixed |
-|------|-----------|
-| `public/locales/en/dashboard.json` | Remove duplicate `lawyer.kpi` block (lines ~932–941) |
-| `public/locales/ar/dashboard.json` | Remove duplicate `lawyer.kpi` block (same location in AR file) |
-| `src/pages/team/TeamTodayPage.tsx` | Fix date header locale (`en-US` → dynamic), fix `format()` month names, add `dir` to container |
-| `src/pages/team/TeamCasesPage.tsx` | Wrap `formatDistanceToNow` span in `dir="ltr"` so timestamp reads correctly in RTL |
-| `src/pages/team/TeamAppointmentsPage.tsx` | Fix time labels (AM/PM → ص/م), week day names, and date range header locale |
-
----
-
-### Precise Changes
-
-**1. `public/locales/en/dashboard.json`** — delete the second `"kpi"` block inside `"lawyer"` (the one around line 932–941, which is identical to the one at line 865). This restores correct JSON key resolution.
-
-**2. `public/locales/ar/dashboard.json`** — same: delete the duplicate `"kpi"` block inside `"lawyer"` that was added by the previous analytics task (~line 960–969 in AR).
-
-**3. `src/pages/team/TeamTodayPage.tsx`**
-- Line 86–90: change `"en-US"` → `isAr ? "ar-SA" : "en-US"` 
-- Line 93: add `dir={isAr ? 'rtl' : 'ltr'}` to the outer `<div>`
-- Line 117: change `format(new Date(a.scheduled_at), "MMM d, h:mm a")` → `new Date(a.scheduled_at).toLocaleString(isAr ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })`
-
-**4. `src/pages/team/TeamCasesPage.tsx`**
-- Line 230–234: add `dir="ltr"` + `className="inline-block"` on the timestamp `<span>` so "34 minutes ago" doesn't reverse in RTL
-
-**5. `src/pages/team/TeamAppointmentsPage.tsx`**
-- Time labels in day view (around line 546): `format(new Date().setHours(hour, 0, 0, 0), "h a")` → use locale-aware `toLocaleTimeString(isAr ? 'ar-SA' : 'en-US', { hour: 'numeric', hour12: true })`
-- Week view time labels (line 637): same fix
-- Week day names (line 613): `format(day, "EEE")` → `day.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { weekday: 'short' })`
-- Month view day names (line 677 in original, the `["Sun","Mon",...]` array): already uses `t()` keys from previous task — verify it uses the Arabic `dayAbbrev*` keys
-- Date range header text: wrap in `dir={isAr ? 'rtl' : 'ltr'}`
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

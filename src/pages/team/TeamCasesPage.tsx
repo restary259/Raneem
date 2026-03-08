@@ -230,7 +230,7 @@ export default function TeamCasesPage() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                     <Phone className="h-3 w-3" />{c.phone_number}
                     <span>·</span>
-                    <span>{formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}</span>
+                    <span dir="ltr" className="inline-block">{formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}</span>
                   </div>
                 </div>
                 <Badge className={STATUS_COLORS[c.status] ?? 'bg-muted text-foreground border-border'}>
