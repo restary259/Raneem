@@ -23,19 +23,40 @@ export default function PartnerEarningsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const [casesRes, settingsRes] = await Promise.all([
+    // Fetch override + global settings + visibility in parallel
+    const [overrideRes, settingsRes] = await Promise.all([
       (supabase as any)
-        .from("cases")
-        .select("id,full_name,status,created_at")
+        .from("partner_commission_overrides")
+        .select("commission_amount,show_all_cases")
         .eq("partner_id", uid)
-        .order("created_at", { ascending: false }),
+        .maybeSingle(),
       (supabase as any).from("platform_settings").select("partner_commission_rate").limit(1).maybeSingle(),
     ]);
 
-    setCases(casesRes.data || []);
-    if (settingsRes.data?.partner_commission_rate) {
-      setCommissionRate(Number(settingsRes.data.partner_commission_rate));
+    // Commission rate: per-partner override takes priority over global setting
+    const globalRate = settingsRes.data?.partner_commission_rate ?? 500;
+    const override = overrideRes.data;
+    setCommissionRate(Number(override?.commission_amount ?? globalRate));
+
+    // Build cases query respecting visibility setting
+    let query = (supabase as any)
+      .from("cases")
+      .select("id,full_name,status,created_at")
+      .order("created_at", { ascending: false });
+
+    if (override !== null && override !== undefined) {
+      if (override.show_all_cases === false) {
+        query = query.in("source", ["apply_page", "contact_form"]);
+      } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
+        query = query.eq("partner_id", uid);
+      }
+      // show_all_cases === true → no extra filter
+    } else {
+      query = query.in("source", ["apply_page", "contact_form"]);
     }
+
+    const { data } = await query;
+    setCases(data || []);
     setIsLoading(false);
   }, []);
 
