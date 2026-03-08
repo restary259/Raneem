@@ -278,7 +278,7 @@ const AdminPipelinePage = () => {
         .eq("id", caseId);
       if (error) throw error;
       await fetchData();
-      toast({ description: isRtl ? "تم التعيين بنجاح" : "Case assigned successfully" });
+      toast({ description: t('admin.pipeline.caseAssigned', 'Case assigned successfully') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {

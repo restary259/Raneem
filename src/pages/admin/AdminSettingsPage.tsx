@@ -172,7 +172,7 @@ const AdminSettingsPage = () => {
         })
         .eq("id", settings.id);
       if (error) throw error;
-      toast({ description: isRtl ? "تم حفظ الإعدادات" : "Settings saved" });
+      toast({ description: t('admin.settings.settingsSaved', 'Settings saved') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -182,7 +182,7 @@ const AdminSettingsPage = () => {
 
   const createContact = async () => {
     if (!contactForm.name_ar || !contactForm.name_en) {
-      toast({ variant: "destructive", description: isRtl ? "الاسم مطلوب" : "Name is required" });
+      toast({ variant: "destructive", description: t('admin.settings.nameRequired', 'Name is required') });
       return;
     }
     setContactSaving(true);
@@ -198,7 +198,7 @@ const AdminSettingsPage = () => {
       setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0" });
       setContactOpen(false);
       await fetchData();
-      toast({ description: isRtl ? "تم إنشاء جهة الاتصال" : "Contact created" });
+      toast({ description: t('admin.settings.contactCreated', 'Contact created') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -220,7 +220,7 @@ const AdminSettingsPage = () => {
 
   const createVisaField = async () => {
     if (!visaFieldForm.field_key || !visaFieldForm.label_en || !visaFieldForm.label_ar) {
-      toast({ variant: "destructive", description: isRtl ? "جميع الحقول مطلوبة" : "All fields are required" });
+      toast({ variant: "destructive", description: t('admin.settings.allFieldsRequired', 'All fields are required') });
       return;
     }
     setVisaFieldSaving(true);
@@ -237,7 +237,7 @@ const AdminSettingsPage = () => {
       setVisaFieldForm({ field_key: "", label_en: "", label_ar: "", field_type: "text", is_required: false, display_order: "0" });
       setVisaFieldOpen(false);
       await fetchVisaFields();
-      toast({ description: isRtl ? "تم إضافة الحقل" : "Field added" });
+      toast({ description: t('admin.settings.fieldAdded', 'Field added') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -284,7 +284,7 @@ const AdminSettingsPage = () => {
     setResetting(true);
     try {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetPassword });
-      if (authErr) throw new Error(isRtl ? "كلمة المرور غير صحيحة" : "Incorrect password");
+      if (authErr) throw new Error(t('admin.settings.incorrectPassword', 'Incorrect password'));
 
       const selectedTables = RESET_CATEGORIES
         .filter(c => resetCategories.includes(c.id))
@@ -301,10 +301,8 @@ const AdminSettingsPage = () => {
       });
 
       toast({
-        title: isRtl ? "✅ تم الحذف" : "✅ Data deleted",
-        description: isRtl
-          ? `تم حذف البيانات من ${selectedTables.length} جدول`
-          : `Deleted data from ${selectedTables.length} table(s)`,
+        title: t('admin.settings.purgeSuccess', '✅ Data deleted'),
+        description: t('admin.settings.finalConfirmDesc', '{{count}} records will be permanently deleted.', { count: selectedTables.length }),
       });
       setShowFinalConfirm(false);
       setResetPassword("");
@@ -328,7 +326,7 @@ const AdminSettingsPage = () => {
   const totalRowCount = Object.values(rowCounts).reduce((a, b) => a + b, 0);
 
   if (loading)
-    return <div className="p-8 text-center text-muted-foreground">{isRtl ? "جار التحميل..." : "Loading..."}</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t('common.loading', 'Loading...')}</div>;
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
@@ -347,9 +345,9 @@ const AdminSettingsPage = () => {
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
-          <TabsTrigger value="visa">{isRtl ? "حقول التأشيرة" : "Visa Fields"}</TabsTrigger>
+          <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
           <TabsTrigger value="reset" className="text-destructive data-[state=active]:text-destructive">
-            {isRtl ? "⚠️ مسح البيانات" : "⚠️ Data Reset"}
+            {t('admin.settings.resetTabLabel', '⚠️ Data Reset')}
           </TabsTrigger>
         </TabsList>
 
@@ -363,19 +361,19 @@ const AdminSettingsPage = () => {
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label>{isRtl ? "أيام الحالة الجديدة قبل أن تُنسى" : "New Case Forgotten Days"}</Label>
+                    <Label>{t('admin.settings.newCaseDays', 'New Case Forgotten Days')}</Label>
                     <Input type="number" value={settings.forgotten_new_case_days}
                       onChange={(e) => setSettings((s) => (s ? { ...s, forgotten_new_case_days: Number(e.target.value) } : s))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? 'أيام حالة "تم التواصل" قبل أن تُنسى' : "Contacted Case Forgotten Days"}</Label>
+                    <Label>{t('admin.settings.contactedDays', 'Contacted Case Forgotten Days')}</Label>
                     <Input type="number" value={settings.forgotten_contacted_days}
                       onChange={(e) => setSettings((s) => (s ? { ...s, forgotten_contacted_days: Number(e.target.value) } : s))} />
                   </div>
                 </div>
                 <Button onClick={saveSettings} disabled={saving} className="gap-2">
                   <Save className="h-4 w-4" />
-                  {saving ? (isRtl ? "جار الحفظ..." : "Saving...") : t("common.save", "Save Changes")}
+                  {saving ? t('admin.settings.saving', 'Saving...') : t("common.save", "Save Changes")}
                 </Button>
               </CardContent>
             </Card>
