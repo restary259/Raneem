@@ -145,7 +145,7 @@ const SelectiveDeleteDialog = ({
     <div className="space-y-5">
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          {isRtl ? "اختر ما تريد حذفه" : "Select Categories to Delete"}
+          {t("admin.students.selectCategories")}
         </p>
         <div className="space-y-2">
           {CATEGORIES.map((cat) => (
@@ -161,7 +161,7 @@ const SelectiveDeleteDialog = ({
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          {isRtl ? "نوع الحذف" : "Delete Mode"}
+          {t("admin.students.deleteMode")}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -170,10 +170,8 @@ const SelectiveDeleteDialog = ({
               mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"
             }`}
           >
-            <p className="font-medium">{isRtl ? "ناعم" : "Soft Delete"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {isRtl ? "قابل للاسترجاع" : "Hidden but recoverable"}
-            </p>
+            <p className="font-medium">{t("admin.students.softDeleteLabel")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.softDeleteDesc")}</p>
           </button>
           <button
             onClick={() => setMode("hard")}
@@ -181,36 +179,30 @@ const SelectiveDeleteDialog = ({
               mode === "hard" ? "border-destructive bg-destructive/5 font-medium" : "border-border"
             }`}
           >
-            <p className="font-medium text-destructive">{isRtl ? "صعب" : "Hard Delete"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {isRtl ? "غير قابل للتراجع" : "Permanent — irreversible"}
-            </p>
+            <p className="font-medium text-destructive">{t("admin.students.hardDeleteLabel")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.hardDeleteDesc")}</p>
           </button>
         </div>
       </div>
 
       {mode === "hard" && (
         <div className="space-y-2">
-          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
-            <p>
-              {isRtl
-                ? "الحذف الصعب يدمر البيانات نهائياً. أدخل كلمة مرورك للتأكيد."
-                : "Hard delete permanently destroys data. Enter your admin password to confirm."}
-            </p>
+          <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl text-sm text-destructive flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>{t("admin.students.hardDeleteWarning")}</p>
           </div>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={isRtl ? "كلمة المرور" : "Admin password"}
+            placeholder={t("admin.students.adminPassword")}
           />
         </div>
       )}
 
       <div className="flex gap-2 pt-2">
         <Button variant="outline" className="flex-1" onClick={onClose} disabled={deleting}>
-          {isRtl ? "إلغاء" : "Cancel"}
+          {t("admin.students.cancel")}
         </Button>
         <Button
           variant="destructive"
@@ -219,7 +211,7 @@ const SelectiveDeleteDialog = ({
           disabled={!categories.length || deleting}
         >
           {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          {deleting ? (isRtl ? "جارٍ الحذف..." : "Deleting...") : isRtl ? "حذف" : "Delete"}
+          {deleting ? t("admin.students.deleting") : t("admin.students.delete")}
         </Button>
       </div>
     </div>
