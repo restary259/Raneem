@@ -327,7 +327,14 @@
       "role": "الدور",
       "tempPassword": "كلمة المرور المؤقتة",
       "createBtn": "إنشاء حساب",
-      "noMembers": "لا يوجد أعضاء فريق بعد"
+      "noMembers": "لا يوجد أعضاء فريق بعد",
+      "teamMemberRole": "عضو الفريق",
+      "partnerRole": "شريك",
+      "creating": "جار الإنشاء...",
+      "loading": "جار التحميل...",
+      "allFieldsRequired": "يرجى ملء جميع الحقول",
+      "accountCreated": "تم إنشاء الحساب بنجاح",
+      "credentialsHint": "تم إنشاء الحساب. شارك بيانات الاعتماد مع العضو."
     },
     "programs": {
       "title": "البرامج والسكن",

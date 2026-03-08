@@ -326,7 +326,14 @@
       "role": "Role",
       "tempPassword": "Temp Password",
       "createBtn": "Create Account",
-      "noMembers": "No team members yet"
+      "noMembers": "No team members yet",
+      "teamMemberRole": "Team Member",
+      "partnerRole": "Partner",
+      "creating": "Creating...",
+      "loading": "Loading...",
+      "allFieldsRequired": "Please fill all fields",
+      "accountCreated": "Account created successfully",
+      "credentialsHint": "Account created. Share credentials with the member."
     },
     "programs": {
       "title": "Programs & Accommodations",
