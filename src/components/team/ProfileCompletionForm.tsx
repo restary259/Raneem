@@ -259,7 +259,7 @@ export default function ProfileCompletionForm({
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
   const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
 
-  const age = dob ? differenceInYears(new Date(), dob) : null;
+  const age = ageFromISO(dob);
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const selectedProgram = programs.find((p) => p.id === programId);
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
@@ -268,14 +268,20 @@ export default function ProfileCompletionForm({
 
   useEffect(() => {
     if (selectedProgram?.duration_in_months && courseStart) {
-      setCourseEnd(addMonths(courseStart, selectedProgram.duration_in_months));
+      // courseStart is ISO string; add months and format back to ISO
+      const startDate = new Date(courseStart);
+      if (!isNaN(startDate.getTime())) {
+        const endDate = addMonths(startDate, selectedProgram.duration_in_months);
+        setCourseEnd(format(endDate, "yyyy-MM-dd"));
+      }
     }
   }, [selectedProgram?.duration_in_months, courseStart]);
 
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
-      setCourseStart(new Date(y, m - 1, selectedProgram.fixed_start_day_of_month));
+      const d = String(selectedProgram.fixed_start_day_of_month).padStart(2, "0");
+      setCourseStart(`${y}-${String(m).padStart(2, "0")}-${d}`);
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
