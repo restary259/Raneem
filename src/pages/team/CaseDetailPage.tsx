@@ -524,15 +524,17 @@ export default function CaseDetailPage() {
       if (pendingAppt)
         return (
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  {format(new Date(pendingAppt.scheduled_at), "EEE, MMM d · h:mm a")}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm flex items-center gap-1.5 min-w-0">
+                  <Calendar className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate">
+                    {new Date(pendingAppt.scheduled_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                  </span>
                 </p>
-                {pendingAppt.notes && <p className="text-xs text-muted-foreground mt-0.5">{pendingAppt.notes}</p>}
+                {pendingAppt.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{pendingAppt.notes}</p>}
               </div>
-              <div className="flex gap-2 shrink-0 flex-wrap">
+              <div className="flex gap-2 shrink-0 flex-wrap justify-start">
                 <Button size="sm" variant="outline" onClick={() => setRescheduleAppt(pendingAppt)}>
                   {t("case.detail.reschedule")}
                 </Button>
@@ -686,8 +688,8 @@ export default function CaseDetailPage() {
       <PipelineBar />
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+      <div className="flex items-start gap-3 flex-wrap">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 mt-0.5">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -702,11 +704,11 @@ export default function CaseDetailPage() {
             </a>
             <CopyButton value={caseData.phone_number} />
             <span>·</span>
-            <Clock className="h-3 w-3" />
-            {formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}
+            <Clock className="h-3 w-3 shrink-0" />
+            <span dir="ltr" className="inline-block">{formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
           {caseData.student_user_id && (
             <Badge variant="secondary" className="gap-1 text-xs">
@@ -878,49 +880,49 @@ export default function CaseDetailPage() {
           </CardHeader>
           <CardContent className="text-sm space-y-2">
             {programTotal > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("case.detail.program")}{resolved.programName ? ` (${resolved.programName})` : ""}</span>
-                <span className="font-medium text-foreground">{programTotal.toLocaleString()} EUR</span>
+              <div className="flex justify-between gap-2 text-muted-foreground">
+                <span className="truncate flex-1 min-w-0">{t("case.detail.program")}{resolved.programName ? ` (${resolved.programName})` : ""}</span>
+                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{programTotal.toLocaleString("en-US")} EUR</span>
               </div>
             )}
             {accomTotal > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("case.detail.accommodation")}{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
-                <span className="font-medium text-foreground">{accomTotal.toLocaleString()} EUR</span>
+              <div className="flex justify-between gap-2 text-muted-foreground">
+                <span className="truncate flex-1 min-w-0">{t("case.detail.accommodation")}{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
+                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{accomTotal.toLocaleString("en-US")} EUR</span>
               </div>
             )}
             {insTotal > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("case.detail.insurance")}{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
-                <span className="font-medium text-foreground">{insTotal.toLocaleString()} EUR</span>
+              <div className="flex justify-between gap-2 text-muted-foreground">
+                <span className="truncate flex-1 min-w-0">{t("case.detail.insurance")}{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
+                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{insTotal.toLocaleString("en-US")} EUR</span>
               </div>
             )}
             {serviceFee > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("case.detail.serviceFee")}</span>
-                <span className="font-medium text-foreground">{serviceFee.toLocaleString()} ILS</span>
+              <div className="flex justify-between gap-2 text-muted-foreground">
+                <span className="truncate flex-1 min-w-0">{t("case.detail.serviceFee")}</span>
+                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{serviceFee.toLocaleString("en-US")} ILS</span>
               </div>
             )}
             <Separator />
-            <div className="flex justify-between font-semibold text-base">
-              <span>{t("case.detail.total")}</span>
-              <span>{grandTotal.toLocaleString()}</span>
+            <div className="flex justify-between gap-2 font-semibold text-base">
+              <span className="truncate flex-1 min-w-0">{t("case.detail.total")}</span>
+              <span className="shrink-0 whitespace-nowrap">{grandTotal.toLocaleString("en-US")}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("case.detail.amountPaid")}</span>
-              <span className={amountPaid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}>
-                {amountPaid.toLocaleString()} ILS
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.amountPaid")}</span>
+              <span className={`shrink-0 whitespace-nowrap ${amountPaid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}`}>
+                {amountPaid.toLocaleString("en-US")} ILS
               </span>
             </div>
             {remaining > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("case.detail.remaining")}</span>
-                <span className="text-amber-600 font-medium">{remaining.toLocaleString()}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.remaining")}</span>
+                <span className="text-amber-600 font-medium shrink-0 whitespace-nowrap">{remaining.toLocaleString("en-US")}</span>
               </div>
             )}
-            <div className="flex justify-between pt-1">
-              <span className="text-muted-foreground">{t("case.detail.paymentStatus")}</span>
-              <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
+            <div className="flex justify-between gap-2 pt-1">
+              <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.paymentStatus")}</span>
+              <span className={`shrink-0 whitespace-nowrap ${submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}`}>
                 {submission.payment_confirmed ? t("case.detail.paymentConfirmed") : t("case.detail.paymentPending")}
               </span>
             </div>
@@ -958,11 +960,11 @@ export default function CaseDetailPage() {
                   {appointments.map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-start justify-between gap-2 pb-3 last:pb-0 border-b last:border-b-0 border-border"
+                      className="flex flex-col sm:flex-row items-start justify-between gap-2 pb-3 last:pb-0 border-b last:border-b-0 border-border"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium">
-                          {format(new Date(a.scheduled_at), "EEE, MMM d · h:mm a")}
+                          {new Date(a.scheduled_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                         </div>
                         <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                           {a.outcome ? (
@@ -975,11 +977,11 @@ export default function CaseDetailPage() {
                             <Badge className="text-xs bg-primary/10 text-primary border-primary/20">{t("case.detail.pendingOutcome")}</Badge>
                           )}
                           {a.outcome_notes && (
-                            <span className="text-xs text-muted-foreground truncate">{a.outcome_notes}</span>
+                            <span className="text-xs text-muted-foreground block max-w-[200px] truncate">{a.outcome_notes}</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-1 shrink-0">
+                      <div className="flex gap-1 shrink-0 flex-wrap">
                         {!a.outcome && (
                           <>
                             <Button
