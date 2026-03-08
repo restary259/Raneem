@@ -31,7 +31,7 @@ export default function PartnerOverviewPage() {
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
@@ -101,32 +101,32 @@ export default function PartnerOverviewPage() {
 
   const kpis = [
     {
-      label: isAr ? "إجمالي التسجيلات" : "Total Applications",
+      label: t("partner.totalApplications"),
       value: total,
       icon: Users,
       color: "text-blue-600 bg-blue-50",
     },
     {
-      label: isAr ? "حالات مدفوعة" : "Paid Cases",
+      label: t("partner.paidCases"),
       value: paid,
       icon: CreditCard,
       color: "text-emerald-600 bg-emerald-50",
     },
-    { label: isAr ? "مسجلون" : "Enrolled", value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
+    { label: t("partner.enrolled"), value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
     {
-      label: isAr ? "إجمالي الأرباح" : "Total Paid Out",
+      label: t("partner.totalPaidOut"),
       value: `₪${totalEarned.toLocaleString()}`,
       icon: DollarSign,
       color: "text-primary bg-primary/10",
     },
     {
-      label: isAr ? "أرباح متوقعة" : "Projected Earnings",
+      label: t("partner.projectedEarnings"),
       value: `₪${(paid * commissionRate).toLocaleString()}`,
       icon: TrendingUp,
       color: "text-purple-600 bg-purple-50",
     },
     {
-      label: isAr ? "عمولة لكل حالة" : "Per Case Commission",
+      label: t("partner.perCaseComm"),
       value: `₪${commissionRate.toLocaleString()}`,
       icon: CheckCircle,
       color: "text-sky-600 bg-sky-50",
@@ -138,28 +138,24 @@ export default function PartnerOverviewPage() {
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          {isAr ? "مرحبًا" : "Welcome"}
+          {t("partner.welcomeGreeting")}
           {profile?.full_name ? `, ${profile.full_name}` : ""}! 👋
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isAr
-            ? "لوحة تحكم الشريك — عرض مباشر للحالات والأرباح"
-            : "Partner Dashboard — live view of cases and commissions"}
+          {t("partner.partnerDashboard")}
         </p>
       </div>
 
       {/* Earnings Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-bold text-foreground">{isAr ? "الأرباح المتوقعة" : "Projected Earnings"}</p>
+          <p className="text-sm font-bold text-foreground">{t("partner.projectedEarnings")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {isAr
-              ? `${paid} حالة مدفوعة × ₪${commissionRate.toLocaleString()}`
-              : `${paid} paid cases × ₪${commissionRate.toLocaleString()}`}
+            {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString() })}
           </p>
           {totalEarned > 0 && (
             <p className="text-xs text-emerald-600 mt-1 font-semibold">
-              {isAr ? `تم الصرف: ₪${totalEarned.toLocaleString()}` : `Paid out: ₪${totalEarned.toLocaleString()}`}
+              {t("partner.paidOut", { amount: totalEarned.toLocaleString() })}
             </p>
           )}
         </div>
@@ -186,7 +182,7 @@ export default function PartnerOverviewPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <FileCheck className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base">{isAr ? "قائمة الحالات" : "Case List"}</CardTitle>
+            <CardTitle className="text-base">{t("partner.caseList")}</CardTitle>
             <Badge variant="secondary" className="ml-auto text-xs">
               {total}
             </Badge>
@@ -196,7 +192,7 @@ export default function PartnerOverviewPage() {
           {cases.length === 0 ? (
             <div className="py-12 text-center">
               <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">{isAr ? "لا توجد حالات بعد" : "No cases yet"}</p>
+              <p className="text-muted-foreground text-sm">{t("partner.noCases")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -204,19 +200,19 @@ export default function PartnerOverviewPage() {
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
-                      {isAr ? "الاسم" : "Name"}
+                      {t("partner.col.name")}
                     </th>
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
-                      {isAr ? "التخصص" : "Major"}
+                      {t("partner.col.major")}
                     </th>
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
-                      {isAr ? "الحالة" : "Status"}
+                      {t("partner.col.status")}
                     </th>
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
-                      {isAr ? "العمولة" : "Commission"}
+                      {t("partner.col.commission")}
                     </th>
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
-                      {isAr ? "التاريخ" : "Date"}
+                      {t("partner.col.date")}
                     </th>
                   </tr>
                 </thead>
@@ -244,12 +240,12 @@ export default function PartnerOverviewPage() {
                               <CheckCircle className="h-3 w-3" />
                               {commission
                                 ? `₪${commission.partner_commission_ils.toLocaleString()}`
-                                : `₪${commissionRate.toLocaleString()} ${isAr ? "(متوقع)" : "(proj.)"}`}
+                                : `₪${commissionRate.toLocaleString()} ${t("partner.projLabel")}`}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              {isAr ? "في الانتظار" : "Pending"}
+                              {t("partner.pending")}
                             </span>
                           )}
                         </td>

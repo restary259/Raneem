@@ -110,7 +110,7 @@ export default function TeamStudentsPage() {
     if (!firstName.trim() || !fatherName.trim() || !familyName.trim()) {
       toast({
         variant: "destructive",
-        description: isRtl ? "يرجى إدخال الاسم الثلاثي كاملاً" : "Please enter all three name parts",
+        description: t("team.students.namePartsRequired"),
       });
       return;
     }
@@ -118,7 +118,7 @@ export default function TeamStudentsPage() {
     if (!email.includes("@")) {
       toast({
         variant: "destructive",
-        description: isRtl ? "البريد الإلكتروني غير صالح" : "Invalid email address",
+        description: t("team.students.invalidEmail"),
       });
       return;
     }
@@ -148,7 +148,7 @@ export default function TeamStudentsPage() {
       resetForm();
       await fetchStudents();
       toast({
-        description: isRtl ? "تم إنشاء الحساب بنجاح" : "Account created successfully",
+        description: t("team.students.createdSuccess"),
       });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -185,7 +185,7 @@ export default function TeamStudentsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={fetchStudents} title={isRtl ? "تحديث" : "Refresh"}>
+          <Button variant="outline" size="icon" onClick={fetchStudents} title={t("common.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
 
@@ -216,16 +216,14 @@ export default function TeamStudentsPage() {
               {newCreds ? (
                 <div className="space-y-4 pt-1">
                   <p className="text-sm text-muted-foreground">
-                    {isRtl
-                      ? `تم إنشاء حساب لـ ${newCreds.full_name}. شارك بيانات الدخول مع الطالب.`
-                      : `Account created for ${newCreds.full_name}. Share these credentials with the student.`}
+                    {t("team.students.createdFor", { name: newCreds.full_name })}
                   </p>
 
                   <div className="rounded-lg bg-muted p-4 space-y-3 text-sm">
                     {/* Email row */}
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">{isRtl ? "البريد الإلكتروني" : "Email"}</p>
+                        <p className="text-xs text-muted-foreground mb-0.5">{t("team.students.tempEmail")}</p>
                         <p className="font-medium">{newCreds.email}</p>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => copyToClipboard(newCreds.email, "email")}>
@@ -243,7 +241,7 @@ export default function TeamStudentsPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-xs text-muted-foreground mb-0.5">
-                          {isRtl ? "كلمة المرور المؤقتة" : "Temporary Password"}
+                          {t("team.students.tempPassword")}
                         </p>
                         <p className="font-mono font-semibold tracking-wide">{newCreds.password}</p>
                       </div>
@@ -262,9 +260,7 @@ export default function TeamStudentsPage() {
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    {isRtl
-                      ? "سيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول."
-                      : "The student will be required to change this password on first login."}
+                    {t("team.students.changePasswordHint")}
                   </p>
 
                   <Button
@@ -283,11 +279,11 @@ export default function TeamStudentsPage() {
                   {/* Three-part name */}
                   <div className="space-y-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {isRtl ? "الاسم الثلاثي" : "Full Three-Part Name"}
+                      {t("team.students.fullThreePart")}
                     </p>
 
                     <div className="space-y-1">
-                      <Label htmlFor="firstName">{isRtl ? "الاسم الأول" : "First Name"}</Label>
+                      <Label htmlFor="firstName">{t("team.students.firstName")}</Label>
                       <Input
                         id="firstName"
                         value={form.firstName}
@@ -298,7 +294,7 @@ export default function TeamStudentsPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="fatherName">{isRtl ? "اسم الأب" : "Father's Name"}</Label>
+                      <Label htmlFor="fatherName">{t("team.students.fatherName")}</Label>
                       <Input
                         id="fatherName"
                         value={form.fatherName}
@@ -308,7 +304,7 @@ export default function TeamStudentsPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="familyName">{isRtl ? "اسم العائلة" : "Family Name"}</Label>
+                      <Label htmlFor="familyName">{t("team.students.familyName")}</Label>
                       <Input
                         id="familyName"
                         value={form.familyName}
@@ -331,7 +327,7 @@ export default function TeamStudentsPage() {
 
                   {/* Email */}
                   <div className="space-y-1">
-                    <Label htmlFor="email">{isRtl ? "البريد الإلكتروني" : "Email Address"}</Label>
+                    <Label htmlFor="email">{t("team.students.emailAddress")}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -346,7 +342,7 @@ export default function TeamStudentsPage() {
                     {creating ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin me-2" />
-                        {isRtl ? "جارٍ الإنشاء…" : "Creating…"}
+                        {t("team.students.creating")}
                       </>
                     ) : (
                       t("team.students.createAccount", "Create Account")
@@ -365,7 +361,7 @@ export default function TeamStudentsPage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={isRtl ? "بحث بالاسم أو البريد…" : "Search by name or email…"}
+          placeholder={t("team.students.searchPlaceholder")}
           className="ps-9"
         />
       </div>
@@ -374,16 +370,14 @@ export default function TeamStudentsPage() {
       {listLoading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin me-2" />
-          {isRtl ? "جارٍ التحميل…" : "Loading…"}
+          {t("team.students.loading")}
         </div>
       ) : filtered.length === 0 ? (
         <div className="border-2 border-dashed border-border rounded-2xl p-12 text-center">
           <User className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-foreground">
             {search
-              ? isRtl
-                ? "لا توجد نتائج"
-                : "No results found"
+              ? t("team.students.noResults")
               : t("team.students.noStudents", "No student accounts yet")}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">

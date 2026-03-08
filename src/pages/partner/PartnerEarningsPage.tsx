@@ -17,7 +17,7 @@ export default function PartnerEarningsPage() {
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
@@ -64,13 +64,12 @@ export default function PartnerEarningsPage() {
   const pendingEarnings = pendingCases.length * commissionRate;
 
   const earningStatusLabel = (s: string) => {
-    const map: Record<string, { en: string; ar: string }> = {
-      payment_confirmed: { en: "Payment Received", ar: "تم الدفع" },
-      submitted: { en: "Submitted for Enrollment", ar: "مقدم للتسجيل" },
-      enrollment_paid: { en: "Enrolled ✅", ar: "مسجل ✅" },
+    const map: Record<string, string> = {
+      payment_confirmed: t("partner.status.payment"),
+      submitted: t("partner.earnings.submitted"),
+      enrollment_paid: t("partner.earnings.enrolled"),
     };
-    const entry = map[s];
-    return entry ? (isAr ? entry.ar : entry.en) : s;
+    return map[s] ?? s;
   };
 
   const earningStatusColor: Record<string, string> = {
@@ -80,7 +79,7 @@ export default function PartnerEarningsPage() {
   };
 
   const paymentStatus = (s: string) =>
-    s === "enrollment_paid" ? (isAr ? "مؤكد" : "Confirmed") : isAr ? "معلق" : "Pending";
+    s === "enrollment_paid" ? t("partner.earnings.confirmedLabel") : t("partner.earnings.pendingLabel");
 
   const paymentStatusColor = (s: string) =>
     s === "enrollment_paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
@@ -89,16 +88,14 @@ export default function PartnerEarningsPage() {
     <div className="p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
       <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
         <DollarSign className="h-6 w-6 text-primary" />
-        {isAr ? "أرباحي" : "My Earnings"}
+        {t("partner.earningsTitle")}
       </h1>
 
       {/* Commission Rate Info */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50 border border-border">
         <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-sm text-muted-foreground">
-          {isAr
-            ? `تحصل على ₪${commissionRate.toLocaleString()} لكل طالب يصل إلى مرحلة الدفع أو التسجيل.`
-            : `You earn ₪${commissionRate.toLocaleString()} per student who reaches the payment or enrollment stage.`}
+          {t("partner.commission.rateInfo", { rate: commissionRate.toLocaleString() })}
         </p>
       </div>
 
@@ -108,7 +105,7 @@ export default function PartnerEarningsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Award className="h-4 w-4 text-green-600" />
-              <span className="text-xs">{isAr ? "الإجمالي" : "Total"}</span>
+              <span className="text-xs">{t("partner.earnings.total")}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{totalEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -120,7 +117,7 @@ export default function PartnerEarningsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <TrendingUp className="h-4 w-4 text-cyan-600" />
-              <span className="text-xs">{isAr ? "معلق" : "Pending"}</span>
+              <span className="text-xs">{t("partner.earnings.pendingLabel")}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{pendingEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -132,7 +129,7 @@ export default function PartnerEarningsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <DollarSign className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs">{isAr ? "مؤكد" : "Confirmed"}</span>
+              <span className="text-xs">{t("partner.earnings.confirmedLabel")}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">₪{confirmedEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -145,21 +142,21 @@ export default function PartnerEarningsPage() {
       {/* Earnings Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{isAr ? "تفاصيل الأرباح" : "Earnings Breakdown"}</CardTitle>
+          <CardTitle className="text-base">{t("partner.earnings.breakdown")}</CardTitle>
         </CardHeader>
         <CardContent>
           {earningCases.length === 0 ? (
             <p className="text-center text-muted-foreground py-6 text-sm">
-              {isAr ? "لا يوجد طلاب وصلوا لمرحلة الدفع بعد." : "No students have reached the payment stage yet."}
+              {t("partner.earnings.noQualifying")}
             </p>
           ) : (
             <>
               {/* Table header */}
               <div className="grid grid-cols-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 border-b border-border mb-2">
-                <span>{isAr ? "الطالب" : "Student"}</span>
-                <span>{isAr ? "حالة الدفع" : "Payment Status"}</span>
-                <span>{isAr ? "المرحلة" : "Stage"}</span>
-                <span className="text-end">{isAr ? "العمولة" : "Commission"}</span>
+                <span>{t("partner.earnings.colStudent")}</span>
+                <span>{t("partner.earnings.colPaymentStatus")}</span>
+                <span>{t("partner.earnings.colStage")}</span>
+                <span className="text-end">{t("partner.earnings.colCommission")}</span>
               </div>
               {earningCases.map((c) => (
                 <div
@@ -192,7 +189,7 @@ export default function PartnerEarningsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {isAr ? "في المسار (لم يصلوا للدفع بعد)" : "In Pipeline (not yet earning)"}
+              {t("partner.earnings.inPipeline")}
             </CardTitle>
           </CardHeader>
           <CardContent className="divide-y divide-border">
@@ -209,9 +206,7 @@ export default function PartnerEarningsPage() {
       )}
 
       <p className="text-xs text-muted-foreground text-center">
-        {isAr
-          ? "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب"
-          : "* First names only shown to protect student privacy"}
+        {t("partner.privacyNote")}
       </p>
     </div>
   );
