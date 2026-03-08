@@ -182,7 +182,7 @@ const AdminSettingsPage = () => {
 
   const createContact = async () => {
     if (!contactForm.name_ar || !contactForm.name_en) {
-      toast({ variant: "destructive", description: isRtl ? "الاسم مطلوب" : "Name is required" });
+      toast({ variant: "destructive", description: t('admin.settings.nameRequired', 'Name is required') });
       return;
     }
     setContactSaving(true);
@@ -198,7 +198,7 @@ const AdminSettingsPage = () => {
       setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0" });
       setContactOpen(false);
       await fetchData();
-      toast({ description: isRtl ? "تم إنشاء جهة الاتصال" : "Contact created" });
+      toast({ description: t('admin.settings.contactCreated', 'Contact created') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -220,7 +220,7 @@ const AdminSettingsPage = () => {
 
   const createVisaField = async () => {
     if (!visaFieldForm.field_key || !visaFieldForm.label_en || !visaFieldForm.label_ar) {
-      toast({ variant: "destructive", description: isRtl ? "جميع الحقول مطلوبة" : "All fields are required" });
+      toast({ variant: "destructive", description: t('admin.settings.allFieldsRequired', 'All fields are required') });
       return;
     }
     setVisaFieldSaving(true);
@@ -237,7 +237,7 @@ const AdminSettingsPage = () => {
       setVisaFieldForm({ field_key: "", label_en: "", label_ar: "", field_type: "text", is_required: false, display_order: "0" });
       setVisaFieldOpen(false);
       await fetchVisaFields();
-      toast({ description: isRtl ? "تم إضافة الحقل" : "Field added" });
+      toast({ description: t('admin.settings.fieldAdded', 'Field added') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
