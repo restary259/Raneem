@@ -747,7 +747,7 @@ export default function TeamAppointmentsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
