@@ -1,119 +1,126 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Verification Results: 5 Issues Found
 
-### What was found (full audit)
+### Full Audit Summary
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+**What works correctly:**
+- `CommissionSettingsPanel.tsx` — per-account UI, 3-way visibility pills, save/delete — ✅ correct
+- `AdminTeamPage.tsx` — one-partner constraint, delete button, warning banner — ✅ correct  
+- `AdminSubmissionsPage.tsx` — split preview panel, password gate, calls `admin-mark-paid` → `record_case_commission` — ✅ correct
+- `PartnerStudentsPage.tsx` — 3-way visibility logic, realtime subscriptions — ✅ correct
+- `PartnerEarningsPage.tsx` — override-first commission rate, realtime subscriptions — ✅ correct
+- `record_case_commission` DB function — reads `cases.partner_id`, checks overrides, writes rewards — ✅ correct
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
-
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
-
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
-
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
-
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
-
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
-
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
-
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+**Bugs found (5 issues):**
 
 ---
 
-### Files to change (batched)
+### Bug 1: CRITICAL — Partner cannot read their own commission override (RLS missing)
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**`partner_commission_overrides` table has NO SELECT policy for the partner role.** Only admins can read it.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+When `PartnerStudentsPage`, `PartnerOverviewPage`, and `PartnerEarningsPage` call:
+```js
+supabase.from('partner_commission_overrides').eq('partner_id', uid).maybeSingle()
+```
+They get **zero rows back** (RLS silently blocks it). The `override` variable is `null`, so the fallback kicks in: default to `apply_page / contact_form` regardless of what admin configured.
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
-
-**B. Numeric safety (7 component files)**
-
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
-
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
-
-**C. SparklineCard overflow fix**
-
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**Fix:** Add a DB migration to create a SELECT policy on `partner_commission_overrides` that allows partners to read their own row:
+```sql
+CREATE POLICY "Partners can read own override"
+ON public.partner_commission_overrides FOR SELECT
+USING (partner_id = auth.uid());
+```
+Same for `team_member_commission_overrides`:
+```sql
+CREATE POLICY "Team members can read own override"
+ON public.team_member_commission_overrides FOR SELECT
+USING (team_member_id = auth.uid());
+```
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### Bug 2: `PartnerOverviewPage` — wrong visibility logic for `show_all_cases = null`
+
+The page uses a **2-way boolean** check instead of the new **3-way nullable** logic:
+```js
+// CURRENT (wrong):
+const showAll = override?.show_all_cases !== null ? override.show_all_cases : globalShowAll;
+if (!showAll) { query = query.in("source", ["apply_page", "contact_form"]); }
+
+// When show_all_cases = null (referral only), falls back to globalShowAll → wrong behavior
+```
+
+`PartnerStudentsPage` has the correct 3-way logic but `PartnerOverviewPage` does not. This means the KPI counts on the overview are wrong when visibility is set to "Referral Cases Only".
+
+**Fix:** Rewrite `PartnerOverviewPage`'s visibility section to match `PartnerStudentsPage`:
+```js
+if (override !== null && override !== undefined) {
+  if (override.show_all_cases === false) {
+    query = query.in("source", ["apply_page", "contact_form"]);
+  } else if (override.show_all_cases === null) {
+    query = query.eq("partner_id", uid); // referral only
+  }
+  // true → no filter
+} else {
+  query = query.in("source", ["apply_page", "contact_form"]); // default fallback
+}
+```
+
+---
+
+### Bug 3: `record_case_commission` skips partner commission when cases have `partner_id = null`
+
+From the DB: **all 4 cases have `partner_id = null`** (apply_page and manual sources don't set partner_id). The `record_case_commission` function only creates a partner reward `IF v_case.partner_id IS NOT NULL`. Since the partner has `show_all_cases = true` (sees all cases), they should earn a commission when any case reaches `enrollment_paid` — but the DB function won't create the reward because partner_id isn't set.
+
+**The design gap:** The current architecture ties partner commission to `cases.partner_id`. But when visibility is "All Cases" or "Apply/Contact Only", there's no partner_id on the case to reference.
+
+**Fix:** Two options:
+- Option A (simpler): When admin marks a case enrolled and the split panel shows a partner commission, also write `cases.partner_id = partner_id` at that moment so `record_case_commission` works. Since there's only one partner, admin can be presented with the partner's id.
+- Option B: Pass the `partner_commission` override amount directly into `record_case_commission` so it doesn't rely on `partner_id` lookup.
+
+**Chosen fix:** In `AdminSubmissionsPage.markEnrolled()`, before calling `admin-mark-paid`, update `cases.partner_id` to the configured partner's ID if there's a partner commission configured and no `partner_id` yet. We fetch the partner from `partner_commission_overrides` and set it on the case.
+
+---
+
+### Bug 4: `PartnerOverviewPage` commission rate display uses wrong fallback after RLS fix
+
+After fixing RLS Bug 1, the `override` will return actual data. But the overview page currently falls back to `globalShowAll` (a boolean from platform_settings) when override is null — this should become the 3-way logic (Bug 2 above). These two bugs are fixed together in `PartnerOverviewPage`.
+
+---
+
+### Bug 5: `team_member_commission_overrides` also has no SELECT policy for team members
+
+Same pattern as Bug 1 — team member commission override can't be read by the team member's own dashboard if we ever build that. Not currently breaking any partner-facing UI, but should be fixed for consistency.
+
+---
+
+## Files to Change — 2 files + 1 DB migration
+
+| What | File/Action |
+|------|-------------|
+| Add RLS SELECT policies for partners & team members | DB migration (SQL) |
+| Fix 3-way visibility logic | `src/pages/partner/PartnerOverviewPage.tsx` |
+| Auto-link partner_id at enrollment | `src/pages/admin/AdminSubmissionsPage.tsx` |
+
+### DB Migration SQL
+```sql
+-- Partners can read their own commission override
+CREATE POLICY "Partners can read own override"
+ON public.partner_commission_overrides FOR SELECT
+USING (partner_id = auth.uid());
+
+-- Team members can read their own commission override
+CREATE POLICY "Team members can read own override"
+ON public.team_member_commission_overrides FOR SELECT
+USING (team_member_id = auth.uid());
+```
+
+### PartnerOverviewPage fix
+Replace the 2-way `showAll` boolean logic with the same 3-way nullable check already in `PartnerStudentsPage` (about 8 lines changed in the `load` function).
+
+### AdminSubmissionsPage fix
+In `markEnrolled()`, before the `admin-mark-paid` call: if `splitPreview.partnerCommission > 0` and `selected.partner_id` is null, look up the single partner account from `partner_commission_overrides` and update `cases.partner_id` on the case row. This ensures `record_case_commission` finds the partner and creates the reward.
+
+### No other changes needed
+The realtime wiring, commission calculations, team page, and commission settings UI are all correct. The 3 fixes above close all found gaps.
