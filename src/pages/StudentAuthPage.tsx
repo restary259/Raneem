@@ -244,12 +244,22 @@ const StudentAuthPage = () => {
           <div className="space-y-3">
             <div>
               <Label>{isRTL ? "كلمة المرور الجديدة" : "New Password"}</Label>
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={isRTL ? "أدخل كلمة مرور جديدة" : "Enter new password"}
-              />
+              <div className="relative">
+                <Input
+                  type={showNewPw ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={isRTL ? "أدخل كلمة مرور جديدة" : "Enter new password"}
+                  className="pe-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw((v) => !v)}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <PasswordStrength password={newPassword} />
             </div>
             <Button className="w-full" onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
