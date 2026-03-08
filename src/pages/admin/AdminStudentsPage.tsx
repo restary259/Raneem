@@ -81,12 +81,12 @@ interface CreatorInfo {
 // ─────────────────────────────────────────────────────────────────────────────
 const SelectiveDeleteDialog = ({
   student,
-  isRtl,
+  t,
   onClose,
   onDeleted,
 }: {
   student: StudentRecord;
-  isRtl: boolean;
+  t: (key: string, opts?: any) => string;
   onClose: () => void;
   onDeleted: () => void;
 }) => {
@@ -97,9 +97,9 @@ const SelectiveDeleteDialog = ({
   const [deleting, setDeleting] = useState(false);
 
   const CATEGORIES = [
-    { id: "contact_info", label: isRtl ? "معلومات الاتصال" : "Contact Information" },
-    { id: "documents", label: isRtl ? "المستندات" : "Documents" },
-    { id: "case", label: isRtl ? "الملف والتقديمات" : "Case & Submissions" },
+    { id: "contact_info", label: t("admin.students.catContactInfo") },
+    { id: "documents", label: t("admin.students.catDocuments") },
+    { id: "case", label: t("admin.students.catCase") },
   ];
 
   const toggleCat = (id: string) =>
@@ -107,11 +107,11 @@ const SelectiveDeleteDialog = ({
 
   const handleDelete = async () => {
     if (!categories.length) {
-      toast({ variant: "destructive", description: "Select at least one category." });
+      toast({ variant: "destructive", description: t("admin.students.selectCategories") });
       return;
     }
     if (mode === "hard" && !password) {
-      toast({ variant: "destructive", description: "Password required for hard delete." });
+      toast({ variant: "destructive", description: t("admin.students.adminPassword") });
       return;
     }
     setDeleting(true);
@@ -130,7 +130,7 @@ const SelectiveDeleteDialog = ({
       }
 
       toast({
-        title: isRtl ? "تم الحذف" : "Deleted",
+        title: t("admin.students.deleted"),
         description: resp.data.message,
       });
       onDeleted();
