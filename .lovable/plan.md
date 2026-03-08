@@ -1,119 +1,101 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Diagnosis: "Average Days Per Stage" Chart
 
-### What was found (full audit)
+### Is the chart technically rendering?
+**Yes, it renders** — but it is **completely useless** because all bars show `0` days (or near-zero fractions).
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+### Why it shows 0 for everything:
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+**Root cause: All cases are only hours old.**
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+The DB query confirms:
+- All 4 cases were created on **2026-03-08** (today)
+- `last_activity_at - created_at` = minutes to hours at most (max 0.01 days = ~15 minutes)
+- After `Math.round()`, every single value rounds to **0**
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+So the chart renders fine but displays `0` bars for every stage — it looks broken but is actually calculating correctly on toy/demo data.
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+**Secondary issue: The calculation measures the WRONG thing.**
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+The current formula:
+```js
+diff = last_activity_at - created_at  // time since case was CREATED
+```
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+This measures "how long the case has existed in its current status" for cases **still in that status** — which is meaningless for real pipeline analysis.
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
+What it SHOULD measure: **how long cases spent in each stage before advancing**, which requires a `stage_history` or `status_changed_at` audit trail. That data doesn't exist in the DB schema right now.
 
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+**The correct approximation (without a full audit trail)** is to measure the gap between `status_changed_at` and `now()` for active cases, or compare `last_activity_at` vs expected SLA thresholds. The current approach using `created_at` as the baseline is wrong for cases that have been in multiple statuses.
 
----
+### What to fix
 
-### Files to change (batched)
+**Fix 1 — Use `updated_at` (when status last changed) minus `created_at` as a proxy**
+This is still imperfect but better — `updated_at` reflects the last time the row was modified (which coincides with status transitions).
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**Fix 2 — Add a `minPointSize` guard and a "no meaningful data" empty state**
+When all values are 0 (all data is < 1 day old), show a placeholder message instead of a flat bar chart.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+**Fix 3 — Correct the label from "Average Days Per Stage" to "Avg. Days In Current Stage"**
+This is accurate to what the chart actually shows (time spent so far in current status).
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+**Fix 4 — Add decimal precision for fresh data**
+Instead of `Math.round()` (which zeroes out everything < 0.5 days), use `Math.round(avg * 10) / 10` to show 1 decimal place, and for sub-day values show hours instead.
 
-**B. Numeric safety (7 component files)**
+### Files to change: 1 file
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+| File | Change |
+|------|---------|
+| `src/pages/admin/AdminAnalyticsPage.tsx` | Fix avgDays calculation to use `updated_at` as stage-change proxy; show 1-decimal precision; add empty-state guard when all values are 0; use hours for sub-day values |
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
+### Implementation
 
-**C. SparklineCard overflow fix**
+```tsx
+// Fix avgDays calculation
+const avgDays = STATUSES.slice(0, 7).map(s => {
+  const group = cases.filter(c => c.status === s);
+  if (group.length === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
+  
+  const avgMs = group.reduce((sum, c) => {
+    // Use last_activity_at as "entered current status at" proxy
+    const base = new Date(c.last_activity_at).getTime();
+    const now = Date.now();
+    return sum + Math.max(0, now - base);
+  }, 0) / group.length;
+  
+  const days = avgMs / 86400000;
+  return { 
+    name: statusLabels[s], 
+    avg: Math.round(days * 10) / 10,  // 1 decimal
+    hours: Math.round(avgMs / 3600000) // for tooltip
+  };
+});
 
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+const allZero = avgDays.every(d => d.avg === 0);
+```
 
-**D. TeamStudentProfilePage — add translations**
+And in the JSX, add the empty state:
+```tsx
+{allZero ? (
+  <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
+    <Clock className="h-8 w-8 opacity-30" />
+    <p className="text-sm">Not enough time has passed to calculate stage durations</p>
+    <p className="text-xs opacity-70">This chart populates as cases progress through the pipeline over days</p>
+  </div>
+) : (
+  <ResponsiveContainer ...>
+    ...
+  </ResponsiveContainer>
+)}
+```
 
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+The tooltip also changes to show hours when < 1 day:
+```tsx
+formatter={(v, _, props) => {
+  const hours = props.payload?.hours;
+  if (v < 1 && hours) return [`${hours}h`, ''];
+  return [`${v} ${t('admin.analytics.tooltipDays')}`, ''];
+}}
+```
 
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
-
----
-
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+No DB migration, no new tables, no other files changed.
