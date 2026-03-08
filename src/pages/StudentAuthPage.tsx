@@ -21,6 +21,7 @@ const StudentAuthPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
