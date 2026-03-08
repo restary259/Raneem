@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: string }> = {
   new: { label: "New", labelAr: "جديد", color: "bg-slate-100 text-slate-700" },
@@ -91,6 +92,11 @@ export default function PartnerOverviewPage() {
       load(session.user.id);
     });
   }, [navigate, load]);
+
+  // Real-time: refetch when commission overrides, settings, or cases change
+  useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
