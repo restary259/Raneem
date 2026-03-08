@@ -12,7 +12,7 @@ const CVPreview: React.FC<Props> = ({ data }) => {
   const dir = data.contentLanguage === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <div id="cv-preview" dir={dir} className="cv-preview-container bg-white shadow-lg border rounded-lg overflow-auto">
+    <div id="cv-preview" dir={dir} className="cv-preview-container bg-white shadow-lg border rounded-lg overflow-hidden print:overflow-visible">
       {data.template === 'academic' && <AcademicTemplate data={data} />}
       {data.template === 'german-standard' && <GermanStandardTemplate data={data} />}
       {data.template === 'europass' && <EuropassTemplate data={data} />}
