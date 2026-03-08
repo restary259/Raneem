@@ -34,15 +34,15 @@ const AdminAnalyticsPage = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const statusLabels: Record<string, string> = {
-    new: isRtl ? 'جديد' : 'New',
-    contacted: isRtl ? 'تواصل' : 'Contacted',
-    appointment_scheduled: isRtl ? 'موعد' : 'Appt',
-    profile_completion: isRtl ? 'ملف' : 'Profile',
-    payment_confirmed: isRtl ? 'دفع' : 'Payment',
-    submitted: isRtl ? 'تقديم' : 'Submitted',
-    enrollment_paid: isRtl ? 'مسجل' : 'Enrolled',
-    forgotten: isRtl ? 'منسي' : 'Forgotten',
-    cancelled: isRtl ? 'ملغى' : 'Cancelled',
+    new: t('admin.analytics.statusNew'),
+    contacted: t('admin.analytics.statusContacted'),
+    appointment_scheduled: t('admin.analytics.statusAppointment'),
+    profile_completion: t('admin.analytics.statusProfile'),
+    payment_confirmed: t('admin.analytics.statusPayment'),
+    submitted: t('admin.analytics.statusSubmitted'),
+    enrollment_paid: t('admin.analytics.statusEnrolled'),
+    forgotten: t('admin.analytics.statusForgotten'),
+    cancelled: t('admin.analytics.statusCancelled'),
   };
 
   const funnelData = STATUSES.map((s, i) => ({
@@ -52,10 +52,10 @@ const AdminAnalyticsPage = () => {
   }));
 
   const sourceData = SOURCES.map(s => ({
-    name: s === 'apply_page' ? (isRtl ? 'صفحة التقديم' : 'Apply Page')
-        : s === 'manual' ? (isRtl ? 'يدوي' : 'Manual')
-        : s === 'submit_new_student' ? (isRtl ? 'تسجيل مباشر' : 'Direct Submit')
-        : (isRtl ? 'شريك' : 'Partner'),
+    name: s === 'apply_page' ? t('admin.analytics.sourceApplyPage')
+        : s === 'manual' ? t('admin.analytics.sourceManual')
+        : s === 'submit_new_student' ? t('admin.analytics.sourceDirect')
+        : t('admin.analytics.sourcePartner'),
     count: cases.filter(c => c.source === s).length,
   })).filter(s => s.count > 0);
 
@@ -75,7 +75,7 @@ const AdminAnalyticsPage = () => {
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{isRtl ? 'التحليلات' : 'Analytics'}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('admin.analytics.title')}</h1>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
@@ -84,10 +84,10 @@ const AdminAnalyticsPage = () => {
       {/* KPI summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: isRtl ? 'إجمالي الملفات' : 'Total Cases', value: cases.length },
-          { label: isRtl ? 'ملفات نشطة' : 'Active', value: cases.filter(c => !['enrollment_paid','cancelled','forgotten'].includes(c.status)).length },
-          { label: isRtl ? 'مسجلون' : 'Enrolled', value: cases.filter(c => c.status === 'enrollment_paid').length },
-          { label: isRtl ? 'نسبة التحويل' : 'Conversion', value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
+          { label: t('admin.analytics.kpiTotalCases'), value: cases.length },
+          { label: t('admin.analytics.kpiActive'), value: cases.filter(c => !['enrollment_paid','cancelled','forgotten'].includes(c.status)).length },
+          { label: t('admin.analytics.kpiEnrolled'), value: cases.filter(c => c.status === 'enrollment_paid').length },
+          { label: t('admin.analytics.kpiConversion'), value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
         ].map((kpi, i) => (
           <Card key={i}>
             <CardContent className="p-4">
@@ -101,7 +101,7 @@ const AdminAnalyticsPage = () => {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Funnel */}
         <Card>
-          <CardHeader><CardTitle className="text-base">{isRtl ? 'قمع التحويل' : 'Conversion Funnel'}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -118,7 +118,7 @@ const AdminAnalyticsPage = () => {
                   tickMargin={4}
                 />
                 <Tooltip
-                  formatter={(v) => [v, isRtl ? 'عدد' : 'Cases']}
+                  formatter={(v) => [v, t('admin.analytics.tooltipCases')]}
                   contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
                 />
                 <Bar dataKey="count" radius={4}>
@@ -131,10 +131,10 @@ const AdminAnalyticsPage = () => {
 
         {/* Source breakdown */}
         <Card>
-          <CardHeader><CardTitle className="text-base">{isRtl ? 'توزيع المصادر' : 'Source Breakdown'}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t('admin.analytics.sourceBreakdown')}</CardTitle></CardHeader>
           <CardContent>
             {sourceData.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-8">{isRtl ? 'لا توجد بيانات' : 'No data yet'}</p>
+              <p className="text-center text-muted-foreground text-sm py-8">{t('admin.analytics.noData')}</p>
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={200}>
@@ -172,14 +172,14 @@ const AdminAnalyticsPage = () => {
 
         {/* Avg days per stage */}
         <Card className="md:col-span-2">
-          <CardHeader><CardTitle className="text-base">{isRtl ? 'متوسط الأيام في كل مرحلة' : 'Average Days Per Stage'}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t('admin.analytics.avgDaysPerStage')}</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={avgDays} margin={{ top: 4, bottom: 4 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'currentColor' }} />
                 <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
                 <Tooltip
-                  formatter={(v) => [`${v} ${isRtl ? 'يوم' : 'days'}`, '']}
+                  formatter={(v) => [`${v} ${t('admin.analytics.tooltipDays')}`, '']}
                   contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
                 />
                 <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} />

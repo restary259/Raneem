@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -61,7 +61,7 @@ const AdminActivityPage = () => {
   });
 
   const fmt = (ts: string) =>
-    new Date(ts).toLocaleString(isRtl ? 'ar-EG' : 'en-GB', { dateStyle: 'short', timeStyle: 'medium' });
+    new Date(ts).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'medium' });
 
   const entityColor: Record<string, string> = {
     case: 'bg-primary/10 text-primary',
@@ -94,9 +94,9 @@ const AdminActivityPage = () => {
       <Card>
         <CardContent className="p-0">
           {loading && entries.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'جار التحميل...' : 'Loading...'}</div>
+            <div className="p-8 text-center text-muted-foreground text-sm">{t('common.loading')}</div>
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'لا يوجد نشاط' : 'No activity found'}</div>
+            <div className="p-8 text-center text-muted-foreground text-sm">{t('admin.activity.noActivity')}</div>
           ) : (
             <div className="divide-y divide-border">
               {filtered.map(entry => (
@@ -120,7 +120,7 @@ const AdminActivityPage = () => {
               {!search && entries.length === (page + 1) * PAGE_SIZE && (
                 <div className="p-4 text-center">
                   <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)}>
-                    {isRtl ? 'تحميل المزيد' : 'Load more'}
+                    {t('common.loadMore')}
                   </Button>
                 </div>
               )}
