@@ -16,7 +16,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ loginAttempts = [], audit
 
   return (
     <Tabs defaultValue="eligibility" className="space-y-4">
-      <TabsList className="flex-wrap">
+      <TabsList className="flex-wrap w-full h-auto">
         <TabsTrigger value="eligibility">{t('admin.tabs.eligibility')}</TabsTrigger>
         <TabsTrigger value="notifications">{t('admin.tabs.notifications')}</TabsTrigger>
         <TabsTrigger value="security">{t('admin.tabs.security')}</TabsTrigger>

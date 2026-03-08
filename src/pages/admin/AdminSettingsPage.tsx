@@ -338,7 +338,7 @@ const AdminSettingsPage = () => {
       </div>
 
       <Tabs defaultValue="platform">
-        <TabsList className="flex-wrap">
+        <TabsList className="flex-wrap w-full h-auto">
           <TabsTrigger value="platform">{t("admin.settings.platform", "Platform")}</TabsTrigger>
           <TabsTrigger value="commissions">
             <DollarSign className="h-3.5 w-3.5 me-1" />
