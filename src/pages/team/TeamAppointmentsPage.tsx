@@ -917,7 +917,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setSelectedAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           {selectedAppt &&
             (() => {
               const s = apptStyle(selectedAppt.outcome);
