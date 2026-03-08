@@ -602,7 +602,10 @@
     "edit": "Edit",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "saving": "Saving…",
+    "inAppBannerText": "For the best experience, open in Safari or Chrome",
+    "copyLink": "Copy link"
   },
   "funnel": {
     "new": "Lead Submitted",

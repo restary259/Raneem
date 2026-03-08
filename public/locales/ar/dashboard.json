@@ -615,7 +615,10 @@
     "edit": "تعديل",
     "loading": "جار التحميل...",
     "error": "خطأ",
-    "success": "نجاح"
+    "success": "نجاح",
+    "saving": "جارٍ الحفظ…",
+    "inAppBannerText": "للحصول على أفضل تجربة، افتح في Safari أو Chrome",
+    "copyLink": "نسخ الرابط"
   },
   "funnel": {
     "new": "عميل جديد",
