@@ -31,6 +31,9 @@ export default defineConfig(({ mode }) => ({
           'vendor-i18n': ['i18next', 'react-i18next', 'i18next-http-backend'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'vendor-date': ['date-fns'],
+          'vendor-mapbox': ['mapbox-gl'],
+          'vendor-pdf': ['jspdf', 'jspdf-autotable', 'exceljs'],
+          'vendor-3d': ['@react-three/fiber'],
         }
       }
     }
