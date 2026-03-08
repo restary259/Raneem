@@ -499,13 +499,13 @@ export default function CaseDetailPage() {
       return (
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-medium text-sm">Mark as Contacted</p>
+            <p className="font-medium text-sm">{t("case.detail.markContacted")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Start the pipeline by marking this lead as contacted.
+              {t("case.detail.markContactedDesc")}
             </p>
           </div>
           <Button onClick={() => updateStatus("contacted")} disabled={updatingStatus} className="shrink-0">
-            Mark Contacted <ChevronRight className="h-4 w-4 ms-1" />
+            {t("case.detail.markContacted")} <ChevronRight className="h-4 w-4 ms-1" />
           </Button>
         </div>
       );
@@ -513,11 +513,11 @@ export default function CaseDetailPage() {
       return (
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-medium text-sm">Schedule an Appointment</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Book a time to discuss the student's application.</p>
+            <p className="font-medium text-sm">{t("case.detail.scheduleAppt")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("case.detail.scheduleApptDesc")}</p>
           </div>
           <Button onClick={() => setShowScheduler(true)} className="shrink-0">
-            <CalendarClock className="h-4 w-4 me-1" /> Schedule
+            <CalendarClock className="h-4 w-4 me-1" /> {t("lawyer.schedule")}
           </Button>
         </div>
       );
@@ -535,7 +535,7 @@ export default function CaseDetailPage() {
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap">
                 <Button size="sm" variant="outline" onClick={() => setRescheduleAppt(pendingAppt)}>
-                  Reschedule
+                  {t("case.detail.reschedule")}
                 </Button>
                 <Button
                   size="sm"
@@ -546,7 +546,7 @@ export default function CaseDetailPage() {
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
                 <Button size="sm" onClick={() => setOutcomeApptId(pendingAppt.id)}>
-                  Record Outcome <ChevronRight className="h-4 w-4 ms-1" />
+                  {t("case.detail.outcome")} <ChevronRight className="h-4 w-4 ms-1" />
                 </Button>
               </div>
             </div>
@@ -555,11 +555,11 @@ export default function CaseDetailPage() {
       return (
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-medium text-sm text-amber-700">All outcomes recorded</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Ready to proceed to Profile stage.</p>
+            <p className="font-medium text-sm text-amber-700">{t("case.detail.allOutcomesRecorded")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("case.detail.proceedToProfile")}</p>
           </div>
           <Button size="sm" onClick={() => updateStatus("profile_completion")} disabled={updatingStatus}>
-            Go to Profile Stage <ChevronRight className="h-4 w-4 ms-1" />
+            {t("case.detail.completeProfile")} <ChevronRight className="h-4 w-4 ms-1" />
           </Button>
         </div>
       );
@@ -570,7 +570,7 @@ export default function CaseDetailPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <User className="h-4 w-4 text-primary" />
-              <p className="font-medium text-sm">Complete Student Profile</p>
+              <p className="font-medium text-sm">{t("case.detail.completeProfile")}</p>
             </div>
             <ProfileCompletionForm
               caseId={caseData.id}
@@ -589,7 +589,7 @@ export default function CaseDetailPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
             <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-            <p className="text-sm text-green-800 font-medium">Profile Complete — Confirm Payment to Proceed</p>
+            <p className="text-sm text-green-800 font-medium">{t("case.detail.profileComplete")}</p>
           </div>
           <PaymentConfirmationForm
             caseId={caseData.id}
@@ -605,25 +605,25 @@ export default function CaseDetailPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
             <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
-            <p className="text-sm text-emerald-800 font-medium">Payment Confirmed — Review & Submit to Admin</p>
+            <p className="text-sm text-emerald-800 font-medium">{t("case.detail.confirmPayment")}</p>
           </div>
           {submission && (
             <div className="text-sm space-y-1 px-1">
               {resolved.programName && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Program</span>
+                  <span>{t("case.detail.program")}</span>
                   <span className="font-medium text-foreground">{resolved.programName}</span>
                 </div>
               )}
               {submission.program_price > 0 && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Program cost</span>
+                  <span>{t("case.detail.programCost")}</span>
                   <span className="font-medium text-foreground">{submission.program_price.toLocaleString()} EUR</span>
                 </div>
               )}
               {submission.accommodation_price > 0 && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Accommodation</span>
+                  <span>{t("case.detail.accommodation")}</span>
                   <span className="font-medium text-foreground">
                     {submission.accommodation_price.toLocaleString()} EUR
                   </span>
@@ -631,13 +631,13 @@ export default function CaseDetailPage() {
               )}
               {submission.service_fee > 0 && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Service fee</span>
+                  <span>{t("case.detail.serviceFee")}</span>
                   <span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
                 </div>
               )}
               {submission.program_start_date && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Start Date</span>
+                  <span>{t("case.detail.startDate")}</span>
                   <span>{submission.program_start_date}</span>
                 </div>
               )}
@@ -645,7 +645,7 @@ export default function CaseDetailPage() {
           )}
           <div className="flex justify-end">
             <Button onClick={() => setShowSubmitConfirm(true)} disabled={updatingStatus}>
-              <SendHorizonal className="h-4 w-4 me-1" /> Submit to Admin
+              <SendHorizonal className="h-4 w-4 me-1" /> {t("case.detail.submitToAdmin")}
             </Button>
           </div>
         </div>
@@ -655,8 +655,8 @@ export default function CaseDetailPage() {
         <div className="flex items-center gap-3 p-3 rounded-lg bg-teal-50 border border-teal-200">
           <CheckCircle2 className="h-5 w-5 text-teal-600 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-teal-800">Submitted to Admin</p>
-            <p className="text-xs text-teal-700 mt-0.5">Waiting for admin review and enrollment confirmation.</p>
+            <p className="text-sm font-medium text-teal-800">{t("case.detail.submittedToAdmin")}</p>
+            <p className="text-xs text-teal-700 mt-0.5">{t("case.detail.waitingAdminReview")}</p>
           </div>
         </div>
       );
@@ -665,21 +665,20 @@ export default function CaseDetailPage() {
         <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
           <GraduationCap className="h-5 w-5 text-green-600 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-green-800">🎉 Student Enrolled</p>
-            <p className="text-xs text-green-700 mt-0.5">Case complete. Student is enrolled in the program.</p>
+            <p className="text-sm font-medium text-green-800">{t("case.detail.studentEnrolled")}</p>
+            <p className="text-xs text-green-700 mt-0.5">{t("case.detail.caseComplete")}</p>
           </div>
         </div>
       );
     if (status === "forgotten")
       return (
         <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-destructive">This case was marked forgotten.</p>
+          <p className="text-sm text-destructive">{t("case.detail.forgottenCase")}</p>
           <Button variant="outline" onClick={() => updateStatus("contacted", true)}>
-            Re-activate
+            {t("case.detail.reactivate")}
           </Button>
         </div>
       );
-    return null;
   };
 
   /* ── Render ─────────────────────────────────────────────────────────── */
