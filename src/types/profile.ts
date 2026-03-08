@@ -24,6 +24,10 @@ export interface Profile {
   has_dual_citizenship?: boolean;
   second_passport_country?: string;
   arrival_date?: string;
+  nationality?: string;
+  passport_number?: string;
+  passport_expiry?: string;
+  date_of_birth?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -19,7 +19,7 @@ import {
   User,
   Mail,
   Phone,
-  GraduationCap,
+  Building2,
   FileText,
   Download,
   Trash2,
@@ -647,7 +647,7 @@ export default function AdminStudentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <GraduationCap className="h-6 w-6 text-primary" />
+          <Building2 className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">{t("admin.students.managementTitle")}</h1>
           <Badge variant="secondary" className="text-xs">{students.length}</Badge>
         </div>
@@ -688,7 +688,7 @@ export default function AdminStudentsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p>{t("admin.students.noRegistered")}</p>
         </div>
       ) : (
@@ -897,7 +897,7 @@ export default function AdminStudentsPage() {
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldDob"), value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldNationality"), value: selected.nationality || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "العنوان / الدولة" : "Address / Country", value: selected.country || "—" },
-                        { icon: <GraduationCap className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
+                        { icon: <Building2 className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldIntake"), value: selected.intake_month || "—" },
                         { icon: <FileText className="h-3.5 w-3.5" />, label: isRtl ? "رقم جواز السفر" : "Passport No.", value: selected.passport_number || "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: isRtl ? "انتهاء جواز السفر" : "Passport Expiry", value: selected.passport_expiry ? format(new Date(selected.passport_expiry), "PPP") : "—" },
