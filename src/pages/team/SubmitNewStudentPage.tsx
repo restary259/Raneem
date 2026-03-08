@@ -276,7 +276,6 @@ export default function SubmitNewStudentPage() {
 
   // Step 4 — Payment & Documents
   const [serviceFee, setServiceFee] = useState("");
-  const [translationFee, setTranslationFee] = useState("0");
   const [paymentReceived, setPaymentReceived] = useState(false);
   const [skipDocuments, setSkipDocuments] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; file: File; category: string }[]>([]);
@@ -285,7 +284,7 @@ export default function SubmitNewStudentPage() {
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-  const total = (parseFloat(serviceFee) || 0) + (parseFloat(translationFee) || 0);
+  const total = parseFloat(serviceFee) || 0;
 
   // ✅ FIX: Generate intake months from current month using utility
   const monthOptions = generateIntakeMonths(24);
