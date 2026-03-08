@@ -1,119 +1,264 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Plan: Add Arabic Translations to TeamAppointmentsPage
 
-### What was found (full audit)
+### Inventory of All Hardcoded English Strings
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+From scanning `TeamAppointmentsPage.tsx`, every hardcoded English string that needs a translation key:
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+**Status labels (in `apptStyle` function, lines 83–114):**
+- "Upcoming", "Completed", "No Show", "Rescheduled"
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+**Header / Calendar UI (lines 511–677):**
+- "Today" (nav button)
+- "day" / "week" / "month" (view toggle pills)
+- "New Appointment" (already has `isAr ? "موعد جديد" : "New Appointment"` — must replace with `t()`)
+- "· Today" (day view pill suffix, line 557)
+- "Drop to schedule here" (drag hint, line 581)
+- "Drop here" (week view hint, line 657)
+- Day abbreviations: "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" (month view header, line 677)
+- "+{n} more" (overflow pill, line 728)
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+**New/Edit modal (lines 756–909):**
+- "Edit Appointment" / "New Appointment" (title)
+- "Student" (label)
+- "Select existing case…" (placeholder)
+- "Manual" (button)
+- "Enter student name…" (placeholder)
+- "Date" (label)
+- "Pick date" (placeholder)
+- "Time (8 am – 8 pm)" (label)
+- "Duration" (label)
+- "Notes" (label)
+- "What was discussed, action items, follow-ups…" (placeholder)
+- "Cancel" (button)
+- "Save Changes" / "Create Appointment" (button)
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+**Detail modal (lines 956–997):**
+- "Notes" (label above notes block)
+- "Edit" (button)
+- "Delete" (button)
+- "View Case" (button)
+- "Record Outcome" (button)
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+**Reschedule confirm (lines 1014–1036):**
+- "Reschedule Appointment?" (title)
+- "Move **{name}** to:" (text)
+- "Previously: {date}" (text)
+- "Cancel" (button)
+- "Confirm Reschedule" (button)
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+**Delete confirm (lines 1050–1065):**
+- "Delete Appointment?" (title)
+- "Remove the appointment with **{name}** on {date}? This cannot be undone." (text)
+- "Cancel" (button)
+- "Delete" (button)
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
-
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
-
----
-
-### Files to change (batched)
-
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
-
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
-
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
-
-**B. Numeric safety (7 component files)**
-
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
-
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
-
-**C. SparklineCard overflow fix**
-
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**Toast messages (lines 230, 268, 310–326, 346, 378, 397):**
+- "Appointments can only be scheduled between 8 am and 8 pm."
+- "Rescheduled"
+- "Please select a date"
+- "Please select a case or enter a student name"
+- "Please enter a student name"
+- "Appointments must be between 8 am and 8 pm."
+- "Appointment updated"
+- "Appointment created"
+- "Appointment deleted"
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### Translation Keys to Add
+
+**In `public/locales/en/dashboard.json`** — extend the existing `team.appointments` block and add a new `team.apptPage` block:
+
+```json
+"appointments": {
+  "title": "Appointments",
+  "needOutcome": "Need Outcome",
+  "today": "Today",
+  "upcoming": "Upcoming",
+  "past": "Past Appointments",
+
+  "statusUpcoming": "Upcoming",
+  "statusCompleted": "Completed",
+  "statusNoShow": "No Show",
+  "statusRescheduled": "Rescheduled",
+
+  "navToday": "Today",
+  "viewDay": "Day",
+  "viewWeek": "Week",
+  "viewMonth": "Month",
+  "newAppointment": "New Appointment",
+  "dropHere": "Drop here",
+  "dropSchedule": "Drop to schedule here",
+  "moreCount": "+{{n}} more",
+
+  "labelStudent": "Student",
+  "labelDate": "Date",
+  "labelTime": "Time (8 am – 8 pm)",
+  "labelDuration": "Duration",
+  "labelNotes": "Notes",
+  "placeholderCase": "Select existing case…",
+  "placeholderManualName": "Enter student name…",
+  "placeholderDate": "Pick date",
+  "placeholderNotes": "What was discussed, action items, follow-ups…",
+  "manualBtn": "Manual",
+  "editTitle": "Edit Appointment",
+  "newTitle": "New Appointment",
+  "btnCancel": "Cancel",
+  "btnSaveChanges": "Save Changes",
+  "btnCreate": "Create Appointment",
+  "btnEdit": "Edit",
+  "btnDelete": "Delete",
+  "btnViewCase": "View Case",
+  "btnRecordOutcome": "Record Outcome",
+
+  "rescheduleTitle": "Reschedule Appointment?",
+  "rescheduleMoveText": "Move {{name}} to:",
+  "rescheduleOldDate": "Previously: {{date}}",
+  "btnConfirmReschedule": "Confirm Reschedule",
+
+  "deleteTitle": "Delete Appointment?",
+  "deleteBody": "Remove the appointment with {{name}} on {{date}}? This cannot be undone.",
+  "btnConfirmDelete": "Delete",
+
+  "toastRescheduled": "Rescheduled",
+  "toastCreated": "Appointment created",
+  "toastUpdated": "Appointment updated",
+  "toastDeleted": "Appointment deleted",
+  "errNoDate": "Please select a date",
+  "errNoCase": "Please select a case or enter a student name",
+  "errNoName": "Please enter a student name",
+  "errWorkHours": "Appointments must be between 8 am and 8 pm.",
+  "errDropWorkHours": "Appointments can only be scheduled between 8 am and 8 pm.",
+
+  "dayAbbrevSun": "Sun",
+  "dayAbbrevMon": "Mon",
+  "dayAbbrevTue": "Tue",
+  "dayAbbrevWed": "Wed",
+  "dayAbbrevThu": "Thu",
+  "dayAbbrevFri": "Fri",
+  "dayAbbrevSat": "Sat",
+  "todayPill": "· Today"
+}
+```
+
+**In `public/locales/ar/dashboard.json`** — same block with Arabic values:
+
+```json
+"appointments": {
+  "title": "المواعيد",
+  "needOutcome": "تحتاج نتيجة",
+  "today": "اليوم",
+  "upcoming": "القادمة",
+  "past": "المواعيد السابقة",
+
+  "statusUpcoming": "قادم",
+  "statusCompleted": "مكتمل",
+  "statusNoShow": "لم يحضر",
+  "statusRescheduled": "أُعيد جدولته",
+
+  "navToday": "اليوم",
+  "viewDay": "يوم",
+  "viewWeek": "أسبوع",
+  "viewMonth": "شهر",
+  "newAppointment": "موعد جديد",
+  "dropHere": "أفلت هنا",
+  "dropSchedule": "أفلت لجدولة موعد هنا",
+  "moreCount": "+{{n}} أكثر",
+
+  "labelStudent": "الطالب",
+  "labelDate": "التاريخ",
+  "labelTime": "الوقت (8 ص – 8 م)",
+  "labelDuration": "المدة",
+  "labelNotes": "ملاحظات",
+  "placeholderCase": "اختر حالة موجودة…",
+  "placeholderManualName": "أدخل اسم الطالب…",
+  "placeholderDate": "اختر تاريخاً",
+  "placeholderNotes": "ما الذي نوقش، عناصر العمل، المتابعات…",
+  "manualBtn": "يدوي",
+  "editTitle": "تعديل الموعد",
+  "newTitle": "موعد جديد",
+  "btnCancel": "إلغاء",
+  "btnSaveChanges": "حفظ التغييرات",
+  "btnCreate": "إنشاء الموعد",
+  "btnEdit": "تعديل",
+  "btnDelete": "حذف",
+  "btnViewCase": "عرض الحالة",
+  "btnRecordOutcome": "تسجيل النتيجة",
+
+  "rescheduleTitle": "إعادة جدولة الموعد؟",
+  "rescheduleMoveText": "نقل {{name}} إلى:",
+  "rescheduleOldDate": "السابق: {{date}}",
+  "btnConfirmReschedule": "تأكيد إعادة الجدولة",
+
+  "deleteTitle": "حذف الموعد؟",
+  "deleteBody": "إزالة الموعد مع {{name}} في {{date}}؟ لا يمكن التراجع عن هذا الإجراء.",
+  "btnConfirmDelete": "حذف",
+
+  "toastRescheduled": "تمت إعادة الجدولة",
+  "toastCreated": "تم إنشاء الموعد",
+  "toastUpdated": "تم تحديث الموعد",
+  "toastDeleted": "تم حذف الموعد",
+  "errNoDate": "يرجى اختيار تاريخ",
+  "errNoCase": "يرجى اختيار حالة أو إدخال اسم الطالب",
+  "errNoName": "يرجى إدخال اسم الطالب",
+  "errWorkHours": "يجب أن تكون المواعيد بين الساعة 8 صباحاً و8 مساءً.",
+  "errDropWorkHours": "لا يمكن جدولة المواعيد إلا بين الساعة 8 صباحاً و8 مساءً.",
+
+  "dayAbbrevSun": "أحد",
+  "dayAbbrevMon": "إثن",
+  "dayAbbrevTue": "ثلا",
+  "dayAbbrevWed": "أرب",
+  "dayAbbrevThu": "خمي",
+  "dayAbbrevFri": "جمع",
+  "dayAbbrevSat": "سبت",
+  "todayPill": "· اليوم"
+}
+```
+
+---
+
+### Code Changes in `TeamAppointmentsPage.tsx`
+
+1. **Line 126**: Add `t` to destructure: `const { i18n, t } = useTranslation("dashboard")`
+
+2. **`apptStyle` function** — it currently returns hardcoded `label` strings. Since it's a plain function (not a component), it can't call `t()`. Fix: return a label key instead and call `t()` at the call sites:
+   - Change `label: "Upcoming"` → `label: "team.appointments.statusUpcoming"`
+   - etc. for all 4 statuses
+   - At render sites (line 937, line 83, line 92, etc.) use `t(s.label)` instead of `{s.label}`
+
+3. **Line 511**: `"Today"` nav button → `{t("team.appointments.navToday")}`
+
+4. **Line 522–528**: view toggle — replace `` `capitalize` `` + `{v}` with `t(\`team.appointments.view${v.charAt(0).toUpperCase() + v.slice(1)}\`)`
+
+5. **Line 533**: Replace `isAr ? "موعد جديد" : "New Appointment"` → `{t("team.appointments.newAppointment")}`
+
+6. **Line 557**: `· Today` → `{t("team.appointments.todayPill")}`
+
+7. **Line 581**: `"Drop to schedule here"` → `{t("team.appointments.dropSchedule")}`
+
+8. **Line 657**: `"Drop here"` → `{t("team.appointments.dropHere")}`
+
+9. **Line 677**: Day abbrev array `["Sun","Mon",...]` → `[t("...Sun"), t("...Mon"), ...]`
+
+10. **Line 728**: `+{n} more` → `{t("team.appointments.moreCount", { n: dayAppts.length - 3 })}`
+
+11. **Modal labels/placeholders** (lines 756–909): replace all 13 hardcoded strings with `t()` calls
+
+12. **Detail modal** (lines 956–997): replace 4 button labels + "Notes" with `t()` calls
+
+13. **Reschedule confirm** (lines 1014–1036): replace 5 strings with `t()` calls; update Reschedule confirm `dir` from always `"ltr"` → `dir={isAr ? 'rtl' : 'ltr'}` since it now has Arabic content
+
+14. **Delete confirm** (lines 1050–1065): replace 4 strings with `t()` calls; same dir fix
+
+15. **Toast messages** (lines 230, 268, 310–326, 346, 378, 397): replace 9 hardcoded English strings with `t()` calls
+
+---
+
+### Files to Change
+
+| File | Change |
+|------|--------|
+| `public/locales/en/dashboard.json` | Extend `team.appointments` block with ~40 new keys |
+| `public/locales/ar/dashboard.json` | Add same 40 keys in Arabic |
+| `src/pages/team/TeamAppointmentsPage.tsx` | Replace all hardcoded strings with `t()` calls |
