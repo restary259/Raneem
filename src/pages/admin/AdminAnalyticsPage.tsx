@@ -59,16 +59,23 @@ const AdminAnalyticsPage = () => {
     count: cases.filter(c => c.source === s).length,
   })).filter(s => s.count > 0);
 
-  // Avg days per stage
+  // Avg days in current stage (time since last_activity_at as proxy for stage entry)
   const avgDays = STATUSES.slice(0, 7).map(s => {
     const group = cases.filter(c => c.status === s);
-    if (group.length === 0) return { name: statusLabels[s], avg: 0 };
-    const avg = group.reduce((sum, c) => {
-      const diff = (new Date(c.last_activity_at).getTime() - new Date(c.created_at).getTime()) / 86400000;
-      return sum + Math.max(0, diff);
+    if (group.length === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
+    const avgMs = group.reduce((sum, c) => {
+      const base = new Date(c.last_activity_at).getTime();
+      return sum + Math.max(0, Date.now() - base);
     }, 0) / group.length;
-    return { name: statusLabels[s], avg: Math.round(avg) };
+    const days = avgMs / 86400000;
+    return {
+      name: statusLabels[s],
+      avg: Math.round(days * 10) / 10,
+      hours: Math.round(avgMs / 3600000),
+    };
   });
+
+  const allZero = avgDays.every(d => d.avg === 0);
 
   const yAxisWidth = isRtl ? 130 : 110;
 
