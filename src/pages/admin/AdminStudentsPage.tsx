@@ -842,7 +842,7 @@ export default function AdminStudentsPage() {
                 {/* Admin Actions */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? "إجراءات الأدمن" : "Admin Actions"}
+                    {t("admin.students.adminActions")}
                   </p>
                   <div className="flex flex-col gap-2">
                     <Button
@@ -852,7 +852,7 @@ export default function AdminStudentsPage() {
                       onClick={() => setShowResetDialog(true)}
                     >
                       <KeyRound className="h-4 w-4" />
-                      {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
+                      {t("admin.students.resetPassword")}
                     </Button>
                     <Button
                       variant="outline"
@@ -864,7 +864,7 @@ export default function AdminStudentsPage() {
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
-                      {isRtl ? "حذف انتقائي" : "Selective Delete"}
+                      {t("admin.students.selectiveDelete")}
                     </Button>
                   </div>
                 </div>
@@ -874,11 +874,11 @@ export default function AdminStudentsPage() {
                 {/* Document Upload */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? "رفع مستند جديد" : "Upload New Document"}
+                    {t("admin.students.uploadNewDocument")}
                   </p>
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs">{isRtl ? "نوع المستند" : "Category"}</Label>
+                      <Label className="text-xs">{t("admin.students.docCategory")}</Label>
                       <select
                         value={uploadCategory}
                         onChange={(e) => setUploadCategory(e.target.value)}
@@ -893,11 +893,11 @@ export default function AdminStudentsPage() {
                     </div>
                     {uploadCategory === "other" && (
                       <div>
-                        <Label className="text-xs">{isRtl ? "اسم المستند" : "Document Name"}</Label>
+                        <Label className="text-xs">{t("admin.students.docName")}</Label>
                         <Input
                           value={customDocName}
                           onChange={(e) => setCustomDocName(e.target.value)}
-                          placeholder={isRtl ? "مثال: شهادة الميلاد" : "e.g., Birth Certificate"}
+                          placeholder={t("admin.students.docNamePlaceholder")}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
@@ -919,13 +919,7 @@ export default function AdminStudentsPage() {
                         onClick={() => fileInputRef.current?.click()}
                       >
                         {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploading
-                          ? isRtl
-                            ? "جار الرفع..."
-                            : "Uploading..."
-                          : isRtl
-                            ? "اختر ملف للرفع"
-                            : "Choose file to upload"}
+                        {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
                       </Button>
                     </div>
                   </div>
@@ -938,7 +932,7 @@ export default function AdminStudentsPage() {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {isRtl ? "بيانات الفيزا" : "Visa Information"}
+                        {t("admin.students.visaInfo")}
                       </p>
                       {!editingVisa ? (
                         <Button
@@ -950,7 +944,7 @@ export default function AdminStudentsPage() {
                             setEditingVisa(true);
                           }}
                         >
-                          <Edit3 className="h-3 w-3" /> {isRtl ? "تعديل" : "Edit"}
+                          <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
                         </Button>
                       ) : (
                         <div className="flex gap-2">
@@ -961,7 +955,7 @@ export default function AdminStudentsPage() {
                             onClick={() => setEditingVisa(false)}
                             disabled={savingVisa}
                           >
-                            <X className="h-3 w-3" /> {isRtl ? "إلغاء" : "Cancel"}
+                            <X className="h-3 w-3" /> {t("admin.students.cancel")}
                           </Button>
                           <Button
                             size="sm"
@@ -970,7 +964,7 @@ export default function AdminStudentsPage() {
                             disabled={savingVisa}
                           >
                             {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                            {isRtl ? "حفظ" : "Save"}
+                            {t("admin.students.save")}
                           </Button>
                         </div>
                       )}
