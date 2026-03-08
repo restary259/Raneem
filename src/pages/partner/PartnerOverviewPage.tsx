@@ -159,7 +159,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className="text-4xl font-black text-primary">₪{(paid * commissionRate).toLocaleString()}</p>
+        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">₪{(paid * commissionRate).toLocaleString()}</p>
       </div>
 
       {/* KPI Cards */}
@@ -183,7 +183,7 @@ export default function PartnerOverviewPage() {
           <div className="flex items-center gap-2">
             <FileCheck className="h-4 w-4 text-primary" />
             <CardTitle className="text-base">{t("partner.caseList")}</CardTitle>
-            <Badge variant="secondary" className="ml-auto text-xs">
+            <Badge variant="secondary" className="ms-auto text-xs">
               {total}
             </Badge>
           </div>

@@ -109,7 +109,7 @@ const AdminTeamPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('admin.team.title', 'Team Members')}</h1>
         <div className="flex gap-2">
@@ -123,7 +123,7 @@ const AdminTeamPage = () => {
                 {t('admin.team.createMember', 'Create Member')}
               </Button>
             </DialogTrigger>
-            <DialogContent dir={isRtl ? 'rtl' : 'ltr'}>
+            <DialogContent dir={isRtl ? 'rtl' : 'ltr'} className="max-w-[95vw] sm:max-w-lg w-full">
               <DialogHeader>
                 <DialogTitle>{t('admin.team.createMember', 'Create Team Member')}</DialogTitle>
               </DialogHeader>
