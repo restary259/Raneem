@@ -302,12 +302,25 @@ const AdminSettingsPage = () => {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetPassword });
       if (authErr) throw new Error(t('admin.settings.incorrectPassword', 'Incorrect password'));
 
+      // Tables come out in the correct child-first order defined in RESET_CATEGORIES.
       const selectedTables = RESET_CATEGORIES
         .filter(c => resetCategories.includes(c.id))
         .flatMap(c => c.tables);
 
+      const errors: string[] = [];
       for (const table of selectedTables) {
-        await (supabase as any).from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        const { error: delErr } = await (supabase as any)
+          .from(table)
+          .delete()
+          .neq("id", "00000000-0000-0000-0000-000000000000");
+        if (delErr) {
+          console.error(`Failed to delete from ${table}:`, delErr);
+          errors.push(table);
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new Error(`Failed to delete from: ${errors.join(", ")}`);
       }
 
       await supabase.rpc("log_user_activity" as any, {
@@ -318,7 +331,7 @@ const AdminSettingsPage = () => {
 
       toast({
         title: t('admin.settings.purgeSuccess', '✅ Data deleted'),
-        description: t('admin.settings.finalConfirmDesc', '{{count}} records will be permanently deleted.', { count: selectedTables.length }),
+        description: `${selectedTables.join(", ")} cleared successfully.`,
       });
       setShowFinalConfirm(false);
       setResetPassword("");
