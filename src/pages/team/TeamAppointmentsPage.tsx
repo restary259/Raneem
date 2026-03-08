@@ -935,7 +935,7 @@ export default function TeamAppointmentsPage() {
                             s.badge,
                           )}
                         >
-                          {s.icon} {s.label}
+                          {s.icon} {t(s.labelKey)}
                         </span>
                       </div>
                     </div>
