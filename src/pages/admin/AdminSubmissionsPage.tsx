@@ -13,6 +13,7 @@ import { RefreshCw, CheckCircle2, ChevronRight, Download, FileText, User, Lock, 
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { CopyButton } from "@/components/common/CopyButton";
 
 interface SubmittedCase {
   id: string;
@@ -322,23 +323,38 @@ const AdminSubmissionsPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
-                    <p className="font-medium">{selected.phone_number}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.phone_number}</p>
+                      <CopyButton value={selected.phone_number} />
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
-                    <p className="font-medium">{selected.city || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.city || "–"}</p>
+                      {selected.city && <CopyButton value={selected.city} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
-                    <p className="font-medium">{selected.education_level || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.education_level || "–"}</p>
+                      {selected.education_level && <CopyButton value={selected.education_level} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
-                    <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
+                      {selected.passport_type && <CopyButton value={selected.passport_type.replace(/_/g, " ")} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
-                    <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
+                      {selected.submission?.submitted_at && <CopyButton value={fmt(selected.submission.submitted_at)} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.payment")}:</span>
@@ -367,18 +383,27 @@ const AdminSubmissionsPage = () => {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}:</span>
-                    <p className="font-medium">{(selected.submission?.service_fee || 0).toLocaleString('en-US')} ILS</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{(selected.submission?.service_fee || 0).toLocaleString('en-US')} ILS</p>
+                      <CopyButton value={String(selected.submission?.service_fee || 0)} />
+                    </div>
                   </div>
                   {selected.submission?.program_start_date && (
                     <div>
                       <span className="text-muted-foreground">{t("admin.submissions.startDate")}:</span>
-                      <p className="font-medium">{fmt(selected.submission.program_start_date)}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-medium">{fmt(selected.submission.program_start_date)}</p>
+                        <CopyButton value={fmt(selected.submission.program_start_date)} />
+                      </div>
                     </div>
                   )}
                   {selected.submission?.program_end_date && (
                     <div>
                       <span className="text-muted-foreground">{t("admin.submissions.endDate")}:</span>
-                      <p className="font-medium">{fmt(selected.submission.program_end_date)}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-medium">{fmt(selected.submission.program_end_date)}</p>
+                        <CopyButton value={fmt(selected.submission.program_end_date)} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -430,11 +455,14 @@ const AdminSubmissionsPage = () => {
                       {Object.entries(selected.submission.extra_data).map(([key, val]) => {
                         if (!val || val === "") return null;
                         if (key === "program_id" || key === "accommodation_id") return null;
-                        const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                        const fieldLabel = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
                         return (
                           <div key={key}>
-                            <span className="text-muted-foreground">{label}:</span>
-                            <p className="font-medium">{String(val)}</p>
+                            <span className="text-muted-foreground">{fieldLabel}:</span>
+                            <div className="flex items-center gap-1">
+                              <p className="font-medium">{String(val)}</p>
+                              <CopyButton value={String(val)} />
+                            </div>
                           </div>
                         );
                       })}
@@ -480,8 +508,9 @@ const AdminSubmissionsPage = () => {
                   variant="outline"
                   className="w-full gap-2"
                   onClick={() => {
+                    const caseId = selected.id;
                     setSelected(null);
-                    navigate(`/team/cases/${selected.id}`);
+                    navigate(`/admin/pipeline?case=${caseId}`);
                   }}
                 >
                   <ExternalLink className="h-4 w-4" />

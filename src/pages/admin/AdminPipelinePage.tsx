@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
@@ -218,6 +219,8 @@ const AdminPipelinePage = () => {
   const { toast } = useToast();
   const isRtl = i18n.language === "ar";
 
+  const [searchParams] = useSearchParams();
+
   const [cases, setCases] = useState<Case[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,6 +270,15 @@ const AdminPipelinePage = () => {
     fetchData();
   }, [fetchData]);
   useRealtimeSubscription("cases", fetchData, true);
+
+  /* ── auto-open case from URL ?case=<id> ── */
+  useEffect(() => {
+    const caseId = searchParams.get("case");
+    if (!caseId || cases.length === 0 || selectedCase) return;
+    const target = cases.find((c) => c.id === caseId);
+    if (target) openCase(target);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cases, searchParams]);
 
   /* ── assign ── */
   const assignCase = async (caseId: string, userId: string | null) => {
