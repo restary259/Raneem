@@ -393,8 +393,8 @@ export default function ProfileCompletionForm({
         case_id: caseId,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: courseStart ? format(courseStart, "yyyy-MM-dd") : null,
-        program_end_date: courseEnd ? format(courseEnd, "yyyy-MM-dd") : null,
+        program_start_date: courseStart || null,
+        program_end_date: courseEnd || null,
         service_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
@@ -757,7 +757,7 @@ export default function ProfileCompletionForm({
             {(
               [
                 ["Full Name", fullName || "—"],
-                ["Date of Birth", dob ? format(dob, "PP") : "—"],
+                ["Date of Birth", dob || "—"],
                 ["Gender", gender || "—"],
                 ["City of Birth", cityOfBirth || "—"],
                 ["Email", email || "—"],
@@ -766,9 +766,9 @@ export default function ProfileCompletionForm({
                 ["Address", [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
                 ["Program", selectedProgram?.name_en || "—"],
                 ["School", schools.find((s) => s.id === schoolId)?.name_en || "—"],
-                ["Course Start", courseStart ? format(courseStart, "PP") : "—"],
-                ["Course End", courseEnd ? format(courseEnd, "PP") : "—"],
-                ["Arrival Date", arrivalDate ? format(arrivalDate, "PP") : "—"],
+                ["Course Start", courseStart || "—"],
+                ["Course End", courseEnd || "—"],
+                ["Arrival Date", arrivalDate || "—"],
                 ["Accommodation", selectedAccom?.name_en || "—"],
                 ["Insurance", selectedIns?.name || "—"],
               ] as [string, string][]
