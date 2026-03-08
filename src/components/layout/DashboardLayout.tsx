@@ -157,8 +157,24 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
-...
-          <div className="flex items-center gap-2">
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  return (
+    <SidebarProvider>
+      <div className={cn("flex h-screen w-full overflow-hidden bg-background", isRtl && "dir-rtl")}>
+        <Sidebar side={isRtl ? "right" : "left"} collapsible="icon">
+          <SidebarNav role={role} />
+        </Sidebar>
+
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          {/* Top header */}
+          <header className="h-14 border-b border-border/50 flex items-center justify-between px-4 shrink-0 bg-background/95 backdrop-blur">
+            <SidebarTrigger />
+            <div className="flex items-center gap-2">
               <LanguageSwitcher />
               {user && <NotificationBell />}
               <TooltipProvider>
