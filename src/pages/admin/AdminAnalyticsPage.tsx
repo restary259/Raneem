@@ -179,28 +179,40 @@ const AdminAnalyticsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Avg days per stage */}
+        {/* Avg days in current stage */}
         <Card className="md:col-span-2">
           <CardHeader><CardTitle className="text-base">{t('admin.analytics.avgDaysPerStage')}</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={avgDays} margin={{ top: 4, bottom: 50, left: 0, right: 0 }}>
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
-                  angle={-35}
-                  textAnchor="middle"
-                  height={80}
-                  interval={0}
-                />
-                <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
-                <Tooltip
-                  formatter={(v) => [`${v} ${t('admin.analytics.tooltipDays')}`, '']}
-                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                />
-                <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} minPointSize={4} />
-              </BarChart>
-            </ResponsiveContainer>
+            {allZero ? (
+              <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                <Clock className="h-8 w-8 opacity-30" />
+                <p className="text-sm">{t('admin.analytics.noStageData', 'Not enough time has passed to calculate stage durations')}</p>
+                <p className="text-xs opacity-70">{t('admin.analytics.noStageDataSub', 'This chart populates as cases progress through the pipeline over days')}</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={avgDays} margin={{ top: 4, bottom: 50, left: 0, right: 0 }}>
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
+                    angle={-35}
+                    textAnchor="middle"
+                    height={80}
+                    interval={0}
+                  />
+                  <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
+                  <Tooltip
+                    formatter={(v: any, _: any, props: any) => {
+                      const hours = props?.payload?.hours;
+                      if ((v as number) < 1 && hours) return [`${hours}h`, ''];
+                      return [`${v} ${t('admin.analytics.tooltipDays')}`, ''];
+                    }}
+                    contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                  />
+                  <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} minPointSize={4} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
