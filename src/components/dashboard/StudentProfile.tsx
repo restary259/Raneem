@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Save, X, User, Trash2 } from "lucide-react";
+import { Edit, Save, X, User, Trash2, Lock } from "lucide-react";
 import { Profile } from "@/types/profile";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -239,6 +239,39 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                     onChange={set("intake_month")}
                     disabled={!isEditing}
                   />
+                </Field>
+              </div>
+            </div>
+
+            {/* Identity Information — read-only (filled by agency) */}
+            <div className="mt-6 pt-4 border-t space-y-4">
+              <div className="flex items-center gap-2">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t("profile.identityInfo", "Identity Information")}
+                </h3>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-1">
+                {t("profile.identityInfoNote", "These fields are managed by the agency. Contact us to update them.")}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Field label={t("profile.nationality", "Nationality")}>
+                  <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-input bg-muted text-sm text-muted-foreground cursor-not-allowed">
+                    <Lock className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{(profile as any).nationality || "—"}</span>
+                  </div>
+                </Field>
+                <Field label={t("profile.passportNumber", "Passport Number")}>
+                  <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-input bg-muted text-sm text-muted-foreground cursor-not-allowed">
+                    <Lock className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{(profile as any).passport_number || "—"}</span>
+                  </div>
+                </Field>
+                <Field label={t("profile.eyeColor", "Eye Color")}>
+                  <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-input bg-muted text-sm text-muted-foreground cursor-not-allowed">
+                    <Lock className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{profile.eye_color || "—"}</span>
+                  </div>
                 </Field>
               </div>
             </div>
