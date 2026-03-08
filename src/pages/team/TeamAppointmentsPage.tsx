@@ -74,13 +74,14 @@ const HOURS = Array.from({ length: WORK_END - WORK_START }, (_, i) => i + WORK_S
 type CalendarView = "day" | "week" | "month";
 
 /* ── Status helpers ─────────────────────────────────────────────────── */
+// Returns a labelKey (i18n key) rather than a raw string so callers can use t(s.labelKey)
 const apptStyle = (outcome: string | null) => {
   if (!outcome)
     return {
       bg: "bg-violet-50 border-violet-200 text-violet-900",
       dot: "bg-violet-500",
       badge: "bg-violet-100 text-violet-700",
-      label: "Upcoming",
+      labelKey: "team.appointments.statusUpcoming",
       icon: <Clock className="h-2.5 w-2.5" />,
     };
   if (outcome === "completed")
@@ -88,7 +89,7 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-emerald-50 border-emerald-200 text-emerald-900",
       dot: "bg-emerald-500",
       badge: "bg-emerald-100 text-emerald-700",
-      label: "Completed",
+      labelKey: "team.appointments.statusCompleted",
       icon: <CheckCircle2 className="h-2.5 w-2.5" />,
     };
   if (outcome === "no_show")
@@ -96,7 +97,7 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-rose-50 border-rose-200 text-rose-900",
       dot: "bg-rose-500",
       badge: "bg-rose-100 text-rose-700",
-      label: "No Show",
+      labelKey: "team.appointments.statusNoShow",
       icon: <AlertCircle className="h-2.5 w-2.5" />,
     };
   if (outcome === "rescheduled" || outcome === "delayed")
@@ -104,14 +105,14 @@ const apptStyle = (outcome: string | null) => {
       bg: "bg-amber-50 border-amber-200 text-amber-900",
       dot: "bg-amber-500",
       badge: "bg-amber-100 text-amber-700",
-      label: "Rescheduled",
+      labelKey: "team.appointments.statusRescheduled",
       icon: <RefreshCw className="h-2.5 w-2.5" />,
     };
   return {
     bg: "bg-slate-50  border-slate-200  text-slate-800",
     dot: "bg-slate-400",
     badge: "bg-slate-100 text-slate-600",
-    label: outcome,
+    labelKey: outcome,
     icon: <CalendarIcon className="h-2.5 w-2.5" />,
   };
 };
@@ -123,7 +124,7 @@ export default function TeamAppointmentsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { i18n, t } = useTranslation("dashboard");
   const isAr = i18n.language === "ar";
 
   /* ── Data ── */
@@ -227,7 +228,7 @@ export default function TeamAppointmentsPage() {
 
     // Working hours safeguard
     if (hour < WORK_START || hour >= WORK_END) {
-      toast({ variant: "destructive", description: "Appointments can only be scheduled between 8 am and 8 pm." });
+      toast({ variant: "destructive", description: t("team.appointments.errDropWorkHours") });
       setDraggingId(null);
       setDragOverSlot(null);
       return;
@@ -265,7 +266,7 @@ export default function TeamAppointmentsPage() {
         .update({ scheduled_at: pendingMove.newDate.toISOString() })
         .eq("id", pendingMove.appt.id);
       if (error) throw error;
-      toast({ title: "Rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      toast({ title: t("team.appointments.toastRescheduled"), description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
       setPendingMove(null);
       fetchAppts();
     } catch (err: any) {
@@ -307,22 +308,22 @@ export default function TeamAppointmentsPage() {
   /* ══ SAVE ════════════════════════════════════════════════════════════ */
   const handleSave = async () => {
     if (!newDate) {
-      toast({ variant: "destructive", description: "Please select a date" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoDate") });
       return;
     }
     if (!useManualName && !newCaseId) {
-      toast({ variant: "destructive", description: "Please select a case or enter a student name" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoCase") });
       return;
     }
     if (useManualName && !manualName.trim()) {
-      toast({ variant: "destructive", description: "Please enter a student name" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoName") });
       return;
     }
 
     // Working hours validation
     const [hh] = newTime.split(":").map(Number);
     if (hh < WORK_START || hh >= WORK_END) {
-      toast({ variant: "destructive", description: "Appointments must be between 8 am and 8 pm." });
+      toast({ variant: "destructive", description: t("team.appointments.errWorkHours") });
       return;
     }
 
@@ -343,7 +344,7 @@ export default function TeamAppointmentsPage() {
           })
           .eq("id", editingAppt.id);
         if (error) throw error;
-        toast({ title: "Appointment updated" });
+        toast({ title: t("team.appointments.toastUpdated") });
       } else {
         let caseId = newCaseId;
         if (useManualName && manualName.trim()) {
@@ -375,7 +376,7 @@ export default function TeamAppointmentsPage() {
             .eq("id", caseId)
             .eq("status", "contacted");
         }
-        toast({ title: "Appointment created" });
+        toast({ title: t("team.appointments.toastCreated") });
       }
       setShowModal(false);
       setEditingAppt(null);
@@ -394,7 +395,7 @@ export default function TeamAppointmentsPage() {
     try {
       const { error } = await supabase.from("appointments").delete().eq("id", deletingAppt.id);
       if (error) throw error;
-      toast({ title: "Appointment deleted" });
+      toast({ title: t("team.appointments.toastDeleted") });
       setDeletingAppt(null);
       setSelectedAppt(null);
       fetchAppts();
@@ -508,7 +509,7 @@ export default function TeamAppointmentsPage() {
             className="text-xs h-7 px-3 rounded-full"
             onClick={() => setCurrentDate(new Date())}
           >
-            Today
+            {t("team.appointments.navToday")}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -524,13 +525,13 @@ export default function TeamAppointmentsPage() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {v}
+                {v === "day" ? t("team.appointments.viewDay") : v === "week" ? t("team.appointments.viewWeek") : t("team.appointments.viewMonth")}
               </button>
             ))}
           </div>
           <Button size="sm" className="gap-1.5 rounded-full px-4 h-8 shadow-sm" onClick={() => openNew()}>
             <Plus className="h-3.5 w-3.5" />
-            {isAr ? "موعد جديد" : "New Appointment"}
+            {t("team.appointments.newAppointment")}
           </Button>
         </div>
       </div>
@@ -554,7 +555,7 @@ export default function TeamAppointmentsPage() {
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {format(currentDate, "EEEE, MMMM d")}
-                {isToday(currentDate) && <span className="text-xs opacity-80">· Today</span>}
+                {isToday(currentDate) && <span className="text-xs opacity-80">{t("team.appointments.todayPill")}</span>}
               </div>
             </div>
             {HOURS.map((hour) => {
@@ -578,7 +579,7 @@ export default function TeamAppointmentsPage() {
                   </div>
                   <div className="p-1.5 cursor-pointer">
                     {isOver && (
-                      <div className="text-[10px] text-violet-600 font-medium mb-1">Drop to schedule here</div>
+                      <div className="text-[10px] text-violet-600 font-medium mb-1">{t("team.appointments.dropSchedule")}</div>
                     )}
                     {slotAppts.map((a) => (
                       <ApptBlock key={a.id} appt={a} />
@@ -654,7 +655,7 @@ export default function TeamAppointmentsPage() {
                       {isOver && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                           <div className="text-[9px] text-violet-600 font-semibold bg-violet-50 border border-violet-200 rounded-md px-1.5 py-0.5">
-                            Drop here
+                            {t("team.appointments.dropHere")}
                           </div>
                         </div>
                       )}
@@ -674,7 +675,15 @@ export default function TeamAppointmentsPage() {
       {!loading && view === "month" && (
         <div className="flex-1 overflow-auto p-3">
           <div className="grid grid-cols-7 mb-1">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            {[
+              t("team.appointments.dayAbbrevSun"),
+              t("team.appointments.dayAbbrevMon"),
+              t("team.appointments.dayAbbrevTue"),
+              t("team.appointments.dayAbbrevWed"),
+              t("team.appointments.dayAbbrevThu"),
+              t("team.appointments.dayAbbrevFri"),
+              t("team.appointments.dayAbbrevSat"),
+            ].map((d) => (
               <div
                 key={d}
                 className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-wide py-1"
@@ -725,7 +734,7 @@ export default function TeamAppointmentsPage() {
                       ))}
                       {dayAppts.length > 3 && (
                         <p className="text-[9px] text-muted-foreground text-center font-medium mt-0.5">
-                          +{dayAppts.length - 3} more
+                          {t("team.appointments.moreCount", { n: dayAppts.length - 3 })}
                         </p>
                       )}
                     </div>
@@ -753,19 +762,19 @@ export default function TeamAppointmentsPage() {
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <CalendarIcon className="h-3.5 w-3.5 text-primary" />
               </span>
-              {editingAppt ? "Edit Appointment" : "New Appointment"}
+              {editingAppt ? t("team.appointments.editTitle") : t("team.appointments.newTitle")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-1">
             {/* Student */}
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Student</Label>
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelStudent")}</Label>
               {!useManualName ? (
                 <div className="flex gap-2">
                   <Select value={newCaseId} onValueChange={setNewCaseId}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select existing case…" />
+                      <SelectValue placeholder={t("team.appointments.placeholderCase")} />
                     </SelectTrigger>
                     <SelectContent>
                       {myCases.map((c) => (
@@ -788,14 +797,14 @@ export default function TeamAppointmentsPage() {
                       setNewCaseId("");
                     }}
                   >
-                    <User className="h-3 w-3" /> Manual
+                    <User className="h-3 w-3" /> {t("team.appointments.manualBtn")}
                   </Button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <Input
                     className="flex-1"
-                    placeholder="Enter student name…"
+                    placeholder={t("team.appointments.placeholderManualName")}
                     value={manualName}
                     onChange={(e) => setManualName(e.target.value)}
                     autoFocus
@@ -810,7 +819,7 @@ export default function TeamAppointmentsPage() {
             {/* Date & Time */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Date</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelDate")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -818,7 +827,7 @@ export default function TeamAppointmentsPage() {
                       className={cn("w-full justify-start font-normal", !newDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="me-2 h-4 w-4" />
-                      {newDate ? format(newDate, "MMM d, yyyy") : "Pick date"}
+                      {newDate ? format(newDate, "MMM d, yyyy") : t("team.appointments.placeholderDate")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -834,7 +843,7 @@ export default function TeamAppointmentsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Time <span className="text-muted-foreground/60 normal-case font-normal">(8 am – 8 pm)</span>
+                  {t("team.appointments.labelTime")} <span className="text-muted-foreground/60 normal-case font-normal">{t("team.appointments.labelTimeRange")}</span>
                 </Label>
                 <Input
                   type="time"
@@ -849,7 +858,7 @@ export default function TeamAppointmentsPage() {
             {/* Duration */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Duration
+                {t("team.appointments.labelDuration")}
               </Label>
               <div className="flex gap-1.5">
                 {[
@@ -879,12 +888,12 @@ export default function TeamAppointmentsPage() {
             {/* Notes */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                <FileText className="h-3 w-3" /> Notes
+                <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
               </Label>
               <Textarea
                 value={newNotes}
                 onChange={(e) => setNewNotes(e.target.value)}
-                placeholder="What was discussed, action items, follow-ups…"
+                placeholder={t("team.appointments.placeholderNotes")}
                 rows={3}
                 className="resize-none text-sm"
               />
@@ -900,11 +909,11 @@ export default function TeamAppointmentsPage() {
                 setEditingAppt(null);
               }}
             >
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving} type="button">
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              {editingAppt ? "Save Changes" : "Create Appointment"}
+              {editingAppt ? t("team.appointments.btnSaveChanges") : t("team.appointments.btnCreate")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -934,7 +943,7 @@ export default function TeamAppointmentsPage() {
                             s.badge,
                           )}
                         >
-                          {s.icon} {s.label}
+                          {s.icon} {t(s.labelKey)}
                         </span>
                       </div>
                     </div>
@@ -953,7 +962,7 @@ export default function TeamAppointmentsPage() {
                     {selectedAppt.notes && (
                       <div className="bg-muted/40 rounded-lg p-3 border border-border/40">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
-                          <FileText className="h-3 w-3" /> Notes
+                          <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
                         </p>
                         <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
                       </div>
@@ -967,7 +976,7 @@ export default function TeamAppointmentsPage() {
                         className="flex-1 gap-1.5"
                         onClick={() => openEdit(selectedAppt)}
                       >
-                        <Pencil className="h-3.5 w-3.5" /> Edit
+                        <Pencil className="h-3.5 w-3.5" /> {t("team.appointments.btnEdit")}
                       </Button>
                       <Button
                         variant="outline"
@@ -978,11 +987,11 @@ export default function TeamAppointmentsPage() {
                           setSelectedAppt(null);
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                        <Trash2 className="h-3.5 w-3.5" /> {t("team.appointments.btnDelete")}
                       </Button>
                     </div>
                     <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
-                      View Case
+                      {t("team.appointments.btnViewCase")}
                     </Button>
                     {!selectedAppt.outcome && new Date(selectedAppt.scheduled_at) < new Date() && (
                       <Button
@@ -992,7 +1001,7 @@ export default function TeamAppointmentsPage() {
                           setSelectedAppt(null);
                         }}
                       >
-                        Record Outcome
+                        {t("team.appointments.btnRecordOutcome")}
                       </Button>
                     )}
                   </DialogFooter>
@@ -1009,30 +1018,30 @@ export default function TeamAppointmentsPage() {
           if (!v) setPendingMove(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir="ltr">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>Reschedule Appointment?</DialogTitle>
+            <DialogTitle>{t("team.appointments.rescheduleTitle")}</DialogTitle>
           </DialogHeader>
           {pendingMove && (
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                Move <strong>{(pendingMove.appt.case as any)?.full_name}</strong> to:
+                {t("team.appointments.rescheduleMoveText", { name: (pendingMove.appt.case as any)?.full_name })}
               </p>
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 font-semibold text-center text-base">
                 {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Previously: {format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a")}
+                {t("team.appointments.rescheduleOldDate", { date: format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a") })}
               </p>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingMove(null)}>
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={confirmMove} disabled={confirmingMove}>
               {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              Confirm Reschedule
+              {t("team.appointments.btnConfirmReschedule")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1045,23 +1054,25 @@ export default function TeamAppointmentsPage() {
           if (!v) setDeletingAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir="ltr">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>Delete Appointment?</DialogTitle>
+            <DialogTitle>{t("team.appointments.deleteTitle")}</DialogTitle>
           </DialogHeader>
           {deletingAppt && (
             <p className="text-sm text-muted-foreground">
-              Remove the appointment with <strong>{(deletingAppt.case as any)?.full_name}</strong> on{" "}
-              {format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a")}? This cannot be undone.
+              {t("team.appointments.deleteBody", {
+                name: (deletingAppt.case as any)?.full_name,
+                date: format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a"),
+              })}
             </p>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingAppt(null)}>
-              Cancel
+              {t("team.appointments.btnCancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
               {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              Delete
+              {t("team.appointments.btnConfirmDelete")}
             </Button>
           </DialogFooter>
         </DialogContent>
