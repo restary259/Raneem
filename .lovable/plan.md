@@ -1,119 +1,91 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Commission Settings UI Overhaul
 
-### What was found (full audit)
+### What the user wants
+Remove the **Global Rates** card entirely. The UI should be **per-account only**:
+- Select a partner → set their commission amount + choose their **case visibility** (All Cases / Apply+Contact auto-generated only / Referral cases only)
+- Select a team member → set their commission amount
+- No global fallback rates shown in the UI (the DB defaults remain as a backend safety net)
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+### Current state
+`CommissionSettingsPanel.tsx` has:
+1. **Global Commission Rates** card (partner_commission_rate + team_member_commission_rate inputs) → **REMOVE**
+2. **Partner Dashboard Visibility** global switch → **REMOVE** (replaced by per-account setting)
+3. **Save Global Settings** button → **REMOVE**
+4. **Per-Partner Overrides** card — keep + enhance with new 3-option visibility selector
+5. **Per-Team-Member Overrides** card — keep as-is
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+### New visibility options for partners (3 choices, not 2)
+Currently the `partner_commission_overrides.show_all_cases` is a nullable boolean:
+- `null` = global default
+- `true` = all cases
+- `false` = apply/contact only
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+User wants **3 explicit options**:
+1. **All Cases** — sees everything
+2. **Apply / Contact page only** — only auto-generated leads from apply/contact forms
+3. **Referral cases only** — only cases that came from referrals
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+Since the DB has a boolean `show_all_cases` column (null/true/false), we can re-map:
+- `true` → All Cases
+- `false` → Apply + Contact auto-generated
+- `null` → Referral cases only (new semantic for null)
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+BUT — a cleaner approach that doesn't change DB schema: use `null` as "Apply+Contact only" (existing behavior) and add a separate `show_referral_only` concept... however since we can't add a column without migration, we should reuse the existing 3-state nullable boolean and just **relabel** the options clearly in the UI. The semantic mapping becomes:
+- `true` → "All cases"
+- `false` → "Apply / Contact form cases only"  
+- `null` → "Referral cases only"
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+This requires NO schema change.
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+### Files to change — 1 file
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
+**`src/components/admin/CommissionSettingsPanel.tsx`** — full rewrite of the return JSX:
 
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+#### Remove:
+- `saveGlobalSettings` function (keep it in state to not break anything, but remove the UI)
+- The Global Rates `<Card>` (lines 197–275)
+- The Partner Dashboard Visibility `<Card>` (lines 277–299)
+- The global Save button (lines 301–305)
 
----
+#### Keep + Improve:
+- `fetchData`, all state, `addPartnerOverride`, `addTeamOverride`, `deletePartnerOverride`, `deleteTeamOverride`
+- Per-partner overrides card — update the 3 visibility pills:
+  - Option 1: value=`"true"` → label "All Cases" → desc "Sees all cases in the system"
+  - Option 2: value=`"false"` → label "Apply / Contact Only" → desc "Only auto-generated leads from Apply and Contact pages"
+  - Option 3: value=`"null"` → label "Referral Cases Only" → desc "Only cases that came through referral links"
+- Update the badge display on existing overrides to match the 3 new labels
+- Per-team-member overrides card — no changes needed
 
-### Files to change (batched)
+#### New layout structure:
+```text
+[Page]
+  ├─ Section: Partner Commission
+  │    ├─ Existing override rows (partner name | ₪amount | visibility badge | delete)
+  │    └─ Add/Update form:
+  │         ├─ Select Partner dropdown
+  │         ├─ ₪ Amount input
+  │         ├─ Notes input  
+  │         └─ Case Visibility: [All Cases] [Apply/Contact Only] [Referral Only]
+  │              └─ Save button
+  │
+  └─ Section: Team Member Commission
+       ├─ Existing override rows (name | ₪amount | delete)
+       └─ Add/Update form:
+            ├─ Select Team Member dropdown
+            ├─ ₪ Amount input
+            ├─ Notes input
+            └─ Save button
+```
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+### No DB changes needed
+The `show_all_cases` nullable boolean in `partner_commission_overrides` supports 3 states (true/false/null) which maps perfectly to the 3 visibility options. No migration required.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
-
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
-
-**B. Numeric safety (7 component files)**
-
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
-
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
-
-**C. SparklineCard overflow fix**
-
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
-
----
-
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### What changes in `CommissionSettingsPanel.tsx`
+1. Delete `saveGlobalSettings` function
+2. Delete `settings` state and `PlatformSettings` interface (no longer needed)
+3. Remove `partner_commission_rate` / `team_member_commission_rate` references
+4. Remove the 3 cards (Global Rates, Partner Dashboard Visibility, Save Global button)
+5. Update the 3 visibility pill labels to: "All Cases" / "Apply / Contact Only" / "Referral Cases Only"
+6. Update the badge display to match the same 3 labels
+7. Add a descriptive header explaining this is per-account configuration
