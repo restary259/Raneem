@@ -401,6 +401,13 @@ export default function AdminStudentsPage() {
       notes: profile.notes || "",
       passport_number: profile.passport_number || "",
       passport_expiry: profile.passport_expiry || "",
+      eye_color: profile.eye_color || "",
+      previous_legal_name: profile.previous_legal_name || "",
+      has_changed_legal_name: profile.has_changed_legal_name ?? false,
+      has_criminal_record: profile.has_criminal_record ?? false,
+      criminal_record_details: profile.criminal_record_details || "",
+      has_dual_citizenship: profile.has_dual_citizenship ?? false,
+      second_passport_country: profile.second_passport_country || "",
     });
 
     setDocs([]);
