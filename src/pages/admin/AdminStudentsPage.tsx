@@ -1172,7 +1172,7 @@ export default function AdminStudentsPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-amber-600" />
+              <KeyRound className="h-5 w-5 text-warning" />
               {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
             </DialogTitle>
           </DialogHeader>
@@ -1213,9 +1213,9 @@ export default function AdminStudentsPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20">
-            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 dark:text-amber-200">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted border border-border">
+            <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
               {isRtl ? "شارك هذه البيانات مع الطالب فورًا. لن تتمكن من رؤيتها مجددًا." : "Share these credentials with the student immediately. They won't be shown again."}
             </p>
           </div>
