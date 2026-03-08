@@ -44,11 +44,18 @@ const ALL_SUBJECT_IDS = SUBJECT_GROUPS.flatMap((g) => g.subjects);
 const initialSubjects: Subject[] = ALL_SUBJECT_IDS.map((id) => ({ id, units: "", grade: "" }));
 
 /* ─── Helper ─────────────────────────────────────────────────────────────── */
-function getGermanLabel(grade: number): { label: string; color: string } {
-  if (grade <= 1.5) return { label: "Sehr Gut", color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-  if (grade <= 2.5) return { label: "Gut", color: "bg-blue-50 text-blue-700 border-blue-300" };
-  if (grade <= 3.5) return { label: "Befriedigend", color: "bg-amber-50 text-amber-700 border-amber-300" };
-  return { label: "Ausreichend", color: "bg-orange-50 text-orange-700 border-orange-300" };
+function getGermanLabel(grade: number): { label: string; arabic: string; color: string } {
+  if (grade <= 1.5) return { label: "Sehr Gut",     arabic: "ممتاز",    color: "bg-emerald-50 text-emerald-700 border-emerald-300" };
+  if (grade <= 2.5) return { label: "Gut",           arabic: "جيد جداً", color: "bg-blue-50 text-blue-700 border-blue-300" };
+  if (grade <= 3.5) return { label: "Befriedigend",  arabic: "جيد",      color: "bg-amber-50 text-amber-700 border-amber-300" };
+  return               { label: "Ausreichend",    arabic: "مقبول",    color: "bg-orange-50 text-orange-700 border-orange-300" };
+}
+
+function getAverageColor(avg: number): string {
+  if (avg >= 80) return "text-emerald-600";
+  if (avg >= 65) return "text-blue-600";
+  if (avg >= 56) return "text-amber-600";
+  return "text-destructive";
 }
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -134,20 +141,18 @@ export default function BagrutConverter() {
         </p>
       </div>
 
-      {/* ── Progress pill ── */}
-      {filledCount > 0 && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${(filledCount / ALL_SUBJECT_IDS.length) * 100}%` }}
-            />
-          </div>
-          <span className="tabular-nums shrink-0">
-            {filledCount}/{ALL_SUBJECT_IDS.length}
-          </span>
+      {/* ── Progress pill ── (always visible) */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-300"
+            style={{ width: `${(filledCount / ALL_SUBJECT_IDS.length) * 100}%` }}
+          />
         </div>
-      )}
+        <span className="tabular-nums shrink-0">
+          {filledCount}/{ALL_SUBJECT_IDS.length} {isAr ? "مادة" : "subjects"}
+        </span>
+      </div>
 
       {/* ── Subject groups ── */}
       <div className="space-y-4">
@@ -169,9 +174,9 @@ export default function BagrutConverter() {
                 return (
                   <div key={subjectId}>
                     <div className="flex items-center gap-3 px-4 py-3">
-                      {/* Label */}
+                      {/* Label — no truncation, allow wrapping */}
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span className="text-sm font-medium text-foreground truncate">
+                        <span className="text-sm font-medium text-foreground leading-tight">
                           {tr(`gpaCalculator.subjects.${subjectId}`)}
                         </span>
                         <Tooltip>
@@ -252,7 +257,9 @@ export default function BagrutConverter() {
             <div className="grid grid-cols-2 gap-4">
               {/* Bagrut average */}
               <div className="bg-background rounded-lg border p-4 text-center">
-                <div className="text-3xl font-bold tabular-nums text-foreground">{results.average}</div>
+                <div className={`text-3xl font-bold tabular-nums ${getAverageColor(results.average)}`}>
+                  {results.average}
+                </div>
                 <div className="text-xs text-muted-foreground mt-1">{isAr ? "معدل البجروت" : "Bagrut Average"}</div>
                 <div className="mt-2">
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -266,10 +273,13 @@ export default function BagrutConverter() {
               <div className="bg-background rounded-lg border p-4 text-center">
                 <div className="text-3xl font-bold tabular-nums text-foreground">{results.germanGrade}</div>
                 <div className="text-xs text-muted-foreground mt-1">{isAr ? "النظام الألماني" : "German Grade"}</div>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-col items-center gap-1">
                   <Badge variant="outline" className={`text-xs ${germanLabel.color}`}>
                     {germanLabel.label}
                   </Badge>
+                  {isAr && (
+                    <span className="text-xs text-muted-foreground">{germanLabel.arabic}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -286,13 +296,31 @@ export default function BagrutConverter() {
 
       {/* ── Actions ── */}
       <div className="flex items-center gap-3 pt-1">
-        <Button onClick={handleCalculate} className="flex-1 sm:flex-none gap-2">
+        <Button
+          onClick={handleCalculate}
+          className="flex-1 sm:flex-none gap-2"
+          disabled={filledCount === 0}
+        >
           <Calculator className="h-4 w-4" />
           {isAr ? "احسب المعدل" : "Calculate"}
         </Button>
-        <Button onClick={handleReset} variant="outline" size="icon" className="shrink-0">
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              size="icon"
+              className="shrink-0"
+              aria-label={isAr ? "إعادة تعيين" : "Reset"}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-xs">{isAr ? "إعادة تعيين" : "Reset"}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
