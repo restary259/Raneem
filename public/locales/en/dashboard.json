@@ -1637,7 +1637,7 @@
       "date": "Date"
     },
     "noCases": "No cases yet",
-    "projMultiplier": "paid cases × ₪{{rate}}",
+    "projMultiplier": "{{paid}} paid cases × ₪{{rate}}",
     "paidOut": "Paid out: ₪{{amount}}",
     "projLabel": "(proj.)",
     "pending": "Pending",
