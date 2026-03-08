@@ -411,6 +411,8 @@ const AdminSettingsPage = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.settings.contactFormRoleAr')}</Label>
                       <Input value={contactForm.role_ar} onChange={(e) => setContactForm((f) => ({ ...f, role_ar: e.target.value }))} />
                     </div>
                     <div className="space-y-1">
