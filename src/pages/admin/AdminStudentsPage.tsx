@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   RefreshCw,
@@ -47,6 +49,8 @@ interface StudentRecord {
   must_change_password: boolean;
   created_by: string | null;
   emergency_contact: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
   arrival_date: string | null;
   gender: string | null;
   date_of_birth: string | null;
@@ -55,10 +59,11 @@ interface StudentRecord {
   university_name: string | null;
   intake_month: string | null;
   notes: string | null;
+  passport_number: string | null;
+  passport_expiry: string | null;
   updated_by_student_at: string | null;
 }
 
-// FIX: Added uploaded_by and uploader_name fields
 interface Document {
   id: string;
   file_name: string;
@@ -94,6 +99,7 @@ const SelectiveDeleteDialog = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [mode, setMode] = useState<"soft" | "hard">("soft");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const CATEGORIES = [
@@ -126,13 +132,10 @@ const SelectiveDeleteDialog = ({
       });
 
       if (resp.error || !resp.data?.success) {
-        throw new Error(resp.data?.error || "Delete failed");
+        throw new Error(resp.data?.error || resp.error?.message || "Delete failed");
       }
 
-      toast({
-        title: t("admin.students.deleted"),
-        description: resp.data.message,
-      });
+      toast({ title: t("admin.students.deleted"), description: resp.data.message });
       onDeleted();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -151,9 +154,7 @@ const SelectiveDeleteDialog = ({
           {CATEGORIES.map((cat) => (
             <div key={cat.id} className="flex items-center gap-3 p-2.5 border rounded-lg hover:bg-muted/30">
               <Checkbox id={cat.id} checked={categories.includes(cat.id)} onCheckedChange={() => toggleCat(cat.id)} />
-              <Label htmlFor={cat.id} className="cursor-pointer text-sm flex-1">
-                {cat.label}
-              </Label>
+              <Label htmlFor={cat.id} className="cursor-pointer text-sm flex-1">{cat.label}</Label>
             </div>
           ))}
         </div>
@@ -166,18 +167,14 @@ const SelectiveDeleteDialog = ({
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setMode("soft")}
-            className={`p-3 rounded-xl border text-sm text-left transition-all ${
-              mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"
-            }`}
+            className={`p-3 rounded-xl border text-sm text-left transition-all ${mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"}`}
           >
             <p className="font-medium">{t("admin.students.softDeleteLabel")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.softDeleteDesc")}</p>
           </button>
           <button
             onClick={() => setMode("hard")}
-            className={`p-3 rounded-xl border text-sm text-left transition-all ${
-              mode === "hard" ? "border-destructive bg-destructive/5 font-medium" : "border-border"
-            }`}
+            className={`p-3 rounded-xl border text-sm text-left transition-all ${mode === "hard" ? "border-destructive bg-destructive/5 font-medium" : "border-border"}`}
           >
             <p className="font-medium text-destructive">{t("admin.students.hardDeleteLabel")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.hardDeleteDesc")}</p>
@@ -191,12 +188,22 @@ const SelectiveDeleteDialog = ({
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <p>{t("admin.students.hardDeleteWarning")}</p>
           </div>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("admin.students.adminPassword")}
-          />
+          <div className="relative">
+            <Input
+              type={showPw ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t("admin.students.adminPassword")}
+              className="pe-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       )}
 
@@ -231,12 +238,10 @@ export default function AdminStudentsPage() {
   const [search, setSearch] = useState("");
   const [creatorNames, setCreatorNames] = useState<CreatorInfo>({});
 
-  // Detail sheet
   const [selected, setSelected] = useState<StudentRecord | null>(null);
   const [docs, setDocs] = useState<Document[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
 
-  // Visa fields
   const [visaFields, setVisaFields] = useState<
     Array<{ id: string; label_en: string; label_ar: string; field_type: string; options_json: any[] | null }>
   >([]);
@@ -246,31 +251,30 @@ export default function AdminStudentsPage() {
   const [visaDraft, setVisaDraft] = useState<Record<string, string>>({});
   const [savingVisa, setSavingVisa] = useState(false);
 
-  // Referral count
   const [referralCount, setReferralCount] = useState(0);
 
-  // Edit mode
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<StudentRecord>>({});
   const [saving, setSaving] = useState(false);
 
-  // Document upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadCategory, setUploadCategory] = useState("other");
   const [customDocName, setCustomDocName] = useState("");
 
-  // Reset password
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetCreds, setResetCreds] = useState<{ email: string; password: string } | null>(null);
   const [showResetPw, setShowResetPw] = useState(false);
   const [copiedReset, setCopiedReset] = useState(false);
 
-  // Selective delete dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
+  const PROFILE_SELECT =
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at";
+
+  // ── FIX 2: Remove over-restrictive filters — show ALL students ──
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
@@ -289,12 +293,9 @@ export default function AdminStudentsPage() {
 
       const { data: profileData, error } = await supabase
         .from("profiles")
-        .select(
-          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
-        )
+        .select(PROFILE_SELECT)
         .in("id", userIds)
-        .not("created_by", "is", null)
-        .is("case_id", null)
+        // Removed .not("created_by","is",null) and .is("case_id",null) — those were hiding valid students
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -308,9 +309,7 @@ export default function AdminStudentsPage() {
           .select("id, full_name, email")
           .in("id", creatorIds);
         const map: CreatorInfo = {};
-        (creatorProfs || []).forEach((p: any) => {
-          map[p.id] = p.full_name || p.email;
-        });
+        (creatorProfs || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
         setCreatorNames(map);
       }
     } catch (err: any) {
@@ -320,38 +319,82 @@ export default function AdminStudentsPage() {
     }
   }, [toast]);
 
-  useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
+  useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  const handleCardClick = (s: StudentRecord) => {
-    openStudent(s);
-  };
+  // ── FIX 4: Helper to refresh docs with uploader names ──
+  const fetchDocsForStudent = useCallback(async (studentId: string) => {
+    const { data: refreshedDocs } = await supabase
+      .from("documents")
+      .select("id, file_name, file_url, category, created_at, file_type, file_size, notes, uploaded_by")
+      .eq("student_id", studentId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    const rawDocs = (refreshedDocs as Document[]) ?? [];
+    const uploaderIds = [...new Set(rawDocs.map((d) => d.uploaded_by).filter(Boolean) as string[])];
+    let uploaderMap: Record<string, string> = {};
+    if (uploaderIds.length > 0) {
+      const { data: uploaderProfs } = await supabase.from("profiles").select("id, full_name, email").in("id", uploaderIds);
+      (uploaderProfs ?? []).forEach((p: any) => { uploaderMap[p.id] = p.full_name || p.email; });
+    }
+    setDocs(rawDocs.map((d) => ({ ...d, uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null })));
+  }, []);
+
+  // ── FIX 4: Realtime subscription while sheet is open ──
+  useEffect(() => {
+    if (!selected) return;
+    const studentId = selected.id;
+
+    const channel = supabase
+      .channel(`student-sheet-${studentId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "documents", filter: `student_id=eq.${studentId}` },
+        () => { fetchDocsForStudent(studentId); }
+      )
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${studentId}` },
+        async () => {
+          const { data } = await supabase.from("profiles").select(PROFILE_SELECT).eq("id", studentId).maybeSingle();
+          if (data) {
+            const updated = data as StudentRecord;
+            setSelected(updated);
+            setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, ...updated } : s)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [selected?.id, fetchDocsForStudent]);
 
   const openStudent = async (s: StudentRecord) => {
     setSelected(s);
     setEditing(false);
     setEditingVisa(false);
 
-    const { data: freshProfile } = await supabase
-      .from("profiles")
-      .select(
-        "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
-      )
-      .eq("id", s.id)
-      .maybeSingle();
-
+    const { data: freshProfile } = await supabase.from("profiles").select(PROFILE_SELECT).eq("id", s.id).maybeSingle();
     const profile: StudentRecord = (freshProfile as StudentRecord) ?? s;
     setSelected(profile);
     setStudents((prev) => prev.map((p) => (p.id === profile.id ? { ...p, ...profile } : p)));
 
+    // ── FIX 1: All profile fields in editForm ──
     setEditForm({
       full_name: profile.full_name,
       phone_number: profile.phone_number || "",
       city: profile.city || "",
       emergency_contact: profile.emergency_contact || "",
+      emergency_contact_name: profile.emergency_contact_name || "",
+      emergency_contact_phone: profile.emergency_contact_phone || "",
       arrival_date: profile.arrival_date || "",
+      gender: profile.gender || "",
+      date_of_birth: profile.date_of_birth || "",
+      nationality: profile.nationality || "",
+      country: profile.country || "",
+      university_name: profile.university_name || "",
+      intake_month: profile.intake_month || "",
+      notes: profile.notes || "",
+      passport_number: profile.passport_number || "",
+      passport_expiry: profile.passport_expiry || "",
     });
+
     setDocs([]);
     setDocsLoading(true);
     setVisaFields([]);
@@ -361,56 +404,35 @@ export default function AdminStudentsPage() {
 
     try {
       const [docsRes, fieldsRes, valuesRes, referralRes] = await Promise.all([
-        // FIX: also fetch uploaded_by so we can resolve the uploader's name
         supabase
           .from("documents")
           .select("id, file_name, file_url, category, created_at, file_type, file_size, notes, uploaded_by")
           .eq("student_id", s.id)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
-        (supabase as any)
-          .from("visa_fields")
-          .select("id, label_en, label_ar, field_type, options_json")
-          .eq("is_active", true)
-          .order("display_order"),
+        (supabase as any).from("visa_fields").select("id, label_en, label_ar, field_type, options_json").eq("is_active", true).order("display_order"),
         (supabase as any).from("visa_field_values").select("id, field_id, value").eq("student_user_id", s.id),
         (supabase as any).from("referrals").select("id", { count: "exact", head: true }).eq("referrer_user_id", s.id),
       ]);
 
       if (docsRes.error) throw docsRes.error;
       const rawDocs = (docsRes.data as Document[]) ?? [];
-
-      // FIX: Resolve uploader names from profiles
       const uploaderIds = [...new Set(rawDocs.map((d) => d.uploaded_by).filter(Boolean) as string[])];
       let uploaderMap: Record<string, string> = {};
       if (uploaderIds.length > 0) {
-        const { data: uploaderProfs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", uploaderIds);
-        (uploaderProfs ?? []).forEach((p: any) => {
-          uploaderMap[p.id] = p.full_name || p.email;
-        });
+        const { data: uploaderProfs } = await supabase.from("profiles").select("id, full_name, email").in("id", uploaderIds);
+        (uploaderProfs ?? []).forEach((p: any) => { uploaderMap[p.id] = p.full_name || p.email; });
       }
-
-      setDocs(
-        rawDocs.map((d) => ({
-          ...d,
-          uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null,
-        })),
-      );
+      setDocs(rawDocs.map((d) => ({ ...d, uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null })));
 
       if (fieldsRes.data) setVisaFields(fieldsRes.data);
 
       const valMap: Record<string, string> = {};
       const idMap: Record<string, string> = {};
-      (valuesRes.data ?? []).forEach((v: any) => {
-        valMap[v.field_id] = v.value ?? "";
-        idMap[v.field_id] = v.id;
-      });
+      (valuesRes.data ?? []).forEach((v: any) => { valMap[v.field_id] = v.value ?? ""; idMap[v.field_id] = v.id; });
       setVisaValues(valMap);
       setVisaValueIds(idMap);
       setVisaDraft(valMap);
-
       setReferralCount(referralRes.count ?? 0);
     } catch (err: any) {
       console.error(err);
@@ -430,9 +452,7 @@ export default function AdminStudentsPage() {
         value: visaDraft[f.id] ?? null,
         updated_at: new Date().toISOString(),
       }));
-      const { error } = await (supabase as any)
-        .from("visa_field_values")
-        .upsert(upserts, { onConflict: "field_id,student_user_id" });
+      const { error } = await (supabase as any).from("visa_field_values").upsert(upserts, { onConflict: "field_id,student_user_id" });
       if (error) throw error;
       setVisaValues({ ...visaDraft });
       setEditingVisa(false);
@@ -444,6 +464,7 @@ export default function AdminStudentsPage() {
     }
   };
 
+  // ── FIX 1: handleSave writes ALL profile fields ──
   const handleSave = async () => {
     if (!selected) return;
     setSaving(true);
@@ -455,20 +476,25 @@ export default function AdminStudentsPage() {
           phone_number: editForm.phone_number || null,
           city: editForm.city || null,
           emergency_contact: editForm.emergency_contact || null,
+          emergency_contact_name: editForm.emergency_contact_name || null,
+          emergency_contact_phone: editForm.emergency_contact_phone || null,
           arrival_date: editForm.arrival_date || null,
+          gender: editForm.gender || null,
+          date_of_birth: editForm.date_of_birth || null,
+          nationality: editForm.nationality || null,
+          country: editForm.country || null,
+          university_name: editForm.university_name || null,
+          intake_month: editForm.intake_month || null,
+          notes: editForm.notes || null,
+          passport_number: editForm.passport_number || null,
+          passport_expiry: editForm.passport_expiry || null,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", selected.id);
       if (error) throw error;
       toast({ description: t("admin.students.changesSaved") });
       setEditing(false);
-      const { data: confirmed } = await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, updated_by_student_at",
-        )
-        .eq("id", selected.id)
-        .maybeSingle();
+      const { data: confirmed } = await supabase.from("profiles").select(PROFILE_SELECT).eq("id", selected.id).maybeSingle();
       const saved = (confirmed as StudentRecord) ?? { ...selected, ...editForm };
       setSelected(saved);
       setStudents((prev) => prev.map((s) => (s.id === selected.id ? { ...s, ...saved } : s)));
@@ -486,9 +512,7 @@ export default function AdminStudentsPage() {
     try {
       const ext = file.name.split(".").pop();
       const path = `${selected.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("student-documents")
-        .upload(path, file, { upsert: false });
+      const { error: uploadError } = await supabase.storage.from("student-documents").upload(path, file, { upsert: false });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(path);
       const displayName = uploadCategory === "other" && customDocName.trim() ? customDocName.trim() : file.name;
@@ -506,29 +530,7 @@ export default function AdminStudentsPage() {
       toast({ description: t("admin.students.fileUploaded") });
       setCustomDocName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-
-      // Re-fetch docs with uploader names
-      const { data: refreshedDocs } = await supabase
-        .from("documents")
-        .select("id, file_name, file_url, category, created_at, file_type, file_size, notes, uploaded_by")
-        .eq("student_id", selected.id)
-        .order("created_at", { ascending: false });
-
-      const rawDocs = (refreshedDocs as Document[]) ?? [];
-      const uploaderIds = [...new Set(rawDocs.map((d) => d.uploaded_by).filter(Boolean) as string[])];
-      let uploaderMap: Record<string, string> = {};
-      if (uploaderIds.length > 0) {
-        const { data: uploaderProfs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", uploaderIds);
-        (uploaderProfs ?? []).forEach((p: any) => {
-          uploaderMap[p.id] = p.full_name || p.email;
-        });
-      }
-      setDocs(
-        rawDocs.map((d) => ({ ...d, uploader_name: d.uploaded_by ? uploaderMap[d.uploaded_by] || "Unknown" : null })),
-      );
+      // Realtime subscription auto-refreshes docs list
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -537,12 +539,10 @@ export default function AdminStudentsPage() {
   };
 
   const handleDeleteDoc = async (doc: Document) => {
-    if (!confirm(t("admin.students.docDeleted"))) return;
+    if (!confirm(isRtl ? "هل أنت متأكد من حذف هذا المستند؟" : "Delete this document?")) return;
     try {
       const urlParts = doc.file_url.split("/student-documents/");
-      if (urlParts[1]) {
-        await supabase.storage.from("student-documents").remove([urlParts[1]]);
-      }
+      if (urlParts[1]) await supabase.storage.from("student-documents").remove([urlParts[1]]);
       await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast({ description: t("admin.students.docDeleted") });
@@ -551,20 +551,15 @@ export default function AdminStudentsPage() {
     }
   };
 
-  // FIX: Use signed URL for download (bucket is private, public URLs fail)
   const handleDownloadDoc = async (doc: Document) => {
     try {
       const urlParts = doc.file_url.split("/student-documents/");
       const storagePath = urlParts[1] ?? doc.file_url;
-
       const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60);
       if (error) throw error;
-
-      // Fetch as blob so browser downloads instead of opening in a new tab
       const response = await fetch(data.signedUrl);
       if (!response.ok) throw new Error("Failed to fetch file");
       const blob = await response.blob();
-
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
@@ -583,15 +578,10 @@ export default function AdminStudentsPage() {
     if (!selected) return;
     setResetting(true);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-student-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session!.access_token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session!.access_token}` },
         body: JSON.stringify({ user_id: selected.id }),
       });
       const result = await resp.json();
@@ -624,9 +614,7 @@ export default function AdminStudentsPage() {
   const filtered = students.filter((s) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    return (
-      s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q)
-    );
+    return s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q);
   });
 
   const DOC_CATEGORIES = ["passport", "certificate", "visa", "financial", "application", "other"];
@@ -638,16 +626,12 @@ export default function AdminStudentsPage() {
         <div className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">{t("admin.students.managementTitle")}</h1>
-          <Badge variant="secondary" className="text-xs">
-            {students.length}
-          </Badge>
+          <Badge variant="secondary" className="text-xs">{students.length}</Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            {t("admin.students.refresh")}
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
+          <RefreshCw className="h-4 w-4" />
+          {t("admin.students.refresh")}
+        </Button>
       </div>
 
       {/* Search */}
@@ -687,11 +671,7 @@ export default function AdminStudentsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((s) => (
-            <Card
-              key={s.id}
-              className="cursor-pointer hover:shadow-md transition-shadow border-border"
-              onClick={() => handleCardClick(s)}
-            >
+            <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow border-border" onClick={() => openStudent(s)}>
               <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -703,12 +683,9 @@ export default function AdminStudentsPage() {
                 <p className="text-xs text-muted-foreground">{s.phone_number || "—"}</p>
                 <p className="text-xs text-muted-foreground">{format(new Date(s.created_at), "dd MMM yyyy")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.created_by
-                    ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..."
-                    : t("admin.students.selfRegistered")}
+                  {s.created_by ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..." : t("admin.students.selfRegistered")}
                 </p>
               </CardContent>
-              {/* Mobile */}
               <CardContent className="p-4 flex md:hidden items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -727,15 +704,7 @@ export default function AdminStudentsPage() {
       )}
 
       {/* ── Student Detail Sheet ── */}
-      <Sheet
-        open={!!selected}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelected(null);
-            setEditing(false);
-          }
-        }}
-      >
+      <Sheet open={!!selected} onOpenChange={(open) => { if (!open) { setSelected(null); setEditing(false); } }}>
         <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
           {selected && (
             <>
@@ -754,25 +723,13 @@ export default function AdminStudentsPage() {
                       {t("admin.students.studentInfo")}
                     </p>
                     {!editing ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditing(true)}
-                        className="gap-1 h-7 text-xs"
-                      >
-                        <Edit3 className="h-3 w-3" />
-                        {t("admin.students.edit")}
+                      <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1 h-7 text-xs">
+                        <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
                       </Button>
                     ) : (
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditing(false)}
-                          className="h-7 text-xs gap-1"
-                        >
-                          <X className="h-3 w-3" />
-                          {t("admin.students.cancel")}
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="h-7 text-xs gap-1">
+                          <X className="h-3 w-3" /> {t("admin.students.cancel")}
                         </Button>
                         <Button size="sm" onClick={handleSave} disabled={saving} className="h-7 text-xs gap-1">
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
@@ -783,12 +740,20 @@ export default function AdminStudentsPage() {
                   </div>
 
                   {editing ? (
+                    /* ── FIX 1: Full edit form ── */
                     <div className="space-y-3">
                       {[
                         { label: t("admin.students.fieldFullName"), key: "full_name" },
                         { label: t("admin.students.fieldPhoneNumber"), key: "phone_number" },
                         { label: t("admin.students.fieldCity"), key: "city" },
+                        { label: t("admin.students.fieldNationality"), key: "nationality" },
+                        { label: isRtl ? "العنوان / الدولة" : "Address / Country", key: "country" },
+                        { label: t("admin.students.fieldUniversity"), key: "university_name" },
+                        { label: t("admin.students.fieldIntake"), key: "intake_month" },
+                        { label: isRtl ? "رقم جواز السفر" : "Passport Number", key: "passport_number" },
                         { label: t("admin.students.fieldEmergency"), key: "emergency_contact" },
+                        { label: isRtl ? "اسم جهة الاتصال للطوارئ" : "Emergency Contact Name", key: "emergency_contact_name" },
+                        { label: isRtl ? "هاتف جهة الاتصال للطوارئ" : "Emergency Contact Phone", key: "emergency_contact_phone" },
                       ].map(({ label, key }) => (
                         <div key={key}>
                           <Label className="text-xs">{label}</Label>
@@ -799,13 +764,43 @@ export default function AdminStudentsPage() {
                           />
                         </div>
                       ))}
+
+                      {/* Gender select */}
+                      <div>
+                        <Label className="text-xs">{t("admin.students.fieldGender")}</Label>
+                        <Select value={editForm.gender || ""} onValueChange={(v) => setEditForm((f) => ({ ...f, gender: v }))}>
+                          <SelectTrigger className="mt-1 h-9 text-sm">
+                            <SelectValue placeholder={isRtl ? "اختر الجنس" : "Select gender"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">{isRtl ? "ذكر" : "Male"}</SelectItem>
+                            <SelectItem value="female">{isRtl ? "أنثى" : "Female"}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Date fields */}
+                      <div>
+                        <Label className="text-xs">{t("admin.students.fieldDob")}</Label>
+                        <Input type="date" value={editForm.date_of_birth || ""} onChange={(e) => setEditForm((f) => ({ ...f, date_of_birth: e.target.value }))} className="mt-1 h-9 text-sm" />
+                      </div>
                       <div>
                         <Label className="text-xs">{t("admin.students.fieldArrival")}</Label>
-                        <Input
-                          type="date"
-                          value={editForm.arrival_date || ""}
-                          onChange={(e) => setEditForm((f) => ({ ...f, arrival_date: e.target.value }))}
-                          className="mt-1 h-9 text-sm"
+                        <Input type="date" value={editForm.arrival_date || ""} onChange={(e) => setEditForm((f) => ({ ...f, arrival_date: e.target.value }))} className="mt-1 h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{isRtl ? "انتهاء صلاحية جواز السفر" : "Passport Expiry"}</Label>
+                        <Input type="date" value={editForm.passport_expiry || ""} onChange={(e) => setEditForm((f) => ({ ...f, passport_expiry: e.target.value }))} className="mt-1 h-9 text-sm" />
+                      </div>
+
+                      {/* Notes */}
+                      <div>
+                        <Label className="text-xs">{isRtl ? "ملاحظات" : "Notes"}</Label>
+                        <Textarea
+                          value={editForm.notes || ""}
+                          onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
+                          className="mt-1 text-sm min-h-[80px]"
+                          placeholder={isRtl ? "ملاحظات..." : "Notes..."}
                         />
                       </div>
                     </div>
@@ -815,24 +810,35 @@ export default function AdminStudentsPage() {
                         { icon: <Mail className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmail"), value: selected.email },
                         { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldPhone"), value: selected.phone_number || "—" },
                         { icon: <Shield className="h-3.5 w-3.5" />, label: t("admin.students.fieldCity"), value: selected.city || "—" },
-                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmergency"), value: selected.emergency_contact || "—" },
-                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldGender"), value: selected.gender || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldDob"), value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldNationality"), value: selected.nationality || "—" },
-                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldAddress"), value: selected.country || "—" },
-                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "العنوان / الدولة" : "Address / Country", value: selected.country || "—" },
+                        { icon: <GraduationCap className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldIntake"), value: selected.intake_month || "—" },
+                        { icon: <FileText className="h-3.5 w-3.5" />, label: isRtl ? "رقم جواز السفر" : "Passport No.", value: selected.passport_number || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: isRtl ? "انتهاء جواز السفر" : "Passport Expiry", value: selected.passport_expiry ? format(new Date(selected.passport_expiry), "PPP") : "—" },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmergency"), value: selected.emergency_contact || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "اسم جهة الطوارئ" : "Emergency Name", value: selected.emergency_contact_name || "—" },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? "هاتف جهة الطوارئ" : "Emergency Phone", value: selected.emergency_contact_phone || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldLastUpdated"), value: selected.updated_by_student_at ? format(new Date(selected.updated_by_student_at), "PPP") : "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreated"), value: format(new Date(selected.created_at), "PPP") },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreatedBy"), value: selected.created_by ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8) : t("admin.students.selfRegistered") },
                       ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
-                          <span className="text-muted-foreground w-28 shrink-0 text-xs">{label}</span>
+                          <span className="text-muted-foreground w-32 shrink-0 text-xs">{label}</span>
                           <span className="font-medium text-xs break-all">{value}</span>
                         </div>
                       ))}
+                      {selected.notes && (
+                        <div className="flex items-start gap-2">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                          <span className="text-muted-foreground w-32 shrink-0 text-xs">{isRtl ? "ملاحظات" : "Notes"}</span>
+                          <span className="font-medium text-xs break-all">{selected.notes}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -845,12 +851,7 @@ export default function AdminStudentsPage() {
                     {t("admin.students.adminActions")}
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 w-full"
-                      onClick={() => setShowResetDialog(true)}
-                    >
+                    <Button variant="outline" size="sm" className="gap-2 w-full" onClick={() => setShowResetDialog(true)}>
                       <KeyRound className="h-4 w-4" />
                       {t("admin.students.resetPassword")}
                     </Button>
@@ -858,10 +859,7 @@ export default function AdminStudentsPage() {
                       variant="outline"
                       size="sm"
                       className="gap-2 w-full text-destructive hover:bg-destructive/5 border-destructive/30"
-                      onClick={() => {
-                        setDeleteTarget(selected);
-                        setShowDeleteDialog(true);
-                      }}
+                      onClick={() => { setDeleteTarget(selected); setShowDeleteDialog(true); }}
                     >
                       <Trash2 className="h-4 w-4" />
                       {t("admin.students.selectiveDelete")}
@@ -885,49 +883,27 @@ export default function AdminStudentsPage() {
                         className="mt-1 w-full h-9 rounded-xl border border-input bg-background px-3 text-sm"
                       >
                         {DOC_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c.charAt(0).toUpperCase() + c.slice(1)}
-                          </option>
+                          <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                         ))}
                       </select>
                     </div>
                     {uploadCategory === "other" && (
                       <div>
                         <Label className="text-xs">{t("admin.students.docName")}</Label>
-                        <Input
-                          value={customDocName}
-                          onChange={(e) => setCustomDocName(e.target.value)}
-                          placeholder={t("admin.students.docNamePlaceholder")}
-                          className="mt-1 h-9 text-sm"
-                        />
+                        <Input value={customDocName} onChange={(e) => setCustomDocName(e.target.value)} placeholder={t("admin.students.docNamePlaceholder")} className="mt-1 h-9 text-sm" />
                       </div>
                     )}
-                    <div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*,.pdf,.doc,.docx"
-                        onChange={handleUpload}
-                        className="hidden"
-                        id="admin-doc-upload"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 w-full"
-                        disabled={uploading}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
-                      </Button>
-                    </div>
+                    <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleUpload} className="hidden" />
+                    <Button variant="outline" size="sm" className="gap-2 w-full" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
+                    </Button>
                   </div>
                 </div>
 
                 <Separator />
 
-                {/* Visa Field Values */}
+                {/* ── FIX 3: Visa Fields — handle select, date, boolean, text ── */}
                 {visaFields.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
@@ -935,34 +911,16 @@ export default function AdminStudentsPage() {
                         {t("admin.students.visaInfo")}
                       </p>
                       {!editingVisa ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => {
-                            setVisaDraft({ ...visaValues });
-                            setEditingVisa(true);
-                          }}
-                        >
+                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
+                          onClick={() => { setVisaDraft({ ...visaValues }); setEditingVisa(true); }}>
                           <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
                         </Button>
                       ) : (
                         <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs gap-1"
-                            onClick={() => setEditingVisa(false)}
-                            disabled={savingVisa}
-                          >
+                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setEditingVisa(false)} disabled={savingVisa}>
                             <X className="h-3 w-3" /> {t("admin.students.cancel")}
                           </Button>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs gap-1"
-                            onClick={saveVisaValues}
-                            disabled={savingVisa}
-                          >
+                          <Button size="sm" className="h-7 text-xs gap-1" onClick={saveVisaValues} disabled={savingVisa}>
                             {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                             {t("admin.students.save")}
                           </Button>
@@ -974,28 +932,54 @@ export default function AdminStudentsPage() {
                         const label = isRtl ? f.label_ar : f.label_en;
                         const val = editingVisa ? (visaDraft[f.id] ?? "") : (visaValues[f.id] ?? "");
                         const onChange = (v: string) => setVisaDraft((d) => ({ ...d, [f.id]: v }));
-                        if (f.field_type === "boolean")
+
+                        if (f.field_type === "boolean") {
                           return (
                             <div key={f.id} className="flex items-center justify-between py-1 text-xs">
                               <span className="text-muted-foreground">{label}</span>
-                              <input
-                                type="checkbox"
-                                checked={val === "true"}
-                                onChange={(e) => onChange(e.target.checked ? "true" : "false")}
-                                disabled={!editingVisa}
-                                className="h-4 w-4 rounded"
-                              />
+                              <input type="checkbox" checked={val === "true"} onChange={(e) => onChange(e.target.checked ? "true" : "false")} disabled={!editingVisa} className="h-4 w-4 rounded" />
                             </div>
                           );
+                        }
+
+                        if (f.field_type === "select" && Array.isArray(f.options_json) && f.options_json.length > 0) {
+                          return (
+                            <div key={f.id} className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                              {editingVisa ? (
+                                <select value={val} onChange={(e) => onChange(e.target.value)} className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-xs">
+                                  <option value="">{isRtl ? "اختر..." : "Select..."}</option>
+                                  {f.options_json.map((opt: any) => (
+                                    <option key={opt.value ?? opt} value={opt.value ?? opt}>{opt.label ?? opt.value ?? opt}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span className="font-medium">{val || "—"}</span>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        if (f.field_type === "date") {
+                          return (
+                            <div key={f.id} className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                              {editingVisa ? (
+                                <Input type="date" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
+                              ) : (
+                                <span className="font-medium">
+                                  {val ? (() => { try { return format(new Date(val), "PPP"); } catch { return val; } })() : "—"}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+
                         return (
                           <div key={f.id} className="flex items-center gap-2 text-xs">
                             <span className="text-muted-foreground w-28 shrink-0">{label}</span>
                             {editingVisa ? (
-                              <Input
-                                value={val}
-                                onChange={(e) => onChange(e.target.value)}
-                                className="h-7 text-xs flex-1"
-                              />
+                              <Input value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
                             ) : (
                               <span className="font-medium">{val || "—"}</span>
                             )}
@@ -1028,28 +1012,18 @@ export default function AdminStudentsPage() {
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : docs.length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-2">
-                      {isRtl ? "لا توجد مستندات بعد" : "No documents yet"}
-                    </p>
+                    <p className="text-xs text-muted-foreground py-2">{isRtl ? "لا توجد مستندات بعد" : "No documents yet"}</p>
                   ) : (
                     <div className="space-y-2">
                       {docs.map((doc) => (
-                        // FIX: Updated card to show upload date and uploader name
-                        <div
-                          key={doc.id}
-                          className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted text-xs border border-border/50"
-                        >
+                        <div key={doc.id} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted text-xs border border-border/50">
                           <div className="flex items-center gap-2 min-w-0">
                             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                             <div className="min-w-0 space-y-0.5">
                               <p className="truncate font-medium text-sm">{doc.file_name}</p>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs capitalize px-1 py-0">
-                                  {doc.category.replace(/_/g, " ")}
-                                </Badge>
-                                {doc.file_size && (
-                                  <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>
-                                )}
+                                <Badge variant="outline" className="text-xs capitalize px-1 py-0">{doc.category.replace(/_/g, " ")}</Badge>
+                                {doc.file_size && <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>}
                               </div>
                               <div className="flex items-center gap-3 text-muted-foreground mt-0.5">
                                 <span>{format(new Date(doc.created_at), "dd MMM yyyy, HH:mm")}</span>
@@ -1063,22 +1037,10 @@ export default function AdminStudentsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => handleDownloadDoc(doc)}
-                              title={isRtl ? "تحميل" : "Download"}
-                            >
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownloadDoc(doc)} title={isRtl ? "تحميل" : "Download"}>
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => handleDeleteDoc(doc)}
-                              title={isRtl ? "حذف" : "Delete"}
-                            >
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc)} title={isRtl ? "حذف" : "Delete"}>
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
                           </div>
@@ -1094,15 +1056,7 @@ export default function AdminStudentsPage() {
       </Sheet>
 
       {/* ── Selective Delete Dialog ── */}
-      <Dialog
-        open={showDeleteDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowDeleteDialog(false);
-            setDeleteTarget(null);
-          }
-        }}
-      >
+      <Dialog open={showDeleteDialog} onOpenChange={(open) => { if (!open) { setShowDeleteDialog(false); setDeleteTarget(null); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
@@ -1115,28 +1069,15 @@ export default function AdminStudentsPage() {
             <SelectiveDeleteDialog
               student={deleteTarget}
               t={t as (key: string, opts?: any) => string}
-              onClose={() => {
-                setShowDeleteDialog(false);
-                setDeleteTarget(null);
-              }}
-              onDeleted={() => {
-                setShowDeleteDialog(false);
-                setDeleteTarget(null);
-                setSelected(null);
-                fetchStudents();
-              }}
+              onClose={() => { setShowDeleteDialog(false); setDeleteTarget(null); }}
+              onDeleted={() => { setShowDeleteDialog(false); setDeleteTarget(null); setSelected(null); fetchStudents(); }}
             />
           )}
         </DialogContent>
       </Dialog>
 
       {/* ── Reset Password Confirm ── */}
-      <Dialog
-        open={showResetDialog}
-        onOpenChange={(open) => {
-          if (!open) setShowResetDialog(false);
-        }}
-      >
+      <Dialog open={showResetDialog} onOpenChange={(open) => { if (!open) setShowResetDialog(false); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1145,14 +1086,10 @@ export default function AdminStudentsPage() {
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {isRtl
-              ? `هل تريد إعادة تعيين كلمة مرور ${selected?.full_name || selected?.email}؟`
-              : `Reset password for ${selected?.full_name || selected?.email}?`}
+            {isRtl ? `هل تريد إعادة تعيين كلمة مرور ${selected?.full_name || selected?.email}؟` : `Reset password for ${selected?.full_name || selected?.email}?`}
           </p>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowResetDialog(false)} disabled={resetting}>
-              {isRtl ? "إلغاء" : "Cancel"}
-            </Button>
+            <Button variant="outline" onClick={() => setShowResetDialog(false)} disabled={resetting}>{isRtl ? "إلغاء" : "Cancel"}</Button>
             <Button onClick={handleResetPassword} disabled={resetting} variant="destructive" className="gap-2">
               {resetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
               {isRtl ? "إعادة التعيين" : "Reset"}
@@ -1162,12 +1099,7 @@ export default function AdminStudentsPage() {
       </Dialog>
 
       {/* ── New Password Result ── */}
-      <Dialog
-        open={!!resetCreds}
-        onOpenChange={(open) => {
-          if (!open) setResetCreds(null);
-        }}
-      >
+      <Dialog open={!!resetCreds} onOpenChange={(open) => { if (!open) setResetCreds(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
@@ -1193,9 +1125,7 @@ export default function AdminStudentsPage() {
           <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20">
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800 dark:text-amber-200">
-              {isRtl
-                ? "شارك هذه البيانات مع الطالب فورًا. لن تتمكن من رؤيتها مجددًا."
-                : "Share these credentials with the student immediately. They won't be shown again."}
+              {isRtl ? "شارك هذه البيانات مع الطالب فورًا. لن تتمكن من رؤيتها مجددًا." : "Share these credentials with the student immediately. They won't be shown again."}
             </p>
           </div>
           <Button className="w-full gap-2" onClick={copyResetCreds}>
