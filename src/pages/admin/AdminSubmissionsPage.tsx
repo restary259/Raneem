@@ -323,23 +323,38 @@ const AdminSubmissionsPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
-                    <p className="font-medium">{selected.phone_number}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.phone_number}</p>
+                      <CopyButton value={selected.phone_number} />
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
-                    <p className="font-medium">{selected.city || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.city || "–"}</p>
+                      {selected.city && <CopyButton value={selected.city} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
-                    <p className="font-medium">{selected.education_level || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.education_level || "–"}</p>
+                      {selected.education_level && <CopyButton value={selected.education_level} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
-                    <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
+                      {selected.passport_type && <CopyButton value={selected.passport_type.replace(/_/g, " ")} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
-                    <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
+                      {selected.submission?.submitted_at && <CopyButton value={fmt(selected.submission.submitted_at)} />}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.payment")}:</span>
