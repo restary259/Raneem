@@ -1,119 +1,86 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Full Team Dashboard Audit — Findings & Fix Plan
 
-### What was found (full audit)
+### Root Cause Analysis
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+**Bug 1 — BirthdayPicker in `ProfileCompletionForm` is broken (the reported issue)**
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+`ProfileCompletionForm.tsx` has its OWN local `BirthdayPicker` (lines 109–170) that uses `Date | undefined` as its value type and calls `onChange(new Date(\`${y}-${m}-${d}\`))`. The problem:
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+```
+update = (y, m, d) => { if (y && m && d) onChange(new Date(`${y}-${m}-${d}`)) }
+```
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+When you first pick a **Year only**, `selMonth` and `selDay` are empty strings → `update(y, "", "")` → condition `if (y && m && d)` fails → nothing changes. Then when you pick Month, it calls `update(y, m, selDay || "01")` which auto-sets day to "01" before the user chose it. This is functionally broken.
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+**Compare to `SubmitNewStudentPage.tsx`**: It already has the FIXED version — BirthdayPicker accepts `value: string` (ISO), stores year/month/day as separate `useState` strings, and uses `normalizeDate()` from `dateUtils.ts`. It handles partial state correctly.
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+**Bug 2 — `ProfileCompletionForm` uses `Date` objects; `SubmitNewStudentPage` uses ISO strings**
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+The two forms are out of sync in every date field:
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
+| Field | `ProfileCompletionForm` | `SubmitNewStudentPage` |
+|-------|------------------------|----------------------|
+| DOB | `Date \| undefined` (broken BirthdayPicker) | `string` ISO + `normalizeDate` (fixed) |
+| Arrival Date | `Date \| undefined` (Popover `<Calendar>`) | `string` ISO + `<Input type="date">` |
+| Course Start | `Date \| undefined` (Popover `<Calendar>`) | `string` ISO + `<Input type="date">` |
+| Course End | `Date \| undefined` (auto-calc) | `string` ISO (auto-calc) |
 
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+The Popover `<Calendar>` based `DatePick` component inside `ProfileCompletionForm` also has the known pointer-events CSS issue in modals/dialogs.
+
+**Bug 3 — `ProfileCompletionForm` still imports `Popover, Calendar` for DatePick (legacy broken component)**
+
+`DatePick` uses `<Popover><Calendar>` — this is the widget with the pointer-events issue. The same fix already applied to `SubmitNewStudentPage` (using `<Input type="date">`) needs to be applied here.
+
+**Bug 4 — `TeamTodayPage.tsx` line 86: date uses `"ar-EG"` locale**
+
+```typescript
+const dateStr = new Date().toLocaleDateString(isAr ? "ar-EG" : "en-GB", {...})
+```
+This violates `numeric-safety-v1` — `ar-EG` renders Arabic-Indic numerals. Must use `"en-US"` always.
+
+**Non-bugs found during audit:**
+- `TeamCasesPage.tsx` — works correctly, creates case at `new` status ✓
+- `CaseDetailPage.tsx` pipeline progression — all 7 stages wired correctly ✓
+- `TeamAppointmentsPage.tsx` — calendar with drag-and-drop works ✓
+- `TeamTodayPage.tsx` — KPI cards and overdue detection work ✓
+- RLS: `Partner can view all cases` policy means partner sees ALL cases (not filtered by `partner_id`) — this is by design per the "pool mode" setting ✓
 
 ---
 
-### Files to change (batched)
+### What to Fix
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**File 1: `src/components/team/ProfileCompletionForm.tsx`**
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+Replace the broken local `BirthdayPicker` (lines 109–170) with the fixed version from `SubmitNewStudentPage`:
+- Change `value: Date | undefined` → `value: string` (ISO string)
+- Use separate `year/month/day` useState strings
+- Call `normalizeDate()` from `dateUtils.ts`
+- Import `DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth` from `@/utils/dateUtils`
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+Replace the broken `DatePick` component (Popover/Calendar) with `<Input type="date">` — matching `SubmitNewStudentPage`'s `SimpleDateField`.
 
-**B. Numeric safety (7 component files)**
+Update all state variables:
+- `dob`: `Date | undefined` → `string` (ISO or "")
+- `arrivalDate`: `Date | undefined` → `string`
+- `courseStart`: `Date | undefined` → `string`
+- `courseEnd`: `Date | undefined` → `string`
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+Update `handleSave` to use `dob` string directly (no `format(dob, ...)` needed).
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
+Update the Review step display to format ISO strings correctly.
 
-**C. SparklineCard overflow fix**
+Remove unused imports: `Popover, PopoverContent, PopoverTrigger, Calendar, CalendarIcon` — these are only needed by the broken `DatePick`.
 
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+**File 2: `src/pages/team/TeamTodayPage.tsx`**
 
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+Line 86: `isAr ? "ar-EG" : "en-GB"` → `"en-US"` (numeric safety fix).
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### Files to Change
+
+| File | Change |
+|------|--------|
+| `src/components/team/ProfileCompletionForm.tsx` | Fix BirthdayPicker + DatePick to use ISO strings, matching SubmitNewStudentPage |
+| `src/pages/team/TeamTodayPage.tsx` | Line 86: locale → `"en-US"` |
