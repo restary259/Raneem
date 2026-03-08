@@ -555,7 +555,7 @@ export default function TeamAppointmentsPage() {
                 )}
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {format(currentDate, "EEEE, MMMM d")}
+                {currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric" })}
                 {isToday(currentDate) && <span className="text-xs opacity-80">{t("team.appointments.todayPill")}</span>}
               </div>
             </div>
