@@ -436,7 +436,7 @@ export default function AdminStudentsPage() {
       if (error) throw error;
       setVisaValues({ ...visaDraft });
       setEditingVisa(false);
-      toast({ description: isRtl ? "تم حفظ بيانات الفيزا" : "Visa data saved" });
+      toast({ description: t("admin.students.visaSaved") });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -460,7 +460,7 @@ export default function AdminStudentsPage() {
         })
         .eq("id", selected.id);
       if (error) throw error;
-      toast({ description: isRtl ? "تم حفظ التغييرات" : "Changes saved" });
+      toast({ description: t("admin.students.changesSaved") });
       setEditing(false);
       const { data: confirmed } = await supabase
         .from("profiles")
