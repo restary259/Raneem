@@ -327,9 +327,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
                         <span>{t('cases.referralDiscount')}</span><span className="font-semibold text-red-700">-{selectedCase.referral_discount} ₪</span>
                       </div>
-                      <div className="flex justify-between p-2 bg-red-50 rounded border border-red-200">
-                        <span>{t('cases.translationFee')}</span><span className="font-semibold text-red-700">-{selectedCase.translation_fee} ₪</span>
-                      </div>
                     </div>
                     <div className={`mt-3 flex justify-between p-3 rounded-xl font-bold text-base ${getNetProfit(selectedCase) >= 0 ? 'bg-emerald-100 border border-emerald-300' : 'bg-red-100 border border-red-300'}`}>
                       <span>{t('cases.netProfit')}</span>
@@ -343,7 +340,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         influencer_commission: selectedCase.influencer_commission || 0,
                         lawyer_commission: selectedCase.lawyer_commission || 0,
                         referral_discount: selectedCase.referral_discount || 0,
-                        translation_fee: selectedCase.translation_fee || 0,
+                        translation_fee: 0,
                       });
                     }}>
                       <DollarSign className="h-3 w-3 me-1" />{t('studentCases.editFinancials', { defaultValue: 'Edit Financials' })}
@@ -357,7 +354,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       { key: 'influencer_commission', label: t('cases.agentComm') },
                       { key: 'lawyer_commission', label: t('cases.teamMemberComm') },
                       { key: 'referral_discount', label: t('cases.referralDiscount') },
-                      { key: 'translation_fee', label: t('cases.translationFee') },
                     ].map(field => (
                       <div key={field.key} className="flex items-center gap-2">
                         <label className="text-sm w-40 shrink-0">{field.label}</label>
