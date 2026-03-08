@@ -40,24 +40,17 @@ interface Column {
   selected: boolean;
 }
 
-const ALL_COLUMNS: Column[] = [
-  { key: "full_name", label: "Name", selected: true },
-  { key: "email", label: "Email", selected: true },
-  { key: "phone_number", label: "Phone", selected: true },
-  { key: "city", label: "City", selected: true },
-  { key: "program_name", label: "Program", selected: true },
-  { key: "school_name", label: "School", selected: true },
-  { key: "accommodation_name", label: "Accommodation", selected: true },
-  { key: "insurance_name", label: "Insurance", selected: false },
-  { key: "intake_month", label: "Intake Month", selected: true },
-  { key: "course_start", label: "Course Start", selected: true },
-  { key: "course_end", label: "Course End", selected: true },
-  { key: "program_price", label: "Program Cost", selected: false },
-  { key: "accommodation_price", label: "Accommodation Cost", selected: false },
-  { key: "insurance_price", label: "Insurance Cost", selected: false },
-  { key: "total", label: "Total Cost", selected: false },
-  { key: "status", label: "Status", selected: false },
-];
+const ALL_COLUMNS_KEYS = [
+  "full_name", "email", "phone_number", "city", "program_name", "school_name",
+  "accommodation_name", "insurance_name", "intake_month", "course_start",
+  "course_end", "program_price", "accommodation_price", "insurance_price",
+  "total", "status",
+] as const;
+
+const DEFAULT_SELECTED = new Set([
+  "full_name","email","phone_number","city","program_name","school_name",
+  "accommodation_name","intake_month","course_start","course_end",
+]);
 
 // ✅ FIX: Generate month options starting from the CURRENT month (not hardcoded 2025-01-01)
 // generateIntakeMonths() uses Asia/Jerusalem timezone automatically
@@ -65,13 +58,34 @@ const MONTH_OPTIONS = generateIntakeMonths(24);
 
 export default function AdminSpreadsheetPage() {
   const { toast } = useToast();
+  const { t } = useTranslation("dashboard");
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [columns, setColumns] = useState<Column[]>(ALL_COLUMNS);
   const [filterMonth, setFilterMonth] = useState("all");
   const [showColConfig, setShowColConfig] = useState(false);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(DEFAULT_SELECTED);
   const tableRef = useRef<HTMLTableElement>(null);
 
+  const columns = useMemo(() => [
+    { key: "full_name" as keyof StudentRow, label: t("admin.spreadsheet.col.name") },
+    { key: "email" as keyof StudentRow, label: t("admin.spreadsheet.col.email") },
+    { key: "phone_number" as keyof StudentRow, label: t("admin.spreadsheet.col.phone") },
+    { key: "city" as keyof StudentRow, label: t("admin.spreadsheet.col.city") },
+    { key: "program_name" as keyof StudentRow, label: t("admin.spreadsheet.col.program") },
+    { key: "school_name" as keyof StudentRow, label: t("admin.spreadsheet.col.school") },
+    { key: "accommodation_name" as keyof StudentRow, label: t("admin.spreadsheet.col.accommodation") },
+    { key: "insurance_name" as keyof StudentRow, label: t("admin.spreadsheet.col.insurance") },
+    { key: "intake_month" as keyof StudentRow, label: t("admin.spreadsheet.col.intakeMonth") },
+    { key: "course_start" as keyof StudentRow, label: t("admin.spreadsheet.col.courseStart") },
+    { key: "course_end" as keyof StudentRow, label: t("admin.spreadsheet.col.courseEnd") },
+    { key: "program_price" as keyof StudentRow, label: t("admin.spreadsheet.col.programCost") },
+    { key: "accommodation_price" as keyof StudentRow, label: t("admin.spreadsheet.col.accommodationCost") },
+    { key: "insurance_price" as keyof StudentRow, label: t("admin.spreadsheet.col.insuranceCost") },
+    { key: "total" as keyof StudentRow, label: t("admin.spreadsheet.col.totalCost") },
+    { key: "status" as keyof StudentRow, label: t("admin.spreadsheet.col.status") },
+  ], [t]);
+
+  const activeColumns = useMemo(() => columns.filter(c => selectedKeys.has(c.key)), [columns, selectedKeys]);
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
