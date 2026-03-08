@@ -3,14 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format, differenceInYears, addMonths } from "date-fns";
-import { CalendarIcon, Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { format, addMonths } from "date-fns";
+import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
