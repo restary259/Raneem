@@ -457,8 +457,8 @@ export default function CaseDetailPage() {
   const amountPaid = submission?.payment_confirmed ? serviceFee + translationFee : 0;
   const remaining = grandTotal - amountPaid;
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
-  if (!caseData) return <div className="p-6 text-muted-foreground">Case not found</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">{t("case.detail.loading")}</div>;
+  if (!caseData) return <div className="p-6 text-muted-foreground">{t("case.detail.notFound")}</div>;
 
   /* ── Pipeline bar ──────────────────────────────────────────────────── */
   const PipelineBar = () => (
@@ -481,7 +481,7 @@ export default function CaseDetailPage() {
                   <span
                     className={`text-[10px] hidden sm:block ${isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}`}
                   >
-                    {PIPELINE_LABELS[stage]}
+                    {t(PIPELINE_LABELS[stage], stage)}
                   </span>
                 </div>
               </React.Fragment>
