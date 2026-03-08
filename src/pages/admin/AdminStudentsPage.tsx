@@ -303,7 +303,8 @@ export default function AdminStudentsPage() {
         .from("profiles")
         .select(PROFILE_SELECT)
         .in("id", userIds)
-        .not("created_by", "is", null)   // Only manually-provisioned accounts
+        .not("created_by", "is", null)   // Must have been provisioned by someone
+        .is("case_id", null)             // Standalone accounts only (not case-linked)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
