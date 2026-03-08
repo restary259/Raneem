@@ -103,10 +103,12 @@ export default function PartnerEarningsPage() {
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  // Only cases directly attributed to this partner (partner_id = uid) generate commission
-  // Other visible cases (unattributed agency leads) appear in pipeline but earn nothing
-  const attributedCases = cases.filter((c) => c.partner_id === userId);
-  const earningCases = attributedCases.filter((c) => PAID_STATUSES.includes(c.status));
+  // Pool mode: all visible paid cases earn commission (applies to Apply/Contact Only + No Override)
+  // Attribution mode: only cases where partner_id = uid earn commission
+  const commissionEligible = isPoolMode
+    ? cases
+    : cases.filter((c) => c.partner_id === userId);
+  const earningCases = commissionEligible.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
   const confirmedCases = earningCases.filter((c) => c.status === "enrollment_paid");
