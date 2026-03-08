@@ -347,7 +347,7 @@ const AdminSettingsPage = () => {
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
           <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
           <TabsTrigger value="reset" className="text-destructive data-[state=active]:text-destructive">
-            {isRtl ? "⚠️ مسح البيانات" : "⚠️ Data Reset"}
+            {t('admin.settings.resetTabLabel', '⚠️ Data Reset')}
           </TabsTrigger>
         </TabsList>
 
@@ -361,19 +361,19 @@ const AdminSettingsPage = () => {
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label>{isRtl ? "أيام الحالة الجديدة قبل أن تُنسى" : "New Case Forgotten Days"}</Label>
+                    <Label>{t('admin.settings.newCaseDays', 'New Case Forgotten Days')}</Label>
                     <Input type="number" value={settings.forgotten_new_case_days}
                       onChange={(e) => setSettings((s) => (s ? { ...s, forgotten_new_case_days: Number(e.target.value) } : s))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{isRtl ? 'أيام حالة "تم التواصل" قبل أن تُنسى' : "Contacted Case Forgotten Days"}</Label>
+                    <Label>{t('admin.settings.contactedDays', 'Contacted Case Forgotten Days')}</Label>
                     <Input type="number" value={settings.forgotten_contacted_days}
                       onChange={(e) => setSettings((s) => (s ? { ...s, forgotten_contacted_days: Number(e.target.value) } : s))} />
                   </div>
                 </div>
                 <Button onClick={saveSettings} disabled={saving} className="gap-2">
                   <Save className="h-4 w-4" />
-                  {saving ? (isRtl ? "جار الحفظ..." : "Saving...") : t("common.save", "Save Changes")}
+                  {saving ? t('admin.settings.saving', 'Saving...') : t("common.save", "Save Changes")}
                 </Button>
               </CardContent>
             </Card>
