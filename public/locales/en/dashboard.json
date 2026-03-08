@@ -761,7 +761,13 @@
     "clients": "Clients",
     "quality": "Quality",
     "conversion": "Conversion",
-    "costPerStudent": "Cost/Student"
+    "costPerStudent": "Cost/Student",
+    "conversionFunnel": "Conversion Funnel",
+    "revenueTrend": "Revenue Trend",
+    "paidLabel": "Paid",
+    "exportRevenue": "Export Revenue",
+    "exportLeads": "Export Leads",
+    "exportCases": "Export Cases"
   },
   "lawyer": {
     "hi": "Hi",
