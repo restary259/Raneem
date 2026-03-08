@@ -410,9 +410,7 @@ const AdminSettingsPage = () => {
                       <Input value={contactForm.name_en} onChange={(e) => setContactForm((f) => ({ ...f, name_en: e.target.value }))} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.settings.contactFormRoleAr')}</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input value={contactForm.role_ar} onChange={(e) => setContactForm((f) => ({ ...f, role_ar: e.target.value }))} />
                     </div>
                     <div className="space-y-1">
@@ -514,7 +512,7 @@ const AdminSettingsPage = () => {
                     <Input value={visaFieldForm.field_key} placeholder="e.g. passport_number"
                       onChange={(e) => setVisaFieldForm(f => ({ ...f, field_key: e.target.value }))} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label>{isRtl ? "التسمية (إنجليزي)" : "Label (English)"}</Label>
                       <Input value={visaFieldForm.label_en}

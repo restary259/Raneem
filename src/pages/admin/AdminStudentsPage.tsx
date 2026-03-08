@@ -632,7 +632,7 @@ export default function AdminStudentsPage() {
   const DOC_CATEGORIES = ["passport", "certificate", "visa", "financial", "application", "other"];
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
@@ -716,7 +716,7 @@ export default function AdminStudentsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{s.full_name || s.email}</p>
-                    <p className="text-xs text-muted-foreground">{s.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground shrink-0">{format(new Date(s.created_at), "dd MMM yy")}</p>

@@ -427,7 +427,7 @@ const AdminPipelinePage = () => {
           />
         </div>
         <Select value={filterTeam} onValueChange={setFilterTeam}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by team member" />
           </SelectTrigger>
           <SelectContent>

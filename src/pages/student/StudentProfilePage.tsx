@@ -34,7 +34,7 @@ export default function StudentProfilePage() {
   if (!userId || !profile) return <DashboardLoading />;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <StudentProfile profile={profile} userId={userId} onProfileUpdate={fetchProfile} />
     </div>
   );
