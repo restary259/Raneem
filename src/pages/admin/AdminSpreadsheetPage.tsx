@@ -147,12 +147,15 @@ export default function AdminSpreadsheetPage() {
     fetchData();
   }, [fetchData]);
 
-  const activeColumns = columns.filter((c) => c.selected);
-
   const filteredRows = filterMonth !== "all" ? rows.filter((r) => r.intake_month?.startsWith(filterMonth)) : rows;
 
   const toggleColumn = (key: keyof StudentRow) => {
-    setColumns((prev) => prev.map((c) => (c.key === key ? { ...c, selected: !c.selected } : c)));
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   const exportPDF = () => {
