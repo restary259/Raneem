@@ -785,10 +785,10 @@ export default function AdminStudentsPage() {
                   {editing ? (
                     <div className="space-y-3">
                       {[
-                        { label: isRtl ? "الاسم الكامل" : "Full Name", key: "full_name" },
-                        { label: isRtl ? "رقم الهاتف" : "Phone Number", key: "phone_number" },
-                        { label: isRtl ? "مدينة الميلاد" : "City of Birth", key: "city" },
-                        { label: isRtl ? "رقم الطوارئ" : "Emergency Contact", key: "emergency_contact" },
+                        { label: t("admin.students.fieldFullName"), key: "full_name" },
+                        { label: t("admin.students.fieldPhoneNumber"), key: "phone_number" },
+                        { label: t("admin.students.fieldCity"), key: "city" },
+                        { label: t("admin.students.fieldEmergency"), key: "emergency_contact" },
                       ].map(({ label, key }) => (
                         <div key={key}>
                           <Label className="text-xs">{label}</Label>
@@ -800,7 +800,7 @@ export default function AdminStudentsPage() {
                         </div>
                       ))}
                       <div>
-                        <Label className="text-xs">{isRtl ? "تاريخ الوصول" : "Arrival Date"}</Label>
+                        <Label className="text-xs">{t("admin.students.fieldArrival")}</Label>
                         <Input
                           type="date"
                           value={editForm.arrival_date || ""}
@@ -809,85 +809,22 @@ export default function AdminStudentsPage() {
                         />
                       </div>
                     </div>
-                  ) : (
                     <div className="space-y-2.5 text-sm">
                       {[
-                        {
-                          icon: <Mail className="h-3.5 w-3.5" />,
-                          label: isRtl ? "البريد" : "Email",
-                          value: selected.email,
-                        },
-                        {
-                          icon: <Phone className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الهاتف" : "Phone",
-                          value: selected.phone_number || "—",
-                        },
-                        {
-                          icon: <Shield className="h-3.5 w-3.5" />,
-                          label: isRtl ? "مدينة الميلاد" : "City of Birth",
-                          value: selected.city || "—",
-                        },
-                        {
-                          icon: <Phone className="h-3.5 w-3.5" />,
-                          label: isRtl ? "رقم الطوارئ" : "Emergency Contact",
-                          value: selected.emergency_contact || "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الوصول" : "Arrival Date",
-                          value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجنس" : "Gender",
-                          value: selected.gender || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الميلاد" : "Date of Birth",
-                          value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجنسية" : "Nationality",
-                          value: selected.nationality || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "عنوان السكن" : "Home Address",
-                          value: selected.country || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجامعة" : "University",
-                          value: selected.university_name || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "شهر القبول" : "Intake Month",
-                          value: selected.intake_month || "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "آخر تحديث من الطالب" : "Last Updated by Student",
-                          value: selected.updated_by_student_at
-                            ? format(new Date(selected.updated_by_student_at), "PPP")
-                            : "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الإنشاء" : "Created",
-                          value: format(new Date(selected.created_at), "PPP"),
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "أنشئ بواسطة" : "Created By",
-                          value: selected.created_by
-                            ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8)
-                            : isRtl
-                              ? "تسجيل ذاتي"
-                              : "Self-registered",
-                        },
+                        { icon: <Mail className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmail"), value: selected.email },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldPhone"), value: selected.phone_number || "—" },
+                        { icon: <Shield className="h-3.5 w-3.5" />, label: t("admin.students.fieldCity"), value: selected.city || "—" },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmergency"), value: selected.emergency_contact || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldGender"), value: selected.gender || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldDob"), value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldNationality"), value: selected.nationality || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldAddress"), value: selected.country || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldIntake"), value: selected.intake_month || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldLastUpdated"), value: selected.updated_by_student_at ? format(new Date(selected.updated_by_student_at), "PPP") : "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreated"), value: format(new Date(selected.created_at), "PPP") },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreatedBy"), value: selected.created_by ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8) : t("admin.students.selfRegistered") },
                       ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
