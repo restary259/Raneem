@@ -62,6 +62,14 @@ interface StudentRecord {
   passport_number: string | null;
   passport_expiry: string | null;
   updated_by_student_at: string | null;
+  // Additional personal fields
+  eye_color: string | null;
+  has_changed_legal_name: boolean;
+  previous_legal_name: string | null;
+  has_criminal_record: boolean;
+  criminal_record_details: string | null;
+  has_dual_citizenship: boolean;
+  second_passport_country: string | null;
 }
 
 interface Document {
