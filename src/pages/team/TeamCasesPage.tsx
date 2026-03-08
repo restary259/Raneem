@@ -224,18 +224,25 @@ export default function TeamCasesPage() {
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => navigate(`/team/cases/${c.id}`)}
             >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{c.full_name}</div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                    <Phone className="h-3 w-3" />{c.phone_number}
-                    <span>·</span>
-                    <span dir="ltr" className="inline-block">{formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}</span>
-                  </div>
+              <CardContent className="p-4">
+                {/* Row 1: name + badge */}
+                <div className="flex items-start justify-between gap-2 min-w-0">
+                  <span className="font-semibold text-sm leading-snug truncate min-w-0 flex-1">
+                    {c.full_name}
+                  </span>
+                  <Badge className={`shrink-0 text-xs ${STATUS_COLORS[c.status] ?? 'bg-muted text-foreground border-border'}`}>
+                    {statusLabel(c.status)}
+                  </Badge>
                 </div>
-                <Badge className={STATUS_COLORS[c.status] ?? 'bg-muted text-foreground border-border'}>
-                  {statusLabel(c.status)}
-                </Badge>
+                {/* Row 2: phone + timestamp */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 flex-wrap">
+                  <Phone className="h-3 w-3 shrink-0" />
+                  <span className="shrink-0">{c.phone_number}</span>
+                  <span className="text-muted-foreground/40 shrink-0">·</span>
+                  <span dir="ltr" className="inline-block whitespace-nowrap">
+                    {formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}
+                  </span>
+                </div>
               </CardContent>
             </Card>
           ))}
