@@ -886,6 +886,8 @@
       "paid": "Paid",
       "ready_to_apply": "Ready to Apply",
       "registration_submitted": "Registration Submitted",
+      "submitted": "Submitted",
+      "enrollment_paid": "Enrollment Paid",
       "visa_stage": "Visa Stage",
       "settled": "Settled",
       "completed": "Completed"
