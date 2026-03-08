@@ -1028,31 +1028,31 @@ export default function CaseDetailPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Course & Program
+                <FileText className="h-4 w-4" /> {t("case.detail.courseProgram")}
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               {resolved.programName && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Program</span>
+                  <span className="text-muted-foreground">{t("case.detail.program")}</span>
                   <span className="font-medium">{resolved.programName}</span>
                 </div>
               )}
               {resolved.schoolName && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">School</span>
+                  <span className="text-muted-foreground">{t("case.detail.school")}</span>
                   <span className="font-medium">{resolved.schoolName}</span>
                 </div>
               )}
               {resolved.accommodationName && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Accommodation</span>
+                  <span className="text-muted-foreground">{t("case.detail.accommodation")}</span>
                   <span className="font-medium">{resolved.accommodationName}</span>
                 </div>
               )}
               {submission.program_start_date && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Start Date</span>
+                  <span className="text-muted-foreground">{t("case.detail.startDate")}</span>
                   <div className="flex items-center gap-1">
                     <span>{submission.program_start_date}</span>
                     <CopyButton value={submission.program_start_date} />
@@ -1061,7 +1061,7 @@ export default function CaseDetailPage() {
               )}
               {submission.program_end_date && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">End Date</span>
+                  <span className="text-muted-foreground">{t("case.detail.endDate")}</span>
                   <div className="flex items-center gap-1">
                     <span>{submission.program_end_date}</span>
                     <CopyButton value={submission.program_end_date} />
@@ -1070,14 +1070,14 @@ export default function CaseDetailPage() {
               )}
               <Separator />
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Payment</span>
+                <span className="text-muted-foreground">{t("case.detail.payment")}</span>
                 <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
-                  {submission.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
+                  {submission.payment_confirmed ? t("case.detail.paymentConfirmed") : t("case.detail.paymentPending")}
                 </span>
               </div>
               {submission.submitted_at && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Submitted</span>
+                  <span className="text-muted-foreground">{t("case.detail.submitted")}</span>
                   <span>{format(new Date(submission.submitted_at), "MMM d, yyyy")}</span>
                 </div>
               )}
@@ -1091,7 +1091,7 @@ export default function CaseDetailPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4" /> Documents ({documents.length})
+              <FileText className="h-4 w-4" /> {t("case.detail.documents")} ({documents.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1105,8 +1105,8 @@ export default function CaseDetailPage() {
                     </p>
                   </div>
                   <a href={doc.file_url} target="_blank" rel="noreferrer">
-                    <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0">
-                      <Download className="h-3.5 w-3.5" /> Download
+                   <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0">
+                      <Download className="h-3.5 w-3.5" /> {t("case.detail.download")}
                     </Button>
                   </a>
                 </div>
@@ -1141,20 +1141,20 @@ export default function CaseDetailPage() {
       <Dialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Submit Case to Admin</DialogTitle>
+            <DialogTitle>{t("case.detail.submitCaseTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Have you reviewed all profile data? This will send the case to admin for enrollment processing.
+              {t("case.detail.submitCaseDesc")}
             </p>
             <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-              <p className="text-xs text-amber-700">This action cannot be undone.</p>
+              <p className="text-xs text-amber-700">{t("case.detail.submitWarning")}</p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSubmitConfirm(false)}>
-              Cancel
+              {t("case.detail.cancel")}
             </Button>
             <Button
               onClick={async () => {
@@ -1168,7 +1168,7 @@ export default function CaseDetailPage() {
               }}
               disabled={updatingStatus}
             >
-              Confirm & Submit
+              {t("case.detail.confirmSubmit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1180,20 +1180,20 @@ export default function CaseDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              Delete Case
+              {t("case.detail.deleteCase")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the case for <strong>{caseData.full_name}</strong>? This cannot be undone.
+              {t("case.detail.deleteCaseDesc", { name: caseData.full_name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("case.detail.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteCase}
               disabled={deletingCase}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingCase ? "Deleting…" : "Delete Case"}
+              {deletingCase ? t("case.detail.deleting") : t("case.detail.deleteCase")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1205,18 +1205,18 @@ export default function CaseDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              Delete Appointment
+              {t("case.detail.deleteApptTitle")}
             </AlertDialogTitle>
-            <AlertDialogDescription>Are you sure? This cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>{t("case.detail.deleteApptDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("case.detail.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAppointment}
               disabled={deletingAppt}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingAppt ? "Deleting…" : "Delete"}
+              {deletingAppt ? t("case.detail.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
