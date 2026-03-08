@@ -452,9 +452,8 @@ export default function CaseDetailPage() {
   const accomTotal = submission?.accommodation_price ?? 0;
   const insTotal = submission?.insurance_price ?? 0;
   const serviceFee = submission?.service_fee ?? 0;
-  const translationFee = submission?.translation_fee ?? 0;
-  const grandTotal = programTotal + accomTotal + insTotal + serviceFee + translationFee;
-  const amountPaid = submission?.payment_confirmed ? serviceFee + translationFee : 0;
+  const grandTotal = programTotal + accomTotal + insTotal + serviceFee;
+  const amountPaid = submission?.payment_confirmed ? serviceFee : 0;
   const remaining = grandTotal - amountPaid;
 
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">{t("case.detail.loading")}</div>;

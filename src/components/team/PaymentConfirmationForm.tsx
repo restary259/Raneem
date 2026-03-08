@@ -21,11 +21,10 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
   const { t, i18n } = useTranslation('dashboard');
   const isRtl = i18n.language === 'ar';
   const [serviceFee, setServiceFee] = useState('');
-  const [translationFee, setTranslationFee] = useState('0');
   const [paymentReceived, setPaymentReceived] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const total = (parseFloat(serviceFee) || 0) + (parseFloat(translationFee) || 0);
+  const total = parseFloat(serviceFee) || 0;
 
   const handleConfirm = async () => {
     if (!paymentReceived) {
