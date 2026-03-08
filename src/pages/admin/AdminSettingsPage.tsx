@@ -329,7 +329,7 @@ const AdminSettingsPage = () => {
     return <div className="p-8 text-center text-muted-foreground">{t('common.loading', 'Loading...')}</div>;
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t("admin.settings.title", "Settings")}</h1>
         <Button variant="outline" size="sm" onClick={fetchData}>
@@ -341,7 +341,7 @@ const AdminSettingsPage = () => {
         <TabsList className="flex-wrap">
           <TabsTrigger value="platform">{t("admin.settings.platform", "Platform")}</TabsTrigger>
           <TabsTrigger value="commissions">
-            <DollarSign className="h-3.5 w-3.5 mr-1" />
+            <DollarSign className="h-3.5 w-3.5 me-1" />
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
@@ -359,7 +359,7 @@ const AdminSettingsPage = () => {
                 <CardTitle className="text-base">{t("admin.settings.platformTitle", "Platform Configuration")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label>{t('admin.settings.newCaseDays', 'New Case Forgotten Days')}</Label>
                     <Input type="number" value={settings.forgotten_new_case_days}
@@ -395,12 +395,12 @@ const AdminSettingsPage = () => {
                   {t("admin.settings.addContact", "Add Contact")}
                 </Button>
               </DialogTrigger>
-              <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-h-[90vh] overflow-y-auto">
+              <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{t("admin.settings.addContact", "Add Contact")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label>{t('admin.settings.contactFormArabicName')}</Label>
                       <Input value={contactForm.name_ar} onChange={(e) => setContactForm((f) => ({ ...f, name_ar: e.target.value }))} />

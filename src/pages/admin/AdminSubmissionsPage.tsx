@@ -360,7 +360,7 @@ const AdminSubmissionsPage = () => {
                     <h3 className="text-sm font-semibold text-foreground mb-2">
                       {t("admin.submissions.studentProfileData")}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {Object.entries(selected.submission.extra_data).map(([key, val]) => {
                         if (!val || val === "") return null;
                         if (key === "program_id" || key === "accommodation_id") return null;
