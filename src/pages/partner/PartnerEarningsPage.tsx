@@ -32,16 +32,30 @@ export default function PartnerEarningsPage() {
         .select("commission_amount,show_all_cases")
         .eq("partner_id", uid)
         .maybeSingle(),
-      (supabase as any).from("platform_settings").select("partner_commission_rate").limit(1).maybeSingle(),
+      (supabase as any)
+        .from("platform_settings")
+        .select("partner_commission_rate,partner_dashboard_show_all_cases")
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     // Commission rate: per-partner override takes priority over global setting
     const globalRate = settingsRes.data?.partner_commission_rate ?? 500;
+    const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? globalRate));
 
+    // Pool mode: earn commission on ALL visible agency cases (not just partner_id = uid)
+    // Applies when: no override row (default agency pool), OR override.show_all_cases === false
+    let poolMode = false;
+    if (override === null || override === undefined) {
+      poolMode = !globalShowAll;
+    } else {
+      poolMode = override.show_all_cases === false;
+    }
+    setIsPoolMode(poolMode);
+
     // Build cases query respecting visibility setting
-    // Always fetch partner_id so we can correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,created_at,source,partner_id")
@@ -52,16 +66,15 @@ export default function PartnerEarningsPage() {
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
-        // Referral Cases Only: peer student-to-student referrals (source='referral')
         query = query.eq("source", "referral");
       }
-      // show_all_cases === true → no extra filter (show everything)
+      // show_all_cases === true → no extra filter
     } else {
-      // No override row at all → default: agency-generated leads only
-      query = query.in("source", PARTNER_SOURCES);
+      if (!globalShowAll) {
+        query = query.in("source", PARTNER_SOURCES);
+      }
     }
 
     const { data, error } = await query;
