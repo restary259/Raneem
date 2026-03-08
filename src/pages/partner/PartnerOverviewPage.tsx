@@ -68,18 +68,21 @@ export default function PartnerOverviewPage() {
     setCommissions(rewardsData || []);
 
     // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
+    // Always fetch partner_id to correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
-      .select("id,full_name,status,source,created_at,education_level,degree_interest")
+      .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
       .order("created_at", { ascending: false });
 
-    // All case sources that should be visible to partners
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"];
+    // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
+    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
+        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null) {
+        // Partner-attributed only: cases linked via this partner's referral link
         query = query.eq("partner_id", uid);
       }
       // show_all_cases === true → no filter (show everything)
