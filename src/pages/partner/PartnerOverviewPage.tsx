@@ -238,22 +238,22 @@ export default function PartnerOverviewPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="w-[28%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
                       {t("partner.col.name")}
                     </th>
-                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="w-[15%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
                       {t("partner.col.major")}
                     </th>
-                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="w-[18%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
                       {t("partner.col.status")}
                     </th>
-                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="w-[22%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
                       {t("partner.col.commission")}
                     </th>
-                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="w-[17%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
                       {t("partner.col.date")}
                     </th>
                   </tr>
@@ -270,28 +270,28 @@ export default function PartnerOverviewPage() {
                     const earnsCommission = isPaid && (isPoolMode || c.partner_id === userId);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">{c.degree_interest || "—"}</td>
-                        <td className="px-4 py-3">
+                        <td className="w-[28%] px-4 py-3 font-medium text-foreground truncate max-w-0">{c.full_name}</td>
+                        <td className="w-[15%] px-4 py-3 text-muted-foreground text-xs truncate max-w-0">{c.degree_interest || "—"}</td>
+                        <td className="w-[18%] px-4 py-3">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
                             {isAr ? cfg.labelAr : cfg.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="w-[22%] px-4 py-3">
                           {earnsCommission ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                              <CheckCircle className="h-3 w-3" />
+                              <CheckCircle className="h-3 w-3 shrink-0" />
                               ₪{commissionRate.toLocaleString('en-US')} {t("partner.projLabel")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
+                              <Clock className="h-3 w-3 shrink-0" />
                               {t("partner.pending")}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString(isAr ? "ar-SA" : "en-GB")}
+                        <td className="w-[17%] px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString("en-US")}
                         </td>
                       </tr>
                     );
