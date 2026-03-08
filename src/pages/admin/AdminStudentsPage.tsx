@@ -503,7 +503,7 @@ export default function AdminStudentsPage() {
         is_visible_to_student: true,
       });
       if (dbError) throw dbError;
-      toast({ description: isRtl ? "تم رفع الملف" : "File uploaded" });
+      toast({ description: t("admin.students.fileUploaded") });
       setCustomDocName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
 
@@ -537,7 +537,7 @@ export default function AdminStudentsPage() {
   };
 
   const handleDeleteDoc = async (doc: Document) => {
-    if (!confirm(isRtl ? "هل أنت متأكد من حذف هذا الملف؟" : "Delete this document?")) return;
+    if (!confirm(t("admin.students.docDeleted"))) return;
     try {
       const urlParts = doc.file_url.split("/student-documents/");
       if (urlParts[1]) {
@@ -545,7 +545,7 @@ export default function AdminStudentsPage() {
       }
       await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      toast({ description: isRtl ? "تم حذف الملف" : "Document deleted" });
+      toast({ description: t("admin.students.docDeleted") });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
