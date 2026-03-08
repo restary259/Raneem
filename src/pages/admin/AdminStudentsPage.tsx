@@ -816,6 +816,66 @@ export default function AdminStudentsPage() {
                         <Input type="date" value={editForm.passport_expiry || ""} onChange={(e) => setEditForm((f) => ({ ...f, passport_expiry: e.target.value }))} className="mt-1 h-9 text-sm" />
                       </div>
 
+                      {/* Eye color */}
+                      <div>
+                        <Label className="text-xs">{isRtl ? "لون العيون" : "Eye Color"}</Label>
+                        <Input
+                          value={(editForm as any).eye_color || ""}
+                          onChange={(e) => setEditForm((f) => ({ ...f, eye_color: e.target.value }))}
+                          className="mt-1 h-9 text-sm"
+                          placeholder={isRtl ? "مثال: بني، أزرق" : "e.g. brown, blue"}
+                        />
+                      </div>
+
+                      {/* Boolean toggles */}
+                      {[
+                        { key: "has_changed_legal_name", label: isRtl ? "هل غيّر اسمه القانوني؟" : "Changed Legal Name?" },
+                        { key: "has_criminal_record", label: isRtl ? "هل لديه سجل جنائي؟" : "Has Criminal Record?" },
+                        { key: "has_dual_citizenship", label: isRtl ? "هل لديه جنسية مزدوجة؟" : "Dual Citizenship?" },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center justify-between py-1 border rounded-lg px-3">
+                          <Label className="text-xs cursor-pointer">{label}</Label>
+                          <input
+                            type="checkbox"
+                            checked={(editForm as any)[key] ?? false}
+                            onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.checked }))}
+                            className="h-4 w-4 rounded"
+                          />
+                        </div>
+                      ))}
+
+                      {/* Conditional text fields */}
+                      {editForm.has_changed_legal_name && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "الاسم القانوني السابق" : "Previous Legal Name"}</Label>
+                          <Input
+                            value={(editForm as any).previous_legal_name || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, previous_legal_name: e.target.value }))}
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+                      {editForm.has_criminal_record && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "تفاصيل السجل الجنائي" : "Criminal Record Details"}</Label>
+                          <Textarea
+                            value={(editForm as any).criminal_record_details || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, criminal_record_details: e.target.value }))}
+                            className="mt-1 text-sm min-h-[60px]"
+                          />
+                        </div>
+                      )}
+                      {editForm.has_dual_citizenship && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "دولة الجواز الثاني" : "Second Passport Country"}</Label>
+                          <Input
+                            value={(editForm as any).second_passport_country || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, second_passport_country: e.target.value }))}
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+
                       {/* Notes */}
                       <div>
                         <Label className="text-xs">{isRtl ? "ملاحظات" : "Notes"}</Label>
@@ -845,6 +905,14 @@ export default function AdminStudentsPage() {
                         { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "اسم جهة الطوارئ" : "Emergency Name", value: selected.emergency_contact_name || "—" },
                         { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? "هاتف جهة الطوارئ" : "Emergency Phone", value: selected.emergency_contact_phone || "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
+                        // Personal / Identity fields
+                        { icon: <Eye className="h-3.5 w-3.5" />, label: isRtl ? "لون العيون" : "Eye Color", value: selected.eye_color || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "غيّر اسمه القانوني" : "Changed Legal Name", value: selected.has_changed_legal_name ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_changed_legal_name && selected.previous_legal_name ? [{ icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "الاسم السابق" : "Previous Name", value: selected.previous_legal_name }] : []),
+                        { icon: <Shield className="h-3.5 w-3.5" />, label: isRtl ? "سجل جنائي" : "Criminal Record", value: selected.has_criminal_record ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_criminal_record && selected.criminal_record_details ? [{ icon: <Shield className="h-3.5 w-3.5" />, label: isRtl ? "تفاصيل السجل" : "Record Details", value: selected.criminal_record_details }] : []),
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "جنسية مزدوجة" : "Dual Citizenship", value: selected.has_dual_citizenship ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_dual_citizenship && selected.second_passport_country ? [{ icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "دولة الجواز الثاني" : "2nd Passport Country", value: selected.second_passport_country }] : []),
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldLastUpdated"), value: selected.updated_by_student_at ? format(new Date(selected.updated_by_student_at), "PPP") : "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreated"), value: format(new Date(selected.created_at), "PPP") },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreatedBy"), value: selected.created_by ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8) : t("admin.students.selfRegistered") },
