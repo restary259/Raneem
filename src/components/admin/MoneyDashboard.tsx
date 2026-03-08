@@ -162,10 +162,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       if (c.referral_discount > 0) {
         rows.push({ id: `${c.id}-rd`, studentName: name, type: 'referral_cashback', amount: c.referral_discount, currency: 'NIS', status, date, notes: '', direction: 'out' });
       }
-      // Translation fee (expense)
-      if (c.translation_fee > 0) {
-        rows.push({ id: `${c.id}-tf`, studentName: name, type: 'translation_fee', amount: c.translation_fee, currency: 'NIS', status, date, notes: '', direction: 'out' });
-      }
     });
 
     // Sort by date desc
@@ -184,7 +180,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     const totalReferralDiscount = paidCases.reduce((s, c) => s + (Number(c.referral_discount) || 0), 0);
 
     const totalRevenueNIS = totalServiceFees + totalSchoolComm;
-    const totalExpensesNIS = totalInfluencerComm + totalLawyerComm + totalReferralDiscount + totalTranslation;
+    const totalExpensesNIS = totalInfluencerComm + totalLawyerComm + totalReferralDiscount;
     const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
 
     const pendingPayouts = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -193,7 +189,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     return {
       totalRevenueNIS, totalExpensesNIS, netProfitNIS,
       totalServiceFees, totalSchoolComm, totalInfluencerComm, totalLawyerComm,
-      totalReferralDiscount, totalTranslation, pendingPayouts, paidPayouts,
+      totalReferralDiscount, pendingPayouts, paidPayouts,
       paidStudents: paidCases.length,
     };
   }, [cases, rewards]);
@@ -298,13 +294,12 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
       {/* Breakdown Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {[
+      {[
           { label: t('money.types.service_fee'), value: kpis.totalServiceFees, color: 'text-emerald-700', icon: ArrowUpRight },
           { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight },
           { label: t('money.types.influencer_payout'), value: kpis.totalInfluencerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.team_member_comm'), value: kpis.totalLawyerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.referral_cashback'), value: kpis.totalReferralDiscount, color: 'text-red-600', icon: ArrowDownRight },
-          { label: t('money.types.translation_fee'), value: kpis.totalTranslation, color: 'text-red-600', icon: ArrowDownRight },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -336,7 +331,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <SelectTrigger className="w-44"><SelectValue placeholder={t('money.revenueType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
-            {['service_fee', 'school_commission', 'influencer_payout', 'team_member_comm', 'referral_cashback', 'translation_fee'].map(type => (
+            {['service_fee', 'school_commission', 'influencer_payout', 'team_member_comm', 'referral_cashback'].map(type => (
               <SelectItem key={type} value={type}>{typeLabel(type)}</SelectItem>
             ))}
           </SelectContent>
