@@ -180,7 +180,7 @@ const AdminSubmissionsPage = () => {
     ((s.submission?.service_fee || 0) + (s.submission?.translation_fee || 0)).toLocaleString('en-US');
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
@@ -236,7 +236,7 @@ const AdminSubmissionsPage = () => {
 
       {/* Full Case Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" /> {selected?.full_name}
@@ -249,7 +249,7 @@ const AdminSubmissionsPage = () => {
                 <h3 className="text-sm font-semibold text-foreground mb-2">
                   {t("admin.submissions.basicInfo")}
                 </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
                     <p className="font-medium">{selected.phone_number}</p>
@@ -330,7 +330,7 @@ const AdminSubmissionsPage = () => {
                     <h3 className="text-sm font-semibold text-foreground mb-2">
                       {t("admin.submissions.programAccom")}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {selected.submission?.program_id && (
                         <div>
                           <span className="text-muted-foreground">{t("admin.submissions.program")}:</span>
@@ -360,7 +360,7 @@ const AdminSubmissionsPage = () => {
                     <h3 className="text-sm font-semibold text-foreground mb-2">
                       {t("admin.submissions.studentProfileData")}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {Object.entries(selected.submission.extra_data).map(([key, val]) => {
                         if (!val || val === "") return null;
                         if (key === "program_id" || key === "accommodation_id") return null;

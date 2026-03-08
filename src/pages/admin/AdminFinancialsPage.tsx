@@ -71,7 +71,7 @@ const AdminFinancialsPage = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t('admin.financials.title')}</h1>
@@ -87,7 +87,7 @@ const AdminFinancialsPage = () => {
               <div className={`inline-flex p-2 rounded-lg ${kpi.color.split(' ')[1]} mb-3`}>
                 <kpi.icon className={`h-5 w-5 ${kpi.color.split(' ')[0]}`} />
               </div>
-              <p className="text-2xl font-bold text-foreground">{loading ? '–' : kpi.value}</p>
+              <p className="text-xl font-bold text-foreground truncate min-w-0">{loading ? '–' : kpi.value}</p>
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
             </CardContent>
           </Card>

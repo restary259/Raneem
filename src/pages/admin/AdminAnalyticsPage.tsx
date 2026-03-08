@@ -73,7 +73,7 @@ const AdminAnalyticsPage = () => {
   const yAxisWidth = isRtl ? 80 : 100;
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('admin.analytics.title')}</h1>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>

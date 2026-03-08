@@ -85,7 +85,7 @@ export default function PartnerEarningsPage() {
     s === "enrollment_paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
       <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
         <DollarSign className="h-6 w-6 text-primary" />
         {t("partner.earningsTitle")}
@@ -100,14 +100,14 @@ export default function PartnerEarningsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Award className="h-4 w-4 text-green-600" />
               <span className="text-xs">{t("partner.earnings.total")}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">₪{totalEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{totalEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {earningCases.length} {isAr ? "طالب" : "students"}
             </p>
@@ -119,7 +119,7 @@ export default function PartnerEarningsPage() {
               <TrendingUp className="h-4 w-4 text-cyan-600" />
               <span className="text-xs">{t("partner.earnings.pendingLabel")}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">₪{pendingEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{pendingEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {pendingCases.length} {isAr ? "طالب" : "students"}
             </p>
@@ -131,7 +131,7 @@ export default function PartnerEarningsPage() {
               <DollarSign className="h-4 w-4 text-emerald-600" />
               <span className="text-xs">{t("partner.earnings.confirmedLabel")}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">₪{confirmedEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{confirmedEarnings.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {confirmedCases.length} {isAr ? "طالب" : "students"}
             </p>
@@ -150,35 +150,37 @@ export default function PartnerEarningsPage() {
               {t("partner.earnings.noQualifying")}
             </p>
           ) : (
-            <>
-              {/* Table header */}
-              <div className="grid grid-cols-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 border-b border-border mb-2">
-                <span>{t("partner.earnings.colStudent")}</span>
-                <span>{t("partner.earnings.colPaymentStatus")}</span>
-                <span>{t("partner.earnings.colStage")}</span>
-                <span className="text-end">{t("partner.earnings.colCommission")}</span>
-              </div>
-              {earningCases.map((c) => (
-                <div
-                  key={c.id}
-                  className="grid grid-cols-4 items-center py-3 border-b border-border/50 last:border-0 text-sm gap-2"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
-                    </p>
-                  </div>
-                  <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>{paymentStatus(c.status)}</Badge>
-                  <Badge
-                    className={`text-xs w-fit ${earningStatusColor[c.status] || "bg-muted text-muted-foreground"}`}
-                  >
-                    {earningStatusLabel(c.status)}
-                  </Badge>
-                  <span className="text-end font-bold text-foreground">₪{commissionRate.toLocaleString()}</span>
+            <div className="overflow-x-auto">
+              <div className="min-w-[400px]">
+                {/* Table header */}
+                <div className="grid grid-cols-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 border-b border-border mb-2">
+                  <span>{t("partner.earnings.colStudent")}</span>
+                  <span>{t("partner.earnings.colPaymentStatus")}</span>
+                  <span>{t("partner.earnings.colStage")}</span>
+                  <span className="text-end">{t("partner.earnings.colCommission")}</span>
                 </div>
-              ))}
-            </>
+                {earningCases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="grid grid-cols-4 items-center py-3 border-b border-border/50 last:border-0 text-sm gap-2"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                      </p>
+                    </div>
+                    <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>{paymentStatus(c.status)}</Badge>
+                    <Badge
+                      className={`text-xs w-fit ${earningStatusColor[c.status] || "bg-muted text-muted-foreground"}`}
+                    >
+                      {earningStatusLabel(c.status)}
+                    </Badge>
+                    <span className="text-end font-bold text-foreground">₪{commissionRate.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
