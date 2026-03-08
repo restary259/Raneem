@@ -747,7 +747,7 @@ export default function TeamAppointmentsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
@@ -917,7 +917,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setSelectedAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
           {selectedAppt &&
             (() => {
               const s = apptStyle(selectedAppt.outcome);
@@ -1009,7 +1009,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setPendingMove(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir="ltr">
           <DialogHeader>
             <DialogTitle>Reschedule Appointment?</DialogTitle>
           </DialogHeader>
@@ -1045,7 +1045,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setDeletingAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" dir="ltr">
           <DialogHeader>
             <DialogTitle>Delete Appointment?</DialogTitle>
           </DialogHeader>

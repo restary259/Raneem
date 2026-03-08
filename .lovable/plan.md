@@ -1,80 +1,119 @@
 
-## Full E2E Audit Results — Appointments Page
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### Test session completed as `team@gmail.com`
+### What was found (full audit)
 
-#### ✅ PASSING — All core features work
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-| Feature | Result |
-|---------|--------|
-| Week view loads | ✅ Empty calendar, hour labels AM8–PM8 |
-| ASCII numerals on calendar dates | ✅ 8, 9, 10, 11… no Arabic-Indic digits |
-| New Appointment modal opens | ✅ All fields present |
-| Manual name entry | ✅ Switches from dropdown to text input |
-| Duration selector (5 buttons) | ✅ 30m, 45m, 1h, 1.5h, 2h all clickable |
-| Appointment created & appears on grid | ✅ "Ahmad Test · 30m · AM 10:00" on correct slot |
-| Month view | ✅ March 2026, today highlighted, appointment visible |
-| Day view | ✅ Full-width block, "Today · Sunday, March 8" pill |
-| Detail modal (click block) | ✅ Name, status badge "Upcoming", date, time, notes |
-| Edit modal | ✅ Pre-filled with existing data, "Save Changes" button |
-| Edit saves correctly | ✅ Updated notes reflected in detail modal |
-| Delete confirmation dialog | ✅ Shows correct message, Cancel works |
-| View navigation (prev/next, Today) | ✅ Arrows and Today button work |
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-#### ❌ BUGS FOUND — 3 issues to fix
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
----
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-### Bug 1 — Delete/Detail dialogs render RTL when in English mode (HIGH)
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-**Root cause**: `i18n.ts` line 52 sets `document.documentElement.dir = "rtl"` when language is Arabic. The app's `lng` defaults to `"ar"` (line 16). When the user keeps the UI in Arabic (`lng = "ar"`), ALL dialogs on `TeamAppointmentsPage` inherit `dir="rtl"` from the `<html>` element.
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-The dialogs have no `dir` override, so English-string dialogs are rendered mirrored:
-- "Delete Appointment?" appears as "?Delete Appointment"
-- Confirmation text reads right-to-left
-- Time in detail modal: "10:00 AM · 30 min" renders as "AM · 30 min 10:00"
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-**Fix**: Add `dir="ltr"` to all Dialog `DialogContent` elements in `TeamAppointmentsPage.tsx` that contain English-only hardcoded strings (the New/Edit modal, Detail modal, Delete confirm, Reschedule confirm). This mirrors the fix already applied in `AppointmentOutcomeModal.tsx` which correctly has `dir={isRtl ? 'rtl' : 'ltr'}` on its `DialogContent`.
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
----
-
-### Bug 2 — "Record Outcome" button hidden for today's appointments (MEDIUM)
-
-**Root cause**: Line 987 of `TeamAppointmentsPage.tsx`:
-```typescript
-{!selectedAppt.outcome && new Date(selectedAppt.scheduled_at) < new Date() && (
-  <Button ...>Record Outcome</Button>
-)}
-```
-The test appointment was set at 10:00 AM UTC today. The browser time may be in a different timezone (UTC+2/UTC+3 for Israel). `scheduled_at` is stored as UTC in the database. When the browser evaluates `new Date(selectedAppt.scheduled_at)`, it converts to local time correctly — BUT if the test appointment was scheduled at "10:00" in the modal (using `dt.setHours(10, 0, 0, 0)` which is LOCAL time), it gets stored as UTC-3 which is 07:00 UTC. The check works but only shows the button strictly after the scheduled time in local browser timezone, so the button is actually correct (it only shows after the appointment time has passed).
-
-This is not a bug — the behavior is correct and the "Record Outcome" button is intentionally gated to past appointments only.
-
----
-
-### Bug 3 — Delete dialog text RTL flip causes "?Delete Appointment" (same root as Bug 1)
-
-This is a manifestation of Bug 1. The fix is the same.
-
----
-
-### What to Fix
-
-**File: `src/pages/team/TeamAppointmentsPage.tsx`**
-
-The 4 `DialogContent` elements need `dir={isAr ? "rtl" : "ltr"}` added (the component already has `const isAr = i18n.language === "ar"`):
-
-1. **New/Edit modal** (line ~750): `<DialogContent className="max-w-md">` → `<DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>`
-2. **Detail modal** (line ~920): `<DialogContent className="max-w-sm">` → `<DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>`
-3. **Reschedule confirm** (line ~1012): `<DialogContent className="max-w-sm">` → `<DialogContent className="max-w-sm" dir="ltr">` (always LTR — no Arabic content)
-4. **Delete confirm** (line ~1048): `<DialogContent className="max-w-sm">` → `<DialogContent className="max-w-sm" dir="ltr">` (always LTR — no Arabic content)
-
-That's it — 4 attribute additions in one file. No DB changes, no new translations needed.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-### Files to Change
+### Files to change (batched)
 
-| File | Change |
-|------|--------|
-| `src/pages/team/TeamAppointmentsPage.tsx` | Add `dir` attribute to 4 DialogContent elements |
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)
