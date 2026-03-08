@@ -855,7 +855,19 @@
       "middleName": "Middle Name",
       "familyName": "Family Name",
       "emailLabel": "Student Email Address",
-      "selectCase": "Select a case to link"
+      "selectCase": "Select a case to link",
+      "namePartsRequired": "Please enter all three name parts",
+      "invalidEmail": "Invalid email address",
+      "createdSuccess": "Account created successfully",
+      "fatherName": "Father's Name",
+      "fullThreePart": "Full Three-Part Name",
+      "emailAddress": "Email Address",
+      "creating": "Creating…",
+      "loading": "Loading…",
+      "noResults": "No results found",
+      "createdFor": "Account created for {{name}}. Share these credentials with the student.",
+      "changePasswordHint": "The student will be required to change this password on first login.",
+      "refresh": "Refresh"
     },
     "bagrut": {
       "subtitle": "Convert Bagrut scores to German university grades"
