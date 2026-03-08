@@ -352,7 +352,7 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
                       <Badge variant={req.status === 'approved' ? 'default' : 'secondary'} className="text-[10px]">{req.status}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {Number(req.amount).toLocaleString()} ₪ · {new Date(req.requested_at).toLocaleDateString()}
+                      {Number(req.amount).toLocaleString('en-US')} ₪ · {new Date(req.requested_at).toLocaleDateString('en-US')}
                       {req.payment_method && ` · ${req.payment_method.slice(0, 40)}`}
                     </p>
                     {req.linked_student_names?.length > 0 && (
@@ -412,7 +412,7 @@ const InfluencerPayoutsTab: React.FC<Props> = ({ cases, leads, influencers, rewa
                 <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-background rounded-lg border">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{getProfileName(r.user_id)}</p>
-                    <p className="text-xs text-muted-foreground">{Number(r.amount).toLocaleString()} ₪ · {new Date(r.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">{Number(r.amount).toLocaleString('en-US')} ₪ · {new Date(r.created_at).toLocaleDateString('en-US')}</p>
                     {r.admin_notes && <p className="text-[10px] text-muted-foreground truncate">{r.admin_notes}</p>}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">

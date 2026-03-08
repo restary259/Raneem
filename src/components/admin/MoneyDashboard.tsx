@@ -264,7 +264,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <TrendingDown className="h-4 w-4 text-red-600" />
               <span className="text-xs text-muted-foreground">{t('money.totalExpenses')}</span>
             </div>
-            <p className="text-xl font-bold text-red-700">{kpis.totalExpensesNIS.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold text-red-700">{kpis.totalExpensesNIS.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
         <Card className={`border-2 ${kpis.netProfitNIS >= 0 ? 'border-emerald-400 bg-emerald-50' : 'border-red-400 bg-red-50'}`}>
@@ -273,7 +273,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <Wallet className="h-4 w-4" />
               <span className="text-xs text-muted-foreground">{t('money.netProfit')}</span>
             </div>
-            <p className={`text-xl font-bold ${kpis.netProfitNIS >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{kpis.netProfitNIS.toLocaleString()} ₪</p>
+            <p className={`text-xl font-bold ${kpis.netProfitNIS >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{kpis.netProfitNIS.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
         <Card className="border-amber-200 bg-amber-50/50">
@@ -282,7 +282,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <Wallet className="h-4 w-4 text-amber-600" />
               <span className="text-xs text-muted-foreground">{t('money.pendingPayouts')}</span>
             </div>
-            <p className="text-xl font-bold text-amber-700">{kpis.pendingPayouts.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold text-amber-700">{kpis.pendingPayouts.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
         <Card className="border-emerald-200 bg-emerald-50/50">
@@ -291,7 +291,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <DollarSign className="h-4 w-4 text-emerald-600" />
               <span className="text-xs text-muted-foreground">{t('money.totalPaidOut')}</span>
             </div>
-            <p className="text-xl font-bold text-emerald-700">{kpis.paidPayouts.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold text-emerald-700">{kpis.paidPayouts.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
       </div>
@@ -314,7 +314,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                   <Icon className={`h-3 w-3 ${item.color}`} />
                   <span className="text-[10px] text-muted-foreground truncate">{item.label}</span>
                 </div>
-                <p className={`text-sm font-bold ${item.color}`}>{item.value.toLocaleString()} ₪</p>
+                <p className={`text-sm font-bold ${item.color}`}>{item.value.toLocaleString('en-US')} ₪</p>
               </CardContent>
             </Card>
           );
@@ -386,10 +386,10 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{typeLabel(row.type)}</span>
                         <span className={`font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
-                          {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()} {row.currency}
+                          {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString('en-US')} {row.currency}
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">{new Date(row.date).toLocaleDateString()}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(row.date).toLocaleDateString('en-US')}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -426,16 +426,11 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                               </div>
                             </td>
                             <td className={`px-4 py-3 font-bold ${row.direction === 'in' ? 'text-emerald-700' : 'text-red-600'}`}>
-                              {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString()}
+                              {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString('en-US')}
                             </td>
                             <td className="px-4 py-3 text-muted-foreground">{row.currency}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[row.status] || 'bg-muted border-muted'}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
-                                {statusLabel(row.status)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(row.date).toLocaleDateString()}</td>
+...
+                            <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(row.date).toLocaleDateString('en-US')}</td>
                           </tr>
                         ))}
                       </tbody>

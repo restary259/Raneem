@@ -21,8 +21,8 @@ interface Props {
 
 export default function AppointmentOutcomeModal({ open, onClose, appointmentId, onSuccess }: Props) {
   const { toast } = useToast();
-  const { i18n } = useTranslation('dashboard');
-  const isAr = i18n.language === 'ar';
+  const { t, i18n } = useTranslation('dashboard');
+  const isRtl = i18n.language === 'ar';
   const [outcome, setOutcome] = useState<Outcome>('completed');
   const [notes, setNotes] = useState('');
   const [newDate, setNewDate] = useState('');
@@ -30,49 +30,19 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
 
   const needsNewDate = outcome === 'rescheduled' || outcome === 'delayed';
 
-  type OutcomeMeta = { value: Outcome; label: string; labelAr: string; description: string; descriptionAr: string };
+  type OutcomeMeta = { value: Outcome; labelKey: string; descKey: string };
 
   const OUTCOMES: OutcomeMeta[] = [
-    {
-      value: 'completed',
-      label: 'Completed',
-      labelAr: 'مكتمل',
-      description: 'Meeting happened — move to profile completion',
-      descriptionAr: 'تم الاجتماع — الانتقال إلى استكمال الملف',
-    },
-    {
-      value: 'delayed',
-      label: 'Delayed',
-      labelAr: 'مؤجل',
-      description: 'Needs a new date — schedule another appointment',
-      descriptionAr: 'يحتاج تاريخاً جديداً — حدد موعداً آخر',
-    },
-    {
-      value: 'cancelled',
-      label: 'Cancelled',
-      labelAr: 'ملغى',
-      description: 'Meeting cancelled — return to contacted',
-      descriptionAr: 'تم إلغاء الاجتماع — العودة إلى حالة تم التواصل',
-    },
-    {
-      value: 'rescheduled',
-      label: 'Rescheduled',
-      labelAr: 'أُعيد جدولته',
-      description: 'New date set — create replacement appointment',
-      descriptionAr: 'تم تحديد تاريخ جديد — إنشاء موعد بديل',
-    },
-    {
-      value: 'no_show',
-      label: 'No Show',
-      labelAr: 'لم يحضر',
-      description: 'Student did not appear — mark as forgotten',
-      descriptionAr: 'الطالب لم يظهر — تحديده كمنسي',
-    },
+    { value: 'completed', labelKey: 'team.outcome.completed', descKey: 'team.outcome.completedDesc' },
+    { value: 'delayed', labelKey: 'team.outcome.delayed', descKey: 'team.outcome.delayedDesc' },
+    { value: 'cancelled', labelKey: 'team.outcome.cancelled', descKey: 'team.outcome.cancelledDesc' },
+    { value: 'rescheduled', labelKey: 'team.outcome.rescheduled', descKey: 'team.outcome.rescheduledDesc' },
+    { value: 'no_show', labelKey: 'team.outcome.noShow', descKey: 'team.outcome.noShowDesc' },
   ];
 
   const handleSave = async () => {
     if (needsNewDate && !newDate) {
-      toast({ variant: 'destructive', description: isAr ? 'يرجى تحديد تاريخ ووقت جديد' : 'Please provide a new date/time' });
+      toast({ variant: 'destructive', description: t('team.outcome.dateRequired') });
       return;
     }
     setSaving(true);
@@ -88,7 +58,7 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (resp.error) throw new Error(resp.error.message);
-      toast({ title: isAr ? 'تم تسجيل النتيجة' : 'Outcome recorded' });
+      toast({ title: t('team.outcome.recorded') });
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -100,9 +70,9 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>
+      <DialogContent className="max-w-md" dir={isRtl ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>{isAr ? 'تسجيل نتيجة الموعد' : 'Record Appointment Outcome'}</DialogTitle>
+          <DialogTitle>{t('team.outcome.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <RadioGroup value={outcome} onValueChange={v => setOutcome(v as Outcome)}>
@@ -110,8 +80,8 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
               <div key={o.value} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
                 <RadioGroupItem value={o.value} id={o.value} className="mt-0.5" />
                 <Label htmlFor={o.value} className="cursor-pointer">
-                  <span className="font-medium">{isAr ? o.labelAr : o.label}</span>
-                  <p className="text-xs text-muted-foreground font-normal">{isAr ? o.descriptionAr : o.description}</p>
+                  <span className="font-medium">{t(o.labelKey)}</span>
+                  <p className="text-xs text-muted-foreground font-normal">{t(o.descKey)}</p>
                 </Label>
               </div>
             ))}
@@ -119,7 +89,7 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
 
           {needsNewDate && (
             <div className="space-y-1">
-              <Label>{isAr ? 'التاريخ والوقت الجديد' : 'New Date & Time'}</Label>
+              <Label>{t('team.outcome.newDateTime')}</Label>
               <Input
                 type="datetime-local"
                 value={newDate}
@@ -130,18 +100,18 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
           )}
 
           <div className="space-y-1">
-            <Label>{isAr ? 'ملاحظات (اختياري)' : 'Notes (optional)'}</Label>
+            <Label>{t('team.outcome.notes')}</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            {isAr ? 'إلغاء' : 'Cancel'}
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving
-              ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{isAr ? 'جار الحفظ...' : 'Saving...'}</>
-              : (isAr ? 'حفظ النتيجة' : 'Save Outcome')}
+              ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('common.saving')}</>
+              : t('team.outcome.saveOutcome')}
           </Button>
         </DialogFooter>
       </DialogContent>
