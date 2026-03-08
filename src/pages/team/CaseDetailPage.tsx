@@ -532,7 +532,7 @@ export default function CaseDetailPage() {
                     {new Date(pendingAppt.scheduled_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                   </span>
                 </p>
-                {pendingAppt.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{pendingAppt.notes}</p>}
+                {pendingAppt.notes && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 break-words overflow-hidden">{pendingAppt.notes}</p>}
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap justify-start">
                 <Button size="sm" variant="outline" onClick={() => setRescheduleAppt(pendingAppt)}>
@@ -688,7 +688,7 @@ export default function CaseDetailPage() {
       <PipelineBar />
 
       {/* ── Header ── */}
-      <div className="flex items-start gap-3 flex-wrap">
+      <div className="flex items-start gap-3 flex-wrap" dir="ltr">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="shrink-0 mt-0.5">
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -705,7 +705,7 @@ export default function CaseDetailPage() {
             <CopyButton value={caseData.phone_number} />
             <span>·</span>
             <Clock className="h-3 w-3 shrink-0" />
-            <span dir="ltr" className="inline-block">{formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}</span>
+            <span dir="ltr" className="inline-block whitespace-nowrap">{formatDistanceToNow(new Date(caseData.last_activity_at), { addSuffix: true })}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap shrink-0">
@@ -931,7 +931,7 @@ export default function CaseDetailPage() {
       )}
 
       {/* ── Next Action ── */}
-      <Card className="border-primary/30 bg-primary/5">
+      <Card className="border-primary/30 bg-primary/5 overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">{t("case.detail.nextAction")}</CardTitle>
         </CardHeader>
@@ -1028,52 +1028,52 @@ export default function CaseDetailPage() {
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               {resolved.programName && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.program")}</span>
-                  <span className="font-medium">{resolved.programName}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.program")}</span>
+                  <span className="font-medium shrink-0 whitespace-nowrap max-w-[50%] truncate">{resolved.programName}</span>
                 </div>
               )}
               {resolved.schoolName && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.school")}</span>
-                  <span className="font-medium">{resolved.schoolName}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.school")}</span>
+                  <span className="font-medium shrink-0 whitespace-nowrap max-w-[50%] truncate">{resolved.schoolName}</span>
                 </div>
               )}
               {resolved.accommodationName && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.accommodation")}</span>
-                  <span className="font-medium">{resolved.accommodationName}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.accommodation")}</span>
+                  <span className="font-medium shrink-0 whitespace-nowrap max-w-[50%] truncate">{resolved.accommodationName}</span>
                 </div>
               )}
               {submission.program_start_date && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.startDate")}</span>
-                  <div className="flex items-center gap-1">
-                    <span>{submission.program_start_date}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.startDate")}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="whitespace-nowrap">{submission.program_start_date}</span>
                     <CopyButton value={submission.program_start_date} />
                   </div>
                 </div>
               )}
               {submission.program_end_date && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.endDate")}</span>
-                  <div className="flex items-center gap-1">
-                    <span>{submission.program_end_date}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.endDate")}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="whitespace-nowrap">{submission.program_end_date}</span>
                     <CopyButton value={submission.program_end_date} />
                   </div>
                 </div>
               )}
               <Separator />
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("case.detail.payment")}</span>
-                <span className={submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.payment")}</span>
+                <span className={`shrink-0 whitespace-nowrap ${submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}`}>
                   {submission.payment_confirmed ? t("case.detail.paymentConfirmed") : t("case.detail.paymentPending")}
                 </span>
               </div>
               {submission.submitted_at && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("case.detail.submitted")}</span>
-                  <span>{format(new Date(submission.submitted_at), "MMM d, yyyy")}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.submitted")}</span>
+                  <span className="shrink-0 whitespace-nowrap">{new Date(submission.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                 </div>
               )}
             </CardContent>
