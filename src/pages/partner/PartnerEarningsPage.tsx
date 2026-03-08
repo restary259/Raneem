@@ -71,6 +71,11 @@ export default function PartnerEarningsPage() {
     });
   }, [navigate, load]);
 
+  // Real-time: refetch when commission overrides, settings, or cases change
+  useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
+
   if (!userId || isLoading) return <DashboardLoading />;
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
