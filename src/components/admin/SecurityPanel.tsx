@@ -168,7 +168,7 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
           )}
 
           {/* 24h Summary */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Card><CardContent className="p-4 text-center">
               <p className="text-xs text-muted-foreground">{t('admin.security.successfulLogins', { defaultValue: 'Successful (24h)' })}</p>
               <p className="text-2xl font-bold text-green-600">{successCount}</p>
@@ -188,7 +188,7 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
             <CardHeader className="pb-3">
               <CardTitle className="text-base">{t('admin.security.recentLogins')}</CardTitle>
               <div className="flex flex-wrap gap-2 mt-2">
-                <div className="relative flex-1 min-w-[200px]">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder={t('admin.security.searchEmail', { defaultValue: 'Search by email...' })} value={search} onChange={e => setSearch(e.target.value)} className="ps-9" />
                 </div>

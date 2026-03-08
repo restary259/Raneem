@@ -133,7 +133,7 @@ const EligibilityConfig: React.FC = () => {
         <Card>
           <CardContent className="p-4 space-y-4">
             <h3 className="font-bold text-base">{t('admin.eligibility.thresholdsTitle')}</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">{t('admin.eligibility.eligibleMin')}</label>
                 <Input type="number" value={thresholds.eligible_min} onChange={e => setThresholds({ ...thresholds, eligible_min: Number(e.target.value) || 0 })} />
@@ -149,7 +149,7 @@ const EligibilityConfig: React.FC = () => {
               <div className="bg-amber-400" style={{ width: `${thresholds.eligible_min - thresholds.review_min}%` }} />
               <div className="bg-emerald-400" style={{ width: `${100 - thresholds.eligible_min}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground">
+            <div className="flex flex-wrap justify-between gap-1 text-[10px] text-muted-foreground">
               <span>{t('admin.eligibility.notEligible')} (&lt;{thresholds.review_min})</span>
               <span>{t('admin.eligibility.review')} ({thresholds.review_min}–{thresholds.eligible_min - 1})</span>
               <span>{t('admin.eligibility.eligible')} (≥{thresholds.eligible_min})</span>
