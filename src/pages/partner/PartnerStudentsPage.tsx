@@ -60,16 +60,19 @@ export default function PartnerStudentsPage() {
       .select("id,full_name,status,created_at,source")
       .order("created_at", { ascending: false });
 
+    // All case sources that should be visible to partners
+    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"];
+
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        query = query.in("source", ["apply_page", "contact_form"]);
+        query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
         query = query.eq("partner_id", uid);
       }
-      // show_all_cases === true → no extra filter
+      // show_all_cases === true → no extra filter (show everything)
     } else {
-      // No override row at all → default: apply_page / contact_form
-      query = query.in("source", ["apply_page", "contact_form"]);
+      // No override row at all → default: all partner-visible sources
+      query = query.in("source", PARTNER_SOURCES);
     }
 
     const { data, error } = await query;
