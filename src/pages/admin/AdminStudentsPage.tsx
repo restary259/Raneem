@@ -809,6 +809,7 @@ export default function AdminStudentsPage() {
                         />
                       </div>
                     </div>
+                  ) : (
                     <div className="space-y-2.5 text-sm">
                       {[
                         { icon: <Mail className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmail"), value: selected.email },
