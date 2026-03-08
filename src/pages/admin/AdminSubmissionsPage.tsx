@@ -583,6 +583,21 @@ const AdminSubmissionsPage = () => {
 
               <Separator />
 
+              {/* Enrolled badge for completed cases */}
+              {selected.status === "enrollment_paid" && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-emerald-800">{t("admin.submissions.tabCompleted")}</p>
+                    {selected.submission?.enrollment_paid_at && (
+                      <p className="text-emerald-700 text-xs">
+                        {t("admin.submissions.enrolledOn")}: {fmt(selected.submission.enrollment_paid_at)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex flex-col gap-2">
                 <Button
@@ -597,10 +612,12 @@ const AdminSubmissionsPage = () => {
                   <ExternalLink className="h-4 w-4" />
                   {t("admin.submissions.openFullCase")}
                 </Button>
-                <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
-                  <SplitSquareHorizontal className="h-4 w-4" />
-                  {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
-                </Button>
+                {selected.status !== "enrollment_paid" && (
+                  <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
+                    <SplitSquareHorizontal className="h-4 w-4" />
+                    {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
+                  </Button>
+                )}
               </div>
             </div>
           )}
