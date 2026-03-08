@@ -62,6 +62,14 @@ interface StudentRecord {
   passport_number: string | null;
   passport_expiry: string | null;
   updated_by_student_at: string | null;
+  // Additional personal fields
+  eye_color: string | null;
+  has_changed_legal_name: boolean;
+  previous_legal_name: string | null;
+  has_criminal_record: boolean;
+  criminal_record_details: string | null;
+  has_dual_citizenship: boolean;
+  second_passport_country: string | null;
 }
 
 interface Document {
@@ -272,7 +280,7 @@ export default function AdminStudentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
   const PROFILE_SELECT =
-    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at";
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
 
   // ── FIX 2: Remove over-restrictive filters — show ALL students ──
   const fetchStudents = useCallback(async () => {
@@ -393,6 +401,13 @@ export default function AdminStudentsPage() {
       notes: profile.notes || "",
       passport_number: profile.passport_number || "",
       passport_expiry: profile.passport_expiry || "",
+      eye_color: profile.eye_color || "",
+      previous_legal_name: profile.previous_legal_name || "",
+      has_changed_legal_name: profile.has_changed_legal_name ?? false,
+      has_criminal_record: profile.has_criminal_record ?? false,
+      criminal_record_details: profile.criminal_record_details || "",
+      has_dual_citizenship: profile.has_dual_citizenship ?? false,
+      second_passport_country: profile.second_passport_country || "",
     });
 
     setDocs([]);
@@ -488,6 +503,14 @@ export default function AdminStudentsPage() {
           notes: editForm.notes || null,
           passport_number: editForm.passport_number || null,
           passport_expiry: editForm.passport_expiry || null,
+          // Additional personal fields
+          eye_color: editForm.eye_color || null,
+          previous_legal_name: editForm.previous_legal_name || null,
+          has_changed_legal_name: editForm.has_changed_legal_name ?? false,
+          has_criminal_record: editForm.has_criminal_record ?? false,
+          criminal_record_details: editForm.criminal_record_details || null,
+          has_dual_citizenship: editForm.has_dual_citizenship ?? false,
+          second_passport_country: editForm.second_passport_country || null,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("id", selected.id);
@@ -793,6 +816,66 @@ export default function AdminStudentsPage() {
                         <Input type="date" value={editForm.passport_expiry || ""} onChange={(e) => setEditForm((f) => ({ ...f, passport_expiry: e.target.value }))} className="mt-1 h-9 text-sm" />
                       </div>
 
+                      {/* Eye color */}
+                      <div>
+                        <Label className="text-xs">{isRtl ? "لون العيون" : "Eye Color"}</Label>
+                        <Input
+                          value={(editForm as any).eye_color || ""}
+                          onChange={(e) => setEditForm((f) => ({ ...f, eye_color: e.target.value }))}
+                          className="mt-1 h-9 text-sm"
+                          placeholder={isRtl ? "مثال: بني، أزرق" : "e.g. brown, blue"}
+                        />
+                      </div>
+
+                      {/* Boolean toggles */}
+                      {[
+                        { key: "has_changed_legal_name", label: isRtl ? "هل غيّر اسمه القانوني؟" : "Changed Legal Name?" },
+                        { key: "has_criminal_record", label: isRtl ? "هل لديه سجل جنائي؟" : "Has Criminal Record?" },
+                        { key: "has_dual_citizenship", label: isRtl ? "هل لديه جنسية مزدوجة؟" : "Dual Citizenship?" },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center justify-between py-1 border rounded-lg px-3">
+                          <Label className="text-xs cursor-pointer">{label}</Label>
+                          <input
+                            type="checkbox"
+                            checked={(editForm as any)[key] ?? false}
+                            onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.checked }))}
+                            className="h-4 w-4 rounded"
+                          />
+                        </div>
+                      ))}
+
+                      {/* Conditional text fields */}
+                      {editForm.has_changed_legal_name && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "الاسم القانوني السابق" : "Previous Legal Name"}</Label>
+                          <Input
+                            value={(editForm as any).previous_legal_name || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, previous_legal_name: e.target.value }))}
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+                      {editForm.has_criminal_record && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "تفاصيل السجل الجنائي" : "Criminal Record Details"}</Label>
+                          <Textarea
+                            value={(editForm as any).criminal_record_details || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, criminal_record_details: e.target.value }))}
+                            className="mt-1 text-sm min-h-[60px]"
+                          />
+                        </div>
+                      )}
+                      {editForm.has_dual_citizenship && (
+                        <div>
+                          <Label className="text-xs">{isRtl ? "دولة الجواز الثاني" : "Second Passport Country"}</Label>
+                          <Input
+                            value={(editForm as any).second_passport_country || ""}
+                            onChange={(e) => setEditForm((f) => ({ ...f, second_passport_country: e.target.value }))}
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      )}
+
                       {/* Notes */}
                       <div>
                         <Label className="text-xs">{isRtl ? "ملاحظات" : "Notes"}</Label>
@@ -822,6 +905,14 @@ export default function AdminStudentsPage() {
                         { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "اسم جهة الطوارئ" : "Emergency Name", value: selected.emergency_contact_name || "—" },
                         { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? "هاتف جهة الطوارئ" : "Emergency Phone", value: selected.emergency_contact_phone || "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
+                        // Personal / Identity fields
+                        { icon: <Eye className="h-3.5 w-3.5" />, label: isRtl ? "لون العيون" : "Eye Color", value: selected.eye_color || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "غيّر اسمه القانوني" : "Changed Legal Name", value: selected.has_changed_legal_name ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_changed_legal_name && selected.previous_legal_name ? [{ icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "الاسم السابق" : "Previous Name", value: selected.previous_legal_name }] : []),
+                        { icon: <Shield className="h-3.5 w-3.5" />, label: isRtl ? "سجل جنائي" : "Criminal Record", value: selected.has_criminal_record ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_criminal_record && selected.criminal_record_details ? [{ icon: <Shield className="h-3.5 w-3.5" />, label: isRtl ? "تفاصيل السجل" : "Record Details", value: selected.criminal_record_details }] : []),
+                        { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "جنسية مزدوجة" : "Dual Citizenship", value: selected.has_dual_citizenship ? (isRtl ? "نعم" : "Yes") : (isRtl ? "لا" : "No") },
+                        ...(selected.has_dual_citizenship && selected.second_passport_country ? [{ icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "دولة الجواز الثاني" : "2nd Passport Country", value: selected.second_passport_country }] : []),
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldLastUpdated"), value: selected.updated_by_student_at ? format(new Date(selected.updated_by_student_at), "PPP") : "—" },
                         { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreated"), value: format(new Date(selected.created_at), "PPP") },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreatedBy"), value: selected.created_by ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8) : t("admin.students.selfRegistered") },
@@ -1081,7 +1172,7 @@ export default function AdminStudentsPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-amber-600" />
+              <KeyRound className="h-5 w-5 text-warning" />
               {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
             </DialogTitle>
           </DialogHeader>
@@ -1122,9 +1213,9 @@ export default function AdminStudentsPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20">
-            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 dark:text-amber-200">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-muted border border-border">
+            <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
               {isRtl ? "شارك هذه البيانات مع الطالب فورًا. لن تتمكن من رؤيتها مجددًا." : "Share these credentials with the student immediately. They won't be shown again."}
             </p>
           </div>
