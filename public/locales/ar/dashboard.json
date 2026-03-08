@@ -450,7 +450,16 @@
       "finalConfirmDesc": "سيتم حذف {{count}} سجل بشكل دائم. لا يمكن التراجع.",
       "deleting": "جار الحذف...",
       "confirmYesDelete": "نعم، احذف",
-      "incorrectPassword": "كلمة المرور غير صحيحة"
+      "incorrectPassword": "كلمة المرور غير صحيحة",
+      "contactFormArabicName": "الاسم عربي",
+      "contactFormEnglishName": "الاسم إنجليزي",
+      "contactFormRoleAr": "الدور عربي",
+      "contactFormRoleEn": "الدور إنجليزي",
+      "contactFormPhone": "الهاتف",
+      "contactFormEmail": "البريد الإلكتروني",
+      "contactFormLink": "الرابط",
+      "contactFormCategory": "الفئة",
+      "contactFormOrder": "الترتيب"
     },
     "spreadsheet": {
       "title": "جدول بيانات الطلاب",
@@ -538,7 +547,30 @@
       "timer": "المؤقت",
       "waitingPeriod": "لم تنتهِ فترة الانتظار (20 يوم) بعد",
       "ready": "جاهز",
-      "days": "يوم"
+      "days": "يوم",
+      "bankNameRequired": "يرجى إدخال اسم البنك",
+      "invalidBranch": "رقم فرع غير صالح (2-4 أرقام)",
+      "invalidAccount": "رقم حساب غير صالح (4-12 رقم)",
+      "invalidIban": "رقم IBAN غير صالح — يرجى التحقق من الرقم والمحاولة مرة أخرى",
+      "bankSaved": "تم حفظ بيانات البنك",
+      "defaultUserName": "المستخدم",
+      "requestSubmitted": "تم إرسال الطلب!",
+      "bankBanner": "أضف بيانات حسابك البنكي لتسريع عملية الدفع (اختياري)",
+      "bankAdd": "إضافة",
+      "sending": "جارٍ الإرسال...",
+      "requestPayoutWA": "طلب سحب عبر واتساب",
+      "editBankDetails": "تعديل بيانات البنك",
+      "requestPending": "طلب قيد الانتظار",
+      "allReceived": "تم استلام جميع العمولات",
+      "lockActive": "المكافآت قيد قفل 20 يوم",
+      "bankModalTitle": "بيانات الحساب البنكي الإسرائيلي",
+      "bankName": "اسم البنك",
+      "bankBranch": "رقم الفرع",
+      "bankAccount": "رقم الحساب",
+      "bankIban": "رقم IBAN (اختياري)",
+      "bankIbanHint": "سيتم التحقق من صحة الرقم تلقائياً",
+      "bankCancel": "إلغاء",
+      "bankSaveBtn": "حفظ"
     },
     "referralLink": {
       "title": "رابط الإحالة الخاص بك",
@@ -876,6 +908,36 @@
     }
   },
   "team": {
+    "outcome": {
+      "title": "تسجيل نتيجة الموعد",
+      "completed": "مكتمل",
+      "completedDesc": "تم الاجتماع — الانتقال إلى استكمال الملف",
+      "delayed": "مؤجل",
+      "delayedDesc": "يحتاج تاريخاً جديداً — حدد موعداً آخر",
+      "cancelled": "ملغى",
+      "cancelledDesc": "تم إلغاء الاجتماع — العودة إلى حالة تم التواصل",
+      "rescheduled": "أُعيد جدولته",
+      "rescheduledDesc": "تم تحديد تاريخ جديد — إنشاء موعد بديل",
+      "noShow": "لم يحضر",
+      "noShowDesc": "الطالب لم يظهر — تحديده كمنسي",
+      "newDateTime": "التاريخ والوقت الجديد",
+      "notes": "ملاحظات (اختياري)",
+      "saveOutcome": "حفظ النتيجة",
+      "recorded": "تم تسجيل النتيجة",
+      "dateRequired": "يرجى تحديد تاريخ ووقت جديد"
+    },
+    "payment": {
+      "confirmDesc": "أدخل مبالغ الخدمة وأكد استلام الدفع من الطالب.",
+      "serviceFeeLabel": "رسوم الخدمة (شيكل) *",
+      "translationFeeLabel": "رسوم الترجمة (شيكل)",
+      "total": "الإجمالي",
+      "confirmCheckbox": "أؤكد استلام مبلغ {{amount}} شيكل بالكامل",
+      "confirmed": "تم تأكيد الدفع",
+      "mustConfirm": "يجب تأكيد استلام الدفع",
+      "feeRequired": "رسوم الخدمة يجب أن تكون أكبر من صفر",
+      "confirming": "جار الحفظ...",
+      "confirmBtn": "تأكيد الدفع"
+    },
     "today": {
       "title": "اليوم",
       "schedule": "جدول اليوم",
@@ -1183,7 +1245,9 @@
     "refer": "إحالة",
     "contacts": "جهات الاتصال",
     "spreadsheet": "جدول البيانات",
-    "bagrut": "أداة البجروت"
+    "bagrut": "أداة البجروت",
+    "mainSite": "الموقع الرئيسي",
+    "backToMainSite": "العودة إلى الموقع الرئيسي"
   },
   "case": {
     "status": {
