@@ -9,15 +9,15 @@ import {
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { TrendingUp, Users, Calendar } from 'lucide-react';
 
-/* ── Recharts chart colours using CSS vars so they respect the theme ───── */
+/* ── Chart colours — explicit HSL values for Recharts (no CSS var support in SVG) ── */
 const CHART_COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-  'hsl(217 91% 60%)',
-  'hsl(142 71% 45%)',
+  'hsl(217, 91%, 60%)',
+  'hsl(50, 100%, 50%)',
+  'hsl(270, 80%, 65%)',
+  'hsl(25, 95%, 55%)',
+  'hsl(140, 60%, 45%)',
+  'hsl(185, 90%, 45%)',
+  'hsl(0, 85%, 60%)',
 ];
 
 export default function TeamAnalyticsPage() {

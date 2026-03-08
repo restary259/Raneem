@@ -917,6 +917,8 @@
       "paid": "مدفوع",
       "ready_to_apply": "جاهز للتقديم",
       "registration_submitted": "تم تقديم التسجيل",
+      "submitted": "تم التقديم",
+      "enrollment_paid": "تم الدفع",
       "visa_stage": "مرحلة الفيزا",
       "settled": "مستقر",
       "completed": "مكتمل"
