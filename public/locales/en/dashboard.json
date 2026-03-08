@@ -1636,10 +1636,7 @@
       "successMsg": "Selected data deleted successfully",
       "noneSelected": "Please select at least one category"
     }
-  },
-  "admin": {
-    "programs": {
-      "title": "Programs & Catalog",
+}
       "tabPrograms": "Programs",
       "tabSchools": "Schools",
       "tabAccommodations": "Accommodations",

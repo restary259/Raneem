@@ -1648,10 +1648,7 @@
       "successMsg": "تم حذف البيانات المحددة بنجاح",
       "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
     }
-  },
-  "admin": {
-    "programs": {
-      "title": "البرامج والكتالوج",
+}
       "tabPrograms": "البرامج",
       "tabSchools": "المدارس",
       "tabAccommodations": "الإسكان",
