@@ -41,7 +41,7 @@ export default function PartnerEarningsPage() {
     // Build cases query respecting visibility setting
     let query = (supabase as any)
       .from("cases")
-      .select("id,full_name,status,created_at")
+      .select("id,full_name,status,created_at,source")
       .order("created_at", { ascending: false });
 
     if (override !== null && override !== undefined) {
@@ -55,7 +55,8 @@ export default function PartnerEarningsPage() {
       query = query.in("source", ["apply_page", "contact_form"]);
     }
 
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) console.error("cases fetch error:", error);
     setCases(data || []);
     setIsLoading(false);
   }, []);

@@ -72,7 +72,8 @@ export default function PartnerStudentsPage() {
       query = query.in("source", ["apply_page", "contact_form"]);
     }
 
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) console.error("cases fetch error:", error);
     setCases(data || []);
     setIsLoading(false);
   }, []);

@@ -1,80 +1,119 @@
 
-## Full Diagnosis & Fix Plan
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### What the screenshots show (pre-fix state):
-- **Overview**: shows 1 case (raneem, apply_page) — correct with old fallback logic
-- **Students page**: shows 0 — OLD code used `.eq("partner_id", uid)`, all cases have `partner_id=null`
-- **Earnings page**: shows ₪0 — reads from `commission_transactions` table which has 0 rows
+### What was found (full audit)
 
-### Root causes confirmed from DB audit:
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-**Bug A — Students page: 0 results (FIXED in code, but need to verify)**
-The code was correctly updated in the last session. DB check confirms: RLS `Partners can read own override` policy ✅ exists, override row has `show_all_cases=true` → no filter → all cases visible. The students page should now work.
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-**Bug B — Earnings shows ₪0 (STILL BROKEN)**
-`PartnerOverviewPage` fetches `totalEarned` from `commission_transactions` table → **0 rows in that table** → always ₪0. The actual commission data lives in the `cases` table as `influencer_commission` column (written by `record_case_commission`) or in `rewards`. The `commission_transactions` table is a legacy/unused table in this pipeline. The "Total Paid Out" KPI needs to be sourced from `rewards` (where `record_case_commission` writes partner commissions) not `commission_transactions`.
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-**Bug C — Earnings page: reads `cases.source` but doesn't select it**
-`PartnerEarningsPage` builds a visibility filter using `source` column but the select list is `id,full_name,status,created_at` — **missing `source`**. When `show_all_cases===false`, the `.in("source", [...])` filter still works (Supabase can filter on columns not in SELECT), but this can cause unexpected behavior. Minor but should be fixed.
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-**Bug D — All cases have `partner_id=null`**  
-The `record_case_commission` function only creates rewards when `partner_id IS NOT NULL`. Our fix in `AdminSubmissionsPage` auto-links the partner BEFORE calling `admin-mark-paid`, but raneem's case was submitted BEFORE this fix. Since raneem is already in `submitted` status and no commission was written, the "Total Paid Out" will be 0 even after fixing the table source — until admin marks a NEW case enrolled.
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-### What to fix now — 2 code files only (no DB changes needed):
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-**Fix 1: `PartnerOverviewPage.tsx` — replace `commission_transactions` with `rewards`**
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-The overview's "Total Paid Out" (totalEarned) currently queries:
-```js
-supabase.from("commission_transactions").select("*").eq("partner_id", uid)
-```
-Replace with:
-```js
-supabase.from("rewards").select("amount,status").eq("user_id", uid).in("status", ["approved","paid"])
-```
-And `totalEarned = rewards.reduce((sum, r) => sum + r.amount, 0)`
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-This matches how `record_case_commission` actually stores partner commissions.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
-**Fix 2: `PartnerEarningsPage.tsx` — add `source` to select list**
+---
 
-Change:
-```js
-.select("id,full_name,status,created_at")
-```
-To:
-```js
-.select("id,full_name,status,created_at,source")
-```
+### Files to change (batched)
 
-**Fix 3: Both pages — add error logging to catch silent failures**
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-Both pages use `const { data } = await query` with no error check. Add:
-```js
-const { data, error } = await query;
-if (error) console.error("cases fetch error:", error);
-```
-This will expose any remaining silent RLS or query failures in the console.
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-**Fix 4: `PartnerStudentsPage.tsx` — add `source` to select list (same as Fix 2)**
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-Currently selects `id,full_name,status,created_at,source` — already has source ✅. Just needs error logging added.
+**B. Numeric safety (7 component files)**
 
-### Files to change: 2 files
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
 
-| File | Change |
-|------|---------|
-| `src/pages/partner/PartnerOverviewPage.tsx` | Switch totalEarned from `commission_transactions` → `rewards`; add error logging to cases query |
-| `src/pages/partner/PartnerEarningsPage.tsx` | Add `source` to select list; add error logging to cases query |
-| `src/pages/partner/PartnerStudentsPage.tsx` | Add error logging to cases query |
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
 
-### No DB migration needed
-All tables and RLS policies are correct. The fixes are purely in the frontend data-fetching layer.
+**C. SparklineCard overflow fix**
 
-### After these fixes, the flow will be:
-1. Partner logs in → reads own `partner_commission_overrides` row (RLS allows it ✅)
-2. `show_all_cases=true` → no filter → all cases returned (RLS on cases allows for social_media_partner ✅)  
-3. Students page: shows all 4 cases with friendly status labels ✅
-4. Earnings page: shows cases in paid statuses with correct commission amount ✅
-5. Overview "Total Paid Out": reads from `rewards` table where actual commissions land ✅
-6. Real-time: any change to commission_overrides/cases triggers refetch ✅
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)
