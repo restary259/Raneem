@@ -61,8 +61,8 @@ export const majorsData: MajorCategory[] = [
         languageRequirementsEN: 'B2 German for most programs, some programs available in English (IELTS 6.0+)',
         careerOpportunities: 'وظائف في وزارات الصحة الألمانية، منظمة الصحة العالمية، شركات التأمين الصحي مثل TK، مراكز الأبحاث الطبية مثل Robert Koch Institut',
         careerOpportunitiesEN: 'Positions at German health ministries, WHO, health insurance companies like TK, medical research centers like Robert Koch Institut',
-        arab48Notes: 'تخصص مناسب جداً لمن يريد العودة والعمل في المجال الصحي. شهادة البجروت كافية للقبول المباشر في معظم الجامعات. لا يتطلب Studienkolleg عادةً إذا كان المعدل فوق 60.',
-        arab48NotesEN: 'Very suitable for those who want to return and work in health. Bagrut certificate is sufficient for direct admission at most universities. Usually no Studienkolleg required if GPA is above 60.'
+        arab48Notes: 'تخصص مناسب جداً لمن يريد العودة والعمل في المجال الصحي. شهادة البجروت كافية للقبول المباشر في معظم الجامعات. القبول المباشر يتطلب عادةً بجروت 80+؛ الطلاب بمعدل أقل سيحتاجون Studienkolleg على الأرجح. معظم الجامعات تتطلب التقديم عبر uni-assist.de — قدّم مبكراً.',
+        arab48NotesEN: 'Very suitable for those who want to return and work in health. Bagrut certificate is sufficient for direct admission at most universities. Direct admission usually requires Bagrut 80+; students with lower GPA will likely need Studienkolleg. Most universities require applying via uni-assist.de — apply early.'
       },
       {
         id: 'bioinformatics',
@@ -111,8 +111,8 @@ export const majorsData: MajorCategory[] = [
         languageRequirementsEN: 'B2 German for most programs. Some master\'s programs in English at RWTH Aachen and TU München',
         careerOpportunities: 'ألمانيا من أكبر مصدري الأجهزة الطبية عالمياً. شركات مثل Siemens Healthineers، B. Braun، Otto Bock توظف باستمرار. رواتب بداية 48,000-58,000 يورو سنوياً',
         careerOpportunitiesEN: 'Germany is one of the largest medical device exporters globally. Companies like Siemens Healthineers, B. Braun, Otto Bock hire continuously. Starting salaries 48,000-58,000 EUR/year',
-        arab48Notes: 'تخصص مطلوب جداً في سوق العمل الألماني. شهادة البجروت مقبولة للتقديم المباشر بمعدل فوق 65. يمكن البدء بـ T-Kurs Studienkolleg إذا لزم الأمر.',
-        arab48NotesEN: 'Highly demanded in the German job market. Bagrut certificate accepted for direct admission with GPA above 65. Can start with T-Kurs Studienkolleg if needed.'
+        arab48Notes: 'تخصص مطلوب جداً في سوق العمل الألماني. شهادة البجروت مقبولة للتقديم المباشر. القبول المباشر يتطلب عادةً بجروت 80+؛ الطلاب بمعدل أقل سيحتاجون Studienkolleg على الأرجح. يمكن البدء بـ T-Kurs Studienkolleg إذا لزم الأمر. معظم الجامعات تتطلب التقديم عبر uni-assist.de.',
+        arab48NotesEN: 'Highly demanded in the German job market. Bagrut certificate accepted for direct admission. Direct admission usually requires Bagrut 80+; students with lower GPA will likely need Studienkolleg. Can start with T-Kurs Studienkolleg if needed. Most universities require applying via uni-assist.de.'
       },
       {
         id: 'pharmacy',
@@ -159,10 +159,10 @@ export const majorsData: MajorCategory[] = [
         requiredBackgroundEN: 'Bagrut with GPA 85+ and 5 units in natural sciences. TMS test can improve chances',
         languageRequirements: 'C1 ألماني إلزامي (DSH-2 أو TestDaF 4x4). لا توجد برامج بالإنجليزية',
         languageRequirementsEN: 'C1 German mandatory (DSH-2 or TestDaF 4x4). No English-language programs available',
-        careerOpportunities: 'نقص كبير في أطباء الأسنان في المناطق الريفية الألمانية. راتب بداية 4,000-5,000 يورو. إمكانية فتح عيادة خاصة بدخل مرتفع جداً بعد التخصص',
-        careerOpportunitiesEN: 'Major shortage of dentists in rural Germany. Starting salary 4,000-5,000 EUR. Possibility of opening private practice with very high income after specialization',
-        arab48Notes: 'يتطلب معدل بجروت عالٍ جداً (أقل من 1.5 بالنظام الألماني). البديل: Studienkolleg ثم التقديم. اختبار TMS يساعد كثيراً. المنافسة عالية لكن الفرص بعد التخرج ممتازة.',
-        arab48NotesEN: 'Requires very high Bagrut GPA (below 1.5 in German system). Alternative: Studienkolleg then apply. TMS test helps significantly. High competition but excellent post-graduation opportunities.'
+        careerOpportunities: 'نقص كبير في أطباء الأسنان في المناطق الريفية الألمانية. راتب بداية 3,500-4,200 يورو. إمكانية فتح عيادة خاصة بدخل مرتفع جداً بعد التخصص',
+        careerOpportunitiesEN: 'Major shortage of dentists in rural Germany. Starting salary 3,500-4,200 EUR. Possibility of opening private practice with very high income after specialization',
+        arab48Notes: 'يتطلب معدل بجروت عالٍ جداً (بجروت 90 ≈ درجة ألمانية 1.67؛ للحصول على أقل من 1.5 تحتاج بجروت 93-94+). البديل: Studienkolleg ثم التقديم. اختبار TMS يساعد كثيراً. ملاحظة: اختبار البسيكومتري الإسرائيلي (PET) غير مطلوب للتقديم للجامعات الألمانية. الطلاب الإسرائيليون لا يحتاجون شهادة APS. معظم الجامعات تتطلب التقديم عبر uni-assist.de.',
+        arab48NotesEN: 'Requires very high Bagrut GPA (Bagrut 90 ≈ German 1.67; to achieve below 1.5 you need Bagrut 93-94+). Alternative: Studienkolleg then apply. TMS test helps significantly. Note: Israeli Psychometric Test (PET) is not required for German universities. Israeli students do not need an APS certificate. Most universities require applying via uni-assist.de.'
       },
       {
         id: 'medicine',
@@ -170,10 +170,10 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Medicine',
         description: 'اكتشف مجال الطب وفرصه المستقبلية في الرعاية الصحية',
         descriptionEN: 'Discover the field of medicine and its future healthcare opportunities',
-        duration: '12 فصل دراسي + سنة تدريب',
-        durationEN: '12 semesters + 1 practical year',
-        detailedDescription: 'الطب هو أحد أكثر التخصصات تطلباً وأهمية، حيث يدرس الطلاب تشخيص وعلاج الأمراض البشرية. البرنامج يشمل العلوم الأساسية، علم التشريح، وظائف الأعضاء، علم الأمراض، والطب السريري. يتطلب سنوات من التدريب العملي في المستشفيات الجامعية.',
-        detailedDescriptionEN: 'Medicine is one of the most demanding and important fields, where students study diagnosing and treating human diseases. The program covers basic sciences, anatomy, physiology, pathology, and clinical medicine. It requires years of practical training at university hospitals.',
+        duration: '12 فصل دراسي (6 سنوات) شاملاً السنة العملية',
+        durationEN: '12 semesters (6 years) including the Praktisches Jahr',
+        detailedDescription: 'الطب هو أحد أكثر التخصصات تطلباً وأهمية، حيث يدرس الطلاب تشخيص وعلاج الأمراض البشرية. البرنامج يشمل العلوم الأساسية، علم التشريح، وظائف الأعضاء، علم الأمراض، والطب السريري. يتطلب 12 فصلاً دراسياً (6 سنوات) شاملاً السنة العملية (Praktisches Jahr) في المستشفيات الجامعية.',
+        detailedDescriptionEN: 'Medicine is one of the most demanding and important fields, where students study diagnosing and treating human diseases. The program covers basic sciences, anatomy, physiology, pathology, and clinical medicine. It requires 12 semesters (6 years) including the Praktisches Jahr (practical year) at university hospitals.',
         careerProspects: 'طبيب عام، التخصص في الطب الباطني، الجراحة، طب الأطفال، أو أي تخصص طبي آخر، البحث الطبي.',
         careerProspectsEN: 'General practitioner, specialization in internal medicine, surgery, pediatrics, or any other medical specialty, medical research.',
         requirements: 'درجات استثنائية في الثانوية العامة، اجتياز اختبار القبول الطبي، قدرة على التحمل النفسي والجسدي.',
@@ -184,10 +184,10 @@ export const majorsData: MajorCategory[] = [
         requiredBackgroundEN: 'Bagrut with GPA 90+ and 5 units in biology and chemistry. TMS test (Test für Medizinische Studiengänge) required',
         languageRequirements: 'C1 ألماني إلزامي (DSH-2 أو TestDaF 4x4). لا توجد برامج طب بالإنجليزية في ألمانيا',
         languageRequirementsEN: 'C1 German mandatory (DSH-2 or TestDaF 4x4). No English-language medical programs in Germany',
-        careerOpportunities: 'ألمانيا تعاني من نقص حاد في الأطباء. فرص عمل ممتازة في المستشفيات والعيادات. راتب بداية حوالي 4,500-5,500 يورو شهرياً. إمكانية فتح عيادة خاصة بعد التخصص (Facharzt)',
-        careerOpportunitiesEN: 'Germany has a severe shortage of doctors. Excellent job opportunities in hospitals and clinics. Starting salary approx. 4,500-5,500 EUR/month. Possibility of opening private practice after specialization (Facharzt)',
-        arab48Notes: 'الطب من أصعب التخصصات للقبول. معدل البجروت يُحسب بالطريقة البافارية ويجب أن يكون أقل من 1.5 ألماني (أي بجروت فوق 90). بديل: يمكن الالتحاق بـ M-Kurs Studienkolleg ثم التقديم. اختبار TMS يمكن أن يحسن فرصك حتى بمعدل أقل.',
-        arab48NotesEN: 'Medicine is the hardest major for admission. Bagrut GPA is calculated using the Bavarian method and must be below 1.5 German (i.e., Bagrut above 90). Alternative: Join M-Kurs Studienkolleg then apply. TMS test can improve your chances even with a lower GPA.'
+        careerOpportunities: 'ألمانيا تعاني من نقص حاد في الأطباء. فرص عمل ممتازة في المستشفيات والعيادات. راتب بداية حوالي 3,800-4,400 يورو شهرياً (Assistenzarzt طبقاً لـ TV-Ärzte). إمكانية فتح عيادة خاصة بعد التخصص (Facharzt)',
+        careerOpportunitiesEN: 'Germany has a severe shortage of doctors. Excellent job opportunities in hospitals and clinics. Starting salary approx. 3,800-4,400 EUR/month (Assistenzarzt per TV-Ärzte). Possibility of opening private practice after specialization (Facharzt)',
+        arab48Notes: 'الطب من أصعب التخصصات للقبول. بجروت 90 ≈ درجة ألمانية 1.67؛ للحصول على درجة أقل من 1.5 تحتاج بجروت 93-94+. بديل: يمكن الالتحاق بـ M-Kurs Studienkolleg ثم التقديم. اختبار TMS يمكن أن يحسن فرصك حتى بمعدل أقل. ملاحظة: اختبار البسيكومتري الإسرائيلي (PET) غير مطلوب للتقديم للجامعات الألمانية. الطلاب الإسرائيليون لا يحتاجون شهادة APS (تُطلب فقط من الصينيين والفيتناميين). معظم الجامعات تتطلب التقديم عبر uni-assist.de — قدّم مبكراً.',
+        arab48NotesEN: 'Medicine is the hardest major for admission. Bagrut 90 ≈ German 1.67; to achieve below 1.5 you need Bagrut 93-94+. Alternative: Join M-Kurs Studienkolleg then apply. TMS test can improve your chances even with a lower GPA. Note: Israeli Psychometric Test (PET) is not required for German universities. Israeli students do not need an APS certificate (required only for Chinese and Vietnamese applicants). Most universities require applying via uni-assist.de — apply early.'
       },
       {
         id: 'physiotherapy',
@@ -195,10 +195,10 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Physiotherapy',
         description: 'تعرف على تخصص العلاج الطبيعي وإعادة التأهيل',
         descriptionEN: 'Learn about physiotherapy and rehabilitation',
-        duration: '6 فصول دراسية',
-        durationEN: '6 semesters',
-        detailedDescription: 'العلاج الطبيعي يركز على استعادة الحركة والوظائف الجسدية بعد الإصابات أو الأمراض. يدرس الطلاب علم التشريح، وظائف الأعضاء، تقنيات العلاج اليدوي، والتمارين العلاجية. البرنامج يشمل تدريباً عملياً في المستشفيات ومراكز إعادة التأهيل.',
-        detailedDescriptionEN: 'Physiotherapy focuses on restoring movement and bodily functions after injuries or diseases. Students study anatomy, physiology, manual therapy techniques, and therapeutic exercises. The program includes practical training in hospitals and rehabilitation centers.',
+        duration: '3 سنوات تدريب مهني (Ausbildung) أو 6 فصول جامعية',
+        durationEN: '3-year Ausbildung (vocational) or 6-semester university BSc (limited programs)',
+        detailedDescription: 'تنبيه مهم: العلاج الطبيعي في ألمانيا هو في المقام الأول تدريب مهني (Ausbildung) مدته 3 سنوات وليس بكالوريوس جامعي. برامج البكالوريوس الجامعية موجودة لكنها نادرة. العلاج الطبيعي يركز على استعادة الحركة والوظائف الجسدية بعد الإصابات أو الأمراض. يدرس الطلاب علم التشريح، وظائف الأعضاء، تقنيات العلاج اليدوي، والتمارين العلاجية. البرنامج يشمل تدريباً عملياً في المستشفيات ومراكز إعادة التأهيل.',
+        detailedDescriptionEN: 'Important: Physiotherapy in Germany is primarily a 3-year vocational training (Ausbildung), not a university bachelor\'s degree. University BSc programs exist but are rare and limited. Physiotherapy focuses on restoring movement and bodily functions after injuries or diseases. Students study anatomy, physiology, manual therapy techniques, and therapeutic exercises. The program includes practical training in hospitals and rehabilitation centers.',
         careerProspects: 'العمل في المستشفيات، مراكز إعادة التأهيل، النوادي الرياضية، أو فتح عيادة خاصة.',
         careerProspectsEN: 'Work in hospitals, rehabilitation centers, sports clubs, or opening a private practice.',
         requirements: 'لياقة بدنية جيدة، مهارات تواصل قوية، اهتمام بالصحة والرياضة، صبر في التعامل مع المرضى.',
@@ -211,8 +211,8 @@ export const majorsData: MajorCategory[] = [
         languageRequirementsEN: 'B2 German mandatory. Direct patient interaction requires good German',
         careerOpportunities: 'طلب مرتفع جداً في ألمانيا على أخصائيي العلاج الطبيعي. إمكانية فتح عيادة خاصة. راتب بداية 2,800-3,500 يورو شهرياً مع نمو سريع',
         careerOpportunitiesEN: 'Very high demand in Germany for physiotherapists. Possibility of opening private practice. Starting salary 2,800-3,500 EUR/month with rapid growth',
-        arab48Notes: 'تخصص عملي ممتاز بمتطلبات قبول معتدلة. البجروت مقبول مباشرة في معظم الجامعات. لا يتطلب Studienkolleg عادةً. فرص عمل مضمونة تقريباً بعد التخرج.',
-        arab48NotesEN: 'Excellent practical major with moderate admission requirements. Bagrut accepted directly at most universities. Usually no Studienkolleg required. Job opportunities almost guaranteed after graduation.'
+        arab48Notes: 'تنبيه: مسار Ausbildung (التدريب المهني 3 سنوات) هو الأكثر شيوعاً وليس الجامعة. برامج BSc الجامعية محدودة. القبول المباشر يتطلب عادةً بجروت 80+؛ الطلاب بمعدل أقل سيحتاجون Studienkolleg على الأرجح. فرص عمل ممتازة بعد التخرج. معظم الجامعات تتطلب التقديم عبر uni-assist.de.',
+        arab48NotesEN: 'Note: The Ausbildung (3-year vocational training) pathway is the most common, not university. University BSc programs are limited. Direct admission usually requires Bagrut 80+; students with lower GPA will likely need Studienkolleg. Excellent job opportunities after graduation. Most universities require applying via uni-assist.de.'
       },
       {
         id: 'veterinary',
@@ -245,10 +245,10 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Nursing',
         description: 'تعرف على مسار التمريض ومستقبله في الرعاية الصحية',
         descriptionEN: 'Learn about the nursing pathway and its future in healthcare',
-        duration: '6 فصول دراسية',
-        durationEN: '6 semesters',
-        detailedDescription: 'التمريض يركز على رعاية المرضى وتقديم الدعم الطبي تحت إشراف الأطباء. يدرس الطلاب أساسيات الرعاية الصحية، علم التشريح، إدارة الأدوية، والتمريض السريري. البرنامج يشمل تدريباً مكثفاً في أقسام المستشفى المختلفة.',
-        detailedDescriptionEN: 'Nursing focuses on patient care and providing medical support under physician supervision. Students study healthcare basics, anatomy, medication management, and clinical nursing. The program includes intensive training across various hospital departments.',
+        duration: '3 سنوات تدريب مهني (Ausbildung) أو 6 فصول جامعية',
+        durationEN: '3-year Ausbildung (vocational) or 6-semester university BSc',
+        detailedDescription: 'تنبيه مهم: التمريض في ألمانيا يسلك بصورة رئيسية مسار التدريب المهني (Ausbildung) مدته 3 سنوات. برامج بكالوريوس التمريض الجامعية موجودة ولكنها أقل شيوعاً. التمريض يركز على رعاية المرضى وتقديم الدعم الطبي تحت إشراف الأطباء. يدرس الطلاب أساسيات الرعاية الصحية، علم التشريح، إدارة الأدوية، والتمريض السريري. البرنامج يشمل تدريباً مكثفاً في أقسام المستشفى المختلفة.',
+        detailedDescriptionEN: 'Important: Nursing in Germany primarily follows the 3-year vocational training (Ausbildung) pathway. University nursing BSc programs exist but are less common. Nursing focuses on patient care and providing medical support under physician supervision. Students study healthcare basics, anatomy, medication management, and clinical nursing. The program includes intensive training across various hospital departments.',
         careerProspects: 'العمل في المستشفيات، دور المسنين، الرعاية المنزلية، أو التخصص في تمريض العناية المركزة.',
         careerProspectsEN: 'Work in hospitals, nursing homes, home care, or specializing in intensive care nursing.',
         requirements: 'تعاطف وصبر، قدرة على العمل تحت الضغط، مهارات تواصل جيدة، واستعداد للعمل في نوبات.',
@@ -259,10 +259,10 @@ export const majorsData: MajorCategory[] = [
         requiredBackgroundEN: 'Bagrut with GPA 55+. No specific science subjects required in high school',
         languageRequirements: 'B2 ألماني إلزامي. التعامل اليومي مع المرضى والطاقم الطبي يتطلب ألمانية جيدة',
         languageRequirementsEN: 'B2 German mandatory. Daily interaction with patients and medical staff requires good German',
-        careerOpportunities: 'نقص حاد جداً في الممرضين في ألمانيا. فرص عمل مضمونة 100%. راتب بداية 3,000-3,600 يورو شهرياً. إمكانية التخصص والترقي بسرعة',
-        careerOpportunitiesEN: 'Severe nursing shortage in Germany. 100% guaranteed job opportunities. Starting salary 3,000-3,600 EUR/month. Possibility of specialization and rapid advancement',
-        arab48Notes: 'أسهل تخصص طبي للقبول. البجروت مقبول مباشرة. لا يتطلب Studienkolleg. ألمانيا تقدم منح وتسهيلات كبيرة لطلاب التمريض بسبب النقص الحاد.',
-        arab48NotesEN: 'Easiest medical major for admission. Bagrut accepted directly. No Studienkolleg required. Germany offers scholarships and great facilities for nursing students due to severe shortage.'
+        careerOpportunities: 'شح حاد في الممرضين في ألمانيا يجعل إيجاد العمل سهلاً جداً. راتب بداية 3,000-3,600 يورو شهرياً. إمكانية التخصص والترقي بسرعة',
+        careerOpportunitiesEN: 'Germany\'s severe nursing shortage makes job-finding very easy. Starting salary 3,000-3,600 EUR/month. Possibility of specialization and rapid advancement',
+        arab48Notes: 'تنبيه: مسار Ausbildung (التدريب المهني 3 سنوات) هو الأكثر شيوعاً وليس الجامعة. القبول المباشر يتطلب عادةً بجروت 80+؛ الطلاب بمعدل أقل سيحتاجون Studienkolleg على الأرجح. ألمانيا تقدم منح وتسهيلات كبيرة لطلاب التمريض بسبب النقص الحاد. معظم الجامعات تتطلب التقديم عبر uni-assist.de.',
+        arab48NotesEN: 'Note: The Ausbildung (3-year vocational training) pathway is most common, not university. Direct admission usually requires Bagrut 80+; students with lower GPA will likely need Studienkolleg. Germany offers scholarships and great facilities for nursing students due to severe shortage. Most universities require applying via uni-assist.de.'
       }
     ]
   },
