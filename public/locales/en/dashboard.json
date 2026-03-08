@@ -440,7 +440,11 @@
       "confirmEnroll": "Confirm & Enroll",
       "totalFees": "Total fees",
       "incorrectPassword": "Incorrect password",
-      "enrolledSuccess": "Marked as enrolled"
+      "enrolledSuccess": "Marked as enrolled",
+      "tabPending": "Pending Review",
+      "tabCompleted": "Completed",
+      "enrolledOn": "Enrolled On",
+      "emptyCompleted": "No completed cases yet"
     },
     "financials": {
       "title": "Financial Dashboard",

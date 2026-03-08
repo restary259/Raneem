@@ -441,7 +441,11 @@
       "confirmEnroll": "تأكيد وتسجيل",
       "totalFees": "إجمالي الرسوم",
       "incorrectPassword": "كلمة المرور غير صحيحة",
-      "enrolledSuccess": "تم تسجيل القبول بنجاح"
+      "enrolledSuccess": "تم تسجيل القبول بنجاح",
+      "tabPending": "قيد المراجعة",
+      "tabCompleted": "مكتملة",
+      "enrolledOn": "تاريخ التسجيل",
+      "emptyCompleted": "لا توجد حالات مكتملة بعد"
     },
     "financials": {
       "title": "لوحة المالية",

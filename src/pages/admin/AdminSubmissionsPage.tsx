@@ -2,14 +2,14 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, CheckCircle2, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal } from "lucide-react";
+import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +56,9 @@ const AdminSubmissionsPage = () => {
   const navigate = useNavigate();
   const isRtl = i18n.language === "ar";
 
+  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
   const [cases, setCases] = useState<SubmittedCase[]>([]);
+  const [completedCases, setCompletedCases] = useState<SubmittedCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubmittedCase | null>(null);
   const [marking, setMarking] = useState(false);
@@ -73,47 +75,59 @@ const AdminSubmissionsPage = () => {
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
 
+  const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
+    if (ids.length === 0) return [];
+    const [subRes, docsRes] = await Promise.all([
+      supabase.from("case_submissions").select("*").in("case_id", ids),
+      supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
+    ]);
+    const subMap: Record<string, any> = {};
+    (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
+    const docsMap: Record<string, any[]> = {};
+    (docsRes.data || []).forEach((d) => {
+      if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
+      docsMap[d.case_id].push(d);
+    });
+    return rawCases.map((c) => ({
+      ...c,
+      submission: subMap[c.id] || null,
+      documents: docsMap[c.id] || [],
+    }));
+  }, []);
+
   const fetchCases = useCallback(async () => {
     setLoading(true);
     try {
-      const casesRes = await supabase
-        .from("cases")
-        .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
-        .eq("status", "submitted")
-        .order("created_at", { ascending: false });
-
-      if (casesRes.error) throw casesRes.error;
-      const ids = (casesRes.data || []).map((c) => c.id);
-
-      if (ids.length === 0) {
-        setCases([]);
-        setLoading(false);
-        return;
-      }
-
-      const [subRes, docsRes] = await Promise.all([
-        supabase.from("case_submissions").select("*").in("case_id", ids),
-        supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
+      const [pendingRes, completedRes] = await Promise.all([
+        supabase
+          .from("cases")
+          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .eq("status", "submitted")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("cases")
+          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .eq("status", "enrollment_paid")
+          .order("created_at", { ascending: false }),
       ]);
 
-      const subMap: Record<string, any> = {};
-      (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
+      if (pendingRes.error) throw pendingRes.error;
+      if (completedRes.error) throw completedRes.error;
 
-      const docsMap: Record<string, any[]> = {};
-      (docsRes.data || []).forEach((d) => {
-        if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
-        docsMap[d.case_id].push(d);
-      });
+      const pendingIds = (pendingRes.data || []).map((c) => c.id);
+      const completedIds = (completedRes.data || []).map((c) => c.id);
 
-      const enriched = (casesRes.data || []).map((c) => ({
-        ...c,
-        submission: subMap[c.id] || null,
-        documents: docsMap[c.id] || [],
-      }));
-      setCases(enriched);
+      const [enrichedPending, enrichedCompleted] = await Promise.all([
+        enrichCases(pendingIds, pendingRes.data || []),
+        enrichCases(completedIds, completedRes.data || []),
+      ]);
 
-      const programIds = [...new Set(enriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
-      const accommodationIds = [...new Set(enriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
+      setCases(enrichedPending);
+      setCompletedCases(enrichedCompleted);
+
+      const allEnriched = [...enrichedPending, ...enrichedCompleted];
+      const programIds = [...new Set(allEnriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
+      const accommodationIds = [...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
 
       if (programIds.length > 0) {
         const { data: progData } = await (supabase as any).from("programs").select("id, name_en").in("id", programIds);
@@ -133,7 +147,7 @@ const AdminSubmissionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, enrichCases]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
@@ -266,41 +280,108 @@ const AdminSubmissionsPage = () => {
         </Button>
       </div>
 
+      {/* Subtabs */}
+      <div className="flex gap-2 border-b border-border pb-0">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 transition-colors ${
+            activeTab === "pending"
+              ? "bg-background text-foreground border-border"
+              : "text-muted-foreground border-transparent hover:text-foreground"
+          }`}
+        >
+          {t("admin.submissions.tabPending", "Pending Review")}
+          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+            {cases.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("completed")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 transition-colors ${
+            activeTab === "completed"
+              ? "bg-background text-foreground border-border"
+              : "text-muted-foreground border-transparent hover:text-foreground"
+          }`}
+        >
+          {t("admin.submissions.tabCompleted", "Completed")}
+          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"}`}>
+            {completedCases.length}
+          </span>
+        </button>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
               {t("common.loading")}
             </div>
-          ) : cases.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              {t("admin.submissions.empty", "No submitted cases yet")}
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {cases.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => setSelected(c)}
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{c.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
-                      {fmt(c.submission?.submitted_at || null)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-end">
-                      <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
-                      <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+          ) : activeTab === "pending" ? (
+            cases.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                {t("admin.submissions.empty", "No submitted cases yet")}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {cases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelected(c)}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
+                        {fmt(c.submission?.submitted_at || null)}
+                      </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-3">
+                      <div className="text-end">
+                        <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
+                        <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          ) : (
+            completedCases.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                {t("admin.submissions.emptyCompleted", "No completed cases yet")}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {completedCases.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelected(c)}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.phone_number} · {t("admin.submissions.enrolledOn")}:{" "}
+                        {fmt(c.submission?.enrollment_paid_at || null)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 border hidden sm:flex">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {t("admin.submissions.tabCompleted")}
+                      </Badge>
+                      <div className="text-end">
+                        <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
+                        <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </CardContent>
       </Card>
@@ -502,6 +583,21 @@ const AdminSubmissionsPage = () => {
 
               <Separator />
 
+              {/* Enrolled badge for completed cases */}
+              {selected.status === "enrollment_paid" && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-emerald-800">{t("admin.submissions.tabCompleted")}</p>
+                    {selected.submission?.enrollment_paid_at && (
+                      <p className="text-emerald-700 text-xs">
+                        {t("admin.submissions.enrolledOn")}: {fmt(selected.submission.enrollment_paid_at)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex flex-col gap-2">
                 <Button
@@ -516,10 +612,12 @@ const AdminSubmissionsPage = () => {
                   <ExternalLink className="h-4 w-4" />
                   {t("admin.submissions.openFullCase")}
                 </Button>
-                <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
-                  <SplitSquareHorizontal className="h-4 w-4" />
-                  {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
-                </Button>
+                {selected.status !== "enrollment_paid" && (
+                  <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
+                    <SplitSquareHorizontal className="h-4 w-4" />
+                    {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
+                  </Button>
+                )}
               </div>
             </div>
           )}
