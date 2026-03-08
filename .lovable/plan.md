@@ -1,119 +1,133 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Mobile Rendering Audit — Findings & Fix Plan
 
-### What was found (full audit)
+### What Already Works (Global CSS)
+- `box-sizing: border-box` ✅ (base.css line 40)
+- `overflow-x: hidden` on `html` and `body` ✅
+- `word-break: break-word` on body + tables ✅
+- `overflow-wrap: anywhere` on td/th ✅
+- `max-width: 100%` on img/video/table/iframe ✅
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
-
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
-
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
-
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
-
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
-
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
-
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
-
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
-
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+### Issues Found — Grouped by Type
 
 ---
 
-### Files to change (batched)
+#### 1. Non-responsive Grid Layouts (need responsive breakpoints)
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**`AdminCommandCenter.tsx`** — `grid-cols-5` KPI tiles: On mobile 2 columns is fine but 5 fixed cols will overflow. Already `grid-cols-2 lg:grid-cols-5` → OK. But `p-6` container has no `px-4` fallback. **Minor fix**: ensure page padding scales.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+**`AdminFinancialsPage.tsx`** — `grid grid-cols-2 md:grid-cols-3` — OK.
+- Summary cards `p-5` with `text-2xl` value: on 320px with long ILS strings, can overflow. Need `truncate` on value text.
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+**`PartnerEarningsPage.tsx`** — `grid grid-cols-3 gap-4` (line 103): **3 equal columns with no breakpoint** — on mobile 320px each card gets ~100px wide, text is clipped. Fix: `grid-cols-1 sm:grid-cols-3`.
+- Earnings breakdown uses `grid grid-cols-4` (custom div, line 155) with no overflow wrapper and no responsive column count — on narrow screens the 4 columns are too tight. Fix: wrap in `overflow-x-auto` or make it `grid-cols-2 sm:grid-cols-4`.
 
-**B. Numeric safety (7 component files)**
+**`AdminAnalyticsPage.tsx`** — `grid grid-cols-2 md:grid-cols-4` KPIs — fine. Charts use `ResponsiveContainer width="100%"` — fine.
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+**`AdminSettingsPage.tsx`** — `grid grid-cols-2 gap-4` in platform config (line 362) — on mobile inputs get too narrow. Fix: `grid-cols-1 sm:grid-cols-2`.
+- Contact form `grid grid-cols-2 gap-3` appears 4 times (lines 403, 413) — same fix.
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
+**`AdminSubmissionsPage.tsx`** — `grid grid-cols-2 gap-3` for detail view sections — fine on most phones but tight on 320px. Fix: `grid-cols-1 sm:grid-cols-2`.
 
-**C. SparklineCard overflow fix**
+**`AdminPipelinePage.tsx`** — Kanban: `flex gap-4 min-w-max` inside `overflow-x-auto` → this is correct Kanban behavior, horizontal scroll is intentional. **No fix needed.**
+- Filter row: `min-w-[200px]` on search — may cause overflow. Fix: `min-w-0` or `min-w-[160px]`.
+- Sheet `w-full sm:max-w-md` — ✅.
 
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**`CaseDetailPage.tsx`** — Application info `grid grid-cols-2 sm:grid-cols-3` — ✅.
+- Appointment action buttons `flex gap-2 shrink-0 flex-wrap` — ✅.
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+#### 2. Fixed-width `DialogContent` / `SheetContent` missing `max-w-[95vw]`
+
+**`AdminTeamPage.tsx`** — `DialogContent dir={isRtl ? "rtl" : "ltr"}` — no `max-w` or responsive width. Fix: add `className="max-w-[95vw] sm:max-w-lg"`.
+
+**`AdminSubmissionsPage.tsx`** — `DialogContent ... className="max-w-2xl max-h-[90vh] overflow-y-auto"` — on small screens `max-w-2xl` is wider than the viewport. Fix: `max-w-[95vw] sm:max-w-2xl`.
+
+**`TeamCasesPage.tsx`** — `DialogContent className="max-w-sm"` — `max-w-sm` is 384px, fine on most phones but not on 320px screens. Fix: `max-w-[95vw] sm:max-w-sm`.
+
+**`AdminSettingsPage.tsx`** — `DialogContent ... className="max-h-[90vh] overflow-y-auto"` (contact add form) — missing max-w. Fix: add `max-w-[95vw] sm:max-w-lg`.
+
+---
+
+#### 3. Headers / text that can overflow
+
+**`AdminStudentsPage.tsx`** — Student list row `grid-cols-5` on desktop, mobile has separate card. The mobile card has `truncate` on name ✅. But `p.text-xs.text-muted-foreground` for email has no `truncate` — long email can overflow. Fix: add `truncate` to email `<p>` in mobile card.
+
+**`AdminPipelinePage.tsx`** — Filter `SelectTrigger className="w-[200px]"` — fixed pixel width, on 320px with both search + select in flex-wrap row, the select may overflow. Fix: `w-full sm:w-[200px]` or `min-w-0 flex-1`.
+
+**`PartnerOverviewPage.tsx`** — Earnings banner: `text-4xl font-black` for monetary value — could overflow on 320px. Fix: `text-3xl sm:text-4xl break-all`.
+
+**`AdminCommandCenter.tsx`** — KPI card: `text-3xl font-bold` for value. On smaller cards at 2-col layout may be slightly tight. Fine as-is given numbers are small.
+
+---
+
+#### 4. Table overflows
+
+**`AdminSpreadsheetPage.tsx`** — Table wrapped in `overflow-auto` ✅ (line 264).
+
+**`PartnerOverviewPage.tsx`** — Table wrapped in `overflow-x-auto` ✅ (line 198). Table cells use `px-4 py-3` text — but no `whitespace-nowrap` protection. On very small screens, names wrap naturally which is fine.
+
+**`AdminStudentsPage.tsx`** — Uses cards instead of a table for mobile ✅.
+
+---
+
+#### 5. Page padding on mobile (all dashboard pages use `p-6`)
+
+`p-6` = 24px padding — on 320px this gives only 272px for content. Should be `p-4 sm:p-6` for comfort. Affects:
+- `AdminCommandCenter.tsx` (line 146)
+- `AdminFinancialsPage.tsx` (line 74)
+- `AdminTeamPage.tsx` (line 112)
+- `AdminActivityPage.tsx` (line 75)
+- `AdminAnalyticsPage.tsx` (line 76)
+- `AdminStudentsPage.tsx` (line 635)
+- `TeamTodayPage.tsx` (line 87)
+- `PartnerEarningsPage.tsx` (line 88)
+- `StudentChecklistPage.tsx` (line 25)
+- `StudentProfilePage.tsx` (line 37)
+- `StudentDocumentsPage.tsx` (line 21)
+- `StudentVisaPage.tsx` (line 234)
+- `AdminSettingsPage.tsx` (line 332)
+
+---
+
+#### 6. RTL directional classes to convert (hardcoded `ml-`, `mr-`, `pl-`, `pr-`)
+
+**`AdminSettingsPage.tsx` (line 344)** — `<DollarSign className="h-3.5 w-3.5 mr-1" />` — Fix: `me-1`.
+
+**`PartnerOverviewPage.tsx` (line 186)** — `className="ml-auto text-xs"` — Fix: `ms-auto`.
+
+---
+
+#### 7. Bottom Nav labels — already good
+
+`MobileBottomNav.tsx` uses `truncate max-w-[48px]` and `text-[10px]` ✅. No fix needed.
+
+---
+
+### Files to Edit (CSS-only changes)
+
+| File | Changes |
+|---|---|
+| `src/pages/partner/PartnerEarningsPage.tsx` | `grid-cols-3` → `grid-cols-1 sm:grid-cols-3`; earnings breakdown `grid-cols-4` row → `overflow-x-auto` wrapper |
+| `src/pages/partner/PartnerOverviewPage.tsx` | `text-4xl` value → `text-3xl sm:text-4xl`; `ml-auto` → `ms-auto` |
+| `src/pages/admin/AdminTeamPage.tsx` | `DialogContent` → add `className="max-w-[95vw] sm:max-w-lg w-full"` |
+| `src/pages/admin/AdminSubmissionsPage.tsx` | `max-w-2xl` → `max-w-[95vw] sm:max-w-2xl`; `grid-cols-2` detail grids → `grid-cols-1 sm:grid-cols-2` |
+| `src/pages/admin/AdminSettingsPage.tsx` | `grid-cols-2` form grids → `grid-cols-1 sm:grid-cols-2`; `mr-1` → `me-1`; `DialogContent` → add `max-w-[95vw]` |
+| `src/pages/team/TeamCasesPage.tsx` | `DialogContent className="max-w-sm"` → `max-w-[95vw] sm:max-w-sm` |
+| `src/pages/admin/AdminCommandCenter.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/admin/AdminFinancialsPage.tsx` | `p-6` → `p-4 sm:p-6`; `text-2xl` value → add `truncate` |
+| `src/pages/admin/AdminTeamPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/admin/AdminActivityPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/admin/AdminAnalyticsPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/admin/AdminStudentsPage.tsx` | `p-6` → `p-4 sm:p-6`; mobile card email `truncate` |
+| `src/pages/admin/AdminSettingsPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/team/TeamTodayPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/partner/PartnerEarningsPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/student/StudentChecklistPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/student/StudentProfilePage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/student/StudentDocumentsPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/student/StudentVisaPage.tsx` | `p-6` → `p-4 sm:p-6` |
+| `src/pages/admin/AdminPipelinePage.tsx` | Filter `SelectTrigger w-[200px]` → `w-full sm:w-[200px]` |
+
+All changes are CSS class modifications only — zero logic, state, or query changes.
