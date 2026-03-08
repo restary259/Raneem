@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, RefreshCw, Copy, CheckCheck } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, AlertCircle } from 'lucide-react';
 
 interface TeamMember {
   id: string;
@@ -30,6 +31,8 @@ const AdminTeamPage = () => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
@@ -65,9 +68,19 @@ const AdminTeamPage = () => {
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
+  const existingPartner = members.find(m => m.role === 'social_media_partner');
+
   const createMember = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
       toast({ variant: 'destructive', description: t('admin.team.allFieldsRequired') });
+      return;
+    }
+    // One-partner constraint
+    if (form.role === 'social_media_partner' && existingPartner) {
+      toast({
+        variant: 'destructive',
+        description: t('admin.team.partnerExistsError', 'A partner account already exists. Delete the existing partner before creating a new one.'),
+      });
       return;
     }
     setCreating(true);
@@ -91,6 +104,33 @@ const AdminTeamPage = () => {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!deleteTargetId) return;
+    setDeleting(true);
+    try {
+      // Remove role so they can no longer access partner dashboard
+      const { error: roleErr } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', deleteTargetId);
+      if (roleErr) throw roleErr;
+
+      // Soft-delete the profile
+      await (supabase as any)
+        .from('profiles')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', deleteTargetId);
+
+      toast({ description: t('admin.team.accountDeleted', 'Account deleted successfully') });
+      setDeleteTargetId(null);
+      await fetchMembers();
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -148,6 +188,13 @@ const AdminTeamPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4 pt-2">
+                  {/* Partner constraint warning */}
+                  {form.role === 'social_media_partner' && existingPartner && (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <p>{t('admin.team.partnerExistsError', 'A partner account already exists. Delete the existing partner before creating a new one.')}</p>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <Label>{t('admin.team.fullName', 'Full Name')}</Label>
                     <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} />
@@ -166,7 +213,11 @@ const AdminTeamPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="w-full" onClick={createMember} disabled={creating}>
+                  <Button
+                    className="w-full"
+                    onClick={createMember}
+                    disabled={creating || (form.role === 'social_media_partner' && !!existingPartner)}
+                  >
                     {creating ? t('admin.team.creating') : t('admin.team.createBtn', 'Create Account')}
                   </Button>
                 </div>
@@ -191,13 +242,46 @@ const AdminTeamPage = () => {
                     <p className="text-sm font-medium text-foreground">{m.full_name}</p>
                     <p className="text-xs text-muted-foreground">{m.email}</p>
                   </div>
-                  <Badge variant="secondary">{roleLabel(m.role)}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{roleLabel(m.role)}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTargetId(m.id)}
+                      title={t('admin.team.deleteAccount', 'Delete Account')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTargetId} onOpenChange={(v) => { if (!v) setDeleteTargetId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin.team.deleteConfirmTitle', 'Delete Account?')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('admin.team.deleteConfirmDesc', 'This will remove the account and revoke all access. This action cannot be undone.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteMember}
+              disabled={deleting}
+            >
+              {deleting ? '...' : t('admin.team.confirmDelete', 'Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

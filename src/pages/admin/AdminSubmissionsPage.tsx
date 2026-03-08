@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, CheckCircle2, ChevronRight, Download, FileText, User, Lock, ExternalLink } from "lucide-react";
+import { RefreshCw, CheckCircle2, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -24,10 +24,11 @@ interface SubmittedCase {
   city: string | null;
   passport_type: string | null;
   student_user_id: string | null;
+  partner_id: string | null;
+  assigned_to: string | null;
   submission?: {
     id: string;
     service_fee: number;
-    translation_fee: number;
     submitted_at: string | null;
     enrollment_paid_at: string | null;
     program_id: string | null;
@@ -38,6 +39,13 @@ interface SubmittedCase {
     extra_data: Record<string, unknown> | null;
   } | null;
   documents?: Array<{ id: string; file_name: string; file_url: string; category: string; created_at: string }>;
+}
+
+interface CommissionPreview {
+  serviceFee: number;
+  partnerCommission: number;
+  teamCommission: number;
+  platformRevenue: number;
 }
 
 const AdminSubmissionsPage = () => {
@@ -55,6 +63,11 @@ const AdminSubmissionsPage = () => {
   const [programNames, setProgramNames] = useState<Record<string, string>>({});
   const [accommodationNames, setAccommodationNames] = useState<Record<string, string>>();
 
+  // Split panel state
+  const [showSplitPanel, setShowSplitPanel] = useState(false);
+  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({ serviceFee: 0, partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+
+  // Password gate state
   const [showPasswordGate, setShowPasswordGate] = useState(false);
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
@@ -64,7 +77,7 @@ const AdminSubmissionsPage = () => {
     try {
       const casesRes = await supabase
         .from("cases")
-        .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id")
+        .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
         .eq("status", "submitted")
         .order("created_at", { ascending: false });
 
@@ -102,7 +115,7 @@ const AdminSubmissionsPage = () => {
       const accommodationIds = [...new Set(enriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
 
       if (programIds.length > 0) {
-        const { data: progData } = await supabase.from("programs").select("id, name_en").in("id", programIds);
+        const { data: progData } = await (supabase as any).from("programs").select("id, name_en").in("id", programIds);
         const map: Record<string, string> = {};
         (progData || []).forEach((p: any) => { map[p.id] = p.name_en; });
         setProgramNames(map);
@@ -122,6 +135,36 @@ const AdminSubmissionsPage = () => {
   }, [toast]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
+
+  // Load commission preview for selected case
+  const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
+    const fee = c.submission?.service_fee || 0;
+    try {
+      const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
+        supabase.from("platform_settings" as any).select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
+        c.partner_id ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle() : Promise.resolve({ data: null }),
+        c.assigned_to ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle() : Promise.resolve({ data: null }),
+      ]);
+      const globalPartner = settRes.data?.partner_commission_rate ?? 500;
+      const globalTeam = settRes.data?.team_member_commission_rate ?? 100;
+      const partnerCommission = partnerOvRes.data?.commission_amount ?? (c.partner_id ? globalPartner : 0);
+      const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
+      setSplitPreview({
+        serviceFee: fee,
+        partnerCommission,
+        teamCommission,
+        platformRevenue: Math.max(0, fee - partnerCommission - teamCommission),
+      });
+    } catch {
+      setSplitPreview({ serviceFee: fee, partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
+    }
+  }, []);
+
+  const openSplitPanel = async () => {
+    if (!selected) return;
+    await loadSplitPreview(selected);
+    setShowSplitPanel(true);
+  };
 
   const handleReAuth = async () => {
     if (!reAuthPassword.trim() || !user?.email) return;
@@ -143,26 +186,27 @@ const AdminSubmissionsPage = () => {
     if (!selected) return;
     setMarking(true);
     try {
-      const { error: caseErr } = await supabase.from("cases").update({ status: "enrollment_paid" }).eq("id", selected.id);
-      if (caseErr) throw caseErr;
-
-      if (selected.submission?.id) {
-        const { error: subErr } = await supabase
-          .from("case_submissions")
-          .update({ enrollment_paid_at: new Date().toISOString(), enrollment_paid_by: user?.id })
-          .eq("id", selected.submission.id);
-        if (subErr) throw subErr;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      // Call admin-mark-paid edge function to trigger record_case_commission automatically
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ case_id: selected.id, total_payment_ils: splitPreview.serviceFee }),
+      });
+      const result = await resp.json();
+      if (!resp.ok) throw new Error(result.error || "Failed");
 
       await supabase.rpc("log_user_activity" as any, {
         p_action: "MARK_ENROLLED",
         p_target_id: selected.id,
         p_target_table: "cases",
-        p_details: `Marked case ${selected.full_name} as enrolled`,
+        p_details: `Marked case ${selected.full_name} as enrolled. Split: partner=${splitPreview.partnerCommission}, team=${splitPreview.teamCommission}`,
       });
 
       toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
+      setShowSplitPanel(false);
+      setSplitPreview({ serviceFee: 0, partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -177,7 +221,7 @@ const AdminSubmissionsPage = () => {
   };
 
   const totalFee = (s: SubmittedCase) =>
-    ((s.submission?.service_fee || 0) + (s.submission?.translation_fee || 0)).toLocaleString('en-US');
+    (s.submission?.service_fee || 0).toLocaleString('en-US');
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
@@ -235,7 +279,7 @@ const AdminSubmissionsPage = () => {
       </Card>
 
       {/* Full Case Detail Dialog */}
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+      <Dialog open={!!selected && !showSplitPanel && !showPasswordGate} onOpenChange={() => setSelected(null)}>
         <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -298,10 +342,6 @@ const AdminSubmissionsPage = () => {
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}:</span>
                     <p className="font-medium">{(selected.submission?.service_fee || 0).toLocaleString('en-US')} ILS</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.translationFee")}:</span>
-                    <p className="font-medium">{(selected.submission?.translation_fee || 0).toLocaleString('en-US')} ILS</p>
                   </div>
                   {selected.submission?.program_start_date && (
                     <div>
@@ -421,13 +461,60 @@ const AdminSubmissionsPage = () => {
                   <ExternalLink className="h-4 w-4" />
                   {t("admin.submissions.openFullCase")}
                 </Button>
-                <Button className="w-full gap-2" onClick={() => setShowPasswordGate(true)} disabled={marking}>
-                  <Lock className="h-4 w-4" />
-                  {marking ? t("admin.submissions.processing") : t("admin.submissions.markEnrolled", "Mark as Enrolled")}
+                <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
+                  <SplitSquareHorizontal className="h-4 w-4" />
+                  {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
                 </Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Split Panel */}
+      <Dialog open={showSplitPanel} onOpenChange={(v) => { if (!v) setShowSplitPanel(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SplitSquareHorizontal className="h-5 w-5 text-primary" />
+              {t("admin.submissions.paymentSplit", "Payment Split")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {t("admin.submissions.paymentSplitDesc", "Review how the service fee will be split before confirming enrollment.")}
+            </p>
+            <div className="space-y-2">
+              <div className="flex justify-between p-3 rounded-lg bg-muted border border-border text-sm">
+                <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
+                <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
+                <span className="font-semibold text-orange-600">-₪{splitPreview.partnerCommission.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
+                <span className="font-semibold text-purple-600">-₪{splitPreview.teamCommission.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
+                <span className="font-semibold">{t("admin.commission.platformRevenue", "Platform Revenue")}</span>
+                <span className="font-bold text-emerald-700">₪{splitPreview.platformRevenue.toLocaleString('en-US')}</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("admin.submissions.splitNote", "Commissions are set in Settings → Money Split. Confirm with your password to proceed.")}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSplitPanel(false)}>
+              {t("admin.submissions.cancel")}
+            </Button>
+            <Button onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }} disabled={marking}>
+              <Lock className="h-4 w-4 me-1" />
+              {t("admin.submissions.confirmEnroll", "Confirm")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
