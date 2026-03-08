@@ -172,7 +172,7 @@ const AdminSettingsPage = () => {
         })
         .eq("id", settings.id);
       if (error) throw error;
-      toast({ description: isRtl ? "تم حفظ الإعدادات" : "Settings saved" });
+      toast({ description: t('admin.settings.settingsSaved', 'Settings saved') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
