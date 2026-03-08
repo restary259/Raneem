@@ -56,7 +56,9 @@ const AdminSubmissionsPage = () => {
   const navigate = useNavigate();
   const isRtl = i18n.language === "ar";
 
+  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
   const [cases, setCases] = useState<SubmittedCase[]>([]);
+  const [completedCases, setCompletedCases] = useState<SubmittedCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubmittedCase | null>(null);
   const [marking, setMarking] = useState(false);
@@ -73,47 +75,59 @@ const AdminSubmissionsPage = () => {
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
 
+  const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
+    if (ids.length === 0) return [];
+    const [subRes, docsRes] = await Promise.all([
+      supabase.from("case_submissions").select("*").in("case_id", ids),
+      supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
+    ]);
+    const subMap: Record<string, any> = {};
+    (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
+    const docsMap: Record<string, any[]> = {};
+    (docsRes.data || []).forEach((d) => {
+      if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
+      docsMap[d.case_id].push(d);
+    });
+    return rawCases.map((c) => ({
+      ...c,
+      submission: subMap[c.id] || null,
+      documents: docsMap[c.id] || [],
+    }));
+  }, []);
+
   const fetchCases = useCallback(async () => {
     setLoading(true);
     try {
-      const casesRes = await supabase
-        .from("cases")
-        .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
-        .eq("status", "submitted")
-        .order("created_at", { ascending: false });
-
-      if (casesRes.error) throw casesRes.error;
-      const ids = (casesRes.data || []).map((c) => c.id);
-
-      if (ids.length === 0) {
-        setCases([]);
-        setLoading(false);
-        return;
-      }
-
-      const [subRes, docsRes] = await Promise.all([
-        supabase.from("case_submissions").select("*").in("case_id", ids),
-        supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
+      const [pendingRes, completedRes] = await Promise.all([
+        supabase
+          .from("cases")
+          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .eq("status", "submitted")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("cases")
+          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .eq("status", "enrollment_paid")
+          .order("created_at", { ascending: false }),
       ]);
 
-      const subMap: Record<string, any> = {};
-      (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
+      if (pendingRes.error) throw pendingRes.error;
+      if (completedRes.error) throw completedRes.error;
 
-      const docsMap: Record<string, any[]> = {};
-      (docsRes.data || []).forEach((d) => {
-        if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
-        docsMap[d.case_id].push(d);
-      });
+      const pendingIds = (pendingRes.data || []).map((c) => c.id);
+      const completedIds = (completedRes.data || []).map((c) => c.id);
 
-      const enriched = (casesRes.data || []).map((c) => ({
-        ...c,
-        submission: subMap[c.id] || null,
-        documents: docsMap[c.id] || [],
-      }));
-      setCases(enriched);
+      const [enrichedPending, enrichedCompleted] = await Promise.all([
+        enrichCases(pendingIds, pendingRes.data || []),
+        enrichCases(completedIds, completedRes.data || []),
+      ]);
 
-      const programIds = [...new Set(enriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
-      const accommodationIds = [...new Set(enriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
+      setCases(enrichedPending);
+      setCompletedCases(enrichedCompleted);
+
+      const allEnriched = [...enrichedPending, ...enrichedCompleted];
+      const programIds = [...new Set(allEnriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
+      const accommodationIds = [...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
 
       if (programIds.length > 0) {
         const { data: progData } = await (supabase as any).from("programs").select("id, name_en").in("id", programIds);
@@ -133,7 +147,7 @@ const AdminSubmissionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, enrichCases]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
