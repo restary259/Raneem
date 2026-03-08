@@ -83,7 +83,7 @@ export default function TeamTodayPage() {
   }, [fetchData]);
 
   const totalCases = Object.values(caseCounts).reduce((a, b) => a + b, 0);
-  const dateStr = new Date().toLocaleDateString(isAr ? "ar-SA" : "en-US", {
+  const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",

@@ -491,29 +491,29 @@ export default function TeamAppointmentsPage() {
     <div className="flex flex-col h-full bg-background">
       {/* ── HEADER ── */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigatePrev}>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" onClick={navigatePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <button
-            className="text-sm font-semibold min-w-[200px] text-center hover:text-primary transition-colors"
+            className="text-sm font-semibold min-w-0 flex-1 text-center hover:text-primary transition-colors truncate"
             onClick={() => setCurrentDate(new Date())}
           >
             {headerLabel}
           </button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigateNext}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="text-xs h-7 px-3 rounded-full"
+            className="text-xs h-7 px-3 rounded-full shrink-0"
             onClick={() => setCurrentDate(new Date())}
           >
             {t("team.appointments.navToday")}
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
             {(["day", "week", "month"] as CalendarView[]).map((v) => (
               <button
@@ -530,9 +530,9 @@ export default function TeamAppointmentsPage() {
               </button>
             ))}
           </div>
-          <Button size="sm" className="gap-1.5 rounded-full px-4 h-8 shadow-sm" onClick={() => openNew()}>
+          <Button size="sm" className="gap-1.5 rounded-full px-3 sm:px-4 h-8 shadow-sm shrink-0" onClick={() => openNew()}>
             <Plus className="h-3.5 w-3.5" />
-            {t("team.appointments.newAppointment")}
+            <span className="hidden sm:inline">{t("team.appointments.newAppointment")}</span>
           </Button>
         </div>
       </div>
