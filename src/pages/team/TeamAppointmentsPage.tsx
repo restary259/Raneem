@@ -433,12 +433,13 @@ export default function TeamAppointmentsPage() {
       return isSameDay(d, day) && getHours(d) === hour;
     });
   const getDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+  const calLocale = isAr ? "ar-SA" : "en-US";
   const headerLabel =
     view === "day"
-      ? format(currentDate, "EEEE, MMMM d, yyyy")
+      ? currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
       : view === "week"
-        ? `${format(weekDays[0], "MMM d")} – ${format(weekDays[6], "MMM d, yyyy")}`
-        : format(currentDate, "MMMM yyyy");
+        ? `${weekDays[0].toLocaleDateString(calLocale, { month: "short", day: "numeric" })} – ${weekDays[6].toLocaleDateString(calLocale, { month: "short", day: "numeric", year: "numeric" })}`
+        : currentDate.toLocaleDateString(calLocale, { month: "long", year: "numeric" });
 
   /* ══ APPOINTMENT BLOCK ═══════════════════════════════════════════════
      draggable={true} always. Browser guarantees: real drag → no click fires.
