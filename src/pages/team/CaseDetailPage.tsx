@@ -901,12 +901,6 @@ export default function CaseDetailPage() {
                 <span className="font-medium text-foreground">{serviceFee.toLocaleString()} ILS</span>
               </div>
             )}
-            {translationFee > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("case.detail.translationFee")}</span>
-                <span className="font-medium text-foreground">{translationFee.toLocaleString()} ILS</span>
-              </div>
-            )}
             <Separator />
             <div className="flex justify-between font-semibold text-base">
               <span>{t("case.detail.total")}</span>
