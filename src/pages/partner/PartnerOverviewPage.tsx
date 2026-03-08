@@ -242,7 +242,6 @@ export default function PartnerOverviewPage() {
                       color: "bg-gray-100 text-gray-600",
                     };
                     const isPaid = PAID_STATUSES.includes(c.status);
-                    const commission = commissions.find((cm) => cm.case_id === c.id);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
