@@ -251,6 +251,8 @@ export default function PartnerOverviewPage() {
                       color: "bg-gray-100 text-gray-600",
                     };
                     const isPaid = PAID_STATUSES.includes(c.status);
+                    // Commission only applies to cases attributed to this partner
+                    const isAttributed = c.partner_id === userId;
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
@@ -261,10 +263,15 @@ export default function PartnerOverviewPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {isPaid ? (
+                          {isPaid && isAttributed ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                               <CheckCircle className="h-3 w-3" />
                               ₪{commissionRate.toLocaleString()} {t("partner.projLabel")}
+                            </span>
+                          ) : isPaid && !isAttributed ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {t("partner.noCommission", { defaultValue: "No commission" })}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
