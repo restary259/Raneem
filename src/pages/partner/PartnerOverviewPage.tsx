@@ -37,29 +37,35 @@ export default function PartnerOverviewPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const [profRes, settingsRes, commissionsRes] = await Promise.all([
+    const [profRes, settingsRes, overrideRes] = await Promise.all([
       (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
       (supabase as any)
         .from("platform_settings")
         .select("partner_commission_rate,partner_dashboard_show_all_cases")
         .limit(1)
         .maybeSingle(),
-      (supabase as any).from("commission_transactions").select("*").eq("partner_id", uid),
+      (supabase as any)
+        .from("partner_commission_overrides")
+        .select("commission_amount,show_all_cases")
+        .eq("partner_id", uid)
+        .maybeSingle(),
     ]);
 
     if (profRes.data) setProfile(profRes.data);
 
     const rate = settingsRes.data?.partner_commission_rate ?? 500;
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    setCommissions(commissionsRes.data || []);
-
-    // Check per-partner override (commission + visibility)
-    const { data: override } = await (supabase as any)
-      .from("partner_commission_overrides")
-      .select("commission_amount,show_all_cases")
-      .eq("partner_id", uid)
-      .maybeSingle();
+    const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? rate));
+
+    // Fetch rewards (actual paid commissions) — replaces defunct commission_transactions
+    const { data: rewardsData, error: rewardsErr } = await (supabase as any)
+      .from("rewards")
+      .select("amount,status,created_at,admin_notes")
+      .eq("user_id", uid)
+      .in("status", ["approved", "paid"]);
+    if (rewardsErr) console.error("rewards fetch error:", rewardsErr);
+    setCommissions(rewardsData || []);
 
     // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
     let query = (supabase as any)
@@ -81,7 +87,8 @@ export default function PartnerOverviewPage() {
       }
     }
 
-    const { data: casesData } = await query;
+    const { data: casesData, error: casesErr } = await query;
+    if (casesErr) console.error("cases fetch error:", casesErr);
     setCases(casesData || []);
     setIsLoading(false);
   }, []);
@@ -107,7 +114,8 @@ export default function PartnerOverviewPage() {
   const total = cases.length;
   const paid = cases.filter((c) => PAID_STATUSES.includes(c.status)).length;
   const enrolled = cases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
-  const totalEarned = commissions.reduce((sum, c) => sum + (c.partner_commission_ils || 0), 0);
+  // commissions = rewards rows (approved/paid) — sum their amounts
+  const totalEarned = commissions.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
 
   const kpis = [
     {
@@ -248,9 +256,7 @@ export default function PartnerOverviewPage() {
                           {isPaid ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                               <CheckCircle className="h-3 w-3" />
-                              {commission
-                                ? `₪${commission.partner_commission_ils.toLocaleString()}`
-                                : `₪${commissionRate.toLocaleString()} ${t("partner.projLabel")}`}
+                              ₪{commissionRate.toLocaleString()} {t("partner.projLabel")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
