@@ -899,7 +899,9 @@
       "paidThisMonth": "مدفوع هذا الشهر",
       "slaWarnings": "تحذيرات SLA",
       "myEarnings": "أرباحي",
-      "totalRevenue": "إجمالي الإيرادات"
+      "totalRevenue": "إجمالي الإيرادات",
+      "conversionRate": "معدل التحويل",
+      "showRate": "معدل الحضور"
     },
     "statuses": {
       "assigned": "معيّن",
