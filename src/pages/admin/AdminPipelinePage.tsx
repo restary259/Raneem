@@ -219,6 +219,8 @@ const AdminPipelinePage = () => {
   const { toast } = useToast();
   const isRtl = i18n.language === "ar";
 
+  const [searchParams] = useSearchParams();
+
   const [cases, setCases] = useState<Case[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
