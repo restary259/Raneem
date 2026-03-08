@@ -10,16 +10,22 @@
   }
 
   #cv-preview {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
-    width: 210mm;
+    width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 10mm 15mm;
     box-shadow: none;
     border: none;
-    overflow: visible;
-    max-height: none;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Force all inner scroll containers open */
+  #cv-preview * {
+    overflow: visible !important;
+    max-height: none !important;
   }
 
   .print\:hidden {
@@ -51,7 +57,7 @@
 
   @page {
     size: A4;
-    margin: 10mm 15mm;
+    margin: 0;
   }
 
   /* Page break handling */
