@@ -479,7 +479,20 @@
       "sourceApplyPage": "صفحة التقديم",
       "sourceManual": "يدوي",
       "sourceDirect": "تسجيل مباشر",
-      "sourcePartner": "شريك"
+      "sourcePartner": "شريك",
+      "slaWarnings": "تحذيرات SLA",
+      "monthlyBreakdown": "التوزيع الشهري",
+      "revenue": "الإيرادات",
+      "teamComm": "عمولة الفريق",
+      "infComm": "عمولة الوكيل",
+      "teamPerformance": "أداء الفريق",
+      "influencerPerformance": "أداء الوكلاء",
+      "leadsGenerated": "عملاء محالون",
+      "name": "الاسم",
+      "assigned": "معيّن",
+      "paid": "مدفوع",
+      "commission": "العمولة",
+      "funnelTitle": "مسار العملاء"
     },
     "commission": {
       "globalRates": "معدلات العمولة العامة",

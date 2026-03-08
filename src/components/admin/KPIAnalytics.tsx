@@ -210,13 +210,20 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={funnelData}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={funnelData} margin={{ top: 4, bottom: 60, left: 0, right: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 9, fill: 'currentColor' }}
+                angle={-30}
+                textAnchor="end"
+                height={75}
+                interval={0}
+              />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} />
+              <Bar dataKey="count" radius={[4, 4, 0, 0]} minPointSize={4}>
                 {funnelData.map((_, i) => (
                   <Cell key={i} fill={FUNNEL_COLORS[i % FUNNEL_COLORS.length]} />
                 ))}
