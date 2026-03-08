@@ -503,6 +503,14 @@ export default function AdminStudentsPage() {
           notes: editForm.notes || null,
           passport_number: editForm.passport_number || null,
           passport_expiry: editForm.passport_expiry || null,
+          // Additional personal fields
+          eye_color: editForm.eye_color || null,
+          previous_legal_name: editForm.previous_legal_name || null,
+          has_changed_legal_name: editForm.has_changed_legal_name ?? false,
+          has_criminal_record: editForm.has_criminal_record ?? false,
+          criminal_record_details: editForm.criminal_record_details || null,
+          has_dual_citizenship: editForm.has_dual_citizenship ?? false,
+          second_passport_country: editForm.second_passport_country || null,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("id", selected.id);
