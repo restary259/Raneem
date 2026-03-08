@@ -868,7 +868,9 @@
       "paidThisMonth": "Paid This Month",
       "slaWarnings": "SLA Warnings",
       "myEarnings": "My Earnings",
-      "totalRevenue": "Total Revenue"
+      "totalRevenue": "Total Revenue",
+      "conversionRate": "Conversion Rate",
+      "showRate": "Show Rate"
     },
     "statuses": {
       "assigned": "Assigned",
@@ -884,6 +886,8 @@
       "paid": "Paid",
       "ready_to_apply": "Ready to Apply",
       "registration_submitted": "Registration Submitted",
+      "submitted": "Submitted",
+      "enrollment_paid": "Enrollment Paid",
       "visa_stage": "Visa Stage",
       "settled": "Settled",
       "completed": "Completed"
@@ -916,7 +920,24 @@
     "referralDiscount": "Referral Discount",
     "analytics": {
       "statusDistribution": "Status Distribution",
-      "slaAlerts": "SLA Alerts"
+      "slaAlerts": "SLA Alerts",
+      "pageTitle": "My Analytics",
+      "closedThisMonth": "Closed This Month",
+      "totalCases": "Total Cases",
+      "casesByStatus": "Cases by Status",
+      "loading": "Loading...",
+      "noData": "No data yet",
+      "caseCount": "Cases"
+    },
+    "kpi": {
+      "activeLeads": "Active Leads",
+      "todayAppts": "Today's Appointments",
+      "paidThisMonth": "Paid This Month",
+      "slaWarnings": "SLA Warnings",
+      "myEarnings": "My Earnings",
+      "totalRevenue": "Total Revenue",
+      "conversionRate": "Conversion Rate",
+      "showRate": "Show Rate"
     },
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",
