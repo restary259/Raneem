@@ -120,11 +120,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Duplicate phone detection
+    // Duplicate phone detection — only block if the existing case comes from the same
+    // public submission flows (contact_form or apply_page). If the blocking case was
+    // created manually, by the team, or via referral, it may be a different person
+    // who happens to share the same phone number, so we let the new submission through.
     const { data: existingCase } = await supabaseAdmin
       .from("cases")
-      .select("id, full_name, status")
+      .select("id, full_name, status, source")
       .eq("phone_number", cleanPhone)
+      .in("source", ["contact_form", "apply_page"])
       .maybeSingle();
 
     if (existingCase) {

@@ -371,6 +371,13 @@ const AdminPipelinePage = () => {
     }
   };
 
+  /* ── duplicate phone detection ── */
+  const phoneCount = cases.reduce<Record<string, number>>((acc, c) => {
+    acc[c.phone_number] = (acc[c.phone_number] ?? 0) + 1;
+    return acc;
+  }, {});
+  const hasDuplicatePhone = (c: Case) => phoneCount[c.phone_number] > 1;
+
   /* ── filter ── */
   const filtered = cases.filter((c) => {
     const matchSearch =
