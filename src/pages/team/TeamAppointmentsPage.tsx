@@ -165,23 +165,35 @@ export default function TeamAppointmentsPage() {
   const fetchAppts = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("appointments")
-      .select("*, case:cases(full_name, phone_number, status)")
-      .eq("team_member_id", user.id)
-      .order("scheduled_at");
-    setAppts((data as any[]) ?? []);
-    setLoading(false);
-  }, [user]);
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*, case:cases(full_name, phone_number, status)")
+        .eq("team_member_id", user.id)
+        .order("scheduled_at");
+      if (error) throw error;
+      setAppts((data as any[]) ?? []);
+    } catch (err: any) {
+      console.error("fetchAppts error:", err);
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setLoading(false);
+    }
+  }, [user, toast]);
 
   const fetchMyCases = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("cases")
-      .select("id, full_name, phone_number")
-      .eq("assigned_to", user.id)
-      .order("full_name");
-    setMyCases((data as Case[]) ?? []);
+    try {
+      const { data, error } = await supabase
+        .from("cases")
+        .select("id, full_name, phone_number")
+        .eq("assigned_to", user.id)
+        .order("full_name");
+      if (error) throw error;
+      setMyCases((data as Case[]) ?? []);
+    } catch (err: any) {
+      console.error("fetchMyCases error:", err);
+    }
   }, [user]);
 
   useEffect(() => {

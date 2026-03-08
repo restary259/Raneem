@@ -59,6 +59,10 @@ export default function TeamTodayPage() {
         supabase.from("cases").select("status").eq("assigned_to", user.id),
       ]);
 
+      if (apptRes.error) throw apptRes.error;
+      if (overdueRes.error) throw overdueRes.error;
+      if (caseRes.error) throw caseRes.error;
+
       setTodayAppts((apptRes.data as any[]) ?? []);
       setOverdueAppts((overdueRes.data as any[]) ?? []);
 
@@ -67,6 +71,8 @@ export default function TeamTodayPage() {
         counts[c.status] = (counts[c.status] ?? 0) + 1;
       }
       setCaseCounts(counts);
+    } catch (err: any) {
+      console.error("TeamTodayPage fetchData error:", err);
     } finally {
       setLoading(false);
     }
