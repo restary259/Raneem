@@ -509,7 +509,7 @@ export default function TeamAppointmentsPage() {
             className="text-xs h-7 px-3 rounded-full"
             onClick={() => setCurrentDate(new Date())}
           >
-            Today
+            {t("team.appointments.navToday")}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -525,13 +525,13 @@ export default function TeamAppointmentsPage() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {v}
+                {v === "day" ? t("team.appointments.viewDay") : v === "week" ? t("team.appointments.viewWeek") : t("team.appointments.viewMonth")}
               </button>
             ))}
           </div>
           <Button size="sm" className="gap-1.5 rounded-full px-4 h-8 shadow-sm" onClick={() => openNew()}>
             <Plus className="h-3.5 w-3.5" />
-            {isAr ? "موعد جديد" : "New Appointment"}
+            {t("team.appointments.newAppointment")}
           </Button>
         </div>
       </div>
@@ -555,7 +555,7 @@ export default function TeamAppointmentsPage() {
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {format(currentDate, "EEEE, MMMM d")}
-                {isToday(currentDate) && <span className="text-xs opacity-80">· Today</span>}
+                {isToday(currentDate) && <span className="text-xs opacity-80">{t("team.appointments.todayPill")}</span>}
               </div>
             </div>
             {HOURS.map((hour) => {
@@ -579,7 +579,7 @@ export default function TeamAppointmentsPage() {
                   </div>
                   <div className="p-1.5 cursor-pointer">
                     {isOver && (
-                      <div className="text-[10px] text-violet-600 font-medium mb-1">Drop to schedule here</div>
+                      <div className="text-[10px] text-violet-600 font-medium mb-1">{t("team.appointments.dropSchedule")}</div>
                     )}
                     {slotAppts.map((a) => (
                       <ApptBlock key={a.id} appt={a} />
@@ -675,7 +675,15 @@ export default function TeamAppointmentsPage() {
       {!loading && view === "month" && (
         <div className="flex-1 overflow-auto p-3">
           <div className="grid grid-cols-7 mb-1">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            {[
+              t("team.appointments.dayAbbrevSun"),
+              t("team.appointments.dayAbbrevMon"),
+              t("team.appointments.dayAbbrevTue"),
+              t("team.appointments.dayAbbrevWed"),
+              t("team.appointments.dayAbbrevThu"),
+              t("team.appointments.dayAbbrevFri"),
+              t("team.appointments.dayAbbrevSat"),
+            ].map((d) => (
               <div
                 key={d}
                 className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-wide py-1"
@@ -726,7 +734,7 @@ export default function TeamAppointmentsPage() {
                       ))}
                       {dayAppts.length > 3 && (
                         <p className="text-[9px] text-muted-foreground text-center font-medium mt-0.5">
-                          +{dayAppts.length - 3} more
+                          {t("team.appointments.moreCount", { n: dayAppts.length - 3 })}
                         </p>
                       )}
                     </div>
