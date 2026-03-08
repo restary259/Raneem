@@ -947,7 +947,24 @@
     "referralDiscount": "خصم إحالة",
     "analytics": {
       "statusDistribution": "توزيع الحالات",
-      "slaAlerts": "تنبيهات SLA"
+      "slaAlerts": "تنبيهات SLA",
+      "pageTitle": "تحليلاتي",
+      "closedThisMonth": "مغلق هذا الشهر",
+      "totalCases": "إجمالي الملفات",
+      "casesByStatus": "الملفات حسب الحالة",
+      "loading": "جار التحميل...",
+      "noData": "لا توجد بيانات بعد",
+      "caseCount": "ملفات"
+    },
+    "kpi": {
+      "activeLeads": "ملفات نشطة",
+      "todayAppts": "مواعيد اليوم",
+      "paidThisMonth": "مدفوع هذا الشهر",
+      "slaWarnings": "تحذيرات SLA",
+      "myEarnings": "أرباحي",
+      "totalRevenue": "إجمالي الإيرادات",
+      "conversionRate": "معدل التحويل",
+      "showRate": "معدل الحضور"
     },
     "majorsTab": "التخصصات",
     "searchMajors": "ابحث عن تخصص…",

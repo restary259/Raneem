@@ -916,7 +916,24 @@
     "referralDiscount": "Referral Discount",
     "analytics": {
       "statusDistribution": "Status Distribution",
-      "slaAlerts": "SLA Alerts"
+      "slaAlerts": "SLA Alerts",
+      "pageTitle": "My Analytics",
+      "closedThisMonth": "Closed This Month",
+      "totalCases": "Total Cases",
+      "casesByStatus": "Cases by Status",
+      "loading": "Loading...",
+      "noData": "No data yet",
+      "caseCount": "Cases"
+    },
+    "kpi": {
+      "activeLeads": "Active Leads",
+      "todayAppts": "Today's Appointments",
+      "paidThisMonth": "Paid This Month",
+      "slaWarnings": "SLA Warnings",
+      "myEarnings": "My Earnings",
+      "totalRevenue": "Total Revenue",
+      "conversionRate": "Conversion Rate",
+      "showRate": "Show Rate"
     },
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",
