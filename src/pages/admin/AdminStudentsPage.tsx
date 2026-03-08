@@ -81,12 +81,12 @@ interface CreatorInfo {
 // ─────────────────────────────────────────────────────────────────────────────
 const SelectiveDeleteDialog = ({
   student,
-  isRtl,
+  t,
   onClose,
   onDeleted,
 }: {
   student: StudentRecord;
-  isRtl: boolean;
+  t: (key: string, opts?: any) => string;
   onClose: () => void;
   onDeleted: () => void;
 }) => {
@@ -97,9 +97,9 @@ const SelectiveDeleteDialog = ({
   const [deleting, setDeleting] = useState(false);
 
   const CATEGORIES = [
-    { id: "contact_info", label: isRtl ? "معلومات الاتصال" : "Contact Information" },
-    { id: "documents", label: isRtl ? "المستندات" : "Documents" },
-    { id: "case", label: isRtl ? "الملف والتقديمات" : "Case & Submissions" },
+    { id: "contact_info", label: t("admin.students.catContactInfo") },
+    { id: "documents", label: t("admin.students.catDocuments") },
+    { id: "case", label: t("admin.students.catCase") },
   ];
 
   const toggleCat = (id: string) =>
@@ -107,11 +107,11 @@ const SelectiveDeleteDialog = ({
 
   const handleDelete = async () => {
     if (!categories.length) {
-      toast({ variant: "destructive", description: "Select at least one category." });
+      toast({ variant: "destructive", description: t("admin.students.selectCategories") });
       return;
     }
     if (mode === "hard" && !password) {
-      toast({ variant: "destructive", description: "Password required for hard delete." });
+      toast({ variant: "destructive", description: t("admin.students.adminPassword") });
       return;
     }
     setDeleting(true);
@@ -130,7 +130,7 @@ const SelectiveDeleteDialog = ({
       }
 
       toast({
-        title: isRtl ? "تم الحذف" : "Deleted",
+        title: t("admin.students.deleted"),
         description: resp.data.message,
       });
       onDeleted();
@@ -145,7 +145,7 @@ const SelectiveDeleteDialog = ({
     <div className="space-y-5">
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          {isRtl ? "اختر ما تريد حذفه" : "Select Categories to Delete"}
+          {t("admin.students.selectCategories")}
         </p>
         <div className="space-y-2">
           {CATEGORIES.map((cat) => (
@@ -161,7 +161,7 @@ const SelectiveDeleteDialog = ({
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          {isRtl ? "نوع الحذف" : "Delete Mode"}
+          {t("admin.students.deleteMode")}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -170,10 +170,8 @@ const SelectiveDeleteDialog = ({
               mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"
             }`}
           >
-            <p className="font-medium">{isRtl ? "ناعم" : "Soft Delete"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {isRtl ? "قابل للاسترجاع" : "Hidden but recoverable"}
-            </p>
+            <p className="font-medium">{t("admin.students.softDeleteLabel")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.softDeleteDesc")}</p>
           </button>
           <button
             onClick={() => setMode("hard")}
@@ -181,36 +179,30 @@ const SelectiveDeleteDialog = ({
               mode === "hard" ? "border-destructive bg-destructive/5 font-medium" : "border-border"
             }`}
           >
-            <p className="font-medium text-destructive">{isRtl ? "صعب" : "Hard Delete"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {isRtl ? "غير قابل للتراجع" : "Permanent — irreversible"}
-            </p>
+            <p className="font-medium text-destructive">{t("admin.students.hardDeleteLabel")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("admin.students.hardDeleteDesc")}</p>
           </button>
         </div>
       </div>
 
       {mode === "hard" && (
         <div className="space-y-2">
-          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
-            <p>
-              {isRtl
-                ? "الحذف الصعب يدمر البيانات نهائياً. أدخل كلمة مرورك للتأكيد."
-                : "Hard delete permanently destroys data. Enter your admin password to confirm."}
-            </p>
+          <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl text-sm text-destructive flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>{t("admin.students.hardDeleteWarning")}</p>
           </div>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={isRtl ? "كلمة المرور" : "Admin password"}
+            placeholder={t("admin.students.adminPassword")}
           />
         </div>
       )}
 
       <div className="flex gap-2 pt-2">
         <Button variant="outline" className="flex-1" onClick={onClose} disabled={deleting}>
-          {isRtl ? "إلغاء" : "Cancel"}
+          {t("admin.students.cancel")}
         </Button>
         <Button
           variant="destructive"
@@ -219,7 +211,7 @@ const SelectiveDeleteDialog = ({
           disabled={!categories.length || deleting}
         >
           {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          {deleting ? (isRtl ? "جارٍ الحذف..." : "Deleting...") : isRtl ? "حذف" : "Delete"}
+          {deleting ? t("admin.students.deleting") : t("admin.students.delete")}
         </Button>
       </div>
     </div>
@@ -231,7 +223,7 @@ const SelectiveDeleteDialog = ({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminStudentsPage() {
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
 
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -444,7 +436,7 @@ export default function AdminStudentsPage() {
       if (error) throw error;
       setVisaValues({ ...visaDraft });
       setEditingVisa(false);
-      toast({ description: isRtl ? "تم حفظ بيانات الفيزا" : "Visa data saved" });
+      toast({ description: t("admin.students.visaSaved") });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -468,7 +460,7 @@ export default function AdminStudentsPage() {
         })
         .eq("id", selected.id);
       if (error) throw error;
-      toast({ description: isRtl ? "تم حفظ التغييرات" : "Changes saved" });
+      toast({ description: t("admin.students.changesSaved") });
       setEditing(false);
       const { data: confirmed } = await supabase
         .from("profiles")
@@ -511,7 +503,7 @@ export default function AdminStudentsPage() {
         is_visible_to_student: true,
       });
       if (dbError) throw dbError;
-      toast({ description: isRtl ? "تم رفع الملف" : "File uploaded" });
+      toast({ description: t("admin.students.fileUploaded") });
       setCustomDocName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
 
@@ -545,7 +537,7 @@ export default function AdminStudentsPage() {
   };
 
   const handleDeleteDoc = async (doc: Document) => {
-    if (!confirm(isRtl ? "هل أنت متأكد من حذف هذا الملف؟" : "Delete this document?")) return;
+    if (!confirm(t("admin.students.docDeleted"))) return;
     try {
       const urlParts = doc.file_url.split("/student-documents/");
       if (urlParts[1]) {
@@ -553,7 +545,7 @@ export default function AdminStudentsPage() {
       }
       await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
-      toast({ description: isRtl ? "تم حذف الملف" : "Document deleted" });
+      toast({ description: t("admin.students.docDeleted") });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
@@ -645,7 +637,7 @@ export default function AdminStudentsPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">{isRtl ? "إدارة الطلاب" : "Student Management"}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("admin.students.managementTitle")}</h1>
           <Badge variant="secondary" className="text-xs">
             {students.length}
           </Badge>
@@ -653,7 +645,7 @@ export default function AdminStudentsPage() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
             <RefreshCw className="h-4 w-4" />
-            {isRtl ? "تحديث" : "Refresh"}
+            {t("admin.students.refresh")}
           </Button>
         </div>
       </div>
@@ -662,7 +654,7 @@ export default function AdminStudentsPage() {
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={isRtl ? "بحث بالاسم أو البريد..." : "Search by name or email..."}
+          placeholder={t("admin.students.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ps-9"
@@ -672,11 +664,11 @@ export default function AdminStudentsPage() {
       {/* Table header */}
       {!loading && filtered.length > 0 && (
         <div className="hidden md:grid grid-cols-5 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <span>{isRtl ? "الطالب" : "Student"}</span>
-          <span>{isRtl ? "البريد" : "Email"}</span>
-          <span>{isRtl ? "الهاتف" : "Phone"}</span>
-          <span>{isRtl ? "تاريخ الإنشاء" : "Created"}</span>
-          <span>{isRtl ? "أنشئ بواسطة" : "Created By"}</span>
+          <span>{t("admin.students.colStudent")}</span>
+          <span>{t("admin.students.colEmail")}</span>
+          <span>{t("admin.students.colPhone")}</span>
+          <span>{t("admin.students.colCreated")}</span>
+          <span>{t("admin.students.colCreatedBy")}</span>
         </div>
       )}
 
@@ -690,7 +682,7 @@ export default function AdminStudentsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>{isRtl ? "لا يوجد طلاب مسجلون" : "No registered students found"}</p>
+          <p>{t("admin.students.noRegistered")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -713,9 +705,7 @@ export default function AdminStudentsPage() {
                 <p className="text-xs text-muted-foreground">
                   {s.created_by
                     ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..."
-                    : isRtl
-                      ? "تسجيل ذاتي"
-                      : "Self-registered"}
+                    : t("admin.students.selfRegistered")}
                 </p>
               </CardContent>
               {/* Mobile */}
@@ -761,7 +751,7 @@ export default function AdminStudentsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {isRtl ? "معلومات الطالب" : "Student Information"}
+                      {isRtl ? "معلومات الطالب" : t("admin.students.studentInfo")}
                     </p>
                     {!editing ? (
                       <Button
@@ -771,7 +761,7 @@ export default function AdminStudentsPage() {
                         className="gap-1 h-7 text-xs"
                       >
                         <Edit3 className="h-3 w-3" />
-                        {isRtl ? "تعديل" : "Edit"}
+                        {t("admin.students.edit")}
                       </Button>
                     ) : (
                       <div className="flex gap-2">
@@ -782,11 +772,11 @@ export default function AdminStudentsPage() {
                           className="h-7 text-xs gap-1"
                         >
                           <X className="h-3 w-3" />
-                          {isRtl ? "إلغاء" : "Cancel"}
+                          {t("admin.students.cancel")}
                         </Button>
                         <Button size="sm" onClick={handleSave} disabled={saving} className="h-7 text-xs gap-1">
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                          {isRtl ? "حفظ" : "Save"}
+                          {t("admin.students.save")}
                         </Button>
                       </div>
                     )}
@@ -795,10 +785,10 @@ export default function AdminStudentsPage() {
                   {editing ? (
                     <div className="space-y-3">
                       {[
-                        { label: isRtl ? "الاسم الكامل" : "Full Name", key: "full_name" },
-                        { label: isRtl ? "رقم الهاتف" : "Phone Number", key: "phone_number" },
-                        { label: isRtl ? "مدينة الميلاد" : "City of Birth", key: "city" },
-                        { label: isRtl ? "رقم الطوارئ" : "Emergency Contact", key: "emergency_contact" },
+                        { label: t("admin.students.fieldFullName"), key: "full_name" },
+                        { label: t("admin.students.fieldPhoneNumber"), key: "phone_number" },
+                        { label: t("admin.students.fieldCity"), key: "city" },
+                        { label: t("admin.students.fieldEmergency"), key: "emergency_contact" },
                       ].map(({ label, key }) => (
                         <div key={key}>
                           <Label className="text-xs">{label}</Label>
@@ -810,7 +800,7 @@ export default function AdminStudentsPage() {
                         </div>
                       ))}
                       <div>
-                        <Label className="text-xs">{isRtl ? "تاريخ الوصول" : "Arrival Date"}</Label>
+                        <Label className="text-xs">{t("admin.students.fieldArrival")}</Label>
                         <Input
                           type="date"
                           value={editForm.arrival_date || ""}
@@ -822,82 +812,20 @@ export default function AdminStudentsPage() {
                   ) : (
                     <div className="space-y-2.5 text-sm">
                       {[
-                        {
-                          icon: <Mail className="h-3.5 w-3.5" />,
-                          label: isRtl ? "البريد" : "Email",
-                          value: selected.email,
-                        },
-                        {
-                          icon: <Phone className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الهاتف" : "Phone",
-                          value: selected.phone_number || "—",
-                        },
-                        {
-                          icon: <Shield className="h-3.5 w-3.5" />,
-                          label: isRtl ? "مدينة الميلاد" : "City of Birth",
-                          value: selected.city || "—",
-                        },
-                        {
-                          icon: <Phone className="h-3.5 w-3.5" />,
-                          label: isRtl ? "رقم الطوارئ" : "Emergency Contact",
-                          value: selected.emergency_contact || "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الوصول" : "Arrival Date",
-                          value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجنس" : "Gender",
-                          value: selected.gender || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الميلاد" : "Date of Birth",
-                          value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجنسية" : "Nationality",
-                          value: selected.nationality || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "عنوان السكن" : "Home Address",
-                          value: selected.country || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "الجامعة" : "University",
-                          value: selected.university_name || "—",
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "شهر القبول" : "Intake Month",
-                          value: selected.intake_month || "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "آخر تحديث من الطالب" : "Last Updated by Student",
-                          value: selected.updated_by_student_at
-                            ? format(new Date(selected.updated_by_student_at), "PPP")
-                            : "—",
-                        },
-                        {
-                          icon: <Clock className="h-3.5 w-3.5" />,
-                          label: isRtl ? "تاريخ الإنشاء" : "Created",
-                          value: format(new Date(selected.created_at), "PPP"),
-                        },
-                        {
-                          icon: <User className="h-3.5 w-3.5" />,
-                          label: isRtl ? "أنشئ بواسطة" : "Created By",
-                          value: selected.created_by
-                            ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8)
-                            : isRtl
-                              ? "تسجيل ذاتي"
-                              : "Self-registered",
-                        },
+                        { icon: <Mail className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmail"), value: selected.email },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldPhone"), value: selected.phone_number || "—" },
+                        { icon: <Shield className="h-3.5 w-3.5" />, label: t("admin.students.fieldCity"), value: selected.city || "—" },
+                        { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmergency"), value: selected.emergency_contact || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldArrival"), value: selected.arrival_date ? format(new Date(selected.arrival_date), "PPP") : "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldGender"), value: selected.gender || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldDob"), value: selected.date_of_birth ? format(new Date(selected.date_of_birth), "PPP") : "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldNationality"), value: selected.nationality || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldAddress"), value: selected.country || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldIntake"), value: selected.intake_month || "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldLastUpdated"), value: selected.updated_by_student_at ? format(new Date(selected.updated_by_student_at), "PPP") : "—" },
+                        { icon: <Clock className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreated"), value: format(new Date(selected.created_at), "PPP") },
+                        { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldCreatedBy"), value: selected.created_by ? creatorNames[selected.created_by] || selected.created_by.slice(0, 8) : t("admin.students.selfRegistered") },
                       ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-start gap-2">
                           <span className="text-muted-foreground shrink-0 mt-0.5">{icon}</span>
@@ -914,7 +842,7 @@ export default function AdminStudentsPage() {
                 {/* Admin Actions */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? "إجراءات الأدمن" : "Admin Actions"}
+                    {t("admin.students.adminActions")}
                   </p>
                   <div className="flex flex-col gap-2">
                     <Button
@@ -924,7 +852,7 @@ export default function AdminStudentsPage() {
                       onClick={() => setShowResetDialog(true)}
                     >
                       <KeyRound className="h-4 w-4" />
-                      {isRtl ? "إعادة تعيين كلمة المرور" : "Reset Password"}
+                      {t("admin.students.resetPassword")}
                     </Button>
                     <Button
                       variant="outline"
@@ -936,7 +864,7 @@ export default function AdminStudentsPage() {
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
-                      {isRtl ? "حذف انتقائي" : "Selective Delete"}
+                      {t("admin.students.selectiveDelete")}
                     </Button>
                   </div>
                 </div>
@@ -946,11 +874,11 @@ export default function AdminStudentsPage() {
                 {/* Document Upload */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? "رفع مستند جديد" : "Upload New Document"}
+                    {t("admin.students.uploadNewDocument")}
                   </p>
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs">{isRtl ? "نوع المستند" : "Category"}</Label>
+                      <Label className="text-xs">{t("admin.students.docCategory")}</Label>
                       <select
                         value={uploadCategory}
                         onChange={(e) => setUploadCategory(e.target.value)}
@@ -965,11 +893,11 @@ export default function AdminStudentsPage() {
                     </div>
                     {uploadCategory === "other" && (
                       <div>
-                        <Label className="text-xs">{isRtl ? "اسم المستند" : "Document Name"}</Label>
+                        <Label className="text-xs">{t("admin.students.docName")}</Label>
                         <Input
                           value={customDocName}
                           onChange={(e) => setCustomDocName(e.target.value)}
-                          placeholder={isRtl ? "مثال: شهادة الميلاد" : "e.g., Birth Certificate"}
+                          placeholder={t("admin.students.docNamePlaceholder")}
                           className="mt-1 h-9 text-sm"
                         />
                       </div>
@@ -991,13 +919,7 @@ export default function AdminStudentsPage() {
                         onClick={() => fileInputRef.current?.click()}
                       >
                         {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploading
-                          ? isRtl
-                            ? "جار الرفع..."
-                            : "Uploading..."
-                          : isRtl
-                            ? "اختر ملف للرفع"
-                            : "Choose file to upload"}
+                        {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
                       </Button>
                     </div>
                   </div>
@@ -1010,7 +932,7 @@ export default function AdminStudentsPage() {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {isRtl ? "بيانات الفيزا" : "Visa Information"}
+                        {t("admin.students.visaInfo")}
                       </p>
                       {!editingVisa ? (
                         <Button
@@ -1022,7 +944,7 @@ export default function AdminStudentsPage() {
                             setEditingVisa(true);
                           }}
                         >
-                          <Edit3 className="h-3 w-3" /> {isRtl ? "تعديل" : "Edit"}
+                          <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
                         </Button>
                       ) : (
                         <div className="flex gap-2">
@@ -1033,7 +955,7 @@ export default function AdminStudentsPage() {
                             onClick={() => setEditingVisa(false)}
                             disabled={savingVisa}
                           >
-                            <X className="h-3 w-3" /> {isRtl ? "إلغاء" : "Cancel"}
+                            <X className="h-3 w-3" /> {t("admin.students.cancel")}
                           </Button>
                           <Button
                             size="sm"
@@ -1042,7 +964,7 @@ export default function AdminStudentsPage() {
                             disabled={savingVisa}
                           >
                             {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                            {isRtl ? "حفظ" : "Save"}
+                            {t("admin.students.save")}
                           </Button>
                         </div>
                       )}
@@ -1185,14 +1107,14 @@ export default function AdminStudentsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              {isRtl ? "حذف انتقائي" : "Selective Delete"}
+              {t("admin.students.selectiveDeleteTitle")}
               {deleteTarget && <span className="text-foreground font-normal text-sm"> — {deleteTarget.full_name}</span>}
             </DialogTitle>
           </DialogHeader>
           {deleteTarget && (
             <SelectiveDeleteDialog
               student={deleteTarget}
-              isRtl={isRtl}
+              t={t as (key: string, opts?: any) => string}
               onClose={() => {
                 setShowDeleteDialog(false);
                 setDeleteTarget(null);
