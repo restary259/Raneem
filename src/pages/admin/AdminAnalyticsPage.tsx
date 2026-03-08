@@ -98,7 +98,7 @@ const AdminAnalyticsPage = () => {
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-6" dir="ltr">
         {/* Funnel */}
         <Card>
           <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
@@ -109,14 +109,13 @@ const AdminAnalyticsPage = () => {
                 layout="vertical"
                 barCategoryGap="40%"
                 barSize={20}
-                margin={{ top: 4, bottom: 4, left: isRtl ? 4 : 0, right: isRtl ? 0 : 4 }}
+                margin={{ top: 4, bottom: 4, left: 0, right: 4 }}
               >
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
                   dataKey="name"
                   width={yAxisWidth}
-                  orientation={isRtl ? 'right' : 'left'}
                   tick={{ fontSize: 11, fill: 'currentColor' }}
                   tickMargin={6}
                 />
@@ -182,9 +181,9 @@ const AdminAnalyticsPage = () => {
                 <XAxis
                   dataKey="name"
                   tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
-                  angle={-30}
-                  textAnchor="end"
-                  height={70}
+                  angle={-35}
+                  textAnchor="middle"
+                  height={80}
                   interval={0}
                 />
                 <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
