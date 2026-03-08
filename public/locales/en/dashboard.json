@@ -868,7 +868,9 @@
       "paidThisMonth": "Paid This Month",
       "slaWarnings": "SLA Warnings",
       "myEarnings": "My Earnings",
-      "totalRevenue": "Total Revenue"
+      "totalRevenue": "Total Revenue",
+      "conversionRate": "Conversion Rate",
+      "showRate": "Show Rate"
     },
     "statuses": {
       "assigned": "Assigned",
