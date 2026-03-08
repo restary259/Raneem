@@ -118,8 +118,11 @@ export default function PartnerOverviewPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const total = cases.length;
-  const paid = cases.filter((c) => PAID_STATUSES.includes(c.status)).length;
-  const enrolled = cases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
+  // Only cases directly attributed to this partner (partner_id = uid) generate commission
+  // Other visible cases (unattributed agency leads) count toward pipeline totals but not earnings
+  const attributedCases = cases.filter((c) => c.partner_id === userId);
+  const paid = attributedCases.filter((c) => PAID_STATUSES.includes(c.status)).length;
+  const enrolled = attributedCases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
   // commissions = rewards rows (approved/paid) — sum their amounts
   const totalEarned = commissions.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
 

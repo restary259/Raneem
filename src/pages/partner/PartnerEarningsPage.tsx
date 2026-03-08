@@ -88,7 +88,10 @@ export default function PartnerEarningsPage() {
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  const earningCases = cases.filter((c) => PAID_STATUSES.includes(c.status));
+  // Only cases directly attributed to this partner (partner_id = uid) generate commission
+  // Other visible cases (unattributed agency leads) appear in pipeline but earn nothing
+  const attributedCases = cases.filter((c) => c.partner_id === userId);
+  const earningCases = attributedCases.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
   const confirmedCases = earningCases.filter((c) => c.status === "enrollment_paid");
