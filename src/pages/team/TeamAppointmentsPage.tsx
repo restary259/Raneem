@@ -228,7 +228,7 @@ export default function TeamAppointmentsPage() {
 
     // Working hours safeguard
     if (hour < WORK_START || hour >= WORK_END) {
-      toast({ variant: "destructive", description: "Appointments can only be scheduled between 8 am and 8 pm." });
+      toast({ variant: "destructive", description: t("team.appointments.errDropWorkHours") });
       setDraggingId(null);
       setDragOverSlot(null);
       return;
@@ -266,7 +266,7 @@ export default function TeamAppointmentsPage() {
         .update({ scheduled_at: pendingMove.newDate.toISOString() })
         .eq("id", pendingMove.appt.id);
       if (error) throw error;
-      toast({ title: "Rescheduled", description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      toast({ title: t("team.appointments.toastRescheduled"), description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
       setPendingMove(null);
       fetchAppts();
     } catch (err: any) {
@@ -308,22 +308,22 @@ export default function TeamAppointmentsPage() {
   /* ══ SAVE ════════════════════════════════════════════════════════════ */
   const handleSave = async () => {
     if (!newDate) {
-      toast({ variant: "destructive", description: "Please select a date" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoDate") });
       return;
     }
     if (!useManualName && !newCaseId) {
-      toast({ variant: "destructive", description: "Please select a case or enter a student name" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoCase") });
       return;
     }
     if (useManualName && !manualName.trim()) {
-      toast({ variant: "destructive", description: "Please enter a student name" });
+      toast({ variant: "destructive", description: t("team.appointments.errNoName") });
       return;
     }
 
     // Working hours validation
     const [hh] = newTime.split(":").map(Number);
     if (hh < WORK_START || hh >= WORK_END) {
-      toast({ variant: "destructive", description: "Appointments must be between 8 am and 8 pm." });
+      toast({ variant: "destructive", description: t("team.appointments.errWorkHours") });
       return;
     }
 
@@ -344,7 +344,7 @@ export default function TeamAppointmentsPage() {
           })
           .eq("id", editingAppt.id);
         if (error) throw error;
-        toast({ title: "Appointment updated" });
+        toast({ title: t("team.appointments.toastUpdated") });
       } else {
         let caseId = newCaseId;
         if (useManualName && manualName.trim()) {
@@ -376,7 +376,7 @@ export default function TeamAppointmentsPage() {
             .eq("id", caseId)
             .eq("status", "contacted");
         }
-        toast({ title: "Appointment created" });
+        toast({ title: t("team.appointments.toastCreated") });
       }
       setShowModal(false);
       setEditingAppt(null);
@@ -395,7 +395,7 @@ export default function TeamAppointmentsPage() {
     try {
       const { error } = await supabase.from("appointments").delete().eq("id", deletingAppt.id);
       if (error) throw error;
-      toast({ title: "Appointment deleted" });
+      toast({ title: t("team.appointments.toastDeleted") });
       setDeletingAppt(null);
       setSelectedAppt(null);
       fetchAppts();
