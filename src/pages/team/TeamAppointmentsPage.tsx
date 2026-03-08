@@ -611,7 +611,7 @@ export default function TeamAppointmentsPage() {
                     isToday(day) && "bg-violet-50/50",
                   )}
                 >
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{format(day, "EEE")}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{day.toLocaleDateString(calLocale, { weekday: "short" })}</div>
                   <div
                     className={cn(
                       "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
