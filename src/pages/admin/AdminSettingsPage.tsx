@@ -284,7 +284,7 @@ const AdminSettingsPage = () => {
     setResetting(true);
     try {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password: resetPassword });
-      if (authErr) throw new Error(isRtl ? "كلمة المرور غير صحيحة" : "Incorrect password");
+      if (authErr) throw new Error(t('admin.settings.incorrectPassword', 'Incorrect password'));
 
       const selectedTables = RESET_CATEGORIES
         .filter(c => resetCategories.includes(c.id))
@@ -301,10 +301,8 @@ const AdminSettingsPage = () => {
       });
 
       toast({
-        title: isRtl ? "✅ تم الحذف" : "✅ Data deleted",
-        description: isRtl
-          ? `تم حذف البيانات من ${selectedTables.length} جدول`
-          : `Deleted data from ${selectedTables.length} table(s)`,
+        title: t('admin.settings.purgeSuccess', '✅ Data deleted'),
+        description: t('admin.settings.finalConfirmDesc', '{{count}} records will be permanently deleted.', { count: selectedTables.length }),
       });
       setShowFinalConfirm(false);
       setResetPassword("");
@@ -328,7 +326,7 @@ const AdminSettingsPage = () => {
   const totalRowCount = Object.values(rowCounts).reduce((a, b) => a + b, 0);
 
   if (loading)
-    return <div className="p-8 text-center text-muted-foreground">{isRtl ? "جار التحميل..." : "Loading..."}</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t('common.loading', 'Loading...')}</div>;
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
@@ -347,7 +345,7 @@ const AdminSettingsPage = () => {
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
-          <TabsTrigger value="visa">{isRtl ? "حقول التأشيرة" : "Visa Fields"}</TabsTrigger>
+          <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
           <TabsTrigger value="reset" className="text-destructive data-[state=active]:text-destructive">
             {isRtl ? "⚠️ مسح البيانات" : "⚠️ Data Reset"}
           </TabsTrigger>
