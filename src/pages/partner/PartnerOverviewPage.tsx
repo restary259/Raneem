@@ -68,18 +68,21 @@ export default function PartnerOverviewPage() {
     setCommissions(rewardsData || []);
 
     // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
+    // Always fetch partner_id to correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
-      .select("id,full_name,status,source,created_at,education_level,degree_interest")
+      .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
       .order("created_at", { ascending: false });
 
-    // All case sources that should be visible to partners
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"];
+    // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
+    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
+        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null) {
+        // Partner-attributed only: cases linked via this partner's referral link
         query = query.eq("partner_id", uid);
       }
       // show_all_cases === true → no filter (show everything)
@@ -115,8 +118,11 @@ export default function PartnerOverviewPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const total = cases.length;
-  const paid = cases.filter((c) => PAID_STATUSES.includes(c.status)).length;
-  const enrolled = cases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
+  // Only cases directly attributed to this partner (partner_id = uid) generate commission
+  // Other visible cases (unattributed agency leads) count toward pipeline totals but not earnings
+  const attributedCases = cases.filter((c) => c.partner_id === userId);
+  const paid = attributedCases.filter((c) => PAID_STATUSES.includes(c.status)).length;
+  const enrolled = attributedCases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
   // commissions = rewards rows (approved/paid) — sum their amounts
   const totalEarned = commissions.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
 
@@ -245,6 +251,8 @@ export default function PartnerOverviewPage() {
                       color: "bg-gray-100 text-gray-600",
                     };
                     const isPaid = PAID_STATUSES.includes(c.status);
+                    // Commission only applies to cases attributed to this partner
+                    const isAttributed = c.partner_id === userId;
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground">{c.full_name}</td>
@@ -255,10 +263,15 @@ export default function PartnerOverviewPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {isPaid ? (
+                          {isPaid && isAttributed ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                               <CheckCircle className="h-3 w-3" />
                               ₪{commissionRate.toLocaleString()} {t("partner.projLabel")}
+                            </span>
+                          ) : isPaid && !isAttributed ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {t("partner.noCommission", { defaultValue: "No commission" })}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">

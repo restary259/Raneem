@@ -23,7 +23,7 @@ export default function PartnerEarningsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    // Fetch override + global settings + visibility in parallel
+    // Fetch override + global settings in parallel
     const [overrideRes, settingsRes] = await Promise.all([
       (supabase as any)
         .from("partner_commission_overrides")
@@ -39,23 +39,26 @@ export default function PartnerEarningsPage() {
     setCommissionRate(Number(override?.commission_amount ?? globalRate));
 
     // Build cases query respecting visibility setting
+    // Always fetch partner_id so we can correctly scope commission calculations
     let query = (supabase as any)
       .from("cases")
-      .select("id,full_name,status,created_at,source")
+      .select("id,full_name,status,created_at,source,partner_id")
       .order("created_at", { ascending: false });
 
-    // All case sources that should be visible to partners
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "referral", "manual"];
+    // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
+    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
+        // Apply/Contact Only: agency-generated leads, no peer referrals
         query = query.in("source", PARTNER_SOURCES);
       } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
+        // Partner-attributed only: cases linked via this partner's referral link
         query = query.eq("partner_id", uid);
       }
       // show_all_cases === true → no extra filter (show everything)
     } else {
-      // No override row at all → default: all partner-visible sources
+      // No override row at all → default: agency-generated leads only
       query = query.in("source", PARTNER_SOURCES);
     }
 
@@ -85,7 +88,10 @@ export default function PartnerEarningsPage() {
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  const earningCases = cases.filter((c) => PAID_STATUSES.includes(c.status));
+  // Only cases directly attributed to this partner (partner_id = uid) generate commission
+  // Other visible cases (unattributed agency leads) appear in pipeline but earn nothing
+  const attributedCases = cases.filter((c) => c.partner_id === userId);
+  const earningCases = attributedCases.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
   const confirmedCases = earningCases.filter((c) => c.status === "enrollment_paid");
