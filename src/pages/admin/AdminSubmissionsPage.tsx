@@ -141,12 +141,12 @@ const AdminSubmissionsPage = () => {
     const fee = c.submission?.service_fee || 0;
     try {
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
-        supabase.from("platform_settings" as any).select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
+        (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
         c.partner_id ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle() : Promise.resolve({ data: null }),
         c.assigned_to ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle() : Promise.resolve({ data: null }),
       ]);
-      const globalPartner = settRes.data?.partner_commission_rate ?? 500;
-      const globalTeam = settRes.data?.team_member_commission_rate ?? 100;
+      const globalPartner = (settRes.data as any)?.partner_commission_rate ?? 500;
+      const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
       const partnerCommission = partnerOvRes.data?.commission_amount ?? (c.partner_id ? globalPartner : 0);
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
       setSplitPreview({
