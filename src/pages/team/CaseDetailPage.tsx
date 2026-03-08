@@ -264,7 +264,7 @@ export default function CaseDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
 
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
