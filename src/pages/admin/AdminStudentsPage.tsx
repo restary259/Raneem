@@ -751,7 +751,7 @@ export default function AdminStudentsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {isRtl ? "معلومات الطالب" : "Student Information"}
+                      {isRtl ? "معلومات الطالب" : t("admin.students.studentInfo")}
                     </p>
                     {!editing ? (
                       <Button
@@ -761,7 +761,7 @@ export default function AdminStudentsPage() {
                         className="gap-1 h-7 text-xs"
                       >
                         <Edit3 className="h-3 w-3" />
-                        {isRtl ? "تعديل" : "Edit"}
+                        {t("admin.students.edit")}
                       </Button>
                     ) : (
                       <div className="flex gap-2">
@@ -772,11 +772,11 @@ export default function AdminStudentsPage() {
                           className="h-7 text-xs gap-1"
                         >
                           <X className="h-3 w-3" />
-                          {isRtl ? "إلغاء" : "Cancel"}
+                          {t("admin.students.cancel")}
                         </Button>
                         <Button size="sm" onClick={handleSave} disabled={saving} className="h-7 text-xs gap-1">
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                          {isRtl ? "حفظ" : "Save"}
+                          {t("admin.students.save")}
                         </Button>
                       </div>
                     )}
