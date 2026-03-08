@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +67,7 @@ const AdminTeamPage = () => {
 
   const createMember = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
-      toast({ variant: 'destructive', description: isRtl ? 'يرجى ملء جميع الحقول' : 'Please fill all fields' });
+      toast({ variant: 'destructive', description: t('admin.team.allFieldsRequired') });
       return;
     }
     setCreating(true);
@@ -86,7 +86,7 @@ const AdminTeamPage = () => {
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
-      toast({ description: isRtl ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully' });
+      toast({ description: t('admin.team.accountCreated') });
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
     } finally {
@@ -101,11 +101,11 @@ const AdminTeamPage = () => {
   };
 
   const roleLabel = (role: string) => {
-    const map: Record<string, { en: string; ar: string }> = {
-      team_member: { en: 'Team Member', ar: 'عضو الفريق' },
-      social_media_partner: { en: 'Partner', ar: 'شريك' },
+    const map: Record<string, string> = {
+      team_member: t('admin.team.teamMemberRole'),
+      social_media_partner: t('admin.team.partnerRole'),
     };
-    return isRtl ? map[role]?.ar : map[role]?.en;
+    return map[role] || role;
   };
 
   return (
@@ -131,7 +131,7 @@ const AdminTeamPage = () => {
               {newCreds ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    {isRtl ? 'تم إنشاء الحساب بنجاح. شارك بيانات الاعتماد مع العضو.' : 'Account created. Share credentials with the member.'}
+                    {t('admin.team.credentialsHint')}
                   </p>
                   <div className="p-4 rounded-lg bg-muted space-y-2">
                     <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {newCreds.email}</p>
@@ -161,13 +161,13 @@ const AdminTeamPage = () => {
                     <Select value={form.role} onValueChange={val => setForm(f => ({ ...f, role: val }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="team_member">{isRtl ? 'عضو الفريق' : 'Team Member'}</SelectItem>
-                        <SelectItem value="social_media_partner">{isRtl ? 'شريك' : 'Partner'}</SelectItem>
+                        <SelectItem value="team_member">{t('admin.team.teamMemberRole')}</SelectItem>
+                        <SelectItem value="social_media_partner">{t('admin.team.partnerRole')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <Button className="w-full" onClick={createMember} disabled={creating}>
-                    {creating ? (isRtl ? 'جار الإنشاء...' : 'Creating...') : t('admin.team.createBtn', 'Create Account')}
+                    {creating ? t('admin.team.creating') : t('admin.team.createBtn', 'Create Account')}
                   </Button>
                 </div>
               )}
@@ -180,7 +180,7 @@ const AdminTeamPage = () => {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">{isRtl ? 'جار التحميل...' : 'Loading...'}</div>
+            <div className="p-8 text-center text-muted-foreground text-sm">{t('admin.team.loading')}</div>
           ) : members.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">{t('admin.team.noMembers', 'No team members yet')}</div>
           ) : (
@@ -191,7 +191,7 @@ const AdminTeamPage = () => {
                     <p className="text-sm font-medium text-foreground">{m.full_name}</p>
                     <p className="text-xs text-muted-foreground">{m.email}</p>
                   </div>
-                  <Badge variant="secondary">{roleLabel(m.role) || m.role}</Badge>
+                  <Badge variant="secondary">{roleLabel(m.role)}</Badge>
                 </div>
               ))}
             </div>

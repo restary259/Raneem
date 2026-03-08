@@ -52,11 +52,9 @@ const AdminSubmissionsPage = () => {
   const [selected, setSelected] = useState<SubmittedCase | null>(null);
   const [marking, setMarking] = useState(false);
 
-  // Resolved name maps: UUID → human-readable name
   const [programNames, setProgramNames] = useState<Record<string, string>>({});
   const [accommodationNames, setAccommodationNames] = useState<Record<string, string>>();
 
-  // Password re-auth
   const [showPasswordGate, setShowPasswordGate] = useState(false);
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
@@ -66,9 +64,7 @@ const AdminSubmissionsPage = () => {
     try {
       const casesRes = await supabase
         .from("cases")
-        .select(
-          "id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id",
-        )
+        .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id")
         .eq("status", "submitted")
         .order("created_at", { ascending: false });
 
@@ -87,9 +83,7 @@ const AdminSubmissionsPage = () => {
       ]);
 
       const subMap: Record<string, any> = {};
-      (subRes.data || []).forEach((s) => {
-        subMap[s.case_id] = s;
-      });
+      (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
 
       const docsMap: Record<string, any[]> = {};
       (docsRes.data || []).forEach((d) => {
@@ -104,30 +98,20 @@ const AdminSubmissionsPage = () => {
       }));
       setCases(enriched);
 
-      // Resolve program and accommodation UUIDs → names
       const programIds = [...new Set(enriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
-      const accommodationIds = [
-        ...new Set(enriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[]),
-      ];
+      const accommodationIds = [...new Set(enriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
 
       if (programIds.length > 0) {
         const { data: progData } = await supabase.from("programs").select("id, name_en").in("id", programIds);
         const map: Record<string, string> = {};
-        (progData || []).forEach((p: any) => {
-          map[p.id] = p.name_en;
-        });
+        (progData || []).forEach((p: any) => { map[p.id] = p.name_en; });
         setProgramNames(map);
       }
 
       if (accommodationIds.length > 0) {
-        const { data: accomData } = await (supabase as any)
-          .from("accommodations")
-          .select("id, name_en")
-          .in("id", accommodationIds);
+        const { data: accomData } = await (supabase as any).from("accommodations").select("id, name_en").in("id", accommodationIds);
         const map: Record<string, string> = {};
-        (accomData || []).forEach((a: any) => {
-          map[a.id] = a.name_en;
-        });
+        (accomData || []).forEach((a: any) => { map[a.id] = a.name_en; });
         setAccommodationNames(map);
       }
     } catch (err: any) {
@@ -137,9 +121,7 @@ const AdminSubmissionsPage = () => {
     }
   }, [toast]);
 
-  useEffect(() => {
-    fetchCases();
-  }, [fetchCases]);
+  useEffect(() => { fetchCases(); }, [fetchCases]);
 
   const handleReAuth = async () => {
     if (!reAuthPassword.trim() || !user?.email) return;
@@ -149,10 +131,9 @@ const AdminSubmissionsPage = () => {
       if (error) throw error;
       setShowPasswordGate(false);
       setReAuthPassword("");
-      // Now mark enrolled
       await markEnrolled();
     } catch (err: any) {
-      toast({ variant: "destructive", description: isRtl ? "كلمة المرور غير صحيحة" : "Incorrect password" });
+      toast({ variant: "destructive", description: t("admin.submissions.incorrectPassword") });
     } finally {
       setReAuthing(false);
     }
@@ -162,24 +143,17 @@ const AdminSubmissionsPage = () => {
     if (!selected) return;
     setMarking(true);
     try {
-      const { error: caseErr } = await supabase
-        .from("cases")
-        .update({ status: "enrollment_paid" })
-        .eq("id", selected.id);
+      const { error: caseErr } = await supabase.from("cases").update({ status: "enrollment_paid" }).eq("id", selected.id);
       if (caseErr) throw caseErr;
 
       if (selected.submission?.id) {
         const { error: subErr } = await supabase
           .from("case_submissions")
-          .update({
-            enrollment_paid_at: new Date().toISOString(),
-            enrollment_paid_by: user?.id,
-          })
+          .update({ enrollment_paid_at: new Date().toISOString(), enrollment_paid_by: user?.id })
           .eq("id", selected.submission.id);
         if (subErr) throw subErr;
       }
 
-      // Audit log
       await supabase.rpc("log_user_activity" as any, {
         p_action: "MARK_ENROLLED",
         p_target_id: selected.id,
@@ -187,7 +161,7 @@ const AdminSubmissionsPage = () => {
         p_details: `Marked case ${selected.full_name} as enrolled`,
       });
 
-      toast({ description: isRtl ? "تم تسجيل القبول بنجاح" : "Marked as enrolled" });
+      toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
       await fetchCases();
     } catch (err: any) {
@@ -203,7 +177,7 @@ const AdminSubmissionsPage = () => {
   };
 
   const totalFee = (s: SubmittedCase) =>
-    ((s.submission?.service_fee || 0) + (s.submission?.translation_fee || 0)).toLocaleString();
+    ((s.submission?.service_fee || 0) + (s.submission?.translation_fee || 0)).toLocaleString('en-US');
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -225,7 +199,7 @@ const AdminSubmissionsPage = () => {
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
-              {isRtl ? "جار التحميل..." : "Loading..."}
+              {t("common.loading")}
             </div>
           ) : cases.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
@@ -242,14 +216,14 @@ const AdminSubmissionsPage = () => {
                   <div>
                     <p className="text-sm font-medium text-foreground">{c.full_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.phone_number} · {isRtl ? "تم التقديم:" : "Submitted:"}{" "}
+                      {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
                       {fmt(c.submission?.submitted_at || null)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-end">
                       <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
-                      <p className="text-xs text-muted-foreground">{isRtl ? "إجمالي الرسوم" : "Total fees"}</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
@@ -273,31 +247,31 @@ const AdminSubmissionsPage = () => {
               {/* Basic Info */}
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {isRtl ? "معلومات أساسية" : "Basic Information"}
+                  {t("admin.submissions.basicInfo")}
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "الهاتف" : "Phone"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
                     <p className="font-medium">{selected.phone_number}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "المدينة" : "City"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
                     <p className="font-medium">{selected.city || "–"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "المستوى التعليمي" : "Education"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
                     <p className="font-medium">{selected.education_level || "–"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "نوع الجواز" : "Passport"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
                     <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "تاريخ التقديم" : "Submitted"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
                     <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "الدفع" : "Payment"}:</span>
+                    <span className="text-muted-foreground">{t("admin.submissions.payment")}:</span>
                     <Badge
                       className={
                         selected.submission?.payment_confirmed
@@ -305,7 +279,9 @@ const AdminSubmissionsPage = () => {
                           : "bg-amber-100 text-amber-800"
                       }
                     >
-                      {selected.submission?.payment_confirmed ? "✅ Confirmed" : "⏳ Pending"}
+                      {selected.submission?.payment_confirmed
+                        ? t("admin.submissions.paymentConfirmed")
+                        : t("admin.submissions.paymentPending")}
                     </Badge>
                   </div>
                 </div>
@@ -316,32 +292,32 @@ const AdminSubmissionsPage = () => {
               {/* Payment Details */}
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {isRtl ? "تفاصيل الدفع" : "Payment Details"}
+                  {t("admin.submissions.paymentDetails")}
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "رسوم الخدمة" : "Service Fee"}:</span>
-                    <p className="font-medium">{selected.submission?.service_fee?.toLocaleString() || 0} ILS</p>
+                    <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}:</span>
+                    <p className="font-medium">{(selected.submission?.service_fee || 0).toLocaleString('en-US')} ILS</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{isRtl ? "رسوم الترجمة" : "Translation Fee"}:</span>
-                    <p className="font-medium">{selected.submission?.translation_fee?.toLocaleString() || 0} ILS</p>
+                    <span className="text-muted-foreground">{t("admin.submissions.translationFee")}:</span>
+                    <p className="font-medium">{(selected.submission?.translation_fee || 0).toLocaleString('en-US')} ILS</p>
                   </div>
                   {selected.submission?.program_start_date && (
                     <div>
-                      <span className="text-muted-foreground">{isRtl ? "تاريخ البدء" : "Start Date"}:</span>
+                      <span className="text-muted-foreground">{t("admin.submissions.startDate")}:</span>
                       <p className="font-medium">{fmt(selected.submission.program_start_date)}</p>
                     </div>
                   )}
                   {selected.submission?.program_end_date && (
                     <div>
-                      <span className="text-muted-foreground">{isRtl ? "تاريخ الانتهاء" : "End Date"}:</span>
+                      <span className="text-muted-foreground">{t("admin.submissions.endDate")}:</span>
                       <p className="font-medium">{fmt(selected.submission.program_end_date)}</p>
                     </div>
                   )}
                 </div>
                 <div className="mt-3 p-3 rounded-lg bg-muted text-sm">
-                  <span className="text-muted-foreground">{isRtl ? "الإجمالي" : "Total"}:</span>
+                  <span className="text-muted-foreground">{t("admin.submissions.total")}:</span>
                   <span className="font-bold ms-2 text-foreground">{totalFee(selected)} ILS</span>
                 </div>
               </div>
@@ -352,12 +328,12 @@ const AdminSubmissionsPage = () => {
                   <Separator />
                   <div>
                     <h3 className="text-sm font-semibold text-foreground mb-2">
-                      {isRtl ? "البرنامج والإقامة" : "Program & Accommodation"}
+                      {t("admin.submissions.programAccom")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {selected.submission?.program_id && (
                         <div>
-                          <span className="text-muted-foreground">{isRtl ? "البرنامج" : "Program"}:</span>
+                          <span className="text-muted-foreground">{t("admin.submissions.program")}:</span>
                           <p className="font-medium">
                             {programNames[selected.submission.program_id] || selected.submission.program_id}
                           </p>
@@ -365,10 +341,9 @@ const AdminSubmissionsPage = () => {
                       )}
                       {selected.submission?.accommodation_id && (
                         <div>
-                          <span className="text-muted-foreground">{isRtl ? "الإقامة" : "Accommodation"}:</span>
+                          <span className="text-muted-foreground">{t("admin.submissions.accommodation")}:</span>
                           <p className="font-medium">
-                            {accommodationNames?.[selected.submission.accommodation_id] ||
-                              selected.submission.accommodation_id}
+                            {accommodationNames?.[selected.submission.accommodation_id] || selected.submission.accommodation_id}
                           </p>
                         </div>
                       )}
@@ -377,18 +352,17 @@ const AdminSubmissionsPage = () => {
                 </>
               )}
 
-              {/* Extra Profile Data — skip program_id / accommodation_id (shown above) */}
+              {/* Extra Profile Data */}
               {selected.submission?.extra_data && Object.keys(selected.submission.extra_data).length > 0 && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="text-sm font-semibold text-foreground mb-2">
-                      {isRtl ? "بيانات الملف الشخصي" : "Student Profile Data"}
+                      {t("admin.submissions.studentProfileData")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {Object.entries(selected.submission.extra_data).map(([key, val]) => {
                         if (!val || val === "") return null;
-                        // Skip raw UUID fields — rendered above with resolved names
                         if (key === "program_id" || key === "accommodation_id") return null;
                         const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
                         return (
@@ -409,7 +383,7 @@ const AdminSubmissionsPage = () => {
                   <Separator />
                   <div>
                     <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                      <FileText className="h-4 w-4" /> {isRtl ? "المستندات" : "Documents"} ({selected.documents.length})
+                      <FileText className="h-4 w-4" /> {t("admin.submissions.documents")} ({selected.documents.length})
                     </h3>
                     <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
                       {selected.documents.map((doc) => (
@@ -445,15 +419,11 @@ const AdminSubmissionsPage = () => {
                   }}
                 >
                   <ExternalLink className="h-4 w-4" />
-                  {isRtl ? "فتح الملف الكامل" : "Open Full Case"}
+                  {t("admin.submissions.openFullCase")}
                 </Button>
                 <Button className="w-full gap-2" onClick={() => setShowPasswordGate(true)} disabled={marking}>
                   <Lock className="h-4 w-4" />
-                  {marking
-                    ? isRtl
-                      ? "جار التسجيل..."
-                      : "Processing..."
-                    : t("admin.submissions.markEnrolled", "Mark as Enrolled")}
+                  {marking ? t("admin.submissions.processing") : t("admin.submissions.markEnrolled", "Mark as Enrolled")}
                 </Button>
               </div>
             </div>
@@ -473,17 +443,15 @@ const AdminSubmissionsPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" />
-              {isRtl ? "تأكيد هويتك" : "Confirm Your Identity"}
+              {t("admin.submissions.confirmIdentity")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {isRtl
-                ? "أدخل كلمة المرور الخاصة بك لتأكيد هذا الإجراء الحساس."
-                : "Enter your password to confirm this sensitive action."}
+              {t("admin.submissions.confirmIdentityDesc")}
             </p>
             <div>
-              <Label>{isRtl ? "كلمة المرور" : "Password"}</Label>
+              <Label>{t("admin.submissions.password")}</Label>
               <Input
                 type="password"
                 value={reAuthPassword}
@@ -502,10 +470,10 @@ const AdminSubmissionsPage = () => {
                 setReAuthPassword("");
               }}
             >
-              {isRtl ? "إلغاء" : "Cancel"}
+              {t("admin.submissions.cancel")}
             </Button>
             <Button onClick={handleReAuth} disabled={reAuthing || !reAuthPassword.trim()}>
-              {reAuthing ? "..." : isRtl ? "تأكيد وتسجيل" : "Confirm & Enroll"}
+              {reAuthing ? "..." : t("admin.submissions.confirmEnroll")}
             </Button>
           </DialogFooter>
         </DialogContent>

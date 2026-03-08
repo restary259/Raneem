@@ -244,7 +244,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <TrendingUp className="h-4 w-4 text-emerald-600" />
               <span className="text-xs text-muted-foreground">{t('money.totalRevenueNIS')}</span>
             </div>
-            <p className="text-xl font-bold text-emerald-700">{kpis.totalRevenueNIS.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold text-emerald-700">{kpis.totalRevenueNIS.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground">{kpis.paidStudents} {t('money.students')}</p>
           </CardContent>
         </Card>
@@ -254,7 +254,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <DollarSign className="h-4 w-4 text-blue-600" />
               <span className="text-xs text-muted-foreground">{t('money.schoolCommission', 'School Commission')}</span>
             </div>
-            <p className="text-xl font-bold text-blue-700">{kpis.totalSchoolComm.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold text-blue-700">{kpis.totalSchoolComm.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground">{t('money.schoolCommissions')}</p>
           </CardContent>
         </Card>
