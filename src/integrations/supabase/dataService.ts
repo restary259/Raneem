@@ -103,11 +103,12 @@ export async function getTeamDashboard(
 ): Promise<{ data: TeamDashboardData | null; error: string | null }> {
   try {
     const [casesRes, appointmentsRes, profileRes] = await Promise.all([
+      // New cases table: assigned_to links the case to the team_member
       safeQuery(
         (supabase as any)
-          .from('student_cases')
+          .from('cases')
           .select('*')
-          .eq('assigned_lawyer_id', userId)
+          .eq('assigned_to', userId)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
       ),
@@ -115,7 +116,7 @@ export async function getTeamDashboard(
         (supabase as any)
           .from('appointments')
           .select('*')
-          .eq('lawyer_id', userId)
+          .eq('team_member_id', userId)
           .order('scheduled_at', { ascending: true })
       ),
       safeQuery(
@@ -133,20 +134,9 @@ export async function getTeamDashboard(
 
     const casesData: any[] = casesRes.data ?? [];
 
-    // Derive leads from the case lead_ids
-    let leadsData: any[] = [];
-    const leadIds = [...new Set(casesData.map((c: any) => c.lead_id).filter(Boolean))];
-    if (leadIds.length > 0) {
-      // Use lawyer-safe view (excludes email column) for team members
-      const leadsRes = await safeQuery(
-        (supabase as any)
-          .from('leads_lawyer_safe')
-          .select('id, full_name, phone, eligibility_score, eligibility_reason, source_type, source_id, passport_type, english_units, math_units, last_contacted, created_at, preferred_major')
-          .in('id', leadIds)
-      );
-      if (leadsRes.error) console.error('[dataService] Team leads fetch failed:', leadsRes.error);
-      leadsData = leadsRes.data ?? [];
-    }
+    // Derive leads from the cases — new cases table does not have lead_id,
+    // but may have full_name / phone_number directly. Skip legacy leads join.
+    const leadsData: any[] = [];
 
     return {
       data: {
