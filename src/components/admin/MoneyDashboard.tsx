@@ -163,18 +163,22 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const kpis = useMemo(() => {
     const enrolledCases = cases.filter(c => c.status === 'enrollment_paid');
     const totalServiceFees = enrolledCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
-    const totalPartnerComm = enrolledCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
-    const totalTeamComm = enrolledCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
+    // Admin net revenue = sum of platform_revenue_ils (set after commission split)
+    const netProfitNIS = enrolledCases.reduce((s, c) => s + (Number(c.platform_revenue_ils) || 0), 0);
+    const totalExpensesNIS = Math.max(0, totalServiceFees - netProfitNIS);
 
-    const totalRevenueNIS = totalServiceFees;
-    const totalExpensesNIS = totalPartnerComm + totalTeamComm;
-    const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
+    // Partner payouts = rewards with 'Partner commission' notes
+    const partnerRewards = rewards.filter(r => (r.admin_notes || '').includes('Partner commission') || (r.admin_notes || '').includes('partner commission'));
+    const totalPartnerComm = partnerRewards.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    // Team payouts = rewards with 'Team commission' notes
+    const teamRewards = rewards.filter(r => (r.admin_notes || '').includes('Team commission') || (r.admin_notes || '').includes('team commission'));
+    const totalTeamComm = teamRewards.reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
     const pendingPayouts = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + (Number(r.amount) || 0), 0);
     const paidPayouts = rewards.filter(r => r.status === 'paid').reduce((s, r) => s + (Number(r.amount) || 0), 0);
 
     return {
-      totalRevenueNIS, totalExpensesNIS, netProfitNIS,
+      totalRevenueNIS: totalServiceFees, totalExpensesNIS, netProfitNIS,
       totalServiceFees, totalPartnerComm, totalTeamComm,
       pendingPayouts, paidPayouts,
       enrolledStudents: enrolledCases.length,
