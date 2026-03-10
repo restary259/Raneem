@@ -65,7 +65,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [txPage, setTxPage] = useState(1);
   const [txPage, setTxPage] = useState(1);
   const TX_PAGE_SIZE = 50;
 
