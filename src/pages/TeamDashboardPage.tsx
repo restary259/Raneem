@@ -251,45 +251,29 @@ const TeamDashboardPage = () => {
 
   // ── ACTIONS ──
   // Issue 2: per-button loading + Issue 3: check both results
-  const handleMarkContacted = async (leadId: string, caseId: string) => {
+  const handleMarkContacted = async (caseId: string) => {
     if (pendingRef.current.has(caseId)) return;
     pendingRef.current.add(caseId);
     setActionLoadingId(caseId);
     try {
-      const now = new Date().toISOString();
-      const { error: leadErr } = await (supabase as any).from("leads").update({ last_contacted: now }).eq("id", leadId);
-      if (leadErr) {
-        toast({ variant: "destructive", title: t("common.error"), description: leadErr.message });
-        return;
-      }
       const caseItem = cases.find((c) => c.id === caseId);
-      if (caseItem && canTransition(caseItem.case_status, CaseStatus.CONTACTED)) {
+      if (caseItem && canTransition(caseItem.status, CaseStatus.CONTACTED)) {
         const { error: caseErr } = await (supabase as any)
-          .from("student_cases")
-          .update({ case_status: "contacted" })
+          .from("cases")
+          .update({ status: "contacted" })
           .eq("id", caseId);
         if (caseErr) {
-          toast({
-            variant: "destructive",
-            title: t("common.error"),
-            description: t("lawyer.contactLoggedButNotTransitioned", "Contact logged but status could not transition."),
-          });
-          try {
-            await refetch();
-          } catch {}
+          toast({ variant: "destructive", title: t("common.error"), description: caseErr.message });
           return;
         }
       }
       await (supabase as any).rpc("log_user_activity", {
         p_action: "mark_contacted",
         p_target_id: caseId,
-        p_target_table: "student_cases",
+        p_target_table: "cases",
       });
-      const lead = leads.find((l) => l.id === leadId);
-      toast({ title: t("lawyer.contactLogged"), description: lead?.full_name || "" });
-      try {
-        await refetch();
-      } catch {}
+      toast({ title: t("lawyer.contactLogged"), description: caseItem?.full_name || "" });
+      try { await refetch(); } catch {}
     } catch (err: any) {
       if (err?.name !== "AbortError")
         toast({ variant: "destructive", title: t("common.error"), description: err?.message || "Unexpected error" });
