@@ -1,93 +1,119 @@
 
-## Adding "Partner Payouts" Subtab to the Admin Finance Tab
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### What exists today
-- The Finance tab (`id: 'money'`) in AdminLayout renders the `MoneyDashboard` component inside a page. The current tab structure has only a single view under the "money" tab.
-- The "Agent Payouts" subtab is `PayoutsManagement.tsx` — it handles `payout_requests` table (3-step approve flow). This is completely separate from the new feature which writes directly to `rewards`.
-- `PasswordVerifyDialog` at `src/components/admin/PasswordVerifyDialog.tsx` already accepts `onVerified()` callback — reuse it directly.
-- `rewards` table has: `id, user_id, amount, status (pending|paid), admin_notes, paid_at, created_at`.
-- The `admin_notes` field for partner rewards follows the exact pattern: `'Partner commission from case ' + caseId`.
-- `profiles` table has `full_name, email, avatar_url`.
+### What was found (full audit)
 
-### Architecture decision: where does the Finance tab live?
-Looking at the admin dashboard, the `money` tab renders `MoneyDashboard` (which is the transactions/money view). The spec says to add a subtab **inside** the Finance tab. This means converting the Finance area from a flat page to a tabbed view with subtabs: "Overview" (existing MoneyDashboard), "Agent Payouts" (existing PayoutsManagement), and the new "Partner Payouts".
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-Currently `AdminOverview.tsx` is what renders tabs. Let me check how the `money` tab is rendered in the admin dashboard page.
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-The tab `id: 'money'` maps to the finance section. The admin dashboard renders content per `activeTab`. I need to find where `money` is rendered and add a subtabs wrapper.
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-### Files to create
-1. **`src/components/admin/PartnerPayoutsPanel.tsx`** — the entire new feature component
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-### Files to modify
-1. **`src/pages/StudentDashboardPage.tsx`** OR wherever the admin `money` tab content is rendered — add a subtabs UI with "Overview", "Agent Payouts", "Partner Payouts" tabs (need to locate the render switch)
-2. **`src/pages/partner/PartnerOverviewPage.tsx`** — replace single "projected total" KPI card with two cards: "إجمالي المدفوع هذا الشهر" (paid this month from `rewards` where `status='paid'` and `paid_at` in current month) and "إجمالي المدفوع الكلي" (all-time paid from `rewards`)
-3. **`src/pages/partner/PartnerEarningsPage.tsx`** — add "سجل المدفوعات" section at the bottom; fetch `rewards` where `status='paid'` and `user_id=uid`; parse case ID from `admin_notes`; fetch `cases` for names; display sorted by `paid_at` desc
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-### Finding the money tab render location
-Need to check where `activeTab === 'money'` renders its content — it's likely in the same page that uses AdminLayout.
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
----
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-### PartnerPayoutsPanel — Data Flow
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-```text
-FETCH
-  rewards (admin_notes LIKE 'Partner commission from case%')
-    JOIN profiles!inner(full_name, email, avatar_url)
-  → parse caseId from admin_notes for each reward
-  → fetch cases IN (all extracted case IDs) → get full_name per case
-
-GROUP by user_id → one entry per partner
-
-DISPLAY
-  For each partner:
-    Card: name, avatar, pending total (amber), paid-this-month (green), paid-all-time (green)
-    Collapsible breakdown below card:
-      pending rows expanded by default
-      paid rows collapsed under "Show paid history" toggle
-    Each pending row: student name, source, amount, status badge, created_at, "Confirm Payment" btn
-    Each paid row: student name, source, amount, "Paid" badge, created_at, paid_at
-
-  "Pay All Pending" on partner card: bulk confirm all their pending rewards
-```
-
-### Confirm Payment Flow (both single and bulk)
-```text
-1. PasswordVerifyDialog (reuse existing, onVerified callback)
-2. AlertDialog confirmation summary (single vs bulk text)
-3. On confirm:
-   UPDATE rewards SET status='paid', paid_at=now() WHERE id IN (...)
-   INSERT admin_audit_log for each reward
-4. Optimistic update: mutate local state (move rows from pending → paid)
-5. Toast success
-```
-
-### Realtime
-Add a `useRealtimeSubscription('rewards', refetch, true)` so admin tab updates live when another admin confirms in another browser tab. The partner pages already subscribe to `rewards` via `useRealtimeSubscription` — so the partner's overview and earnings will update automatically once status changes.
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-### Partner Overview Page changes
-Replace the existing "إجمالي الأرباح المتوقعة" KPI with **two new reward-table-backed KPIs**:
-- Fetch `rewards WHERE user_id=uid AND status='paid'` 
-- **This month**: filter `paid_at >= start of current month`
-- **All time**: sum everything
+### Files to change (batched)
 
-Keep the existing projection-based earnings banner untouched (it shows projected, the new cards show actual paid).
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-### Partner Earnings Page changes  
-Add a new card at the bottom after the pipeline section:
-- Title: `سجل المدفوعات` / "Payment History"
-- Fetch `rewards WHERE user_id=uid AND status='paid'`
-- Parse case UUID from `admin_notes.replace('Partner commission from case ', '').trim()`
-- Fetch case names in one batch `IN` query
-- Sort by `paid_at` DESC
-- Each row: student first name | amount | paid_at date
-- Empty state: `لا توجد مدفوعات مؤكدة بعد`
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
 
 ---
 
-### Finding the money tab rendering
-
-I need to check where the admin `money` tab content renders to know how to add subtabs. The AdminLayout just renders `{children}` — the tab switching logic is in a parent page. Need to look at where `AdminLayout` is used.
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

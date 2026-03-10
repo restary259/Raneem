@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, Award, Clock, Info } from "lucide-react";
+import { DollarSign, TrendingUp, Award, Clock, Info, History } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
@@ -16,9 +16,10 @@ export default function PartnerEarningsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(500);
-  // isPoolMode = partner earns on ALL visible cases (not just partner_id = uid)
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [paidHistory, setPaidHistory] = useState<any[]>([]);
+  const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -80,6 +81,30 @@ export default function PartnerEarningsPage() {
     const { data, error } = await query;
     if (error) console.error("cases fetch error:", error);
     setCases(data || []);
+
+    // Fetch paid reward history
+    const { data: historyRows } = await (supabase as any)
+      .from("rewards")
+      .select("id,amount,paid_at,admin_notes")
+      .eq("user_id", uid)
+      .eq("status", "paid")
+      .like("admin_notes", "Partner commission from case%")
+      .order("paid_at", { ascending: false });
+
+    const history = historyRows || [];
+    setPaidHistory(history);
+
+    // Batch-fetch case names for history
+    const caseIds = [...new Set(
+      history.map((r: any) => r.admin_notes?.replace("Partner commission from case ", "").trim()).filter((id: string) => id?.length === 36)
+    )] as string[];
+    if (caseIds.length > 0) {
+      const { data: caseRows } = await (supabase as any).from("cases").select("id,full_name").in("id", caseIds);
+      const map: Record<string, string> = {};
+      (caseRows || []).forEach((c: any) => { map[c.id] = c.full_name; });
+      setPaidCaseMap(map);
+    }
+
     setIsLoading(false);
   }, []);
 
@@ -280,6 +305,44 @@ export default function PartnerEarningsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Payment History */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" />
+            {isAr ? "سجل المدفوعات" : "Payment History"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {paidHistory.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-6">
+              {isAr ? "لا توجد مدفوعات مؤكدة بعد" : "No confirmed payments yet"}
+            </p>
+          ) : (
+            <div className="divide-y divide-border">
+              {paidHistory.map((r: any) => {
+                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
+                const studentName = paidCaseMap[caseId]?.split(" ")[0] ?? "—";
+                return (
+                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                    <div>
+                      <p className="font-medium text-foreground">{studentName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString(isAr ? "ar" : "en-GB") : "—"}
+                      </p>
+                    </div>
+                    <div className="text-end">
+                      <p className="font-bold text-emerald-600">₪{Number(r.amount).toLocaleString()}</p>
+                      <Badge className="text-xs bg-emerald-100 text-emerald-800">{isAr ? "مدفوع" : "Paid"}</Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="text-xs text-muted-foreground text-center">
         {t("partner.privacyNote")}
