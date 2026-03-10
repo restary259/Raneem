@@ -20,7 +20,7 @@ interface ScheduleDialogProps {
   refetch: () => Promise<void>;
 }
 
-const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads, userId, onClose, refetch }) => {
+const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, userId, onClose, refetch }) => {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
