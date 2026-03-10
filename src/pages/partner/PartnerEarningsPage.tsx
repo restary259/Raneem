@@ -194,9 +194,9 @@ export default function PartnerEarningsPage() {
               <Award className="h-4 w-4 text-green-600" />
               <span className="text-xs">{t("partner.earnings.total")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{totalEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{totalEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {earningCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: earningCases.length })}
             </p>
           </CardContent>
         </Card>
