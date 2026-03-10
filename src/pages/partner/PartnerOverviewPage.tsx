@@ -10,15 +10,15 @@ import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: string }> = {
-  new: { label: "New", labelAr: "جديد", color: "bg-slate-100 text-slate-700" },
-  contacted: { label: "Contacted", labelAr: "تم التواصل", color: "bg-blue-100 text-blue-700" },
-  appointment_scheduled: { label: "Appointment", labelAr: "موعد", color: "bg-purple-100 text-purple-700" },
-  profile_completion: { label: "Profile Filling", labelAr: "إكمال الملف", color: "bg-yellow-100 text-yellow-700" },
-  payment_confirmed: { label: "Paid", labelAr: "مدفوع", color: "bg-emerald-100 text-emerald-700" },
-  submitted: { label: "Submitted", labelAr: "مُقدَّم", color: "bg-green-100 text-green-700" },
-  enrollment_paid: { label: "Enrolled", labelAr: "مسجل", color: "bg-teal-100 text-teal-700" },
-  rejected: { label: "Rejected", labelAr: "مرفوض", color: "bg-red-100 text-red-700" },
-  cancelled: { label: "Cancelled", labelAr: "ملغي", color: "bg-gray-100 text-gray-500" },
+  new: { label: "new", labelAr: "new", color: "bg-slate-100 text-slate-700" },
+  contacted: { label: "contacted", labelAr: "contacted", color: "bg-blue-100 text-blue-700" },
+  appointment_scheduled: { label: "appointment", labelAr: "appointment", color: "bg-purple-100 text-purple-700" },
+  profile_completion: { label: "profile", labelAr: "profile", color: "bg-yellow-100 text-yellow-700" },
+  payment_confirmed: { label: "payment", labelAr: "payment", color: "bg-emerald-100 text-emerald-700" },
+  submitted: { label: "submitted", labelAr: "submitted", color: "bg-green-100 text-green-700" },
+  enrollment_paid: { label: "paid", labelAr: "paid", color: "bg-teal-100 text-teal-700" },
+  rejected: { label: "cancelled", labelAr: "cancelled", color: "bg-red-100 text-red-700" },
+  cancelled: { label: "cancelled", labelAr: "cancelled", color: "bg-gray-100 text-gray-500" },
 };
 
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
