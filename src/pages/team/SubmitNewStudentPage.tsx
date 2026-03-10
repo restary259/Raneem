@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 import { addMonths, format, differenceInYears } from "date-fns";
 import { ArrowLeft, Loader2, Upload, X, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation, TFunction } from "react-i18next";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 // ✅ FIX: Use the shared intakeMonths utility (fixes hardcoded 2025 start)
 import { generateIntakeMonths } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
