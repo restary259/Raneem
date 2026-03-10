@@ -122,11 +122,11 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const markEligible = async (lead: Lead) => {
     setActionLoadingId(lead.id);
 
-    // Step 1: Check if a case already exists for this lead (prevents duplicate on double-click)
+    // Step 1: Check if a case already exists for this lead by phone (prevents duplicate)
     const { data: existingCases } = await (supabase as any)
-      .from('student_cases')
+      .from('cases')
       .select('id')
-      .eq('lead_id', lead.id)
+      .eq('phone_number', lead.phone)
       .limit(1);
 
     // Step 2: Update lead status to eligible
@@ -143,12 +143,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
     // Step 3: Restore soft-deleted case or insert new one
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
+      await (supabase as any).from('cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
     } else {
-      const { error: caseErr } = await (supabase as any).from('student_cases').insert({
-        lead_id: lead.id,
-        selected_city: lead.preferred_city,
-        accommodation_status: lead.accommodation ? 'needed' : 'not_needed',
+      const { error: caseErr } = await (supabase as any).from('cases').insert({
+        full_name: lead.full_name,
+        phone_number: lead.phone,
+        source: 'contact_form',
+        city: lead.preferred_city || lead.city || null,
       });
       if (caseErr) {
         toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
