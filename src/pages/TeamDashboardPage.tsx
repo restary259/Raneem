@@ -359,11 +359,7 @@ const TeamDashboardPage = () => {
   };
 
   const openProfileModal = (c: any) => {
-    const lead = leads.find((l) => l.id === c.lead_id);
-    if (!lead) {
-      toast({ variant: "destructive", title: t("lawyer.leadNotFound") });
-      return;
-    }
+    // Cases table has full_name/phone_number directly — no lead lookup needed
     setProfileCase(c);
   };
 
