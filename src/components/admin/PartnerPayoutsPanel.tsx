@@ -425,7 +425,7 @@ export default function PartnerPayoutsPanel() {
   };
 
   /* ── render ──────────────────────────────────────────── */
-  const totalPending = useMemo(() => rewards.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount, 0), [rewards]);
+  const totalPending = useMemo(() => rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + r.amount, 0), [rewards]);
   const totalPaid = useMemo(() => rewards.filter(r => r.status === 'paid').reduce((s, r) => s + r.amount, 0), [rewards]);
 
   if (loading) {
