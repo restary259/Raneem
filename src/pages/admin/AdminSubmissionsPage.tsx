@@ -104,7 +104,7 @@ const AdminSubmissionsPage = () => {
       const [pendingRes, completedRes] = await Promise.all([
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
           .in("status", ["submitted", "payment_confirmed"])
           .order("created_at", { ascending: false }),
         supabase
