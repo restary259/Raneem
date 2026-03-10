@@ -271,7 +271,7 @@ const AdminSubmissionsPage = () => {
       toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
       setShowSplitPanel(false);
-      setSplitPreview({ serviceFee: 0, partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+      setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
