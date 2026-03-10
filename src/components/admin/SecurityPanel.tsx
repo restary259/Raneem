@@ -101,8 +101,12 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
 
       setFraudAlerts(alerts);
 
-      // Load flagged cases
-      const { data: flagged } = await (supabase as any).from('student_cases').select('id, student_full_name, fraud_flagged, fraud_notes').eq('fraud_flagged', true);
+      // Load flagged leads (fraud_flags array non-empty)
+      const { data: flagged } = await (supabase as any)
+        .from('leads')
+        .select('id, full_name, fraud_flags')
+        .not('fraud_flags', 'eq', '{}')
+        .is('deleted_at', null);
       if (flagged) setFlaggedCases(flagged);
     };
     detectFraud();
