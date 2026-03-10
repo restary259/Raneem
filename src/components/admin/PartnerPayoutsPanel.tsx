@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, DollarSign, Clock, CheckCircle2, RefreshCw, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, DollarSign, CheckCircle2, RefreshCw, Users } from 'lucide-react';
 import PasswordVerifyDialog from '@/components/admin/PasswordVerifyDialog';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
@@ -72,7 +73,7 @@ const startOfMonth = () => {
   return d.toISOString();
 };
 
-/* ─── sub-components ────────────────────────────────────── */
+/* ─── PartnerCard ───────────────────────────────────────── */
 function PartnerCard({
   group,
   onConfirmSingle,
@@ -82,6 +83,7 @@ function PartnerCard({
   onConfirmSingle: (reward: RewardRow) => void;
   onConfirmBulk: (group: PartnerGroup) => void;
 }) {
+  const { t } = useTranslation('dashboard');
   const [showPaidHistory, setShowPaidHistory] = useState(false);
   const monthStart = startOfMonth();
   const paidThisMonth = group.paid.filter(r => r.paid_at && r.paid_at >= monthStart);
@@ -121,15 +123,15 @@ function PartnerCard({
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="text-center">
                 <p className="text-lg font-bold text-amber-600">{fmt(pendingTotal)}</p>
-                <p className="text-[11px] text-muted-foreground">Pending</p>
+                <p className="text-[11px] text-muted-foreground">{t('admin.partnerPayouts.pending')}</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-emerald-600">{fmt(paidMonthTotal)}</p>
-                <p className="text-[11px] text-muted-foreground">Paid this month</p>
+                <p className="text-[11px] text-muted-foreground">{t('admin.partnerPayouts.paidThisMonth')}</p>
               </div>
               <div className="text-center">
                 <p className="text-base font-semibold text-emerald-700">{fmt(paidAllTotal)}</p>
-                <p className="text-[11px] text-muted-foreground">All time</p>
+                <p className="text-[11px] text-muted-foreground">{t('admin.partnerPayouts.allTime')}</p>
               </div>
               {group.pending.length > 0 && (
                 <Button
@@ -138,7 +140,7 @@ function PartnerCard({
                   onClick={() => onConfirmBulk(group)}
                 >
                   <DollarSign className="h-3.5 w-3.5" />
-                  Pay All Pending ({group.pending.length})
+                  {t('admin.partnerPayouts.payAllPending', { count: group.pending.length })}
                 </Button>
               )}
             </div>
@@ -162,10 +164,12 @@ function PartnerCard({
                         {caseRow?.full_name ?? '—'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {caseRow?.source ?? ''} · {new Date(reward.created_at).toLocaleDateString('en-GB')}
+                        {caseRow?.source ?? ''} · {new Date(reward.created_at).toLocaleDateString('en-US')}
                       </p>
                     </div>
-                    <Badge className="bg-amber-100 text-amber-800 text-xs font-medium">Pending</Badge>
+                    <Badge className="bg-amber-100 text-amber-800 text-xs font-medium">
+                      {t('admin.partnerPayouts.pending')}
+                    </Badge>
                     <span className="font-bold text-foreground text-sm">{fmt(reward.amount)}</span>
                     <Button
                       size="sm"
@@ -174,7 +178,7 @@ function PartnerCard({
                       onClick={() => onConfirmSingle(reward)}
                     >
                       <CheckCircle2 className="h-3 w-3 me-1" />
-                      Confirm Payment
+                      {t('admin.partnerPayouts.confirmPayment')}
                     </Button>
                   </div>
                 );
@@ -183,16 +187,20 @@ function PartnerCard({
           )}
 
           {group.pending.length === 0 && group.paid.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-6">No reward rows</p>
+            <p className="text-center text-sm text-muted-foreground py-6">
+              {t('admin.partnerPayouts.noRewardRows')}
+            </p>
           )}
 
-            {/* Paid history — collapsible */}
+          {/* Paid history — collapsible */}
           {group.paid.length > 0 && (
             <Collapsible open={showPaidHistory} onOpenChange={setShowPaidHistory}>
               <CollapsibleTrigger asChild>
                 <button className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground py-3 border-t border-border/50 hover:bg-muted/30 transition-colors">
                   {showPaidHistory ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  {showPaidHistory ? 'Hide' : 'Show'} paid history ({group.paid.length})
+                  {showPaidHistory
+                    ? t('admin.partnerPayouts.hidePaidHistory', { count: group.paid.length })
+                    : t('admin.partnerPayouts.showPaidHistory', { count: group.paid.length })}
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -207,14 +215,16 @@ function PartnerCard({
                             {caseRow?.full_name ?? '—'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {caseRow?.source ?? ''} · Created: {new Date(reward.created_at).toLocaleDateString('en-GB')}
+                            {caseRow?.source ?? ''} · {t('admin.partnerPayouts.createdLabel')}: {new Date(reward.created_at).toLocaleDateString('en-US')}
                           </p>
                         </div>
-                        <Badge className="bg-emerald-100 text-emerald-800 text-xs font-medium">Paid</Badge>
+                        <Badge className="bg-emerald-100 text-emerald-800 text-xs font-medium">
+                          {t('admin.partnerPayouts.paid')}
+                        </Badge>
                         <span className="font-bold text-foreground text-sm">{fmt(reward.amount)}</span>
                         {reward.paid_at && (
                           <span className="text-xs text-muted-foreground">
-                            Confirmed: {new Date(reward.paid_at).toLocaleDateString('en-GB')}
+                            {t('admin.partnerPayouts.confirmedLabel')}: {new Date(reward.paid_at).toLocaleDateString('en-US')}
                           </span>
                         )}
                       </div>
@@ -233,11 +243,11 @@ function PartnerCard({
 /* ─── main panel ────────────────────────────────────────── */
 export default function PartnerPayoutsPanel() {
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
   const [rewards, setRewards] = useState<RewardRow[]>([]);
   const [caseMap, setCaseMap] = useState<Record<string, CaseRow>>({});
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
 
   // action state
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -249,7 +259,6 @@ export default function PartnerPayoutsPanel() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch all partner rewards joined with profiles
       const { data: rewardRows, error: rErr } = await (supabase as any)
         .from('rewards')
         .select('id,amount,status,created_at,paid_at,admin_notes,user_id,profiles!inner(full_name,email,avatar_url)')
@@ -260,7 +269,6 @@ export default function PartnerPayoutsPanel() {
       const rows: RewardRow[] = rewardRows || [];
       setRewards(rows);
 
-      // 2. Extract unique case IDs and batch-fetch case names
       const caseIds = [...new Set(rows.map(r => parseCaseId(r.admin_notes)).filter(Boolean))] as string[];
       if (caseIds.length > 0) {
         const { data: caseRows } = await (supabase as any)
@@ -280,10 +288,7 @@ export default function PartnerPayoutsPanel() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setCurrentUserId(user.id);
-        setCurrentUserEmail(user.email ?? '');
-      }
+      if (user) setCurrentUserId(user.id);
     });
     fetchData();
   }, [fetchData]);
@@ -311,7 +316,6 @@ export default function PartnerPayoutsPanel() {
       if (r.status === 'pending') byPartner[uid].pending.push(r);
       else if (r.status === 'paid') byPartner[uid].paid.push(r);
     });
-    // update caseMap reference (this runs after caseMap state update)
     Object.values(byPartner).forEach(g => { g.caseMap = caseMap; });
     return Object.values(byPartner);
   }, [rewards, caseMap]);
@@ -336,30 +340,31 @@ export default function PartnerPayoutsPanel() {
         const caseId = parseCaseId(reward.admin_notes);
         const caseName = caseId ? (pendingAction.caseMap[caseId]?.full_name ?? caseId) : '—';
 
-        // Update reward status
         const { error: updErr } = await supabase
           .from('rewards')
           .update({ status: 'paid', paid_at: now } as any)
           .eq('id', reward.id);
         if (updErr) throw updErr;
 
-        // Audit log
         await supabase.from('admin_audit_log').insert({
           admin_id: currentUserId,
           action: 'partner_payout_confirmed',
           target_id: reward.id,
           target_table: 'rewards',
-          details: `Confirmed ${fmt(reward.amount)} to ${pendingAction.partnerName} for case ${caseName} on ${new Date(now).toLocaleDateString('en-GB')}`,
+          details: `Confirmed ${fmt(reward.amount)} to ${pendingAction.partnerName} for case ${caseName} on ${new Date(now).toLocaleDateString('en-US')}`,
         } as any);
       }
 
       const totalAmount = pendingAction.rewards.reduce((s, r) => s + r.amount, 0);
       toast({
-        title: `Payment confirmed`,
-        description: `${fmt(totalAmount)} confirmed for ${pendingAction.partnerName}`,
+        title: t('admin.partnerPayouts.successTitle'),
+        description: t('admin.partnerPayouts.successDesc', {
+          amount: fmt(totalAmount),
+          partner: pendingAction.partnerName,
+        }),
       });
 
-      // Optimistic state update — move confirmed rows to paid
+      // Optimistic update
       const confirmedIds = new Set(pendingAction.rewards.map(r => r.id));
       setRewards(prev => prev.map(r =>
         confirmedIds.has(r.id) ? { ...r, status: 'paid', paid_at: now } : r
@@ -390,21 +395,21 @@ export default function PartnerPayoutsPanel() {
       {/* Summary bar */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Partner Payouts</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage and confirm partner commission payments</p>
+          <h2 className="text-xl font-bold text-foreground">{t('admin.partnerPayouts.title')}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('admin.partnerPayouts.subtitle')}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-center">
             <p className="text-lg font-bold text-amber-600">{fmt(totalPending)}</p>
-            <p className="text-xs text-muted-foreground">Total Pending</p>
+            <p className="text-xs text-muted-foreground">{t('admin.partnerPayouts.totalPending')}</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-emerald-600">{fmt(totalPaid)}</p>
-            <p className="text-xs text-muted-foreground">Total Paid</p>
+            <p className="text-xs text-muted-foreground">{t('admin.partnerPayouts.totalPaid')}</p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchData} className="gap-1.5">
             <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            {t('admin.partnerPayouts.refresh')}
           </Button>
         </div>
       </div>
@@ -414,9 +419,9 @@ export default function PartnerPayoutsPanel() {
         <Card>
           <CardContent className="py-16 text-center">
             <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">No partner commission rewards found.</p>
+            <p className="text-muted-foreground text-sm">{t('admin.partnerPayouts.noPartners')}</p>
             <p className="text-xs text-muted-foreground/70 mt-1">
-              Partner rewards appear here once cases reach enrollment_paid status.
+              {t('admin.partnerPayouts.noPartnersHint')}
             </p>
           </CardContent>
         </Card>
@@ -453,45 +458,51 @@ export default function PartnerPayoutsPanel() {
           if (!open) setPendingAction(null);
         }}
         onVerified={onPasswordVerified}
-        title="Re-authenticate to confirm payment"
-        description="Enter your admin password to proceed with this payout action."
+        title={t('admin.partnerPayouts.passwordTitle')}
+        description={t('admin.partnerPayouts.passwordDescription')}
       />
 
       {/* Confirmation dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Payout</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingAction?.type === 'single' ? (
-                <>
-                  Confirm payment of{' '}
-                  <strong>{fmt(pendingAction.rewards[0].amount)}</strong> to{' '}
-                  <strong>{pendingAction.partnerName}</strong> for case{' '}
-                  <strong>
-                    {(() => {
-                      const cid = parseCaseId(pendingAction.rewards[0].admin_notes);
-                      return cid ? (pendingAction.caseMap[cid]?.full_name ?? cid) : '—';
-                    })()}
-                  </strong>?
-                </>
-              ) : pendingAction ? (
-                <>
-                  Confirm payment of{' '}
-                  <strong>{fmt(pendingAction.rewards.reduce((s, r) => s + r.amount, 0))}</strong> to{' '}
-                  <strong>{pendingAction.partnerName}</strong> covering{' '}
-                  <strong>{pendingAction.rewards.length} case{pendingAction.rewards.length !== 1 ? 's' : ''}</strong>?
-                </>
-              ) : null}
-              <br /><br />
-              This will mark the reward(s) as <strong>paid</strong> and record an audit log entry.
-              This action cannot be undone.
+            <AlertDialogTitle>{t('admin.partnerPayouts.confirmDialogTitle')}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {pendingAction?.type === 'single' ? (
+                  <p>
+                    {t('admin.partnerPayouts.confirmSingle', {
+                      amount: pendingAction.rewards[0].amount.toLocaleString('en-US'),
+                      partner: pendingAction.partnerName,
+                      student: (() => {
+                        const cid = parseCaseId(pendingAction.rewards[0].admin_notes);
+                        return cid ? (pendingAction.caseMap[cid]?.full_name ?? cid) : '—';
+                      })(),
+                    })}
+                  </p>
+                ) : pendingAction ? (
+                  <p>
+                    {t('admin.partnerPayouts.confirmBulk', {
+                      total: pendingAction.rewards.reduce((s, r) => s + r.amount, 0).toLocaleString('en-US'),
+                      partner: pendingAction.partnerName,
+                      count: pendingAction.rewards.length,
+                    })}
+                  </p>
+                ) : null}
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {t('admin.partnerPayouts.confirmNote')}
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isExecuting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isExecuting}>
+              {t('admin.partnerPayouts.cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction disabled={isExecuting} onClick={executeConfirm}>
-              {isExecuting ? 'Confirming…' : 'Confirm Payment'}
+              {isExecuting
+                ? t('admin.partnerPayouts.confirming')
+                : t('admin.partnerPayouts.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
