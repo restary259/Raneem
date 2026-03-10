@@ -1771,10 +1771,15 @@
       "new": "New",
       "contacted": "Contacted",
       "appointment": "Appointment",
+      "appointment_scheduled": "Appointment Scheduled",
       "profile": "Profile",
+      "profile_completion": "Profile Filling",
       "payment": "Payment",
+      "payment_confirmed": "Payment Confirmed",
       "submitted": "Submitted",
+      "enrollment_paid": "Enrolled ✅",
       "paid": "Enrolled & Paid ✅",
+      "rejected": "Rejected",
       "cancelled": "Cancelled"
     },
     "welcome": "Welcome back",
@@ -1992,12 +1997,22 @@
       "successDesc": "{{amount}} confirmed for {{partner}}"
     },
     "financials": {
+      "title": "Financials",
+      "kpiServiceFees": "Service Fees Collected",
       "kpiAdminNet": "Platform Net Revenue",
       "kpiPartnerPending": "Partner Commissions Pending",
       "kpiPartnerPaid": "Partner Commissions Paid",
+      "kpiEnrolledStudents": "Enrolled Students",
+      "kpiReferralDiscounts": "Referral Discounts",
+      "partnerCommissionRateInfo": "Partner commission rate: ₪{{rate}} per case",
+      "recentEnrolled": "Recent Enrolled Cases",
+      "noData": "No enrolled cases yet.",
       "tabOverview": "Overview",
       "tabAgentPayouts": "Team Payouts",
       "tabPartnerPayouts": "Partner Payouts"
+    },
+    "students": {
+      "studentCount": "{{count}} students"
     }
   }
 }

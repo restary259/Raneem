@@ -194,9 +194,9 @@ export default function PartnerEarningsPage() {
               <Award className="h-4 w-4 text-green-600" />
               <span className="text-xs">{t("partner.earnings.total")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{totalEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{totalEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {earningCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: earningCases.length })}
             </p>
           </CardContent>
         </Card>
@@ -206,9 +206,9 @@ export default function PartnerEarningsPage() {
               <TrendingUp className="h-4 w-4 text-cyan-600" />
               <span className="text-xs">{t("partner.earnings.pendingLabel")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{pendingEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{pendingEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {pendingCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: pendingCases.length })}
             </p>
           </CardContent>
         </Card>
@@ -218,9 +218,9 @@ export default function PartnerEarningsPage() {
               <DollarSign className="h-4 w-4 text-emerald-600" />
               <span className="text-xs">{t("partner.earnings.confirmedLabel")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{confirmedEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{confirmedEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {confirmedCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: confirmedCases.length })}
             </p>
           </CardContent>
         </Card>
@@ -261,7 +261,7 @@ export default function PartnerEarningsPage() {
                       <td className="py-3 px-1 whitespace-nowrap">
                         <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                          {new Date(c.created_at).toLocaleDateString('en-US')}
                         </p>
                       </td>
                       <td className="py-3 px-1 whitespace-nowrap">

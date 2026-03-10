@@ -101,9 +101,7 @@ export default function PartnerStudentsPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const statusLabel = (s: string) => {
-    const entry = FRIENDLY_LABELS[s];
-    if (!entry) return s;
-    return isAr ? entry.ar : entry.en;
+    return t(`partner.status.${s}`, { defaultValue: s });
   };
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
@@ -180,7 +178,7 @@ export default function PartnerStudentsPage() {
               >
                 <span className="font-medium text-foreground">{firstNameOnly(c.full_name)}</span>
                 <span className="text-muted-foreground text-xs">
-                  {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                  {new Date(c.created_at).toLocaleDateString('en-US')}
                 </span>
                 <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>
                   {statusLabel(c.status)}
