@@ -1,98 +1,119 @@
 
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-## Root Cause Diagnosis
+### What was found (full audit)
 
-There are **three separate problems** all causing `0 ILS` to show:
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-### Problem 1 — The existing E2E test case has `commission_split_done = true` with `platform_revenue_ils = 0` already baked in (data problem)
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-The `Ahmad E2E Test` case was advanced to `enrollment_paid` via a SQL migration that called `record_case_commission(id, 0)` — hardcoded zero. The `commission_split_done` flag is now `true`, so the trigger will **never fire again** on this case. The fix to the trigger helps future cases only.
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-The existing case data must be **manually corrected** in the DB.
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-### Problem 2 — The trigger fix migration (`20260310125618`) only fixes the trigger function, but the existing case is already locked (`commission_split_done = true`)
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-The new `auto_split_payment` now correctly reads `case_submissions.service_fee`, but for the existing "Ahmad E2E Test" case with `commission_split_done=true`, the trigger will never run again. The `platform_revenue_ils` column on that row is stuck at `0`.
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-### Problem 3 — `AdminFinancialsPage` Overview reads `platform_revenue_ils` from `cases` — which is `0` for this case
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-The UI at line 56:
-```typescript
-const platformNetRevenue = cases.reduce((s, c) => s + (c.platform_revenue_ils || 0), 0);
-```
-This is correct logic — but the DB value is `0`.
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-### Problem 4 — `AdminFinancialsPage` `serviceFees` KPI also shows `0` because `case_submissions.service_fee` is `NULL` for this case
-
-The case was advanced via SQL, bypassing `PaymentConfirmationForm`. So `case_submissions` has no `service_fee` row for this case at all (or `service_fee = 0`).
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
 ---
 
-## What Needs to Happen
+### Files to change (batched)
 
-### Fix A — Data fix: Backfill `platform_revenue_ils` for the existing locked case
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-We need to:
-1. Set `case_submissions.service_fee = 4000` for the Ahmad E2E Test case (it was entered as ₪4000 but the SQL migration bypassed the form)
-2. Reset `commission_split_done = false` on that case temporarily, then call `record_case_commission` — but since rewards are already created, this would double them. Instead: **directly update `platform_revenue_ils = 4000 - 1500 - 1000 = 2500`** (math: service fee minus team commission minus partner commission)
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-### Fix B — Override the `platformNetRevenue` KPI calculation in `AdminFinancialsPage` to be smarter
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-Instead of reading `platform_revenue_ils` (which can be 0 if the case was split before the trigger fix), **compute it dynamically**: `service_fee - team_rewards - partner_rewards` per case.
+**B. Numeric safety (7 component files)**
 
-This makes the KPI resilient to legacy data and future data gaps.
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
 
-### Fix C — `serviceFees` KPI: join `case_submissions` properly
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
 
-Currently queries `case_submissions` for `service_fee` separately (only rows with `enrollment_paid_at IS NOT NULL`). The Ahmad E2E Test case's `case_submissions` row has `service_fee = NULL` because it was created via SQL migration. We need to also handle this gracefully.
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
 
 ---
 
-## Implementation Plan
-
-### Step 1 — DB data fix (migration/SQL data patch)
-
-Update the test case directly:
-```sql
--- Set the service fee on case_submissions for the E2E test case
-UPDATE public.case_submissions 
-SET service_fee = 4000
-WHERE case_id = (SELECT id FROM cases WHERE full_name = 'Ahmad E2E Test' LIMIT 1);
-
--- Set platform_revenue_ils = 4000 - 1500 (team) - 1000 (partner) = 2500
-UPDATE public.cases 
-SET platform_revenue_ils = 2500
-WHERE full_name = 'Ahmad E2E Test';
-```
-
-### Step 2 — Fix `AdminFinancialsPage` `OverviewTab` KPI to compute admin net dynamically
-
-Instead of reading `platform_revenue_ils` alone, compute:
-```
-adminNet = serviceFees - sum(team rewards for these cases) - sum(partner rewards for these cases)
-```
-
-This is more accurate and handles legacy/edge cases. Query:
-- `case_submissions` → `service_fee` (total revenue)
-- `rewards WHERE admin_notes LIKE 'Team commission from case%'` → team cost
-- `rewards WHERE admin_notes LIKE 'Partner commission from case%'` → partner cost
-- `adminNet = serviceFees - teamCommissions - partnerCommissions`
-
-And still show `platform_revenue_ils` from DB as a secondary check.
-
-### Files Changed
-
-| File | Change |
-|---|---|
-| New DB data migration | `UPDATE cases SET platform_revenue_ils = 2500` and `UPDATE case_submissions SET service_fee = 4000` for Ahmad E2E Test |
-| `src/pages/admin/AdminFinancialsPage.tsx` | Add team commission rewards to the parallel fetch; compute `platformNetRevenue` as `serviceFees - teamComm - partnerComm` (dynamically correct, not just reading stored column) |
-
-### Result After Fix
-
-```
-Service Fees KPI:       ₪4,000  ✅
-Admin Net Revenue KPI:  ₪2,500  ✅  (4000 - 1500 team - 1000 partner)
-Partner Pending KPI:    ₪0      ✅  (partner reward was already paid)
-Partner Paid KPI:       ₪1,000  ✅
-```
-
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)
