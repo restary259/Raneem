@@ -207,7 +207,7 @@ const TeamDashboardPage = () => {
   const kpis = useMemo(() => {
     const now = new Date();
     const activeLeads = cases.filter(
-      (c) => !["enrollment_paid", "cancelled", "forgotten"].includes(c.case_status),
+      (c) => !["enrollment_paid", "cancelled", "forgotten"].includes(c.status),
     ).length;
     const todayAppts = appointments.filter((a) => {
       if (!isToday(new Date(a.scheduled_at))) return false;
@@ -216,15 +216,15 @@ const TeamDashboardPage = () => {
     }).length;
     const paidThisMonth = cases.filter(
       (c) =>
-        c.paid_at &&
-        new Date(c.paid_at).getMonth() === now.getMonth() &&
-        new Date(c.paid_at).getFullYear() === now.getFullYear(),
+        c.status === 'enrollment_paid' &&
+        new Date(c.updated_at).getMonth() === now.getMonth() &&
+        new Date(c.updated_at).getFullYear() === now.getFullYear(),
     ).length;
     const slaWarnings = cases.filter((c) => isSlaBreached(c)).length;
-    const totalEarnings = cases.filter((c) => c.paid_at).reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
-    const totalServiceFees = cases.filter((c) => c.paid_at).reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
+    const totalEarnings = cases.filter((c) => c.status === 'enrollment_paid').reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
+    const totalServiceFees = cases.filter((c) => c.status === 'enrollment_paid').reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
     const conversionRate =
-      cases.length > 0 ? Math.round((cases.filter((c) => c.paid_at).length / cases.length) * 100) : 0;
+      cases.length > 0 ? Math.round((cases.filter((c) => c.status === 'enrollment_paid').length / cases.length) * 100) : 0;
     const pastAppts = appointments.filter((a) => new Date(a.scheduled_at) < now);
     const bookedPast = pastAppts.filter((a) => a.status === "scheduled" || a.status === "completed").length;
     const completedAppts = pastAppts.filter((a) => a.status === "completed").length;
