@@ -213,7 +213,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     <div className="space-y-6">
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Card className="border-emerald-200 bg-emerald-50/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -222,16 +222,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
             </div>
             <p className="text-xl font-bold text-emerald-700">{kpis.totalRevenueNIS.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground">{kpis.enrolledStudents} {t('money.students')}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="text-xs text-muted-foreground">{t('money.schoolCommission', 'School Commission')}</span>
-            </div>
-            <p className="text-xl font-bold text-blue-700">{kpis.totalSchoolComm.toLocaleString('en-US')} ₪</p>
-            <p className="text-[10px] text-muted-foreground">{t('money.schoolCommissions')}</p>
           </CardContent>
         </Card>
         <Card className="border-red-200 bg-red-50/50">
@@ -273,10 +263,9 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       </div>
 
       {/* Breakdown Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: t('money.types.service_fee'), value: kpis.totalServiceFees, color: 'text-emerald-700', icon: ArrowUpRight },
-          { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight },
           { label: t('money.types.partner_commission', 'Partner Commission'), value: kpis.totalPartnerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.team_member_comm'), value: kpis.totalTeamComm, color: 'text-red-600', icon: ArrowDownRight },
         ].map((item, i) => {
