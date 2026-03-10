@@ -35,13 +35,12 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
   const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
 
-  React.useEffect(() => {
+  const profileValues_init = () => {
     if (!profileCase) return;
-    const lead = leads.find(l => l.id === profileCase.lead_id);
     setProfileValues({
-      student_full_name: profileCase.student_full_name || lead?.full_name || '',
-      student_email: profileCase.student_email || lead?.email || '',
-      student_phone: profileCase.student_phone || lead?.phone || '',
+      student_full_name: profileCase.full_name || '',
+      student_email: profileCase.student_email || '',
+      student_phone: profileCase.phone_number || '',
       student_address: profileCase.student_address || '',
       student_age: profileCase.student_age || '',
       language_proficiency: profileCase.language_proficiency || '',
@@ -49,13 +48,18 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       passport_number: profileCase.passport_number || '',
       nationality: profileCase.nationality || '',
       country_of_birth: profileCase.country_of_birth || '',
-      selected_city: profileCase.selected_city || '',
+      selected_city: profileCase.selected_city || profileCase.city || '',
       selected_school: profileCase.selected_school || '',
       housing_description: profileCase.housing_description || '',
       gender: profileCase.gender || '',
       notes: profileCase.notes || '',
     });
-  }, [profileCase, leads]);
+  };
+
+  React.useEffect(() => {
+    if (!profileCase) return;
+    profileValues_init();
+  }, [profileCase]);
 
   const saveProfileCompletion = async () => {
     if (!profileCase) return;
