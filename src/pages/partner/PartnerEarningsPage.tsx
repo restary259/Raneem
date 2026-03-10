@@ -16,9 +16,10 @@ export default function PartnerEarningsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(500);
-  // isPoolMode = partner earns on ALL visible cases (not just partner_id = uid)
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [paidHistory, setPaidHistory] = useState<any[]>([]);
+  const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
