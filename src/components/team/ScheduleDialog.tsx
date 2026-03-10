@@ -93,7 +93,7 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, userId
         <div className="space-y-3">
           <div className="p-2 bg-muted/50 rounded-lg">
             <p className="text-xs text-muted-foreground">{t('lawyer.student')}</p>
-            <p className="text-sm font-semibold">{scheduleForCase ? getLeadInfo(scheduleForCase.lead_id).full_name : ''}</p>
+            <p className="text-sm font-semibold">{scheduleForCase ? (scheduleForCase.full_name || '—') : ''}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-xs">{t('lawyer.date')}</Label><Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></div>

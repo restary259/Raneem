@@ -28,26 +28,23 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
   }, [reassignCase]);
 
   // Guard: only allow reassignment for pre-submission stages
-  const REASSIGN_ALLOWED_STATUSES = ['assigned', 'contacted', 'appointment_scheduled', 'appointment_waiting', 'appointment_completed'];
+  const REASSIGN_ALLOWED_STATUSES = ['new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed'];
 
   const handleReassign = async () => {
     if (!reassignCase || !targetId) return;
-    if (!REASSIGN_ALLOWED_STATUSES.includes(reassignCase.case_status)) {
+    if (!REASSIGN_ALLOWED_STATUSES.includes(reassignCase.status)) {
       toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.reassignNotAllowed', 'Reassignment is only allowed before submission to admin.') });
       return;
     }
     setReassigning(true);
     try {
-      const historyEntry = { from: reassignCase.assigned_lawyer_id, to: targetId, at: new Date().toISOString(), by: userId, notes: notes.trim() || null };
-      const currentHistory = Array.isArray(reassignCase.reassignment_history) ? reassignCase.reassignment_history : [];
-      const { error } = await (supabase as any).from('student_cases').update({
-        assigned_lawyer_id: targetId, reassigned_from: reassignCase.assigned_lawyer_id,
-        reassignment_notes: notes.trim() || null, reassignment_history: [...currentHistory, historyEntry],
+      const { error } = await (supabase as any).from('cases').update({
+        assigned_to: targetId,
       }).eq('id', reassignCase.id);
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'student_cases', p_details: `Reassigned to ${targetId}` });
+        await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'cases', p_details: `Reassigned to ${targetId}` });
         toast({ title: t('lawyer.caseReassigned') });
         onClose();
         try { await refetch(); } catch {}
