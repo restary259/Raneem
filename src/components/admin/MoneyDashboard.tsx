@@ -299,7 +299,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <SelectTrigger className="w-44"><SelectValue placeholder={t('money.revenueType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
-            {['service_fee', 'school_commission', 'partner_commission', 'team_member_comm'].map(type => (
+            {['service_fee', 'partner_commission', 'team_member_comm'].map(type => (
               <SelectItem key={type} value={type}>{typeLabel(type)}</SelectItem>
             ))}
           </SelectContent>
