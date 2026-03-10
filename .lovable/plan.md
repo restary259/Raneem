@@ -1,119 +1,115 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## End-to-End Money Flow Verification — Findings & Fix Plan
 
-### What was found (full audit)
+### What I Verified
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
-
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
-
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
-
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
-
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
-
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
-
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
-
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
-
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+I traced the complete flow through every component and the database schema. The cleanup is largely correct, but there is **one critical data gap** and **two secondary issues** that will cause incorrect KPIs.
 
 ---
 
-### Files to change (batched)
+### CRITICAL BUG: `service_fee` is NOT on the `cases` table
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+The `cases` table schema (from `types.ts` lines 476–508) has these financial columns:
+- `influencer_commission`, `lawyer_commission`, `school_commission`, `referral_discount`, `discount_amount`
+- **NO `service_fee` column**
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+`service_fee` lives on `case_submissions` (a separate 1:1 table keyed by `case_id`).
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+**Impact:**
+- `MoneyDashboard.tsx` line 144: `if (c.service_fee > 0)` → always `false` → **service fee revenue row never appears**
+- `MoneyDashboard.tsx` line 169: `totalServiceFees` → always `0`
+- `KPIAnalytics.tsx` line 52: `totalRevenue` → `0 + school_commission` only (misses service fees entirely)
+- `AdminFinancialsPage.tsx` already queries `case_submissions` directly — this one is **correct**
 
-**B. Numeric safety (7 component files)**
-
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
-
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
-
-**C. SparklineCard overflow fix**
-
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
-
-**D. TeamStudentProfilePage — add translations**
-
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
-
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
-
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**Root cause:** `dataService.ts` `getAdminDashboard()` does `from('cases').select('*')` — but `service_fee` is not on `cases`. The admin KPI "Total Revenue" will always be ₪0 in service fees.
 
 ---
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+### Secondary Bug 1: `admin-weekly-digest` edge function still reads legacy
+
+`supabase/functions/admin-weekly-digest/index.ts` line 25:
+```
+from("student_cases").select("id, case_status, service_fee, ...")
+```
+Still using `student_cases` + `case_status === 'paid'` and even shows `€` in the notification body (line 54: `${weekRevenue}€`). This function sends admins a weekly summary using dead data.
+
+---
+
+### Secondary Bug 2: `StudentCasesManagement.tsx` is fully legacy
+
+`StudentCasesManagement.tsx` lines 29, 53–56, 365:
+- Filters `READY_STATUSES = ['services_filled', 'paid']` — these are `student_cases.case_status` values (neither exist in `cases` table)
+- Reads `c.case_status`, `c.assigned_lawyer_id`, `c.lead_id` — all `student_cases` fields
+- Saves to `from('student_cases').update(moneyValues)` on line 365
+- This component will always show **empty** because `cases` table has no `case_status` field
+
+This component is used only in the legacy admin panel and is fed the `cases` prop from `dataService.ts` (which now returns `cases` table rows). The status filter `['services_filled', 'paid']` will match nothing.
+
+**However:** This component appears to be a legacy admin panel widget that may no longer be the primary financial editor — `AdminSubmissionsPage.tsx` has replaced it for the actual enrollment flow. It should be evaluated for removal or replacement with a `cases`-aware version.
+
+---
+
+### What Works Correctly
+
+| Component | Status |
+|---|---|
+| Team: `PaymentConfirmationForm` → writes `service_fee` to `case_submissions` | ✅ Correct |
+| Team: `SubmitNewStudentPage` → writes `service_fee` to `case_submissions` | ✅ Correct |
+| Admin: `AdminSubmissionsPage` → reads `case_submissions.service_fee`, shows split preview, calls `admin-mark-paid` | ✅ Correct |
+| `admin-mark-paid` edge function → updates `cases.status = 'enrollment_paid'`, calls `record_case_commission` | ✅ Correct |
+| `record_case_commission` DB fn → reads `partner_commission_overrides` + `platform_settings`, writes `cases.influencer_commission` + `cases.lawyer_commission`, inserts `rewards` rows | ✅ Correct |
+| Partner: `PartnerEarningsPage` → counts qualifying `cases` × `commissionRate` | ✅ Correct |
+| Team: `EarningsPanel` → reads from `rewards` table | ✅ Correct |
+| `dataService.ts` role names: `social_media_partner`, `team_member` | ✅ Fixed |
+| `dataService.ts` team dashboard: `cases` + `assigned_to` | ✅ Fixed |
+| Student: `PaymentsSummary` → reads `payments` table (student-only, no split info) | ✅ Correct — students see no earnings |
+| `KPIAnalytics` currency `₪` | ✅ Fixed |
+| `KPIAnalytics` funnel statuses | ✅ Fixed |
+
+---
+
+### Fix Plan
+
+**Fix 1 — Critical: `MoneyDashboard` and `KPIAnalytics` service_fee**
+
+`dataService.ts` `getAdminDashboard()` must JOIN `case_submissions` to get `service_fee` per case. The cleanest approach: enrich the cases array after fetching by joining with `case_submissions`.
+
+Change `getAdminDashboard()` to also fetch `case_submissions` and merge `service_fee` onto each case object, so `MoneyDashboard` and `KPIAnalytics` can read `c.service_fee` as before.
+
+```
+cases (id, status, influencer_commission, lawyer_commission, school_commission, ...)
+   JOIN
+case_submissions (case_id, service_fee, enrollment_paid_at, ...)
+   → merged: { ...case, service_fee: submission.service_fee || 0 }
+```
+
+**Fix 2 — `admin-weekly-digest` edge function**
+
+- Switch from `student_cases` to `cases` table
+- Use `status === 'enrollment_paid'` instead of `case_status === 'paid'`
+- Join `case_submissions` to get `service_fee`
+- Change `€` to `₪` in the notification body string
+
+**Fix 3 — `StudentCasesManagement.tsx`**
+
+This component is effectively dead since it filters by `['services_filled', 'paid']` which are legacy `student_cases` statuses. Two options:
+1. **Remove it** from `AdminDashboardPage.tsx` or wherever it's rendered (if `AdminSubmissionsPage` covers the same use case)
+2. **Rewrite** to use `cases` table + `enrollment_paid` status as the display list
+
+I will check where it's rendered and decide the best approach. If it's used in the admin tabs, option 2 is safer.
+
+---
+
+### Files to Change
+
+| File | Change |
+|---|---|
+| `src/integrations/supabase/dataService.ts` | In `getAdminDashboard()`: fetch `case_submissions` and merge `service_fee` onto each case row so MoneyDashboard/KPIAnalytics read it correctly |
+| `src/components/admin/MoneyDashboard.tsx` | No change needed once `service_fee` is merged in dataService |
+| `src/components/admin/KPIAnalytics.tsx` | No change needed once `service_fee` is merged in dataService |
+| `src/components/admin/StudentCasesManagement.tsx` | Update `READY_STATUSES` and field references to use new `cases` table fields (`status`, `assigned_to`) — or remove if superseded by `AdminSubmissionsPage` |
+| `supabase/functions/admin-weekly-digest/index.ts` | Switch to `cases` table + `enrollment_paid`, join `case_submissions` for `service_fee`, fix `€` → `₪` |
+
+### No DB Migration Needed
+
+The `cases` table schema is correct as-is. The fix is purely in the data-fetching layer — merge `service_fee` from `case_submissions` into the cases array at query time.
