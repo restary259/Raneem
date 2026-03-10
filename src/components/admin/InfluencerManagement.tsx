@@ -79,8 +79,8 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
       // Route to correct edge function based on role
       const effectiveRole = filterRole || role;
       // Map UI role names to DB role names
-      const dbRole = effectiveRole === 'lawyer' ? 'team_member' : effectiveRole;
-      const fnName = dbRole === 'social_media_partner' ? 'create-influencer' : 'create-team-member';
+      const dbRole = effectiveRole === 'lawyer' ? 'team_member' : 'social_media_partner';
+      const fnName = effectiveRole === 'lawyer' ? 'create-team-member' : 'create-influencer';
 
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`, {
         method: 'POST',
