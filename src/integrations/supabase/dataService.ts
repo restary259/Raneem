@@ -44,11 +44,14 @@ export async function getInfluencerDashboard(
           .eq('source_id', userId)
           .order('created_at', { ascending: false })
       ),
+      // New cases table: partner_id links the case to the social_media_partner
       safeQuery(
         (supabase as any)
-          .from('student_cases')
-          .select('*, leads!inner(source_id)')
-          .eq('leads.source_id', userId)
+          .from('cases')
+          .select('*')
+          .eq('partner_id', userId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
       ),
       safeQuery(
         (supabase as any)
@@ -100,11 +103,12 @@ export async function getTeamDashboard(
 ): Promise<{ data: TeamDashboardData | null; error: string | null }> {
   try {
     const [casesRes, appointmentsRes, profileRes] = await Promise.all([
+      // New cases table: assigned_to links the case to the team_member
       safeQuery(
         (supabase as any)
-          .from('student_cases')
+          .from('cases')
           .select('*')
-          .eq('assigned_lawyer_id', userId)
+          .eq('assigned_to', userId)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
       ),
@@ -112,7 +116,7 @@ export async function getTeamDashboard(
         (supabase as any)
           .from('appointments')
           .select('*')
-          .eq('lawyer_id', userId)
+          .eq('team_member_id', userId)
           .order('scheduled_at', { ascending: true })
       ),
       safeQuery(
@@ -130,20 +134,9 @@ export async function getTeamDashboard(
 
     const casesData: any[] = casesRes.data ?? [];
 
-    // Derive leads from the case lead_ids
-    let leadsData: any[] = [];
-    const leadIds = [...new Set(casesData.map((c: any) => c.lead_id).filter(Boolean))];
-    if (leadIds.length > 0) {
-      // Use lawyer-safe view (excludes email column) for team members
-      const leadsRes = await safeQuery(
-        (supabase as any)
-          .from('leads_lawyer_safe')
-          .select('id, full_name, phone, eligibility_score, eligibility_reason, source_type, source_id, passport_type, english_units, math_units, last_contacted, created_at, preferred_major')
-          .in('id', leadIds)
-      );
-      if (leadsRes.error) console.error('[dataService] Team leads fetch failed:', leadsRes.error);
-      leadsData = leadsRes.data ?? [];
-    }
+    // Derive leads from the cases — new cases table does not have lead_id,
+    // but may have full_name / phone_number directly. Skip legacy leads join.
+    const leadsData: any[] = [];
 
     return {
       data: {
@@ -192,11 +185,11 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('services').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('payments').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'influencer')),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'social_media_partner')),
       safeQuery((supabase as any).from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('student_cases').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'lawyer')),
-      // NOTE: Financial KPI source of truth is student_cases — commissions table is NOT used in KPI calcs to avoid double-counting
+      // NOTE: Financial KPI source of truth is the new `cases` table
+      safeQuery((supabase as any).from('cases').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'team_member')),
       safeQuery((supabase as any).from('commissions').select('*').order('created_at', { ascending: false }).limit(2000)),
       safeQuery((supabase as any).from('rewards').select('*').order('created_at', { ascending: false }).limit(2000)),
       safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),

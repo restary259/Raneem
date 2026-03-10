@@ -96,7 +96,7 @@ const TeamDashboardPage = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", session.user.id)
-        .eq("role", "lawyer");
+        .eq("role", "team_member");
       if (!roles?.length) {
         toast({ variant: "destructive", title: t("lawyer.unauthorized"), description: t("lawyer.unauthorizedDesc") });
         navigate("/");
