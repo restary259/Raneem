@@ -394,7 +394,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     </div>
                   </div>
                 )}
-                {selectedCase.lead?.source_type === 'influencer' && selectedCase.agent && (
+                {selectedCase.partner_id && selectedCase.agent && (
                   <p className="text-xs text-muted-foreground mt-2">🤝 {t('studentCases.agentNote', { name: selectedCase.agent.full_name, amount: selectedCase.influencer_commission, defaultValue: 'Agent: {{name}} — Commission: {{amount}} ₪' })}</p>
                 )}
                 {selectedCase.referral_discount > 0 && (
