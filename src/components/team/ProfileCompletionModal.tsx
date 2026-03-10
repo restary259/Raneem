@@ -52,8 +52,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       selected_city: profileCase.selected_city || '',
       selected_school: profileCase.selected_school || '',
       housing_description: profileCase.housing_description || '',
-      has_translation_service: profileCase.has_translation_service || false,
-      translation_added_by_user_id: profileCase.translation_added_by_user_id || null,
       gender: profileCase.gender || '',
       notes: profileCase.notes || '',
     });

@@ -90,7 +90,6 @@ interface Submission {
   program_start_date: string | null;
   program_end_date: string | null;
   service_fee: number;
-  translation_fee: number;
   payment_confirmed: boolean;
   extra_data: Record<string, unknown> | null;
   submitted_at: string | null;
