@@ -802,7 +802,7 @@ const TeamDashboardPage = () => {
                                     <p className="text-[10px] text-purple-500">{appt.duration_minutes || 30} min</p>
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="font-semibold text-sm truncate">{appt.student_name}</p>
+                                     <p className="font-semibold text-sm truncate">{appt.guest_name || appt.student_name}</p>
                                     {appt.location && (
                                       <p className="text-xs text-muted-foreground truncate">📍 {appt.location}</p>
                                     )}
