@@ -306,6 +306,44 @@ export default function PartnerEarningsPage() {
         </Card>
       )}
 
+      {/* Payment History */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" />
+            {isAr ? "سجل المدفوعات" : "Payment History"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {paidHistory.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-6">
+              {isAr ? "لا توجد مدفوعات مؤكدة بعد" : "No confirmed payments yet"}
+            </p>
+          ) : (
+            <div className="divide-y divide-border">
+              {paidHistory.map((r: any) => {
+                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
+                const studentName = paidCaseMap[caseId]?.split(" ")[0] ?? "—";
+                return (
+                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                    <div>
+                      <p className="font-medium text-foreground">{studentName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString(isAr ? "ar" : "en-GB") : "—"}
+                      </p>
+                    </div>
+                    <div className="text-end">
+                      <p className="font-bold text-emerald-600">₪{Number(r.amount).toLocaleString()}</p>
+                      <Badge className="text-xs bg-emerald-100 text-emerald-800">{isAr ? "مدفوع" : "Paid"}</Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <p className="text-xs text-muted-foreground text-center">
         {t("partner.privacyNote")}
       </p>
