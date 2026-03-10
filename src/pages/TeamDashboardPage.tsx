@@ -651,13 +651,13 @@ const TeamDashboardPage = () => {
                       </Badge>
                     </h2>
                     {filteredCases.map((c) => {
-                      const lead = getLeadInfo(c.lead_id);
-                      const statusLabel = t(`lawyer.statuses.${c.case_status}`, c.case_status);
-                      const statusColor = IMPORTED_STATUS_COLORS[c.case_status] || "bg-gray-100 text-gray-800";
-                      const neonBorder = getNeonBorder(c.case_status);
+                      const lead = getLeadInfo(c);
+                      const statusLabel = t(`lawyer.statuses.${c.status}`, c.status);
+                      const statusColor = IMPORTED_STATUS_COLORS[c.status] || "bg-gray-100 text-gray-800";
+                      const neonBorder = getNeonBorder(c.status);
                       const sla = isSlaBreached(c);
-                      const sourceType = (lead as any).source_type;
-                      const isPaid = !!c.paid_at;
+                      const sourceType = c.source;
+                      const isPaid = c.status === 'enrollment_paid';
                       return (
                         <Card
                           key={c.id}
