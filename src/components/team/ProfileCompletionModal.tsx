@@ -120,20 +120,20 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
     setSavingProfile(true);
     try {
       const finalData = { ...pendingUpdateData };
-      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_COMPLETION)) {
-        finalData.case_status = CaseStatus.PROFILE_COMPLETION;
+      if (canTransition(profileCase.status, CaseStatus.PROFILE_COMPLETION)) {
+        finalData.status = CaseStatus.PROFILE_COMPLETION;
       } else {
         toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.cannotTransition') });
         return;
       }
-      const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
+      const { error } = await (supabase as any).from('cases').update(finalData).eq('id', profileCase.id);
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
+        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'cases' });
         toast({ title: t('lawyer.fileCompleted') });
         onClose();
-        onCompleted('profile_filled');
+        onCompleted('profile_completion');
         try { await refetch(); } catch {}
       }
     } catch (err: any) {
