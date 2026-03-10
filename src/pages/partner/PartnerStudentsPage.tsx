@@ -101,9 +101,7 @@ export default function PartnerStudentsPage() {
   if (!userId || isLoading) return <DashboardLoading />;
 
   const statusLabel = (s: string) => {
-    const entry = FRIENDLY_LABELS[s];
-    if (!entry) return s;
-    return isAr ? entry.ar : entry.en;
+    return t(`partner.status.${s}`, { defaultValue: s });
   };
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";

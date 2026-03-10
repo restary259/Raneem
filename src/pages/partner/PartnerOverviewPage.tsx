@@ -275,7 +275,7 @@ export default function PartnerOverviewPage() {
                         <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground text-xs whitespace-nowrap max-w-[100px] truncate">{c.degree_interest || "—"}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
-                            {isAr ? cfg.labelAr : cfg.label}
+                            {t(`partner.status.${c.status}`, { defaultValue: cfg.label })}
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
