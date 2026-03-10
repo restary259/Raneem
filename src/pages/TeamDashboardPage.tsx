@@ -613,7 +613,7 @@ const TeamDashboardPage = () => {
                           ? cases.length
                           : f === "sla"
                             ? cases.filter((c) => isSlaBreached(c)).length
-                            : cases.filter((c) => matchesFilter(c.case_status, f)).length;
+                            : cases.filter((c) => matchesFilter(c.status, f)).length;
                       const active = caseFilter === f;
                       const countColor =
                         !active && count > 0
