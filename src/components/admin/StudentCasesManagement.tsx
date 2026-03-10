@@ -178,7 +178,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     </p>
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
+                    <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.status}`, { defaultValue: c.status }))}</Badge>
                     {releasedCases.has(c.id) ? (
                       <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.paidOut', { defaultValue: 'Paid Out' })}</Badge>
                     ) : countdownInfo && (
