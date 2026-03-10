@@ -30,7 +30,6 @@ import {
   Trash2,
   UserCheck,
 } from "lucide-react";
-import AppointmentCalendar from "@/components/lawyer/AppointmentCalendar";
 import NotificationBell from "@/components/common/NotificationBell";
 import { differenceInHours, isToday, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -176,42 +175,42 @@ const TeamDashboardPage = () => {
 
   // Defense-in-depth: client-side filter ensures team member only sees their own cases
   const cases: any[] = useMemo(
-    () => (data?.cases ?? []).filter((c: any) => c.assigned_lawyer_id === user?.id),
+    () => (data?.cases ?? []).filter((c: any) => c.assigned_to === user?.id),
     [data?.cases, user?.id],
   );
   const leads: any[] = data?.leads ?? [];
   const appointments: any[] = data?.appointments ?? [];
   const profile: any = data?.profile ?? null;
 
-  useRealtimeSubscription("student_cases", debouncedRefetch, authReady);
+  useRealtimeSubscription("cases", debouncedRefetch, authReady);
   useRealtimeSubscription("appointments", debouncedRefetch, authReady);
   useRealtimeSubscription("leads", debouncedRefetch, authReady);
   useRealtimeSubscription("notifications", debouncedRefetch, authReady);
 
   const getLeadInfo = useCallback(
-    (leadId: string) => leads.find((l) => l.id === leadId) || { full_name: t("lawyer.unknown"), phone: "" },
-    [leads, t],
+    (c: any) => {
+      // New cases table has full_name and phone_number directly
+      return { full_name: c.full_name || t("lawyer.unknown"), phone: c.phone_number || "" };
+    },
+    [t],
   );
 
   const isSlaBreached = useCallback(
     (c: any) => {
-      // SLA breach: case is 'new' (uncontacted) for more than 24 hours with no last_contacted
-      if (!["new", "contacted"].includes(c.case_status)) return false;
-      if (c.case_status === "new") {
+      if (!["new", "contacted"].includes(c.status)) return false;
+      if (c.status === "new") {
         return differenceInHours(new Date(), new Date(c.created_at)) > 24;
       }
-      // contacted: check if lead was last_contacted within acceptable window
-      const lead = leads.find((l) => l.id === c.lead_id);
-      if (lead?.last_contacted) return false;
+      if (c.last_contacted) return false;
       return differenceInHours(new Date(), new Date(c.created_at)) > 24;
     },
-    [leads],
+    [],
   );
 
   const kpis = useMemo(() => {
     const now = new Date();
     const activeLeads = cases.filter(
-      (c) => !["enrollment_paid", "cancelled", "forgotten"].includes(c.case_status),
+      (c) => !["enrollment_paid", "cancelled", "forgotten"].includes(c.status),
     ).length;
     const todayAppts = appointments.filter((a) => {
       if (!isToday(new Date(a.scheduled_at))) return false;
@@ -220,15 +219,15 @@ const TeamDashboardPage = () => {
     }).length;
     const paidThisMonth = cases.filter(
       (c) =>
-        c.paid_at &&
-        new Date(c.paid_at).getMonth() === now.getMonth() &&
-        new Date(c.paid_at).getFullYear() === now.getFullYear(),
+        c.status === 'enrollment_paid' &&
+        new Date(c.updated_at).getMonth() === now.getMonth() &&
+        new Date(c.updated_at).getFullYear() === now.getFullYear(),
     ).length;
     const slaWarnings = cases.filter((c) => isSlaBreached(c)).length;
-    const totalEarnings = cases.filter((c) => c.paid_at).reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
-    const totalServiceFees = cases.filter((c) => c.paid_at).reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
+    const totalEarnings = cases.filter((c) => c.status === 'enrollment_paid').reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
+    const totalServiceFees = cases.filter((c) => c.status === 'enrollment_paid').reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
     const conversionRate =
-      cases.length > 0 ? Math.round((cases.filter((c) => c.paid_at).length / cases.length) * 100) : 0;
+      cases.length > 0 ? Math.round((cases.filter((c) => c.status === 'enrollment_paid').length / cases.length) * 100) : 0;
     const pastAppts = appointments.filter((a) => new Date(a.scheduled_at) < now);
     const bookedPast = pastAppts.filter((a) => a.status === "scheduled" || a.status === "completed").length;
     const completedAppts = pastAppts.filter((a) => a.status === "completed").length;
@@ -247,50 +246,34 @@ const TeamDashboardPage = () => {
 
   const filteredCases = useMemo(() => {
     if (caseFilter === "sla") return cases.filter((c) => isSlaBreached(c));
-    return cases.filter((c) => matchesFilter(c.case_status, caseFilter));
+    return cases.filter((c) => matchesFilter(c.status, caseFilter));
   }, [cases, caseFilter, isSlaBreached]);
 
   // ── ACTIONS ──
   // Issue 2: per-button loading + Issue 3: check both results
-  const handleMarkContacted = async (leadId: string, caseId: string) => {
+  const handleMarkContacted = async (caseId: string) => {
     if (pendingRef.current.has(caseId)) return;
     pendingRef.current.add(caseId);
     setActionLoadingId(caseId);
     try {
-      const now = new Date().toISOString();
-      const { error: leadErr } = await (supabase as any).from("leads").update({ last_contacted: now }).eq("id", leadId);
-      if (leadErr) {
-        toast({ variant: "destructive", title: t("common.error"), description: leadErr.message });
-        return;
-      }
       const caseItem = cases.find((c) => c.id === caseId);
-      if (caseItem && canTransition(caseItem.case_status, CaseStatus.CONTACTED)) {
+      if (caseItem && canTransition(caseItem.status, CaseStatus.CONTACTED)) {
         const { error: caseErr } = await (supabase as any)
-          .from("student_cases")
-          .update({ case_status: "contacted" })
+          .from("cases")
+          .update({ status: "contacted" })
           .eq("id", caseId);
         if (caseErr) {
-          toast({
-            variant: "destructive",
-            title: t("common.error"),
-            description: t("lawyer.contactLoggedButNotTransitioned", "Contact logged but status could not transition."),
-          });
-          try {
-            await refetch();
-          } catch {}
+          toast({ variant: "destructive", title: t("common.error"), description: caseErr.message });
           return;
         }
       }
       await (supabase as any).rpc("log_user_activity", {
         p_action: "mark_contacted",
         p_target_id: caseId,
-        p_target_table: "student_cases",
+        p_target_table: "cases",
       });
-      const lead = leads.find((l) => l.id === leadId);
-      toast({ title: t("lawyer.contactLogged"), description: lead?.full_name || "" });
-      try {
-        await refetch();
-      } catch {}
+      toast({ title: t("lawyer.contactLogged"), description: caseItem?.full_name || "" });
+      try { await refetch(); } catch {}
     } catch (err: any) {
       if (err?.name !== "AbortError")
         toast({ variant: "destructive", title: t("common.error"), description: err?.message || "Unexpected error" });
@@ -912,11 +895,52 @@ const TeamDashboardPage = () => {
                 </div>
               )}
 
-              {/* APPOINTMENTS TAB */}
+              {/* APPOINTMENTS TAB — full appointment list */}
               {activeTab === "appointments" && (
                 <div className="space-y-4">
-                  {user && (
-                    <AppointmentCalendar userId={user.id} cases={cases} leads={leads} onAppointmentChange={refetch} />
+                  <h2 className="font-bold text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                    {t("lawyer.allAppointments", "All Appointments")}
+                    <Badge variant="secondary" className="text-xs">{appointments.length}</Badge>
+                  </h2>
+                  {appointments.length === 0 ? (
+                    <Card><CardContent className="p-8 text-center">
+                      <Calendar className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">{t("lawyer.noTodayAppointments")}</p>
+                    </CardContent></Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {appointments.map((appt) => {
+                        const linkedCase = cases.find((c) => c.id === appt.case_id);
+                        const isUpcoming = new Date(appt.scheduled_at) > new Date();
+                        return (
+                          <Card key={appt.id} className={`border ${isUpcoming ? "border-purple-200/60" : "border-muted"}`}>
+                            <CardContent className="p-3 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="text-center shrink-0 bg-purple-50 rounded-lg px-2.5 py-1">
+                                    <p className="text-sm font-bold text-purple-700">{format(new Date(appt.scheduled_at), "HH:mm")}</p>
+                                    <p className="text-[10px] text-purple-500">{format(new Date(appt.scheduled_at), "dd/MM")}</p>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-sm truncate">{appt.guest_name || (linkedCase ? linkedCase.full_name : "—")}</p>
+                                    <p className="text-xs text-muted-foreground">{appt.duration_minutes || 30} min</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setRescheduleAppt(appt)}>
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => setDeleteApptConfirm(appt.id)}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}

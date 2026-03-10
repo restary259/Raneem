@@ -15,7 +15,7 @@ const BottomNav = () => {
   // Hide on influencer apply flow and dashboard pages
   const searchParams = new URLSearchParams(location.search);
   const isInfluencerApply = location.pathname === '/apply' && searchParams.has('ref');
-  const isDashboard = ['/student-dashboard', '/admin', '/influencer-dashboard', '/team-dashboard', '/lawyer-dashboard'].includes(location.pathname);
+  const isDashboard = ['/student-dashboard', '/admin', '/team-dashboard'].includes(location.pathname);
 
   if (!isMobile || isInfluencerApply || isDashboard) {
     return null;

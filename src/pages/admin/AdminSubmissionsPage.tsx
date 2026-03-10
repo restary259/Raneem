@@ -102,7 +102,7 @@ const AdminSubmissionsPage = () => {
         supabase
           .from("cases")
           .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
-          .eq("status", "submitted")
+          .in("status", ["submitted", "payment_confirmed"])
           .order("created_at", { ascending: false }),
         supabase
           .from("cases")

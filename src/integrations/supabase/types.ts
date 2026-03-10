@@ -478,6 +478,7 @@ export type Database = {
           assigned_to: string | null
           bagrut_score: number | null
           city: string | null
+          commission_split_done: boolean
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
@@ -498,6 +499,7 @@ export type Database = {
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          platform_revenue_ils: number
           referral_discount: number
           referred_by: string | null
           school_commission: number
@@ -510,6 +512,7 @@ export type Database = {
           assigned_to?: string | null
           bagrut_score?: number | null
           city?: string | null
+          commission_split_done?: boolean
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
@@ -530,6 +533,7 @@ export type Database = {
           partner_id?: string | null
           passport_type?: string | null
           phone_number: string
+          platform_revenue_ils?: number
           referral_discount?: number
           referred_by?: string | null
           school_commission?: number
@@ -542,6 +546,7 @@ export type Database = {
           assigned_to?: string | null
           bagrut_score?: number | null
           city?: string | null
+          commission_split_done?: boolean
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
@@ -562,6 +567,7 @@ export type Database = {
           partner_id?: string | null
           passport_type?: string | null
           phone_number?: string
+          platform_revenue_ils?: number
           referral_discount?: number
           referred_by?: string | null
           school_commission?: number
@@ -596,36 +602,6 @@ export type Database = {
           is_required?: boolean
           item_name?: string
           sort_order?: number
-        }
-        Relationships: []
-      }
-      commission_tiers: {
-        Row: {
-          base_amount: number
-          created_at: string
-          description: string | null
-          id: number
-          max_students: number | null
-          min_students: number
-          percentage: number
-        }
-        Insert: {
-          base_amount?: number
-          created_at?: string
-          description?: string | null
-          id?: number
-          max_students?: number | null
-          min_students: number
-          percentage: number
-        }
-        Update: {
-          base_amount?: number
-          created_at?: string
-          description?: string | null
-          id?: number
-          max_students?: number | null
-          min_students?: number
-          percentage?: number
         }
         Relationships: []
       }
@@ -2531,6 +2507,7 @@ export type Database = {
           assigned_to: string | null
           bagrut_score: number | null
           city: string | null
+          commission_split_done: boolean
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
@@ -2551,6 +2528,7 @@ export type Database = {
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          platform_revenue_ils: number
           referral_discount: number
           referred_by: string | null
           school_commission: number
@@ -2569,10 +2547,6 @@ export type Database = {
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]
-      }
-      get_influencer_tier_commission: {
-        Args: { p_influencer_id: string }
-        Returns: number
       }
       get_lawyer_lead_ids: { Args: { _lawyer_id: string }; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
