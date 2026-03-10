@@ -182,7 +182,7 @@ const TeamDashboardPage = () => {
   const appointments: any[] = data?.appointments ?? [];
   const profile: any = data?.profile ?? null;
 
-  useRealtimeSubscription("student_cases", debouncedRefetch, authReady);
+  useRealtimeSubscription("cases", debouncedRefetch, authReady);
   useRealtimeSubscription("appointments", debouncedRefetch, authReady);
   useRealtimeSubscription("leads", debouncedRefetch, authReady);
   useRealtimeSubscription("notifications", debouncedRefetch, authReady);
