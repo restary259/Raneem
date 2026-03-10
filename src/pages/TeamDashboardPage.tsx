@@ -188,8 +188,11 @@ const TeamDashboardPage = () => {
   useRealtimeSubscription("notifications", debouncedRefetch, authReady);
 
   const getLeadInfo = useCallback(
-    (leadId: string) => leads.find((l) => l.id === leadId) || { full_name: t("lawyer.unknown"), phone: "" },
-    [leads, t],
+    (c: any) => {
+      // New cases table has full_name and phone_number directly
+      return { full_name: c.full_name || t("lawyer.unknown"), phone: c.phone_number || "" };
+    },
+    [t],
   );
 
   const isSlaBreached = useCallback(
