@@ -151,24 +151,25 @@ const AdminSubmissionsPage = () => {
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
-  // Load commission preview for selected case
+  // Load commission preview for selected case.
+  // Partner commission is ONLY shown when the case has an explicit partner_id set.
+  // Cases with partner_id = null show ₪0 partner commission — no auto-attribution here.
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
     const fee = c.submission?.service_fee || 0;
     try {
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
         (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
-        // CRITICAL FIX: Always fetch the configured partner override regardless of case.partner_id.
-        // Cases from apply_page/submit_new_student have partner_id=null but the partner commission
-        // must still show correctly so the auto-link in markEnrolled can fire.
+        // Only fetch partner override if case has an explicit partner_id — never auto-assign
         c.partner_id
           ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle()
-          : (supabase as any).from("partner_commission_overrides").select("commission_amount").limit(1).maybeSingle(),
+          : Promise.resolve({ data: null }),
         c.assigned_to ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle() : Promise.resolve({ data: null }),
       ]);
-      const globalPartner = (settRes.data as any)?.partner_commission_rate ?? 500;
       const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
-      // Always use the override amount if found; otherwise use global rate (never 0)
-      const partnerCommission = partnerOvRes.data?.commission_amount ?? globalPartner;
+      // Partner commission is 0 when no partner_id is set on the case
+      const partnerCommission = c.partner_id
+        ? (partnerOvRes.data?.commission_amount ?? ((settRes.data as any)?.partner_commission_rate ?? 500))
+        : 0;
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
       setSplitPreview({
         serviceFee: fee,
@@ -209,24 +210,9 @@ const AdminSubmissionsPage = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Bug fix: if there's a partner commission configured but no partner_id on the case,
-      // look up the single partner account and link it so record_case_commission can attribute
-      // the reward correctly (cases from apply_page/contact_form have partner_id = null).
-      if (splitPreview.partnerCommission > 0 && !selected.partner_id) {
-        const { data: partnerOverride } = await (supabase as any)
-          .from("partner_commission_overrides")
-          .select("partner_id")
-          .limit(1)
-          .maybeSingle();
-        if (partnerOverride?.partner_id) {
-          await supabase
-            .from("cases")
-            .update({ partner_id: partnerOverride.partner_id })
-            .eq("id", selected.id);
-          // Reflect in local state so the audit log is accurate
-          selected.partner_id = partnerOverride.partner_id;
-        }
-      }
+      // No auto-attribution: partner commission only fires for cases where partner_id is
+      // explicitly set. Cases without a partner_id get ₪0 partner commission — this is correct
+      // and prevents assigning the wrong partner when multiple partners exist.
 
       // Call admin-mark-paid edge function to trigger record_case_commission automatically
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
