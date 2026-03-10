@@ -49,7 +49,6 @@ const OverviewTab = () => {
       const allRewards: any[] = allRewardsRes.data || [];
       const cases = casesRes.data || [];
 
-      const serviceFees = subs.reduce((s: number, r: any) => s + (r.service_fee || 0), 0);
       const enrolledCount = cases.length;
       const referralDiscounts = cases.reduce((s: number, c: any) => s + (c.discount_amount || 0), 0);
 
@@ -69,11 +68,23 @@ const OverviewTab = () => {
         .filter((r: any) => r.admin_notes?.startsWith('Team commission from case'))
         .reduce((s: number, r: any) => s + (r.amount || 0), 0);
 
-      // Dynamic admin net: service fees minus all team and partner commissions
-      // This is resilient to legacy data where platform_revenue_ils may be 0
       const partnerCommissionsTotal = partnerRewards.reduce(
         (s: number, r: any) => s + (r.amount || 0), 0
       );
+
+      // Primary: sum service_fee from case_submissions (requires enrollment_paid_at)
+      const serviceFeesFromSubs = subs.reduce((s: number, r: any) => s + (r.service_fee || 0), 0);
+
+      // Fallback: if submissions missing (legacy data), derive from cases.platform_revenue_ils + commissions
+      const serviceFeesFromCases = cases.reduce(
+        (s: number, c: any) => s + (c.platform_revenue_ils || 0), 0
+      ) + teamCommissionsTotal + partnerCommissionsTotal;
+
+      const serviceFees = serviceFeesFromSubs > 0
+        ? serviceFeesFromSubs
+        : serviceFeesFromCases;
+
+      // Dynamic admin net: service fees minus all team and partner commissions
       const platformNetRevenue = Math.max(
         0,
         serviceFees - teamCommissionsTotal - partnerCommissionsTotal
