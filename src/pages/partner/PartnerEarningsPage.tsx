@@ -311,13 +311,13 @@ export default function PartnerEarningsPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
-            {isAr ? "سجل المدفوعات" : "Payment History"}
+            {t('partner.paymentHistory')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {paidHistory.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-6">
-              {isAr ? "لا توجد مدفوعات مؤكدة بعد" : "No confirmed payments yet"}
+              {t('partner.noPaymentHistory')}
             </p>
           ) : (
             <div className="divide-y divide-border">
@@ -329,12 +329,12 @@ export default function PartnerEarningsPage() {
                     <div>
                       <p className="font-medium text-foreground">{studentName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString(isAr ? "ar" : "en-GB") : "—"}
+                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString('en-US') : "—"}
                       </p>
                     </div>
                     <div className="text-end">
-                      <p className="font-bold text-emerald-600">₪{Number(r.amount).toLocaleString()}</p>
-                      <Badge className="text-xs bg-emerald-100 text-emerald-800">{isAr ? "مدفوع" : "Paid"}</Badge>
+                      <p className="font-bold text-emerald-600">₪{Number(r.amount).toLocaleString('en-US')}</p>
+                      <Badge className="text-xs bg-emerald-100 text-emerald-800">{t('partner.paymentHistoryBadge')}</Badge>
                     </div>
                   </div>
                 );

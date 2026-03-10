@@ -158,14 +158,14 @@ export default function PartnerOverviewPage() {
     },
     { label: t("partner.enrolled"), value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
     {
-      label: isAr ? "إجمالي المدفوع هذا الشهر" : "Paid This Month",
-      value: `₪${paidThisMonth.toLocaleString()}`,
+      label: t('partner.paidThisMonth', 'Paid This Month'),
+      value: `₪${paidThisMonth.toLocaleString('en-US')}`,
       icon: CalendarDays,
       color: "text-emerald-600 bg-emerald-50",
     },
     {
-      label: isAr ? "إجمالي المدفوع الكلي" : "Paid All Time",
-      value: `₪${paidAllTime.toLocaleString()}`,
+      label: t('partner.paidAllTime', 'Paid All Time'),
+      value: `₪${paidAllTime.toLocaleString('en-US')}`,
       icon: DollarSign,
       color: "text-primary bg-primary/10",
     },
@@ -199,7 +199,7 @@ export default function PartnerOverviewPage() {
           </p>
           {paidAllTime > 0 && (
             <p className="text-xs text-emerald-600 mt-1 font-semibold">
-              {isAr ? `إجمالي المدفوع: ₪${paidAllTime.toLocaleString()}` : `Total paid: ₪${paidAllTime.toLocaleString()}`}
+              {t('partner.paidOut', { amount: paidAllTime.toLocaleString('en-US') })}
             </p>
           )}
         </div>
