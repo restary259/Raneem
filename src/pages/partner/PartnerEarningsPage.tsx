@@ -4,13 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useToast } from "@/hooks/use-toast";
 
 // Cases at these statuses generate a partner earning
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
+const LOCK_DAYS = 20;
 
 export default function PartnerEarningsPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -18,12 +22,14 @@ export default function PartnerEarningsPage() {
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // Actual reward rows (pending / approved / paid)
   const [rewards, setRewards] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
+  const [showPayoutDialog, setShowPayoutDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
+  const { toast } = useToast();
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
@@ -76,7 +82,7 @@ export default function PartnerEarningsPage() {
     if (error) console.error("cases fetch error:", error);
     setCases(casesData || []);
 
-    // Fetch ALL partner commission rewards (pending, approved, paid) — source of truth for ₪
+    // Fetch ALL partner commission rewards (pending, approved, paid)
     const { data: rewardRows } = await (supabase as any)
       .from("rewards")
       .select("id,amount,status,paid_at,admin_notes,created_at,payout_requested_at")
@@ -87,7 +93,6 @@ export default function PartnerEarningsPage() {
     const allRewards = rewardRows || [];
     setRewards(allRewards);
 
-    // Batch-fetch case names for reward notes
     const caseIds = [...new Set(
       allRewards
         .map((r: any) => r.admin_notes?.replace("Partner commission from case ", "").trim())
@@ -123,13 +128,11 @@ export default function PartnerEarningsPage() {
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  const commissionEligible = isPoolMode
-    ? cases
-    : cases.filter((c) => c.partner_id === userId);
+  const commissionEligible = isPoolMode ? cases : cases.filter((c) => c.partner_id === userId);
   const earningCases = commissionEligible.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
-  // Reward-based financials (real money state from DB)
+  // Reward-based financials
   const pendingRewards = rewards.filter((r) => r.status === "pending");
   const approvedRewards = rewards.filter((r) => r.status === "approved");
   const paidRewards = rewards.filter((r) => r.status === "paid");
@@ -139,14 +142,73 @@ export default function PartnerEarningsPage() {
   const paidAmount = paidRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
   const totalAmount = pendingAmount + approvedAmount + paidAmount;
 
-  // Per-case: map actual reward payout status label
+  // Which pending rewards are unlocked (> 20 days old)
+  const now = new Date();
+  const unlockedPending = pendingRewards.filter((r: any) => {
+    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return age >= LOCK_DAYS;
+  });
+  const lockedPending = pendingRewards.filter((r: any) => {
+    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return age < LOCK_DAYS;
+  });
+  const unlockedAmount = unlockedPending.reduce((s: number, r: any) => s + Number(r.amount), 0);
+  const canRequestPayout = unlockedPending.length > 0;
+
+  const handleRequestPayout = async () => {
+    if (!userId || unlockedPending.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const rewardIds = unlockedPending.map((r: any) => r.id);
+      const studentNames = unlockedPending.map((r: any) => {
+        const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
+        return paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
+      });
+
+      const { data, error } = await (supabase as any).rpc("request_payout", {
+        p_reward_ids: rewardIds,
+        p_amount: unlockedAmount,
+        p_notes: null,
+        p_payment_method: "bank_transfer",
+        p_requestor_role: "social_media_partner",
+        p_student_names: studentNames,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: isAr ? "تم تقديم طلب الصرف ✅" : "Payout Request Submitted ✅",
+        description: isAr
+          ? `تم تقديم طلب صرف بمبلغ ₪${unlockedAmount.toLocaleString("en-US")} بنجاح.`
+          : `Your payout request for ₪${unlockedAmount.toLocaleString("en-US")} has been submitted.`,
+      });
+      setShowPayoutDialog(false);
+      load(userId);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: isAr ? "خطأ" : "Error",
+        description: err.message,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getCaseRewardInfo = (caseId: string) => {
     const reward = rewards.find((r: any) => r.admin_notes?.includes(caseId));
     if (!reward) return { label: isAr ? "متوقع" : "Projected", color: "bg-yellow-100 text-yellow-800" };
     if (reward.status === "paid") return { label: isAr ? "مدفوع" : "Paid", color: "bg-emerald-100 text-emerald-800" };
     if (reward.status === "approved") return { label: isAr ? "طلب صرف مقدم" : "Payout Requested", color: "bg-blue-100 text-blue-800" };
-    // pending
-    return { label: isAr ? "في الانتظار" : "Awaiting Payout", color: "bg-orange-100 text-orange-800" };
+    const age = (now.getTime() - new Date(reward.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    if (age < LOCK_DAYS) {
+      const daysLeft = Math.ceil(LOCK_DAYS - age);
+      return {
+        label: isAr ? `مقفل (${daysLeft} يوم)` : `Locked (${daysLeft}d)`,
+        color: "bg-gray-100 text-gray-600",
+      };
+    }
+    return { label: isAr ? "متاح للصرف" : "Ready for Payout", color: "bg-orange-100 text-orange-800" };
   };
 
   const caseStageLabel = (s: string) => {
@@ -166,10 +228,29 @@ export default function PartnerEarningsPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
-      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-        <DollarSign className="h-6 w-6 text-primary" />
-        {t("partner.earningsTitle")}
-      </h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <DollarSign className="h-6 w-6 text-primary" />
+          {t("partner.earningsTitle")}
+        </h1>
+        {/* Request Payout CTA */}
+        {canRequestPayout && (
+          <Button
+            onClick={() => setShowPayoutDialog(true)}
+            className="gap-2 shrink-0"
+            size="sm"
+          >
+            <Send className="h-4 w-4" />
+            {isAr ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")}` : `Request Payout ₪${unlockedAmount.toLocaleString("en-US")}`}
+          </Button>
+        )}
+        {lockedPending.length > 0 && !canRequestPayout && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-full px-3 py-1.5">
+            <Lock className="h-3.5 w-3.5" />
+            {isAr ? `مقفل — ${LOCK_DAYS} يوم قفل` : `Locked — ${LOCK_DAYS}-day hold`}
+          </div>
+        )}
+      </div>
 
       {/* Commission Rate Info */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50 border border-border">
@@ -180,13 +261,13 @@ export default function PartnerEarningsPage() {
           </p>
           <p className="text-xs text-muted-foreground/70">
             {isAr
-              ? "المبالغ المعروضة هي أرباح فعلية. يتم الدفع بعد تقديم طلب الصرف وموافقة الإدارة."
-              : "Amounts shown are actual accrued earnings. Payout is processed after submitting a payout request and admin approval."}
+              ? `أرباح محققة. يُمكن طلب الصرف بعد مرور ${LOCK_DAYS} يوماً من تسجيل كل حالة وموافقة الإدارة.`
+              : `Accrued earnings. Payout can be requested after a ${LOCK_DAYS}-day hold per case and admin approval.`}
           </p>
         </div>
       </div>
 
-      {/* KPI Cards — driven by real reward status from DB */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -232,7 +313,7 @@ export default function PartnerEarningsPage() {
         </Card>
       </div>
 
-      {/* Earnings Breakdown Table — with real reward payout status per case */}
+      {/* Earnings Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">{t("partner.earnings.breakdown")}</CardTitle>
@@ -293,7 +374,7 @@ export default function PartnerEarningsPage() {
         </CardContent>
       </Card>
 
-      {/* Pipeline (not yet earning) */}
+      {/* Pipeline */}
       {pipelineCases.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -315,7 +396,7 @@ export default function PartnerEarningsPage() {
         </Card>
       )}
 
-      {/* Payment History — only truly paid rewards */}
+      {/* Payment History */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -356,6 +437,58 @@ export default function PartnerEarningsPage() {
       <p className="text-xs text-muted-foreground text-center">
         {t("partner.privacyNote")}
       </p>
+
+      {/* Request Payout Dialog */}
+      <Dialog open={showPayoutDialog} onOpenChange={setShowPayoutDialog}>
+        <DialogContent dir={dir} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-primary" />
+              {isAr ? "طلب صرف" : "Request Payout"}
+            </DialogTitle>
+            <DialogDescription>
+              {isAr
+                ? "سيتم إرسال طلب الصرف للمراجعة. سيتم دفع المبلغ بعد موافقة الإدارة."
+                : "Your payout request will be sent for review. Payment will be processed after admin approval."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
+              <p className="text-3xl font-black text-primary">₪{unlockedAmount.toLocaleString("en-US")}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {unlockedPending.length} {isAr ? "حالة مؤهلة" : "qualifying case(s)"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+              {unlockedPending.map((r: any) => {
+                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
+                const name = paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
+                return (
+                  <div key={r.id} className="flex justify-between">
+                    <span>{name}</span>
+                    <span className="font-semibold text-foreground">₪{Number(r.amount).toLocaleString("en-US")}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowPayoutDialog(false)} disabled={isSubmitting}>
+              {isAr ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button onClick={handleRequestPayout} disabled={isSubmitting} className="gap-2">
+              {isSubmitting ? (
+                <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isAr ? "تأكيد الطلب" : "Submit Request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
