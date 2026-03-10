@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
       await supabaseAdmin.from('payout_requests').insert({
         requestor_id: userId,
-        requestor_role: 'influencer',
+        requestor_role: 'social_media_partner',
         linked_reward_ids: userRewardIds,
         amount: userAmount,
         status: 'paid',

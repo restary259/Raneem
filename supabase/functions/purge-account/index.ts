@@ -50,11 +50,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get assigned cases count
+    // Get assigned cases count from cases table
     const { data: assignedCases } = await supabaseAdmin
-      .from('student_cases')
+      .from('cases')
       .select('id')
-      .eq('assigned_lawyer_id', target_user_id)
+      .eq('assigned_to', target_user_id)
       .is('deleted_at', null);
 
     const caseCount = assignedCases?.length ?? 0;
@@ -63,16 +63,16 @@ Deno.serve(async (req) => {
       if (transfer_to) {
         // Transfer all assigned cases to new member
         await supabaseAdmin
-          .from('student_cases')
-          .update({ assigned_lawyer_id: transfer_to })
-          .eq('assigned_lawyer_id', target_user_id)
+          .from('cases')
+          .update({ assigned_to: transfer_to })
+          .eq('assigned_to', target_user_id)
           .is('deleted_at', null);
       } else if (force_purge) {
         // Set cases to unassigned + flag for reassignment
         await supabaseAdmin
-          .from('student_cases')
-          .update({ assigned_lawyer_id: null, requires_reassignment: true })
-          .eq('assigned_lawyer_id', target_user_id)
+          .from('cases')
+          .update({ assigned_to: null, requires_reassignment: true })
+          .eq('assigned_to', target_user_id)
           .is('deleted_at', null);
       } else {
         return new Response(JSON.stringify({ 
