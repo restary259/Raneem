@@ -782,14 +782,14 @@ const TeamDashboardPage = () => {
                     <div className="space-y-3">
                       {todayAppointments.map((appt) => {
                         const linkedCase = cases.find((c) => c.id === appt.case_id);
-                        const linkedLead = linkedCase ? getLeadInfo(linkedCase.lead_id) : null;
+                        const linkedLead = linkedCase ? getLeadInfo(linkedCase) : null;
                         const statusColor = linkedCase
-                          ? IMPORTED_STATUS_COLORS[linkedCase.case_status] || "bg-muted text-muted-foreground"
+                          ? IMPORTED_STATUS_COLORS[linkedCase.status] || "bg-muted text-muted-foreground"
                           : "";
                         const statusLabel = linkedCase
-                          ? t(`lawyer.statuses.${linkedCase.case_status}`, linkedCase.case_status)
+                          ? t(`lawyer.statuses.${linkedCase.status}`, linkedCase.status)
                           : "";
-                        const isApptStage = linkedCase && ["appointment_scheduled"].includes(linkedCase.case_status);
+                        const isApptStage = linkedCase && ["appointment_scheduled"].includes(linkedCase.status);
                         return (
                           <Card key={appt.id} className="border-purple-200/60">
                             <CardContent className="p-3 space-y-2">
