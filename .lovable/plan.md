@@ -1,217 +1,119 @@
 
-## Root Cause: Duplicate `"admin"` Root Keys in Both JSON Files
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### The Core Bug
-Both `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json` have **two separate `"admin": { ... }` blocks** at the root level — one starting at line 245 (large, containing all admin sections) and another at line 1918 (small, containing only `referralsMgmt`, `payouts`, `partnerPayouts`, `financials`, `students.studentCount`).
+### What was found (full audit)
 
-JSON specification prohibits duplicate keys. Every JSON parser silently **discards the first block** and keeps only the last one. This means at runtime, `admin.commandCenter`, `admin.pipeline`, `admin.team`, `admin.programs`, `admin.submissions`, `admin.analytics`, `admin.activity`, `admin.settings`, `admin.spreadsheet`, and the `admin.students` full block are all thrown away. All those page sections show raw key strings.
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-### Additionally Missing Keys (Never Added to Either Block)
-- `admin.leads.*` — used across 7 files (LeadsManagement, StudentCasesManagement, StudentProfilesManagement, MoneyDashboard, ReadyToApplyTable, AuditLog, StudentManagement): `all`, `searchPlaceholder`, `namePhoneRequired`, `added`, `deleted`, `updated`, `qualifiedAndCaseCreated`, `caseCreationError`, `markEligible`, `markNotEligible`, `assignTeamMember`, `scoreUpdated`, `teamMemberAssigned`, `phone`, `city`, `source`, `view`, `new`, `eligible`, `not_eligible`, `notEligible`, `contacted`, `assignModal`, `delete`, `deleteConfirm`, `assignNotes`, `scoreLabel`
-- `admin.ready.*` — used across 4 files: `fullName`, `email`, `phone`, `age`, `address`, `passportNumber`, `nationality`, `countryOfBirth`, `languageProficiency`, `destinationCity`, `schoolLabel`, `intensiveCourse`, `staff`, `filterCity`
-- `admin.tabs.*` — used across 5 files: `students`, `teamMembers`, `influencers`, `referrals`, `security`, `audit`, `eligibility`, `notifications`
-- `admin.referralsMgmt.*` — exists only in the second (winning) `admin` block but is missing: `name`, `referredBy`, `type`, `email`, `family`, `status`, `date`, `all`, `familyType`, `noReferrals`, `statusUpdated`, `deleted`, `deleteDesc`
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-### Fix Strategy
-**Merge both `"admin"` blocks into one** — take the large first block (lines 245-762 in EN, 245-781 in AR), add all the keys from the small second block into it, add the missing `admin.leads`, `admin.ready`, `admin.tabs`, `admin.referralsMgmt` (full) keys, then remove the duplicate second `admin` block entirely.
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-### Files to Change
-| File | Change |
-|------|--------|
-| `public/locales/en/dashboard.json` | Merge second `admin` block into first; add all missing `admin.leads`, `admin.ready`, `admin.tabs`, `admin.referralsMgmt` full blocks; remove duplicate |
-| `public/locales/ar/dashboard.json` | Same — merge and add all Arabic translations for the same missing keys |
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-### New Keys to Add Inside the Single Merged `admin` Block
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-**`admin.leads` (EN)**
-```json
-"leads": {
-  "all": "All",
-  "searchPlaceholder": "Search by name or phone...",
-  "namePhoneRequired": "Name and phone are required",
-  "added": "Lead added",
-  "deleted": "Lead deleted",
-  "updated": "Lead updated",
-  "qualifiedAndCaseCreated": "{{name}} qualified and case created",
-  "caseCreationError": "Failed to create case",
-  "markEligible": "Mark Eligible",
-  "markNotEligible": "Not Eligible",
-  "assignTeamMember": "Assign Team Member",
-  "scoreUpdated": "Score updated",
-  "teamMemberAssigned": "Team member assigned",
-  "phone": "Phone",
-  "city": "City",
-  "source": "Source",
-  "view": "View",
-  "new": "New",
-  "eligible": "Eligible",
-  "not_eligible": "Ineligible",
-  "notEligible": "Ineligible",
-  "contacted": "Contacted",
-  "delete": "Delete",
-  "deleteConfirm": "Are you sure you want to delete this lead?",
-  "assignNotes": "Notes",
-  "scoreLabel": "Eligibility Score"
-}
-```
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-**`admin.ready` (EN)**
-```json
-"ready": {
-  "fullName": "Full Name",
-  "email": "Email",
-  "phone": "Phone",
-  "age": "Age",
-  "address": "Address",
-  "passportNumber": "Passport Number",
-  "nationality": "Nationality",
-  "countryOfBirth": "Country of Birth",
-  "languageProficiency": "Language Level",
-  "destinationCity": "Destination City",
-  "schoolLabel": "Language School",
-  "intensiveCourse": "Intensive Course",
-  "staff": "Team Member",
-  "filterCity": "Filter by City"
-}
-```
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-**`admin.tabs` (EN)**
-```json
-"tabs": {
-  "students": "Students",
-  "teamMembers": "Team Members",
-  "influencers": "Partners",
-  "referrals": "Referrals",
-  "security": "Security",
-  "audit": "Audit Log",
-  "eligibility": "Eligibility",
-  "notifications": "Notifications"
-}
-```
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-**`admin.referralsMgmt` (EN) — complete block**
-```json
-"referralsMgmt": {
-  "agent": "Partner",
-  "student": "Student",
-  "name": "Name",
-  "referredBy": "Referred By",
-  "type": "Type",
-  "email": "Email",
-  "family": "Family",
-  "status": "Status",
-  "date": "Date",
-  "all": "All",
-  "familyType": "Family",
-  "noReferrals": "No referrals found",
-  "statusUpdated": "Status updated",
-  "deleted": "Referral deleted",
-  "deleteDesc": "This will permanently delete this referral. This action cannot be undone."
-}
-```
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
-All of the above get Arabic equivalents in `ar/dashboard.json`:
+---
 
-**`admin.leads` (AR)**
-```json
-"leads": {
-  "all": "الكل",
-  "searchPlaceholder": "البحث بالاسم أو الهاتف...",
-  "namePhoneRequired": "الاسم والهاتف مطلوبان",
-  "added": "تمت إضافة العميل",
-  "deleted": "تم حذف العميل",
-  "updated": "تم تحديث العميل",
-  "qualifiedAndCaseCreated": "تم تأهيل {{name}} وإنشاء ملف",
-  "caseCreationError": "فشل إنشاء الملف",
-  "markEligible": "تأهيل",
-  "markNotEligible": "غير مؤهل",
-  "assignTeamMember": "تعيين عضو فريق",
-  "scoreUpdated": "تم تحديث النقاط",
-  "teamMemberAssigned": "تم تعيين عضو الفريق",
-  "phone": "الهاتف",
-  "city": "المدينة",
-  "source": "المصدر",
-  "view": "عرض",
-  "new": "جديد",
-  "eligible": "مؤهل",
-  "not_eligible": "غير مؤهل",
-  "notEligible": "غير مؤهل",
-  "contacted": "تم التواصل",
-  "delete": "حذف",
-  "deleteConfirm": "هل أنت متأكد من حذف هذا العميل؟",
-  "assignNotes": "ملاحظات",
-  "scoreLabel": "نقاط الأهلية"
-}
-```
+### Files to change (batched)
 
-**`admin.ready` (AR)**
-```json
-"ready": {
-  "fullName": "الاسم الكامل",
-  "email": "البريد الإلكتروني",
-  "phone": "الهاتف",
-  "age": "العمر",
-  "address": "العنوان",
-  "passportNumber": "رقم جواز السفر",
-  "nationality": "الجنسية",
-  "countryOfBirth": "بلد الميلاد",
-  "languageProficiency": "مستوى اللغة",
-  "destinationCity": "مدينة الوجهة",
-  "schoolLabel": "مدرسة اللغة",
-  "intensiveCourse": "دورة مكثفة",
-  "staff": "عضو الفريق",
-  "filterCity": "تصفية حسب المدينة"
-}
-```
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-**`admin.tabs` (AR)**
-```json
-"tabs": {
-  "students": "الطلاب",
-  "teamMembers": "أعضاء الفريق",
-  "influencers": "الشركاء",
-  "referrals": "الإحالات",
-  "security": "الأمان",
-  "audit": "سجل التدقيق",
-  "eligibility": "الأهلية",
-  "notifications": "الإشعارات"
-}
-```
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
 
-**`admin.referralsMgmt` (AR)**
-```json
-"referralsMgmt": {
-  "agent": "الشريك",
-  "student": "الطالب",
-  "name": "الاسم",
-  "referredBy": "أُحيل من",
-  "type": "النوع",
-  "email": "البريد الإلكتروني",
-  "family": "عائلة",
-  "status": "الحالة",
-  "date": "التاريخ",
-  "all": "الكل",
-  "familyType": "عائلة",
-  "noReferrals": "لا توجد إحالات",
-  "statusUpdated": "تم تحديث الحالة",
-  "deleted": "تم حذف الإحالة",
-  "deleteDesc": "سيؤدي هذا إلى حذف الإحالة نهائياً. لا يمكن التراجع."
-}
-```
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
 
-### Execution Plan
-1. **Edit `public/locales/en/dashboard.json`**: Remove lines 1918-2017 (the duplicate `admin` stub). Inside the original `admin` block (lines 245-762), add the four new sub-blocks (`leads`, `ready`, `tabs`, full `referralsMgmt`) and merge the keys from the removed stub (`payouts`, `partnerPayouts`, `financials`, `students.studentCount`).
+**B. Numeric safety (7 component files)**
 
-2. **Edit `public/locales/ar/dashboard.json`**: Same operation — remove the duplicate `admin` stub at lines 1949-2048, merge into the original `admin` block, adding all Arabic equivalents.
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
 
-### What This Fixes
-- Every admin page tab (Pipeline, Team, Submissions, Analytics, Activity, Settings, Spreadsheet, Students) that was showing raw keys
-- All Leads management labels
-- All "Ready to Apply" profile completion form labels
-- All tab labels in Settings and Partners sections
-- All Referrals management table headers
-- All Payouts management labels
-- All Partner Payouts panel labels
-- All Financials KPI labels
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
 
-No component files need changes — the components are correct; only the broken JSON is the issue.
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)
