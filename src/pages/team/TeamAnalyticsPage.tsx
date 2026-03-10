@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { TrendingUp, Users, Calendar } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign } from 'lucide-react';
 
 /* ── Chart colours — explicit HSL values for Recharts (no CSS var support in SVG) ── */
 const CHART_COLORS = [
@@ -28,6 +28,8 @@ export default function TeamAnalyticsPage() {
   const [caseCounts, setCaseCounts] = useState<Record<string, number>>({});
   const [closedThisMonth, setClosedThisMonth] = useState(0);
   const [todayAppts, setTodayAppts] = useState(0);
+  const [commissionPerCase, setCommissionPerCase] = useState<number | null>(null);
+  const [earnedThisMonth, setEarnedThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -38,7 +40,7 @@ export default function TeamAnalyticsPage() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [casesRes, closedRes, apptRes] = await Promise.all([
+    const [casesRes, closedRes, apptRes, overrideRes, rewardsRes] = await Promise.all([
       supabase.from('cases').select('status').eq('assigned_to', user.id),
       supabase.from('cases').select('id')
         .eq('assigned_to', user.id)
@@ -49,6 +51,15 @@ export default function TeamAnalyticsPage() {
         .eq('team_member_id', user.id)
         .gte('scheduled_at', todayStart.toISOString())
         .lte('scheduled_at', todayEnd.toISOString()),
+      supabase.from('team_member_commission_overrides')
+        .select('commission_amount')
+        .eq('team_member_id', user.id)
+        .maybeSingle(),
+      supabase.from('rewards')
+        .select('amount')
+        .eq('user_id', user.id)
+        .gte('created_at', monthStart)
+        .lte('created_at', monthEnd),
     ]);
 
     const counts: Record<string, number> = {};
@@ -56,6 +67,13 @@ export default function TeamAnalyticsPage() {
     setCaseCounts(counts);
     setClosedThisMonth(closedRes.data?.length ?? 0);
     setTodayAppts(apptRes.data?.length ?? 0);
+
+    if (overrideRes.data) {
+      setCommissionPerCase(overrideRes.data.commission_amount);
+    }
+    const monthEarned = (rewardsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount), 0);
+    setEarnedThisMonth(monthEarned);
+
     setLoading(false);
   }, [user]);
 
@@ -77,7 +95,7 @@ export default function TeamAnalyticsPage() {
       </h1>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -105,6 +123,30 @@ export default function TeamAnalyticsPage() {
               <span className="text-xs text-muted-foreground">{t('lawyer.kpi.todayAppts')}</span>
             </div>
             <div className="text-3xl font-bold tabular-nums">{todayAppts}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.commissionPerCase')}</span>
+            </div>
+            <div className="text-3xl font-bold tabular-nums text-emerald-600">
+              {commissionPerCase !== null ? `₪${commissionPerCase.toLocaleString('en-US')}` : '—'}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.earnedThisMonth')}</span>
+            </div>
+            <div className="text-3xl font-bold tabular-nums text-emerald-600">
+              ₪{earnedThisMonth.toLocaleString('en-US')}
+            </div>
           </CardContent>
         </Card>
       </div>
