@@ -98,7 +98,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const markAsPaid = (caseId: string) => {
     const existingCase = studentCases.find(c => c.id === caseId);
-    if (existingCase?.is_paid_admin || existingCase?.case_status === 'paid') {
+    if (existingCase?.status === 'enrollment_paid') {
       toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
       return;
     }
@@ -107,10 +107,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   };
 
   const getSourceBadge = (c: any) => {
-    const lead = c.lead;
-    if (!lead) return null;
-    if (lead.source_type === 'influencer' && c.agent) return <Badge variant="outline" className="text-[10px]">🤝 {c.agent.full_name}</Badge>;
-    if (lead.source_type === 'referral') return <Badge variant="outline" className="text-[10px]">👥 {t('lawyer.sources.referral')}</Badge>;
+    if (c.partner_id && c.agent) return <Badge variant="outline" className="text-[10px]">🤝 {c.agent.full_name}</Badge>;
+    if (c.referred_by) return <Badge variant="outline" className="text-[10px]">👥 {t('lawyer.sources.referral')}</Badge>;
     return <Badge variant="outline" className="text-[10px]">🌐 {t('lawyer.sources.organic')}</Badge>;
   };
 
