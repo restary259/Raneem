@@ -290,16 +290,16 @@ export default function SubmitNewStudentPage() {
   const validate = (s: StepNum): Record<string, string> => {
     const e: Record<string, string> = {};
     if (s === 1) {
-      if (!firstName.trim()) e.firstName = "First name is required";
-      if (!lastName.trim()) e.lastName = "Last name is required";
+      if (!firstName.trim()) e.firstName = ss('errorFirstName');
+      if (!lastName.trim()) e.lastName = ss('errorLastName');
     }
     if (s === 2) {
-      if (!email.trim() || !email.includes("@")) e.email = "Valid email is required";
-      if (!phone.trim()) e.phone = "Phone number is required";
+      if (!email.trim() || !email.includes("@")) e.email = ss('errorEmail');
+      if (!phone.trim()) e.phone = ss('errorPhone');
     }
     if (s === 4) {
-      if (!serviceFee || parseFloat(serviceFee) <= 0) e.serviceFee = "Service fee is required";
-      if (!paymentReceived) e.payment = "You must confirm payment was received";
+      if (!serviceFee || parseFloat(serviceFee) <= 0) e.serviceFee = ss('errorServiceFee');
+      if (!paymentReceived) e.payment = ss('errorPayment');
     }
     return e;
   };
@@ -310,7 +310,7 @@ export default function SubmitNewStudentPage() {
       setErrors(errs);
       toast({
         variant: "destructive",
-        description: "Please fill in the required fields.",
+        description: ss('errorRequired'),
       });
       return;
     }
