@@ -151,13 +151,14 @@ const SimpleDateField = ({
   </div>
 );
 
-const StepBar = ({ step }: { step: StepNum }) => (
+const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
   <div className="flex items-center gap-1 mb-6">
-    {FORM_STEPS.map((s, i) => {
-      const done = s.n < step;
-      const current = s.n === step;
+    {STEP_KEYS.map((key, i) => {
+      const n = (i + 1) as StepNum;
+      const done = n < step;
+      const current = n === step;
       return (
-        <React.Fragment key={s.n}>
+        <React.Fragment key={n}>
           <div
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
@@ -168,10 +169,10 @@ const StepBar = ({ step }: { step: StepNum }) => (
                   : "bg-muted text-muted-foreground",
             )}
           >
-            {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{s.n}</span>}
-            <span className="hidden sm:inline">{s.label}</span>
+            {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{n}</span>}
+            <span className="hidden sm:inline">{t(`lawyer.submitStudent.${key}`)}</span>
           </div>
-          {i < FORM_STEPS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
+          {i < STEP_KEYS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
         </React.Fragment>
       );
     })}
