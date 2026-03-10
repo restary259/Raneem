@@ -61,9 +61,9 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const filtered = useMemo(() => {
     return studentCases.filter(c => {
-      const name = c.student_full_name || c.lead?.full_name || '';
-      const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.student_phone || c.lead?.phone || '').includes(search);
-      const matchStatus = statusFilter === 'all' || c.case_status === statusFilter;
+      const name = c.full_name || '';
+      const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.phone_number || '').includes(search);
+      const matchStatus = statusFilter === 'all' || c.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [studentCases, search, statusFilter]);
