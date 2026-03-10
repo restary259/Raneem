@@ -187,8 +187,9 @@ export default function SubmitNewStudentPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { i18n } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const isAr = i18n.language === "ar";
+  const ss = (k: string) => t(`lawyer.submitStudent.${k}`);
 
   const [step, setStep] = useState<StepNum>(1);
   const [programs, setPrograms] = useState<Program[]>([]);
