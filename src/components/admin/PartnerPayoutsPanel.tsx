@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, DollarSign, CheckCircle2, RefreshCw, Users } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronDown, ChevronUp, DollarSign, CheckCircle2, RefreshCw, Users, Info, Clock } from 'lucide-react';
 import PasswordVerifyDialog from '@/components/admin/PasswordVerifyDialog';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 

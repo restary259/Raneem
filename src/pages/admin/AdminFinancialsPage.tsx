@@ -5,7 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock, Info } from 'lucide-react';
 import PayoutsManagement from '@/components/admin/PayoutsManagement';
 import PartnerPayoutsPanel from '@/components/admin/PartnerPayoutsPanel';
 
