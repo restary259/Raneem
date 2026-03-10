@@ -254,19 +254,14 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               <TabsContent value="profile" className="space-y-3 mt-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {[
-                    { label: t('admin.ready.fullName'), value: selectedCase.student_full_name || selectedCase.lead?.full_name },
-                    { label: t('admin.ready.email'), value: selectedCase.student_email || selectedCase.lead?.email },
-                    { label: t('admin.ready.phone'), value: selectedCase.student_phone || selectedCase.lead?.phone },
-                    { label: t('admin.ready.age'), value: selectedCase.student_age },
-                    { label: t('admin.ready.gender', { defaultValue: 'Gender' }), value: selectedCase.gender },
-                    { label: t('admin.ready.passportNumber'), value: selectedCase.passport_number },
-                    { label: t('admin.ready.nationality'), value: selectedCase.nationality },
-                    { label: t('admin.ready.countryOfBirth'), value: selectedCase.country_of_birth },
-                    { label: t('admin.ready.address'), value: selectedCase.student_address },
-                    { label: t('admin.ready.languageProficiency'), value: selectedCase.language_proficiency },
-                    { label: t('admin.ready.destinationCity'), value: selectedCase.selected_city },
-                    { label: t('admin.ready.schoolLabel'), value: selectedCase.selected_school },
-                    { label: t('admin.ready.intensiveCourse'), value: selectedCase.intensive_course },
+                    { label: t('admin.ready.fullName'), value: selectedCase.full_name },
+                    { label: t('admin.ready.phone'), value: selectedCase.phone_number },
+                    { label: t('admin.ready.passportType'), value: selectedCase.passport_type },
+                    { label: t('admin.ready.city'), value: selectedCase.city },
+                    { label: t('admin.ready.educationLevel', { defaultValue: 'Education Level' }), value: selectedCase.education_level },
+                    { label: t('admin.ready.englishLevel', { defaultValue: 'English Level' }), value: selectedCase.english_level },
+                    { label: t('admin.ready.degreeInterest', { defaultValue: 'Degree Interest' }), value: selectedCase.degree_interest },
+                    { label: t('admin.ready.intakeNotes', { defaultValue: 'Intake Notes' }), value: selectedCase.intake_notes },
                   ].map((item, i) => (
                     <div key={i} className="p-2 bg-muted/30 rounded">
                       <p className="text-[10px] text-muted-foreground">{String(item.label)}</p>
