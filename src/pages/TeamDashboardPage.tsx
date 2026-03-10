@@ -243,7 +243,7 @@ const TeamDashboardPage = () => {
 
   const filteredCases = useMemo(() => {
     if (caseFilter === "sla") return cases.filter((c) => isSlaBreached(c));
-    return cases.filter((c) => matchesFilter(c.case_status, caseFilter));
+    return cases.filter((c) => matchesFilter(c.status, caseFilter));
   }, [cases, caseFilter, isSlaBreached]);
 
   // ── ACTIONS ──
