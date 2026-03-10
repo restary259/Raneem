@@ -666,10 +666,18 @@ const AdminSubmissionsPage = () => {
                 <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
                 <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString('en-US')}</span>
               </div>
-              <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
-                <span className="font-semibold text-orange-600">-₪{splitPreview.partnerCommission.toLocaleString('en-US')}</span>
-              </div>
+              {splitPreview.partners.length === 0 && (
+                <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
+                  <span className="font-semibold text-orange-600">-₪0</span>
+                </div>
+              )}
+              {splitPreview.partners.map((p) => (
+                <div key={p.partnerId} className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner")}: {p.name}</span>
+                  <span className="font-semibold text-orange-600">-₪{p.amount.toLocaleString('en-US')}</span>
+                </div>
+              ))}
               <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
                 <span className="font-semibold text-purple-600">-₪{splitPreview.teamCommission.toLocaleString('en-US')}</span>

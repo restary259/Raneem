@@ -141,16 +141,12 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       const status = 'paid';
 
       // Service fee (revenue)
-      if (c.service_fee > 0) {
-        rows.push({ id: `${c.id}-sf`, studentName: name, type: 'service_fee', amount: c.service_fee, currency: 'NIS', status, date, notes: '', direction: 'in' });
+      if ((c.service_fee || 0) > 0) {
+        rows.push({ id: `${c.id}-sf`, studentName: name, type: 'service_fee', amount: Number(c.service_fee), currency: 'NIS', status, date, notes: '', direction: 'in' as const });
       }
-      // Partner commission (expense)
-      if (c.influencer_commission > 0) {
-        rows.push({ id: `${c.id}-ic`, studentName: name, type: 'partner_commission', amount: c.influencer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });
-      }
-      // Team member commission (expense)
-      if (c.lawyer_commission > 0) {
-        rows.push({ id: `${c.id}-lc`, studentName: name, type: 'team_member_comm', amount: c.lawyer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });
+      // Admin net (from platform_revenue_ils)
+      if ((c.platform_revenue_ils || 0) > 0) {
+        rows.push({ id: `${c.id}-net`, studentName: name, type: 'admin_net', amount: Number(c.platform_revenue_ils), currency: 'NIS', status, date, notes: '', direction: 'in' as const });
       }
     });
 
