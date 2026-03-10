@@ -17,7 +17,7 @@ import { LANGUAGE_SCHOOLS } from './TeamConstants';
 
 interface ProfileCompletionModalProps {
   profileCase: any | null;
-  leads: any[];
+  leads?: any[];
   userId?: string;
   onClose: () => void;
   onCompleted: (filter: string) => void;
