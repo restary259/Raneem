@@ -81,6 +81,30 @@ export default function PartnerEarningsPage() {
     const { data, error } = await query;
     if (error) console.error("cases fetch error:", error);
     setCases(data || []);
+
+    // Fetch paid reward history
+    const { data: historyRows } = await (supabase as any)
+      .from("rewards")
+      .select("id,amount,paid_at,admin_notes")
+      .eq("user_id", uid)
+      .eq("status", "paid")
+      .like("admin_notes", "Partner commission from case%")
+      .order("paid_at", { ascending: false });
+
+    const history = historyRows || [];
+    setPaidHistory(history);
+
+    // Batch-fetch case names for history
+    const caseIds = [...new Set(
+      history.map((r: any) => r.admin_notes?.replace("Partner commission from case ", "").trim()).filter((id: string) => id?.length === 36)
+    )] as string[];
+    if (caseIds.length > 0) {
+      const { data: caseRows } = await (supabase as any).from("cases").select("id,full_name").in("id", caseIds);
+      const map: Record<string, string> = {};
+      (caseRows || []).forEach((c: any) => { map[c.id] = c.full_name; });
+      setPaidCaseMap(map);
+    }
+
     setIsLoading(false);
   }, []);
 
