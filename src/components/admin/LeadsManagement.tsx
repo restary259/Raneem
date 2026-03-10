@@ -211,23 +211,20 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     if (!assignModal || !selectedLawyer) return;
     setLoading(true);
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
-    const { data: existingCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
+    const lead = leads.find(l => l.id === assignModal.leadId);
+    const { data: existingCases } = await (supabase as any).from('cases').select('id').eq('phone_number', lead?.phone || '').limit(1);
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({
-        assigned_lawyer_id: selectedLawyer,
-        assigned_at: new Date().toISOString(),
-        deleted_at: null,  // Restore if previously soft-deleted
-        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
+      await (supabase as any).from('cases').update({
+        assigned_to: selectedLawyer,
+        deleted_at: null,
       }).eq('id', existingCases[0].id);
     } else {
-      const lead = leads.find(l => l.id === assignModal.leadId);
-      await (supabase as any).from('student_cases').insert({
-        lead_id: assignModal.leadId,
-        assigned_lawyer_id: selectedLawyer,
-        selected_city: lead?.preferred_city || null,
-        accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
-        assigned_at: new Date().toISOString(),
-        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
+      await (supabase as any).from('cases').insert({
+        full_name: lead?.full_name || assignModal.leadName,
+        phone_number: lead?.phone || '',
+        source: 'contact_form',
+        city: lead?.preferred_city || null,
+        assigned_to: selectedLawyer,
       });
     }
     const { data: { session } } = await supabase.auth.getSession();

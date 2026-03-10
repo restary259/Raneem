@@ -41,7 +41,7 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, userId
     }
   }, [scheduleForCase]);
 
-  const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: 'Unknown', phone: '' };
+  
 
   const handleCreate = async () => {
     if (!scheduleForCase || !scheduleDate || !scheduleTime) return;
