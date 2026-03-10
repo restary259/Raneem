@@ -334,7 +334,7 @@ export default function PartnerPayoutsPanel() {
           caseMap,
         };
       }
-      if (r.status === 'pending') byPartner[uid].pending.push(r);
+      if (r.status === 'pending' || r.status === 'approved') byPartner[uid].pending.push(r);
       else if (r.status === 'paid') byPartner[uid].paid.push(r);
     });
     Object.values(byPartner).forEach(g => { g.caseMap = caseMap; });

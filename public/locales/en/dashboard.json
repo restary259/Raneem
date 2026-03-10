@@ -811,7 +811,21 @@
       "schoolLabel": "Language School",
       "intensiveCourse": "Intensive Course",
       "staff": "Team Member",
-      "filterCity": "Filter by City"
+      "filterCity": "Filter by City",
+      "name": "Name",
+      "city": "City",
+      "paymentDate": "Payment Date",
+      "count": "{{count}} cases",
+      "exportForSchool": "Export for School",
+      "noResults": "No enrolled cases found",
+      "account": "Account",
+      "active": "Active",
+      "noAccount": "No Account",
+      "passportType": "Passport Type",
+      "educationLevel": "Education Level",
+      "englishLevel": "English Level",
+      "degreeInterest": "Degree Interest",
+      "intakeNotes": "Intake Notes"
     },
     "referralsMgmt": {
       "agent": "Partner",
