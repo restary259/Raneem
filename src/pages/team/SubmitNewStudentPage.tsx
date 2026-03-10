@@ -44,12 +44,7 @@ interface Accommodation {
   school_id: string | null;
 }
 
-const FORM_STEPS = [
-  { n: 1 as const, label: "Student Info" },
-  { n: 2 as const, label: "Contact Details" },
-  { n: 3 as const, label: "Program & Accommodation" },
-  { n: 4 as const, label: "Payment & Documents" },
-];
+const STEP_KEYS = ['stepStudentInfo', 'stepContactDetails', 'stepProgram', 'stepPayment'] as const;
 type StepNum = 1 | 2 | 3 | 4;
 
 /* ══════════════════════════════════════════════════════════════════════
