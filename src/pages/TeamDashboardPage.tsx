@@ -911,11 +911,52 @@ const TeamDashboardPage = () => {
                 </div>
               )}
 
-              {/* APPOINTMENTS TAB */}
+              {/* APPOINTMENTS TAB — full appointment list */}
               {activeTab === "appointments" && (
                 <div className="space-y-4">
-                  {user && (
-                    <AppointmentCalendar userId={user.id} cases={cases} leads={leads} onAppointmentChange={refetch} />
+                  <h2 className="font-bold text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                    {t("lawyer.allAppointments", "All Appointments")}
+                    <Badge variant="secondary" className="text-xs">{appointments.length}</Badge>
+                  </h2>
+                  {appointments.length === 0 ? (
+                    <Card><CardContent className="p-8 text-center">
+                      <Calendar className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground">{t("lawyer.noTodayAppointments")}</p>
+                    </CardContent></Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {appointments.map((appt) => {
+                        const linkedCase = cases.find((c) => c.id === appt.case_id);
+                        const isUpcoming = new Date(appt.scheduled_at) > new Date();
+                        return (
+                          <Card key={appt.id} className={`border ${isUpcoming ? "border-purple-200/60" : "border-muted"}`}>
+                            <CardContent className="p-3 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="text-center shrink-0 bg-purple-50 rounded-lg px-2.5 py-1">
+                                    <p className="text-sm font-bold text-purple-700">{format(new Date(appt.scheduled_at), "HH:mm")}</p>
+                                    <p className="text-[10px] text-purple-500">{format(new Date(appt.scheduled_at), "dd/MM")}</p>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-sm truncate">{appt.guest_name || (linkedCase ? linkedCase.full_name : "—")}</p>
+                                    <p className="text-xs text-muted-foreground">{appt.duration_minutes || 30} min</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setRescheduleAppt(appt)}>
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-8 text-xs text-destructive hover:text-destructive" onClick={() => setDeleteApptConfirm(appt.id)}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}
