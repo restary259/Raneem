@@ -13,7 +13,6 @@ const AdminFinancialsPage = () => {
   const [data, setData] = useState({
     totalRevenue: 0,
     serviceFees: 0,
-    translationFees: 0,
     partnerCommission: 0,
     partnerCommissionRate: 500,
     enrolledCount: 0,
@@ -25,7 +24,7 @@ const AdminFinancialsPage = () => {
   const fetchData = useCallback(async () => {
     try {
       const [subRes, settingsRes, casesRes] = await Promise.all([
-        supabase.from('case_submissions').select('service_fee, translation_fee, enrollment_paid_at, case_id').not('enrollment_paid_at', 'is', null),
+        supabase.from('case_submissions').select('service_fee, enrollment_paid_at, case_id').not('enrollment_paid_at', 'is', null),
         supabase.from('platform_settings').select('partner_commission_rate').limit(1).single(),
         supabase.from('cases').select('id, discount_amount, partner_id, status').eq('status', 'enrollment_paid'),
       ]);
@@ -42,7 +41,6 @@ const AdminFinancialsPage = () => {
       setData({
         totalRevenue: serviceFees,
         serviceFees,
-        translationFees: 0,
         partnerCommission: partnerCases * rate,
         partnerCommissionRate: rate,
         enrolledCount,
@@ -104,8 +102,7 @@ const AdminFinancialsPage = () => {
                 <div key={s.case_id} className="flex items-center justify-between p-4">
                   <p className="text-xs text-muted-foreground">{new Date(s.enrollment_paid_at).toLocaleDateString('en-US')}</p>
                   <div className="text-end">
-                    <p className="text-sm font-medium text-foreground">{((s.service_fee || 0) + (s.translation_fee || 0)).toLocaleString('en-US')} ILS</p>
-                    <p className="text-xs text-muted-foreground">{(s.service_fee || 0).toLocaleString('en-US')} + {(s.translation_fee || 0).toLocaleString('en-US')}</p>
+                    <p className="text-sm font-medium text-foreground">{(s.service_fee || 0).toLocaleString('en-US')} ILS</p>
                   </div>
                 </div>
               ))}

@@ -8,17 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
-  ArrowUpRight, ArrowDownRight, Search, FileText, CheckCircle, X, MessageCircle, Clock
+  ArrowUpRight, ArrowDownRight, Search, FileText,
 } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
-import InfluencerPayoutsTab from './InfluencerPayoutsTab';
-
 
 interface MoneyDashboardProps {
   cases: any[];
@@ -132,15 +129,16 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     });
   };
 
-  // Build transaction rows from cases
+  // Build transaction rows from cases — new system uses `status === 'enrollment_paid'`
   const transactions = useMemo(() => {
     const rows: TransactionRow[] = [];
-    const paidCases = cases.filter(c => !!c.paid_at);
+    // Use cases that are enrollment_paid (new system canonical status)
+    const enrolledCases = cases.filter(c => c.status === 'enrollment_paid');
 
-    paidCases.forEach(c => {
-      const name = c.student_full_name || getLeadName(c.lead_id);
-      const date = c.paid_at || c.created_at;
-      const status = c.case_status === 'paid' || c.paid_at ? 'paid' : 'pending';
+    enrolledCases.forEach(c => {
+      const name = c.full_name || getLeadName(c.id);
+      const date = c.updated_at || c.created_at;
+      const status = 'paid';
 
       // Service fee (revenue)
       if (c.service_fee > 0) {
@@ -150,17 +148,13 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       if (c.school_commission > 0) {
         rows.push({ id: `${c.id}-sc`, studentName: name, type: 'school_commission', amount: c.school_commission, currency: 'NIS', status, date, notes: '', direction: 'in' });
       }
-      // Influencer commission (expense)
+      // Partner commission (expense)
       if (c.influencer_commission > 0) {
-        rows.push({ id: `${c.id}-ic`, studentName: name, type: 'influencer_payout', amount: c.influencer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });
+        rows.push({ id: `${c.id}-ic`, studentName: name, type: 'partner_commission', amount: c.influencer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });
       }
-      // Lawyer/team member commission (expense)
+      // Team member commission (expense)
       if (c.lawyer_commission > 0) {
         rows.push({ id: `${c.id}-lc`, studentName: name, type: 'team_member_comm', amount: c.lawyer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });
-      }
-      // Referral discount (expense)
-      if (c.referral_discount > 0) {
-        rows.push({ id: `${c.id}-rd`, studentName: name, type: 'referral_cashback', amount: c.referral_discount, currency: 'NIS', status, date, notes: '', direction: 'out' });
       }
     });
 
@@ -169,17 +163,16 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     return rows;
   }, [cases, leads]);
 
-  // KPI calculations
+  // KPI calculations — source of truth: cases table, status enrollment_paid
   const kpis = useMemo(() => {
-    const paidCases = cases.filter(c => c.paid_at);
-    const totalServiceFees = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
-    const totalSchoolComm = paidCases.reduce((s, c) => s + (Number(c.school_commission) || 0), 0);
-    const totalInfluencerComm = paidCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
-    const totalLawyerComm = paidCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
-    const totalReferralDiscount = paidCases.reduce((s, c) => s + (Number(c.referral_discount) || 0), 0);
+    const enrolledCases = cases.filter(c => c.status === 'enrollment_paid');
+    const totalServiceFees = enrolledCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
+    const totalSchoolComm = enrolledCases.reduce((s, c) => s + (Number(c.school_commission) || 0), 0);
+    const totalPartnerComm = enrolledCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
+    const totalTeamComm = enrolledCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
 
     const totalRevenueNIS = totalServiceFees + totalSchoolComm;
-    const totalExpensesNIS = totalInfluencerComm + totalLawyerComm + totalReferralDiscount;
+    const totalExpensesNIS = totalPartnerComm + totalTeamComm;
     const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
 
     const pendingPayouts = rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -187,9 +180,9 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
     return {
       totalRevenueNIS, totalExpensesNIS, netProfitNIS,
-      totalServiceFees, totalSchoolComm, totalInfluencerComm, totalLawyerComm,
-      totalReferralDiscount, pendingPayouts, paidPayouts,
-      paidStudents: paidCases.length,
+      totalServiceFees, totalSchoolComm, totalPartnerComm, totalTeamComm,
+      pendingPayouts, paidPayouts,
+      enrolledStudents: enrolledCases.length,
     };
   }, [cases, rewards]);
 
@@ -214,7 +207,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       if (session?.user) {
         await (supabase as any).from('admin_audit_log').insert({
           admin_id: session.user.id, action: `financial_export_${format}`,
-          target_table: 'student_cases',
+          target_table: 'cases',
           details: `Exported ${filtered.length} financial records as ${format}`,
         });
       }
@@ -222,13 +215,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   };
 
   return (
-    <Tabs defaultValue="transactions" className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="transactions">{t('money.tabTransactions', 'Transactions')}</TabsTrigger>
-        <TabsTrigger value="payouts">{t('money.tabPayouts', 'Agent Payouts')}</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="transactions">
     <div className="space-y-6">
 
       {/* KPI Cards */}
@@ -240,7 +226,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
               <span className="text-xs text-muted-foreground">{t('money.totalRevenueNIS')}</span>
             </div>
             <p className="text-xl font-bold text-emerald-700">{kpis.totalRevenueNIS.toLocaleString('en-US')} ₪</p>
-            <p className="text-[10px] text-muted-foreground">{kpis.paidStudents} {t('money.students')}</p>
+            <p className="text-[10px] text-muted-foreground">{kpis.enrolledStudents} {t('money.students')}</p>
           </CardContent>
         </Card>
         <Card className="border-blue-200 bg-blue-50/50">
@@ -292,13 +278,12 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       </div>
 
       {/* Breakdown Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-      {[
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {[
           { label: t('money.types.service_fee'), value: kpis.totalServiceFees, color: 'text-emerald-700', icon: ArrowUpRight },
           { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight },
-          { label: t('money.types.influencer_payout'), value: kpis.totalInfluencerComm, color: 'text-red-600', icon: ArrowDownRight },
-          { label: t('money.types.team_member_comm'), value: kpis.totalLawyerComm, color: 'text-red-600', icon: ArrowDownRight },
-          { label: t('money.types.referral_cashback'), value: kpis.totalReferralDiscount, color: 'text-red-600', icon: ArrowDownRight },
+          { label: t('money.types.partner_commission', 'Partner Commission'), value: kpis.totalPartnerComm, color: 'text-red-600', icon: ArrowDownRight },
+          { label: t('money.types.team_member_comm'), value: kpis.totalTeamComm, color: 'text-red-600', icon: ArrowDownRight },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -330,7 +315,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <SelectTrigger className="w-44"><SelectValue placeholder={t('money.revenueType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
-            {['service_fee', 'school_commission', 'influencer_payout', 'team_member_comm', 'referral_cashback'].map(type => (
+            {['service_fee', 'school_commission', 'partner_commission', 'team_member_comm'].map(type => (
               <SelectItem key={type} value={type}>{typeLabel(type)}</SelectItem>
             ))}
           </SelectContent>
@@ -391,7 +376,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                   <div className="py-16 text-center">
                     <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are enrolled' })}</p>
                   </div>
                 )}
               </div>
@@ -423,7 +408,12 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                               {row.direction === 'in' ? '+' : '-'}{row.amount.toLocaleString('en-US')}
                             </td>
                             <td className="px-4 py-3 text-muted-foreground">{row.currency}</td>
-...
+                            <td className="px-4 py-3">
+                              <Badge className={`${STATUS_COLORS[row.status] || 'bg-muted text-muted-foreground'} border text-xs`}>
+                                <span className={`w-1.5 h-1.5 rounded-full me-1.5 ${STATUS_DOTS[row.status] || 'bg-muted-foreground'}`} />
+                                {statusLabel(row.status)}
+                              </Badge>
+                            </td>
                             <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(row.date).toLocaleDateString('en-US')}</td>
                           </tr>
                         ))}
@@ -433,7 +423,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
                       <div className="py-16 text-center">
                         <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                         <p className="text-muted-foreground font-medium">{t('money.noTransactions')}</p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are paid' })}</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">{t('money.noTransactionsDesc', { defaultValue: 'Transactions will appear after cases are enrolled' })}</p>
                       </div>
                     )}
                 </div>
@@ -458,68 +448,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         );
       })()}
     </div>
-      </TabsContent>
-
-      <TabsContent value="payouts">
-        <InfluencerPayoutsTab
-          cases={cases}
-          leads={leads}
-          influencers={influencers}
-          rewards={rewards}
-          payoutRequests={payoutRequests}
-          onRefresh={onRefresh || (() => {})}
-          actionLoading={actionLoading}
-          onMarkPayoutPaid={async (reqId: string, linkedRewardIds?: string[]) => {
-            await guardedAction(`mark-payout-paid-${reqId}`, async () => {
-              setActionLoading(reqId);
-              const { error } = await (supabase as any)
-                .from('payout_requests')
-                .update({ status: 'paid', paid_at: new Date().toISOString() })
-                .eq('id', reqId);
-              if (error) { setActionLoading(null); toast({ variant: 'destructive', description: error.message }); return; }
-              if (linkedRewardIds?.length) {
-                await (supabase as any).from('rewards')
-                  .update({ status: 'paid', paid_at: new Date().toISOString() })
-                  .in('id', linkedRewardIds);
-              }
-              try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                  await (supabase as any).from('admin_audit_log').insert({
-                    admin_id: session.user.id, action: 'mark_payout_paid',
-                    target_id: reqId, target_table: 'payout_requests',
-                    details: `Admin paid payout request ${reqId}`,
-                  });
-                }
-              } catch {}
-              setActionLoading(null);
-              toast({ title: t('money.markedPaid', 'Marked as paid') });
-              onRefresh?.();
-            });
-          }}
-          onRejectPayout={async (reqId: string, linkedRewardIds?: string[]) => {
-            await guardedAction(`reject-payout-${reqId}`, async () => {
-              setActionLoading(reqId);
-              const { error } = await (supabase as any)
-                .from('payout_requests')
-                .update({ status: 'rejected', reject_reason: 'Rejected by admin' })
-                .eq('id', reqId);
-              if (!error && linkedRewardIds?.length) {
-                await (supabase as any).from('rewards')
-                  .update({ status: 'pending', payout_requested_at: null })
-                  .in('id', linkedRewardIds);
-              }
-              setActionLoading(null);
-              if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-              toast({ title: t('money.rejected', 'Request rejected') });
-              onRefresh?.();
-            });
-          }}
-          onMarkRewardPaid={handleMarkRewardPaid}
-          onClearReward={handleClearReward}
-        />
-      </TabsContent>
-    </Tabs>
   );
 };
 
