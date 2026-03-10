@@ -453,70 +453,57 @@ export default function SubmitNewStudentPage() {
 
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-6 max-w-3xl mx-auto space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate("/team/cases")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-xl sm:text-2xl font-bold min-w-0 flex-1 truncate">{isAr ? "تسجيل طالب جديد" : "Submit New Student"}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold min-w-0 flex-1 truncate">{ss('title')}</h1>
       </div>
 
-      <StepBar step={step} />
+      <StepBar step={step} t={t} />
 
       {/* ══ STEP 1: Student Info ══ */}
       {step === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Student Information</CardTitle>
+            <CardTitle className="text-base">{ss('studentInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
-              <FieldWrap label="First Name *" error={errors.firstName}>
-                <Input
-                  className={cn("mt-1", errors.firstName && "border-destructive")}
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
+              <FieldWrap label={`${ss('firstName')} *`} error={errors.firstName}>
+                <Input className={cn("mt-1", errors.firstName && "border-destructive")} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
               </FieldWrap>
               <div>
-                <Label>Middle Name</Label>
+                <Label>{ss('middleName')}</Label>
                 <Input className="mt-1" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
               </div>
-              <FieldWrap label="Last Name *" error={errors.lastName}>
-                <Input
-                  className={cn("mt-1", errors.lastName && "border-destructive")}
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
+              <FieldWrap label={`${ss('lastName')} *`} error={errors.lastName}>
+                <Input className={cn("mt-1", errors.lastName && "border-destructive")} value={lastName} onChange={(e) => setLastName(e.target.value)} />
               </FieldWrap>
             </div>
 
-            {/* ✅ FIX: BirthdayPicker now uses three Select dropdowns instead of broken Popover/Calendar */}
-            <BirthdayPicker value={dob} onChange={setDob} />
+            <BirthdayPicker value={dob} onChange={setDob} t={t} />
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label>Gender</Label>
+                <Label>{ss('gender')}</Label>
                 <Select value={gender} onValueChange={setGender}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('genderSelect')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="male">{ss('genderMale')}</SelectItem>
+                    <SelectItem value="female">{ss('genderFemale')}</SelectItem>
+                    <SelectItem value="other">{ss('genderOther')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>City of Birth</Label>
+                <Label>{ss('cityOfBirth')}</Label>
                 <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
               </div>
             </div>
             <div className="flex justify-end">
-              <Button onClick={goNext}>
-                Next <ChevronRight className="h-4 w-4 ms-1" />
-              </Button>
+              <Button onClick={goNext}>{ss('next')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
             </div>
           </CardContent>
         </Card>
@@ -526,60 +513,39 @@ export default function SubmitNewStudentPage() {
       {step === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Contact Details</CardTitle>
+            <CardTitle className="text-base">{ss('stepContactDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
-              <FieldWrap label="Email *" error={errors.email}>
-                <Input
-                  className={cn("mt-1", errors.email && "border-destructive")}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@email.com"
-                />
+              <FieldWrap label={`${ss('email')} *`} error={errors.email}>
+                <Input className={cn("mt-1", errors.email && "border-destructive")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@email.com" />
               </FieldWrap>
-              <FieldWrap label="Phone *" error={errors.phone}>
-                <Input
-                  className={cn("mt-1", errors.phone && "border-destructive")}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+972..."
-                />
+              <FieldWrap label={`${ss('phone')} *`} error={errors.phone}>
+                <Input className={cn("mt-1", errors.phone && "border-destructive")} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+972..." />
               </FieldWrap>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label>Emergency Contact Name</Label>
+                <Label>{ss('emergencyName')}</Label>
                 <Input className="mt-1" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
               </div>
               <div>
-                <Label>Emergency Contact Phone</Label>
-                {/* ✅ FIX: This input now updates emergencyPhone state (was incorrectly bound to email state) */}
-                <Input
-                  className="mt-1"
-                  value={emergencyPhone}
-                  onChange={(e) => setEmergencyPhone(e.target.value)}
-                  placeholder="+972..."
-                />
+                <Label>{ss('emergencyPhone')}</Label>
+                <Input className="mt-1" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="+972..." />
               </div>
             </div>
             <div>
-              <Label>Address</Label>
+              <Label>{ss('address')}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
-                <Input placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
-                <Input placeholder="House No." value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
-                <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+                <Input placeholder={ss('street')} value={street} onChange={(e) => setStreet(e.target.value)} />
+                <Input placeholder={ss('houseNo')} value={houseNo} onChange={(e) => setHouseNo(e.target.value)} />
+                <Input placeholder={ss('postcode')} value={postcode} onChange={(e) => setPostcode(e.target.value)} />
               </div>
-              <Input className="mt-2" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+              <Input className="mt-2" placeholder={ss('city')} value={city} onChange={(e) => setCity(e.target.value)} />
             </div>
             <div className="flex justify-between">
-              <Button variant="outline" onClick={goBack}>
-                <ChevronLeft className="h-4 w-4 me-1" /> Back
-              </Button>
-              <Button onClick={goNext}>
-                Next <ChevronRight className="h-4 w-4 ms-1" />
-              </Button>
+              <Button variant="outline" onClick={goBack}><ChevronLeft className="h-4 w-4 me-1" /> {ss('back')}</Button>
+              <Button onClick={goNext}>{ss('next')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
             </div>
           </CardContent>
         </Card>
@@ -589,21 +555,19 @@ export default function SubmitNewStudentPage() {
       {step === 3 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Program &amp; Accommodation</CardTitle>
+            <CardTitle className="text-base">{ss('stepProgram')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label>Program</Label>
+                <Label>{ss('program')}</Label>
                 <Select value={programId} onValueChange={setProgramId}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select program" />
-                  </SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectProgram')} /></SelectTrigger>
                   <SelectContent>
                     {programs.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {isAr ? (p as any).name_ar : p.name_en}
-                        {p.lessons_per_week ? ` · ${p.lessons_per_week} lessons/wk` : ""}
+                        {p.lessons_per_week ? ` · ${p.lessons_per_week} ${ss('lessonsPerWeek')}` : ""}
                         {p.duration_in_months ? ` · ${p.duration_in_months}mo` : ""}
                       </SelectItem>
                     ))}
@@ -611,27 +575,20 @@ export default function SubmitNewStudentPage() {
                 </Select>
                 {selectedProgram && (
                   <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex flex-wrap gap-2">
-                    {selectedProgram.lessons_per_week && <span>📚 {selectedProgram.lessons_per_week} lessons/wk</span>}
+                    {selectedProgram.lessons_per_week && <span>📚 {selectedProgram.lessons_per_week} {ss('lessonsPerWeek')}</span>}
                     {selectedProgram.duration_in_months && <span>⏱ {selectedProgram.duration_in_months}mo</span>}
-                    {selectedProgram.price && (
-                      <span>
-                        💰 {selectedProgram.price.toLocaleString()} {selectedProgram.currency}
-                      </span>
-                    )}
+                    {selectedProgram.price && <span>💰 {selectedProgram.price.toLocaleString('en-US')} {selectedProgram.currency}</span>}
                   </div>
                 )}
               </div>
               <div>
-                <Label>School</Label>
+                <Label>{ss('school')}</Label>
                 <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select school" />
-                  </SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectSchool')} /></SelectTrigger>
                   <SelectContent>
                     {schools.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {s.name_en}
-                        {s.city ? ` — ${s.city}` : ""}
+                        {isAr ? (s as any).name_ar : s.name_en}{s.city ? ` — ${s.city}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -639,67 +596,41 @@ export default function SubmitNewStudentPage() {
               </div>
             </div>
 
-            {/* ✅ FIX: Intake months start from current month (generateIntakeMonths) */}
             <div>
-              <Label>Intake Month</Label>
+              <Label>{ss('intakeMonth')}</Label>
               <Select value={startMonth} onValueChange={setStartMonth}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select intake month" />
-                </SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectIntakeMonth')} /></SelectTrigger>
                 <SelectContent>
-                  {monthOptions.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
+                  {monthOptions.map((m) => (<SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              {/* ✅ FIX: Replaced broken Popover/Calendar with <input type="date"> */}
-              <SimpleDateField label="Arrival Date" value={arrivalDate} onChange={setArrivalDate} />
-              <SimpleDateField label="Course Start" value={courseStart} onChange={setCourseStart} />
+              <SimpleDateField label={ss('arrivalDate')} value={arrivalDate} onChange={setArrivalDate} />
+              <SimpleDateField label={ss('courseStart')} value={courseStart} onChange={setCourseStart} />
               <div>
-                <Label>Course End</Label>
-                <div
-                  className={cn(
-                    "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
-                    courseEnd ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {courseEnd ? format(new Date(courseEnd), "PP") : "Auto-calculated"}
+                <Label>{ss('courseEnd')}</Label>
+                <div className={cn("mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30", courseEnd ? "text-foreground" : "text-muted-foreground")}>
+                  {courseEnd ? format(new Date(courseEnd), "PP") : ss('autoCalc')}
                 </div>
               </div>
             </div>
 
             <div>
               <Label>
-                Accommodation{" "}
-                {!schoolId && <span className="text-muted-foreground text-xs">(select a school first)</span>}
+                {ss('accommodation')}{" "}
+                {!schoolId && <span className="text-muted-foreground text-xs">({ss('selectAccomFirst')})</span>}
               </Label>
-              <Select
-                value={accommodationId || "__none__"}
-                onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)}
-                disabled={filteredAccoms.length === 0}
-              >
+              <Select value={accommodationId || "__none__"} onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)} disabled={filteredAccoms.length === 0}>
                 <SelectTrigger className="mt-1">
-                  <SelectValue
-                    placeholder={
-                      filteredAccoms.length === 0
-                        ? schoolId
-                          ? "No accommodations for this school"
-                          : "Select a school first"
-                        : "Select accommodation"
-                    }
-                  />
+                  <SelectValue placeholder={filteredAccoms.length === 0 ? (schoolId ? ss('noAccomForSchool') : ss('selectAccomFirst')) : ss('selectAccom')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
+                  <SelectItem value="__none__">{ss('noAccom')}</SelectItem>
                   {filteredAccoms.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
-                      {isAr ? a.name_ar : a.name_en}
-                      {a.price ? ` — ${a.price.toLocaleString()} ${a.currency}/mo` : ""}
+                      {isAr ? a.name_ar : a.name_en}{a.price ? ` — ${a.price.toLocaleString('en-US')} ${a.currency}/mo` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -707,12 +638,8 @@ export default function SubmitNewStudentPage() {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={goBack}>
-                <ChevronLeft className="h-4 w-4 me-1" /> Back
-              </Button>
-              <Button onClick={goNext}>
-                Next <ChevronRight className="h-4 w-4 ms-1" />
-              </Button>
+              <Button variant="outline" onClick={goBack}><ChevronLeft className="h-4 w-4 me-1" /> {ss('back')}</Button>
+              <Button onClick={goNext}>{ss('next')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
             </div>
           </CardContent>
         </Card>
@@ -723,42 +650,22 @@ export default function SubmitNewStudentPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Payment</CardTitle>
+              <CardTitle className="text-base">{ss('payment')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-1 gap-4">
-                <FieldWrap label="Service Fee (ILS) *" error={errors.serviceFee}>
-                  <Input
-                    className={cn("mt-1", errors.serviceFee && "border-destructive")}
-                    type="number"
-                    min="0"
-                    value={serviceFee}
-                    onChange={(e) => setServiceFee(e.target.value)}
-                  />
-                </FieldWrap>
-              </div>
+              <FieldWrap label={`${ss('serviceFee')} *`} error={errors.serviceFee}>
+                <Input className={cn("mt-1", errors.serviceFee && "border-destructive")} type="number" min="0" value={serviceFee} onChange={(e) => setServiceFee(e.target.value)} />
+              </FieldWrap>
               {total > 0 && (
                 <div className="flex justify-between p-3 rounded-lg bg-muted text-sm font-medium">
-                  <span>Total</span>
-                  <span>{total.toLocaleString()} ILS</span>
+                  <span>{ss('total')}</span>
+                  <span>{total.toLocaleString('en-US')} ILS</span>
                 </div>
               )}
-              <div
-                className={cn(
-                  "flex items-start gap-3 p-3 border rounded-lg",
-                  errors.payment && "border-destructive bg-destructive/5",
-                )}
-              >
-                <Checkbox
-                  id="pr"
-                  checked={paymentReceived}
-                  onCheckedChange={(v) => {
-                    setPaymentReceived(v === true);
-                    setErrors((e) => ({ ...e, payment: "" }));
-                  }}
-                />
+              <div className={cn("flex items-start gap-3 p-3 border rounded-lg", errors.payment && "border-destructive bg-destructive/5")}>
+                <Checkbox id="pr" checked={paymentReceived} onCheckedChange={(v) => { setPaymentReceived(v === true); setErrors((e) => ({ ...e, payment: "" })); }} />
                 <Label htmlFor="pr" className="cursor-pointer text-sm">
-                  I confirm full payment of {total.toLocaleString()} ILS has been received.
+                  {t('lawyer.submitStudent.confirmPayment', { amount: total.toLocaleString('en-US') })}
                 </Label>
               </div>
               {errors.payment && <p className="text-xs text-destructive">{errors.payment}</p>}
@@ -767,39 +674,30 @@ export default function SubmitNewStudentPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Documents</CardTitle>
+              <CardTitle className="text-base">{ss('documents')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Upload documents now or skip — the student can upload later via their dashboard.
-              </p>
+              <p className="text-sm text-muted-foreground">{ss('documentsHint')}</p>
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { category: "passport", label: "Passport" },
-                  { category: "biometric_photo", label: "Biometric Photo" },
-                  { category: "translation", label: "Translations" },
-                  { category: "other", label: "Other Documents" },
+                  { category: "passport", labelKey: "docPassport" },
+                  { category: "biometric_photo", labelKey: "docBiometric" },
+                  { category: "translation", labelKey: "docTranslation" },
+                  { category: "other", labelKey: "docOther" },
                 ].map((doc) => {
-                  const existing = uploadedFiles
-                    .map((f, i) => ({ ...f, idx: i }))
-                    .filter((f) => f.category === doc.category);
+                  const existing = uploadedFiles.map((f, i) => ({ ...f, idx: i })).filter((f) => f.category === doc.category);
                   return (
                     <div key={doc.category} className="border border-dashed border-border rounded-lg p-3">
-                      <Label className="text-xs text-muted-foreground block mb-2">{doc.label}</Label>
+                      <Label className="text-xs text-muted-foreground block mb-2">{ss(doc.labelKey)}</Label>
                       {existing.map((f) => (
                         <div key={f.idx} className="flex items-center gap-2 text-xs mb-1">
-                          <Check className="h-3 w-3 text-green-500 shrink-0" />
+                          <Check className="h-3 w-3 text-emerald-500 shrink-0" />
                           <span className="truncate flex-1">{f.name}</span>
-                          <button
-                            onClick={() => removeFile(f.idx)}
-                            className="text-muted-foreground hover:text-destructive shrink-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
+                          <button onClick={() => removeFile(f.idx)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="h-3 w-3" /></button>
                         </div>
                       ))}
                       <label className="flex items-center gap-1 text-xs text-primary cursor-pointer hover:underline">
-                        <Upload className="h-3 w-3" /> Add file
+                        <Upload className="h-3 w-3" /> {ss('addFile')}
                         <input type="file" className="hidden" onChange={(e) => handleFileAdd(e, doc.category)} />
                       </label>
                     </div>
@@ -808,25 +706,15 @@ export default function SubmitNewStudentPage() {
               </div>
               <div className="flex items-center gap-2 p-3 border rounded-lg">
                 <Checkbox id="skip" checked={skipDocuments} onCheckedChange={(v) => setSkipDocuments(v === true)} />
-                <Label htmlFor="skip" className="text-sm cursor-pointer">
-                  Skip — student will upload documents later
-                </Label>
+                <Label htmlFor="skip" className="text-sm cursor-pointer">{ss('skipDocuments')}</Label>
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-between">
-            <Button variant="outline" onClick={goBack}>
-              <ChevronLeft className="h-4 w-4 me-1" /> Back
-            </Button>
+            <Button variant="outline" onClick={goBack}><ChevronLeft className="h-4 w-4 me-1" /> {ss('back')}</Button>
             <Button onClick={handleSubmit} disabled={saving} size="lg">
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 me-2 animate-spin" /> Submitting…
-                </>
-              ) : (
-                "Submit & Create Student Account"
-              )}
+              {saving ? (<><Loader2 className="h-4 w-4 me-2 animate-spin" /> {ss('submitting')}</>) : ss('submit')}
             </Button>
           </div>
         </div>
