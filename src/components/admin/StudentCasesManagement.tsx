@@ -149,13 +149,13 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
       <div className="space-y-3">
         {paginated.map(c => {
-          const name = c.student_full_name || c.lead?.full_name || '—';
-          const isPaid = c.case_status === 'paid' || !!c.paid_at;
-          const noLawyer = !c.assigned_lawyer_id && c.case_status === 'assigned';
-          // 20-day countdown
+          const name = c.full_name || '—';
+          const isPaid = c.status === 'enrollment_paid';
+          const noLawyer = !c.assigned_to;
+          // 20-day countdown — use rewards created_at as the unlock reference
           const countdownInfo = (() => {
-            if (!isPaid || !c.paid_countdown_started_at) return null;
-            const start = new Date(c.paid_countdown_started_at);
+            if (!isPaid || !c.updated_at) return null;
+            const start = new Date(c.updated_at);
             const unlock = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
             const now = new Date();
             if (now >= unlock) return { locked: false, daysLeft: 0 };
