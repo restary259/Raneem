@@ -830,7 +830,21 @@
       "schoolLabel": "مدرسة اللغة",
       "intensiveCourse": "دورة مكثفة",
       "staff": "عضو الفريق",
-      "filterCity": "تصفية حسب المدينة"
+      "filterCity": "تصفية حسب المدينة",
+      "name": "الاسم",
+      "city": "المدينة",
+      "paymentDate": "تاريخ الدفع",
+      "count": "{{count}} حالة",
+      "exportForSchool": "تصدير للمدرسة",
+      "noResults": "لا توجد حالات مسجلة",
+      "account": "الحساب",
+      "active": "نشط",
+      "noAccount": "لا يوجد حساب",
+      "passportType": "نوع جواز السفر",
+      "educationLevel": "المستوى التعليمي",
+      "englishLevel": "مستوى الإنجليزية",
+      "degreeInterest": "التخصص المطلوب",
+      "intakeNotes": "ملاحظات القبول"
     },
     "referralsMgmt": {
       "agent": "الشريك",
