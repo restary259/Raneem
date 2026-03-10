@@ -156,8 +156,8 @@ export default function PartnerOverviewPage() {
     },
     { label: t("partner.enrolled"), value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
     {
-      label: t("partner.totalPaidOut"),
-      value: `₪${totalEarned.toLocaleString()}`,
+      label: isAr ? "إجمالي الأرباح المتوقعة" : t("partner.projectedEarnings"),
+      value: `₪${(paid * commissionRate).toLocaleString()}`,
       icon: DollarSign,
       color: "text-primary bg-primary/10",
     },

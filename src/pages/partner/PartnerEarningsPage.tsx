@@ -155,8 +155,8 @@ export default function PartnerEarningsPage() {
           </p>
           <p className="text-xs text-muted-foreground/70">
             {isAr
-              ? "المبالغ المعروضة هي أرباح متوقعة محسوبة بناءً على معدل العمولة × عدد الطلاب المؤهلين. يتم تأكيد المستحقات الفعلية عند إتمام التسجيل النهائي."
-              : "Amounts shown are projected earnings based on your commission rate × qualifying students. Confirmed payable amounts are settled after final enrollment."}
+              ? "المبالغ المعروضة هي أرباح متوقعة محسوبة بناءً على معدل العمولة × عدد الطلاب المؤهلين. يتم تأكيد الدفع الفعلي بعد اكتمال التسجيل ومعالجة طلب الصرف — وليس فور الوصول إلى مرحلة التسجيل."
+              : "Amounts shown are projected earnings based on your commission rate × qualifying students. Actual payout is confirmed after final enrollment is complete and a payout request is processed — not at the point of enrollment status."}
           </p>
         </div>
       </div>
