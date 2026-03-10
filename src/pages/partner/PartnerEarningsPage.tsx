@@ -218,9 +218,9 @@ export default function PartnerEarningsPage() {
               <DollarSign className="h-4 w-4 text-emerald-600" />
               <span className="text-xs">{t("partner.earnings.confirmedLabel")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{confirmedEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{confirmedEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {confirmedCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: confirmedCases.length })}
             </p>
           </CardContent>
         </Card>
