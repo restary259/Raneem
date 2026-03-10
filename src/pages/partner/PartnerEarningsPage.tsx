@@ -149,9 +149,16 @@ export default function PartnerEarningsPage() {
       {/* Commission Rate Info */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50 border border-border">
         <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-        <p className="text-sm text-muted-foreground">
-          {t("partner.commission.rateInfo", { rate: commissionRate.toLocaleString() })}
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            {t("partner.commission.rateInfo", { rate: commissionRate.toLocaleString('en-US') })}
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            {isAr
+              ? "المبالغ المعروضة هي أرباح متوقعة محسوبة بناءً على معدل العمولة × عدد الطلاب المؤهلين. يتم تأكيد المستحقات الفعلية عند إتمام التسجيل النهائي."
+              : "Amounts shown are projected earnings based on your commission rate × qualifying students. Confirmed payable amounts are settled after final enrollment."}
+          </p>
+        </div>
       </div>
 
       {/* Summary Cards */}
