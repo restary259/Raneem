@@ -1992,12 +1992,22 @@
       "successDesc": "{{amount}} confirmed for {{partner}}"
     },
     "financials": {
+      "title": "Financials",
+      "kpiServiceFees": "Service Fees Collected",
       "kpiAdminNet": "Platform Net Revenue",
       "kpiPartnerPending": "Partner Commissions Pending",
       "kpiPartnerPaid": "Partner Commissions Paid",
+      "kpiEnrolledStudents": "Enrolled Students",
+      "kpiReferralDiscounts": "Referral Discounts",
+      "partnerCommissionRateInfo": "Partner commission rate: ₪{{rate}} per case",
+      "recentEnrolled": "Recent Enrolled Cases",
+      "noData": "No enrolled cases yet.",
       "tabOverview": "Overview",
       "tabAgentPayouts": "Team Payouts",
       "tabPartnerPayouts": "Partner Payouts"
+    },
+    "students": {
+      "studentCount": "{{count}} students"
     }
   }
 }
