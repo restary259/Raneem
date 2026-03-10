@@ -81,53 +81,8 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     return '—';
   };
 
-  const handleMarkRewardPaid = async (rewardId: string) => {
-    await guardedAction(`mark-reward-paid-${rewardId}`, async () => {
-      setActionLoading(rewardId);
-      const { error } = await (supabase as any)
-        .from('rewards')
-        .update({ status: 'paid', paid_at: new Date().toISOString() })
-        .eq('id', rewardId);
-      setActionLoading(null);
-      if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await (supabase as any).from('admin_audit_log').insert({
-            admin_id: session.user.id, action: 'mark_reward_paid',
-            target_id: rewardId, target_table: 'rewards',
-            details: `Admin manually marked reward ${rewardId} as paid`,
-          });
-        }
-      } catch {}
-      toast({ title: t('money.markedPaid', 'Marked as paid') });
-      onRefresh?.();
-    });
-  };
-
-  const handleClearReward = async (rewardId: string) => {
-    await guardedAction(`clear-reward-${rewardId}`, async () => {
-      setActionLoading(rewardId);
-      const { error } = await (supabase as any)
-        .from('rewards')
-        .update({ status: 'cancelled' })
-        .eq('id', rewardId);
-      setActionLoading(null);
-      if (error) { toast({ variant: 'destructive', description: error.message }); return; }
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await (supabase as any).from('admin_audit_log').insert({
-            admin_id: session.user.id, action: 'clear_reward',
-            target_id: rewardId, target_table: 'rewards',
-            details: `Admin cancelled reward ${rewardId}`,
-          });
-        }
-      } catch {}
-      toast({ title: t('money.cleared', 'Cleared') });
-      onRefresh?.();
-    });
-  };
+  // NOTE: Partner commission rewards are managed exclusively via PartnerPayoutsPanel
+  // (password-gated + audit-logged). Do NOT add direct reward mutation here.
 
   // Build transaction rows from cases — new system uses `status === 'enrollment_paid'`
   const transactions = useMemo(() => {
