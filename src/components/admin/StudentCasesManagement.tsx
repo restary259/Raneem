@@ -25,8 +25,8 @@ interface StudentCasesManagementProps {
   initialFilter?: string | null;
 }
 
-// Cases only appear in admin after team explicitly clicks "Submit to Admin" (services_filled)
-const READY_STATUSES = ['services_filled', 'paid'];
+// Show cases that have progressed to submitted or enrollment_paid (canonical `cases` table statuses)
+const READY_STATUSES = ['submitted', 'enrollment_paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
@@ -50,20 +50,20 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const studentCases = useMemo(() => {
     return cases
-      .filter(c => READY_STATUSES.includes(c.case_status))
+      .filter(c => READY_STATUSES.includes(c.status))
       .map(c => {
-        const lead = leads.find(l => l.id === c.lead_id);
-        const teamMember = c.assigned_lawyer_id ? lawyers.find(l => l.id === c.assigned_lawyer_id) : null;
-        const agent = lead?.source_type === 'influencer' && lead?.source_id ? influencers.find(i => i.id === lead.source_id) : null;
-        return { ...c, lead, teamMember, agent };
+        // `cases` table uses assigned_to; look up the team member by that id
+        const teamMember = c.assigned_to ? lawyers.find((l: any) => l.id === c.assigned_to) : null;
+        const agent = c.partner_id ? influencers.find((i: any) => i.id === c.partner_id) : null;
+        return { ...c, teamMember, agent };
       });
-  }, [cases, leads, lawyers, influencers]);
+  }, [cases, lawyers, influencers]);
 
   const filtered = useMemo(() => {
     return studentCases.filter(c => {
-      const name = c.student_full_name || c.lead?.full_name || '';
-      const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.student_phone || c.lead?.phone || '').includes(search);
-      const matchStatus = statusFilter === 'all' || c.case_status === statusFilter;
+      const name = c.full_name || '';
+      const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || (c.phone_number || '').includes(search);
+      const matchStatus = statusFilter === 'all' || c.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [studentCases, search, statusFilter]);
@@ -98,7 +98,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const markAsPaid = (caseId: string) => {
     const existingCase = studentCases.find(c => c.id === caseId);
-    if (existingCase?.is_paid_admin || existingCase?.case_status === 'paid') {
+    if (existingCase?.status === 'enrollment_paid') {
       toast({ title: t('studentCases.alreadyPaid', { defaultValue: 'Already marked as paid' }) });
       return;
     }
@@ -107,10 +107,8 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
   };
 
   const getSourceBadge = (c: any) => {
-    const lead = c.lead;
-    if (!lead) return null;
-    if (lead.source_type === 'influencer' && c.agent) return <Badge variant="outline" className="text-[10px]">🤝 {c.agent.full_name}</Badge>;
-    if (lead.source_type === 'referral') return <Badge variant="outline" className="text-[10px]">👥 {t('lawyer.sources.referral')}</Badge>;
+    if (c.partner_id && c.agent) return <Badge variant="outline" className="text-[10px]">🤝 {c.agent.full_name}</Badge>;
+    if (c.referred_by) return <Badge variant="outline" className="text-[10px]">👥 {t('lawyer.sources.referral')}</Badge>;
     return <Badge variant="outline" className="text-[10px]">🌐 {t('lawyer.sources.organic')}</Badge>;
   };
 
@@ -119,10 +117,10 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const bulkExportPDF = () => {
     const headers = [t('admin.ready.fullName', 'Full Name'), t('admin.ready.email', 'Email'), t('admin.ready.phone', 'Phone'), t('admin.ready.passportNumber', 'Passport'), t('admin.ready.nationality', 'Nationality'), t('admin.ready.destinationCity', 'City'), t('admin.ready.schoolLabel', 'School'), t('admin.ready.intensiveCourse', 'Course'), t('admin.students.status', 'Status')];
-    const rows = filtered.map(c => [
-      c.student_full_name || c.lead?.full_name || '', c.student_email || c.lead?.email || '', c.student_phone || c.lead?.phone || '',
-      c.passport_number || '', c.nationality || '', c.selected_city || '', c.selected_school || '', c.intensive_course || '',
-      String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status })),
+                   const rows = filtered.map(c => [
+      c.full_name || '', '', c.phone_number || '',
+      c.passport_type || '', '', c.city || '', '', '',
+      String(t(`cases.statuses.${c.status}`, { defaultValue: c.status })),
     ]);
     exportPDF({ headers, rows, fileName: `student-intake-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Student Intake' });
   };
@@ -151,13 +149,13 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
       <div className="space-y-3">
         {paginated.map(c => {
-          const name = c.student_full_name || c.lead?.full_name || '—';
-          const isPaid = c.case_status === 'paid' || !!c.paid_at;
-          const noLawyer = !c.assigned_lawyer_id && c.case_status === 'assigned';
-          // 20-day countdown
+          const name = c.full_name || '—';
+          const isPaid = c.status === 'enrollment_paid';
+          const noLawyer = !c.assigned_to;
+          // 20-day countdown — use rewards created_at as the unlock reference
           const countdownInfo = (() => {
-            if (!isPaid || !c.paid_countdown_started_at) return null;
-            const start = new Date(c.paid_countdown_started_at);
+            if (!isPaid || !c.updated_at) return null;
+            const start = new Date(c.updated_at);
             const unlock = new Date(start.getTime() + 20 * 24 * 60 * 60 * 1000);
             const now = new Date();
             if (now >= unlock) return { locked: false, daysLeft: 0 };
@@ -180,7 +178,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                     </p>
                   </div>
                   <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status }))}</Badge>
+                    <Badge variant={isPaid ? 'default' : 'secondary'}>{String(t(`cases.statuses.${c.status}`, { defaultValue: c.status }))}</Badge>
                     {releasedCases.has(c.id) ? (
                       <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.paidOut', { defaultValue: 'Paid Out' })}</Badge>
                     ) : countdownInfo && (
@@ -195,7 +193,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.payoutReady', { defaultValue: 'Payout Ready' })}</Badge>
                       )
                     )}
-                    {['services_filled', 'profile_filled'].includes(c.case_status) && !isPaid && (
+                    {['submitted', 'profile_completion'].includes(c.status) && !isPaid && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('studentCases.markPaid', { defaultValue: 'Mark Paid' })}
                       </Button>
@@ -242,7 +240,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
       <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedCase?.student_full_name || selectedCase?.lead?.full_name || '—'}</DialogTitle>
+            <DialogTitle>{selectedCase?.full_name || '—'}</DialogTitle>
           </DialogHeader>
           {selectedCase && (
             <Tabs defaultValue="profile" className="mt-2">
@@ -256,19 +254,14 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               <TabsContent value="profile" className="space-y-3 mt-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {[
-                    { label: t('admin.ready.fullName'), value: selectedCase.student_full_name || selectedCase.lead?.full_name },
-                    { label: t('admin.ready.email'), value: selectedCase.student_email || selectedCase.lead?.email },
-                    { label: t('admin.ready.phone'), value: selectedCase.student_phone || selectedCase.lead?.phone },
-                    { label: t('admin.ready.age'), value: selectedCase.student_age },
-                    { label: t('admin.ready.gender', { defaultValue: 'Gender' }), value: selectedCase.gender },
-                    { label: t('admin.ready.passportNumber'), value: selectedCase.passport_number },
-                    { label: t('admin.ready.nationality'), value: selectedCase.nationality },
-                    { label: t('admin.ready.countryOfBirth'), value: selectedCase.country_of_birth },
-                    { label: t('admin.ready.address'), value: selectedCase.student_address },
-                    { label: t('admin.ready.languageProficiency'), value: selectedCase.language_proficiency },
-                    { label: t('admin.ready.destinationCity'), value: selectedCase.selected_city },
-                    { label: t('admin.ready.schoolLabel'), value: selectedCase.selected_school },
-                    { label: t('admin.ready.intensiveCourse'), value: selectedCase.intensive_course },
+                    { label: t('admin.ready.fullName'), value: selectedCase.full_name },
+                    { label: t('admin.ready.phone'), value: selectedCase.phone_number },
+                    { label: t('admin.ready.passportType'), value: selectedCase.passport_type },
+                    { label: t('admin.ready.city'), value: selectedCase.city },
+                    { label: t('admin.ready.educationLevel', { defaultValue: 'Education Level' }), value: selectedCase.education_level },
+                    { label: t('admin.ready.englishLevel', { defaultValue: 'English Level' }), value: selectedCase.english_level },
+                    { label: t('admin.ready.degreeInterest', { defaultValue: 'Degree Interest' }), value: selectedCase.degree_interest },
+                    { label: t('admin.ready.intakeNotes', { defaultValue: 'Intake Notes' }), value: selectedCase.intake_notes },
                   ].map((item, i) => (
                     <div key={i} className="p-2 bg-muted/30 rounded">
                       <p className="text-[10px] text-muted-foreground">{String(item.label)}</p>
@@ -359,48 +352,49 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       </div>
                     ))}
                     <div className="flex gap-2 mt-2">
-                      <Button size="sm" disabled={loading} onClick={async () => {
-                        await guardedAction(`update-financials-${selectedCase.id}`, async () => {
-                          setLoading(true);
-                          const { error } = await (supabase as any).from('student_cases').update(moneyValues).eq('id', selectedCase.id);
-                          if (error) {
-                            toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-                          } else {
-                            // Sync reward rows when case is already paid — keeps influencer/lawyer dashboards accurate.
-                            // Only touches pending/approved rewards (never already-paid ones).
-                            if (selectedCase.case_status === 'paid') {
-                              if (moneyValues.influencer_commission !== selectedCase.influencer_commission) {
-                                await (supabase as any)
-                                  .from('rewards')
-                                  .update({ amount: moneyValues.influencer_commission })
-                                  .like('admin_notes', `%${selectedCase.id}%`)
-                                  .not('admin_notes', 'like', '%lawyer%')
-                                  .not('admin_notes', 'like', '%translation%')
-                                  .in('status', ['pending', 'approved']);
-                              }
-                              if (moneyValues.lawyer_commission !== selectedCase.lawyer_commission) {
-                                await (supabase as any)
-                                  .from('rewards')
-                                  .update({ amount: moneyValues.lawyer_commission })
-                                  .like('admin_notes', `%lawyer commission from case ${selectedCase.id}%`)
-                                  .in('status', ['pending', 'approved']);
-                              }
-                            }
-                            toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
-                            setSelectedCase({ ...selectedCase, ...moneyValues });
-                            setEditingMoney(false);
-                            onRefresh();
-                          }
-                          setLoading(false);
-                        });
-                      }}>
+                       <Button size="sm" disabled={loading} onClick={async () => {
+                         await guardedAction(`update-financials-${selectedCase.id}`, async () => {
+                           setLoading(true);
+                           // `cases` table holds commission columns; service_fee is in case_submissions
+                           const { service_fee, ...caseMoneyValues } = moneyValues;
+                           const { error } = await (supabase as any).from('cases').update(caseMoneyValues).eq('id', selectedCase.id);
+                           if (error) {
+                             toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+                           } else {
+                             // Sync reward rows when case is already paid — keeps partner/team dashboards accurate.
+                             // Only touches pending/approved rewards (never already-paid ones).
+                             if (selectedCase.status === 'enrollment_paid') {
+                               if (moneyValues.influencer_commission !== selectedCase.influencer_commission) {
+                                 await (supabase as any)
+                                   .from('rewards')
+                                   .update({ amount: moneyValues.influencer_commission })
+                                   .like('admin_notes', `%${selectedCase.id}%`)
+                                   .not('admin_notes', 'like', '%team%')
+                                   .in('status', ['pending', 'approved']);
+                               }
+                               if (moneyValues.lawyer_commission !== selectedCase.lawyer_commission) {
+                                 await (supabase as any)
+                                   .from('rewards')
+                                   .update({ amount: moneyValues.lawyer_commission })
+                                   .like('admin_notes', `%team commission — case ${selectedCase.id}%`)
+                                   .in('status', ['pending', 'approved']);
+                               }
+                             }
+                             toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
+                             setSelectedCase({ ...selectedCase, ...moneyValues });
+                             setEditingMoney(false);
+                             onRefresh();
+                           }
+                           setLoading(false);
+                         });
+                       }}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('common.save', { defaultValue: 'Save' })}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setEditingMoney(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
                     </div>
                   </div>
                 )}
-                {selectedCase.lead?.source_type === 'influencer' && selectedCase.agent && (
+                {selectedCase.partner_id && selectedCase.agent && (
                   <p className="text-xs text-muted-foreground mt-2">🤝 {t('studentCases.agentNote', { name: selectedCase.agent.full_name, amount: selectedCase.influencer_commission, defaultValue: 'Agent: {{name}} — Commission: {{amount}} ₪' })}</p>
                 )}
                 {selectedCase.referral_discount > 0 && (
