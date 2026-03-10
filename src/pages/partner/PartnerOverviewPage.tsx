@@ -262,11 +262,7 @@ export default function PartnerOverviewPage() {
                 </thead>
                 <tbody>
                   {cases.map((c) => {
-                    const cfg = STATUS_CONFIG[c.status] || {
-                      label: c.status,
-                      labelAr: c.status,
-                      color: "bg-muted text-muted-foreground",
-                    };
+                    const statusColor = STATUS_COLOR[c.status] || "bg-muted text-muted-foreground";
                     const isPaid = PAID_STATUSES.includes(c.status);
                     const earnsCommission = isPaid && (isPoolMode || c.partner_id === userId);
                     return (
