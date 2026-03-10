@@ -121,7 +121,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     }
     // Insert transaction log
     await (supabase as any).from('transaction_log').insert({
-      type: payTarget.requestor_role === 'influencer' ? 'influencer_payout' : 'student_cashback',
+      type: payTarget.requestor_role === 'social_media_partner' ? 'influencer_payout' : 'student_cashback',
       payout_request_id: payTarget.id,
       amount: payTarget.amount,
       payment_method: paymentMethod,

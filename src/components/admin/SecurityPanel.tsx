@@ -268,8 +268,8 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
                     <tbody>
                       {flaggedCases.map(c => (
                         <tr key={c.id} className="border-b">
-                          <td className="px-3 py-2 font-medium">{c.student_full_name || c.id.slice(0, 8)}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{c.fraud_notes || '—'}</td>
+                          <td className="px-3 py-2 font-medium">{c.full_name || c.id.slice(0, 8)}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{(c.fraud_flags || []).join(', ') || '—'}</td>
                         </tr>
                       ))}
                     </tbody>

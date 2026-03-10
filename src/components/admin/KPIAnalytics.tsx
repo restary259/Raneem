@@ -66,8 +66,8 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
     paidCases.forEach(c => {
       const month = c.created_at?.slice(0, 7);
       if (month && months[month]) {
-        const rev = (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0);
-        const cost = (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0);
+        const rev = (Number(c.service_fee) || 0);
+        const cost = (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0);
         months[month].revenue += rev;
         months[month].costs += cost;
         months[month].profit += rev - cost;

@@ -80,7 +80,7 @@ const InfluencerManagement: React.FC<InfluencerManagementProps> = ({
       const effectiveRole = filterRole || role;
       // Map UI role names to DB role names
       const dbRole = effectiveRole === 'lawyer' ? 'team_member' : effectiveRole;
-      const fnName = dbRole === 'influencer' ? 'create-influencer' : 'create-team-member';
+      const fnName = dbRole === 'social_media_partner' ? 'create-influencer' : 'create-team-member';
 
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`, {
         method: 'POST',
