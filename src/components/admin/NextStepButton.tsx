@@ -45,14 +45,11 @@ const NextStepButton: React.FC<NextStepButtonProps> = ({
     }
 
     setLoading(true);
-    const updateData: Record<string, any> = {
-      case_status: target,
-      ...extraUpdate,
-    };
+    const updateData: Record<string, any> = { status: target, ...extraUpdate };
 
     const { error } = await (supabase as any)
       .from('cases')
-      .update({ status: target })
+      .update(updateData)
       .eq('id', caseId);
 
     if (error) {

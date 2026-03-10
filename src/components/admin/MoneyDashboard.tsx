@@ -163,11 +163,10 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const kpis = useMemo(() => {
     const enrolledCases = cases.filter(c => c.status === 'enrollment_paid');
     const totalServiceFees = enrolledCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
-    const totalSchoolComm = enrolledCases.reduce((s, c) => s + (Number(c.school_commission) || 0), 0);
     const totalPartnerComm = enrolledCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
     const totalTeamComm = enrolledCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
 
-    const totalRevenueNIS = totalServiceFees + totalSchoolComm;
+    const totalRevenueNIS = totalServiceFees;
     const totalExpensesNIS = totalPartnerComm + totalTeamComm;
     const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
 
@@ -176,7 +175,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
     return {
       totalRevenueNIS, totalExpensesNIS, netProfitNIS,
-      totalServiceFees, totalSchoolComm, totalPartnerComm, totalTeamComm,
+      totalServiceFees, totalPartnerComm, totalTeamComm,
       pendingPayouts, paidPayouts,
       enrolledStudents: enrolledCases.length,
     };
