@@ -30,7 +30,6 @@ import {
   Trash2,
   UserCheck,
 } from "lucide-react";
-import AppointmentCalendar from "@/components/lawyer/AppointmentCalendar";
 import NotificationBell from "@/components/common/NotificationBell";
 import { differenceInHours, isToday, format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
