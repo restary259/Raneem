@@ -44,9 +44,11 @@ interface SubmittedCase {
 
 interface CommissionPreview {
   serviceFee: number;
-  partnerCommission: number;
+  partners: { partnerId: string; name: string; amount: number }[];
   teamCommission: number;
   platformRevenue: number;
+  // legacy single field for the log message
+  partnerCommission: number;
 }
 
 const AdminSubmissionsPage = () => {
