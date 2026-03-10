@@ -240,7 +240,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
       <Dialog open={!!selectedCase} onOpenChange={() => setSelectedCase(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedCase?.student_full_name || selectedCase?.lead?.full_name || '—'}</DialogTitle>
+            <DialogTitle>{selectedCase?.full_name || '—'}</DialogTitle>
           </DialogHeader>
           {selectedCase && (
             <Tabs defaultValue="profile" className="mt-2">
