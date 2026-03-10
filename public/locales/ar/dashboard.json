@@ -1937,7 +1937,97 @@
       "passwordPrompt": "أدخل كلمة مرور المشرف للتأكيد:",
       "confirmButton": "حذف البيانات المحددة",
       "successMsg": "تم حذف البيانات المحددة بنجاح",
-      "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
+    "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
+    }
+  },
+  "admin": {
+    "referralsMgmt": {
+      "agent": "الشريك",
+      "student": "الطالب"
+    },
+    "payouts": {
+      "requester": "مقدم الطلب",
+      "amount": "المبلغ",
+      "role": "الدور",
+      "status": "الحالة",
+      "requestDate": "تاريخ الطلب",
+      "action": "الإجراء",
+      "linkedStudents": "الطلاب",
+      "paymentMethodCol": "طريقة الدفع",
+      "all": "الكل",
+      "allRoles": "جميع الأدوار",
+      "exportCSV": "تصدير CSV",
+      "statusUpdated": "تم تحديث الحالة",
+      "unknownRequester": "غير معروف",
+      "noRewards": "لا توجد طلبات صرف",
+      "pay": "دفع",
+      "approveBtn": "موافقة",
+      "rejectBtn": "رفض",
+      "bulkApprove": "موافقة جماعية",
+      "bulkReject": "رفض جماعي",
+      "pendingInfluencer": "طلبات الشريك المعلقة",
+      "pendingStudent": "طلبات الطالب المعلقة",
+      "totalPaid": "إجمالي المدفوع",
+      "totalRejected": "مرفوض",
+      "approveTitle": "الموافقة على الصرف",
+      "rejectTitle": "رفض الصرف",
+      "rejectReason": "السبب (مطلوب)",
+      "markPaidTitle": "تأكيد الدفع",
+      "paymentMethod": "طريقة الدفع",
+      "selectMethod": "اختر طريقة",
+      "transactionRef": "رقم المعاملة / المرجع",
+      "notesOptional": "ملاحظات (اختياري)",
+      "confirmPay": "تأكيد الدفع",
+      "noLinkedStudents": "لا يوجد طلاب مرتبطون",
+      "linkedStudentsTitle": "الطلاب المرتبطون",
+      "statuses": {
+        "pending": "معلق",
+        "approved": "موافق عليه",
+        "paid": "مدفوع",
+        "rejected": "مرفوض"
+      },
+      "methods": {
+        "bank": "تحويل بنكي",
+        "paypal": "باي بال",
+        "cash": "نقداً",
+        "bank_transfer": "تحويل بنكي"
+      }
+    },
+    "partnerPayouts": {
+      "title": "مدفوعات الشركاء",
+      "subtitle": "إدارة وتأكيد مدفوعات عمولة الشركاء",
+      "totalPending": "إجمالي المعلق",
+      "totalPaid": "إجمالي المدفوع",
+      "refresh": "تحديث",
+      "noPartners": "لا توجد مكافآت عمولة للشركاء.",
+      "noPartnersHint": "تظهر مكافآت الشركاء هنا بعد وصول الحالات لحالة enrollment_paid.",
+      "noRewardRows": "لا توجد مكافآت لهذا الشريك بعد.",
+      "pending": "معلق",
+      "paidThisMonth": "مدفوع هذا الشهر",
+      "allTime": "الإجمالي الكلي",
+      "payAllPending": "دفع كل المعلق ({{count}})",
+      "confirmPayment": "تأكيد الدفع",
+      "showPaidHistory": "عرض سجل المدفوعات ({{count}})",
+      "hidePaidHistory": "إخفاء سجل المدفوعات ({{count}})",
+      "paid": "مدفوع",
+      "confirmed": "مؤكد",
+      "createdLabel": "تاريخ الإنشاء",
+      "confirmedLabel": "تاريخ التأكيد",
+      "passwordTitle": "أعد إدخال كلمة المرور",
+      "confirmSingle": "تأكيد دفع ₪{{amount}} للشريك {{partner}} عن الطالب {{student}}؟",
+      "confirmBulk": "تأكيد دفع ₪{{total}} للشريك {{partner}} عن {{count}} حالة؟",
+      "confirm": "تأكيد",
+      "cancel": "إلغاء",
+      "successTitle": "تم تأكيد الدفع",
+      "successDesc": "تم تأكيد {{amount}} للشريك {{partner}}"
+    },
+    "financials": {
+      "kpiAdminNet": "صافي إيرادات المنصة",
+      "kpiPartnerPending": "عمولات الشركاء المعلقة",
+      "kpiPartnerPaid": "عمولات الشركاء المدفوعة",
+      "tabOverview": "نظرة عامة",
+      "tabAgentPayouts": "مدفوعات الفريق",
+      "tabPartnerPayouts": "مدفوعات الشركاء"
     }
   }
 }

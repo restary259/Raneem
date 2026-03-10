@@ -1,178 +1,119 @@
 
-## Issues to Fix
+## Comprehensive Dashboard Scan — Batched Fix Plan
 
-### Bug 1 — `profiles!inner` join fails (the red error)
-Supabase requires a declared foreign key to use the PostgREST join syntax. `rewards.user_id` has no FK to `profiles`. Fix: split into 2 queries in `PartnerPayoutsPanel.tsx`:
-- Query 1: fetch rewards (no join)
-- Query 2: fetch profiles `IN` the distinct `user_id` set
-- Merge manually in JS
+### What was found (full audit)
 
-### Bug 2 — Missing `admin.payouts` locale block
-`PayoutsManagement.tsx` references these keys that don't exist in either locale file:
-- `admin.payouts.requester`, `admin.payouts.amount`, `admin.payouts.role`, `admin.payouts.status`, `admin.payouts.requestDate`, `admin.payouts.action`, `admin.payouts.linkedStudents`, `admin.payouts.paymentMethodCol`, `admin.payouts.all`, `admin.payouts.allRoles`, `admin.payouts.exportCSV`, `admin.payouts.statusUpdated`, `admin.payouts.unknownRequester`, `admin.payouts.noRewards`, `admin.payouts.pay`, `admin.payouts.approveBtn`, `admin.payouts.rejectBtn`, `admin.payouts.bulkApprove`, `admin.payouts.bulkReject`, `admin.payouts.pendingInfluencer`, `admin.payouts.pendingStudent`, `admin.payouts.totalPaid`, `admin.payouts.totalRejected`, `admin.payouts.statuses.*`, `admin.payouts.methods.*`
-- Also: `admin.payouts.approveTitle`, `admin.payouts.notesOptional`, `admin.payouts.rejectTitle`, `admin.payouts.rejectReason`, `admin.payouts.markPaidTitle`, `admin.payouts.paymentMethod`, `admin.payouts.selectMethod`, `admin.payouts.transactionRef`, `admin.payouts.confirmPay`, `admin.payouts.noLinkedStudents` (from `PayoutActionModals` and `LinkedStudentsModal`)
+**1. JSON Duplicate Root Keys (still present — structural bug)**
+Both `en/dashboard.json` and `ar/dashboard.json` still have:
+- `"nav"` 3× (lines 1228, 1448, 1553 EN)
+- `"admin"` 2× (lines 245, 1277 EN)  
+- `"common"` 2× (lines 761, 1266 EN)
+- `"case"` 2× (lines 1253, 1540 EN)
+- `"partner"` 2× (lines 1374, 1482 EN)
+Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
 
-### Bug 3 — Missing `admin.referralsMgmt` locale keys
-`PayoutsManagement.tsx` uses `t('admin.referralsMgmt.agent')` and `t('admin.referralsMgmt.student')` for role labels — these don't exist. Must add them, and rename "agent" → "partner" per the platform's role naming.
+**2. Missing translation keys (8 confirmed)**
+Used in code but absent from both locale files:
+- `influencer.earnings.available` (EarningsPanel:212)
+- `influencer.earnings.requestCancelled` (EarningsPanel:192)
+- `influencer.earnings.actions` (EarningsPanel:300)
+- `influencer.earnings.payoutRequests` (EarningsPanel:277)
+- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
+- `application.serviceFee` (MyApplicationTab:184)
+- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
+- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
 
-### Bug 4 — "Agent Pending" label → rename to "Partner Pending"
-- `admin.payouts.pendingInfluencer` label in EN = "Agent Pending" → change to "Partner Pending"
-- AR equivalent = "طلبات الشريك المعلقة"
-- Role filter value `value="influencer"` → `value="social_media_partner"` (the actual DB value)
+**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
+29 files. Key offenders:
+- `AdminOverview.tsx` line 151, 195 — revenue KPIs
+- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
+- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
+- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
+- `PaymentConfirmationForm.tsx` lines 95, 103, 104
+- `PaymentsSummary.tsx` lines 77, 109
+- `PayoutActionModals.tsx` line 32
+- `AdminSpreadsheetPage.tsx` lines 143, 214
+- `CostCalculator.tsx` lines 221, 227, 231
 
-### Files to change
+**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
+- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
+- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
+- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
+- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
+- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
+- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
 
-| File | Change |
-|------|--------|
-| `src/components/admin/PartnerPayoutsPanel.tsx` | Remove `profiles!inner` join; add second query for profiles by `user_id IN [...]`; merge into `RewardRow` manually |
-| `public/locales/en/dashboard.json` | Add complete `admin.payouts` block + `admin.referralsMgmt.agent` + `admin.referralsMgmt.student` keys |
-| `public/locales/ar/dashboard.json` | Same keys in Arabic |
-| `src/components/admin/PayoutsManagement.tsx` | Fix role filter: `value="influencer"` → `value="social_media_partner"`; fix `RoleBadge` to use correct key |
+**5. `SparklineCard` value overflow — no truncation**
+`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
 
-### New locale keys to add to EN:
-```json
-"admin": {
-  ...existing...,
-  "referralsMgmt": {
-    ...existing (already has some keys)...,
-    "agent": "Partner",
-    "student": "Student"
-  },
-  "payouts": {
-    "requester": "Requester",
-    "amount": "Amount",
-    "role": "Role",
-    "status": "Status",
-    "requestDate": "Request Date",
-    "action": "Action",
-    "linkedStudents": "Students",
-    "paymentMethodCol": "Method",
-    "all": "All",
-    "allRoles": "All Roles",
-    "exportCSV": "Export CSV",
-    "statusUpdated": "Status updated",
-    "unknownRequester": "Unknown",
-    "noRewards": "No payout requests",
-    "pay": "Pay",
-    "approveBtn": "Approve",
-    "rejectBtn": "Reject",
-    "bulkApprove": "Bulk Approve",
-    "bulkReject": "Bulk Reject",
-    "pendingInfluencer": "Partner Pending",
-    "pendingStudent": "Student Pending",
-    "totalPaid": "Total Paid",
-    "totalRejected": "Rejected",
-    "approveTitle": "Approve Payout",
-    "rejectTitle": "Reject Payout",
-    "rejectReason": "Reason (required)",
-    "markPaidTitle": "Mark as Paid",
-    "paymentMethod": "Payment Method",
-    "selectMethod": "Select method",
-    "transactionRef": "Transaction ID / Reference",
-    "notesOptional": "Notes (optional)",
-    "confirmPay": "Confirm Payment",
-    "noLinkedStudents": "No linked students",
-    "statuses": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "paid": "Paid",
-      "rejected": "Rejected"
-    },
-    "methods": {
-      "bank": "Bank Transfer",
-      "paypal": "PayPal",
-      "cash": "Cash",
-      "bank_transfer": "Bank Transfer"
-    }
-  }
-}
-```
+**6. Mobile bottom nav AR overflow — `nav.checklist`**
+AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
 
-### AR equivalents:
-```json
-"referralsMgmt": {
-  "agent": "الشريك",
-  "student": "الطالب"
-},
-"payouts": {
-  "requester": "مقدم الطلب",
-  "amount": "المبلغ",
-  "role": "الدور",
-  "status": "الحالة",
-  "requestDate": "تاريخ الطلب",
-  "action": "الإجراء",
-  "linkedStudents": "الطلاب",
-  "paymentMethodCol": "طريقة الدفع",
-  "all": "الكل",
-  "allRoles": "جميع الأدوار",
-  "exportCSV": "تصدير CSV",
-  "statusUpdated": "تم تحديث الحالة",
-  "unknownRequester": "غير معروف",
-  "noRewards": "لا توجد طلبات صرف",
-  "pay": "دفع",
-  "approveBtn": "موافقة",
-  "rejectBtn": "رفض",
-  "bulkApprove": "موافقة جماعية",
-  "bulkReject": "رفض جماعي",
-  "pendingInfluencer": "طلبات الشريك المعلقة",
-  "pendingStudent": "طلبات الطالب المعلقة",
-  "totalPaid": "إجمالي المدفوع",
-  "totalRejected": "مرفوض",
-  "approveTitle": "الموافقة على الصرف",
-  "rejectTitle": "رفض الصرف",
-  "rejectReason": "السبب (مطلوب)",
-  "markPaidTitle": "تأكيد الدفع",
-  "paymentMethod": "طريقة الدفع",
-  "selectMethod": "اختر طريقة",
-  "transactionRef": "رقم المعاملة / المرجع",
-  "notesOptional": "ملاحظات (اختياري)",
-  "confirmPay": "تأكيد الدفع",
-  "noLinkedStudents": "لا يوجد طلاب مرتبطون",
-  "statuses": {
-    "pending": "معلق",
-    "approved": "موافق عليه",
-    "paid": "مدفوع",
-    "rejected": "مرفوض"
-  },
-  "methods": {
-    "bank": "تحويل بنكي",
-    "paypal": "باي بال",
-    "cash": "نقداً",
-    "bank_transfer": "تحويل بنكي"
-  }
-}
-```
+**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
+Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
 
-### Check for `admin.referralsMgmt` in EN locale
-Need to check if this key exists already in EN locale before adding. From the search, `admin.referralsMgmt` is used in `PayoutsManagement.tsx` and `ReferralManagement.tsx`. It does NOT appear in search results of the locale files — so these are also broken/untranslated keys. Need to add them.
+**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
+Should be `"وكيل"` only.
 
-### PartnerPayoutsPanel fix — two-query approach:
-```typescript
-// Step 1: fetch rewards only
-const { data: rewardRows } = await supabase
-  .from('rewards')
-  .select('id,amount,status,created_at,paid_at,admin_notes,user_id')
-  .like('admin_notes', 'Partner commission from case%')
-  .order('created_at', { ascending: false });
+**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
+`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
 
-// Step 2: fetch profiles separately
-const userIds = [...new Set(rewardRows.map(r => r.user_id))];
-const { data: profileRows } = await supabase
-  .from('profiles')
-  .select('id,full_name,email,avatar_url')
-  .in('id', userIds);
+---
 
-// Merge
-const profileMap = Object.fromEntries(profileRows.map(p => [p.id, p]));
-const rows = rewardRows.map(r => ({ ...r, profiles: profileMap[r.user_id] ?? null }));
-```
+### Files to change (batched)
 
-### Execution order:
-1. Fix `PartnerPayoutsPanel.tsx` — split join into 2 queries
-2. Add `admin.payouts` block to `en/dashboard.json` 
-3. Add `admin.payouts` block to `ar/dashboard.json`
-4. Add `admin.referralsMgmt.agent` + `.student` to both locale files
-5. Fix `PayoutsManagement.tsx` role filter value `influencer` → `social_media_partner`
+**A. Locale files (2 files) — consolidate duplicate keys + add missing**
 
-### Note on `admin.referralsMgmt` existing keys
-Need to check what already exists in `admin` section. The search showed no match for `admin.referralsMgmt` in locale files — so these are completely missing. However the component `ReferralManagement.tsx` uses many `admin.referralsMgmt.*` keys. This is a wider pre-existing gap. Only add the two keys actively needed by `PayoutsManagement.tsx` (`agent` and `student`) without restructuring other components.
+`public/locales/en/dashboard.json`:
+- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
+- Merge 2× `admin` blocks
+- Merge 2× `common` blocks  
+- Merge 2× `case` blocks
+- Merge 2× `partner` blocks
+- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
+- Add `application.serviceFee`
+- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+
+`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+
+**B. Numeric safety (7 component files)**
+
+For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+
+1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
+2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
+3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
+4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
+5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
+6. `src/pages/partner/PartnerStudentsPage.tsx` — same
+7. `src/pages/student/StudentVisaPage.tsx` — same
+8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
+9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
+10. `src/components/admin/PayoutActionModals.tsx` — line 32
+
+**C. SparklineCard overflow fix**
+
+`src/components/admin/SparklineCard.tsx`:
+- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
+- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+
+**D. TeamStudentProfilePage — add translations**
+
+`src/pages/team/TeamStudentProfilePage.tsx`:
+- Add `useTranslation` import
+- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+
+**E. TeamAnalyticsTab KPI cards — mobile overflow**
+
+`src/components/team/TeamAnalyticsTab.tsx`:
+- Add `min-h-[88px]` to `KPICard` CardContent
+- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+
+---
+
+### Implementation order
+1. Fix both JSON locale files (A) — unblocks everything else
+2. Fix numeric/date safety across 10 component files (B) 
+3. SparklineCard overflow (C)
+4. TeamStudentProfilePage hardcoded strings (D)
+5. TeamAnalyticsTab card height (E)

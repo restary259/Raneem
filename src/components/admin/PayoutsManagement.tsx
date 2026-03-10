@@ -198,7 +198,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   );
 
   const RoleBadge = ({ role }: { role: string }) => (
-    <Badge variant="outline" className="text-xs">{role === 'influencer' ? t('admin.referralsMgmt.agent') : t('admin.referralsMgmt.student')}</Badge>
+    <Badge variant="outline" className="text-xs">{role === 'social_media_partner' ? t('admin.referralsMgmt.agent') : t('admin.referralsMgmt.student')}</Badge>
   );
 
   const ActionButtons = ({ req }: { req: any }) => {
@@ -249,7 +249,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.payouts.allRoles', 'All Roles')}</SelectItem>
-            <SelectItem value="influencer">{t('admin.referralsMgmt.agent')}</SelectItem>
+            <SelectItem value="social_media_partner">{t('admin.referralsMgmt.agent')}</SelectItem>
             <SelectItem value="student">{t('admin.referralsMgmt.student')}</SelectItem>
           </SelectContent>
         </Select>
