@@ -20,6 +20,7 @@ interface SubmittedCase {
   full_name: string;
   phone_number: string;
   status: string;
+  source: string;
   created_at: string;
   education_level: string | null;
   city: string | null;
