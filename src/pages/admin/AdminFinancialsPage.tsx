@@ -4,9 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, TrendingUp, Users, DollarSign, Percent } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins } from 'lucide-react';
+import PayoutsManagement from '@/components/admin/PayoutsManagement';
+import PartnerPayoutsPanel from '@/components/admin/PartnerPayoutsPanel';
 
-const AdminFinancialsPage = () => {
+const OverviewTab = () => {
   const { t } = useTranslation('dashboard');
   const { toast } = useToast();
 
@@ -67,12 +70,11 @@ const AdminFinancialsPage = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('admin.financials.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t('admin.financials.partnerCommissionRateInfo', { rate: data.partnerCommissionRate })}</p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {t('admin.financials.partnerCommissionRateInfo', { rate: data.partnerCommissionRate })}
+        </p>
         <Button variant="outline" size="sm" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
       </div>
 
@@ -90,7 +92,6 @@ const AdminFinancialsPage = () => {
         ))}
       </div>
 
-      {/* Recent enrolled cases */}
       <Card>
         <CardHeader><CardTitle className="text-base">{t('admin.financials.recentEnrolled')}</CardTitle></CardHeader>
         <CardContent className="p-0">
@@ -110,6 +111,47 @@ const AdminFinancialsPage = () => {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+const AdminFinancialsPage = () => {
+  const { t } = useTranslation('dashboard');
+
+  return (
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{t('admin.financials.title')}</h1>
+      </div>
+
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="agent-payouts" className="gap-2">
+            <Wallet className="h-4 w-4" />
+            Agent Payouts
+          </TabsTrigger>
+          <TabsTrigger value="partner-payouts" className="gap-2">
+            <HandCoins className="h-4 w-4" />
+            Partner Payouts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <OverviewTab />
+        </TabsContent>
+
+        <TabsContent value="agent-payouts">
+          <PayoutsManagement />
+        </TabsContent>
+
+        <TabsContent value="partner-payouts">
+          <PartnerPayoutsPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
