@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, Award, Clock, Info } from "lucide-react";
+import { DollarSign, TrendingUp, Award, Clock, Info, History } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
