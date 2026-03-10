@@ -175,7 +175,7 @@ const TeamDashboardPage = () => {
 
   // Defense-in-depth: client-side filter ensures team member only sees their own cases
   const cases: any[] = useMemo(
-    () => (data?.cases ?? []).filter((c: any) => c.assigned_lawyer_id === user?.id),
+    () => (data?.cases ?? []).filter((c: any) => c.assigned_to === user?.id),
     [data?.cases, user?.id],
   );
   const leads: any[] = data?.leads ?? [];
