@@ -206,9 +206,9 @@ export default function PartnerEarningsPage() {
               <TrendingUp className="h-4 w-4 text-cyan-600" />
               <span className="text-xs">{t("partner.earnings.pendingLabel")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{pendingEarnings.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">₪{pendingEarnings.toLocaleString('en-US')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {pendingCases.length} {isAr ? "طالب" : "students"}
+              {t("partner.earnings.studentCount", { count: pendingCases.length })}
             </p>
           </CardContent>
         </Card>
