@@ -158,8 +158,9 @@ function PartnerCard({
               {group.pending.map(reward => {
                 const caseId = parseCaseId(reward.admin_notes);
                 const caseRow = caseId ? group.caseMap[caseId] : null;
+                const isPayoutRequested = reward.status === 'approved';
                 return (
-                  <div key={reward.id} className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                  <div key={reward.id} className={`flex flex-wrap items-center gap-3 px-5 py-3 transition-colors ${isPayoutRequested ? 'bg-blue-50/50' : 'hover:bg-muted/30'}`}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
                         {caseRow?.full_name ?? '—'}
@@ -168,19 +169,42 @@ function PartnerCard({
                         {caseRow?.source ?? ''} · {new Date(reward.created_at).toLocaleDateString('en-US')}
                       </p>
                     </div>
-                    <Badge className="bg-amber-100 text-amber-800 text-xs font-medium">
-                      {t('admin.partnerPayouts.pending')}
-                    </Badge>
+                    {isPayoutRequested ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="bg-blue-100 text-blue-700 border border-blue-200 text-xs font-medium gap-1 cursor-help">
+                              <Clock className="h-3 w-3" />
+                              {t('admin.partnerPayouts.payoutRequested', 'Payout Requested')}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[220px] text-xs">
+                            {t('admin.partnerPayouts.payoutRequestedHint', 'Partner submitted a formal payout request. Handle it in the "Payout Requests" tab.')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Badge className="bg-amber-100 text-amber-800 text-xs font-medium">
+                        {t('admin.partnerPayouts.pending')}
+                      </Badge>
+                    )}
                     <span className="font-bold text-foreground text-sm">{fmt(reward.amount)}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7 px-3"
-                      onClick={() => onConfirmSingle(reward)}
-                    >
-                      <CheckCircle2 className="h-3 w-3 me-1" />
-                      {t('admin.partnerPayouts.confirmPayment')}
-                    </Button>
+                    {isPayoutRequested ? (
+                      <span className="text-xs text-blue-600 flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        {t('admin.partnerPayouts.seeRequestsTab', 'See Payout Requests tab')}
+                      </span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-3"
+                        onClick={() => onConfirmSingle(reward)}
+                      >
+                        <CheckCircle2 className="h-3 w-3 me-1" />
+                        {t('admin.partnerPayouts.confirmPayment')}
+                      </Button>
+                    )}
                   </div>
                 );
               })}
