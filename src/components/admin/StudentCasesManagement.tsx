@@ -117,10 +117,10 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const bulkExportPDF = () => {
     const headers = [t('admin.ready.fullName', 'Full Name'), t('admin.ready.email', 'Email'), t('admin.ready.phone', 'Phone'), t('admin.ready.passportNumber', 'Passport'), t('admin.ready.nationality', 'Nationality'), t('admin.ready.destinationCity', 'City'), t('admin.ready.schoolLabel', 'School'), t('admin.ready.intensiveCourse', 'Course'), t('admin.students.status', 'Status')];
-    const rows = filtered.map(c => [
-      c.student_full_name || c.lead?.full_name || '', c.student_email || c.lead?.email || '', c.student_phone || c.lead?.phone || '',
-      c.passport_number || '', c.nationality || '', c.selected_city || '', c.selected_school || '', c.intensive_course || '',
-      String(t(`cases.statuses.${c.case_status}`, { defaultValue: c.case_status })),
+                   const rows = filtered.map(c => [
+      c.full_name || '', '', c.phone_number || '',
+      c.passport_type || '', '', c.city || '', '', '',
+      String(t(`cases.statuses.${c.status}`, { defaultValue: c.status })),
     ]);
     exportPDF({ headers, rows, fileName: `student-intake-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Student Intake' });
   };
