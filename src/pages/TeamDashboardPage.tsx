@@ -389,7 +389,7 @@ const TeamDashboardPage = () => {
 
   // ── Render case action buttons ──
   const renderCaseActions = (c: any, lead: any) => {
-    const status = c.case_status;
+    const status = c.status;
     const phoneBtn = lead.phone ? (
       <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" asChild>
         <a href={`tel:${lead.phone}`}>
