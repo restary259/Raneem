@@ -74,11 +74,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
       housing_description: profileValues.housing_description || null,
-      has_translation_service: !!profileValues.has_translation_service,
-      translation_added_by_user_id:
-        profileCase.translation_added_by_user_id && profileValues.has_translation_service
-          ? profileCase.translation_added_by_user_id
-          : (profileValues.has_translation_service ? userId ?? null : null),
       gender: profileValues.gender || null,
       notes: profileValues.notes || null,
     };
