@@ -246,9 +246,6 @@ const App = () => {
 
             {/* ── Legacy redirects (old routes → new) ── */}
             <Route path="/student-dashboard" element={<Navigate to="/student/checklist" replace />} />
-            <Route path="/influencer-dashboard" element={<Navigate to="/partner" replace />} />
-            <Route path="/lawyer-dashboard" element={<Navigate to="/team" replace />} />
-            <Route path="/team-dashboard" element={<Navigate to="/team" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
