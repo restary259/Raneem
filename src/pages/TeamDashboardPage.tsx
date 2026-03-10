@@ -288,17 +288,15 @@ const TeamDashboardPage = () => {
     try {
       const c = cases.find((cs) => cs.id === caseId);
       if (!c) return;
-      const updateData: Record<string, any> = { submitted_to_admin_at: new Date().toISOString() };
-      if (canTransition(c.case_status, CaseStatus.SUBMITTED)) updateData.case_status = CaseStatus.SUBMITTED;
-      const lead = leads.find((l) => l.id === c.lead_id);
-      if (lead && (lead.source_type === "friend" || lead.source_type === "family")) updateData.referral_discount = 500;
-      const { error } = await (supabase as any).from("student_cases").update(updateData).eq("id", caseId);
+      const updateData: Record<string, any> = {};
+      if (canTransition(c.status, CaseStatus.SUBMITTED)) updateData.status = CaseStatus.SUBMITTED;
+      const { error } = await (supabase as any).from("cases").update(updateData).eq("id", caseId);
       if (error) toast({ variant: "destructive", title: t("common.error"), description: error.message });
       else {
         await (supabase as any).rpc("log_user_activity", {
           p_action: "submit_for_application",
           p_target_id: caseId,
-          p_target_table: "student_cases",
+          p_target_table: "cases",
         });
         toast({ title: t("lawyer.saved") });
       }
@@ -316,7 +314,7 @@ const TeamDashboardPage = () => {
 
   const handleDeleteCase = async (caseId: string) => {
     try {
-      const { error } = await (supabase as any).from("student_cases").delete().eq("id", caseId);
+      const { error } = await (supabase as any).from("cases").update({ deleted_at: new Date().toISOString() }).eq("id", caseId);
       if (error) toast({ variant: "destructive", title: t("common.error"), description: error.message });
       else {
         toast({ title: t("lawyer.caseDeleted") });
