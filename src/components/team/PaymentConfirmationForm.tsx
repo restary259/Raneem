@@ -41,7 +41,6 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       const { error: subErr } = await supabase.from('case_submissions').upsert({
         case_id: caseId,
         service_fee: parseFloat(serviceFee),
-        translation_fee: 0,
         payment_confirmed: true,
         payment_confirmed_at: now,
         payment_confirmed_by: actorId,

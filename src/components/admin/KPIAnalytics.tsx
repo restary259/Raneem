@@ -38,7 +38,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
 
   // Filter cases and leads by date range
   const filteredCases = useMemo(() => cases.filter(c => {
-    const d = new Date(c.paid_at || c.created_at);
+    const d = new Date(c.created_at);
     return isWithinInterval(d, { start: startDate, end: endDate });
   }), [cases, startDate, endDate]);
 
@@ -47,9 +47,10 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
     return isWithinInterval(d, { start: startDate, end: endDate });
   }), [leads, startDate, endDate]);
 
-  const paidCases = filteredCases.filter(c => c.case_status === 'paid' || c.case_status === 'completed');
+  // Use new `cases` table status: enrollment_paid
+  const paidCases = filteredCases.filter(c => c.status === 'enrollment_paid');
   const totalRevenue = paidCases.reduce((sum, c) => sum + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
-  const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0) + (Number(c.translation_fee) || 0), 0);
+  const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0), 0);
   const totalProfit = totalRevenue - totalCosts;
   const avgProfitPerStudent = paidCases.length > 0 ? Math.round(totalProfit / paidCases.length) : 0;
 
@@ -63,10 +64,10 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
       cur.setMonth(cur.getMonth() + 1);
     }
     paidCases.forEach(c => {
-      const month = (c.paid_at || c.created_at)?.slice(0, 7);
+      const month = c.created_at?.slice(0, 7);
       if (month && months[month]) {
         const rev = (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0);
-        const cost = (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0) + (Number(c.translation_fee) || 0);
+        const cost = (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0) + (Number(c.referral_discount) || 0);
         months[month].revenue += rev;
         months[month].costs += cost;
         months[month].profit += rev - cost;
@@ -75,51 +76,47 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
     return Object.entries(months).map(([month, data]) => ({ month: month.slice(5), ...data }));
   }, [paidCases, startDate, endDate]);
 
-  // Conversion funnel data
+  // Conversion funnel data — uses new `cases` table statuses
   const funnelData = useMemo(() => {
     const stages = [
-      { key: 'new', count: filteredLeads.filter(l => l.status === 'new').length },
-      { key: 'eligible', count: filteredLeads.filter(l => l.status === 'eligible' || (l.eligibility_score ?? 0) >= 50).length },
-      { key: 'assigned', count: filteredCases.filter(c => c.case_status === 'assigned').length },
-      { key: 'contacted', count: filteredCases.filter(c => c.case_status === 'contacted').length },
-      { key: 'appointment', count: filteredCases.filter(c => c.case_status === 'appointment').length },
-      { key: 'paid', count: filteredCases.filter(c => c.case_status === 'paid').length },
-      { key: 'ready_to_apply', count: filteredCases.filter(c => c.case_status === 'ready_to_apply').length },
-      { key: 'completed', count: filteredCases.filter(c => c.case_status === 'completed' || c.case_status === 'settled').length },
+      { key: 'new', count: filteredCases.filter(c => c.status === 'new').length },
+      { key: 'contacted', count: filteredCases.filter(c => c.status === 'contacted').length },
+      { key: 'appointment_scheduled', count: filteredCases.filter(c => c.status === 'appointment_scheduled').length },
+      { key: 'profile_completion', count: filteredCases.filter(c => c.status === 'profile_completion').length },
+      { key: 'payment_confirmed', count: filteredCases.filter(c => c.status === 'payment_confirmed').length },
+      { key: 'submitted', count: filteredCases.filter(c => c.status === 'submitted').length },
+      { key: 'enrollment_paid', count: filteredCases.filter(c => c.status === 'enrollment_paid').length },
     ];
     return stages.map(s => ({ name: t(`funnel.${s.key}`, s.key), count: s.count }));
-  }, [filteredLeads, filteredCases, t]);
+  }, [filteredCases, t]);
 
-  // Agent comparison
+  // Agent/Partner comparison — uses partner_id on new cases table
   const agentData = useMemo(() => {
     return influencers.map(inf => {
       const infLeads = filteredLeads.filter(l => l.source_id === inf.id);
-      const infCases = filteredCases.filter(c => {
-        const lead = leads.find(l => l.id === c.lead_id);
-        return lead?.source_id === inf.id;
-      });
-      const paid = infCases.filter(c => c.case_status === 'paid' || c.case_status === 'completed').length;
+      const infCases = filteredCases.filter(c => c.partner_id === inf.id);
+      const paid = infCases.filter(c => c.status === 'enrollment_paid').length;
       return { name: inf.full_name?.split(' ')[0] || '?', leads: infLeads.length, paid };
     }).filter(a => a.leads > 0).slice(0, 8);
-  }, [influencers, filteredLeads, filteredCases, leads]);
+  }, [influencers, filteredLeads, filteredCases]);
 
-  // Team member performance
+  // Team member performance — uses assigned_to on new cases table
   const teamMemberData = useMemo(() => {
     return lawyers.map(lawyer => {
-      const lc = filteredCases.filter(c => c.assigned_lawyer_id === lawyer.id);
-      const closed = lc.filter(c => ['paid', 'completed', 'closed'].includes(c.case_status)).length;
+      const lc = filteredCases.filter(c => c.assigned_to === lawyer.id);
+      const closed = lc.filter(c => c.status === 'enrollment_paid').length;
       const closeRate = lc.length > 0 ? Math.round((closed / lc.length) * 100) : 0;
-      const revenue = closed > 0 ? lc.filter(c => ['paid', 'completed'].includes(c.case_status)).reduce((s, c) => s + (Number(c.service_fee) || 0), 0) : 0;
+      const revenue = lc.filter(c => c.status === 'enrollment_paid').reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
       return { ...lawyer, total: lc.length, closed, closeRate, revenue };
     });
   }, [lawyers, filteredCases]);
 
-  const FUNNEL_COLORS = ['hsl(220, 70%, 55%)', 'hsl(200, 65%, 50%)', 'hsl(180, 60%, 45%)', 'hsl(160, 55%, 45%)', 'hsl(140, 50%, 45%)', 'hsl(120, 55%, 40%)', 'hsl(90, 50%, 45%)', 'hsl(60, 60%, 45%)'];
+  const FUNNEL_COLORS = ['hsl(220, 70%, 55%)', 'hsl(200, 65%, 50%)', 'hsl(180, 60%, 45%)', 'hsl(160, 55%, 45%)', 'hsl(140, 50%, 45%)', 'hsl(120, 55%, 40%)', 'hsl(90, 50%, 45%)'];
 
   // Export handlers
   const exportRevenue = () => downloadCSV(monthlyRevenue.map(m => ({ Month: m.month, Revenue: m.revenue, Costs: m.costs, Profit: m.profit })), 'revenue-report');
   const exportLeads = () => downloadCSV(filteredLeads.map(l => ({ Name: l.full_name, Phone: l.phone, Status: l.status, Score: l.eligibility_score, Source: l.source_type, Date: l.created_at?.slice(0, 10) })), 'leads-report');
-  const exportCases = () => downloadCSV(filteredCases.map(c => ({ CaseID: c.id?.slice(0, 8), Status: c.case_status, ServiceFee: c.service_fee, SchoolComm: c.school_commission, Created: c.created_at?.slice(0, 10) })), 'cases-report');
+  const exportCases = () => downloadCSV(filteredCases.map(c => ({ CaseID: c.id?.slice(0, 8), Status: c.status, ServiceFee: c.service_fee, SchoolComm: c.school_commission, Created: c.created_at?.slice(0, 10) })), 'cases-report');
 
   const DatePicker = ({ date, onSelect, label }: { date: Date; onSelect: (d: Date) => void; label: string }) => (
     <Popover>
@@ -155,26 +152,26 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
         <Card className={`${totalProfit >= 0 ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'}`}>
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('kpi.netProfit')}</p>
-            <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>{totalProfit} €</p>
+            <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>{totalProfit.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground">{t('kpi.paidStudents', { count: paidCases.length })}</p>
           </CardContent>
         </Card>
         <Card className="border-blue-200 bg-blue-50/50">
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('kpi.revenue')}</p>
-            <p className="text-2xl font-bold text-blue-700">{totalRevenue} €</p>
+            <p className="text-2xl font-bold text-blue-700">{totalRevenue.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
         <Card className="border-red-200 bg-red-50/50">
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('kpi.expenses')}</p>
-            <p className="text-2xl font-bold text-red-700">{totalCosts} €</p>
+            <p className="text-2xl font-bold text-red-700">{totalCosts.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('kpi.profitPerStudent')}</p>
-            <p className="text-2xl font-bold">{avgProfitPerStudent} €</p>
+            <p className="text-2xl font-bold">{avgProfitPerStudent.toLocaleString('en-US')} ₪</p>
           </CardContent>
         </Card>
       </div>
@@ -233,7 +230,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
         </CardContent>
       </Card>
 
-      {/* Agent Comparison Chart */}
+      {/* Agent/Partner Comparison Chart */}
       {agentData.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -251,7 +248,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="leads" fill="hsl(220, 70%, 55%)" name={t('kpi.clients')} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="paid" fill="hsl(140, 55%, 45%)" name={t('kpi.paidLabel', { defaultValue: 'Paid' })} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="paid" fill="hsl(140, 55%, 45%)" name={t('kpi.paidLabel', { defaultValue: 'Enrolled' })} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -269,7 +266,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div className="text-center p-2 bg-muted/40 rounded"><p className="text-xs text-muted-foreground">{t('kpi.closeRate')}</p><p className="font-bold">{l.closeRate}%</p></div>
                   <div className="text-center p-2 bg-muted/40 rounded"><p className="text-xs text-muted-foreground">{t('kpi.closedCases')}</p><p className="font-bold">{l.closed}/{l.total}</p></div>
-                  <div className="text-center p-2 bg-muted/40 rounded"><p className="text-xs text-muted-foreground">{t('kpi.revenue')}</p><p className="font-bold">{l.revenue} €</p></div>
+                  <div className="text-center p-2 bg-muted/40 rounded"><p className="text-xs text-muted-foreground">{t('kpi.revenue')}</p><p className="font-bold">{l.revenue.toLocaleString('en-US')} ₪</p></div>
                 </div>
               </CardContent></Card>
             ))}

@@ -52,8 +52,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       selected_city: profileCase.selected_city || '',
       selected_school: profileCase.selected_school || '',
       housing_description: profileCase.housing_description || '',
-      has_translation_service: profileCase.has_translation_service || false,
-      translation_added_by_user_id: profileCase.translation_added_by_user_id || null,
       gender: profileCase.gender || '',
       notes: profileCase.notes || '',
     });
@@ -76,11 +74,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       selected_city: profileValues.selected_city || null,
       selected_school: profileValues.selected_school || null,
       housing_description: profileValues.housing_description || null,
-      has_translation_service: !!profileValues.has_translation_service,
-      translation_added_by_user_id:
-        profileCase.translation_added_by_user_id && profileValues.has_translation_service
-          ? profileCase.translation_added_by_user_id
-          : (profileValues.has_translation_service ? userId ?? null : null),
       gender: profileValues.gender || null,
       notes: profileValues.notes || null,
     };
@@ -224,10 +217,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 <div className="md:col-span-2">
                   <Label>{t('lawyer.housingType')}</Label>
                   <Input value={profileValues.housing_description || ''} onChange={e => setProfileValues(v => ({ ...v, housing_description: e.target.value }))} placeholder={t('lawyer.housingPlaceholder')} />
-                </div>
-                <div className="md:col-span-2 flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                  <input type="checkbox" id="has_translation_service" checked={!!profileValues.has_translation_service} onChange={e => setProfileValues(v => ({ ...v, has_translation_service: e.target.checked }))} className="h-4 w-4 rounded border-input" />
-                  <Label htmlFor="has_translation_service" className="cursor-pointer text-sm">{t('lawyer.translationService')}</Label>
                 </div>
               </div>
             </TabsContent>

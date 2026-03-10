@@ -388,7 +388,6 @@ export type Database = {
           submitted_at: string | null
           submitted_by: string | null
           total_paid: number
-          translation_fee: number
           updated_at: string
         }
         Insert: {
@@ -415,7 +414,6 @@ export type Database = {
           submitted_at?: string | null
           submitted_by?: string | null
           total_paid?: number
-          translation_fee?: number
           updated_at?: string
         }
         Update: {
@@ -442,7 +440,6 @@ export type Database = {
           submitted_at?: string | null
           submitted_by?: string | null
           total_paid?: number
-          translation_fee?: number
           updated_at?: string
         }
         Relationships: [
@@ -1999,7 +1996,6 @@ export type Database = {
           fraud_flagged: boolean | null
           fraud_notes: string | null
           gender: string | null
-          has_translation_service: boolean
           housing_description: string | null
           id: string
           influencer_commission: number
@@ -2030,8 +2026,6 @@ export type Database = {
           student_phone: string | null
           student_profile_id: string | null
           submitted_to_admin_at: string | null
-          translation_added_by_user_id: string | null
-          translation_fee: number
           updated_at: string
         }
         Insert: {
@@ -2047,7 +2041,6 @@ export type Database = {
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
-          has_translation_service?: boolean
           housing_description?: string | null
           id?: string
           influencer_commission?: number
@@ -2078,8 +2071,6 @@ export type Database = {
           student_phone?: string | null
           student_profile_id?: string | null
           submitted_to_admin_at?: string | null
-          translation_added_by_user_id?: string | null
-          translation_fee?: number
           updated_at?: string
         }
         Update: {
@@ -2095,7 +2086,6 @@ export type Database = {
           fraud_flagged?: boolean | null
           fraud_notes?: string | null
           gender?: string | null
-          has_translation_service?: boolean
           housing_description?: string | null
           id?: string
           influencer_commission?: number
@@ -2126,8 +2116,6 @@ export type Database = {
           student_phone?: string | null
           student_profile_id?: string | null
           submitted_to_admin_at?: string | null
-          translation_added_by_user_id?: string | null
-          translation_fee?: number
           updated_at?: string
         }
         Relationships: [
