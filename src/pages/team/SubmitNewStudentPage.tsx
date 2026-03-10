@@ -442,7 +442,7 @@ export default function SubmitNewStudentPage() {
         p_metadata: { full_name: fullName, email },
       });
 
-      toast({ title: "Student submitted & enrolled" });
+      toast({ title: ss('successTitle') });
       navigate(`/team/cases/${caseId}`);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
