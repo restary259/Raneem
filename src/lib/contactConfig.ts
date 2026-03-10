@@ -16,4 +16,4 @@ export const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/J2njR5IJZj9JxLxV7Gq
 export const SUPPORT_EMAIL = "darbsocial27@gmail.com";
 
 /** Support phone number */
-export const SUPPORT_PHONE = "+972 507368283";
+export const SUPPORT_PHONE = "0507368283";
