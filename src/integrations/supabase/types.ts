@@ -478,6 +478,7 @@ export type Database = {
           assigned_to: string | null
           bagrut_score: number | null
           city: string | null
+          commission_split_done: boolean
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
@@ -498,6 +499,7 @@ export type Database = {
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          platform_revenue_ils: number
           referral_discount: number
           referred_by: string | null
           school_commission: number
@@ -510,6 +512,7 @@ export type Database = {
           assigned_to?: string | null
           bagrut_score?: number | null
           city?: string | null
+          commission_split_done?: boolean
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
@@ -530,6 +533,7 @@ export type Database = {
           partner_id?: string | null
           passport_type?: string | null
           phone_number: string
+          platform_revenue_ils?: number
           referral_discount?: number
           referred_by?: string | null
           school_commission?: number
@@ -542,6 +546,7 @@ export type Database = {
           assigned_to?: string | null
           bagrut_score?: number | null
           city?: string | null
+          commission_split_done?: boolean
           created_at?: string
           created_by_team?: boolean
           degree_interest?: string | null
@@ -562,6 +567,7 @@ export type Database = {
           partner_id?: string | null
           passport_type?: string | null
           phone_number?: string
+          platform_revenue_ils?: number
           referral_discount?: number
           referred_by?: string | null
           school_commission?: number
@@ -2531,6 +2537,7 @@ export type Database = {
           assigned_to: string | null
           bagrut_score: number | null
           city: string | null
+          commission_split_done: boolean
           created_at: string
           created_by_team: boolean
           degree_interest: string | null
@@ -2551,6 +2558,7 @@ export type Database = {
           partner_id: string | null
           passport_type: string | null
           phone_number: string
+          platform_revenue_ils: number
           referral_discount: number
           referred_by: string | null
           school_commission: number
