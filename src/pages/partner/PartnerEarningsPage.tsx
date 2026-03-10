@@ -261,7 +261,7 @@ export default function PartnerEarningsPage() {
                       <td className="py-3 px-1 whitespace-nowrap">
                         <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                          {new Date(c.created_at).toLocaleDateString('en-US')}
                         </p>
                       </td>
                       <td className="py-3 px-1 whitespace-nowrap">

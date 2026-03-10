@@ -180,7 +180,7 @@ export default function PartnerStudentsPage() {
               >
                 <span className="font-medium text-foreground">{firstNameOnly(c.full_name)}</span>
                 <span className="text-muted-foreground text-xs">
-                  {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                  {new Date(c.created_at).toLocaleDateString('en-US')}
                 </span>
                 <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>
                   {statusLabel(c.status)}
