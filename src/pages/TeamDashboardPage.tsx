@@ -194,17 +194,14 @@ const TeamDashboardPage = () => {
 
   const isSlaBreached = useCallback(
     (c: any) => {
-      // SLA breach: case is 'new' (uncontacted) for more than 24 hours with no last_contacted
-      if (!["new", "contacted"].includes(c.case_status)) return false;
-      if (c.case_status === "new") {
+      if (!["new", "contacted"].includes(c.status)) return false;
+      if (c.status === "new") {
         return differenceInHours(new Date(), new Date(c.created_at)) > 24;
       }
-      // contacted: check if lead was last_contacted within acceptable window
-      const lead = leads.find((l) => l.id === c.lead_id);
-      if (lead?.last_contacted) return false;
+      if (c.last_contacted) return false;
       return differenceInHours(new Date(), new Date(c.created_at)) > 24;
     },
-    [leads],
+    [],
   );
 
   const kpis = useMemo(() => {
