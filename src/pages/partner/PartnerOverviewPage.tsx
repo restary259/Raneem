@@ -199,7 +199,7 @@ export default function PartnerOverviewPage() {
           </p>
           {paidAllTime > 0 && (
             <p className="text-xs text-emerald-600 mt-1 font-semibold">
-              {isAr ? `إجمالي المدفوع: ₪${paidAllTime.toLocaleString()}` : `Total paid: ₪${paidAllTime.toLocaleString()}`}
+              {t('partner.paidOut', { amount: paidAllTime.toLocaleString('en-US') })}
             </p>
           )}
         </div>
