@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 
 interface ScheduleDialogProps {
   scheduleForCase: any | null;
-  leads: any[];
+  leads?: any[];
   userId?: string;
   onClose: () => void;
   refetch: () => Promise<void>;
