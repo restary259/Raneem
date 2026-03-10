@@ -1,119 +1,148 @@
 
-## Comprehensive Dashboard Scan — Batched Fix Plan
+## Full Audit Complete — Implementation Plan
 
-### What was found (full audit)
+### What I Found After Reading Every Relevant File
 
-**1. JSON Duplicate Root Keys (still present — structural bug)**
-Both `en/dashboard.json` and `ar/dashboard.json` still have:
-- `"nav"` 3× (lines 1228, 1448, 1553 EN)
-- `"admin"` 2× (lines 245, 1277 EN)  
-- `"common"` 2× (lines 761, 1266 EN)
-- `"case"` 2× (lines 1253, 1540 EN)
-- `"partner"` 2× (lines 1374, 1482 EN)
-Last one wins silently — nav labels, case statuses, partner data all load the wrong block.
+**Files to DELETE:**
+1. `src/components/lawyer/AppointmentCalendar.tsx` — imported ONLY in `TeamDashboardPage.tsx`. Functionality duplicated by `AppointmentSchedulerModal.tsx` (new, uses `cases` table + `team_member_id`). AppointmentCalendar still writes to `student_cases` and uses `lawyer_id` in appointments insert.
+2. `src/components/lawyer/OverviewTab.tsx` — not imported anywhere. Dead file.
+3. `src/pages/InfluencerDashboardPage.tsx` — old legacy dashboard at `/influencer-dashboard`. Route redirects to `/partner`. Imports `EarningsPanel`, `ReferralLink` from influencer/ folder. Self-contained.
+4. `src/components/influencer/EarningsPanel.tsx` — only imported by `InfluencerDashboardPage.tsx` (being deleted). The new Partner Dashboard uses `PartnerEarningsPage.tsx` directly.
+5. `src/components/influencer/ReferralLink.tsx` — only imported by `InfluencerDashboardPage.tsx` (being deleted).
+6. `src/components/influencer/MediaHub.tsx` — search confirmed: not imported anywhere. Dead file.
+7. `src/pages/placeholders/PartnerPlaceholderPage.tsx` — not imported anywhere (checked App.tsx — partner routes use `PartnerOverviewPage`). Dead placeholder.
+8. `src/pages/placeholders/TeamPlaceholderPage.tsx` — same.
+9. `orm.tsx` at root — search found no import of it. It's listed in file list as a stray file. Delete.
 
-**2. Missing translation keys (8 confirmed)**
-Used in code but absent from both locale files:
-- `influencer.earnings.available` (EarningsPanel:212)
-- `influencer.earnings.requestCancelled` (EarningsPanel:192)
-- `influencer.earnings.actions` (EarningsPanel:300)
-- `influencer.earnings.payoutRequests` (EarningsPanel:277)
-- `influencer.earnings.minThreshold` with `{{amount}}` (EarningsPanel:263)
-- `application.serviceFee` (MyApplicationTab:184)
-- `lawyer.kpi.conversionRate` (TeamAnalyticsTab:49)
-- `lawyer.kpi.showRate` (TeamAnalyticsTab:50)
+**Files to MODIFY:**
 
-**3. Arabic-Indic numeral risk — `.toLocaleString()` without locale**
-29 files. Key offenders:
-- `AdminOverview.tsx` line 151, 195 — revenue KPIs
-- `EarningsPanel.tsx` lines 208, 212, 216, 305 — uses `locale='ar'` for dates but bare `.toLocaleString()` for amounts
-- `TeamAnalyticsTab.tsx` lines 47, 48 — KPI earnings
-- `TeamStudentProfilePage.tsx` lines 67, 70 — Service Fee / Translation hardcoded EN strings + bare `.toLocaleString()`
-- `PaymentConfirmationForm.tsx` lines 95, 103, 104
-- `PaymentsSummary.tsx` lines 77, 109
-- `PayoutActionModals.tsx` line 32
-- `AdminSpreadsheetPage.tsx` lines 143, 214
-- `CostCalculator.tsx` lines 221, 227, 231
+**`src/App.tsx`** — Remove the 3 legacy redirect routes:
+- `/influencer-dashboard` → `/partner`
+- `/lawyer-dashboard` → `/team`
+- `/team-dashboard` → `/team`
+(Keep `/student-dashboard` → `/student/checklist` as students may have old bookmarks)
+Remove import of `InfluencerDashboardPage` (lazy import line 45 is `AdminDashboardPage` not influencer — check: actually `InfluencerDashboardPage` is NOT imported in App.tsx — it was rendered via a direct route at `/influencer-dashboard` but actually looking at App.tsx it's already a redirect! So no import to remove. The redirect routes themselves just need removing.)
 
-**4. `toLocaleDateString` with `'ar'` locale → Arabic-Indic date digits**
-- `EarningsPanel.tsx` lines 287, 307: `locale = 'ar'` → produces `١٥/٣/٢٠٢٦`
-- `DocumentsManager.tsx` lines 199, 295: `locale = 'ar-SA'` → same issue
-- `PartnerEarningsPage.tsx` line 167: `isAr ? 'ar' : 'en-GB'`
-- `PartnerStudentsPage.tsx` line 142: `isAr ? 'ar' : 'en-GB'`
-- `StudentVisaPage.tsx` line 87: `isAr ? 'ar' : 'en-GB'`
-- `AuditLog.tsx`, `LeadsManagement.tsx`, `ReferralManagement.tsx`, `PayoutsManagement.tsx`: all set `locale = 'ar'` for Arabic and pass it to `toLocaleDateString`
+**`src/components/common/BottomNav.tsx`** — Remove `'/influencer-dashboard'` and `'/lawyer-dashboard'` from the `isDashboard` array (line 18). Keep `'/team-dashboard'` and `'/student-dashboard'` for safety.
 
-**5. `SparklineCard` value overflow — no truncation**
-`<p className="text-2xl lg:text-3xl font-extrabold text-foreground mt-1">{value}</p>` — no `truncate`/`min-w-0`. Large values like `1,234,567 ₪` overflow cards on 360px.
+**`src/pages/TeamDashboardPage.tsx`** — This is the largest file with multiple `student_cases` references. Required changes:
+1. Remove `import AppointmentCalendar from "@/components/lawyer/AppointmentCalendar"` (line 33)
+2. Replace the AppointmentCalendar usage in the "appointments" tab (line 918-921) with `AppointmentSchedulerModal` or a simple list of appointments (the new `CaseDetailPage.tsx` already has a full appointment UI — the team dashboard appointments tab can show the appointments list already loaded from `data?.appointments`)
+3. Fix `c.assigned_lawyer_id` → `c.assigned_to` in the client-side filter (line 179)
+4. Fix all `c.case_status` → `c.status` references (SLA check, kpis, filteredCases, renderCaseActions, card renders)
+5. Fix `from('student_cases').update({ case_status: ... })` in `handleMarkContacted` → `from('cases').update({ status: ... })`
+6. Fix `confirmPaymentAndSubmit` — remove `from('student_cases').update(...)`, replace with `from('cases').update({ status: CaseStatus.SUBMITTED, ... })`; remove `lead_id` references since new cases don't have lead_id
+7. Fix `handleDeleteCase` — change `from('student_cases').delete()` to `from('cases').update({ deleted_at: new Date().toISOString() })` (soft delete)
+8. Fix `realtime subscription 'student_cases'` → `'cases'` (line 186)
+9. Fix fallback `user_roles.eq('role', 'lawyer')` in `fetchLawyers` → `eq('role', 'team_member')` (lines 132, 144)
+10. Fix `c.lead_id` references — cases now have `full_name` and `phone_number` directly; `getLeadInfo` should fall back to case fields
+11. Fix all `c.paid_at` references in kpis → cases don't have `paid_at`; use `c.status === 'enrollment_paid'`
+12. Fix `c.lawyer_commission` → `c.influencer_commission` is already the partner commission; for team commission we need to read from `rewards` or use `c.lawyer_commission` field which still exists on cases
+13. Fix SLA breach check: uses `c.case_status` → `c.status`
 
-**6. Mobile bottom nav AR overflow — `nav.checklist`**
-AR translation at line 1246 (first `nav` block) = `"قائمة المتطلبات"` (16 chars). Container is `max-w-[48px]`. Last winning `nav` block (1553) has `"المتطلبات"` (10 chars) which is better, but the duplicate key confusion means it's unpredictable. Need single block with short labels.
+**`src/components/team/ScheduleDialog.tsx`** — Fix:
+- Line 66: Remove `lawyer_id: userId` from appointments insert (column doesn't exist; correct column is `team_member_id`)
+- Line 73-74: Change `from('student_cases').update({ case_status: ... })` to `from('cases').update({ status: ... })`
+- Fix `scheduleForCase.case_status` → `scheduleForCase.status`
 
-**7. `TeamStudentProfilePage.tsx` hardcoded English strings**
-Lines 55, 64, 67, 70, 72, 73, 79: "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case" — no `t()` calls, no translation.
+**`src/components/team/ReassignDialog.tsx`** — Fix:
+- Line 35: `reassignCase.case_status` → `reassignCase.status`
+- Line 41: `reassignCase.assigned_lawyer_id` → `reassignCase.assigned_to`
+- Line 43-46: `from('student_cases').update({ assigned_lawyer_id: ..., ... })` → `from('cases').update({ assigned_to: ..., ... })`; remove `reassigned_from`, `reassignment_notes`, `reassignment_history` (not in new cases schema)
+- Line 50: `p_target_table: 'student_cases'` → `'cases'`
 
-**8. `team.roleInfluencer` AR: mixed-script `"وكيل (Influencer)"`**
-Should be `"وكيل"` only.
+**`src/components/team/ProfileCompletionModal.tsx`** — Fix:
+- Line 123: `profileCase.case_status` → `profileCase.status`
+- Line 124: `finalData.case_status` → `finalData.status`
+- Line 129: `from('student_cases').update(finalData)` → `from('cases').update(finalData)`
+- Line 133: `p_target_table: 'student_cases'` → `'cases'`
+- Remove `translation_added_by_user_id` from payload if present
 
-**9. `TeamAnalyticsTab` KPI card label overflow on mobile**
-`text-[10px] leading-tight` in `p-3 text-center` card — long Arabic labels like `"معدل التحويل"` (15 chars) push card height inconsistently, breaking grid alignment at 360px. Add `min-h` and `line-clamp-2`.
+**`src/components/admin/LeadsManagement.tsx`** — The `markEligible`, `handleDelete`, `assignLawyer` functions still write to `student_cases`. Decision: 
+- These functions create entries in `student_cases` for the OLD pipeline (leads → lawyer workflow). The NEW pipeline uses `cases` directly (team submits via `SubmitNewStudentPage`). 
+- `markEligible` creates a `student_cases` row when admin marks a lead eligible — this is the OLD admin-side lead conversion flow. Since `student_cases` is being dropped, we need to adapt this to instead create a `cases` row.
+- `handleDelete` cascades to `student_cases` soft-delete — remove those calls.
+- `assignLawyer` inserts/updates `student_cases` with `assigned_lawyer_id` — migrate to `cases` with `assigned_to`.
+- Specific changes: Replace all `from('student_cases')` with `from('cases')` using correct field mappings.
 
----
+**`src/components/admin/NextStepButton.tsx`** — Line 53-56: `from('student_cases').update({ case_status: ... })` → `from('cases').update({ status: ... })`
 
-### Files to change (batched)
+**`src/components/admin/ReadyToApplyTable.tsx`** — This entire component queries `student_cases` with `case_status = 'ready_to_apply'` (a non-existent status in the new system). The new 7-stage pipeline doesn't have `ready_to_apply`. The component shows "enrolled but not yet submitted to consulate" cases. Since the admin now uses `AdminSubmissionsPage` for this, `ReadyToApplyTable` is effectively replaced. However it's used somewhere in admin tabs — need to check.
 
-**A. Locale files (2 files) — consolidate duplicate keys + add missing**
+**`src/components/admin/ReferralManagement.tsx`** — Lines 63-77: Creates `student_cases` row from referral enrollment. Migrate to `cases` table.
 
-`public/locales/en/dashboard.json`:
-- Merge 3× `nav` into single canonical block with all keys (use the last block's short labels for mobile — "Checklist", "Profile", "Docs", "Visa", "Refer", "Contacts", plus full labels for all others)
-- Merge 2× `admin` blocks
-- Merge 2× `common` blocks  
-- Merge 2× `case` blocks
-- Merge 2× `partner` blocks
-- Add to `influencer.earnings`: `available`, `requestCancelled`, `actions`, `payoutRequests`, `minThreshold` (with `{{amount}}`)
-- Add `application.serviceFee`
-- Add `lawyer.kpi.conversionRate` and `lawyer.kpi.showRate`
+**`src/components/admin/SecurityPanel.tsx`** — Line 105: `from('student_cases').select('fraud_flagged, fraud_notes')` → `from('cases')` — cases table doesn't have `fraud_flagged`/`fraud_notes` columns. Flag this as ambiguous: the `cases` table schema doesn't have fraud fields. The query will return empty. Change to show fraud alerts from `leads.fraud_flags` array instead.
 
-`public/locales/ar/dashboard.json`: same consolidation + Arabic translations for the 8 missing keys + fix `team.roleInfluencer` to `"وكيل"` (drop mixed script)
+**`src/components/admin/InfluencerManagement.tsx`** — Fix legacy role string constants:
+- `filterRole?: 'influencer' | 'lawyer'` — keep as UI strings but fix DB calls
+- Line 82: `dbRole = effectiveRole === 'lawyer' ? 'team_member' : effectiveRole` — change `effectiveRole` influencer branch too: `dbRole = effectiveRole === 'lawyer' ? 'team_member' : 'social_media_partner'`
+- Line 83: `fnName = dbRole === 'influencer'` → `fnName = dbRole === 'social_media_partner' ? 'create-influencer' : 'create-team-member'`
+- Lines 56-63: internal `_role` tagging for UI display stays as-is (cosmetic)
 
-**B. Numeric safety (7 component files)**
+**`src/components/admin/PayoutsManagement.tsx`** — Fix:
+- Line 61: `requestor_role === 'influencer'` → `requestor_role === 'social_media_partner'`
+- Line 124: `type: payTarget.requestor_role === 'influencer' ? 'influencer_payout' : 'student_cashback'` → use `'social_media_partner'`
 
-For each file: replace bare `.toLocaleString()` with `.toLocaleString('en-US')` AND fix date locale from `'ar'` / `isAr ? 'ar' : ...` to always `'en-US'`:
+**`src/components/admin/KPIAnalytics.tsx`** — Still has `c.influencer_commission` and `c.lawyer_commission` in cost calculations (lines 53, 70). These should be removed per Step 5 (remove `school_commission`, `influencer_commission`, `lawyer_commission`, `referral_discount` from KPI calculations). Replace with `c.platform_revenue_ils` from cases table (once `commission_split_done` guard is added). For now, simplify to: revenue = `service_fee` (from enriched merge), costs = sum of rewards paid per case.
 
-1. `src/components/influencer/EarningsPanel.tsx` — fix `locale` var used in `toLocaleDateString`; fix bare `.toLocaleString()` on amounts
-2. `src/components/team/TeamAnalyticsTab.tsx` — fix lines 47, 48
-3. `src/components/admin/AdminOverview.tsx` — fix lines 151, 195 (chart tooltip on line 181 also)
-4. `src/components/dashboard/DocumentsManager.tsx` — change `locale = 'ar-SA'` to always `'en-US'`
-5. `src/pages/partner/PartnerEarningsPage.tsx` — change `isAr ? 'ar' : 'en-GB'` to `'en-US'`
-6. `src/pages/partner/PartnerStudentsPage.tsx` — same
-7. `src/pages/student/StudentVisaPage.tsx` — same
-8. `src/components/team/PaymentConfirmationForm.tsx` — lines 95, 103, 104
-9. `src/components/dashboard/PaymentsSummary.tsx` — lines 77, 109
-10. `src/components/admin/PayoutActionModals.tsx` — line 32
+**`src/components/admin/MoneyDashboard.tsx`** — Fix per Step 5:
+- Revenue: `c.service_fee` (already merged from `case_submissions` via `dataService.ts`)  
+- Team payout: `rewards` where `admin_notes LIKE 'Team commission%'`
+- Partner payout: `rewards` where `admin_notes LIKE 'Partner commission%'`
+- Admin net: `c.platform_revenue_ils` (once available post-split)
+- Remove `c.school_commission`, `c.influencer_commission`, `c.lawyer_commission` references
 
-**C. SparklineCard overflow fix**
+**`src/pages/admin/AdminSubmissionsPage.tsx`** — Step 4: Change pending query from `.eq('status', 'submitted')` to `.in('status', ['submitted', 'payment_confirmed'])`
 
-`src/components/admin/SparklineCard.tsx`:
-- Add `truncate` + `min-w-0` to value `<p>`: `className="text-xl lg:text-2xl font-extrabold text-foreground mt-1 truncate min-w-0"`
-- Reduce from `text-2xl lg:text-3xl` to `text-xl lg:text-2xl` to prevent overflow on 360px with large monetary values
+**DB MIGRATIONS needed:**
 
-**D. TeamStudentProfilePage — add translations**
+**Migration 1 — Drop translation columns (if not already done):**
+```sql
+ALTER TABLE public.case_submissions DROP COLUMN IF EXISTS translation_fee;
+ALTER TABLE public.student_cases DROP COLUMN IF EXISTS translation_fee;
+ALTER TABLE public.student_cases DROP COLUMN IF EXISTS has_translation_service;
+ALTER TABLE public.student_cases DROP COLUMN IF EXISTS translation_added_by_user_id;
+```
 
-`src/pages/team/TeamStudentProfilePage.tsx`:
-- Add `useTranslation` import
-- Replace hardcoded "Contact", "Submission", "Service Fee", "Translation", "Start", "End", "View Full Case", "Loading...", "Not found" with `t()` calls using existing keys from `lawyer.*` and `application.*` namespaces
+**Migration 2 — Drop commission_tiers:**
+```sql
+DROP TABLE IF EXISTS public.commission_tiers CASCADE;
+DROP FUNCTION IF EXISTS public.get_influencer_tier_commission(uuid);
+```
 
-**E. TeamAnalyticsTab KPI cards — mobile overflow**
+**Migration 3 — Add commission_split_done guard to cases:**
+```sql
+ALTER TABLE public.cases ADD COLUMN IF NOT EXISTS commission_split_done boolean NOT NULL DEFAULT false;
+ALTER TABLE public.cases ADD COLUMN IF NOT EXISTS platform_revenue_ils integer NOT NULL DEFAULT 0;
+```
 
-`src/components/team/TeamAnalyticsTab.tsx`:
-- Add `min-h-[88px]` to `KPICard` CardContent
-- Add `line-clamp-2` to label `<p>` so Arabic wraps gracefully without collapsing value
+**Migration 4 — Replace record_case_commission with idempotent version:**
+The full `CREATE OR REPLACE FUNCTION` as specified by user in Step 3.
 
----
+**Migration 5 — Drop student_cases (after all code is migrated):**
+```sql
+DROP TRIGGER IF EXISTS trg_auto_split_payment ON public.student_cases;
+DROP TABLE IF EXISTS public.student_cases CASCADE;
+```
 
-### Implementation order
-1. Fix both JSON locale files (A) — unblocks everything else
-2. Fix numeric/date safety across 10 component files (B) 
-3. SparklineCard overflow (C)
-4. TeamStudentProfilePage hardcoded strings (D)
-5. TeamAnalyticsTab card height (E)
+**Migration 6 — Update auto_split_payment trigger** (for cases table if it fires there — the DB functions show it fires on `student_cases` via `NEW.case_status`. Since student_cases is being dropped, this trigger will be dropped automatically with it via CASCADE. No separate action needed.)
+
+### Ambiguous/Flagged Items
+
+1. **`ReadyToApplyTable.tsx`**: This component reads `case_status = 'ready_to_apply'` which was a legacy status. After migration, it will always show empty results. It is used in the admin panel tabs. I will update it to query `cases` with `status = 'enrollment_paid'` instead, giving it a new purpose: showing recently enrolled cases with their student details.
+
+2. **`SecurityPanel.tsx` fraud cases**: The `cases` table has no `fraud_flagged` column. I'll change the query to read from `leads.fraud_flags` (which IS an array column on leads) and show leads with non-empty fraud_flags instead.
+
+3. **`TeamDashboardPage.tsx` AppointmentCalendar replacement**: The appointments tab currently renders `<AppointmentCalendar>` which will be deleted. I'll replace it with an inline list of appointments using the already-loaded `appointments` array (same pattern as the "Today" tab which already renders `todayAppointments` as cards).
+
+4. **`orm.tsx` at root**: Listed in the project files but the search found no content/imports. Will delete it.
+
+### Implementation Order
+1. DB migrations 1–4 first (guard column, replace function, drop legacy tables/functions) 
+2. Delete files
+3. Modify `App.tsx` + `BottomNav.tsx`
+4. Modify `TeamDashboardPage.tsx` (largest, most impacted)
+5. Modify team sub-components: `ScheduleDialog`, `ReassignDialog`, `ProfileCompletionModal`
+6. Modify admin components: `LeadsManagement`, `NextStepButton`, `ReadyToApplyTable`, `ReferralManagement`, `SecurityPanel`, `InfluencerManagement`, `PayoutsManagement`
+7. Modify financial components: `KPIAnalytics`, `MoneyDashboard`, `AdminSubmissionsPage`
+8. DB migration 5 — drop `student_cases` last (after all code is confirmed migrated)
