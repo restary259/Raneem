@@ -75,20 +75,18 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
 const BirthdayPicker = ({
   value,
   onChange,
+  t,
 }: {
-  value: string; // ISO "YYYY-MM-DD" or ""
+  value: string;
   onChange: (iso: string) => void;
+  t: TFunction;
 }) => {
-  // Derive year/month/day from the controlled ISO string
   const [year, setYear] = useState(() => (value ? value.split("-")[0] : ""));
   const [month, setMonth] = useState(() => (value ? value.split("-")[1] : ""));
   const [day, setDay] = useState(() => (value ? value.split("-")[2] : ""));
 
-  // Recompute days when year/month change
   const numDays = daysInMonth(parseInt(month), parseInt(year));
   const days = Array.from({ length: numDays }, (_, i) => String(i + 1).padStart(2, "0"));
-
-  // Clamp day if it exceeds new month length (e.g. Jan 31 → Feb)
   const safeDay = day && parseInt(day) > numDays ? String(numDays).padStart(2, "0") : day;
 
   const tryUpdate = (y: string, m: string, d: string) => {
@@ -105,69 +103,28 @@ const BirthdayPicker = ({
 
   return (
     <div>
-      <Label>Date of Birth</Label>
+      <Label>{t('lawyer.submitStudent.dateOfBirth')}</Label>
       <div className="grid grid-cols-3 gap-2 mt-1">
-        {/* Year */}
-        <Select
-          value={year}
-          onValueChange={(v) => {
-            setYear(v);
-            tryUpdate(v, month, safeDay);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
+        <Select value={year} onValueChange={(v) => { setYear(v); tryUpdate(v, month, safeDay); }}>
+          <SelectTrigger><SelectValue placeholder={t('lawyer.submitStudent.year')} /></SelectTrigger>
           <SelectContent className="max-h-48">
-            {DOB_YEARS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
-            ))}
+            {DOB_YEARS.map((y) => (<SelectItem key={y} value={String(y)}>{y}</SelectItem>))}
           </SelectContent>
         </Select>
-
-        {/* Month */}
-        <Select
-          value={month}
-          onValueChange={(v) => {
-            setMonth(v);
-            tryUpdate(year, v, safeDay);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Month" />
-          </SelectTrigger>
+        <Select value={month} onValueChange={(v) => { setMonth(v); tryUpdate(year, v, safeDay); }}>
+          <SelectTrigger><SelectValue placeholder={t('lawyer.submitStudent.month')} /></SelectTrigger>
           <SelectContent>
-            {DOB_MONTHS.map((m) => (
-              <SelectItem key={m.v} value={m.v}>
-                {m.l}
-              </SelectItem>
-            ))}
+            {DOB_MONTHS.map((m) => (<SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>))}
           </SelectContent>
         </Select>
-
-        {/* Day */}
-        <Select
-          value={safeDay}
-          onValueChange={(v) => {
-            setDay(v);
-            tryUpdate(year, month, v);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Day" />
-          </SelectTrigger>
+        <Select value={safeDay} onValueChange={(v) => { setDay(v); tryUpdate(year, month, v); }}>
+          <SelectTrigger><SelectValue placeholder={t('lawyer.submitStudent.day')} /></SelectTrigger>
           <SelectContent className="max-h-48">
-            {days.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
+            {days.map((d) => (<SelectItem key={d} value={d}>{d}</SelectItem>))}
           </SelectContent>
         </Select>
       </div>
-      {age !== null && !isNaN(age) && <p className="text-xs text-muted-foreground mt-1">Age: {age} years</p>}
+      {age !== null && !isNaN(age) && <p className="text-xs text-muted-foreground mt-1">{t('lawyer.submitStudent.ageYears', { age })}</p>}
     </div>
   );
 };
