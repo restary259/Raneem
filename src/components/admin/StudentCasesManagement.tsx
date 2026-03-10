@@ -193,7 +193,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700 bg-emerald-50">✅ {t('cases.payoutReady', { defaultValue: 'Payout Ready' })}</Badge>
                       )
                     )}
-                    {['services_filled', 'profile_filled'].includes(c.case_status) && !isPaid && (
+                    {['submitted', 'profile_completion'].includes(c.status) && !isPaid && (
                       <Button size="sm" onClick={() => markAsPaid(c.id)} disabled={loading}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('studentCases.markPaid', { defaultValue: 'Mark Paid' })}
                       </Button>
