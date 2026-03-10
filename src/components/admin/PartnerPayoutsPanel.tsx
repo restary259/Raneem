@@ -259,16 +259,37 @@ export default function PartnerPayoutsPanel() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      // Step 1: fetch rewards only (no join — no FK declared between rewards.user_id and profiles)
       const { data: rewardRows, error: rErr } = await (supabase as any)
         .from('rewards')
-        .select('id,amount,status,created_at,paid_at,admin_notes,user_id,profiles!inner(full_name,email,avatar_url)')
+        .select('id,amount,status,created_at,paid_at,admin_notes,user_id')
         .like('admin_notes', 'Partner commission from case%')
         .order('created_at', { ascending: false });
 
       if (rErr) throw rErr;
-      const rows: RewardRow[] = rewardRows || [];
+      const rawRows = rewardRows || [];
+
+      // Step 2: fetch profiles separately by user_id list
+      const userIds = [...new Set(rawRows.map((r: any) => r.user_id))] as string[];
+      let profileMap: Record<string, { full_name: string; email: string; avatar_url: string | null }> = {};
+      if (userIds.length > 0) {
+        const { data: profileRows } = await (supabase as any)
+          .from('profiles')
+          .select('id,full_name,email')
+          .in('id', userIds);
+        (profileRows || []).forEach((p: any) => {
+          profileMap[p.id] = { full_name: p.full_name, email: p.email, avatar_url: null };
+        });
+      }
+
+      // Merge profiles into reward rows
+      const rows: RewardRow[] = rawRows.map((r: any) => ({
+        ...r,
+        profiles: profileMap[r.user_id] ?? null,
+      }));
       setRewards(rows);
 
+      // Step 3: fetch cases
       const caseIds = [...new Set(rows.map(r => parseCaseId(r.admin_notes)).filter(Boolean))] as string[];
       if (caseIds.length > 0) {
         const { data: caseRows } = await (supabase as any)

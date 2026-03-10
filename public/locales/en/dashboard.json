@@ -1907,7 +1907,97 @@
       "passwordPrompt": "Enter your admin password to confirm:",
       "confirmButton": "Delete Selected Data",
       "successMsg": "Selected data deleted successfully",
-      "noneSelected": "Please select at least one category"
+    "noneSelected": "Please select at least one category"
+    }
+  },
+  "admin": {
+    "referralsMgmt": {
+      "agent": "Partner",
+      "student": "Student"
+    },
+    "payouts": {
+      "requester": "Requester",
+      "amount": "Amount",
+      "role": "Role",
+      "status": "Status",
+      "requestDate": "Request Date",
+      "action": "Action",
+      "linkedStudents": "Students",
+      "paymentMethodCol": "Method",
+      "all": "All",
+      "allRoles": "All Roles",
+      "exportCSV": "Export CSV",
+      "statusUpdated": "Status updated",
+      "unknownRequester": "Unknown",
+      "noRewards": "No payout requests",
+      "pay": "Pay",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject",
+      "bulkApprove": "Bulk Approve",
+      "bulkReject": "Bulk Reject",
+      "pendingInfluencer": "Partner Pending",
+      "pendingStudent": "Student Pending",
+      "totalPaid": "Total Paid",
+      "totalRejected": "Rejected",
+      "approveTitle": "Approve Payout",
+      "rejectTitle": "Reject Payout",
+      "rejectReason": "Reason (required)",
+      "markPaidTitle": "Mark as Paid",
+      "paymentMethod": "Payment Method",
+      "selectMethod": "Select method",
+      "transactionRef": "Transaction ID / Reference",
+      "notesOptional": "Notes (optional)",
+      "confirmPay": "Confirm Payment",
+      "noLinkedStudents": "No linked students",
+      "linkedStudentsTitle": "Linked Students",
+      "statuses": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "paid": "Paid",
+        "rejected": "Rejected"
+      },
+      "methods": {
+        "bank": "Bank Transfer",
+        "paypal": "PayPal",
+        "cash": "Cash",
+        "bank_transfer": "Bank Transfer"
+      }
+    },
+    "partnerPayouts": {
+      "title": "Partner Payouts",
+      "subtitle": "Manage and confirm partner commission payments",
+      "totalPending": "Total Pending",
+      "totalPaid": "Total Paid",
+      "refresh": "Refresh",
+      "noPartners": "No partner commission rewards found.",
+      "noPartnersHint": "Partner rewards appear here once cases reach enrollment_paid status.",
+      "noRewardRows": "No rewards for this partner yet.",
+      "pending": "Pending",
+      "paidThisMonth": "Paid this month",
+      "allTime": "All time",
+      "payAllPending": "Pay All Pending ({{count}})",
+      "confirmPayment": "Confirm Payment",
+      "showPaidHistory": "Show paid history ({{count}})",
+      "hidePaidHistory": "Hide paid history ({{count}})",
+      "paid": "Paid",
+      "confirmed": "Confirmed",
+      "createdLabel": "Created",
+      "confirmedLabel": "Confirmed",
+      "passwordTitle": "Re-enter Password",
+      "confirmSingle": "Confirm payment of ₪{{amount}} to {{partner}} for case {{student}}?",
+      "confirmBulk": "Confirm payment of ₪{{total}} to {{partner}} covering {{count}} cases?",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "successTitle": "Payment confirmed",
+      "successDesc": "{{amount}} confirmed for {{partner}}"
+    },
+    "financials": {
+      "kpiAdminNet": "Platform Net Revenue",
+      "kpiPartnerPending": "Partner Commissions Pending",
+      "kpiPartnerPaid": "Partner Commissions Paid",
+      "tabOverview": "Overview",
+      "tabAgentPayouts": "Team Payouts",
+      "tabPartnerPayouts": "Partner Payouts"
     }
   }
 }
