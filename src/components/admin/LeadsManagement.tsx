@@ -174,32 +174,28 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     setLoading(true);
     const now = new Date().toISOString();
 
-    // 1. Find all related cases for this lead
-    const { data: relatedCases } = await (supabase as any)
-      .from('student_cases')
-      .select('id')
-      .eq('lead_id', deleteId);
+    // 1. Find all related cases for this lead by phone number and cancel rewards
+    const lead = leads.find(l => l.id === deleteId);
+    if (lead) {
+      const { data: relatedCases } = await (supabase as any)
+        .from('cases')
+        .select('id')
+        .eq('phone_number', lead.phone);
 
-    if (relatedCases?.length) {
-      const caseIds = relatedCases.map((c: any) => c.id);
-
-      // 2. Cancel any pending/approved rewards linked to these cases
-      for (const caseId of caseIds) {
-        await (supabase as any)
-          .from('rewards')
-          .update({ status: 'cancelled' })
-          .like('admin_notes', `%${caseId}%`)
-          .in('status', ['pending', 'approved']);
+      if (relatedCases?.length) {
+        for (const c of relatedCases) {
+          await (supabase as any)
+            .from('rewards')
+            .update({ status: 'cancelled' })
+            .like('admin_notes', `%${c.id}%`)
+            .in('status', ['pending', 'approved']);
+        }
+        // Soft-delete related cases
+        await (supabase as any).from('cases').update({ deleted_at: now }).eq('phone_number', lead.phone);
       }
-
-      // 3. Soft-delete related cases
-      await (supabase as any)
-        .from('student_cases')
-        .update({ deleted_at: now })
-        .eq('lead_id', deleteId);
     }
 
-    // 4. Soft-delete the lead
+    // 2. Soft-delete the lead
     const { error } = await (supabase as any)
       .from('leads')
       .update({ deleted_at: now })
