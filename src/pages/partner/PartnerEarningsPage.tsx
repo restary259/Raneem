@@ -213,35 +213,47 @@ export default function PartnerEarningsPage() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[400px]">
-                {/* Table header */}
-                <div className="grid grid-cols-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 border-b border-border mb-2">
-                  <span>{t("partner.earnings.colStudent")}</span>
-                  <span>{t("partner.earnings.colPaymentStatus")}</span>
-                  <span>{t("partner.earnings.colStage")}</span>
-                  <span className="text-end">{t("partner.earnings.colCommission")}</span>
-                </div>
-                {earningCases.map((c) => (
-                  <div
-                    key={c.id}
-                    className="grid grid-cols-4 items-center py-3 border-b border-border/50 last:border-0 text-sm gap-2"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
-                      </p>
-                    </div>
-                    <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>{paymentStatus(c.status)}</Badge>
-                    <Badge
-                      className={`text-xs w-fit ${earningStatusColor[c.status] || "bg-muted text-muted-foreground"}`}
-                    >
-                      {earningStatusLabel(c.status)}
-                    </Badge>
-                    <span className="text-end font-bold text-foreground">₪{commissionRate.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
+              <table className="w-full min-w-[420px] text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 px-1 whitespace-nowrap">
+                      {t("partner.earnings.colStudent")}
+                    </th>
+                    <th className="text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 px-1 whitespace-nowrap">
+                      {t("partner.earnings.colPaymentStatus")}
+                    </th>
+                    <th className="hidden sm:table-cell text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 px-1 whitespace-nowrap">
+                      {t("partner.earnings.colStage")}
+                    </th>
+                    <th className="text-end text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2 px-1 whitespace-nowrap">
+                      {t("partner.earnings.colCommission")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {earningCases.map((c) => (
+                    <tr key={c.id} className="border-b border-border/50 last:border-0">
+                      <td className="py-3 px-1 whitespace-nowrap">
+                        <p className="font-medium text-foreground">{firstNameOnly(c.full_name)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString(isAr ? "ar" : "en-GB")}
+                        </p>
+                      </td>
+                      <td className="py-3 px-1 whitespace-nowrap">
+                        <Badge className={`text-xs w-fit ${paymentStatusColor(c.status)}`}>{paymentStatus(c.status)}</Badge>
+                      </td>
+                      <td className="hidden sm:table-cell py-3 px-1 whitespace-nowrap">
+                        <Badge className={`text-xs w-fit ${earningStatusColor[c.status] || "bg-muted text-muted-foreground"}`}>
+                          {earningStatusLabel(c.status)}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-1 text-end whitespace-nowrap font-bold text-foreground">
+                        ₪{commissionRate.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
