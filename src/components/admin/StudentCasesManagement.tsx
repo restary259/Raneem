@@ -295,12 +295,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                           <span className="font-semibold text-blue-700">{selectedCase.housing_description}</span>
                         </div>
                       )}
-                      <div className="flex justify-between p-2 bg-muted/30 rounded border">
-                        <span>{t('cases.translations', { defaultValue: 'Translations' })}</span>
-                        <Badge variant={selectedCase.has_translation_service ? 'default' : 'secondary'}>
-                          {selectedCase.has_translation_service ? (t('common.yes', { defaultValue: 'Yes' })) : (t('common.no', { defaultValue: 'No' }))}
-                        </Badge>
-                      </div>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">{t('studentCases.noServices', { defaultValue: 'No services attached yet' })}</p>
