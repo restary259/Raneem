@@ -51,8 +51,8 @@ const NextStepButton: React.FC<NextStepButtonProps> = ({
     };
 
     const { error } = await (supabase as any)
-      .from('student_cases')
-      .update(updateData)
+      .from('cases')
+      .update({ status: target })
       .eq('id', caseId);
 
     if (error) {

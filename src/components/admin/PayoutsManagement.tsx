@@ -58,7 +58,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   }, [requests, filter, roleFilter]);
 
   // KPIs
-  const pendingInfluencer = requests.filter(r => r.requestor_role === 'influencer' && (r.status === 'pending' || r.status === 'approved')).reduce((s, r) => s + Number(r.amount), 0);
+  const pendingInfluencer = requests.filter(r => r.requestor_role === 'social_media_partner' && (r.status === 'pending' || r.status === 'approved')).reduce((s, r) => s + Number(r.amount), 0);
   const pendingStudent = requests.filter(r => r.requestor_role === 'student' && (r.status === 'pending' || r.status === 'approved')).reduce((s, r) => s + Number(r.amount), 0);
   const totalPaid = requests.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount), 0);
   const totalRejected = requests.filter(r => r.status === 'rejected').reduce((s, r) => s + Number(r.amount), 0);
@@ -121,7 +121,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     }
     // Insert transaction log
     await (supabase as any).from('transaction_log').insert({
-      type: payTarget.requestor_role === 'influencer' ? 'influencer_payout' : 'student_cashback',
+      type: payTarget.requestor_role === 'social_media_partner' ? 'influencer_payout' : 'student_cashback',
       payout_request_id: payTarget.id,
       amount: payTarget.amount,
       payment_method: paymentMethod,

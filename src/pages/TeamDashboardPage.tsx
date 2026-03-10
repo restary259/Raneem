@@ -288,17 +288,15 @@ const TeamDashboardPage = () => {
     try {
       const c = cases.find((cs) => cs.id === caseId);
       if (!c) return;
-      const updateData: Record<string, any> = { submitted_to_admin_at: new Date().toISOString() };
-      if (canTransition(c.case_status, CaseStatus.SUBMITTED)) updateData.case_status = CaseStatus.SUBMITTED;
-      const lead = leads.find((l) => l.id === c.lead_id);
-      if (lead && (lead.source_type === "friend" || lead.source_type === "family")) updateData.referral_discount = 500;
-      const { error } = await (supabase as any).from("student_cases").update(updateData).eq("id", caseId);
+      const updateData: Record<string, any> = {};
+      if (canTransition(c.status, CaseStatus.SUBMITTED)) updateData.status = CaseStatus.SUBMITTED;
+      const { error } = await (supabase as any).from("cases").update(updateData).eq("id", caseId);
       if (error) toast({ variant: "destructive", title: t("common.error"), description: error.message });
       else {
         await (supabase as any).rpc("log_user_activity", {
           p_action: "submit_for_application",
           p_target_id: caseId,
-          p_target_table: "student_cases",
+          p_target_table: "cases",
         });
         toast({ title: t("lawyer.saved") });
       }
@@ -316,7 +314,7 @@ const TeamDashboardPage = () => {
 
   const handleDeleteCase = async (caseId: string) => {
     try {
-      const { error } = await (supabase as any).from("student_cases").delete().eq("id", caseId);
+      const { error } = await (supabase as any).from("cases").update({ deleted_at: new Date().toISOString() }).eq("id", caseId);
       if (error) toast({ variant: "destructive", title: t("common.error"), description: error.message });
       else {
         toast({ title: t("lawyer.caseDeleted") });
@@ -361,11 +359,7 @@ const TeamDashboardPage = () => {
   };
 
   const openProfileModal = (c: any) => {
-    const lead = leads.find((l) => l.id === c.lead_id);
-    if (!lead) {
-      toast({ variant: "destructive", title: t("lawyer.leadNotFound") });
-      return;
-    }
+    // Cases table has full_name/phone_number directly — no lead lookup needed
     setProfileCase(c);
   };
 
@@ -395,7 +389,7 @@ const TeamDashboardPage = () => {
 
   // ── Render case action buttons ──
   const renderCaseActions = (c: any, lead: any) => {
-    const status = c.case_status;
+    const status = c.status;
     const phoneBtn = lead.phone ? (
       <Button size="sm" variant="outline" className="h-8 text-xs active:scale-95 gap-1" asChild>
         <a href={`tel:${lead.phone}`}>
@@ -427,7 +421,7 @@ const TeamDashboardPage = () => {
           <Button
             size="sm"
             className="h-8 text-xs active:scale-95 gap-1"
-            onClick={() => handleMarkContacted(lead.id, c.id)}
+            onClick={() => handleMarkContacted(c.id)}
             disabled={isThisLoading}
           >
             {isThisLoading ? (
@@ -619,7 +613,7 @@ const TeamDashboardPage = () => {
                           ? cases.length
                           : f === "sla"
                             ? cases.filter((c) => isSlaBreached(c)).length
-                            : cases.filter((c) => matchesFilter(c.case_status, f)).length;
+                            : cases.filter((c) => matchesFilter(c.status, f)).length;
                       const active = caseFilter === f;
                       const countColor =
                         !active && count > 0
@@ -657,13 +651,13 @@ const TeamDashboardPage = () => {
                       </Badge>
                     </h2>
                     {filteredCases.map((c) => {
-                      const lead = getLeadInfo(c.lead_id);
-                      const statusLabel = t(`lawyer.statuses.${c.case_status}`, c.case_status);
-                      const statusColor = IMPORTED_STATUS_COLORS[c.case_status] || "bg-gray-100 text-gray-800";
-                      const neonBorder = getNeonBorder(c.case_status);
+                      const lead = getLeadInfo(c);
+                      const statusLabel = t(`lawyer.statuses.${c.status}`, c.status);
+                      const statusColor = IMPORTED_STATUS_COLORS[c.status] || "bg-gray-100 text-gray-800";
+                      const neonBorder = getNeonBorder(c.status);
                       const sla = isSlaBreached(c);
-                      const sourceType = (lead as any).source_type;
-                      const isPaid = !!c.paid_at;
+                      const sourceType = c.source;
+                      const isPaid = c.status === 'enrollment_paid';
                       return (
                         <Card
                           key={c.id}
@@ -788,14 +782,14 @@ const TeamDashboardPage = () => {
                     <div className="space-y-3">
                       {todayAppointments.map((appt) => {
                         const linkedCase = cases.find((c) => c.id === appt.case_id);
-                        const linkedLead = linkedCase ? getLeadInfo(linkedCase.lead_id) : null;
+                        const linkedLead = linkedCase ? getLeadInfo(linkedCase) : null;
                         const statusColor = linkedCase
-                          ? IMPORTED_STATUS_COLORS[linkedCase.case_status] || "bg-muted text-muted-foreground"
+                          ? IMPORTED_STATUS_COLORS[linkedCase.status] || "bg-muted text-muted-foreground"
                           : "";
                         const statusLabel = linkedCase
-                          ? t(`lawyer.statuses.${linkedCase.case_status}`, linkedCase.case_status)
+                          ? t(`lawyer.statuses.${linkedCase.status}`, linkedCase.status)
                           : "";
-                        const isApptStage = linkedCase && ["appointment_scheduled"].includes(linkedCase.case_status);
+                        const isApptStage = linkedCase && ["appointment_scheduled"].includes(linkedCase.status);
                         return (
                           <Card key={appt.id} className="border-purple-200/60">
                             <CardContent className="p-3 space-y-2">
@@ -808,7 +802,7 @@ const TeamDashboardPage = () => {
                                     <p className="text-[10px] text-purple-500">{appt.duration_minutes || 30} min</p>
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="font-semibold text-sm truncate">{appt.student_name}</p>
+                                     <p className="font-semibold text-sm truncate">{appt.guest_name || appt.student_name}</p>
                                     {appt.location && (
                                       <p className="text-xs text-muted-foreground truncate">📍 {appt.location}</p>
                                     )}

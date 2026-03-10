@@ -17,7 +17,7 @@ import { LANGUAGE_SCHOOLS } from './TeamConstants';
 
 interface ProfileCompletionModalProps {
   profileCase: any | null;
-  leads: any[];
+  leads?: any[];
   userId?: string;
   onClose: () => void;
   onCompleted: (filter: string) => void;
@@ -35,13 +35,12 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   const [completeFileConfirm, setCompleteFileConfirm] = useState(false);
   const [pendingUpdateData, setPendingUpdateData] = useState<Record<string, any> | null>(null);
 
-  React.useEffect(() => {
+  const profileValues_init = () => {
     if (!profileCase) return;
-    const lead = leads.find(l => l.id === profileCase.lead_id);
     setProfileValues({
-      student_full_name: profileCase.student_full_name || lead?.full_name || '',
-      student_email: profileCase.student_email || lead?.email || '',
-      student_phone: profileCase.student_phone || lead?.phone || '',
+      student_full_name: profileCase.full_name || '',
+      student_email: profileCase.student_email || '',
+      student_phone: profileCase.phone_number || '',
       student_address: profileCase.student_address || '',
       student_age: profileCase.student_age || '',
       language_proficiency: profileCase.language_proficiency || '',
@@ -49,13 +48,18 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       passport_number: profileCase.passport_number || '',
       nationality: profileCase.nationality || '',
       country_of_birth: profileCase.country_of_birth || '',
-      selected_city: profileCase.selected_city || '',
+      selected_city: profileCase.selected_city || profileCase.city || '',
       selected_school: profileCase.selected_school || '',
       housing_description: profileCase.housing_description || '',
       gender: profileCase.gender || '',
       notes: profileCase.notes || '',
     });
-  }, [profileCase, leads]);
+  };
+
+  React.useEffect(() => {
+    if (!profileCase) return;
+    profileValues_init();
+  }, [profileCase]);
 
   const saveProfileCompletion = async () => {
     if (!profileCase) return;
@@ -120,20 +124,20 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
     setSavingProfile(true);
     try {
       const finalData = { ...pendingUpdateData };
-      if (canTransition(profileCase.case_status, CaseStatus.PROFILE_COMPLETION)) {
-        finalData.case_status = CaseStatus.PROFILE_COMPLETION;
+      if (canTransition(profileCase.status, CaseStatus.PROFILE_COMPLETION)) {
+        finalData.status = CaseStatus.PROFILE_COMPLETION;
       } else {
         toast({ variant: 'destructive', title: t('common.error'), description: t('lawyer.cannotTransition') });
         return;
       }
-      const { error } = await (supabase as any).from('student_cases').update(finalData).eq('id', profileCase.id);
+      const { error } = await (supabase as any).from('cases').update(finalData).eq('id', profileCase.id);
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'student_cases' });
+        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'cases' });
         toast({ title: t('lawyer.fileCompleted') });
         onClose();
-        onCompleted('profile_filled');
+        onCompleted('profile_completion');
         try { await refetch(); } catch {}
       }
     } catch (err: any) {

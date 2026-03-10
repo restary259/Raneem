@@ -14,13 +14,13 @@ import { format } from 'date-fns';
 
 interface ScheduleDialogProps {
   scheduleForCase: any | null;
-  leads: any[];
+  leads?: any[];
   userId?: string;
   onClose: () => void;
   refetch: () => Promise<void>;
 }
 
-const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads, userId, onClose, refetch }) => {
+const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, userId, onClose, refetch }) => {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
@@ -41,37 +41,37 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads,
     }
   }, [scheduleForCase]);
 
-  const getLeadInfo = (leadId: string) => leads.find(l => l.id === leadId) || { full_name: 'Unknown', phone: '' };
+  
 
   const handleCreate = async () => {
     if (!scheduleForCase || !scheduleDate || !scheduleTime) return;
     setSaving(true);
     try {
-      const lead = getLeadInfo(scheduleForCase.lead_id);
+      const guestName = scheduleForCase.full_name || 'Unknown';
       const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
 
       const { data: existing } = await (supabase as any)
         .from('appointments').select('id')
-        .eq('case_id', scheduleForCase.id).eq('lawyer_id', userId).eq('status', 'scheduled').maybeSingle();
+        .eq('case_id', scheduleForCase.id).eq('team_member_id', userId).eq('outcome', null).maybeSingle();
 
       if (existing) {
         const { error } = await (supabase as any).from('appointments').update({
-          student_name: lead.full_name || 'Unknown', scheduled_at: scheduledAt,
-          duration_minutes: scheduleDuration, location: scheduleLocation || null, notes: scheduleNotes || null,
+          guest_name: guestName, scheduled_at: scheduledAt,
+          duration_minutes: scheduleDuration, notes: scheduleNotes || null,
         }).eq('id', existing.id);
         if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
         else toast({ title: t('lawyer.appointmentUpdated') });
       } else {
         const { error } = await (supabase as any).from('appointments').insert({
-          lawyer_id: userId, case_id: scheduleForCase.id, student_name: lead.full_name || 'Unknown',
+          team_member_id: userId, case_id: scheduleForCase.id, guest_name: guestName,
           scheduled_at: scheduledAt, duration_minutes: scheduleDuration,
-          location: scheduleLocation || null, notes: scheduleNotes || null,
+          notes: scheduleNotes || null,
         });
         if (error) toast({ variant: 'destructive', title: t('common.error'), description: error.message });
         else {
           toast({ title: t('lawyer.appointmentScheduled') });
-          if (canTransition(scheduleForCase.case_status, CaseStatus.APPT_SCHEDULED)) {
-            await (supabase as any).from('student_cases').update({ case_status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
+          if (canTransition(scheduleForCase.status, CaseStatus.APPT_SCHEDULED)) {
+            await (supabase as any).from('cases').update({ status: CaseStatus.APPT_SCHEDULED }).eq('id', scheduleForCase.id);
           }
         }
       }
@@ -93,7 +93,7 @@ const ScheduleDialog: React.FC<ScheduleDialogProps> = ({ scheduleForCase, leads,
         <div className="space-y-3">
           <div className="p-2 bg-muted/50 rounded-lg">
             <p className="text-xs text-muted-foreground">{t('lawyer.student')}</p>
-            <p className="text-sm font-semibold">{scheduleForCase ? getLeadInfo(scheduleForCase.lead_id).full_name : ''}</p>
+            <p className="text-sm font-semibold">{scheduleForCase ? (scheduleForCase.full_name || '—') : ''}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-xs">{t('lawyer.date')}</Label><Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></div>

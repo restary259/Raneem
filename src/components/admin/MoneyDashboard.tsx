@@ -144,10 +144,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       if (c.service_fee > 0) {
         rows.push({ id: `${c.id}-sf`, studentName: name, type: 'service_fee', amount: c.service_fee, currency: 'NIS', status, date, notes: '', direction: 'in' });
       }
-      // School commission (revenue)
-      if (c.school_commission > 0) {
-        rows.push({ id: `${c.id}-sc`, studentName: name, type: 'school_commission', amount: c.school_commission, currency: 'NIS', status, date, notes: '', direction: 'in' });
-      }
       // Partner commission (expense)
       if (c.influencer_commission > 0) {
         rows.push({ id: `${c.id}-ic`, studentName: name, type: 'partner_commission', amount: c.influencer_commission, currency: 'NIS', status, date, notes: '', direction: 'out' });

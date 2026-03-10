@@ -122,11 +122,11 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
   const markEligible = async (lead: Lead) => {
     setActionLoadingId(lead.id);
 
-    // Step 1: Check if a case already exists for this lead (prevents duplicate on double-click)
+    // Step 1: Check if a case already exists for this lead by phone (prevents duplicate)
     const { data: existingCases } = await (supabase as any)
-      .from('student_cases')
+      .from('cases')
       .select('id')
-      .eq('lead_id', lead.id)
+      .eq('phone_number', lead.phone)
       .limit(1);
 
     // Step 2: Update lead status to eligible
@@ -143,12 +143,13 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
 
     // Step 3: Restore soft-deleted case or insert new one
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
+      await (supabase as any).from('cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
     } else {
-      const { error: caseErr } = await (supabase as any).from('student_cases').insert({
-        lead_id: lead.id,
-        selected_city: lead.preferred_city,
-        accommodation_status: lead.accommodation ? 'needed' : 'not_needed',
+      const { error: caseErr } = await (supabase as any).from('cases').insert({
+        full_name: lead.full_name,
+        phone_number: lead.phone,
+        source: 'contact_form',
+        city: lead.preferred_city || lead.city || null,
       });
       if (caseErr) {
         toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
@@ -173,32 +174,28 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     setLoading(true);
     const now = new Date().toISOString();
 
-    // 1. Find all related cases for this lead
-    const { data: relatedCases } = await (supabase as any)
-      .from('student_cases')
-      .select('id')
-      .eq('lead_id', deleteId);
+    // 1. Find all related cases for this lead by phone number and cancel rewards
+    const lead = leads.find(l => l.id === deleteId);
+    if (lead) {
+      const { data: relatedCases } = await (supabase as any)
+        .from('cases')
+        .select('id')
+        .eq('phone_number', lead.phone);
 
-    if (relatedCases?.length) {
-      const caseIds = relatedCases.map((c: any) => c.id);
-
-      // 2. Cancel any pending/approved rewards linked to these cases
-      for (const caseId of caseIds) {
-        await (supabase as any)
-          .from('rewards')
-          .update({ status: 'cancelled' })
-          .like('admin_notes', `%${caseId}%`)
-          .in('status', ['pending', 'approved']);
+      if (relatedCases?.length) {
+        for (const c of relatedCases) {
+          await (supabase as any)
+            .from('rewards')
+            .update({ status: 'cancelled' })
+            .like('admin_notes', `%${c.id}%`)
+            .in('status', ['pending', 'approved']);
+        }
+        // Soft-delete related cases
+        await (supabase as any).from('cases').update({ deleted_at: now }).eq('phone_number', lead.phone);
       }
-
-      // 3. Soft-delete related cases
-      await (supabase as any)
-        .from('student_cases')
-        .update({ deleted_at: now })
-        .eq('lead_id', deleteId);
     }
 
-    // 4. Soft-delete the lead
+    // 2. Soft-delete the lead
     const { error } = await (supabase as any)
       .from('leads')
       .update({ deleted_at: now })
@@ -214,23 +211,20 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     if (!assignModal || !selectedLawyer) return;
     setLoading(true);
     await (supabase as any).from('leads').update({ status: 'assigned' }).eq('id', assignModal.leadId);
-    const { data: existingCases } = await (supabase as any).from('student_cases').select('id').eq('lead_id', assignModal.leadId).limit(1);
+    const lead = leads.find(l => l.id === assignModal.leadId);
+    const { data: existingCases } = await (supabase as any).from('cases').select('id').eq('phone_number', lead?.phone || '').limit(1);
     if (existingCases?.[0]) {
-      await (supabase as any).from('student_cases').update({
-        assigned_lawyer_id: selectedLawyer,
-        assigned_at: new Date().toISOString(),
-        deleted_at: null,  // Restore if previously soft-deleted
-        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
+      await (supabase as any).from('cases').update({
+        assigned_to: selectedLawyer,
+        deleted_at: null,
       }).eq('id', existingCases[0].id);
     } else {
-      const lead = leads.find(l => l.id === assignModal.leadId);
-      await (supabase as any).from('student_cases').insert({
-        lead_id: assignModal.leadId,
-        assigned_lawyer_id: selectedLawyer,
-        selected_city: lead?.preferred_city || null,
-        accommodation_status: lead?.accommodation ? 'needed' : 'not_needed',
-        assigned_at: new Date().toISOString(),
-        ...(assignNotes.trim() ? { admin_notes: assignNotes.trim() } : {}),
+      await (supabase as any).from('cases').insert({
+        full_name: lead?.full_name || assignModal.leadName,
+        phone_number: lead?.phone || '',
+        source: 'contact_form',
+        city: lead?.preferred_city || null,
+        assigned_to: selectedLawyer,
       });
     }
     const { data: { session } } = await supabase.auth.getSession();
