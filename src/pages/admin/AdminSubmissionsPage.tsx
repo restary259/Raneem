@@ -20,6 +20,7 @@ interface SubmittedCase {
   full_name: string;
   phone_number: string;
   status: string;
+  source: string;
   created_at: string;
   education_level: string | null;
   city: string | null;
@@ -44,9 +45,11 @@ interface SubmittedCase {
 
 interface CommissionPreview {
   serviceFee: number;
-  partnerCommission: number;
+  partners: { partnerId: string; name: string; amount: number }[];
   teamCommission: number;
   platformRevenue: number;
+  // legacy single field for the log message
+  partnerCommission: number;
 }
 
 const AdminSubmissionsPage = () => {
@@ -68,7 +71,7 @@ const AdminSubmissionsPage = () => {
 
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
-  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({ serviceFee: 0, partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
 
   // Password gate state
   const [showPasswordGate, setShowPasswordGate] = useState(false);
@@ -101,7 +104,7 @@ const AdminSubmissionsPage = () => {
       const [pendingRes, completedRes] = await Promise.all([
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
           .in("status", ["submitted", "payment_confirmed"])
           .order("created_at", { ascending: false }),
         supabase
@@ -151,34 +154,69 @@ const AdminSubmissionsPage = () => {
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
-  // Load commission preview for selected case.
-  // Partner commission is ONLY shown when the case has an explicit partner_id set.
-  // Cases with partner_id = null show ₪0 partner commission — no auto-attribution here.
+  // Load commission preview: loops ALL partners and applies visibility rules per case source
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
     const fee = c.submission?.service_fee || 0;
     try {
-      const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
+      const [settRes, allPartnersRes, teamOvRes, profilesRes] = await Promise.all([
         (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
-        // Only fetch partner override if case has an explicit partner_id — never auto-assign
-        c.partner_id
-          ? (supabase as any).from("partner_commission_overrides").select("commission_amount").eq("partner_id", c.partner_id).maybeSingle()
+        (supabase as any).from("partner_commission_overrides").select("partner_id, commission_amount, show_all_cases"),
+        c.assigned_to
+          ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle()
           : Promise.resolve({ data: null }),
-        c.assigned_to ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle() : Promise.resolve({ data: null }),
+        (supabase as any).from("profiles").select("id, full_name").in(
+          "id",
+          // we'll get IDs after partner fetch, so fetch all for now
+          ["00000000-0000-0000-0000-000000000000"]
+        ),
       ]);
+
       const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
-      // Partner commission is 0 when no partner_id is set on the case
-      const partnerCommission = c.partner_id
-        ? (partnerOvRes.data?.commission_amount ?? ((settRes.data as any)?.partner_commission_rate ?? 500))
-        : 0;
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
+
+      const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
+      const caseSource = c.source || "";
+      const partnerOverrides: any[] = allPartnersRes.data || [];
+
+      // Fetch partner profiles for names
+      const partnerIds = partnerOverrides.map((p: any) => p.partner_id);
+      let partnerNames: Record<string, string> = {};
+      if (partnerIds.length > 0) {
+        const { data: pProfiles } = await (supabase as any)
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", partnerIds);
+        (pProfiles || []).forEach((p: any) => { partnerNames[p.id] = p.full_name; });
+      }
+
+      const qualifyingPartners: { partnerId: string; name: string; amount: number }[] = [];
+      let totalPartner = 0;
+
+      for (const po of partnerOverrides) {
+        const qualifies =
+          po.show_all_cases === true ||
+          (po.show_all_cases === false && PARTNER_SOURCES.includes(caseSource)) ||
+          (po.show_all_cases === null && caseSource === "referral");
+
+        if (qualifies && po.commission_amount > 0) {
+          qualifyingPartners.push({
+            partnerId: po.partner_id,
+            name: partnerNames[po.partner_id] || po.partner_id.slice(0, 8),
+            amount: Number(po.commission_amount),
+          });
+          totalPartner += Number(po.commission_amount);
+        }
+      }
+
       setSplitPreview({
         serviceFee: fee,
-        partnerCommission,
+        partners: qualifyingPartners,
+        partnerCommission: totalPartner,
         teamCommission,
-        platformRevenue: Math.max(0, fee - partnerCommission - teamCommission),
+        platformRevenue: Math.max(0, fee - teamCommission - totalPartner),
       });
     } catch {
-      setSplitPreview({ serviceFee: fee, partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
+      setSplitPreview({ serviceFee: fee, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
     }
   }, []);
 
@@ -233,7 +271,7 @@ const AdminSubmissionsPage = () => {
       toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
       setShowSplitPanel(false);
-      setSplitPreview({ serviceFee: 0, partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+      setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -628,10 +666,18 @@ const AdminSubmissionsPage = () => {
                 <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
                 <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString('en-US')}</span>
               </div>
-              <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
-                <span className="font-semibold text-orange-600">-₪{splitPreview.partnerCommission.toLocaleString('en-US')}</span>
-              </div>
+              {splitPreview.partners.length === 0 && (
+                <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
+                  <span className="font-semibold text-orange-600">-₪0</span>
+                </div>
+              )}
+              {splitPreview.partners.map((p) => (
+                <div key={p.partnerId} className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner")}: {p.name}</span>
+                  <span className="font-semibold text-orange-600">-₪{p.amount.toLocaleString('en-US')}</span>
+                </div>
+              ))}
               <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
                 <span className="font-semibold text-purple-600">-₪{splitPreview.teamCommission.toLocaleString('en-US')}</span>

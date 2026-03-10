@@ -30,31 +30,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders });
     }
 
-    // Run orphan checks
     const checks: Record<string, { count: number; sample_ids: string[] }> = {};
 
-    // 1. Orphan cases (lead deleted or missing)
-    const { data: orphanCases } = await supabaseAdmin.rpc('', undefined).catch(() => ({ data: null }));
-    // Use raw query via from
-    const { data: oc } = await supabaseAdmin
-      .from('student_cases')
-      .select('id, lead_id')
-      .is('deleted_at', null);
-    if (oc?.length) {
-      const leadIds = [...new Set(oc.map((c: any) => c.lead_id))];
-      const { data: existingLeads } = await supabaseAdmin
-        .from('leads')
-        .select('id')
-        .in('id', leadIds);
-      const existingSet = new Set((existingLeads ?? []).map((l: any) => l.id));
-      const orphans = oc.filter((c: any) => !existingSet.has(c.lead_id));
-      checks['orphan_cases_no_lead'] = {
-        count: orphans.length,
-        sample_ids: orphans.slice(0, 10).map((c: any) => c.id),
-      };
-    } else {
-      checks['orphan_cases_no_lead'] = { count: 0, sample_ids: [] };
-    }
+    // 1. Cases with no assigned team member (may need attention)
+    const { data: unassignedCases } = await supabaseAdmin
+      .from('cases')
+      .select('id')
+      .is('assigned_to', null)
+      .is('deleted_at', null)
+      .not('status', 'in', '("enrollment_paid","cancelled","rejected")');
+    checks['unassigned_cases'] = {
+      count: unassignedCases?.length ?? 0,
+      sample_ids: (unassignedCases ?? []).slice(0, 10).map((c: any) => c.id),
+    };
 
     // 2. Duplicate leads by phone
     const { data: allLeads } = await supabaseAdmin
@@ -80,7 +68,7 @@ Deno.serve(async (req) => {
     const { data: staleAppts } = await supabaseAdmin
       .from('appointments')
       .select('id')
-      .not('status', 'in', '("completed","cancelled")')
+      .not('outcome', 'in', '("completed","cancelled","no_show")')
       .lt('scheduled_at', sevenDaysAgo);
     checks['stale_appointments'] = {
       count: staleAppts?.length ?? 0,
@@ -107,16 +95,16 @@ Deno.serve(async (req) => {
       checks['duplicate_rewards'] = { count: 0, sample_ids: [] };
     }
 
-    // 5. Cases with paid_at but status != paid (desync)
-    const { data: desyncCases } = await supabaseAdmin
-      .from('student_cases')
+    // 5. Cases with commission_split_done=false but status=enrollment_paid (missed split)
+    const { data: missedSplitCases } = await supabaseAdmin
+      .from('cases')
       .select('id')
-      .not('paid_at', 'is', null)
-      .neq('case_status', 'paid')
+      .eq('status', 'enrollment_paid')
+      .eq('commission_split_done', false)
       .is('deleted_at', null);
-    checks['paid_at_status_desync'] = {
-      count: desyncCases?.length ?? 0,
-      sample_ids: (desyncCases ?? []).slice(0, 10).map((c: any) => c.id),
+    checks['missed_commission_split'] = {
+      count: missedSplitCases?.length ?? 0,
+      sample_ids: (missedSplitCases ?? []).slice(0, 10).map((c: any) => c.id),
     };
 
     const healthy = Object.values(checks).every(c => c.count === 0);

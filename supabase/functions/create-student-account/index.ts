@@ -25,7 +25,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Verify caller is admin
+    // Verify caller is admin or team_member
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -45,7 +45,7 @@ serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", adminId)
-      .in("role", ["admin", "lawyer"]);
+      .in("role", ["admin", "team_member"]);
 
     if (!roles?.length) {
       return new Response(JSON.stringify({ error: "Admin or team member access required" }), {
@@ -71,10 +71,10 @@ serve(async (req) => {
       });
     }
 
-    // Check if case exists and doesn't already have a student account
+    // Check if case exists in the cases table
     const { data: caseData, error: caseError } = await supabaseAdmin
-      .from("student_cases")
-      .select("id, student_profile_id, student_phone, selected_city, selected_school")
+      .from("cases")
+      .select("id, student_user_id, phone_number, city, degree_interest")
       .eq("id", case_id)
       .single();
 
@@ -85,7 +85,7 @@ serve(async (req) => {
       });
     }
 
-    if (caseData.student_profile_id) {
+    if (caseData.student_user_id) {
       return new Response(JSON.stringify({ error: "Student account already exists for this case" }), {
         status: 409,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -123,15 +123,15 @@ serve(async (req) => {
       id: userId,
       email,
       full_name,
-      phone_number: caseData.student_phone || null,
-      city: caseData.selected_city || null,
-      university_name: caseData.selected_school || null,
+      phone_number: caseData.phone_number || null,
+      city: caseData.city || null,
+      university_name: caseData.degree_interest || null,
       must_change_password: true,
     });
 
-    // Link student profile to case
-    await supabaseAdmin.from("student_cases").update({
-      student_profile_id: userId,
+    // Link student profile to case via student_user_id
+    await supabaseAdmin.from("cases").update({
+      student_user_id: userId,
     }).eq("id", case_id);
 
     // Audit log

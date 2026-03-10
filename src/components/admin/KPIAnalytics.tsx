@@ -50,8 +50,9 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
   // Use new `cases` table status: enrollment_paid
   const paidCases = filteredCases.filter(c => c.status === 'enrollment_paid');
   const totalRevenue = paidCases.reduce((sum, c) => sum + (Number(c.service_fee) || 0), 0);
-  const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0), 0);
-  const totalProfit = totalRevenue - totalCosts;
+  // Admin net uses platform_revenue_ils (set by record_case_commission); fallback to service_fee when not yet split
+  const totalProfit = paidCases.reduce((sum, c) => sum + (Number(c.platform_revenue_ils) || 0), 0);
+  const totalCosts = totalRevenue - totalProfit;
   const avgProfitPerStudent = paidCases.length > 0 ? Math.round(totalProfit / paidCases.length) : 0;
 
   // Monthly revenue trend
@@ -67,10 +68,10 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
       const month = c.created_at?.slice(0, 7);
       if (month && months[month]) {
         const rev = (Number(c.service_fee) || 0);
-        const cost = (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0);
+        const profit = (Number(c.platform_revenue_ils) || 0);
         months[month].revenue += rev;
-        months[month].costs += cost;
-        months[month].profit += rev - cost;
+        months[month].costs += rev - profit;
+        months[month].profit += profit;
       }
     });
     return Object.entries(months).map(([month, data]) => ({ month: month.slice(5), ...data }));

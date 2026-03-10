@@ -29,7 +29,7 @@ const StudentDashboardPage = () => {
 
   // Real-time subscriptions — all tables this dashboard uses
   useRealtimeSubscription('profiles', refetchProfile, !!user);
-  useRealtimeSubscription('student_cases', refetchProfile, !!user);
+  useRealtimeSubscription('cases', refetchProfile, !!user);
   useRealtimeSubscription('appointments', refetchProfile, !!user);
   useRealtimeSubscription('notifications', refetchProfile, !!user);
 
