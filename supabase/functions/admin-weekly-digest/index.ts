@@ -20,19 +20,38 @@ Deno.serve(async (req) => {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const weekAgoISO = weekAgo.toISOString();
 
-    const [leadsRes, casesRes, profilesRes, referralsRes] = await Promise.all([
+    // Fetch from canonical `cases` table with `enrollment_paid` status
+    const [leadsRes, casesRes, profilesRes, referralsRes, submissionsRes] = await Promise.all([
       serviceClient.from("leads").select("id, status, created_at").gte("created_at", weekAgoISO),
-      serviceClient.from("student_cases").select("id, case_status, service_fee, school_commission, created_at, paid_at").gte("created_at", weekAgoISO),
+      serviceClient.from("cases").select("id, status, influencer_commission, school_commission, lawyer_commission, created_at").is("deleted_at", null).gte("created_at", weekAgoISO),
       serviceClient.from("profiles").select("id, created_at").gte("created_at", weekAgoISO),
       serviceClient.from("referrals").select("id, status, created_at").gte("created_at", weekAgoISO),
+      // Get service_fee from case_submissions for enrollment_paid cases this week
+      serviceClient.from("case_submissions").select("case_id, service_fee, enrollment_paid_at").is("deleted_at", null).gte("enrollment_paid_at", weekAgoISO),
     ]);
 
     const newLeads = leadsRes.data?.length || 0;
     const newCases = casesRes.data?.length || 0;
     const newStudents = profilesRes.data?.length || 0;
     const newReferrals = referralsRes.data?.length || 0;
-    const paidCases = casesRes.data?.filter(c => c.case_status === "paid" || c.case_status === "completed") || [];
-    const weekRevenue = paidCases.reduce((s, c) => s + (Number(c.service_fee) || 0) + (Number(c.school_commission) || 0), 0);
+
+    // Revenue = service_fee (from case_submissions) + school_commission (from cases) for enrollment_paid cases
+    const paidCaseIds = new Set(
+      (casesRes.data ?? []).filter(c => c.status === "enrollment_paid").map(c => c.id)
+    );
+    const paidCasesCount = paidCaseIds.size;
+
+    // Sum service fees from case_submissions for enrollment_paid cases
+    const serviceFeeRevenue = (submissionsRes.data ?? [])
+      .filter(s => paidCaseIds.has(s.case_id))
+      .reduce((sum, s) => sum + (Number(s.service_fee) || 0), 0);
+
+    // Sum school_commission from cases for enrollment_paid cases this week
+    const schoolCommRevenue = (casesRes.data ?? [])
+      .filter(c => c.status === "enrollment_paid")
+      .reduce((sum, c) => sum + (Number(c.school_commission) || 0), 0);
+
+    const weekRevenue = serviceFeeRevenue + schoolCommRevenue;
 
     // Get admin user IDs
     const { data: adminRoles } = await serviceClient
@@ -51,13 +70,13 @@ Deno.serve(async (req) => {
       await serviceClient.from("notifications").insert({
         user_id: role.user_id,
         title: "Weekly Digest",
-        body: `This week: ${newLeads} new leads, ${newStudents} new students, ${paidCases.length} paid, ${weekRevenue}€ revenue.`,
+        body: `This week: ${newLeads} new leads, ${newStudents} new students, ${paidCasesCount} enrolled, ₪${weekRevenue.toLocaleString()} revenue.`,
         source: "system",
-        metadata: { newLeads, newCases, newStudents, newReferrals, weekRevenue },
+        metadata: { newLeads, newCases, newStudents, newReferrals, paidCasesCount, weekRevenue },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, kpis: { newLeads, newCases, newStudents, newReferrals, weekRevenue } }), {
+    return new Response(JSON.stringify({ success: true, kpis: { newLeads, newCases, newStudents, newReferrals, paidCasesCount, weekRevenue } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

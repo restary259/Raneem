@@ -25,8 +25,8 @@ interface StudentCasesManagementProps {
   initialFilter?: string | null;
 }
 
-// Cases only appear in admin after team explicitly clicks "Submit to Admin" (services_filled)
-const READY_STATUSES = ['services_filled', 'paid'];
+// Show cases that have progressed to submitted or enrollment_paid (canonical `cases` table statuses)
+const READY_STATUSES = ['submitted', 'enrollment_paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
@@ -50,14 +50,14 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
 
   const studentCases = useMemo(() => {
     return cases
-      .filter(c => READY_STATUSES.includes(c.case_status))
+      .filter(c => READY_STATUSES.includes(c.status))
       .map(c => {
-        const lead = leads.find(l => l.id === c.lead_id);
-        const teamMember = c.assigned_lawyer_id ? lawyers.find(l => l.id === c.assigned_lawyer_id) : null;
-        const agent = lead?.source_type === 'influencer' && lead?.source_id ? influencers.find(i => i.id === lead.source_id) : null;
-        return { ...c, lead, teamMember, agent };
+        // `cases` table uses assigned_to; look up the team member by that id
+        const teamMember = c.assigned_to ? lawyers.find((l: any) => l.id === c.assigned_to) : null;
+        const agent = c.partner_id ? influencers.find((i: any) => i.id === c.partner_id) : null;
+        return { ...c, teamMember, agent };
       });
-  }, [cases, leads, lawyers, influencers]);
+  }, [cases, lawyers, influencers]);
 
   const filtered = useMemo(() => {
     return studentCases.filter(c => {

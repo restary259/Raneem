@@ -179,7 +179,7 @@ export async function getAdminDashboard(): Promise<{
   try {
     const [
       p, s, pay, inv, roles, leadsRes, casesRes,
-      lawyerRoles, commissionsRes, rewardsRes, audit, logins, payoutReqRes,
+      lawyerRoles, commissionsRes, rewardsRes, audit, logins, payoutReqRes, submissionsRes,
     ] = await Promise.all([
       safeQuery((supabase as any).from('profiles').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('services').select('*').order('created_at', { ascending: false }).limit(5000)),
@@ -187,7 +187,7 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'social_media_partner')),
       safeQuery((supabase as any).from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
-      // NOTE: Financial KPI source of truth is the new `cases` table
+      // Financial KPI source of truth: cases table
       safeQuery((supabase as any).from('cases').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'team_member')),
       safeQuery((supabase as any).from('commissions').select('*').order('created_at', { ascending: false }).limit(2000)),
@@ -195,6 +195,8 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),
       safeQuery((supabase as any).from('login_attempts').select('*').order('created_at', { ascending: false }).limit(200)),
       safeQuery((supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false })),
+      // Fetch case_submissions to get service_fee (not on cases table)
+      safeQuery((supabase as any).from('case_submissions').select('case_id, service_fee, enrollment_paid_at, total_paid, remaining_balance').is('deleted_at', null).limit(5000)),
     ]);
 
     if (p.error) console.error('[dataService] Admin profiles fetch failed:', p.error);
@@ -203,6 +205,20 @@ export async function getAdminDashboard(): Promise<{
     if (casesRes.error) console.error('[dataService] Admin cases fetch failed:', casesRes.error);
     if (commissionsRes.error) console.error('[dataService] Admin commissions fetch failed:', commissionsRes.error);
     if (rewardsRes.error) console.error('[dataService] Admin rewards fetch failed:', rewardsRes.error);
+
+    // Build a lookup map: case_id → submission row for O(1) merging
+    const submissionMap = new Map<string, any>();
+    for (const sub of submissionsRes.data ?? []) {
+      submissionMap.set(sub.case_id, sub);
+    }
+
+    // Merge service_fee (and other submission fields) onto each case row
+    const enrichedCases = (casesRes.data ?? []).map((c: any) => {
+      const sub = submissionMap.get(c.id);
+      return sub
+        ? { ...c, service_fee: sub.service_fee ?? 0, enrollment_paid_at: sub.enrollment_paid_at ?? null, total_paid: sub.total_paid ?? 0, remaining_balance: sub.remaining_balance ?? 0 }
+        : { ...c, service_fee: 0 };
+    });
 
     // Resolve influencer profiles
     let influencers: any[] = [];
@@ -216,7 +232,7 @@ export async function getAdminDashboard(): Promise<{
       }
     }
 
-    // Resolve lawyer profiles
+    // Resolve team member profiles
     let lawyers: any[] = [];
     if (lawyerRoles.data) {
       const lawyerIds = lawyerRoles.data.map((r: any) => r.user_id);
@@ -238,7 +254,7 @@ export async function getAdminDashboard(): Promise<{
         payments: pay.data ?? [],
         invites: inv.data ?? [],
         leads: leadsRes.data ?? [],
-        cases: casesRes.data ?? [],
+        cases: enrichedCases,
         influencers,
         lawyers,
         commissions: commissionsRes.data ?? [],
