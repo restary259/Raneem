@@ -50,8 +50,9 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
   // Use new `cases` table status: enrollment_paid
   const paidCases = filteredCases.filter(c => c.status === 'enrollment_paid');
   const totalRevenue = paidCases.reduce((sum, c) => sum + (Number(c.service_fee) || 0), 0);
-  const totalCosts = paidCases.reduce((sum, c) => sum + (Number(c.influencer_commission) || 0) + (Number(c.lawyer_commission) || 0), 0);
-  const totalProfit = totalRevenue - totalCosts;
+  // Admin net uses platform_revenue_ils (set by record_case_commission); fallback to service_fee when not yet split
+  const totalProfit = paidCases.reduce((sum, c) => sum + (Number(c.platform_revenue_ils) || 0), 0);
+  const totalCosts = totalRevenue - totalProfit;
   const avgProfitPerStudent = paidCases.length > 0 ? Math.round(totalProfit / paidCases.length) : 0;
 
   // Monthly revenue trend
