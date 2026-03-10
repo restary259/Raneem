@@ -334,7 +334,6 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                         influencer_commission: selectedCase.influencer_commission || 0,
                         lawyer_commission: selectedCase.lawyer_commission || 0,
                         referral_discount: selectedCase.referral_discount || 0,
-                        translation_fee: 0,
                       });
                     }}>
                       <DollarSign className="h-3 w-3 me-1" />{t('studentCases.editFinancials', { defaultValue: 'Edit Financials' })}

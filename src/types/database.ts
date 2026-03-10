@@ -60,9 +60,6 @@ export interface StudentCase {
   selected_school: string | null;
   housing_description: string | null;
   accommodation_status: string | null;
-  has_translation_service: boolean;
-  translation_fee: number;
-  translation_added_by_user_id: string | null;
   service_fee: number;
   school_commission: number;
   influencer_commission: number;

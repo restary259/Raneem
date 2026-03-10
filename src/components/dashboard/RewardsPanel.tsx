@@ -27,7 +27,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   const [profile, setProfile] = useState<any>(null);
   const [ibanInput, setIbanInput] = useState('');
   const [savingIban, setSavingIban] = useState(false);
-  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
+  const locale = 'en-US'; // Always use en-US to ensure ASCII digits (numeric-safety-v1)
   const LOCK_DAYS = 20;
 
   const MILESTONE_ICONS: Record<string, React.ReactNode> = {

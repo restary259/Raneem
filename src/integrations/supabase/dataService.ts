@@ -185,11 +185,11 @@ export async function getAdminDashboard(): Promise<{
       safeQuery((supabase as any).from('services').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('payments').select('*').order('created_at', { ascending: false }).limit(5000)),
       safeQuery((supabase as any).from('influencer_invites').select('*').order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'influencer')),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'social_media_partner')),
       safeQuery((supabase as any).from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('student_cases').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
-      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'lawyer')),
-      // NOTE: Financial KPI source of truth is student_cases — commissions table is NOT used in KPI calcs to avoid double-counting
+      // NOTE: Financial KPI source of truth is the new `cases` table
+      safeQuery((supabase as any).from('cases').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5000)),
+      safeQuery((supabase as any).from('user_roles').select('*').eq('role', 'team_member')),
       safeQuery((supabase as any).from('commissions').select('*').order('created_at', { ascending: false }).limit(2000)),
       safeQuery((supabase as any).from('rewards').select('*').order('created_at', { ascending: false }).limit(2000)),
       safeQuery((supabase as any).from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(100)),
