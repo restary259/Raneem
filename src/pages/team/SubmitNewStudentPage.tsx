@@ -409,7 +409,6 @@ export default function SubmitNewStudentPage() {
         program_start_date: courseStart || null,
         program_end_date: courseEnd || null,
         service_fee: parseFloat(serviceFee),
-        translation_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
         payment_confirmed: true,
