@@ -186,11 +186,11 @@ function PartnerCard({
             <p className="text-center text-sm text-muted-foreground py-6">No reward rows</p>
           )}
 
-          {/* Paid history — collapsible */}
+            {/* Paid history — collapsible */}
           {group.paid.length > 0 && (
             <Collapsible open={showPaidHistory} onOpenChange={setShowPaidHistory}>
               <CollapsibleTrigger asChild>
-                <button className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground py-3 border-t border-border/50 hover:bg-muted/20 transition-colors">
+                <button className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground py-3 border-t border-border/50 hover:bg-muted/30 transition-colors">
                   {showPaidHistory ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                   {showPaidHistory ? 'Hide' : 'Show'} paid history ({group.paid.length})
                 </button>

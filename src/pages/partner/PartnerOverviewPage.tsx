@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
@@ -24,11 +24,18 @@ const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: str
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
 const ENROLLED_STATUSES = ["enrollment_paid"];
 
+const startOfCurrentMonth = () => {
+  const d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
 export default function PartnerOverviewPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [cases, setCases] = useState<any[]>([]);
-  const [commissions, setCommissions] = useState<any[]>([]);
+  const [paidRewards, setPaidRewards] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -36,7 +43,6 @@ export default function PartnerOverviewPage() {
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
-  // Tracks whether partner is in "Apply/Contact Only" pool mode (no override row also = pool mode)
   const [isPoolMode, setIsPoolMode] = useState(false);
 
   const load = useCallback(async (uid: string) => {
@@ -61,36 +67,29 @@ export default function PartnerOverviewPage() {
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? rate));
 
-    // Determine commission pool mode:
-    // "pool mode" = partner earns on ALL visible agency cases (not just partner_id = uid)
-    // This applies when: no override row, OR override.show_all_cases === false
-    // "attribution mode" = only cases where partner_id === uid earn commission
-    // This applies when: show_all_cases === true OR show_all_cases === null (referral only)
     let poolMode = false;
     if (override === null || override === undefined) {
-      // No override → default agency pool behaviour
       poolMode = !globalShowAll;
     } else {
       poolMode = override.show_all_cases === false;
     }
     setIsPoolMode(poolMode);
 
-    // Fetch rewards (actual paid commissions)
-    const { data: rewardsData, error: rewardsErr } = await (supabase as any)
+    // Fetch actual paid rewards from rewards table
+    const { data: rewardsData } = await (supabase as any)
       .from("rewards")
-      .select("amount,status,created_at,admin_notes")
+      .select("amount,status,paid_at,admin_notes")
       .eq("user_id", uid)
-      .in("status", ["approved", "paid"]);
-    if (rewardsErr) console.error("rewards fetch error:", rewardsErr);
-    setCommissions(rewardsData || []);
+      .eq("status", "paid")
+      .like("admin_notes", "Partner commission from case%");
+    setPaidRewards(rewardsData || []);
 
-    // Fetch cases — 3-way visibility logic (matches PartnerStudentsPage)
+    // Fetch cases
     let query = (supabase as any)
       .from("cases")
       .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
       .order("created_at", { ascending: false });
 
-    // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
     const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
     if (override !== null && override !== undefined) {
@@ -99,7 +98,6 @@ export default function PartnerOverviewPage() {
       } else if (override.show_all_cases === null) {
         query = query.eq("source", "referral");
       }
-      // show_all_cases === true → no filter
     } else {
       if (!globalShowAll) {
         query = query.in("source", PARTNER_SOURCES);
@@ -123,23 +121,27 @@ export default function PartnerOverviewPage() {
     });
   }, [navigate, load]);
 
-  // Real-time: refetch when commission overrides, settings, or cases change
   useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
   const total = cases.length;
-  // In "pool mode" (Apply/Contact Only or No Override): ALL visible cases earn commission
-  // In "attribution mode" (show_all_cases=true or referral-only): only partner_id=uid cases earn
   const commissionEligibleCases = isPoolMode
     ? cases
     : cases.filter((c) => c.partner_id === userId);
   const paid = commissionEligibleCases.filter((c) => PAID_STATUSES.includes(c.status)).length;
   const enrolled = commissionEligibleCases.filter((c) => ENROLLED_STATUSES.includes(c.status)).length;
-  // commissions = rewards rows (approved/paid) — sum their amounts
-  const totalEarned = commissions.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
+
+  // Actual paid totals from rewards table
+  const monthStart = startOfCurrentMonth();
+  const paidThisMonth = paidRewards
+    .filter(r => r.paid_at && r.paid_at >= monthStart)
+    .reduce((s: number, r: any) => s + Number(r.amount), 0);
+  const paidAllTime = paidRewards
+    .reduce((s: number, r: any) => s + Number(r.amount), 0);
 
   const kpis = [
     {
@@ -156,16 +158,16 @@ export default function PartnerOverviewPage() {
     },
     { label: t("partner.enrolled"), value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
     {
-      label: isAr ? "إجمالي الأرباح المتوقعة" : t("partner.projectedEarnings"),
-      value: `₪${(paid * commissionRate).toLocaleString()}`,
-      icon: DollarSign,
-      color: "text-primary bg-primary/10",
+      label: isAr ? "إجمالي المدفوع هذا الشهر" : "Paid This Month",
+      value: `₪${paidThisMonth.toLocaleString()}`,
+      icon: CalendarDays,
+      color: "text-emerald-600 bg-emerald-50",
     },
     {
-      label: t("partner.projectedEarnings"),
-      value: `₪${(paid * commissionRate).toLocaleString()}`,
-      icon: TrendingUp,
-      color: "text-purple-600 bg-purple-50",
+      label: isAr ? "إجمالي المدفوع الكلي" : "Paid All Time",
+      value: `₪${paidAllTime.toLocaleString()}`,
+      icon: DollarSign,
+      color: "text-primary bg-primary/10",
     },
     {
       label: t("partner.perCaseComm"),
@@ -195,9 +197,9 @@ export default function PartnerOverviewPage() {
           <p className="text-xs text-muted-foreground mt-0.5">
             {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString() })}
           </p>
-          {totalEarned > 0 && (
+          {paidAllTime > 0 && (
             <p className="text-xs text-emerald-600 mt-1 font-semibold">
-              {t("partner.paidOut", { amount: totalEarned.toLocaleString() })}
+              {isAr ? `إجمالي المدفوع: ₪${paidAllTime.toLocaleString()}` : `Total paid: ₪${paidAllTime.toLocaleString()}`}
             </p>
           )}
         </div>
@@ -266,7 +268,6 @@ export default function PartnerOverviewPage() {
                       color: "bg-muted text-muted-foreground",
                     };
                     const isPaid = PAID_STATUSES.includes(c.status);
-                    // In pool mode all visible paid cases earn commission; otherwise only attributed ones
                     const earnsCommission = isPaid && (isPoolMode || c.partner_id === userId);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
