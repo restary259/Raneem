@@ -44,11 +44,14 @@ export async function getInfluencerDashboard(
           .eq('source_id', userId)
           .order('created_at', { ascending: false })
       ),
+      // New cases table: partner_id links the case to the social_media_partner
       safeQuery(
         (supabase as any)
-          .from('student_cases')
-          .select('*, leads!inner(source_id)')
-          .eq('leads.source_id', userId)
+          .from('cases')
+          .select('*')
+          .eq('partner_id', userId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
       ),
       safeQuery(
         (supabase as any)
