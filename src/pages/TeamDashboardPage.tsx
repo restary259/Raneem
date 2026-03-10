@@ -123,12 +123,12 @@ const TeamDashboardPage = () => {
           const result = await resp.json();
           setAllLawyers(result.members || []);
         } else {
-          const { data } = await (supabase as any)
+        const { data } = await (supabase as any)
             .from("profiles")
             .select("id, full_name")
             .in(
               "id",
-              (await (supabase as any).from("user_roles").select("user_id").eq("role", "lawyer")).data?.map(
+              (await (supabase as any).from("user_roles").select("user_id").eq("role", "team_member")).data?.map(
                 (r: any) => r.user_id,
               ) ?? [],
             );
@@ -140,7 +140,7 @@ const TeamDashboardPage = () => {
           .select("id, full_name")
           .in(
             "id",
-            (await (supabase as any).from("user_roles").select("user_id").eq("role", "lawyer")).data?.map(
+            (await (supabase as any).from("user_roles").select("user_id").eq("role", "team_member")).data?.map(
               (r: any) => r.user_id,
             ) ?? [],
           );

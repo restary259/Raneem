@@ -163,11 +163,10 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   const kpis = useMemo(() => {
     const enrolledCases = cases.filter(c => c.status === 'enrollment_paid');
     const totalServiceFees = enrolledCases.reduce((s, c) => s + (Number(c.service_fee) || 0), 0);
-    const totalSchoolComm = enrolledCases.reduce((s, c) => s + (Number(c.school_commission) || 0), 0);
     const totalPartnerComm = enrolledCases.reduce((s, c) => s + (Number(c.influencer_commission) || 0), 0);
     const totalTeamComm = enrolledCases.reduce((s, c) => s + (Number(c.lawyer_commission) || 0), 0);
 
-    const totalRevenueNIS = totalServiceFees + totalSchoolComm;
+    const totalRevenueNIS = totalServiceFees;
     const totalExpensesNIS = totalPartnerComm + totalTeamComm;
     const netProfitNIS = totalRevenueNIS - totalExpensesNIS;
 
@@ -176,7 +175,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
 
     return {
       totalRevenueNIS, totalExpensesNIS, netProfitNIS,
-      totalServiceFees, totalSchoolComm, totalPartnerComm, totalTeamComm,
+      totalServiceFees, totalPartnerComm, totalTeamComm,
       pendingPayouts, paidPayouts,
       enrolledStudents: enrolledCases.length,
     };
@@ -214,7 +213,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
     <div className="space-y-6">
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Card className="border-emerald-200 bg-emerald-50/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -223,16 +222,6 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
             </div>
             <p className="text-xl font-bold text-emerald-700">{kpis.totalRevenueNIS.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground">{kpis.enrolledStudents} {t('money.students')}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="text-xs text-muted-foreground">{t('money.schoolCommission', 'School Commission')}</span>
-            </div>
-            <p className="text-xl font-bold text-blue-700">{kpis.totalSchoolComm.toLocaleString('en-US')} ₪</p>
-            <p className="text-[10px] text-muted-foreground">{t('money.schoolCommissions')}</p>
           </CardContent>
         </Card>
         <Card className="border-red-200 bg-red-50/50">
@@ -274,10 +263,9 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
       </div>
 
       {/* Breakdown Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: t('money.types.service_fee'), value: kpis.totalServiceFees, color: 'text-emerald-700', icon: ArrowUpRight },
-          { label: t('money.types.school_commission'), value: kpis.totalSchoolComm, color: 'text-blue-700', icon: ArrowUpRight },
           { label: t('money.types.partner_commission', 'Partner Commission'), value: kpis.totalPartnerComm, color: 'text-red-600', icon: ArrowDownRight },
           { label: t('money.types.team_member_comm'), value: kpis.totalTeamComm, color: 'text-red-600', icon: ArrowDownRight },
         ].map((item, i) => {
@@ -311,7 +299,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <SelectTrigger className="w-44"><SelectValue placeholder={t('money.revenueType')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin.leads.all', 'All')}</SelectItem>
-            {['service_fee', 'school_commission', 'partner_commission', 'team_member_comm'].map(type => (
+            {['service_fee', 'partner_commission', 'team_member_comm'].map(type => (
               <SelectItem key={type} value={type}>{typeLabel(type)}</SelectItem>
             ))}
           </SelectContent>

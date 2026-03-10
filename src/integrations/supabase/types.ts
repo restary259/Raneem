@@ -290,15 +290,7 @@ export type Database = {
           paid_status?: string
           payment_type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "case_payments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "student_cases"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       case_service_snapshots: {
         Row: {
@@ -347,13 +339,6 @@ export type Database = {
           team_commission_value?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "case_service_snapshots_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "student_cases"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "case_service_snapshots_master_service_id_fkey"
             columns: ["master_service_id"]
@@ -677,15 +662,7 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "commissions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "student_cases"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       contact_submissions: {
         Row: {
@@ -1958,159 +1935,6 @@ export type Database = {
         }
         Relationships: []
       }
-      student_cases: {
-        Row: {
-          accommodation_status: string | null
-          admin_notes: string | null
-          assigned_at: string | null
-          assigned_lawyer_id: string | null
-          case_status: string
-          commission_created: boolean | null
-          country_of_birth: string | null
-          created_at: string
-          deleted_at: string | null
-          fraud_flagged: boolean | null
-          fraud_notes: string | null
-          gender: string | null
-          housing_description: string | null
-          id: string
-          influencer_commission: number
-          intensive_course: string | null
-          is_paid_admin: boolean | null
-          language_proficiency: string | null
-          lawyer_commission: number
-          lead_id: string
-          nationality: string | null
-          notes: string | null
-          paid_at: string | null
-          paid_countdown_started_at: string | null
-          passport_number: string | null
-          reassigned_from: string | null
-          reassignment_history: Json | null
-          reassignment_notes: string | null
-          referral_discount: number
-          refund_status: string | null
-          requires_reassignment: boolean | null
-          school_commission: number
-          selected_city: string | null
-          selected_school: string | null
-          service_fee: number
-          student_address: string | null
-          student_age: number | null
-          student_email: string | null
-          student_full_name: string | null
-          student_phone: string | null
-          student_profile_id: string | null
-          submitted_to_admin_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          accommodation_status?: string | null
-          admin_notes?: string | null
-          assigned_at?: string | null
-          assigned_lawyer_id?: string | null
-          case_status?: string
-          commission_created?: boolean | null
-          country_of_birth?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          fraud_flagged?: boolean | null
-          fraud_notes?: string | null
-          gender?: string | null
-          housing_description?: string | null
-          id?: string
-          influencer_commission?: number
-          intensive_course?: string | null
-          is_paid_admin?: boolean | null
-          language_proficiency?: string | null
-          lawyer_commission?: number
-          lead_id: string
-          nationality?: string | null
-          notes?: string | null
-          paid_at?: string | null
-          paid_countdown_started_at?: string | null
-          passport_number?: string | null
-          reassigned_from?: string | null
-          reassignment_history?: Json | null
-          reassignment_notes?: string | null
-          referral_discount?: number
-          refund_status?: string | null
-          requires_reassignment?: boolean | null
-          school_commission?: number
-          selected_city?: string | null
-          selected_school?: string | null
-          service_fee?: number
-          student_address?: string | null
-          student_age?: number | null
-          student_email?: string | null
-          student_full_name?: string | null
-          student_phone?: string | null
-          student_profile_id?: string | null
-          submitted_to_admin_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          accommodation_status?: string | null
-          admin_notes?: string | null
-          assigned_at?: string | null
-          assigned_lawyer_id?: string | null
-          case_status?: string
-          commission_created?: boolean | null
-          country_of_birth?: string | null
-          created_at?: string
-          deleted_at?: string | null
-          fraud_flagged?: boolean | null
-          fraud_notes?: string | null
-          gender?: string | null
-          housing_description?: string | null
-          id?: string
-          influencer_commission?: number
-          intensive_course?: string | null
-          is_paid_admin?: boolean | null
-          language_proficiency?: string | null
-          lawyer_commission?: number
-          lead_id?: string
-          nationality?: string | null
-          notes?: string | null
-          paid_at?: string | null
-          paid_countdown_started_at?: string | null
-          passport_number?: string | null
-          reassigned_from?: string | null
-          reassignment_history?: Json | null
-          reassignment_notes?: string | null
-          referral_discount?: number
-          refund_status?: string | null
-          requires_reassignment?: boolean | null
-          school_commission?: number
-          selected_city?: string | null
-          selected_school?: string | null
-          service_fee?: number
-          student_address?: string | null
-          student_age?: number | null
-          student_email?: string | null
-          student_full_name?: string | null
-          student_phone?: string | null
-          student_profile_id?: string | null
-          submitted_to_admin_at?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_cases_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_cases_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads_lawyer_safe"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       student_checklist: {
         Row: {
           checklist_item_id: string
@@ -2548,7 +2372,6 @@ export type Database = {
         Args: { _influencer_id: string }
         Returns: string[]
       }
-      get_lawyer_lead_ids: { Args: { _lawyer_id: string }; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
       has_role: {
         Args: {
