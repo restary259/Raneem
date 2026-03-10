@@ -237,23 +237,23 @@ export default function PartnerOverviewPage() {
               <p className="text-muted-foreground text-sm">{t("partner.noCases")}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm table-fixed">
+            <div className="overflow-x-auto -mx-0">
+              <table className="w-full text-sm min-w-[540px]">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="w-[28%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.name")}
                     </th>
-                    <th className="w-[15%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="hidden sm:table-cell text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.major")}
                     </th>
-                    <th className="w-[18%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.status")}
                     </th>
-                    <th className="w-[22%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.commission")}
                     </th>
-                    <th className="w-[17%] text-start text-xs font-semibold text-muted-foreground px-4 py-2.5">
+                    <th className="hidden sm:table-cell text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.date")}
                     </th>
                   </tr>
@@ -270,14 +270,14 @@ export default function PartnerOverviewPage() {
                     const earnsCommission = isPaid && (isPoolMode || c.partner_id === userId);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="w-[28%] px-4 py-3 font-medium text-foreground truncate max-w-0">{c.full_name}</td>
-                        <td className="w-[15%] px-4 py-3 text-muted-foreground text-xs truncate max-w-0">{c.degree_interest || "—"}</td>
-                        <td className="w-[18%] px-4 py-3">
+                        <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[140px] truncate">{c.full_name}</td>
+                        <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground text-xs whitespace-nowrap max-w-[100px] truncate">{c.degree_interest || "—"}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
                             {isAr ? cfg.labelAr : cfg.label}
                           </span>
                         </td>
-                        <td className="w-[22%] px-4 py-3">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {earnsCommission ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
                               <CheckCircle className="h-3 w-3 shrink-0" />
@@ -290,7 +290,7 @@ export default function PartnerOverviewPage() {
                             </span>
                           )}
                         </td>
-                        <td className="w-[17%] px-4 py-3 text-xs text-muted-foreground">
+                        <td className="hidden sm:table-cell px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(c.created_at).toLocaleDateString("en-US")}
                         </td>
                       </tr>
