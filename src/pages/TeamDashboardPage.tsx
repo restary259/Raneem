@@ -421,7 +421,7 @@ const TeamDashboardPage = () => {
           <Button
             size="sm"
             className="h-8 text-xs active:scale-95 gap-1"
-            onClick={() => handleMarkContacted(lead.id, c.id)}
+            onClick={() => handleMarkContacted(c.id)}
             disabled={isThisLoading}
           >
             {isThisLoading ? (
