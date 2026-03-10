@@ -2022,12 +2022,22 @@
       "successDesc": "تم تأكيد {{amount}} للشريك {{partner}}"
     },
     "financials": {
+      "title": "المالية",
+      "kpiServiceFees": "رسوم الخدمة المحصّلة",
       "kpiAdminNet": "صافي إيرادات المنصة",
       "kpiPartnerPending": "عمولات الشركاء المعلقة",
       "kpiPartnerPaid": "عمولات الشركاء المدفوعة",
+      "kpiEnrolledStudents": "الطلاب المسجّلون",
+      "kpiReferralDiscounts": "خصومات الإحالة",
+      "partnerCommissionRateInfo": "معدل عمولة الشريك: ₪{{rate}} لكل حالة",
+      "recentEnrolled": "آخر الحالات المسجّلة",
+      "noData": "لا توجد حالات مسجّلة بعد.",
       "tabOverview": "نظرة عامة",
       "tabAgentPayouts": "مدفوعات الفريق",
       "tabPartnerPayouts": "مدفوعات الشركاء"
+    },
+    "students": {
+      "studentCount": "{{count}} طالب"
     }
   }
 }
