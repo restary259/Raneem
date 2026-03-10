@@ -661,9 +661,6 @@
         "status": "Status"
       }
     },
-    "tabs": {
-      "spreadsheet": "Spreadsheet"
-    },
     "students": {
       "title": "Students",
       "subtitle": "Manage student accounts",
