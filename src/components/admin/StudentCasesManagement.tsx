@@ -352,41 +352,42 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
                       </div>
                     ))}
                     <div className="flex gap-2 mt-2">
-                      <Button size="sm" disabled={loading} onClick={async () => {
-                        await guardedAction(`update-financials-${selectedCase.id}`, async () => {
-                          setLoading(true);
-                          const { error } = await (supabase as any).from('student_cases').update(moneyValues).eq('id', selectedCase.id);
-                          if (error) {
-                            toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-                          } else {
-                            // Sync reward rows when case is already paid — keeps influencer/lawyer dashboards accurate.
-                            // Only touches pending/approved rewards (never already-paid ones).
-                            if (selectedCase.case_status === 'paid') {
-                              if (moneyValues.influencer_commission !== selectedCase.influencer_commission) {
-                                await (supabase as any)
-                                  .from('rewards')
-                                  .update({ amount: moneyValues.influencer_commission })
-                                  .like('admin_notes', `%${selectedCase.id}%`)
-                                  .not('admin_notes', 'like', '%lawyer%')
-                                  .not('admin_notes', 'like', '%translation%')
-                                  .in('status', ['pending', 'approved']);
-                              }
-                              if (moneyValues.lawyer_commission !== selectedCase.lawyer_commission) {
-                                await (supabase as any)
-                                  .from('rewards')
-                                  .update({ amount: moneyValues.lawyer_commission })
-                                  .like('admin_notes', `%lawyer commission from case ${selectedCase.id}%`)
-                                  .in('status', ['pending', 'approved']);
-                              }
-                            }
-                            toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
-                            setSelectedCase({ ...selectedCase, ...moneyValues });
-                            setEditingMoney(false);
-                            onRefresh();
-                          }
-                          setLoading(false);
-                        });
-                      }}>
+                       <Button size="sm" disabled={loading} onClick={async () => {
+                         await guardedAction(`update-financials-${selectedCase.id}`, async () => {
+                           setLoading(true);
+                           // `cases` table holds commission columns; service_fee is in case_submissions
+                           const { service_fee, ...caseMoneyValues } = moneyValues;
+                           const { error } = await (supabase as any).from('cases').update(caseMoneyValues).eq('id', selectedCase.id);
+                           if (error) {
+                             toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+                           } else {
+                             // Sync reward rows when case is already paid — keeps partner/team dashboards accurate.
+                             // Only touches pending/approved rewards (never already-paid ones).
+                             if (selectedCase.status === 'enrollment_paid') {
+                               if (moneyValues.influencer_commission !== selectedCase.influencer_commission) {
+                                 await (supabase as any)
+                                   .from('rewards')
+                                   .update({ amount: moneyValues.influencer_commission })
+                                   .like('admin_notes', `%${selectedCase.id}%`)
+                                   .not('admin_notes', 'like', '%team%')
+                                   .in('status', ['pending', 'approved']);
+                               }
+                               if (moneyValues.lawyer_commission !== selectedCase.lawyer_commission) {
+                                 await (supabase as any)
+                                   .from('rewards')
+                                   .update({ amount: moneyValues.lawyer_commission })
+                                   .like('admin_notes', `%team commission — case ${selectedCase.id}%`)
+                                   .in('status', ['pending', 'approved']);
+                               }
+                             }
+                             toast({ title: t('studentCases.financialsSaved', { defaultValue: 'Financials updated' }) });
+                             setSelectedCase({ ...selectedCase, ...moneyValues });
+                             setEditingMoney(false);
+                             onRefresh();
+                           }
+                           setLoading(false);
+                         });
+                       }}>
                         <CheckCircle className="h-3 w-3 me-1" />{t('common.save', { defaultValue: 'Save' })}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setEditingMoney(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
