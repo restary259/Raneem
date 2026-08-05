@@ -52,6 +52,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
             </p>
             <div className="flex items-center gap-2 text-orange-500 group-hover:text-orange-600 transition-colors">
               <span className="text-sm font-medium">{t('educational.readMore')}</span>
+              <span className="sr-only">: {loc.name}</span>
               <Arrow className="h-4 w-4" />
             </div>
           </div>

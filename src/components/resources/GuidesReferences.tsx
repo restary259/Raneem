@@ -62,6 +62,7 @@ const GuidesReferences = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => toggle(article.id)}
+                  aria-label={`${expandedId === article.id ? t('guides.collapse') : t('guides.readMore')} — ${article.title}`}
                   className="w-full text-primary hover:text-primary/80"
                 >
                   {expandedId === article.id ? (
