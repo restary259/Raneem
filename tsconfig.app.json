@@ -23,6 +23,10 @@
     },
     "skipLibCheck": true,
     "strict": false,
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "target": "ES2020",
     "useDefineForClassFields": true
   },
