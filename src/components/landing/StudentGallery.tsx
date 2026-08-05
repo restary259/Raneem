@@ -27,7 +27,7 @@ const StudentGallery = () => {
               <div className="relative bg-secondary">
                 <img 
                   src={student.image} 
-                  alt={`Student ${student.name || 'story'}`}
+                  alt={student.name ? `${student.name} — Darb student now studying in ${student.destination}` : `Darb student success story in ${student.destination}`}
                   className="w-full h-56 sm:h-64 lg:h-80 object-contain object-center group-hover:scale-110 transition-transform duration-500"
                   loading="lazy"
                   decoding="async"

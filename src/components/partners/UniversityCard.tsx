@@ -18,7 +18,7 @@ const UniversityCard = ({ partner }: UniversityCardProps) => {
       <div className="bg-white p-4 flex items-center justify-center aspect-video">
         <img 
           src={partner.logoUrl} 
-          alt={`${partner.name} logo`}
+          alt={`Official emblem of ${partner.name}`}
           className="h-20 w-auto object-contain filter grayscale group-hover:filter-none group-hover:scale-105 transition-all duration-300"
         />
       </div>
@@ -36,7 +36,7 @@ const UniversityCard = ({ partner }: UniversityCardProps) => {
         <div className="mt-auto space-y-4">
           <p className="text-xs text-muted-foreground">{t('card.partnerSince', { year: partner.partnershipSince })}</p>
           <Button asChild variant="secondary" className="w-full">
-            <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer">
+            <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`${t('card.learnMore')} — ${partner.name}`}>
               {t('card.learnMore')} <ArrowRight />
             </a>
           </Button>

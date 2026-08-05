@@ -38,7 +38,7 @@ const UniversityCarousel: React.FC<UniversityCarouselProps> = ({ universities, a
                     <CardContent className="p-4 md:p-6 h-full flex flex-col">
                       <div className="flex flex-col items-center text-center space-y-4 flex-grow">
                         <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm w-full aspect-video flex items-center justify-center border">
-                          <img src={university.logoUrl} alt={`${university.name} logo`} className="h-12 md:h-16 w-auto object-contain" loading="lazy" decoding="async" />
+                          <img src={university.logoUrl} alt={`Official emblem of ${university.name}`} className="h-12 md:h-16 w-auto object-contain" loading="lazy" decoding="async" />
                         </div>
                         <div className="space-y-2 flex-grow">
                           <h4 className="text-base md:text-lg font-bold text-primary line-clamp-2">{university.name}</h4>
