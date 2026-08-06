@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Settings2, Eye, Loader2, Percent, UserCog, RefreshCw, Trash2, Info } from "lucide-react";
+import { Users, Settings2, Eye, Loader2, UserCog, RefreshCw, Trash2, Info } from "lucide-react";
+import AdminPasswordConfirm from "./AdminPasswordConfirm";
 
 interface PartnerOverride {
   id: string;
