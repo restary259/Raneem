@@ -2813,6 +2813,15 @@ export type Database = {
           target: string
         }[]
       }
+      get_document_activity_spikes: {
+        Args: { p_threshold?: number; p_window?: string }
+        Returns: {
+          actor_id: string
+          actor_name: string
+          event_count: number
+          last_seen: string
+        }[]
+      }
       get_forgotten_cases: {
         Args: never
         Returns: {
@@ -2961,6 +2970,10 @@ export type Database = {
           p_target_table?: string
         }
         Returns: undefined
+      }
+      purge_expired_documents: {
+        Args: { p_retention?: string }
+        Returns: number
       }
       reassign_case: {
         Args: { p_case_id: string; p_new_assignee: string }
