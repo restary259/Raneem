@@ -911,6 +911,15 @@
       "empty": "No authorization failures recorded.",
       "sourceRls": "Database (RLS)",
       "sourceEdge": "Backend function"
+    },
+    "inbox": {
+      "title": "Applications Inbox",
+      "subtitle": "Partnership and contact form submissions",
+      "source": {
+        "all": "All",
+        "partnership": "Partnership",
+        "contact": "Contact"
+      }
     }
   },
   "influencer": {
@@ -1806,7 +1815,8 @@
     "spreadsheet": "Spreadsheet",
     "bagrut": "Bagrut Tool",
     "mainSite": "Main Site",
-    "backToMainSite": "Back to Main Website"
+    "backToMainSite": "Back to Main Website",
+    "inbox": "Inbox"
   },
   "case": {
     "status": {
@@ -2439,7 +2449,6 @@
     "empty": "No campaign links yet.",
     "toggle": "Enable link"
   },
-
   "forcePassword": {
     "title": "Set a new password",
     "desc": "Your account still uses the temporary password. Choose a new, strong password to continue.",

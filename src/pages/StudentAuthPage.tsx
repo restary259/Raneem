@@ -121,30 +121,50 @@ const StudentAuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-background p-4 relative overflow-hidden">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-secondary via-background to-secondary p-4 relative overflow-hidden"
+    >
       {/* Background decorative glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/8 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -top-40 -end-40 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-48 -start-40 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-lg relative z-10">
         {/* Back to website */}
-        <div className="mb-4">
+        <div className="mb-5">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
           >
             <ArrowLeft
-              className={`h-4 w-4 transition-transform group-hover:-translate-x-1 ${isRTL ? "rotate-180" : ""}`}
+              className={`h-4 w-4 transition-transform group-hover:-translate-x-1 ${isRTL ? "rotate-180 group-hover:translate-x-1" : ""}`}
             />
             {t("auth.backToWebsite", "Back to main website")}
           </Link>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-card-foreground mb-6">{t("auth.loginTitle")}</h2>
+        <div className="rounded-3xl border border-border bg-card shadow-xl overflow-hidden">
+          {/* Brand header */}
+          <div className="px-8 pt-8 pb-6 text-center border-b border-border bg-secondary/40">
+            <img
+              src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
+              alt={t("loader.brand", "Darb")}
+              className="h-12 w-auto object-contain mx-auto mb-4"
+            />
+            <h1 className="text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {isRTL
+                ? "سجّل الدخول لمتابعة ملفك ومستنداتك وحالة طلبك"
+                : "Sign in to follow your profile, documents and application status"}
+            </p>
+          </div>
+
+          <div className="p-8 pt-7">
+
+
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
@@ -203,7 +223,7 @@ const StudentAuthPage = () => {
 
             <Button
               type="submit"
-              className="w-full font-semibold py-2.5 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -216,9 +236,9 @@ const StudentAuthPage = () => {
               )}
             </Button>
           </form>
+          </div>
         </div>
 
-        {/* Footer note removed for cleaner UI */}
       </div>
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />

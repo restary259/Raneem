@@ -4,7 +4,6 @@ import Footer from "@/components/landing/Footer";
 import ServicesHero from "@/components/services/ServicesHero";
 import ServicesGrid from "@/components/services/ServicesGrid";
 import ServiceProcess from "@/components/services/ServiceProcess";
-import TestimonialSection from "@/components/services/TestimonialSection";
 import ConsultationCta from "@/components/services/ConsultationCta";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
@@ -21,7 +20,6 @@ const ServicesPage = () => {
         <ServicesHero />
         <ServicesGrid />
         <ServiceProcess />
-        <TestimonialSection />
         <ConsultationCta />
       </main>
       <Footer />

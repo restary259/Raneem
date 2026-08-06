@@ -127,7 +127,8 @@
     "invalidEmail": "البريد الإلكتروني غير صالح",
     "loginFailed": "فشل تسجيل الدخول",
     "orContinueWith": "أو تابع باستخدام",
-    "continueWithGoogle": "المتابعة مع Google"
+    "continueWithGoogle": "المتابعة مع Google",
+    "backToWebsite": "العودة إلى الموقع الرئيسي"
   },
   "advisor": {
     "title": "مستشار درب الذكي",
