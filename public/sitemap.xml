@@ -8,6 +8,7 @@
   <url><loc>https://darb-agency.lovable.app/educational-destinations</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb-agency.lovable.app/educational-programs</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://darb-agency.lovable.app/resources</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://darb-agency.lovable.app/faq</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb-agency.lovable.app/quiz</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb-agency.lovable.app/ai-advisor</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb-agency.lovable.app/broadcast</loc><priority>0.5</priority><changefreq>weekly</changefreq></url>
