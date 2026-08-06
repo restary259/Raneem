@@ -8,12 +8,16 @@ import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
 import { exportXLSX } from '@/utils/exportUtils';
 import { useToast } from '@/hooks/use-toast';
 
-export type SheetColumnType = 'text' | 'number' | 'currency' | 'date' | 'percent';
+import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
+
+export type SheetColumnType = 'text' | 'number' | 'currency' | 'date' | 'percent' | 'enum';
 
 export interface SheetColumn {
   key: string;
   label: string;
   type?: SheetColumnType;
+  /** Value dictionary used when type is 'enum' */
+  enumGroup?: SheetEnumGroup;
   currency?: string;
   /** Exclude from the default visible set */
   hidden?: boolean;
@@ -33,7 +37,14 @@ export interface SheetTableProps {
   toolbar?: React.ReactNode;
 }
 
-export const formatCell = (value: any, col: SheetColumn): string => {
+export type ValueTranslator = (group: SheetEnumGroup, value: unknown) => string;
+
+export const formatCell = (
+  value: any,
+  col: SheetColumn,
+  translate?: ValueTranslator,
+): string => {
+  if (col.type === 'enum' && translate) return translate(col.enumGroup ?? 'status', value);
   if (value === null || value === undefined || value === '') return '—';
   switch (col.type) {
     case 'currency': {
@@ -52,6 +63,23 @@ export const formatCell = (value: any, col: SheetColumn): string => {
       return String(value);
   }
 };
+
+const STATUS_TONE: Record<string, string> = {
+  new: 'bg-blue-100 text-blue-800',
+  contacted: 'bg-purple-100 text-purple-800',
+  appointment_scheduled: 'bg-indigo-100 text-indigo-800',
+  profile_completion: 'bg-yellow-100 text-yellow-800',
+  payment_confirmed: 'bg-emerald-100 text-emerald-800',
+  submitted: 'bg-cyan-100 text-cyan-800',
+  enrollment_paid: 'bg-green-100 text-green-800',
+  cancelled: 'bg-red-100 text-red-800',
+  forgotten: 'bg-gray-100 text-gray-700',
+  pending: 'bg-amber-100 text-amber-800',
+  approved: 'bg-blue-100 text-blue-800',
+  paid: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-800',
+};
+
 
 const SheetTable: React.FC<SheetTableProps> = ({
   title,
