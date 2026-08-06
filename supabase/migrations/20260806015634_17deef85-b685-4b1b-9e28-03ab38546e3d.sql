@@ -1,0 +1,1 @@
+DELETE FROM public.rewards WHERE id = '60f0eef6-9377-4e42-800e-5f111c6137da';

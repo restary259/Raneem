@@ -421,27 +421,32 @@ export default function PartnerPayoutsPanel() {
     }
     setIsExecuting(true);
     try {
-      const now = new Date().toISOString();
-      for (const reward of pendingAction.rewards) {
-        const caseId = parseCaseId(reward.admin_notes);
-        const caseName = caseId ? (pendingAction.caseMap[caseId]?.full_name ?? caseId) : '—';
+      const rewardIds = pendingAction.rewards.map(r => r.id);
 
-        const { error: updErr } = await supabase
-          .from('rewards')
-          .update({ status: 'paid', paid_at: now } as any)
-          .eq('id', reward.id);
-        if (updErr) throw updErr;
+      const { data: batchId, error: createErr } = await (supabase as any).rpc('create_payout_batch', {
+        p_reward_ids: rewardIds,
+      });
+      if (createErr) throw createErr;
 
-        await supabase.from('admin_audit_log').insert({
-          admin_id: currentUserId,
-          action: 'partner_payout_confirmed',
-          target_id: reward.id,
-          target_table: 'rewards',
-          details: `Confirmed ${fmt(reward.amount)} to ${pendingAction.partnerName} for case ${caseName} on ${new Date(now).toLocaleDateString('en-US')}`,
-        } as any);
-      }
+      const { error: confirmErr } = await (supabase as any).rpc('confirm_payout_batch', {
+        p_payout_request_id: batchId,
+        p_payment_method: 'bank_transfer',
+        p_transaction_ref: null,
+        p_notes: `Partner payout confirmed from Partner Payouts panel`,
+      });
+      if (confirmErr) throw confirmErr;
 
       const totalAmount = pendingAction.rewards.reduce((s, r) => s + r.amount, 0);
+      const now = new Date().toISOString();
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: currentUserId,
+        action: 'partner_payout_confirmed',
+        target_id: batchId,
+        target_table: 'payout_requests',
+        details: `Confirmed ${fmt(totalAmount)} to ${pendingAction.partnerName} via unified payout batch`,
+      } as any);
+
       toast({
         title: t('admin.partnerPayouts.successTitle'),
         description: t('admin.partnerPayouts.successDesc', {
@@ -450,11 +455,11 @@ export default function PartnerPayoutsPanel() {
         }),
       });
 
-      // Optimistic update
       const confirmedIds = new Set(pendingAction.rewards.map(r => r.id));
       setRewards(prev => prev.map(r =>
         confirmedIds.has(r.id) ? { ...r, status: 'paid', paid_at: now } : r
       ));
+      fetchData();
     } catch (err: any) {
       console.error('[PartnerPayouts]', err);
       toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });

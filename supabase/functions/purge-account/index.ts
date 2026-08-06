@@ -89,15 +89,11 @@ Deno.serve(async (req) => {
       .eq('user_id', target_user_id)
       .in('status', ['pending', 'approved']);
 
-    // Null out lead source references
-    await supabaseAdmin
-      .from('leads')
-      .update({ source_id: null, source_type: 'organic' })
-      .eq('source_id', target_user_id);
-
-    // Delete auth user (cascades to profiles, user_roles, etc.)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(target_user_id);
-    if (deleteError) throw deleteError;
+    // Anonymize the account instead of hard-deleting, so financial/audit
+    // references (transaction_log, payout_requests, audit log) remain intact.
+    // Use service role to bypass the auth.uid() self-check in the RPC.
+    const { error: anonError } = await supabaseAdmin.rpc('anonymize_user', { p_user_id: target_user_id });
+    if (anonError) throw anonError;
 
     // Audit log
     await supabaseAdmin.from('admin_audit_log').insert({

@@ -176,7 +176,7 @@ export default function TeamAppointmentsPage() {
       setAppts((data as any[]) ?? []);
     } catch (err: any) {
       console.error("fetchAppts error:", err);
-      toast({ variant: "destructive", description: err.message });
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,8 @@ export default function TeamAppointmentsPage() {
       setPendingMove(null);
       fetchAppts();
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("confirmMove error:", err);
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setConfirmingMove(false);
     }
@@ -382,7 +383,8 @@ export default function TeamAppointmentsPage() {
       setEditingAppt(null);
       fetchAppts();
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("handleSave error:", err);
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setSaving(false);
     }
@@ -400,7 +402,8 @@ export default function TeamAppointmentsPage() {
       setSelectedAppt(null);
       fetchAppts();
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("handleDelete error:", err);
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setConfirmingDelete(false);
     }

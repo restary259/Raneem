@@ -2364,10 +2364,21 @@ export type Database = {
       }
     }
     Functions: {
+      anonymize_user: { Args: { p_user_id: string }; Returns: undefined }
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      confirm_payout_batch: {
+        Args: {
+          p_notes?: string
+          p_payment_method?: string
+          p_payout_request_id: string
+          p_transaction_ref?: string
+        }
+        Returns: undefined
+      }
+      create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
       get_auth_failure_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
