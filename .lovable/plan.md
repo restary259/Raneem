@@ -156,3 +156,81 @@ This is the same class as H2 but strictly worse, because it needs no policy abus
 **Step 2 — flipping `verify_jwt` back on:** the risk is the public endpoints. `create-case-from-apply` (the apply form), `send-email` (contact form), `get-exchange-rate`, `ai-chat` (anonymous chat is intentional, JWT only raises the rate limit), and `auth-email-hook` (HMAC-verified webhook, no JWT) must all stay `false`. Turning it on for any of those breaks the public site. `auth-guard` is a login endpoint and must also stay `false` — the caller has no JWT yet by definition.
 
 **Step 2 — auth on the three email functions:** `notify_visa_status_email` (trigger on `profiles`) calls `send-event-email` via `pg_net` with `Authorization: Bearer <service_role_key>` read from `current_setting('app.settings.service_role_key')`. If that setting isn't populated in this project, the header is currently empty and the call only works *because* the function has no auth check. Verify that setting resolves before adding the check, or the visa-status email trigger will start failing silently.
+
+---
+
+## Money-flow deep dive (live database, read-only)
+
+Queried the live database directly. Findings below are from actual rows, not code reading.
+
+### The financial tables are essentially empty
+
+| Table | Rows |
+|---|---|
+| cases | 0 |
+| case_submissions | 0 |
+| case_payments | 0 |
+| rewards | 0 |
+| commissions | 0 |
+| commission_transactions | 0 |
+| referrals | 0 |
+| partner_commission_overrides | **0** |
+| team_member_commission_overrides | 2 |
+| payout_requests | 1 |
+| transaction_log | 1 |
+
+Good news for sequencing: **step 1 and step 2 can be executed with essentially zero data-loss risk.** There is no production financial history to corrupt. The `pg_dump` prerequisite is still worth doing, but it should not gate the security fixes — the exposure in C1 is live on a published site while the data at risk is nearly nil. Recommend reordering: run steps 1-2 now, build the backup discipline in parallel rather than before.
+
+### M8 (NEW, HIGH). `record_case_commission` pays every partner on every case
+
+This is the most serious money bug found, and it is not in the plan above. The partner loop in the live function is:
+
+```sql
+FOR v_override IN
+  SELECT partner_id, commission_amount, show_all_cases
+  FROM partner_commission_overrides
+LOOP
+  IF (v_override.show_all_cases = true
+      OR (v_override.show_all_cases = false AND v_case.source IN ('apply_page','contact_form','submit_new_student','manual'))
+      OR (v_override.show_all_cases IS NULL AND v_case.source = 'referral'))
+  THEN ... INSERT INTO rewards (user_id, amount, ...) VALUES (v_override.partner_id, ...)
+```
+
+It iterates **every row in `partner_commission_overrides`** and filters only on `cases.source`. There is no comparison against `v_case.partner_id` or `v_case.referred_by`. So the partner who actually referred the case is never identified — instead, once N partners have override rows, a single enrolled case mints N reward rows, one per partner, and `v_total_partner` deducts all of them from `platform_revenue_ils`.
+
+Today this is invisible because `partner_commission_overrides` is empty, which also means **partner commissions are currently never created at all** — the referral-partner earnings path is dormant. The moment the hub model in R2 onboards a second referral partner, every case starts paying both of them. This must be fixed before R2 ships, and it should be a named step, not folded into M5.
+
+Related: `platform_settings.partner_commission_rate` is 500 but is read nowhere in `record_case_commission` — only `team_member_commission_rate` (1500) is used as a fallback. The partner rate setting is decorative.
+
+Also note the two `team_member_commission_overrides` rows are both 1500, identical to the global `team_member_commission_rate`, so they're currently no-ops.
+
+### M9 (NEW, MEDIUM). Deleting a user orphans paid financial records
+
+The one surviving `payout_requests` row is instructive:
+
+- `id ee2f9700…`, `amount 1000`, `status paid`, `requestor_role social_media_partner`
+- `linked_reward_ids = {96bb9c4f…}` — **that reward no longer exists**; the `rewards` table is empty
+- `requestor_id 81f7f86b…` — **not present in `user_roles`**; the partner was purged
+- matching `transaction_log` row for ILS 1000, `type influencer_payout`, same `payout_request_id`
+
+`linked_reward_ids` is a bare `uuid[]` with no foreign key, and `requestor_id` has no FK either. `selective-delete/index.ts:259` and `purge-account/index.ts:87` delete `rewards` by `user_id` without touching `payout_requests` or `transaction_log`. Result: a permanent record of ILS 1000 paid, to a user that no longer exists, backed by a reward that no longer exists, and no query can reconstruct what it was for.
+
+For a financial ledger this is the wrong deletion semantics. Recommend: soft-delete or anonymise rather than hard-delete anything reachable from `transaction_log`, and add an FK or a validation trigger on `payout_requests.requestor_id`.
+
+### Timing evidence supporting the H2 / RewardsPanel finding
+
+That same request was `requested_at 12:32:01` and `paid_at 12:42:09` — ten minutes end to end, with `approved_at` and `paid_at` nine seconds apart. `request_payout`'s 20-day lock (`(NOW() - created_at) < INTERVAL '20 days'` → raise) could not possibly have passed for a reward created that morning. This is direct evidence that the payout was created outside the RPC, consistent with the finding in (c) that the UI inserts into `payout_requests` directly. Whether this specific row came from the partner UI or manual test insertion can't be determined from the row alone, but the lock demonstrably did not apply.
+
+### Minor
+
+`transaction_ref` is an empty string rather than null on both the request and the ledger row — `PayoutsManagement.handleMarkPaid` passes the raw input with no required-field check, so a bank transfer can be recorded with no reference number. Worth a validation guard when M5 consolidates the panels.
+
+The admin account `4abfba8f…` holds **both** `admin` and `student` roles. Harmless today, but any policy written as "students can only see their own X" will also apply to the admin, and any future `has_role(uid,'student')`-gated UI will render for them. Worth cleaning up before the three-actor role work in R1/R2.
+
+### Revised view on the remediation order
+
+1. Steps 1-2 (C1, C2, C3, H1, H2, H3, H5) — run now. Near-zero data at risk; the exposure is live.
+2. Fold M8 into the same migration window as H2 — both are `rewards`-creation correctness, and both must be right before any real partner is onboarded.
+3. Backup/PITR discipline (step 0) becomes a parallel workstream, not a blocker.
+4. M9 (deletion semantics for financial records) should land before real money flows, not in the general cleanup pass.
+
