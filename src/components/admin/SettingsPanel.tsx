@@ -5,6 +5,7 @@ import EligibilityConfig from './EligibilityConfig';
 import CustomNotifications from './CustomNotifications';
 import SecurityPanel from './SecurityPanel';
 import AuditLog from './AuditLog';
+import AuthFailuresPanel from './AuthFailuresPanel';
 
 interface SettingsPanelProps {
   loginAttempts?: any[];
@@ -20,6 +21,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ loginAttempts = [], audit
         <TabsTrigger value="eligibility">{t('admin.tabs.eligibility')}</TabsTrigger>
         <TabsTrigger value="notifications">{t('admin.tabs.notifications')}</TabsTrigger>
         <TabsTrigger value="security">{t('admin.tabs.security')}</TabsTrigger>
+        <TabsTrigger value="authFailures">{t('admin.tabs.authFailures')}</TabsTrigger>
         <TabsTrigger value="audit">{t('admin.tabs.audit')}</TabsTrigger>
       </TabsList>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -31,6 +33,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ loginAttempts = [], audit
         </TabsContent>
         <TabsContent value="security" className="mt-0 lg:col-span-1">
           <SecurityPanel loginAttempts={loginAttempts} />
+        </TabsContent>
+        <TabsContent value="authFailures" className="mt-0 lg:col-span-2">
+          <AuthFailuresPanel />
         </TabsContent>
         <TabsContent value="audit" className="mt-0 lg:col-span-1">
           <AuditLog logs={auditLogs} />
