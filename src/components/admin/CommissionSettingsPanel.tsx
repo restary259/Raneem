@@ -75,6 +75,9 @@ export default function CommissionSettingsPanel() {
   // Global flat defaults (ILS per enrolled student) used when no per-person override exists.
   const [globals, setGlobals] = useState({ id: "", partner: 500, ambassador: 300, team: 100 });
   const [savingGlobals, setSavingGlobals] = useState(false);
+  // Administrator override gate for granting "all cases" visibility.
+  const [gateOpen, setGateOpen] = useState(false);
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -183,7 +186,6 @@ export default function CommissionSettingsPanel() {
         {
           team_member_id: newTeamOverride.team_member_id,
           commission_amount: parseInt(newTeamOverride.amount),
-
           notes: newTeamOverride.notes || null,
           updated_at: new Date().toISOString(),
         },
@@ -191,7 +193,8 @@ export default function CommissionSettingsPanel() {
       );
       if (error) throw error;
       setNewTeamOverride({ team_member_id: "", amount: "", notes: "" });
-      toast({ description: "Team member commission saved ✓" });
+      toast({ description: t("commissionSettings.teamSaved") });
+
       fetchData();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -212,7 +215,7 @@ export default function CommissionSettingsPanel() {
         })
         .eq("id", globals.id);
       if (error) throw error;
-      toast({ description: "Default commission amounts saved ✓" });
+      toast({ description: t("commissionSettings.defaultsSaved") });
       fetchData();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
