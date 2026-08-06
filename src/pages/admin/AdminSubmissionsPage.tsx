@@ -155,7 +155,7 @@ const AdminSubmissionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, enrichCases]);
+  }, [toast, enrichCases, isAr, t]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
