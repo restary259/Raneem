@@ -77,7 +77,36 @@ const EducationalProgramsPage = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-      <SEOHead title={t('seo.edProgTitle')} description={t('seo.edProgDesc')} />
+      <SEOHead
+        title={t('seo.edProgTitle')}
+        description={t('seo.edProgDesc')}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: t('seo.edProgTitle'),
+          description: t('seo.edProgDesc'),
+          url: 'https://darb-agency.lovable.app/educational-programs',
+          inLanguage: lang,
+          mainEntity: {
+            '@type': 'ItemList',
+            numberOfItems: allSubMajors.length,
+            itemListElement: allSubMajors.slice(0, 30).map((major, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              item: {
+                '@type': 'Course',
+                name: lang === 'ar' ? major.nameAR : major.nameEN,
+                description: lang === 'ar' ? major.description : major.descriptionEN,
+                provider: {
+                  '@type': 'EducationalOrganization',
+                  name: 'Darb Study Pathways',
+                  url: 'https://darb-agency.lovable.app',
+                },
+              },
+            })),
+          },
+        }}
+      />
       <Header />
       <HeroSection />
       <SearchAndFilter
