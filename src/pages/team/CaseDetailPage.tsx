@@ -625,14 +625,14 @@ export default function CaseDetailPage() {
               {submission.program_price > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("case.detail.programCost")}</span>
-                  <span className="font-medium text-foreground">{submission.program_price.toLocaleString()} EUR</span>
+                  <span className="font-medium text-foreground">{submission.program_price.toLocaleString('en-US')} EUR</span>
                 </div>
               )}
               {submission.accommodation_price > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("case.detail.accommodation")}</span>
                   <span className="font-medium text-foreground">
-                    {submission.accommodation_price.toLocaleString()} EUR
+                    {submission.accommodation_price.toLocaleString('en-US')} EUR
                   </span>
                 </div>
               )}
