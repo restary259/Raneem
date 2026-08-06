@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
+import { captureReferralCode, getReferralCode } from "@/lib/referral";
+
 
 const PASSPORT_TYPES = [
   { value: "israeli_blue", label: "جواز أزرق (إسرائيلي)", labelEn: "Israeli Blue Passport" },
@@ -83,9 +85,13 @@ const ApplyPage: React.FC = () => {
     },
   ]);
 
-  // Source tracking (no referral links — partner cases are linked by admin)
-  const sourceType = "organic";
-  const sourceId: string | null = null;
+  // Referral attribution — captured from ?ref= and persisted for 90 days.
+  // The code is always resolved server-side, never trusted as a raw user id.
+  const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
+  useEffect(() => {
+    setRefCode(captureReferralCode(searchParams.toString()));
+  }, [searchParams]);
+
 
   const isValidPhone = (p: string) => {
     const cleaned = p.replace(/[\s\-()]/g, "");
