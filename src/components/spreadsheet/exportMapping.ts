@@ -18,7 +18,7 @@ export function toExportColumns(columns: SheetColumn[]): ExportColumn[] {
               : c.type === 'date'
                 ? ('date' as const)
                 : ('text' as const),
-    currency: c.currency === 'EUR' ? ('EUR' as const) : ('ILS' as const),
+    currency: 'ILS' as const,
     total: c.total ? ('sum' as const) : undefined,
     dataBar: c.total && c.type === 'currency' ? true : undefined,
   }));
