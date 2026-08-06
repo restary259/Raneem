@@ -46,6 +46,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
+
 
     // ── Parse request ──────────────────────────────────────────────────
     const { case_id, student_email, student_full_name, student_phone } = await req.json();
