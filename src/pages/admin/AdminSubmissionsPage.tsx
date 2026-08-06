@@ -379,7 +379,9 @@ const AdminSubmissionsPage = () => {
                     </div>
                   </div>
                 ))}
+                <TablePagination pagination={pendingPagination as any} />
               </div>
+
             )
           ) : (
             completedCases.length === 0 ? (
