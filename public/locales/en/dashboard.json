@@ -1895,7 +1895,10 @@
       "preferences": "Preferences",
       "preferredMajor": "Preferred Major / Degree",
       "notesSection": "Notes",
-      "cityLabel": "City"
+      "cityLabel": "City",
+      "cannotSkip": "Cannot skip stages. Next allowed: {{next}}",
+      "noneStage": "none",
+      "statusUpdated": "Status updated to {{status}}"
     },
     "profileForm": {
       "steps": {
@@ -2011,6 +2014,13 @@
     "genderValues": {
       "male": "Male",
       "female": "Female",
+      "other": "Other"
+    },
+    "passportTypes": {
+      "israeli_blue": "Israeli (blue)",
+      "israeli_red": "Israeli (red / laissez-passer)",
+      "palestinian": "Palestinian",
+      "jordanian": "Jordanian",
       "other": "Other"
     }
   },

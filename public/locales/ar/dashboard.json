@@ -1913,7 +1913,10 @@
       "preferences": "التفضيلات",
       "preferredMajor": "التخصص المفضل",
       "notesSection": "ملاحظات",
-      "cityLabel": "المدينة"
+      "cityLabel": "المدينة",
+      "cannotSkip": "لا يمكن تخطي المراحل. المرحلة التالية المسموحة: {{next}}",
+      "noneStage": "لا يوجد",
+      "statusUpdated": "تم تحديث الحالة إلى {{status}}"
     },
     "profileForm": {
       "steps": {
@@ -2029,6 +2032,13 @@
     "genderValues": {
       "male": "ذكر",
       "female": "أنثى",
+      "other": "آخر"
+    },
+    "passportTypes": {
+      "israeli_blue": "إسرائيلي (أزرق)",
+      "israeli_red": "إسرائيلي (أحمر / وثيقة سفر)",
+      "palestinian": "فلسطيني",
+      "jordanian": "أردني",
       "other": "آخر"
     }
   },
