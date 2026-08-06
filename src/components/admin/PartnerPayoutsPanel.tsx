@@ -46,6 +46,7 @@ interface PartnerGroup {
   email: string;
   avatarUrl: string | null;
   pending: RewardRow[];
+  inRequest: RewardRow[];
   paid: RewardRow[];
   caseMap: Record<string, CaseRow>;
 }
