@@ -121,7 +121,7 @@ serve(async (req) => {
       action: "LOGIN",
       target_id: data.user.id,
       target_table: "active_sessions",
-      details: `Login from device: ${deviceId}, IP: ${ip}`,
+      details: `Login from device: ${userAgent}, IP: ${ip}`,
     });
 
     return new Response(JSON.stringify({
