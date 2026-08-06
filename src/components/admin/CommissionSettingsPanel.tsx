@@ -242,16 +242,14 @@ export default function CommissionSettingsPanel() {
     );
   }
 
+  const vis = (key: string) => t(`commissionSettings.visibility.${key}`);
+
   return (
     <div className="space-y-6">
       {/* Info banner */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border text-sm text-muted-foreground">
         <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-        <p>
-          All commissions are a <strong>flat amount in shekels (₪)</strong> per enrolled student — there are no
-          percentages and no tiers. Each role has a default amount below. If an individual account is given its
-          own amount, <strong>that per-person amount always wins</strong> over the default.
-        </p>
+        <p>{t("commissionSettings.info")}</p>
       </div>
 
       {/* Global flat defaults */}
@@ -259,13 +257,15 @@ export default function CommissionSettingsPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Settings2 className="h-4 w-4 text-primary" />
-            Default Commission per Enrolled Student (₪)
+            {t("commissionSettings.defaultsTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Partner</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("commissionSettings.partner")}
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -275,7 +275,9 @@ export default function CommissionSettingsPanel() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ambassador</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("commissionSettings.ambassador")}
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -285,7 +287,9 @@ export default function CommissionSettingsPanel() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Team Member</label>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("commissionSettings.team")}
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -297,7 +301,7 @@ export default function CommissionSettingsPanel() {
           </div>
           <Button size="sm" onClick={saveGlobals} disabled={savingGlobals || !globals.id}>
             {savingGlobals && <Loader2 className="h-3.5 w-3.5 me-2 animate-spin" />}
-            Save defaults
+            {t("commissionSettings.saveDefaults")}
           </Button>
         </CardContent>
       </Card>
@@ -308,7 +312,7 @@ export default function CommissionSettingsPanel() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-4 w-4 text-primary" />
-              Partner &amp; Ambassador Commission (per account)
+              {t("commissionSettings.partnerTitle")}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchData}>
               <RefreshCw className="h-3.5 w-3.5" />
@@ -316,7 +320,6 @@ export default function CommissionSettingsPanel() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Existing overrides */}
           {partnerOverrides.length > 0 && (
             <div className="space-y-2">
               {partnerOverrides.map((ov) => (
@@ -326,11 +329,11 @@ export default function CommissionSettingsPanel() {
                     {ov.notes && <p className="text-xs text-muted-foreground truncate">{ov.notes}</p>}
                   </div>
                   <Badge variant="secondary" className="font-mono shrink-0">
-                    ₪{ov.commission_amount.toLocaleString("en-US")} / student
+                    ₪{ov.commission_amount.toLocaleString("en-US")} {t("commissionSettings.perStudent")}
                   </Badge>
                   <Badge variant={visibilityBadgeVariant(ov.show_all_cases)} className="text-xs whitespace-nowrap shrink-0">
                     <Eye className="h-3 w-3 me-1" />
-                    {visibilityLabel(ov.show_all_cases)}
+                    {vis(visibilityKey(ov.show_all_cases))}
                   </Badge>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => deletePartnerOverride(ov.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
@@ -341,12 +344,14 @@ export default function CommissionSettingsPanel() {
           )}
 
           {partnerOverrides.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-3">No per-account amounts configured — everyone uses the default above.</p>
+            <p className="text-sm text-muted-foreground text-center py-3">{t("commissionSettings.noPartnerOverrides")}</p>
           )}
 
           {/* Add / update form */}
           <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add / Update Partner</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("commissionSettings.addPartner")}
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <Select
@@ -354,7 +359,7 @@ export default function CommissionSettingsPanel() {
                 onValueChange={(v) => setNewPartnerOverride((p) => ({ ...p, partner_id: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select partner / ambassador account" />
+                  <SelectValue placeholder={t("commissionSettings.selectPartner")} />
                 </SelectTrigger>
                 <SelectContent>
                   {partners.map((p) => (
@@ -363,18 +368,18 @@ export default function CommissionSettingsPanel() {
                 </SelectContent>
               </Select>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
                 <Input
                   type="number"
                   min="0"
-                  placeholder="Amount per student"
-                  className="pl-7"
+                  placeholder={t("commissionSettings.amountPlaceholder")}
+                  className="ps-7"
                   value={newPartnerOverride.amount}
                   onChange={(e) => setNewPartnerOverride((p) => ({ ...p, amount: e.target.value }))}
                 />
               </div>
               <Input
-                placeholder="Notes (optional)"
+                placeholder={t("commissionSettings.notesPlaceholder")}
                 value={newPartnerOverride.notes}
                 onChange={(e) => setNewPartnerOverride((p) => ({ ...p, notes: e.target.value }))}
               />
@@ -383,10 +388,10 @@ export default function CommissionSettingsPanel() {
             {/* Case visibility selector */}
             <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                <Eye className="h-3.5 w-3.5" /> Which cases can this partner see?
+                <Eye className="h-3.5 w-3.5" /> {t("commissionSettings.visibilityQuestion")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {VISIBILITY_OPTIONS.map((opt) => {
+                {VISIBILITY_KEYS.map((opt) => {
                   const currentVal = newPartnerOverride.show_all_cases;
                   const isSelected =
                     opt.value === "true" ? currentVal === true :
@@ -402,14 +407,16 @@ export default function CommissionSettingsPanel() {
                           show_all_cases: opt.value === "null" ? null : opt.value === "true",
                         }))
                       }
-                      className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                      className={`p-3 rounded-xl border text-start text-xs transition-all ${
                         isSelected
                           ? "bg-primary text-primary-foreground border-primary shadow-sm"
                           : "bg-card border-border hover:border-primary/40"
                       }`}
                     >
-                      <p className="font-semibold">{opt.label}</p>
-                      <p className={`mt-0.5 ${isSelected ? "opacity-80" : "text-muted-foreground"}`}>{opt.desc}</p>
+                      <p className="font-semibold">{vis(opt.key)}</p>
+                      <p className={`mt-0.5 ${isSelected ? "opacity-80" : "text-muted-foreground"}`}>
+                        {vis(`${opt.key}Desc`)}
+                      </p>
                     </button>
                   );
                 })}
@@ -421,7 +428,7 @@ export default function CommissionSettingsPanel() {
               onClick={addPartnerOverride}
               disabled={!newPartnerOverride.partner_id || !newPartnerOverride.amount}
             >
-              Save Partner Commission
+              {t("commissionSettings.savePartner")}
             </Button>
           </div>
         </CardContent>
@@ -433,7 +440,7 @@ export default function CommissionSettingsPanel() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <UserCog className="h-4 w-4 text-primary" />
-              Team Member Commission
+              {t("commissionSettings.teamTitle")}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchData}>
               <RefreshCw className="h-3.5 w-3.5" />
@@ -441,7 +448,6 @@ export default function CommissionSettingsPanel() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Existing overrides */}
           {teamOverrides.length > 0 && (
             <div className="space-y-2">
               {teamOverrides.map((ov) => (
@@ -451,7 +457,7 @@ export default function CommissionSettingsPanel() {
                     {ov.notes && <p className="text-xs text-muted-foreground truncate">{ov.notes}</p>}
                   </div>
                   <Badge variant="secondary" className="font-mono shrink-0">
-                    ₪{ov.commission_amount.toLocaleString("en-US")} / student
+                    ₪{ov.commission_amount.toLocaleString("en-US")} {t("commissionSettings.perStudent")}
                   </Badge>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => deleteTeamOverride(ov.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
@@ -462,19 +468,21 @@ export default function CommissionSettingsPanel() {
           )}
 
           {teamOverrides.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-3">No team member commissions configured yet.</p>
+            <p className="text-sm text-muted-foreground text-center py-3">{t("commissionSettings.noTeamOverrides")}</p>
           )}
 
           {/* Add / update form */}
           <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add / Update Team Member</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t("commissionSettings.addTeam")}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <Select
                 value={newTeamOverride.team_member_id}
                 onValueChange={(v) => setNewTeamOverride((p) => ({ ...p, team_member_id: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select team member" />
+                  <SelectValue placeholder={t("commissionSettings.selectTeam")} />
                 </SelectTrigger>
                 <SelectContent>
                   {teamMembers.map((m) => (
@@ -483,18 +491,18 @@ export default function CommissionSettingsPanel() {
                 </SelectContent>
               </Select>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
                 <Input
                   type="number"
                   min="0"
-                  placeholder="Amount per student"
-                  className="pl-7"
+                  placeholder={t("commissionSettings.amountPlaceholder")}
+                  className="ps-7"
                   value={newTeamOverride.amount}
                   onChange={(e) => setNewTeamOverride((p) => ({ ...p, amount: e.target.value }))}
                 />
               </div>
               <Input
-                placeholder="Notes (optional)"
+                placeholder={t("commissionSettings.notesPlaceholder")}
                 value={newTeamOverride.notes}
                 onChange={(e) => setNewTeamOverride((p) => ({ ...p, notes: e.target.value }))}
               />
@@ -504,12 +512,23 @@ export default function CommissionSettingsPanel() {
               onClick={addTeamOverride}
               disabled={!newTeamOverride.team_member_id || !newTeamOverride.amount}
             >
-              Save Team Member Commission
+              {t("commissionSettings.saveTeam")}
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <AdminPasswordConfirm
+        open={gateOpen}
+        reason={vis("allDesc")}
+        onCancel={() => setGateOpen(false)}
+        onConfirmed={async () => {
+          setGateOpen(false);
+          await persistPartnerOverride();
+        }}
+      />
     </div>
   );
 }
+
 
