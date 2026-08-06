@@ -607,7 +607,25 @@ const AdminPipelinePage = () => {
                       );
                     })
                   )}
+                  {!loading && allStatusCases.length > statusCases.length && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-8 text-xs"
+                      onClick={() =>
+                        setColLimits((prev) => ({
+                          ...prev,
+                          [status]: (prev[status] ?? COLUMN_PAGE_SIZE) + COLUMN_PAGE_SIZE,
+                        }))
+                      }
+                    >
+                      {t("common.showMore", "Show more")} (
+                      {(allStatusCases.length - statusCases.length).toLocaleString("en-US")})
+                    </Button>
+                  )}
                 </div>
+
               </div>
             );
           })}
