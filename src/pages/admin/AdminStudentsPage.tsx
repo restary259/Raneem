@@ -41,6 +41,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 interface StudentRecord {
   id: string;
@@ -535,8 +536,15 @@ export default function AdminStudentsPage() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selected) return;
+    const uploadError0 = validateUploadFile(file);
+    if (uploadError0) {
+      toast({ variant: "destructive", description: uploadError0 });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setUploading(true);
     try {
+
       const ext = file.name.split(".").pop();
       const path = `${selected.id}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("student-documents").upload(path, file, { upsert: false });

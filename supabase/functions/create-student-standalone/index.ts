@@ -1,12 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -35,7 +33,16 @@ serve(async (req) => {
     const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
 
 
-    const { email, full_name, case_id, created_by } = await req.json();
+    const parsed = await parseBody(req, z.object({
+      email: emailField,
+      full_name: personName,
+      case_id: uuid.optional().nullable(),
+      created_by: uuid.optional().nullable(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { email, full_name, case_id, created_by } = parsed.data;
 
     if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

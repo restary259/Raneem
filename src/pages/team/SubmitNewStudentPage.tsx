@@ -19,6 +19,7 @@ import type { TFunction } from "i18next";
 import { generateIntakeMonths } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -433,10 +434,16 @@ export default function SubmitNewStudentPage() {
       });
 
       for (const doc of uploadedFiles) {
+        const invalid = validateUploadFile(doc.file);
+        if (invalid) {
+          toast({ variant: "destructive", description: `${doc.file.name}: ${invalid}` });
+          continue;
+        }
         const path = `${caseId}/${doc.category}_${doc.file.name}`;
         const { data: uploadData } = await supabase.storage
           .from("student-documents")
           .upload(path, doc.file, { upsert: true });
+
         if (uploadData?.path) {
           const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(uploadData.path);
           await supabase.from("documents").insert({
