@@ -92,6 +92,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
   toolbar,
 }) => {
   const { t } = useTranslation('dashboard');
+  const { translate } = useSheetLabels();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [visible, setVisible] = useState<Set<string>>(
@@ -107,9 +108,9 @@ const SheetTable: React.FC<SheetTableProps> = ({
     const q = search.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter(r =>
-      activeColumns.some(c => String(r[c.key] ?? '').toLowerCase().includes(q)),
+      activeColumns.some(c => formatCell(r[c.key], c, translate).toLowerCase().includes(q)),
     );
-  }, [rows, search, activeColumns]);
+  }, [rows, search, activeColumns, translate]);
 
   const totals = useMemo(() => {
     const cols = activeColumns.filter(c => c.total);
@@ -133,11 +134,11 @@ const SheetTable: React.FC<SheetTableProps> = ({
     try {
       await exportXLSX({
         headers: activeColumns.map(c => c.label),
-        rows: filteredRows.map(r => activeColumns.map(c => formatCell(r[c.key], c))),
+        rows: filteredRows.map(r => activeColumns.map(c => formatCell(r[c.key], c, translate))),
         summaryRows: totals
           ? [
               activeColumns.map(c =>
-                c.total ? formatCell(totals[c.key], c) : c === activeColumns[0] ? t('sheets.total') : '',
+                c.total ? formatCell(totals[c.key], c, translate) : c === activeColumns[0] ? t('sheets.total') : '',
               ),
             ]
           : undefined,
@@ -230,7 +231,17 @@ const SheetTable: React.FC<SheetTableProps> = ({
                 <tr key={r.id ?? i} className="border-t border-border hover:bg-muted/30">
                   {activeColumns.map(c => (
                     <td key={c.key} className="px-3 py-2 whitespace-nowrap">
-                      {formatCell(r[c.key], c)}
+                      {c.type === 'enum' && (c.enumGroup ?? 'status') === 'status' && r[c.key] ? (
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            STATUS_TONE[String(r[c.key]).toLowerCase()] ?? 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {formatCell(r[c.key], c, translate)}
+                        </span>
+                      ) : (
+                        formatCell(r[c.key], c, translate)
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -241,7 +252,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
                 <tr className="border-t-2 border-border bg-muted/50 font-semibold">
                   {activeColumns.map((c, idx) => (
                     <td key={c.key} className="px-3 py-2 whitespace-nowrap">
-                      {c.total ? formatCell(totals[c.key], c) : idx === 0 ? t('sheets.total') : ''}
+                      {c.total ? formatCell(totals[c.key], c, translate) : idx === 0 ? t('sheets.total') : ''}
                     </td>
                   ))}
                 </tr>
