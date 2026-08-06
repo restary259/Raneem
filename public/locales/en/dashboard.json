@@ -2430,6 +2430,16 @@
     "whatsapp": "Share on WhatsApp",
     "shareText": "Study in Germany with Darb — apply through my link:"
   },
+  "partnerLinks": {
+    "title": "Campaign links",
+    "hint": "Create a separate link per channel to see which one brings the most students.",
+    "labelPlaceholder": "Link name (e.g. Instagram)",
+    "create": "Create",
+    "created": "Link created",
+    "empty": "No campaign links yet.",
+    "toggle": "Enable link"
+  },
+
   "forcePassword": {
     "title": "Set a new password",
     "desc": "Your account still uses the temporary password. Choose a new, strong password to continue.",
