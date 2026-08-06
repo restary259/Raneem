@@ -76,6 +76,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.students", icon: GraduationCap, href: "/team/students" },
     { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
     { key: "nav.analytics", icon: BarChart2, href: "/team/analytics" },
+    { key: "nav.spreadsheet", icon: Table, href: "/team/spreadsheet" },
   ],
   social_media_partner: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
