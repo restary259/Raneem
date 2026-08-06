@@ -197,6 +197,9 @@ export default function PartnerOverviewPage() {
       {/* My referral link */}
       <ReferralLinkCard userId={userId} />
 
+      <PartnerLinksCard partnerId={userId} />
+
+
       {/* Earnings Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">
         <div>
