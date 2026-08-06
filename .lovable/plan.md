@@ -1,42 +1,169 @@
-# CI failure audit and fix
+# Case Flow — Audit & Fix Plan
 
-## What I verified in the repo
+Read-only audit of the three problems you reported, plus a live test run of case `raneem` (`320150e5…`).
 
-The exact GitHub Actions log is not visible from here, so the failing step is unconfirmed. What I could confirm by reading the repo:
+---
 
-1. **`package-lock.json` is stale.** Its root `devDependencies` list contains only the original template packages — `vitest`, `@playwright/test`, and `jsdom` are missing entirely, and there are no lock entries for them. The workflow runs `npm install`, which papers over this by resolving from the network, but the install is non-deterministic and can pull versions that were never tested here. Any step that assumed `npm ci` would fail outright.
-2. **The typecheck step is a no-op.** `npx tsc --noEmit` uses the root `tsconfig.json`, which has `"files": []` and only project references. It compiles nothing and exits 0, so type errors never fail CI — the check gives false confidence rather than protection.
-3. **Backend E2E assertions silently skip.** `e2e/authorization.spec.ts` and `e2e/spreadsheet.spec.ts` read `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` from `process.env`, and the workflow feeds them from repository `vars.*`. If those repo variables were never set in GitHub, every backend guard test skips and only the browser tests actually run.
-4. **Two lockfiles coexist** (`bun.lock`, `bun.lockb`, and `package-lock.json`), so local runs and CI resolve dependencies through different paths.
+## 1. Payment confirmation is blocked — CRITICAL, and it's my regression
 
-Locally, on the current tree: typecheck is clean, `vitest run` passes 14/14, and the app builds.
+**Confirmed from the database error log**, not guessed:
 
-## Plan
+```
+ERROR: record "new" has no field "team_member_commission_ils"
+```
 
-### Step 1 — Confirm the failing step
-Re-run the workflow and read the log for the first failing step. If you can paste the failing step name and its error output, that pins the diagnosis; the fixes below are worth doing regardless.
+This error repeats ~30 times, matching every save you attempted at 03:08–03:15 UTC.
 
-### Step 2 — Make dependency install deterministic
-- Regenerate `package-lock.json` from the current `package.json` so `vitest`, `@playwright/test`, `jsdom`, `exceljs`, and `jspdf` are all locked.
-- Switch the workflow to `npm ci`, which fails loudly on drift instead of resolving silently.
-- Decide on one lockfile for CI. Keeping `package-lock.json` as the CI source of truth and leaving the bun lockfiles for local use is fine, but they must not drift.
+### What is happening
 
-### Step 3 — Make the typecheck real
-Replace `npx tsc --noEmit` with a command that actually compiles the app project (`tsc -b --noEmit` or `tsc --noEmit -p tsconfig.app.json`), so type regressions fail CI. Expect this step to start reporting real errors the first time it runs properly — fix whatever it surfaces.
+In the hardening migration I ran earlier, I added a guard trigger
+`restrict_cases_financial_columns` (BEFORE UPDATE on `cases`). It compares six
+commission columns — but two of them **do not exist** on the `cases` table:
 
-### Step 4 — Make backend E2E coverage explicit
-- Add `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_SUPABASE_PROJECT_ID` as repository variables in GitHub so the authorization and tax-rollup guards actually execute.
-- Change the specs' skip behaviour under CI: when `process.env.CI` is set and the backend variables are missing, fail with a clear message instead of skipping, so a missing configuration never looks like a green run.
+| Referenced by the trigger | Exists on `cases`? |
+| --- | --- |
+| `platform_revenue_ils` | yes |
+| `influencer_commission` | yes |
+| `lawyer_commission` | yes |
+| `school_commission` | yes |
+| `team_member_commission_ils` | **NO** |
+| `partner_commission_ils` | **NO** |
 
-### Step 5 — Harden the E2E job
-- Cache the Playwright browser download keyed on the `@playwright/test` version to cut install time and flakiness.
-- Upload `test-results/` alongside `playwright-report/` so traces and failure screenshots come back with the artifact.
+The guard body runs only when the user is *not* an admin. So:
 
-### Step 6 — Verify
-Run the same sequence locally as CI runs it (`npm ci`, real typecheck, `npm run test`, `npm run build`, `npm run test:e2e`) and confirm each step passes before pushing.
+- **Admin** updates → guard body skipped → work fine (that's why the admin
+  `enrollment_paid` change at 01:55 succeeded).
+- **Team member** updates → guard body runs → hits the missing field → the whole
+  `UPDATE cases` transaction aborts.
+
+### Observed damage on your test case
+
+```text
+03:08:59  Profile step   → case_submissions saved OK   (no triggers on that table)
+                         → UPDATE cases   ABORTED      (silently — error not checked)
+03:11:01  Payment step   → case_submissions saved OK   (service_fee 5000, payment_confirmed true)
+                         → UPDATE cases   ABORTED      → red toast, status never moved
+```
+
+`cases.updated_at` is still frozen at **00:51:45** — no team-member write has
+landed on the row since the migration. The case still reads `profile_completion`
+even though payment is recorded on the submission row.
+
+**Blast radius:** every non-admin write to `cases` — status advance, reassign,
+name/phone edits from the profile step, notes. All broken since 03:05 UTC.
+
+### Fix
+
+- Rewrite `restrict_cases_financial_columns` to be column-agnostic: iterate a
+  list of guarded column names and compare via `to_jsonb(NEW)->>col` vs
+  `to_jsonb(OLD)->>col`, skipping any name not present on the row. This makes the
+  guard impossible to break again by a rename or a dropped column.
+- Guard the columns that actually exist: `platform_revenue_ils`,
+  `influencer_commission`, `lawyer_commission`, `school_commission`,
+  `referral_discount`, `commission_split_done`.
+- Repair the stranded test case: move it to `payment_confirmed` and write the
+  missing `activity_log` entry so the audit trail is not left with a hole.
+
+### Related fix — silent failures
+
+`PaymentConfirmationForm` and `ProfileCompletionForm` issue
+`supabase.from('cases').update(...)` with no `.select()`. With RLS, a write that
+matches zero rows returns **no error at all**, so the profile step failed
+completely silently. Add `.select('id').single()` to both so a blocked write
+always surfaces instead of pretending to succeed.
+
+---
+
+## 2. Rows show English while the UI is Arabic
+
+Three separate causes:
+
+**a. `ProfileCompletionForm.tsx` is 100% hardcoded English.** It imports
+`useTranslation` but only pulls `i18n` — never `t`. Every step name
+(`Personal Info`, `Contact Details`, `Program`, `Accommodation`, `Review & Save`),
+every field label, every placeholder (`Street`, `House No.`, `Postcode`, `Year`,
+`Month`, `Day`), the validation toast, and all 15 rows of the review summary are
+literal English strings.
+
+**b. `CaseDetailPage.tsx` builds labels from raw database keys.** The extra-data
+grid does:
+
+```ts
+const label = key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+```
+
+So the column name `emergency_contact_name` renders as "Emergency Contact Name"
+in Arabic mode. This is the "raw rows in English" you're seeing.
+
+**c. Catalog names always use the English column.** Program, school,
+accommodation and insurance names are read as `name_en` regardless of locale,
+even though `name_ar` exists on every one of those tables.
+
+### Fix
+
+- Add a `case.profileForm.*` block plus a `case.extra.*` label dictionary to
+  `public/locales/en/dashboard.json` and `public/locales/ar/dashboard.json`.
+  (The existing `case.detail.*` and `team.payment.*` namespaces are already
+  complete at 83 and 10 keys in both languages — no gap there.)
+- Wire `t()` through `ProfileCompletionForm`, including the `STEPS` array and the
+  review summary.
+- Replace the title-case fallback in `CaseDetailPage` with
+  `t('case.extra.' + key, { defaultValue: <humanised key> })`, so unknown keys
+  degrade gracefully instead of disappearing.
+- Add a small `localizedName(row)` helper that picks `name_ar` when the locale is
+  Arabic and falls back to `name_en`, and use it in both files.
+
+---
+
+## 3. Emergency contact auto-fills from email
+
+`ProfileCompletionForm.tsx` has **zero** `autoComplete` attributes on 20+ inputs,
+and the fields sit in bare `<div>`s with no `name` attributes. Chrome then
+guesses by proximity and pours the saved email/phone into
+**Emergency Contact Name** and **Emergency Contact Phone**.
+
+### Fix
+
+- Put `autoComplete="off"` and a unique, non-standard `name` (e.g.
+  `name="darb-emergency-name"`) on both emergency fields — Chrome ignores plain
+  `off` on recognised field names, so the unique name matters.
+- Give the genuinely autofillable fields correct tokens instead
+  (`email`, `tel`, `given-name`, `family-name`, `address-line1`, `postal-code`),
+  which stops the browser guessing at the neighbours.
+
+---
+
+## Also found (no action requested yet)
+
+- **19 triggers across 10 tables** reference functions that `authenticated` can no
+  longer execute, after the earlier lockdown migration. I chased this as the
+  likely cause first — it is **not** a problem: the log proves the trigger body
+  *did* run and threw from inside, so Postgres does not re-check EXECUTE when a
+  trigger fires. Leaving these as-is.
+- `case_payments` still carries the broad `anon` grant I flagged previously.
+- `programs`, `schools`, `accommodations` and `insurances` are all **empty**, so
+  every dropdown in the profile step renders with no options. Worth seeding
+  before a real case walkthrough.
+
+---
 
 ## Technical notes
 
-- Files touched: `.github/workflows/ci.yml`, `package-lock.json` (regenerated), `e2e/authorization.spec.ts`, `e2e/spreadsheet.spec.ts`.
-- No application source, database, edge function, or RLS changes are part of this plan.
-- Setting the GitHub repository variables in Step 4 has to be done by you in the repo settings; I cannot set them from here.
+- Files: `src/components/team/ProfileCompletionForm.tsx`,
+  `src/pages/team/CaseDetailPage.tsx`,
+  `src/components/team/PaymentConfirmationForm.tsx`,
+  `public/locales/{en,ar}/dashboard.json`, plus one migration.
+- One migration: replace the guard trigger function, then repair the stranded case.
+- No RLS policy changes. The `cases` policies are correct and were never the cause.
+
+## Test run after the fixes
+
+1. Confirm payment on `raneem` → status advances to `payment_confirmed`, and an
+   `activity_log` row appears.
+2. Advance to `submitted`, then admin-advance to `enrollment_paid`, and verify
+   `auto_split_payment` still fires and writes revenue and rewards.
+3. Reassign the case, and edit a field from the profile step — both must now
+   error loudly rather than silently no-op.
+4. Switch to Arabic and re-walk the profile step: assert no Latin text remains in
+   labels or in the extra-data grid.
+5. Autofill check: fill email, then confirm both emergency fields stay empty.
