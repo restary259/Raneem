@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
+import { useSheetLabels } from './sheetLabels';
 import { exportWorkbook } from '@/utils/exportUtils';
 import {
   fetchStudentsSheet,
@@ -31,6 +32,7 @@ interface Props {
 const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const { t } = useTranslation('dashboard');
   const { toast } = useToast();
+  const { translate } = useSheetLabels();
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [exporting, setExporting] = useState(false);
@@ -47,7 +49,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'full_name', label: c('name') },
         { key: 'phone', label: c('phone') },
         { key: 'city', label: c('city') },
-        { key: 'status', label: c('status') },
+        { key: 'status', label: c('status'), type: 'enum', enumGroup: 'status' },
         { key: 'team_member', label: c('teamMember'), hidden: scope === 'team' },
         { key: 'partner', label: c('partner'), hidden: scope === 'team' },
         { key: 'school_name', label: c('school') },
@@ -78,7 +80,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'total_paid', label: c('totalPaid'), type: 'currency', total: true },
         { key: 'remaining_balance', label: c('remaining'), type: 'currency', total: true },
         { key: 'confirmed_by', label: c('confirmedBy') },
-        { key: 'status', label: c('status') },
+        { key: 'status', label: c('status'), type: 'enum', enumGroup: 'status' },
       ],
     };
 
@@ -89,10 +91,10 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       columns: [
         { key: 'created_at', label: c('created'), type: 'date' },
         { key: 'person', label: c('person'), hidden: scope === 'team' },
-        { key: 'kind', label: c('kind'), hidden: scope === 'team' },
-        { key: 'source', label: c('source') },
+        { key: 'kind', label: c('kind'), type: 'enum', enumGroup: 'kind', hidden: scope === 'team' },
+        { key: 'source', label: c('source'), type: 'enum', enumGroup: 'kind' },
         { key: 'amount', label: c('amount'), type: 'currency', total: true },
-        { key: 'status', label: c('status') },
+        { key: 'status', label: c('status'), type: 'enum', enumGroup: 'rewardStatus' },
         { key: 'unlock_date', label: c('unlockDate'), type: 'date' },
         { key: 'paid_at', label: c('paidAt'), type: 'date' },
       ],
@@ -129,11 +131,11 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'requested_at', label: c('requested'), type: 'date' },
         { key: 'paid_at', label: c('paidAt'), type: 'date' },
         { key: 'person', label: c('person') },
-        { key: 'role', label: c('role') },
+        { key: 'role', label: c('role'), type: 'enum', enumGroup: 'role' },
         { key: 'students', label: c('linkedStudents') },
         { key: 'amount', label: c('amount'), type: 'currency', total: true },
-        { key: 'status', label: c('status') },
-        { key: 'payment_method', label: c('method') },
+        { key: 'status', label: c('status'), type: 'enum', enumGroup: 'rewardStatus' },
+        { key: 'payment_method', label: c('method'), type: 'enum', enumGroup: 'method' },
         { key: 'transaction_ref', label: c('reference') },
       ],
     };
@@ -144,14 +146,14 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       load: () => fetchCatalogSheet(),
       columns: [
         { key: 'name', label: c('name') },
-        { key: 'kind', label: c('kind') },
+        { key: 'kind', label: c('kind'), type: 'enum', enumGroup: 'kind' },
         { key: 'school', label: c('school') },
         { key: 'city', label: c('city') },
-        { key: 'type', label: c('type') },
+        { key: 'type', label: c('type'), type: 'enum', enumGroup: 'programType' },
         { key: 'duration', label: c('duration') },
         { key: 'price', label: c('price'), type: 'number' },
         { key: 'currency', label: c('currency') },
-        { key: 'active', label: c('active') },
+        { key: 'active', label: c('active'), type: 'enum', enumGroup: 'bool' },
         { key: 'students', label: c('studentsPlaced'), type: 'number', total: true },
       ],
     };
@@ -161,7 +163,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       label: t('sheets.tab.taxes'),
       load: () => fetchTaxSheet(),
       columns: [
-        { key: 'month', label: c('month') },
+        { key: 'month', label: c('month'), type: 'enum', enumGroup: 'month' },
         { key: 'gross_collected', label: c('gross'), type: 'currency', total: true },
         { key: 'vat_amount', label: c('vat'), type: 'currency', total: true },
         { key: 'net_before_vat', label: c('netBeforeVat'), type: 'currency', total: true },
@@ -207,7 +209,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         loaded.map(({ def, rows }) => ({
           name: def.label,
           headers: def.columns.filter(col => !col.hidden).map(col => col.label),
-          rows: rows.map(r => def.columns.filter(col => !col.hidden).map(col => formatCell(r[col.key], col))),
+          rows: rows.map(r => def.columns.filter(col => !col.hidden).map(col => formatCell(r[col.key], col, translate))),
         })),
         `DARB-${scope}-workbook-${new Date().toISOString().slice(0, 10)}`,
       );
