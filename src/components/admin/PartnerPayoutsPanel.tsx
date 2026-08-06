@@ -379,6 +379,12 @@ export default function PartnerPayoutsPanel() {
 
   const executeConfirm = async () => {
     if (!pendingAction || !currentUserId) return;
+    if (pendingAction.rewards.length === 0) {
+      toast({ description: t('admin.partnerPayouts.nothingToPay', 'Nothing to pay — all rewards are already in a payout request.') });
+      setShowConfirmDialog(false);
+      setPendingAction(null);
+      return;
+    }
     setIsExecuting(true);
     try {
       const now = new Date().toISOString();
