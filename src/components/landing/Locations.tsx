@@ -11,7 +11,7 @@ const Locations = () => {
     <section id="locations" className="py-12 md:py-24 bg-secondary">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold">{t('locations.title')}</h2>
+          <h1 className="text-3xl md:text-4xl font-bold">{t('locations.title')}</h1>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {Array.isArray(locations) && locations.map((location: any, index: number) => (
