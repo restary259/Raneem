@@ -32,6 +32,8 @@ serve(async (req) => {
     if (!roles?.length) {
       return new Response(JSON.stringify({ error: "Team member or admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
+
 
     const { email, full_name, case_id, created_by } = await req.json();
 
