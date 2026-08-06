@@ -2325,6 +2325,10 @@ export type Database = {
       }
     }
     Functions: {
+      cancel_payout_request: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
       get_forgotten_cases: {
         Args: never
         Returns: {

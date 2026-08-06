@@ -93,18 +93,19 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
       const { data } = await (supabase as any).from('referrals').select('referred_name').in('id', referralIds);
       if (data) studentNames = data.map((r: any) => r.referred_name);
     }
-    const { error: insertError } = await (supabase as any).from('payout_requests').insert({
-      requestor_id: userId, requestor_role: 'student',
-      linked_reward_ids: eligibleRewards.map(r => r.id),
-      linked_student_names: studentNames, amount: availableAmount,
-      admin_notes: requestNotes || null
+    // Server-side RPC enforces ownership, pending status, the 20-day lock and
+    // duplicate-request protection, then flips the rewards atomically.
+    const { error: rpcError } = await (supabase as any).rpc('request_payout', {
+      p_reward_ids: eligibleRewards.map(r => r.id),
+      p_amount: availableAmount,
+      p_notes: requestNotes || null,
+      p_payment_method: 'bank_transfer',
+      p_requestor_role: 'student',
+      p_student_names: studentNames,
     });
-    if (insertError) {
-      toast({ variant: 'destructive', title: t('common.error'), description: insertError.message });
+    if (rpcError) {
+      toast({ variant: 'destructive', title: t('common.error'), description: rpcError.message });
       return;
-    }
-    for (const r of eligibleRewards) {
-      await (supabase as any).from('rewards').update({ status: 'approved', payout_requested_at: new Date().toISOString() }).eq('id', r.id);
     }
     toast({ title: t('rewards.payoutRequested') });
     setShowRequestModal(false);
@@ -115,15 +116,10 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
   const cancelRequest = async (reqId: string) => {
     const req = payoutRequests.find(r => r.id === reqId);
     if (!req || req.status !== 'pending') return;
-    const { error: cancelError } = await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: 'Cancelled by user' }).eq('id', reqId);
+    const { error: cancelError } = await (supabase as any).rpc('cancel_payout_request', { p_request_id: reqId });
     if (cancelError) {
       toast({ variant: 'destructive', title: t('common.error'), description: cancelError.message });
       return;
-    }
-    if (req.linked_reward_ids?.length) {
-      for (const rid of req.linked_reward_ids) {
-        await (supabase as any).from('rewards').update({ status: 'pending', payout_requested_at: null }).eq('id', rid);
-      }
     }
     toast({ title: t('rewards.requestCancelled', 'Request cancelled') });
     fetchData();
