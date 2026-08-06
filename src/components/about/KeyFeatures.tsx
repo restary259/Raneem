@@ -13,7 +13,7 @@ const icons = {
 const iconMap: (keyof typeof icons)[] = ["CheckCircle", "Users", "Wallet", "Handshake", "MapPin"];
 
 const KeyFeatures = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('about');
   const features = t('keyFeatures.features', { returnObjects: true }) as { text: string }[];
   
   return (

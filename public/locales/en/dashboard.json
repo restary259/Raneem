@@ -98,7 +98,13 @@
       "financial": "Financial Documents",
       "housing": "Housing Contract",
       "other": "Other"
-    }
+    },
+    "customDocName": "Document name",
+    "customDocNamePlaceholder": "Enter the document name",
+    "customNameRequired": "Please enter a document name",
+    "fileTooLarge": "File is too large",
+    "invalidType": "Unsupported file type",
+    "maxSize": "Maximum size 15 MB"
   },
   "payments": {
     "title": "Payment Details",
@@ -128,7 +134,13 @@
     "title": "Requirements Checklist",
     "progress": "Completed {{completed}} of {{total}} requirements",
     "allComplete": "All requirements completed!",
-    "noItems": "No requirements defined yet"
+    "noItems": "No requirements defined yet",
+    "checkTitle": "Mark as complete?",
+    "checkDesc": "Confirm that you completed \"{{name}}\"?",
+    "uncheckTitle": "Uncheck item?",
+    "uncheckDesc": "Are you sure you want to uncheck \"{{name}}\"?",
+    "confirmBtn": "Confirm",
+    "cancelBtn": "Cancel"
   },
   "profile": {
     "title": "Account",
@@ -174,7 +186,30 @@
     "hasCriminalRecord": "Do you have a criminal record?",
     "criminalRecordDetails": "Criminal Record Details",
     "hasDualCitizenship": "Do you have dual citizenship?",
-    "secondPassportCountry": "Second Passport Country"
+    "secondPassportCountry": "Second Passport Country",
+    "personalInfo": "Personal information",
+    "identityInfo": "Identity information",
+    "identityInfoNote": "These fields are managed by the agency. Contact us to update them.",
+    "applicationInfo": "Language school & application",
+    "languageSchool": "Language school",
+    "nationality": "Nationality",
+    "passportNumber": "Passport number",
+    "dateOfBirth": "Date of birth",
+    "cityOfBirth": "City of birth",
+    "arrivalDate": "Date of arrival in Germany",
+    "homeAddress": "Home address",
+    "homeAddressPlaceholder": "Street, city, country",
+    "germanAddress": "Address in Germany",
+    "germanAddressPlaceholder": "Street, city, postcode",
+    "emergencyContact": "Emergency contact",
+    "dangerZone": "Danger zone",
+    "deleteAccount": "Delete account permanently",
+    "deleteAccountTitle": "Delete account permanently",
+    "deleteAccountDesc": "This permanently deletes your account and all your data.",
+    "deleteAccountWarning": "Permanently deletes your account and all associated data. This cannot be undone.",
+    "typeDelete": "Type DELETE to confirm:",
+    "confirmDelete": "Yes, delete my account",
+    "accountDeleted": "Account deleted"
   },
   "referrals": {
     "title": "Refer a Friend or Family Member",
@@ -215,7 +250,9 @@
       "enrolled": "Enrolled",
       "paid": "Paid",
       "rejected": "Rejected"
-    }
+    },
+    "namePlaceholder": "Friend's full name",
+    "nameRequired": "Name is required"
   },
   "rewards": {
     "totalRewards": "Total Rewards",
@@ -332,7 +369,14 @@
       "loading": "Loading...",
       "allFieldsRequired": "Please fill all fields",
       "accountCreated": "Account created successfully",
-      "credentialsHint": "Account created. Share credentials with the member."
+      "credentialsHint": "Account created. Share credentials with the member.",
+      "accountDeleted": "Account deleted successfully",
+      "commissionCustom": "Custom amount for this account",
+      "commissionDefault": "Default amount for this role",
+      "confirmDelete": "Delete",
+      "deleteAccount": "Delete account",
+      "deleteConfirmTitle": "Delete account?",
+      "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone."
     },
     "programs": {
       "title": "Programs & Accommodations",
@@ -443,7 +487,10 @@
       "tabPending": "Pending Review",
       "tabCompleted": "Completed",
       "enrolledOn": "Enrolled On",
-      "emptyCompleted": "No completed cases yet"
+      "emptyCompleted": "No completed cases yet",
+      "paymentSplit": "Payment split",
+      "paymentSplitDesc": "Review how the service fee will be split before confirming enrollment.",
+      "splitNote": "Commissions are configured in Settings → Money Split. Confirm with your password to continue."
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -461,7 +508,11 @@
       "tabAgentPayouts": "Agent Payouts",
       "tabPartnerPayouts": "Partner Payouts",
       "recentEnrolled": "Recent Enrolled Cases",
-      "noData": "No data yet"
+      "noData": "No data yet",
+      "partnerDirectTab": "Direct Partner Payouts tab",
+      "partnerDirectHint": "— admin-initiated payments. Rewards marked \"Payout Requested\" must be settled in the Payout Requests tab to avoid double payment.",
+      "payoutRequestsTab": "Payout Requests tab",
+      "payoutRequestsHint": "— handles formal payout requests submitted by partners from their dashboard (reward status: pending → approved → paid)."
     },
     "partnerPayouts": {
       "title": "Partner Payouts",
@@ -493,7 +544,12 @@
       "successDesc": "₪{{amount}} confirmed for {{partner}}",
       "noRewardRows": "No reward rows",
       "createdLabel": "Created",
-      "confirmedLabel": "Confirmed"
+      "confirmedLabel": "Confirmed",
+      "inRequestGroup": "In payout request ({{count}}) — {{total}}",
+      "nothingToPay": "Nothing to pay — all rewards are already in a payout request.",
+      "payoutRequested": "Payout requested",
+      "payoutRequestedHint": "The partner submitted a formal payout request. Handle it in the \"Payout Requests\" tab.",
+      "seeRequestsTab": "Go to Payout Requests tab"
     },
     "analytics": {
       "title": "Analytics",
@@ -532,7 +588,9 @@
       "assigned": "Assigned",
       "paid": "Paid",
       "commission": "Commission",
-      "funnelTitle": "Client Funnel"
+      "funnelTitle": "Client Funnel",
+      "noStageData": "Not enough data yet to calculate stage durations",
+      "noStageDataSub": "This chart fills in as cases move through the pipeline over the coming days"
     },
     "commission": {
       "globalRates": "Global Commission Rates",
@@ -898,7 +956,9 @@
       "exportExcel": "Export Excel",
       "requestId": "Request ID",
       "approvalDate": "Approval Date",
-      "notes": "Notes"
+      "notes": "Notes",
+      "partnerPendingHint": "Partner payout requests",
+      "payError": "Payment could not be completed"
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -920,6 +980,69 @@
         "partnership": "Partnership",
         "contact": "Contact"
       }
+    },
+    "contacts": {
+      "searchPlaceholder": "Search by name or email",
+      "export": "Export",
+      "new": "New",
+      "replied": "Replied",
+      "archived": "Archived",
+      "markReplied": "Mark as replied",
+      "archive": "Archive",
+      "noMessages": "No submissions yet",
+      "noName": "No name",
+      "statusUpdated": "Status updated",
+      "sourcePartnership": "Partnership application",
+      "sourceContact": "Contact message",
+      "details": "Submission details",
+      "fields": {
+        "name": "Full name",
+        "full_name": "Full name",
+        "email": "Email",
+        "phone": "Phone",
+        "whatsapp": "WhatsApp",
+        "city": "City",
+        "age": "Age",
+        "education_level": "Education level",
+        "still_in_school": "Still in school",
+        "english_units": "English units",
+        "math_units": "Math units",
+        "interested_major": "Interested major",
+        "major": "Major",
+        "destination": "Country of interest",
+        "service": "Requested service",
+        "message": "Message",
+        "notes": "Notes",
+        "experience": "Experience",
+        "audience": "Audience size",
+        "social_links": "Social links",
+        "platform": "Platform",
+        "motivation": "Motivation",
+        "source": "Source"
+      },
+      "values": {
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    "passwordVerify": {
+      "title": "Confirm your identity",
+      "description": "Enter your account password to confirm this financial action.",
+      "password": "Password",
+      "placeholder": "Enter your password",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "verifying": "Verifying...",
+      "wrongPassword": "Incorrect password",
+      "userNotFound": "User could not be identified",
+      "verifyFailed": "Verification failed, please try again"
+    },
+    "shared": {
+      "deleteTitle": "Confirm deletion",
+      "deleteDesc": "This action cannot be undone.",
+      "deleteBtn": "Delete",
+      "cancelBtn": "Cancel",
+      "deleted": "Deleted"
     }
   },
   "influencer": {

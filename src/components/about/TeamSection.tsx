@@ -9,7 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 const TeamSection = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('about');
   const teamMembers = t('teamSection.members', { returnObjects: true }) as { name: string; role: string; bio: string, imageUrl: string }[];
   
   return (

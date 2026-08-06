@@ -33,6 +33,31 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
 
   const filtered = contacts.filter(c => !search || c.data?.name?.toLowerCase().includes(search.toLowerCase()) || c.data?.email?.toLowerCase().includes(search.toLowerCase()));
 
+  const humanize = (key: string) =>
+    key.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+
+  const fieldLabel = (key: string) => t(`admin.contacts.fields.${key}`, humanize(key));
+
+  const fieldValue = (value: any) => {
+    if (typeof value === 'boolean') return value ? t('admin.contacts.values.yes') : t('admin.contacts.values.no');
+    const s = String(value);
+    if (s === 'true' || s === 'yes') return t('admin.contacts.values.yes');
+    if (s === 'false' || s === 'no') return t('admin.contacts.values.no');
+    return s;
+  };
+
+  const sourceLabel = (source?: string) =>
+    (source || '').toLowerCase().includes('partner')
+      ? t('admin.contacts.sourcePartnership')
+      : t('admin.contacts.sourceContact');
+
+  const statusLabel = (status: string) =>
+    status === 'new'
+      ? t('admin.contacts.new')
+      : status === 'replied'
+        ? t('admin.contacts.replied')
+        : t('admin.contacts.archived');
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
@@ -50,13 +75,13 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
             <CardContent className="pt-4">
               <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                 <div>
-                  <h3 className="font-bold">{c.data?.name || t('admin.contacts.noName')}</h3>
+                  <h3 className="font-bold">{c.data?.name || c.data?.full_name || t('admin.contacts.noName')}</h3>
                   <p className="text-sm text-muted-foreground">{c.data?.email} • {c.data?.whatsapp || c.data?.phone || '—'}</p>
-                  {c.form_source && <p className="text-xs text-muted-foreground mt-1">{c.form_source}</p>}
+                  <Badge variant="outline" className="mt-1">{sourceLabel(c.form_source)}</Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={c.status === 'new' ? 'destructive' : c.status === 'replied' ? 'default' : 'secondary'}>
-                    {c.status === 'new' ? t('admin.contacts.new') : c.status === 'replied' ? t('admin.contacts.replied') : c.status}
+                    {statusLabel(c.status)}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{c.created_at?.split('T')[0]}</span>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(c.id)}>
@@ -67,15 +92,16 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
               {c.data && (
                 <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm bg-muted/40 p-3 rounded-lg">
                   {Object.entries(c.data as Record<string, any>)
-                    .filter(([k, v]) => !['name', 'email', 'whatsapp', 'phone'].includes(k) && v !== null && v !== undefined && String(v).trim() !== '')
+                    .filter(([k, v]) => !['name', 'full_name', 'email', 'whatsapp', 'phone'].includes(k) && v !== null && v !== undefined && String(v).trim() !== '')
                     .map(([k, v]) => (
                       <div key={k} className="break-words">
-                        <span className="text-muted-foreground">{k}: </span>
-                        <span className="font-medium">{String(v)}</span>
+                        <span className="text-muted-foreground">{fieldLabel(k)}: </span>
+                        <span className="font-medium">{fieldValue(v)}</span>
                       </div>
                     ))}
                 </div>
               )}
+
               <div className="mt-3 flex gap-2">
                 {c.status === 'new' && <Button size="sm" onClick={() => updateStatus(c.id, 'replied')}>{t('admin.contacts.markReplied')}</Button>}
                 {c.status !== 'archived' && <Button size="sm" variant="outline" onClick={() => updateStatus(c.id, 'archived')}>{t('admin.contacts.archive')}</Button>}
