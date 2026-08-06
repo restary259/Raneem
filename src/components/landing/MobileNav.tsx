@@ -57,7 +57,11 @@ const MobileNav = () => {
               <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
+              <Link onClick={close} to="/faq" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+                {t('nav.faq')}
+              </Link>
               <Link onClick={close} to="/educational-destinations" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+
                 {t('nav.educationalDestinations')}
               </Link>
               <Link onClick={close} to="/partnership" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
