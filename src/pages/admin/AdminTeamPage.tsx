@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2 } from 'lucide-react';
 import { buildReferralUrl } from '@/lib/referral';
+import { formatILS } from '@/lib/money';
 
 interface TeamMember {
   id: string;
@@ -20,10 +21,15 @@ interface TeamMember {
   role: string;
   created_at: string;
   referral_code: string | null;
+  /** Flat ILS amount this account actually earns per enrolled student. */
+  commission: number;
+  /** True when the amount comes from a per-account override, not the default. */
+  commissionOverridden: boolean;
 }
 
 /** Roles that get a public referral link of their own. */
 const REFERRING_ROLES = ['social_media_partner', 'ambassador'];
+
 
 const AdminTeamPage = () => {
   const { t, i18n } = useTranslation('dashboard');
@@ -52,14 +58,26 @@ const AdminTeamPage = () => {
       const userIds = (rolesRes.data || []).map(r => r.user_id);
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
-      const profilesRes = await (supabase as any)
-        .from('profiles')
-        .select('id, full_name, email, referral_code, referral_code_enabled')
-        .in('id', userIds);
+      const [profilesRes, settingsRes, partnerOvRes, teamOvRes] = await Promise.all([
+        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled').in('id', userIds),
+        (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate').limit(1).maybeSingle(),
+        (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
+        (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
+      ]);
       if (profilesRes.error) throw profilesRes.error;
 
       const profileMap: Record<string, any> = {};
-      (profilesRes.data || []).forEach(p => { profileMap[p.id] = p; });
+      (profilesRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
+
+      const overrideMap: Record<string, number> = {};
+      (partnerOvRes.data || []).forEach((o: any) => { overrideMap[o.partner_id] = o.commission_amount; });
+      (teamOvRes.data || []).forEach((o: any) => { overrideMap[o.team_member_id] = o.commission_amount; });
+
+      const defaults: Record<string, number> = {
+        social_media_partner: settingsRes.data?.partner_commission_rate ?? 0,
+        ambassador: settingsRes.data?.ambassador_commission_rate ?? 0,
+        team_member: settingsRes.data?.team_member_commission_rate ?? 0,
+      };
 
       const enriched = (rolesRes.data || []).map(r => ({
         id: r.user_id,
@@ -71,7 +89,10 @@ const AdminTeamPage = () => {
           profileMap[r.user_id]?.referral_code_enabled === false
             ? null
             : profileMap[r.user_id]?.referral_code ?? null,
+        commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
+        commissionOverridden: overrideMap[r.user_id] !== undefined,
       }));
+
 
       setMembers(enriched);
     } catch (err: any) {
@@ -256,6 +277,15 @@ const AdminTeamPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{roleLabel(m.role)}</Badge>
+                    <Badge
+                      variant={m.commissionOverridden ? 'default' : 'outline'}
+                      className="font-mono whitespace-nowrap"
+                      title={m.commissionOverridden
+                        ? t('admin.team.commissionCustom', 'Custom amount for this account')
+                        : t('admin.team.commissionDefault', 'Default amount for this role')}
+                    >
+                      {formatILS(m.commission)}
+                    </Badge>
                     <Button
                       variant="ghost"
                       size="icon"

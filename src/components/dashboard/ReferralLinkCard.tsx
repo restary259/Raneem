@@ -60,9 +60,11 @@ const ReferralLinkCard: React.FC<ReferralLinkCardProps> = ({ userId, hint }) => 
   };
 
   const handleWhatsApp = () => {
-    const text = `${t('referralLink.shareText', 'Apply to study in Germany with Darb')} ${url}`;
+    // Short message + link on its own line so WhatsApp renders a single clean preview.
+    const text = `${t('referralLink.shareText', 'Apply to study in Germany with Darb')}\n${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   };
+
 
   return (
     <Card>

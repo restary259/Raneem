@@ -61,8 +61,15 @@ export function clearReferralCode(): void {
   }
 }
 
+/**
+ * Canonical public site address. Referral links are always built from this and
+ * never from `window.location.origin`, so preview/sandbox hosts are never
+ * exposed to partners, ambassadors or students.
+ */
+export const SITE_URL = 'https://darb.agency';
+
 /** Full shareable application link for a code. */
 export function buildReferralUrl(code: string): string {
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${origin}/apply?ref=${encodeURIComponent(code)}`;
+  return `${SITE_URL}/apply?ref=${encodeURIComponent(code)}`;
 }
+

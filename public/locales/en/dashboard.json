@@ -2399,5 +2399,71 @@
   "studentCases": {
     "reportTitle": "Student Intake Report",
     "bulkExcel": "Bulk Excel Export"
+  },
+  "referralLink": {
+    "title": "My referral link",
+    "hint": "Every student who applies through this link is credited to you automatically.",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "Could not copy the link",
+    "code": "Code",
+    "whatsapp": "Share on WhatsApp",
+    "shareText": "Study in Germany with Darb — apply through my link:"
+  },
+  "forcePassword": {
+    "title": "Set a new password",
+    "desc": "Your account still uses the temporary password. Choose a new, strong password to continue.",
+    "new": "New password",
+    "newPlaceholder": "Enter a new password",
+    "confirm": "Confirm password",
+    "confirmPlaceholder": "Repeat the new password",
+    "mismatch": "Passwords do not match",
+    "submit": "Save password and continue",
+    "weak": "Password does not meet the requirements",
+    "success": "Password updated",
+    "signOut": "Sign out"
+  },
+  "adminConfirm": {
+    "title": "Administrator confirmation required",
+    "desc": "This action widens data access. Enter your administrator password to continue.",
+    "password": "Administrator password",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "wrong": "Incorrect password",
+    "phrase": "CONFIRM",
+    "phraseLabel": "Type CONFIRM to proceed"
+  },
+  "commissionSettings": {
+    "info": "All commissions are a flat amount in shekels (₪) per enrolled student — no percentages, no tiers. Each role has a default amount below. A per-account amount always wins over the default.",
+    "defaultsTitle": "Default commission per enrolled student (₪)",
+    "partner": "Partner",
+    "ambassador": "Ambassador",
+    "team": "Team member",
+    "saveDefaults": "Save defaults",
+    "defaultsSaved": "Default commission amounts saved",
+    "partnerTitle": "Partner & ambassador commission (per account)",
+    "teamTitle": "Team member commission (per account)",
+    "perStudent": "/ student",
+    "noPartnerOverrides": "No per-account amounts configured — everyone uses the default above.",
+    "noTeamOverrides": "No per-account amounts configured for team members yet.",
+    "addPartner": "Add / update partner",
+    "addTeam": "Add / update team member",
+    "selectPartner": "Select partner / ambassador account",
+    "selectTeam": "Select team member",
+    "amountPlaceholder": "Amount per student",
+    "notesPlaceholder": "Notes (optional)",
+    "savePartner": "Save partner commission",
+    "saveTeam": "Save team commission",
+    "partnerSaved": "Partner commission saved",
+    "teamSaved": "Team member commission saved",
+    "visibilityQuestion": "Which cases can this account see?",
+    "visibility": {
+      "all": "All cases",
+      "allDesc": "Sees every case in the system",
+      "applyContact": "Apply / contact only",
+      "applyContactDesc": "Only auto-generated leads from the Apply and Contact pages",
+      "referral": "Referral cases only",
+      "referralDesc": "Only cases that came through their referral link"
+    }
   }
 }
