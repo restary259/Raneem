@@ -59,26 +59,23 @@ export default function PartnerEarningsPage() {
     }
     setIsPoolMode(poolMode);
 
-    let query = (supabase as any)
-      .from("cases")
-      .select("id,full_name,status,created_at,source,partner_id")
-      .order("created_at", { ascending: false });
-
     const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
+    let sources: string[] | null = null;
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        query = query.in("source", PARTNER_SOURCES);
+        sources = PARTNER_SOURCES;
       } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
-        query = query.eq("source", "referral");
+        sources = ["referral"];
       }
-    } else {
-      if (!globalShowAll) {
-        query = query.in("source", PARTNER_SOURCES);
-      }
+    } else if (!globalShowAll) {
+      sources = PARTNER_SOURCES;
     }
 
-    const { data: casesData, error } = await query;
+    const { data: casesData, error } = await (supabase as any).rpc(
+      "get_partner_pool_cases",
+      { p_sources: sources }
+    );
     if (error) console.error("cases fetch error:", error);
     setCases(casesData || []);
 

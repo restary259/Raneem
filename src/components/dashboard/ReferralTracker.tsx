@@ -26,7 +26,7 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ userId }) => {
       const { data } = await (supabase as any)
         .from('referrals')
         .select('*')
-        .eq('referrer_id', userId)
+        .eq('referrer_user_id', userId)
         .order('created_at', { ascending: false });
       if (data) setReferrals(data);
     };
