@@ -54,6 +54,9 @@ serve(async (req) => {
       });
     }
 
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
+
+
     const body = await req.json();
     const { case_id, email, full_name } = body;
 
