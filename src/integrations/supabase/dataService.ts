@@ -65,7 +65,9 @@ export async function getInfluencerDashboard(
           .from('cases')
           .select('*')
           .eq('partner_id', userId)
+          .eq('archived', false)
           .is('deleted_at', null)
+
           .order('created_at', { ascending: false })
       ),
       safeQuery(
