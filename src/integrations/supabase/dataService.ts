@@ -126,7 +126,9 @@ export async function getTeamDashboard(
           .from('cases')
           .select('*')
           .eq('assigned_to', userId)
+          .eq('archived', false)
           .is('deleted_at', null)
+
           .order('created_at', { ascending: false })
       ),
       safeQuery(
