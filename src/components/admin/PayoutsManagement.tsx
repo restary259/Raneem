@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,7 @@ import LinkedStudentsModal from './LinkedStudentsModal';
 const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const [requests, setRequests] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
