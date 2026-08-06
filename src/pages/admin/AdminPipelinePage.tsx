@@ -43,15 +43,9 @@ import { useSearchParams } from "react-router-dom";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
-const STATUSES = [
-  "new",
-  "contacted",
-  "appointment_scheduled",
-  "profile_completion",
-  "payment_confirmed",
-  "submitted",
-  "enrollment_paid",
-];
+/** Stages that are never shown as board columns (end states). */
+const NON_BOARD_STATUSES = ["forgotten", "cancelled"];
+
 
 const STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> = {
   new: { en: "New", ar: "جديد", color: "bg-blue-100 text-blue-800 border-blue-200" },
