@@ -1,8 +1,7 @@
-
 {
-  "name": "درب | رفيقك الدراسي العالمي",
+  "name": "درب | الدراسة في ألمانيا للطلاب العرب",
   "short_name": "درب",
-  "description": "من أول قرار حتى أول إنجاز... درب هي الجسر الآمن نحو دراستك في الخارج",
+  "description": "درب ترافقك خطوة بخطوة نحو الدراسة في ألمانيا: معادلة البجروت، القبول الجامعي، التأشيرة والسكن، بدعم عربي كامل.",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -11,7 +10,11 @@
   "scope": "/",
   "lang": "ar",
   "dir": "rtl",
-  "categories": ["education", "travel", "lifestyle"],
+  "categories": [
+    "education",
+    "travel",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
@@ -68,28 +71,48 @@
       "short_name": "المستشار",
       "description": "تحدث مع مستشار درب الذكي",
       "url": "/ai-advisor",
-      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "الخدمات",
       "short_name": "الخدمات",
       "description": "تصفح خدماتنا التعليمية",
       "url": "/services",
-      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "وجهاتنا التعليمية",
       "short_name": "الوجهات",
       "description": "اكتشف الجامعات والبرامج التعليمية",
       "url": "/educational-destinations",
-      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "اتصل بنا",
       "short_name": "اتصل",
       "description": "تواصل معنا للاستشارة",
       "url": "/contact",
-      "icons": [{ "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }

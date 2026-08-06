@@ -79,7 +79,7 @@ export const usePWA = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'درب | رفيقك الدراسي العالمي',
+          title: 'درب | الدراسة في ألمانيا للطلاب العرب',
           text: 'اكتشف رحلتك التعليمية مع درب - من أول قرار حتى أول إنجاز',
           url: window.location.origin,
         });
