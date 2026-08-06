@@ -27,6 +27,7 @@ interface SubmittedCase {
   passport_type: string | null;
   student_user_id: string | null;
   partner_id: string | null;
+  referred_by: string | null;
   assigned_to: string | null;
   submission?: {
     id: string;
@@ -155,21 +156,25 @@ const AdminSubmissionsPage = () => {
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
 
-  // Load commission preview: loops ALL partners and applies visibility rules per case source
+  // Commission preview — mirrors record_case_commission exactly: ONLY the partner
+  // linked to this case (partner_id, else referred_by) can earn a commission.
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
     const fee = c.submission?.service_fee || 0;
     try {
-      const [settRes, allPartnersRes, teamOvRes, profilesRes] = await Promise.all([
+      const linkedPartnerId = c.partner_id || c.referred_by || null;
+
+      const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
         (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
-        (supabase as any).from("partner_commission_overrides").select("partner_id, commission_amount, show_all_cases"),
+        linkedPartnerId
+          ? (supabase as any)
+              .from("partner_commission_overrides")
+              .select("partner_id, commission_amount, show_all_cases")
+              .eq("partner_id", linkedPartnerId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
         c.assigned_to
           ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle()
           : Promise.resolve({ data: null }),
-        (supabase as any).from("profiles").select("id, full_name").in(
-          "id",
-          // we'll get IDs after partner fetch, so fetch all for now
-          ["00000000-0000-0000-0000-000000000000"]
-        ),
       ]);
 
       const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
@@ -177,35 +182,28 @@ const AdminSubmissionsPage = () => {
 
       const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
       const caseSource = c.source || "";
-      const partnerOverrides: any[] = allPartnersRes.data || [];
-
-      // Fetch partner profiles for names
-      const partnerIds = partnerOverrides.map((p: any) => p.partner_id);
-      let partnerNames: Record<string, string> = {};
-      if (partnerIds.length > 0) {
-        const { data: pProfiles } = await (supabase as any)
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", partnerIds);
-        (pProfiles || []).forEach((p: any) => { partnerNames[p.id] = p.full_name; });
-      }
+      const po = partnerOvRes.data as any;
 
       const qualifyingPartners: { partnerId: string; name: string; amount: number }[] = [];
       let totalPartner = 0;
 
-      for (const po of partnerOverrides) {
+      if (po && Number(po.commission_amount) > 0) {
         const qualifies =
           po.show_all_cases === true ||
           (po.show_all_cases === false && PARTNER_SOURCES.includes(caseSource)) ||
           (po.show_all_cases === null && caseSource === "referral");
 
-        if (qualifies && po.commission_amount > 0) {
-          qualifyingPartners.push({
-            partnerId: po.partner_id,
-            name: partnerNames[po.partner_id] || po.partner_id.slice(0, 8),
-            amount: Number(po.commission_amount),
-          });
-          totalPartner += Number(po.commission_amount);
+        if (qualifies) {
+          let name = po.partner_id.slice(0, 8);
+          const { data: pProfile } = await (supabase as any)
+            .from("profiles")
+            .select("full_name")
+            .eq("id", po.partner_id)
+            .maybeSingle();
+          if (pProfile?.full_name) name = pProfile.full_name;
+
+          totalPartner = Number(po.commission_amount);
+          qualifyingPartners.push({ partnerId: po.partner_id, name, amount: totalPartner });
         }
       }
 
@@ -220,6 +218,7 @@ const AdminSubmissionsPage = () => {
       setSplitPreview({ serviceFee: fee, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
     }
   }, []);
+
 
   const openSplitPanel = async () => {
     if (!selected) return;
