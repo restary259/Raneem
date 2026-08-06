@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SecurityPanel from './SecurityPanel';
 import AuditLog from './AuditLog';
+import AuthFailuresPanel from './AuthFailuresPanel';
 
 interface SecurityAuditPanelProps {
   loginAttempts: any[];
@@ -16,10 +17,14 @@ const SecurityAuditPanel: React.FC<SecurityAuditPanelProps> = ({ loginAttempts, 
     <Tabs defaultValue="security" className="space-y-4">
       <TabsList>
         <TabsTrigger value="security">{t('admin.tabs.security')}</TabsTrigger>
+        <TabsTrigger value="authFailures">{t('admin.tabs.authFailures')}</TabsTrigger>
         <TabsTrigger value="audit">{t('admin.tabs.audit')}</TabsTrigger>
       </TabsList>
       <TabsContent value="security">
         <SecurityPanel loginAttempts={loginAttempts} />
+      </TabsContent>
+      <TabsContent value="authFailures">
+        <AuthFailuresPanel />
       </TabsContent>
       <TabsContent value="audit">
         <AuditLog logs={auditLogs} />

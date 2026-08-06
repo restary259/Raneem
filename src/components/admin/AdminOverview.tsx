@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Users, DollarSign, TrendingUp, UserCheck, Percent, BarChart3, AlertTriangle } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, UserCheck, Percent, BarChart3, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { useAuthFailureSpikes } from '@/hooks/useAuthFailureSpikes';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import SparklineCard from './SparklineCard';
@@ -29,6 +30,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   onStageClick,
 }) => {
   const { t } = useTranslation('dashboard');
+  const { spikes: authSpikes } = useAuthFailureSpikes();
 
   // KPI calculations
   const today = new Date().toISOString().slice(0, 10);
@@ -129,6 +131,21 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
 
   return (
     <div className="space-y-6">
+      {authSpikes.length > 0 && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+          <div className="flex items-center gap-2 font-semibold text-destructive">
+            <ShieldAlert className="h-4 w-4" />
+            {t('admin.authFailures.spikeTitle', 'Authorization failure spike detected')}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('admin.authFailures.spikeBody', {
+              defaultValue: '{{count}} target(s) with repeated permission denials in the last hour: {{targets}}',
+              count: authSpikes.length,
+              targets: authSpikes.map(s => `${s.target} (${s.failure_count})`).join(', '),
+            })}
+          </p>
+        </div>
+      )}
       {/* Primary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <SparklineCard

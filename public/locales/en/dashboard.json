@@ -303,14 +303,11 @@
       "discount": "Discount",
       "filterByTeam": "Filter by team member",
       "statusSaved": "Status updated",
-      "emptyColumn": "Empty",
       "hasInfo": "Has info",
       "btnSave": "Save",
       "cancel": "Cancel",
       "deleting": "Deleting…",
       "confirmDelete": "Yes, Delete Case",
-      "identity": "Identity",
-      "education": "Education",
       "notes": "Notes",
       "sourceLabelApply": "Apply",
       "sourceLabelForm": "Form",
@@ -594,8 +591,8 @@
       "resetTabLabel": "⚠️ Data Reset",
       "contactFormArabicName": "Arabic Name",
       "contactFormEnglishName": "English Name",
-      "contactFormRoleAr": "Role AR",
-      "contactFormRoleEn": "Role EN",
+      "contactFormRoleAr": "Role (Arabic)",
+      "contactFormRoleEn": "Role (English)",
       "contactFormPhone": "Phone",
       "contactFormEmail": "Email",
       "contactFormLink": "Link",
@@ -616,16 +613,7 @@
       "finalConfirmDesc": "{{count}} records will be permanently deleted. This cannot be undone.",
       "deleting": "Deleting...",
       "confirmYesDelete": "Yes, Delete",
-      "incorrectPassword": "Incorrect password",
-      "contactFormArabicName": "Arabic Name",
-      "contactFormEnglishName": "English Name",
-      "contactFormRoleAr": "Role (Arabic)",
-      "contactFormRoleEn": "Role (English)",
-      "contactFormPhone": "Phone",
-      "contactFormEmail": "Email",
-      "contactFormLink": "Link",
-      "contactFormCategory": "Category",
-      "contactFormOrder": "Display Order"
+      "incorrectPassword": "Incorrect password"
     },
     "spreadsheet": {
       "title": "Student Spreadsheet",
@@ -767,7 +755,8 @@
       "security": "Security",
       "audit": "Audit Log",
       "eligibility": "Eligibility",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "authFailures": "Auth Failures"
     },
     "leads": {
       "all": "All",
@@ -891,6 +880,18 @@
         "cash": "Cash",
         "bank_transfer": "Bank Transfer"
       }
+    },
+    "authFailures": {
+      "title": "Authorization Failures",
+      "spikeTitle": "Authorization failure spike detected",
+      "spikeBody": "{{count}} target(s) with repeated permission denials in the last hour: {{targets}}",
+      "failures": "failures",
+      "new": "New",
+      "byTarget": "By target",
+      "recent": "Recent denials",
+      "empty": "No authorization failures recorded.",
+      "sourceRls": "Database (RLS)",
+      "sourceEdge": "Backend function"
     }
   },
   "influencer": {
@@ -943,10 +944,22 @@
       "promoContent": "📦 Promotional Content",
       "marketingTips": "💡 Marketing Tips",
       "assets": {
-        "logo": {"title": "Agency Logo","desc": "Darb logo in different formats for use in posts"},
-        "instagram": {"title": "Instagram Post Template","desc": "Ready-made templates for posting on Instagram and TikTok"},
-        "brochure": {"title": "Programs Brochure","desc": "Comprehensive booklet about study programs in Germany"},
-        "video": {"title": "Promotional Video","desc": "Short clip for sharing with followers"}
+        "logo": {
+          "title": "Agency Logo",
+          "desc": "Darb logo in different formats for use in posts"
+        },
+        "instagram": {
+          "title": "Instagram Post Template",
+          "desc": "Ready-made templates for posting on Instagram and TikTok"
+        },
+        "brochure": {
+          "title": "Programs Brochure",
+          "desc": "Comprehensive booklet about study programs in Germany"
+        },
+        "video": {
+          "title": "Promotional Video",
+          "desc": "Short clip for sharing with followers"
+        }
       },
       "tips": [
         "Use Stories to share your real experience with the agency",
@@ -2045,7 +2058,7 @@
       "passwordPrompt": "Enter your admin password to confirm:",
       "confirmButton": "Delete Selected Data",
       "successMsg": "Selected data deleted successfully",
-    "noneSelected": "Please select at least one category"
+      "noneSelected": "Please select at least one category"
     }
   }
 }
