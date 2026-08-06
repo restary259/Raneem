@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -473,6 +474,7 @@ export default function SubmitNewStudentPage() {
         p_metadata: { full_name: fullName, email },
       });
 
+      clearDraft();
       toast({ title: ss('successTitle') });
       navigate(`/team/cases/${caseId}`);
     } catch (err: any) {
