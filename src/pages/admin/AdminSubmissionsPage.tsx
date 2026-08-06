@@ -14,6 +14,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { CopyButton } from "@/components/common/CopyButton";
+import { usePagination } from "@/hooks/usePagination";
+import TablePagination from "@/components/common/TablePagination";
+
 
 interface SubmittedCase {
   id: string;
