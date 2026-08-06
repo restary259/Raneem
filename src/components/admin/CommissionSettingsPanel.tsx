@@ -36,31 +36,16 @@ interface UserProfile {
 // true  → All Cases
 // false → Apply / Contact Only
 // null  → Referral Cases Only
-const VISIBILITY_OPTIONS = [
-  {
-    value: "true",
-    label: "All Cases",
-    desc: "Sees all cases in the system",
-    badgeVariant: "default" as const,
-  },
-  {
-    value: "false",
-    label: "Apply / Contact Only",
-    desc: "Only auto-generated leads from Apply and Contact pages",
-    badgeVariant: "outline" as const,
-  },
-  {
-    value: "null",
-    label: "Referral Cases Only",
-    desc: "Only cases that came through referral links",
-    badgeVariant: "secondary" as const,
-  },
+const VISIBILITY_KEYS = [
+  { value: "true", key: "all", badgeVariant: "default" as const },
+  { value: "false", key: "applyContact", badgeVariant: "outline" as const },
+  { value: "null", key: "referral", badgeVariant: "secondary" as const },
 ] as const;
 
-function visibilityLabel(val: boolean | null): string {
-  if (val === true) return "All Cases";
-  if (val === false) return "Apply / Contact Only";
-  return "Referral Cases Only";
+function visibilityKey(val: boolean | null): "all" | "applyContact" | "referral" {
+  if (val === true) return "all";
+  if (val === false) return "applyContact";
+  return "referral";
 }
 
 function visibilityBadgeVariant(val: boolean | null): "default" | "outline" | "secondary" {
@@ -68,6 +53,7 @@ function visibilityBadgeVariant(val: boolean | null): "default" | "outline" | "s
   if (val === false) return "outline";
   return "secondary";
 }
+
 
 export default function CommissionSettingsPanel() {
   const { t } = useTranslation("dashboard");
