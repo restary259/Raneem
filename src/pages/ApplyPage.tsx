@@ -428,6 +428,28 @@ const ApplyPage: React.FC = () => {
 
           <Progress value={progressValue} className="h-1.5 w-full" />
 
+          {/* Referral attribution health */}
+          {refOwner && (
+            <div
+              data-testid="referral-valid"
+              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800"
+            >
+              {isAr ? `تمت إحالتك من قِبل ${refOwner}` : `You were referred by ${refOwner}`}
+            </div>
+          )}
+          {refBroken && (
+            <div
+              data-testid="referral-broken"
+              className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800"
+            >
+              {isAr
+                ? "رابط الإحالة غير صالح أو منتهي الصلاحية — سيتم إرسال طلبك بدون إحالة."
+                : "This referral link is no longer valid — your application will be sent without a referral."}
+            </div>
+          )}
+
+
+
           {/* Form */}
           <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
             <div className="px-5 py-4 border-b border-border bg-muted/30">
