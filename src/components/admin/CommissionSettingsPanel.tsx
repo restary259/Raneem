@@ -135,8 +135,8 @@ export default function CommissionSettingsPanel() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const addPartnerOverride = async () => {
-    if (!newPartnerOverride.partner_id || !newPartnerOverride.amount) return;
+  /** Persists the partner override. Only called once any required override is cleared. */
+  const persistPartnerOverride = async () => {
     try {
       const { error } = await (supabase as any).from("partner_commission_overrides").upsert(
         {
@@ -149,12 +149,31 @@ export default function CommissionSettingsPanel() {
         { onConflict: "partner_id" },
       );
       if (error) throw error;
+      if (newPartnerOverride.show_all_cases === true) {
+        await (supabase as any).rpc("log_user_activity", {
+          p_action: "grant_all_cases_visibility",
+          p_target_id: newPartnerOverride.partner_id,
+          p_target_table: "partner_commission_overrides",
+          p_details: "Admin override confirmed",
+        });
+      }
       setNewPartnerOverride({ partner_id: "", amount: "", notes: "", show_all_cases: null });
-      toast({ description: "Partner commission saved ✓" });
+      toast({ description: t("commissionSettings.partnerSaved") });
       fetchData();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
+  };
+
+  const addPartnerOverride = async () => {
+    if (!newPartnerOverride.partner_id || !newPartnerOverride.amount) return;
+    // Widening visibility to every case exposes student data — require an
+    // explicit administrator override before it can be saved.
+    if (newPartnerOverride.show_all_cases === true) {
+      setGateOpen(true);
+      return;
+    }
+    await persistPartnerOverride();
   };
 
   const addTeamOverride = async () => {
@@ -164,6 +183,7 @@ export default function CommissionSettingsPanel() {
         {
           team_member_id: newTeamOverride.team_member_id,
           commission_amount: parseInt(newTeamOverride.amount),
+
           notes: newTeamOverride.notes || null,
           updated_at: new Date().toISOString(),
         },
