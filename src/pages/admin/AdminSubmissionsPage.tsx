@@ -82,7 +82,7 @@ const AdminSubmissionsPage = () => {
   const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
     if (ids.length === 0) return [];
     const [subRes, docsRes] = await Promise.all([
-      supabase.from("case_submissions").select("*").in("case_id", ids),
+      supabase.from("case_submissions").select("*").in("case_id", ids).is("deleted_at", null),
       supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
     ]);
     const subMap: Record<string, any> = {};
@@ -107,11 +107,13 @@ const AdminSubmissionsPage = () => {
           .from("cases")
           .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
           .in("status", ["submitted", "payment_confirmed"])
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
           .from("cases")
           .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
           .eq("status", "enrollment_paid")
+          .is("deleted_at", null)
           .order("created_at", { ascending: false }),
       ]);
 
@@ -134,16 +136,16 @@ const AdminSubmissionsPage = () => {
       const accommodationIds = [...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
 
       if (programIds.length > 0) {
-        const { data: progData } = await (supabase as any).from("programs").select("id, name_en").in("id", programIds);
+        const { data: progData } = await (supabase as any).from("programs").select("id, name_en, name_ar").in("id", programIds);
         const map: Record<string, string> = {};
-        (progData || []).forEach((p: any) => { map[p.id] = p.name_en; });
+        (progData || []).forEach((p: any) => { map[p.id] = (isAr ? p.name_ar || p.name_en : p.name_en || p.name_ar) ?? ""; });
         setProgramNames(map);
       }
 
       if (accommodationIds.length > 0) {
-        const { data: accomData } = await (supabase as any).from("accommodations").select("id, name_en").in("id", accommodationIds);
+        const { data: accomData } = await (supabase as any).from("accommodations").select("id, name_en, name_ar").in("id", accommodationIds);
         const map: Record<string, string> = {};
-        (accomData || []).forEach((a: any) => { map[a.id] = a.name_en; });
+        (accomData || []).forEach((a: any) => { map[a.id] = (isAr ? a.name_ar || a.name_en : a.name_en || a.name_ar) ?? ""; });
         setAccommodationNames(map);
       }
     } catch (err: any) {
