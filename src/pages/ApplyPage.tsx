@@ -162,7 +162,8 @@ const ApplyPage: React.FC = () => {
         full_name: fullName.trim(),
         phone_number: phone.trim(),
         source: "apply_page",
-        partner_id: null,
+        ref_code: refCode,
+
         city: city.trim() || null,
         education_level: educationLevel || null,
         bagrut_score: null,
@@ -201,8 +202,8 @@ const ApplyPage: React.FC = () => {
           p_math_units: mathUnits ? parseInt(mathUnits) : null,
           p_education_level: educationLevel || null,
           p_german_level: null,
-          p_source_type: sourceType,
-          p_source_id: sourceId,
+          p_ref_code: refCode,
+
           p_preferred_major: preferredMajor || null,
         } as any);
         if (leadErr) console.warn("[ApplyPage] Lead RPC warning (non-critical):", leadErr.message);
@@ -225,7 +226,7 @@ const ApplyPage: React.FC = () => {
                 full_name: c.name.trim(),
                 phone_number: c.phone.trim(),
                 source: "apply_page",
-                partner_id: null,
+                ref_code: refCode,
                 city: c.city.trim() || null,
                 education_level: c.education || null,
                 passport_type: c.passportType || null,
@@ -261,8 +262,8 @@ const ApplyPage: React.FC = () => {
               p_math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
               p_preferred_major: c.preferredMajor.trim() || null,
               p_german_level: null,
-              p_source_type: sourceType,
-              p_source_id: sourceId,
+              p_ref_code: refCode,
+
             } as any);
             if (cErr) console.warn("[ApplyPage] Companion lead warning (non-critical):", cErr.message);
             else console.log("[ApplyPage] Companion lead saved:", c.phone.trim());
