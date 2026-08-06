@@ -168,6 +168,8 @@ const App = () => {
             <Route path="/resources/lebenslauf-builder" element={<LebenslaufBuilderPage />} />
             <Route path="/broadcast" element={<BroadcastPage />} />
             <Route path="/faq" element={<FaqPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/ai-advisor" element={<AIAdvisorPage />} />
             <Route path="/apply" element={<ApplyPage />} />
