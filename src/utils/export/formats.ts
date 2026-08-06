@@ -9,12 +9,11 @@ export type ExportColumnType =
   | 'datetime'
   | 'status';
 
-export type CurrencyCode = 'ILS' | 'EUR' | 'USD';
+/** Darb money is shekels only — there is no multi-currency money logic. */
+export type CurrencyCode = 'ILS';
 
 const CURRENCY_SYMBOL: Record<CurrencyCode, string> = {
   ILS: '₪',
-  EUR: '€',
-  USD: '$',
 };
 
 /** Accounting-style currency: negatives in red parentheses, zero as an em dash. */

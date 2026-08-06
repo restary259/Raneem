@@ -2,12 +2,13 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'student';
+export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'ambassador' | 'student';
 
 export const ROLE_TO_PATH: Record<AppRole, string> = {
   admin: '/admin',
   team_member: '/team',
   social_media_partner: '/partner',
+  ambassador: '/partner',
   student: '/student/checklist',
 };
 
