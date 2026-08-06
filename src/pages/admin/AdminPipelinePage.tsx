@@ -245,25 +245,20 @@ const AdminPipelinePage = () => {
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
     try {
-      const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
-      const teamIds = (rolesRes.data ?? []).map((r) => r.user_id);
-      const [casesRes, profilesRes] = await Promise.all([
-        supabase.from("cases").select("*").eq("archived", false).not("status", "in", '("forgotten","cancelled")'),
-        teamIds.length > 0
-          ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
-          : Promise.resolve({ data: [], error: null }),
+      const [caseRows, members] = await Promise.all([
+        CaseService.listActive(),
+        CaseService.listTeamMembers(),
       ]);
-      if (casesRes.error) throw casesRes.error;
       const profileMap: Record<string, string> = {};
-      (profilesRes.data || []).forEach((p) => {
+      members.forEach((p) => {
         profileMap[p.id] = p.full_name;
       });
-      const enriched = (casesRes.data || []).map((c) => ({
+      const enriched = caseRows.map((c: any) => ({
         ...c,
         assignee_name: c.assigned_to ? profileMap[c.assigned_to] : undefined,
       }));
       setCases(enriched);
-      setTeamMembers((profilesRes.data || []).map((p) => ({ id: p.id, full_name: p.full_name, email: p.email || "" })));
+      setTeamMembers(members);
       // keep sheet in sync after refresh
       setSelectedCase((prev) => (prev ? (enriched.find((c) => c.id === prev.id) ?? null) : null));
     } catch (err: any) {
@@ -272,6 +267,7 @@ const AdminPipelinePage = () => {
       setLoading(false);
     }
   }, [toast]);
+
 
   useEffect(() => {
     fetchData();
