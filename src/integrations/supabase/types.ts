@@ -301,6 +301,50 @@ export type Database = {
         }
         Relationships: []
       }
+      case_events: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          actor_role: string | null
+          case_id: string
+          created_at: string
+          event_type: string
+          id: string
+          is_internal: boolean
+          payload: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          case_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          is_internal?: boolean
+          payload?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          is_internal?: boolean
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_payments: {
         Row: {
           amount: number
@@ -2596,6 +2640,15 @@ export type Database = {
           p_entity_id?: string
           p_entity_type: string
           p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      log_case_event: {
+        Args: {
+          p_case_id: string
+          p_event_type: string
+          p_is_internal?: boolean
+          p_payload?: Json
         }
         Returns: undefined
       }
