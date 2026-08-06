@@ -49,7 +49,11 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
           <Card key={c.id} className={c.status === 'new' ? 'border-amber-300 bg-amber-50/30' : ''}>
             <CardContent className="pt-4">
               <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-                <div><h3 className="font-bold">{c.data?.name || t('admin.contacts.noName')}</h3><p className="text-sm text-muted-foreground">{c.data?.email} • {c.data?.whatsapp || '—'}</p></div>
+                <div>
+                  <h3 className="font-bold">{c.data?.name || t('admin.contacts.noName')}</h3>
+                  <p className="text-sm text-muted-foreground">{c.data?.email} • {c.data?.whatsapp || c.data?.phone || '—'}</p>
+                  {c.form_source && <p className="text-xs text-muted-foreground mt-1">{c.form_source}</p>}
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={c.status === 'new' ? 'destructive' : c.status === 'replied' ? 'default' : 'secondary'}>
                     {c.status === 'new' ? t('admin.contacts.new') : c.status === 'replied' ? t('admin.contacts.replied') : c.status}
@@ -60,7 +64,18 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
                   </Button>
                 </div>
               </div>
-              {c.data?.message && <p className="text-sm bg-muted/50 p-3 rounded-lg mt-2">{c.data.message}</p>}
+              {c.data && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm bg-muted/40 p-3 rounded-lg">
+                  {Object.entries(c.data as Record<string, any>)
+                    .filter(([k, v]) => !['name', 'email', 'whatsapp', 'phone'].includes(k) && v !== null && v !== undefined && String(v).trim() !== '')
+                    .map(([k, v]) => (
+                      <div key={k} className="break-words">
+                        <span className="text-muted-foreground">{k}: </span>
+                        <span className="font-medium">{String(v)}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
               <div className="mt-3 flex gap-2">
                 {c.status === 'new' && <Button size="sm" onClick={() => updateStatus(c.id, 'replied')}>{t('admin.contacts.markReplied')}</Button>}
                 {c.status !== 'archived' && <Button size="sm" variant="outline" onClick={() => updateStatus(c.id, 'archived')}>{t('admin.contacts.archive')}</Button>}
