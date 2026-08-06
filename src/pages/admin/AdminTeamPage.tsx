@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, AlertCircle } from 'lucide-react';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2 } from 'lucide-react';
+import { buildReferralUrl } from '@/lib/referral';
 
 interface TeamMember {
   id: string;
@@ -18,7 +19,11 @@ interface TeamMember {
   email: string;
   role: string;
   created_at: string;
+  referral_code: string | null;
 }
+
+/** Roles that get a public referral link of their own. */
+const REFERRING_ROLES = ['social_media_partner', 'ambassador'];
 
 const AdminTeamPage = () => {
   const { t, i18n } = useTranslation('dashboard');
@@ -38,16 +43,22 @@ const AdminTeamPage = () => {
 
   const fetchMembers = useCallback(async () => {
     try {
-      const rolesRes = await supabase.from('user_roles').select('user_id, role, created_at').in('role', ['team_member', 'social_media_partner']);
+      const rolesRes = await supabase
+        .from('user_roles')
+        .select('user_id, role, created_at')
+        .in('role', ['team_member', 'social_media_partner', 'ambassador']);
       if (rolesRes.error) throw rolesRes.error;
 
       const userIds = (rolesRes.data || []).map(r => r.user_id);
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
-      const profilesRes = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+      const profilesRes = await (supabase as any)
+        .from('profiles')
+        .select('id, full_name, email, referral_code, referral_code_enabled')
+        .in('id', userIds);
       if (profilesRes.error) throw profilesRes.error;
 
-      const profileMap: Record<string, { full_name: string; email: string }> = {};
+      const profileMap: Record<string, any> = {};
       (profilesRes.data || []).forEach(p => { profileMap[p.id] = p; });
 
       const enriched = (rolesRes.data || []).map(r => ({
@@ -56,6 +67,10 @@ const AdminTeamPage = () => {
         email: profileMap[r.user_id]?.email || '–',
         role: r.role,
         created_at: r.created_at,
+        referral_code:
+          profileMap[r.user_id]?.referral_code_enabled === false
+            ? null
+            : profileMap[r.user_id]?.referral_code ?? null,
       }));
 
       setMembers(enriched);
@@ -68,19 +83,9 @@ const AdminTeamPage = () => {
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
-  const existingPartner = members.find(m => m.role === 'social_media_partner');
-
   const createMember = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
       toast({ variant: 'destructive', description: t('admin.team.allFieldsRequired') });
-      return;
-    }
-    // One-partner constraint
-    if (form.role === 'social_media_partner' && existingPartner) {
-      toast({
-        variant: 'destructive',
-        description: t('admin.team.partnerExistsError', 'A partner account already exists. Delete the existing partner before creating a new one.'),
-      });
       return;
     }
     setCreating(true);
@@ -144,6 +149,7 @@ const AdminTeamPage = () => {
     const map: Record<string, string> = {
       team_member: t('admin.team.teamMemberRole'),
       social_media_partner: t('admin.team.partnerRole'),
+      ambassador: t('admin.team.ambassadorRole', 'Ambassador'),
     };
     return map[role] || role;
   };
@@ -188,13 +194,6 @@ const AdminTeamPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4 pt-2">
-                  {/* Partner constraint warning */}
-                  {form.role === 'social_media_partner' && existingPartner && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive">
-                      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                      <p>{t('admin.team.partnerExistsError', 'A partner account already exists. Delete the existing partner before creating a new one.')}</p>
-                    </div>
-                  )}
                   <div className="space-y-1">
                     <Label>{t('admin.team.fullName', 'Full Name')}</Label>
                     <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} />
@@ -210,13 +209,14 @@ const AdminTeamPage = () => {
                       <SelectContent>
                         <SelectItem value="team_member">{t('admin.team.teamMemberRole')}</SelectItem>
                         <SelectItem value="social_media_partner">{t('admin.team.partnerRole')}</SelectItem>
+                        <SelectItem value="ambassador">{t('admin.team.ambassadorRole', 'Ambassador')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <Button
                     className="w-full"
                     onClick={createMember}
-                    disabled={creating || (form.role === 'social_media_partner' && !!existingPartner)}
+                    disabled={creating}
                   >
                     {creating ? t('admin.team.creating') : t('admin.team.createBtn', 'Create Account')}
                   </Button>
@@ -237,10 +237,22 @@ const AdminTeamPage = () => {
           ) : (
             <div className="divide-y divide-border">
               {members.map(m => (
-                <div key={m.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
-                  <div>
+                <div key={m.id} className="flex items-start justify-between gap-3 p-4 hover:bg-muted/50 transition-colors flex-wrap">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{m.full_name}</p>
                     <p className="text-xs text-muted-foreground">{m.email}</p>
+                    {REFERRING_ROLES.includes(m.role) && m.referral_code && (
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(buildReferralUrl(m.referral_code!))}
+                        className="mt-1.5 flex items-center gap-1.5 text-xs text-primary hover:underline max-w-full"
+                        title={t('admin.team.copyReferralLink', 'Copy referral link')}
+                      >
+                        <Link2 className="h-3 w-3 shrink-0" />
+                        <span className="truncate font-mono">{buildReferralUrl(m.referral_code)}</span>
+                        <Copy className="h-3 w-3 shrink-0" />
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{roleLabel(m.role)}</Badge>
