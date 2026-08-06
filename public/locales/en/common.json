@@ -127,7 +127,8 @@
     "invalidEmail": "Invalid email address",
     "loginFailed": "Login failed",
     "orContinueWith": "or continue with",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "backToWebsite": "Back to main website"
   },
   "advisor": {
     "title": "Darb AI Advisor",
