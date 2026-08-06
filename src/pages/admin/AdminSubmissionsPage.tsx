@@ -67,6 +67,9 @@ const AdminSubmissionsPage = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
   const [cases, setCases] = useState<SubmittedCase[]>([]);
   const [completedCases, setCompletedCases] = useState<SubmittedCase[]>([]);
+  const pendingPagination = usePagination(cases, 25);
+  const completedPagination = usePagination(completedCases, 25);
+
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubmittedCase | null>(null);
   const [marking, setMarking] = useState(false);
