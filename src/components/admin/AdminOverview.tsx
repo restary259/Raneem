@@ -30,6 +30,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({
   onStageClick,
 }) => {
   const { t } = useTranslation('dashboard');
+  const { spikes: authSpikes } = useAuthFailureSpikes();
 
   // KPI calculations
   const today = new Date().toISOString().slice(0, 10);
