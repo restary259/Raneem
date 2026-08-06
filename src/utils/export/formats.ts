@@ -24,7 +24,8 @@ export function currencyFormat(currency: CurrencyCode = 'ILS'): string {
 }
 
 export const NUMBER_FORMAT = '#,##0;[Red](#,##0);"—"';
-export const PERCENT_FORMAT = '0.0%';
+/** Percent values are stored on a 0-100 scale across the app, not 0-1. */
+export const PERCENT_FORMAT = '0.0"%"';
 export const DATE_FORMAT = 'dd/MM/yyyy';
 export const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
 
