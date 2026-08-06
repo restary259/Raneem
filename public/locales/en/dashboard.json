@@ -989,7 +989,13 @@
     "success": "Success",
     "saving": "Saving…",
     "inAppBannerText": "For the best experience, open in Safari or Chrome",
-    "copyLink": "Copy link"
+    "copyLink": "Copy link",
+    "draft": {
+      "restoredTitle": "Draft restored",
+      "restoredBody": "We recovered your unsaved changes.",
+      "discard": "Discard draft",
+      "unsaved": "You have unsaved changes. Leave this page?"
+    }
   },
   "funnel": {
     "new": "Lead Submitted",
@@ -1268,7 +1274,15 @@
     "contactLoggedButNotTransitioned": "Contact logged but status could not transition.",
     "noCasesHint": "Cases assigned to you will appear here.",
     "deleteAppointmentTitle": "Delete Appointment",
-    "deleteAppointmentDesc": "Are you sure you want to delete this appointment? This cannot be undone."
+    "deleteAppointmentDesc": "Are you sure you want to delete this appointment? This cannot be undone.",
+    "picker": {
+      "previousDays": "Previous days",
+      "nextDays": "Next days",
+      "booked": "Already booked",
+      "selected": "Selected",
+      "selectSlot": "Please pick a date and time",
+      "conflict": "This time overlaps another appointment"
+    }
   },
   "influencerDash": {
     "hi": "Hi",
