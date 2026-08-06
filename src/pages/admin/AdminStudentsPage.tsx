@@ -641,7 +641,10 @@ export default function AdminStudentsPage() {
     return s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q);
   });
 
+  const pagination = usePagination(filtered, 25);
+
   const DOC_CATEGORIES = ["passport", "certificate", "visa", "financial", "application", "other"];
+
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
