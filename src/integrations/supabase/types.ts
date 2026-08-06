@@ -2378,7 +2378,7 @@ export type Database = {
       }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
-        Args: never
+        Args: { p_sources?: string[] }
         Returns: {
           created_at: string
           degree_interest: string
