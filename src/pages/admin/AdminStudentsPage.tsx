@@ -700,7 +700,7 @@ export default function AdminStudentsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((s) => (
+          {pagination.items.map((s) => (
             <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow border-border" onClick={() => openStudent(s)}>
               <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
