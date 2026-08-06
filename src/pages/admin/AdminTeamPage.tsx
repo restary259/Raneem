@@ -20,10 +20,15 @@ interface TeamMember {
   role: string;
   created_at: string;
   referral_code: string | null;
+  /** Flat ILS amount this account actually earns per enrolled student. */
+  commission: number;
+  /** True when the amount comes from a per-account override, not the default. */
+  commissionOverridden: boolean;
 }
 
 /** Roles that get a public referral link of their own. */
 const REFERRING_ROLES = ['social_media_partner', 'ambassador'];
+
 
 const AdminTeamPage = () => {
   const { t, i18n } = useTranslation('dashboard');
