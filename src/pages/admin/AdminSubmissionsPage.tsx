@@ -55,6 +55,7 @@ interface CommissionPreview {
 
 const AdminSubmissionsPage = () => {
   const { t, i18n } = useTranslation("dashboard");
+  const isAr = i18n.language === "ar";
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
