@@ -48,7 +48,16 @@ serve(async (req) => {
       });
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, z.object({
+      email: emailField,
+      full_name: personName,
+      role: z.enum(["team_member", "admin", "social_media_partner", "ambassador"]),
+      commission_amount: z.number().int().min(0).max(1000000).optional().nullable(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const body = parsed.data;
     const { email, full_name, role, commission_amount } = body;
 
     if (!email || !full_name || !role) {

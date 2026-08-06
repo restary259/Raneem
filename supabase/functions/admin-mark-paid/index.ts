@@ -33,10 +33,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
-    const { case_id, total_payment_ils } = await req.json();
-    if (!case_id) {
-      return new Response(JSON.stringify({ error: "case_id required" }), { status: 400, headers: corsHeaders });
+    const parsed = await parseBody(req, z.object({
+      case_id: uuid,
+      total_payment_ils: z.number().int().min(0).max(1000000).optional(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: corsHeaders });
     }
+    const { case_id, total_payment_ils } = parsed.data;
 
     // Fetch current case state
     const { data: caseRow, error: fetchError } = await supabaseAdmin

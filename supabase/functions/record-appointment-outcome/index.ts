@@ -28,7 +28,16 @@ serve(async (req) => {
     }
     const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
 
-    const { appointment_id, outcome, outcome_notes, new_scheduled_at } = await req.json();
+    const parsed = await parseBody(req, z.object({
+      appointment_id: uuid,
+      outcome: shortText.min(1),
+      outcome_notes: longText.optional().nullable(),
+      new_scheduled_at: z.string().datetime().optional().nullable(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { appointment_id, outcome, outcome_notes, new_scheduled_at } = parsed.data;
 
     if (!appointment_id || !outcome) {
       return new Response(JSON.stringify({ error: "appointment_id and outcome required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

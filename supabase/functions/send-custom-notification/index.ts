@@ -44,10 +44,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
     }
 
-    const { title, body, roles } = await req.json();
-    if (!title || !body || !Array.isArray(roles) || roles.length === 0) {
-      return new Response(JSON.stringify({ error: "Missing title, body, or roles" }), { status: 400, headers: corsHeaders });
+    const parsed = await parseBody(req, z.object({
+      title: shortText.min(1),
+      body: longText.min(1),
+      roles: z.array(z.enum(["admin", "team_member", "social_media_partner", "student", "ambassador"])).min(1),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: corsHeaders });
     }
+    const { title, body, roles } = parsed.data;
 
     // Get user IDs for selected roles
     const { data: roleUsers } = await serviceClient

@@ -33,7 +33,16 @@ serve(async (req) => {
     const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
 
 
-    const { email, full_name, case_id, created_by } = await req.json();
+    const parsed = await parseBody(req, z.object({
+      email: emailField,
+      full_name: personName,
+      case_id: uuid.optional().nullable(),
+      created_by: uuid.optional().nullable(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { email, full_name, case_id, created_by } = parsed.data;
 
     if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "email is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -47,7 +47,19 @@ serve(async (req) => {
 
 
     // ── Parse request ──────────────────────────────────────────────────
-    const { case_id, student_email, student_full_name, student_phone } = await req.json();
+    const parsed = await parseBody(req, z.object({
+      case_id: uuid,
+      student_email: emailField,
+      student_full_name: personName,
+      student_phone: phoneField.optional().nullable(),
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { case_id, student_email, student_full_name, student_phone } = parsed.data;
 
     if (!case_id || !student_email || !student_full_name) {
       return new Response(JSON.stringify({ error: "case_id, student_email, student_full_name required" }), {

@@ -55,7 +55,15 @@ serve(async (req) => {
     const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
 
 
-    const body = await req.json();
+    const parsed = await parseBody(req, z.object({
+      case_id: uuid,
+      email: emailField,
+      full_name: personName,
+    }));
+    if (!parsed.ok) {
+      return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const body = parsed.data;
     const { case_id, email, full_name } = body;
 
     if (!case_id || !email || !full_name) {
