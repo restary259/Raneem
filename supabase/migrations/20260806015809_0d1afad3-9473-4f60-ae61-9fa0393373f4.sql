@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.restrict_profiles_write() FROM anon;
