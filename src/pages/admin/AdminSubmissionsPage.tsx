@@ -105,12 +105,12 @@ const AdminSubmissionsPage = () => {
       const [pendingRes, completedRes] = await Promise.all([
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
           .in("status", ["submitted", "payment_confirmed"])
           .order("created_at", { ascending: false }),
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, assigned_to")
+          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
           .eq("status", "enrollment_paid")
           .order("created_at", { ascending: false }),
       ]);
@@ -290,7 +290,7 @@ const AdminSubmissionsPage = () => {
     (s.submission?.service_fee || 0).toLocaleString('en-US');
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 w-full max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
