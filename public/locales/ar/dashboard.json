@@ -98,7 +98,13 @@
       "financial": "المستندات المالية",
       "housing": "عقد السكن",
       "other": "أخرى"
-    }
+    },
+    "customDocName": "اسم المستند",
+    "customDocNamePlaceholder": "اكتب اسم المستند",
+    "customNameRequired": "يرجى كتابة اسم المستند",
+    "fileTooLarge": "حجم الملف كبير جداً",
+    "invalidType": "نوع الملف غير مدعوم",
+    "maxSize": "الحد الأقصى 15 ميغابايت"
   },
   "payments": {
     "title": "تفاصيل المدفوعات",
@@ -128,7 +134,13 @@
     "title": "قائمة المتطلبات",
     "progress": "أكملت {{completed}} من {{total}} متطلبات",
     "allComplete": "تم إكمال جميع المتطلبات!",
-    "noItems": "لم يتم تحديد متطلبات بعد"
+    "noItems": "لم يتم تحديد متطلبات بعد",
+    "checkTitle": "تحديد كمكتمل؟",
+    "checkDesc": "هل تؤكد إتمام \"{{name}}\"؟",
+    "uncheckTitle": "إلغاء التحديد؟",
+    "uncheckDesc": "هل تريد إلغاء تحديد \"{{name}}\"؟",
+    "confirmBtn": "تأكيد",
+    "cancelBtn": "إلغاء"
   },
   "profile": {
     "title": "الحساب",
@@ -174,7 +186,30 @@
     "hasCriminalRecord": "هل لديك سجل جنائي؟",
     "criminalRecordDetails": "تفاصيل السجل الجنائي",
     "hasDualCitizenship": "هل لديك جنسية مزدوجة؟",
-    "secondPassportCountry": "بلد جواز السفر الثاني"
+    "secondPassportCountry": "بلد جواز السفر الثاني",
+    "personalInfo": "المعلومات الشخصية",
+    "identityInfo": "معلومات الهوية",
+    "identityInfoNote": "تُدار هذه الحقول من قبل الوكالة. تواصل معنا لتحديثها.",
+    "applicationInfo": "مدرسة اللغة والتقديم",
+    "languageSchool": "مدرسة اللغة",
+    "nationality": "الجنسية",
+    "passportNumber": "رقم جواز السفر",
+    "dateOfBirth": "تاريخ الميلاد",
+    "cityOfBirth": "مكان الولادة",
+    "arrivalDate": "تاريخ الوصول إلى ألمانيا",
+    "homeAddress": "عنوان السكن",
+    "homeAddressPlaceholder": "الشارع، المدينة، الدولة",
+    "germanAddress": "العنوان في ألمانيا",
+    "germanAddressPlaceholder": "الشارع، المدينة، الرمز البريدي",
+    "emergencyContact": "جهة اتصال للطوارئ",
+    "dangerZone": "منطقة الخطر",
+    "deleteAccount": "حذف الحساب نهائياً",
+    "deleteAccountTitle": "حذف الحساب نهائياً",
+    "deleteAccountDesc": "سيتم حذف حسابك وجميع بياناتك نهائياً.",
+    "deleteAccountWarning": "حذف نهائي لحسابك وكل البيانات المرتبطة به. لا يمكن التراجع عن هذا الإجراء.",
+    "typeDelete": "اكتب DELETE للتأكيد:",
+    "confirmDelete": "نعم، احذف حسابي",
+    "accountDeleted": "تم حذف الحساب"
   },
   "referrals": {
     "title": "إحالة صديق أو أحد أفراد العائلة",
@@ -215,7 +250,9 @@
       "enrolled": "مسجّل",
       "paid": "مدفوع",
       "rejected": "مرفوض"
-    }
+    },
+    "namePlaceholder": "الاسم الكامل للصديق",
+    "nameRequired": "الاسم مطلوب"
   },
   "rewards": {
     "totalRewards": "إجمالي المكافآت",
@@ -332,7 +369,14 @@
       "loading": "جار التحميل...",
       "allFieldsRequired": "يرجى ملء جميع الحقول",
       "accountCreated": "تم إنشاء الحساب بنجاح",
-      "credentialsHint": "تم إنشاء الحساب. شارك بيانات الاعتماد مع العضو."
+      "credentialsHint": "تم إنشاء الحساب. شارك بيانات الاعتماد مع العضو.",
+      "accountDeleted": "تم حذف الحساب بنجاح",
+      "commissionCustom": "مبلغ مخصّص لهذا الحساب",
+      "commissionDefault": "المبلغ الافتراضي لهذا الدور",
+      "confirmDelete": "حذف",
+      "deleteAccount": "حذف الحساب",
+      "deleteConfirmTitle": "حذف الحساب؟",
+      "deleteConfirmDesc": "سيتم حذف الحساب وإلغاء جميع صلاحياته. لا يمكن التراجع عن هذا الإجراء."
     },
     "programs": {
       "title": "البرامج والسكن",
@@ -443,7 +487,10 @@
       "tabPending": "قيد المراجعة",
       "tabCompleted": "مكتملة",
       "enrolledOn": "تاريخ التسجيل",
-      "emptyCompleted": "لا توجد حالات مكتملة بعد"
+      "emptyCompleted": "لا توجد حالات مكتملة بعد",
+      "paymentSplit": "توزيع الدفعة",
+      "paymentSplitDesc": "راجع طريقة توزيع رسوم الخدمة قبل تأكيد التسجيل.",
+      "splitNote": "يتم ضبط العمولات من الإعدادات ← توزيع الأموال. أكّد بكلمة المرور للمتابعة."
     },
     "financials": {
       "title": "لوحة المالية",
@@ -461,7 +508,11 @@
       "tabAgentPayouts": "مدفوعات الفريق",
       "tabPartnerPayouts": "مدفوعات الشركاء",
       "recentEnrolled": "آخر الحالات المسجلة",
-      "noData": "لا توجد بيانات بعد"
+      "noData": "لا توجد بيانات بعد",
+      "partnerDirectTab": "تبويب الدفع المباشر للشركاء",
+      "partnerDirectHint": "— دفعات يبدأها المدير. المكافآت التي تحمل شارة «تم طلب الصرف» يجب تسويتها من تبويب طلبات الصرف لتفادي الدفع المزدوج.",
+      "payoutRequestsTab": "تبويب طلبات الصرف",
+      "payoutRequestsHint": "— يعالج طلبات الصرف الرسمية التي يرسلها الشركاء من لوحاتهم (حالة المكافأة: قيد الانتظار ← موافق عليها ← مدفوعة)."
     },
     "partnerPayouts": {
       "title": "مدفوعات الشركاء",
@@ -493,7 +544,12 @@
       "successDesc": "تم تأكيد ₪{{amount}} لـ {{partner}}",
       "noRewardRows": "لا توجد صفوف مكافآت",
       "createdLabel": "تاريخ الإنشاء",
-      "confirmedLabel": "تاريخ التأكيد"
+      "confirmedLabel": "تاريخ التأكيد",
+      "inRequestGroup": "ضمن طلب صرف ({{count}}) — {{total}}",
+      "nothingToPay": "لا يوجد ما يُدفع — جميع المكافآت مُدرجة ضمن طلب صرف.",
+      "payoutRequested": "تم طلب الصرف",
+      "payoutRequestedHint": "أرسل الشريك طلب صرف رسمي. تتم معالجته من تبويب «طلبات الصرف».",
+      "seeRequestsTab": "انتقل إلى تبويب طلبات الصرف"
     },
     "analytics": {
       "title": "التحليلات",
@@ -532,7 +588,9 @@
       "assigned": "معيّن",
       "paid": "مدفوع",
       "commission": "العمولة",
-      "funnelTitle": "مسار العملاء"
+      "funnelTitle": "مسار العملاء",
+      "noStageData": "لا توجد بيانات كافية بعد لحساب مدة كل مرحلة",
+      "noStageDataSub": "سيظهر هذا الرسم تلقائياً كلما تقدّمت الملفات في المسار خلال الأيام القادمة"
     },
     "commission": {
       "globalRates": "معدلات العمولة العامة",
@@ -916,7 +974,9 @@
       "exportExcel": "تصدير Excel",
       "requestId": "رقم الطلب",
       "approvalDate": "تاريخ الموافقة",
-      "notes": "ملاحظات"
+      "notes": "ملاحظات",
+      "partnerPendingHint": "طلبات صرف الشركاء",
+      "payError": "تعذّر إتمام الدفع"
     },
     "authFailures": {
       "title": "إخفاقات الصلاحيات",
@@ -938,6 +998,69 @@
         "partnership": "الشراكة",
         "contact": "تواصل معنا"
       }
+    },
+    "contacts": {
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني",
+      "export": "تصدير",
+      "new": "جديد",
+      "replied": "تم الرد",
+      "archived": "مؤرشف",
+      "markReplied": "تحديد كمُجاب",
+      "archive": "أرشفة",
+      "noMessages": "لا توجد طلبات حتى الآن",
+      "noName": "بدون اسم",
+      "statusUpdated": "تم تحديث الحالة",
+      "sourcePartnership": "طلب شراكة",
+      "sourceContact": "رسالة تواصل",
+      "details": "تفاصيل الطلب",
+      "fields": {
+        "name": "الاسم الكامل",
+        "full_name": "الاسم الكامل",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الهاتف",
+        "whatsapp": "رقم واتساب",
+        "city": "المدينة",
+        "age": "العمر",
+        "education_level": "المستوى التعليمي",
+        "still_in_school": "ما زال في المدرسة",
+        "english_units": "وحدات الإنجليزي",
+        "math_units": "وحدات الرياضيات",
+        "interested_major": "التخصص المطلوب",
+        "major": "التخصص",
+        "destination": "الدولة المطلوبة",
+        "service": "الخدمة المطلوبة",
+        "message": "الرسالة",
+        "notes": "ملاحظات",
+        "experience": "الخبرة",
+        "audience": "حجم الجمهور",
+        "social_links": "روابط التواصل الاجتماعي",
+        "platform": "المنصة",
+        "motivation": "سبب الانضمام",
+        "source": "مصدر الطلب"
+      },
+      "values": {
+        "yes": "نعم",
+        "no": "لا"
+      }
+    },
+    "passwordVerify": {
+      "title": "تأكيد الهوية",
+      "description": "أدخل كلمة مرور حسابك لتأكيد هذه العملية المالية.",
+      "password": "كلمة المرور",
+      "placeholder": "أدخل كلمة المرور",
+      "confirm": "تأكيد",
+      "cancel": "إلغاء",
+      "verifying": "جارٍ التحقق...",
+      "wrongPassword": "كلمة المرور غير صحيحة",
+      "userNotFound": "تعذّر التعرف على المستخدم",
+      "verifyFailed": "فشل التحقق، حاول مرة أخرى"
+    },
+    "shared": {
+      "deleteTitle": "تأكيد الحذف",
+      "deleteDesc": "لا يمكن التراجع عن هذا الإجراء.",
+      "deleteBtn": "حذف",
+      "cancelBtn": "إلغاء",
+      "deleted": "تم الحذف"
     }
   },
   "influencer": {
