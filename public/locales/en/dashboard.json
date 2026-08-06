@@ -615,7 +615,18 @@
       "finalConfirmDesc": "{{n}} records will be permanently deleted. This cannot be undone.",
       "deleting": "Deleting...",
       "confirmYesDelete": "Yes, Delete",
-      "incorrectPassword": "Incorrect password"
+      "incorrectPassword": "Incorrect password",
+      "pipeline": {
+        "tab": "Pipeline stages",
+        "title": "Pipeline stages",
+        "hint": "Rename, recolor and reorder the stages of the case pipeline. A stage that still holds cases cannot be switched off.",
+        "labelAr": "Arabic name",
+        "labelEn": "English name",
+        "color": "Color",
+        "active": "Active",
+        "caseCount": "Cases",
+        "saved": "Pipeline stages saved"
+      }
     },
     "spreadsheet": {
       "title": "Student Spreadsheet",
