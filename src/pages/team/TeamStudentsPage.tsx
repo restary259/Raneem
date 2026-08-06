@@ -67,9 +67,9 @@ export default function TeamStudentsPage() {
         .eq("role", "student");
 
       if (roleErr) {
-        // RLS may block team members — surface the real error
+        // RLS may block team members — show a generic message to avoid leaking internals.
         console.error("user_roles RLS error:", roleErr.message, roleErr.details);
-        toast({ variant: "destructive", description: `Permissions error: ${roleErr.message}` });
+        toast({ variant: "destructive", description: t("common.error") });
         return;
       }
 
@@ -93,7 +93,8 @@ export default function TeamStudentsPage() {
       }
       setStudents(data ?? []);
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("fetchStudents error:", err);
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setListLoading(false);
     }
@@ -151,7 +152,8 @@ export default function TeamStudentsPage() {
         description: t("team.students.createdSuccess"),
       });
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("handleCreate error:", err);
+      toast({ variant: "destructive", description: t("common.error") });
     } finally {
       setCreating(false);
     }

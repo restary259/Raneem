@@ -24,22 +24,10 @@ Deno.serve(async (req) => {
 
     const userId = user.id;
 
-    // 1. Null out leads.source_id for influencer leads (not a FK, won't cascade)
-    await supabaseAdmin
-      .from('leads')
-      .update({ source_id: null, source_type: 'organic' })
-      .eq('source_id', userId);
-
-    // 2. Cancel any pending rewards for this user
-    await supabaseAdmin
-      .from('rewards')
-      .update({ status: 'cancelled' })
-      .eq('user_id', userId)
-      .in('status', ['pending', 'approved']);
-
-    // 3. Delete the auth user — cascades to profiles, user_roles, rewards, payout_requests via FK
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-    if (deleteError) throw deleteError;
+    // Anonymize the user account instead of hard-deleting, so financial/audit
+    // references (transaction_log, payout_requests, audit log) stay intact.
+    const { error: anonError } = await supabaseAdmin.rpc('anonymize_user', { p_user_id: userId });
+    if (anonError) throw anonError;
 
     return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
   } catch (err: any) {

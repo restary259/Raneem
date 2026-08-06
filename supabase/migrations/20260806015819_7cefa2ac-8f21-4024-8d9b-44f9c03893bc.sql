@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.restrict_profiles_write() FROM public; REVOKE EXECUTE ON FUNCTION public.restrict_profiles_write() FROM authenticated; GRANT EXECUTE ON FUNCTION public.restrict_profiles_write() TO service_role;

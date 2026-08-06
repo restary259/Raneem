@@ -105,36 +105,22 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   const handleMarkPaid = async (paymentMethod: string, transactionRef: string, notes: string) => {
     if (!payTarget) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const adminId = session?.user?.id || null;
-    // Update request
-    await (supabase as any).from('payout_requests').update({
-      status: 'paid', payment_method: paymentMethod, transaction_ref: transactionRef,
-      admin_notes: notes || payTarget.admin_notes, paid_at: new Date().toISOString(),
-      paid_by: adminId,
-    }).eq('id', payTarget.id);
-    // Update linked rewards
-    if (payTarget.linked_reward_ids?.length) {
-      for (const rid of payTarget.linked_reward_ids) {
-        await (supabase as any).from('rewards').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', rid);
-      }
+    try {
+      const { error } = await (supabase as any).rpc('confirm_payout_batch', {
+        p_payout_request_id: payTarget.id,
+        p_payment_method: paymentMethod,
+        p_transaction_ref: transactionRef,
+        p_notes: notes,
+      });
+      if (error) throw error;
+      auditLog('payout_paid', payTarget.id, `Paid ${payTarget.amount} NIS to ${getName(payTarget.requestor_id)} via ${paymentMethod}`);
+      toast({ title: t('admin.payouts.statusUpdated') });
+      setPayTarget(null);
+      fetchRequests();
+      onRefresh?.();
+    } catch {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: t('admin.payouts.payError') });
     }
-    // Insert transaction log
-    await (supabase as any).from('transaction_log').insert({
-      type: payTarget.requestor_role === 'social_media_partner' ? 'influencer_payout' : 'student_cashback',
-      payout_request_id: payTarget.id,
-      amount: payTarget.amount,
-      payment_method: paymentMethod,
-      transaction_ref: transactionRef,
-      notes,
-      approved_by: adminId,
-    });
-    // Audit log
-    auditLog('payout_paid', payTarget.id, `Paid ${payTarget.amount} NIS to ${getName(payTarget.requestor_id)} via ${paymentMethod}`);
-    toast({ title: t('admin.payouts.statusUpdated') });
-    setPayTarget(null);
-    fetchRequests();
-    onRefresh?.();
   };
 
   const bulkAction = async (action: 'approved' | 'rejected') => {

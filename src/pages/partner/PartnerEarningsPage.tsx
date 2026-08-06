@@ -182,10 +182,11 @@ export default function PartnerEarningsPage() {
       setShowPayoutDialog(false);
       load(userId);
     } catch (err: any) {
+      console.error("[PartnerEarnings] payout request failed:", err);
       toast({
         variant: "destructive",
         title: isAr ? "خطأ" : "Error",
-        description: err.message,
+        description: isAr ? "تعذر تقديم طلب الصرف. يرجى المحاولة مرة أخرى." : "Unable to submit payout request. Please try again.",
       });
     } finally {
       setIsSubmitting(false);

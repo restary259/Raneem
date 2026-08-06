@@ -43,7 +43,6 @@ const FaqPage = lazy(() => import("./pages/FaqPage"));
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
 const AdminSpreadsheetPage = lazy(() => import("./pages/admin/AdminSpreadsheetPage"));
-const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminCommandCenter = lazy(() => import("./pages/admin/AdminCommandCenter"));
 const AdminPipelinePage = lazy(() => import("./pages/admin/AdminPipelinePage"));
 const AdminTeamPage = lazy(() => import("./pages/admin/AdminTeamPage"));
