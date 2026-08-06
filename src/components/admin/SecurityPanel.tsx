@@ -62,10 +62,10 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
 
       // 2. Rapid referral chains — only flag organic source leads (influencer traffic is normal)
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: recentReferrals } = await (supabase as any).from('referrals').select('referrer_id, created_at').gte('created_at', yesterday);
+      const { data: recentReferrals } = await (supabase as any).from('referrals').select('referrer_user_id, created_at').gte('created_at', yesterday);
       if (recentReferrals) {
         const countByReferrer: Record<string, number> = {};
-        recentReferrals.forEach((r: any) => { countByReferrer[r.referrer_id] = (countByReferrer[r.referrer_id] || 0) + 1; });
+        recentReferrals.forEach((r: any) => { countByReferrer[r.referrer_user_id] = (countByReferrer[r.referrer_user_id] || 0) + 1; });
         // Threshold raised to 15 for influencers (who legitimately send many leads)
         Object.entries(countByReferrer).filter(([, c]) => c >= 10).forEach(([id, count]) => {
           alerts.push({ type: 'rapid_referrals', severity: 'medium', message: isAr ? 'إحالات سريعة مشبوهة' : 'Suspicious rapid referrals', details: `User ${id.slice(0, 8)}...: ${count} referrals in 24h (check if influencer — normal for them)` });

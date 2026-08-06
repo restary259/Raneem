@@ -2377,6 +2377,27 @@ export type Database = {
         Returns: string[]
       }
       get_my_role: { Args: never; Returns: string }
+      get_partner_pool_cases: {
+        Args: { p_sources?: string[] }
+        Returns: {
+          created_at: string
+          degree_interest: string
+          education_level: string
+          full_name: string
+          id: string
+          partner_id: string
+          source: string
+          status: string
+        }[]
+      }
+      get_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

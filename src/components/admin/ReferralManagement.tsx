@@ -12,6 +12,17 @@ import { Trash2, Download } from 'lucide-react';
 
 const STATUS_KEYS = ['pending', 'contacted', 'enrolled', 'paid', 'rejected'];
 
+// The referrals table has no status column — status is derived from the linked case.
+const deriveStatus = (referral: any, caseStatusMap: Record<string, string>): string => {
+  const caseStatus = referral.referred_case_id ? caseStatusMap[referral.referred_case_id] : undefined;
+  if (!caseStatus) return 'pending';
+  if (caseStatus === 'enrollment_paid') return 'paid';
+  if (caseStatus === 'cancelled') return 'rejected';
+  if (caseStatus === 'submitted' || caseStatus === 'payment_confirmed') return 'enrolled';
+  if (caseStatus === 'new') return 'pending';
+  return 'contacted';
+};
+
 interface ReferralMgmtProps {
   onRefresh?: () => void;
   profiles?: { id: string; full_name: string }[];
@@ -28,13 +39,23 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
 
   const fetchReferrals = async () => {
     const { data } = await (supabase as any).from('referrals').select('*').order('created_at', { ascending: false });
-    if (data) setReferrals(data);
+    const rows = data || [];
+
+    // Derive each referral's status from the linked case (the referrals table has no status column)
+    const caseIds = [...new Set(rows.map((r: any) => r.referred_case_id).filter(Boolean))] as string[];
+    let caseStatusMap: Record<string, string> = {};
+    if (caseIds.length > 0) {
+      const { data: caseRows } = await (supabase as any).from('cases').select('id,status').in('id', caseIds);
+      (caseRows || []).forEach((c: any) => { caseStatusMap[c.id] = c.status; });
+    }
+
+    setReferrals(rows.map((r: any) => ({ ...r, status: deriveStatus(r, caseStatusMap) })));
   };
 
   useEffect(() => { fetchReferrals(); }, []);
 
   const getReferrerName = (referral: any) => {
-    const p = profiles.find(pr => pr.id === referral.referrer_id);
+    const p = profiles.find(pr => pr.id === referral.referrer_user_id);
     return p?.full_name || '—';
   };
 
@@ -44,25 +65,6 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
     return t('admin.referralsMgmt.student');
   };
 
-  const updateStatus = async (id: string, newStatus: string, referral: any) => {
-    const { error } = await (supabase as any).from('referrals').update({ status: newStatus }).eq('id', id);
-    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
-
-    // Referral enrolled — no auto case creation needed; cases are managed via the cases table directly
-
-    if (newStatus === 'paid') {
-      const amount = referral.referrer_type === 'influencer' ? 2000 : 500;
-      await (supabase as any).from('rewards').insert({ user_id: referral.referrer_id, referral_id: id, amount, currency: 'ILS', status: 'pending' });
-      const { data: allReferrals } = await (supabase as any).from('referrals').select('id').eq('referrer_id', referral.referrer_id).eq('status', 'paid');
-      const count = allReferrals?.length || 0;
-      const milestoneMap: Record<number, string> = { 1: 'first_referral', 5: '5_referrals', 10: '10_referrals' };
-      if (milestoneMap[count]) {
-        const { data: existing } = await (supabase as any).from('referral_milestones').select('id').eq('user_id', referral.referrer_id).eq('milestone_type', milestoneMap[count]);
-        if (!existing?.length) { await (supabase as any).from('referral_milestones').insert({ user_id: referral.referrer_id, milestone_type: milestoneMap[count] }); }
-      }
-    }
-    toast({ title: t('admin.referralsMgmt.statusUpdated') }); fetchReferrals(); onRefresh?.();
-  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -99,10 +101,9 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const StatusSelect = ({ referral }: { referral: any }) => (
-    <Select value={referral.status} onValueChange={(v) => updateStatus(referral.id, v, referral)}>
-      <SelectTrigger className="w-full sm:w-36 h-10 sm:h-8 text-xs"><SelectValue /></SelectTrigger>
-      <SelectContent>{STATUS_KEYS.map(s => <SelectItem key={s} value={s}>{String(t(`referrals.statuses.${s}`, { defaultValue: s }))}</SelectItem>)}</SelectContent>
-    </Select>
+    <Badge variant={referral.status === 'paid' ? 'default' : referral.status === 'rejected' ? 'destructive' : 'secondary'}>
+      {String(t(`referrals.statuses.${referral.status}`, { defaultValue: referral.status }))}
+    </Badge>
   );
 
   return (

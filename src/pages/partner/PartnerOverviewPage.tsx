@@ -84,27 +84,24 @@ export default function PartnerOverviewPage() {
       .like("admin_notes", "Partner commission from case%");
     setPaidRewards(rewardsData || []);
 
-    // Fetch cases
-    let query = (supabase as any)
-      .from("cases")
-      .select("id,full_name,status,source,created_at,education_level,degree_interest,partner_id")
-      .order("created_at", { ascending: false });
-
+    // Fetch cases through the partner reader (reduced columns — no phone/notes)
     const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
+    let sources: string[] | null = null;
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        query = query.in("source", PARTNER_SOURCES);
+        sources = PARTNER_SOURCES;
       } else if (override.show_all_cases === null) {
-        query = query.eq("source", "referral");
+        sources = ["referral"];
       }
-    } else {
-      if (!globalShowAll) {
-        query = query.in("source", PARTNER_SOURCES);
-      }
+    } else if (!globalShowAll) {
+      sources = PARTNER_SOURCES;
     }
 
-    const { data: casesData, error: casesErr } = await query;
+    const { data: casesData, error: casesErr } = await (supabase as any).rpc(
+      "get_partner_pool_cases",
+      { p_sources: sources }
+    );
     if (casesErr) console.error("cases fetch error:", casesErr);
     setCases(casesData || []);
     setIsLoading(false);

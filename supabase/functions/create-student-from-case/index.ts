@@ -234,8 +234,8 @@ serve(async (req) => {
       .eq("id", callerId)
       .single();
 
-    await supabaseAdmin
-      .rpc("log_activity", {
+    try {
+      await supabaseAdmin.rpc("log_activity", {
         p_actor_id: callerId,
         p_actor_name: callerProfile?.full_name ?? "Team Member",
         p_action: "student_account_created",
@@ -254,10 +254,10 @@ serve(async (req) => {
             phone: !!phone,
           },
         },
-      })
-      .catch(() => {
-        /* non-fatal */
       });
+    } catch (_e) {
+      /* non-fatal */
+    }
 
     // ── Response ───────────────────────────────────────────────────────
     const responsePayload: Record<string, unknown> = {

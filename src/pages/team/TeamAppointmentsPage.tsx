@@ -433,7 +433,8 @@ export default function TeamAppointmentsPage() {
       return isSameDay(d, day) && getHours(d) === hour;
     });
   const getDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
-  const calLocale = isAr ? "ar-SA" : "en-US";
+  // Gregorian calendar + ASCII digits in both languages
+  const calLocale = isAr ? "ar-u-nu-latn-ca-gregory" : "en-US";
   const headerLabel =
     view === "day"
       ? currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
