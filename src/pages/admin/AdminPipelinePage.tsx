@@ -234,6 +234,8 @@ const AdminPipelinePage = () => {
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [colLimits, setColLimits] = useState<Record<string, number>>({});
+
 
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
