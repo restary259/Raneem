@@ -55,6 +55,7 @@ const AdminFinancialsPage = lazy(() => import("./pages/admin/AdminFinancialsPage
 const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 
 // Team pages (Phase 3)
 const TeamTodayPage = lazy(() => import("./pages/team/TeamTodayPage"));
@@ -194,6 +195,7 @@ const App = () => {
               <Route path="financials" element={<AdminFinancialsPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="activity" element={<AdminActivityPage />} />
+              <Route path="inbox" element={<AdminInboxPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
