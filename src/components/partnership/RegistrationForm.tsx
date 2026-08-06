@@ -52,17 +52,21 @@ const RegistrationForm = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-        const result = await supabase.functions.invoke('send-email', {
-            body: {
-                form_source: 'Partnership Registration Form',
-                ...values,
-            },
-        });
+      // Store first: an application must survive an email delivery failure.
+      const { error: insertError } = await (supabase as any)
+        .from('contact_submissions')
+        .insert({ form_source: 'partnership', data: values, status: 'new' });
+      if (insertError) throw new Error(insertError.message);
 
-        if (result.error) throw new Error(`Function error: ${result.error.message}`);
-        if (result.data?.error) throw new Error(result.data.error);
-        if (!result.data?.success) throw new Error('Email sending failed');
-        return result.data;
+      // Email is a notification, not the record of truth.
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: { form_source: 'Partnership Registration Form', ...values },
+        });
+      } catch {
+        /* application is already saved — ignore notification failures */
+      }
+      return { success: true };
     },
     onSuccess: () => {
         toast.success(t('registrationForm.toasts.success'));
@@ -72,6 +76,7 @@ const RegistrationForm = () => {
         toast.error(t('registrationForm.toasts.error', { error: error.message }));
     },
   });
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     mutate(values);
@@ -138,20 +143,30 @@ const RegistrationForm = () => {
                  <FormField control={form.control} name="previousExperience" render={({ field }) => (
                   <FormItem className="space-y-3"><FormLabel>{formContent.previousExperience}</FormLabel>
                     <FormControl>
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
-                        <FormItem className="flex items-center space-x-2 space-x-reverse">
-                          <FormControl><RadioGroupItem value="yes" id="exp-yes" /></FormControl>
-                          <FormLabel htmlFor="exp-yes">{formContent.experienceOptions.yes}</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-x-reverse">
-                          <FormControl><RadioGroupItem value="no" id="exp-no" /></FormControl>
-                          <FormLabel htmlFor="exp-no">{formContent.experienceOptions.no}</FormLabel>
-                        </FormItem>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-row flex-wrap gap-6"
+                        aria-label={formContent.previousExperience}
+                      >
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="yes" id="exp-yes" className="h-4 w-4 shrink-0" />
+                          <label htmlFor="exp-yes" className="text-sm font-medium cursor-pointer">
+                            {formContent.experienceOptions.yes}
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="no" id="exp-no" className="h-4 w-4 shrink-0" />
+                          <label htmlFor="exp-no" className="text-sm font-medium cursor-pointer">
+                            {formContent.experienceOptions.no}
+                          </label>
+                        </div>
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
+
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
