@@ -2152,6 +2152,91 @@
       "conversion": "Conversion",
       "earned": "Commissions Earned",
       "paidOut": "Commissions Paid"
+    },
+    "value": {
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "appointment_scheduled": "Appointment Scheduled",
+        "profile_completion": "Profile Completion",
+        "payment_confirmed": "Payment Confirmed",
+        "submitted": "Submitted to Admin",
+        "enrollment_paid": "Enrolled & Paid",
+        "cancelled": "Cancelled",
+        "forgotten": "Forgotten",
+        "eligible": "Eligible",
+        "not_eligible": "Not Eligible",
+        "assigned": "Assigned",
+        "completed": "Completed"
+      },
+      "rewardStatus": {
+        "pending": "Pending",
+        "approved": "In payout request",
+        "paid": "Paid",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "kind": {
+        "team": "Team commission",
+        "partner": "Partner commission",
+        "other": "Other",
+        "program": "Program",
+        "accommodation": "Accommodation",
+        "insurance": "Insurance",
+        "school": "School",
+        "referral": "Referral",
+        "apply_page": "Apply page",
+        "contact_form": "Contact form",
+        "manual": "Added manually",
+        "submit_new_student": "Submitted by team"
+      },
+      "role": {
+        "admin": "Admin",
+        "team_member": "Team member",
+        "social_media_partner": "Partner",
+        "partner": "Partner",
+        "student": "Student",
+        "influencer": "Partner"
+      },
+      "method": {
+        "bank_transfer": "Bank transfer",
+        "cash": "Cash",
+        "other": "Other",
+        "paypal": "PayPal"
+      },
+      "bool": {
+        "yes": "Active",
+        "no": "Inactive"
+      },
+      "programType": {
+        "language": "Language course",
+        "language_course": "Language course",
+        "foundation": "Foundation year",
+        "studienkolleg": "Studienkolleg",
+        "university": "University",
+        "bachelor": "Bachelor",
+        "master": "Master",
+        "accommodation": "Accommodation",
+        "school": "School",
+        "basic": "Basic",
+        "standard": "Standard",
+        "premium": "Premium",
+        "other": "Other"
+      },
+      "month": {
+        "jan": "January",
+        "feb": "February",
+        "mar": "March",
+        "apr": "April",
+        "may": "May",
+        "jun": "June",
+        "jul": "July",
+        "aug": "August",
+        "sep": "September",
+        "oct": "October",
+        "nov": "November",
+        "dec": "December"
+      }
     }
   }
 }

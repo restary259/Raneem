@@ -2170,6 +2170,91 @@
       "conversion": "نسبة التحويل",
       "earned": "العمولات المكتسبة",
       "paidOut": "العمولات المدفوعة"
+    },
+    "value": {
+      "status": {
+        "new": "جديد",
+        "contacted": "تم التواصل",
+        "appointment_scheduled": "موعد محدّد",
+        "profile_completion": "استكمال الملف",
+        "payment_confirmed": "تم تأكيد الدفع",
+        "submitted": "مُرسل للإدارة",
+        "enrollment_paid": "مسجَّل ومدفوع",
+        "cancelled": "ملغى",
+        "forgotten": "منسي",
+        "eligible": "مؤهل",
+        "not_eligible": "غير مؤهل",
+        "assigned": "مُسند",
+        "completed": "مكتمل"
+      },
+      "rewardStatus": {
+        "pending": "قيد الانتظار",
+        "approved": "ضمن طلب دفع",
+        "paid": "مدفوع",
+        "rejected": "مرفوض",
+        "cancelled": "ملغى"
+      },
+      "kind": {
+        "team": "عمولة فريق",
+        "partner": "عمولة وكيل",
+        "other": "أخرى",
+        "program": "برنامج",
+        "accommodation": "سكن",
+        "insurance": "تأمين",
+        "school": "مدرسة",
+        "referral": "إحالة",
+        "apply_page": "صفحة التقديم",
+        "contact_form": "نموذج التواصل",
+        "manual": "إضافة يدوية",
+        "submit_new_student": "إرسال من الفريق"
+      },
+      "role": {
+        "admin": "مدير",
+        "team_member": "عضو فريق",
+        "social_media_partner": "وكيل",
+        "partner": "وكيل",
+        "student": "طالب",
+        "influencer": "وكيل"
+      },
+      "method": {
+        "bank_transfer": "تحويل بنكي",
+        "cash": "نقداً",
+        "other": "أخرى",
+        "paypal": "PayPal"
+      },
+      "bool": {
+        "yes": "مفعّل",
+        "no": "غير مفعّل"
+      },
+      "programType": {
+        "language": "دورة لغة",
+        "language_course": "دورة لغة",
+        "foundation": "سنة تحضيرية",
+        "studienkolleg": "شتودين كوليغ",
+        "university": "جامعة",
+        "bachelor": "بكالوريوس",
+        "master": "ماجستير",
+        "accommodation": "سكن",
+        "school": "مدرسة",
+        "basic": "أساسي",
+        "standard": "قياسي",
+        "premium": "مميّز",
+        "other": "أخرى"
+      },
+      "month": {
+        "jan": "يناير",
+        "feb": "فبراير",
+        "mar": "مارس",
+        "apr": "أبريل",
+        "may": "مايو",
+        "jun": "يونيو",
+        "jul": "يوليو",
+        "aug": "أغسطس",
+        "sep": "سبتمبر",
+        "oct": "أكتوبر",
+        "nov": "نوفمبر",
+        "dec": "ديسمبر"
+      }
     }
   }
 }
