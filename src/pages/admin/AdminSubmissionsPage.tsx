@@ -357,7 +357,7 @@ const AdminSubmissionsPage = () => {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {cases.map((c) => (
+                {pendingPagination.items.map((c) => (
                   <div
                     key={c.id}
                     className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
