@@ -2390,6 +2390,14 @@ export type Database = {
           status: string
         }[]
       }
+      get_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
