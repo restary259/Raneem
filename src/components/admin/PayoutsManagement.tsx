@@ -145,22 +145,41 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     onRefresh?.();
   };
 
-  const exportCSV = () => {
-    const headers = ['Request ID', 'Requestor', 'Role', 'Linked Students', 'Amount', 'Status', 'Request Date', 'Approval Date', 'Payment Method', 'Notes'];
-    const rows = filtered.map(r => [
-      r.id.slice(0, 8), getName(r.requestor_id), r.requestor_role,
-      (r.linked_student_names || []).join('; '), r.amount, r.status,
-      new Date(r.requested_at).toLocaleDateString(locale),
-      r.approved_at ? new Date(r.approved_at).toLocaleDateString(locale) : '',
-      r.payment_method || '', r.admin_notes || ''
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `payouts-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
-  };
+  const exportExcel = () =>
+    exportCorporateWorkbook({
+      fileName: `DARB-payouts-${new Date().toISOString().slice(0, 10)}`,
+      title: t('admin.payouts.reportTitle', 'Payouts Report'),
+      author,
+      locale: exportLocale,
+      rtl,
+      sheets: [{
+        name: t('admin.payouts.reportTitle', 'Payouts Report'),
+        columns: [
+          { header: t('admin.payouts.requestId', 'Request ID'), type: 'text' },
+          { header: t('admin.payouts.requester'), type: 'text' },
+          { header: t('admin.payouts.role'), type: 'text' },
+          { header: t('admin.payouts.linkedStudents'), type: 'text' },
+          { header: t('admin.payouts.amount'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
+          { header: t('admin.payouts.status'), type: 'status' },
+          { header: t('admin.payouts.requestDate'), type: 'date' },
+          { header: t('admin.payouts.approvalDate', 'Approval Date'), type: 'date' },
+          { header: t('admin.payouts.paymentMethodCol'), type: 'text' },
+          { header: t('admin.payouts.notes', 'Notes'), type: 'text' },
+        ],
+        rows: filtered.map(r => [
+          r.id.slice(0, 8),
+          getName(r.requestor_id),
+          r.requestor_role,
+          (r.linked_student_names || []).join('; '),
+          Number(r.amount) || 0,
+          String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
+          r.requested_at,
+          r.approved_at || null,
+          r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '',
+          r.admin_notes || '',
+        ]),
+      }],
+    });
 
   const toggleSelect = (id: string) => {
     const s = new Set(selected);
