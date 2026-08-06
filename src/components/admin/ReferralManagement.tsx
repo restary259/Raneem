@@ -12,6 +12,17 @@ import { Trash2, Download } from 'lucide-react';
 
 const STATUS_KEYS = ['pending', 'contacted', 'enrolled', 'paid', 'rejected'];
 
+// The referrals table has no status column — status is derived from the linked case.
+const deriveStatus = (referral: any, caseStatusMap: Record<string, string>): string => {
+  const caseStatus = referral.referred_case_id ? caseStatusMap[referral.referred_case_id] : undefined;
+  if (!caseStatus) return 'pending';
+  if (caseStatus === 'enrollment_paid') return 'paid';
+  if (caseStatus === 'cancelled') return 'rejected';
+  if (caseStatus === 'submitted' || caseStatus === 'payment_confirmed') return 'enrolled';
+  if (caseStatus === 'new') return 'pending';
+  return 'contacted';
+};
+
 interface ReferralMgmtProps {
   onRefresh?: () => void;
   profiles?: { id: string; full_name: string }[];
@@ -90,10 +101,9 @@ const ReferralManagement: React.FC<ReferralMgmtProps> = ({ onRefresh, profiles =
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const StatusSelect = ({ referral }: { referral: any }) => (
-    <Select value={referral.status} onValueChange={(v) => updateStatus(referral.id, v, referral)}>
-      <SelectTrigger className="w-full sm:w-36 h-10 sm:h-8 text-xs"><SelectValue /></SelectTrigger>
-      <SelectContent>{STATUS_KEYS.map(s => <SelectItem key={s} value={s}>{String(t(`referrals.statuses.${s}`, { defaultValue: s }))}</SelectItem>)}</SelectContent>
-    </Select>
+    <Badge variant={referral.status === 'paid' ? 'default' : referral.status === 'rejected' ? 'destructive' : 'secondary'}>
+      {String(t(`referrals.statuses.${referral.status}`, { defaultValue: referral.status }))}
+    </Badge>
   );
 
   return (
