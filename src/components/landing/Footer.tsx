@@ -8,6 +8,7 @@ import TikTokIcon from "../icons/TikTokIcon";
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { t: tLegal } = useTranslation('legal');
   const year = new Date().getFullYear();
   return (
     <footer className="bg-primary text-primary-foreground pb-20 md:pb-0">
