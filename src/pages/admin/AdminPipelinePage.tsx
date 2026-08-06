@@ -40,6 +40,7 @@ import {
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 import { useSearchParams } from "react-router-dom";
+import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
@@ -399,7 +400,12 @@ const AdminPipelinePage = () => {
   });
 
   const getCasesForStatus = (status: string) => filtered.filter((c) => c.status === status);
-  const label = (status: string) => (isRtl ? STATUS_LABELS[status]?.ar : STATUS_LABELS[status]?.en);
+  const label = (status: string) =>
+    statusLabel(status) ?? (isRtl ? STATUS_LABELS[status]?.ar : STATUS_LABELS[status]?.en) ?? status;
+  const statusColor = (status: string) =>
+    boardStatuses.some((s) => s.key === status)
+      ? statusColorClass(status)
+      : STATUS_LABELS[status]?.color ?? "bg-muted";
 
   const sourceMeta: Record<string, { label: string; cls: string }> = {
     apply_page: { label: "Apply", cls: "bg-blue-100 text-blue-700" },
@@ -463,15 +469,15 @@ const AdminPipelinePage = () => {
       {/* ── Kanban ── */}
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
-          {STATUSES.map((status) => {
+          {boardStatuses.map(({ key: status }) => {
             const allStatusCases = getCasesForStatus(status);
             const shown = colLimits[status] ?? COLUMN_PAGE_SIZE;
             const statusCases = allStatusCases.slice(0, shown);
-            const meta = STATUS_LABELS[status];
+
             return (
               <div key={status} className="w-64 shrink-0">
                 <div className="flex items-center justify-between mb-3">
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${meta.color}`}>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${statusColor(status)}`}>
                     {label(status)}
                   </span>
                   <span className="text-xs text-muted-foreground font-medium">{allStatusCases.length.toLocaleString("en-US")}</span>
@@ -647,7 +653,7 @@ const AdminPipelinePage = () => {
                     <SheetTitle className="text-lg font-bold truncate">{selectedCase.full_name}</SheetTitle>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
                       <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_LABELS[selectedCase.status]?.color ?? "bg-muted"}`}
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColor(selectedCase.status)}`}
                       >
                         {label(selectedCase.status)}
                       </span>
