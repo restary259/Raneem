@@ -133,15 +133,15 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-emerald-600"><Gift className="h-6 w-6 text-white" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('rewards.totalRewards')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('rewards.totalRewards')}</p><p className="text-2xl font-bold">{totalEarned.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-amber-500"><Clock className="h-6 w-6 text-white" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('rewards.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('rewards.available', 'Available')}</p><p className="text-2xl font-bold">{availableAmount.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-5 flex items-center gap-4">
           <div className="p-3 rounded-xl bg-[hsl(var(--primary))]"><CheckCircle className="h-6 w-6 text-white" /></div>
-          <div><p className="text-sm text-muted-foreground">{t('rewards.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString()} ₪</p></div>
+          <div><p className="text-sm text-muted-foreground">{t('rewards.paid')}</p><p className="text-2xl font-bold">{paidAmount.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
       </div>
 
@@ -201,7 +201,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
                 {payoutRequests.map(r => (
                   <div key={r.id} className="p-3 rounded-lg border space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold">{Number(r.amount).toLocaleString()} ₪</span>
+                      <span className="font-bold">{Number(r.amount).toLocaleString('en-US')} ₪</span>
                       <Badge variant={statusColor(r.status) as any}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</p>
@@ -222,7 +222,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
                   <tbody>
                     {payoutRequests.map(r => (
                       <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                        <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString('en-US')} ₪</td>
                         <td className="px-4 py-3"><Badge variant={statusColor(r.status) as any}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
                         <td className="px-4 py-3 text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
                         <td className="px-4 py-3">
@@ -256,7 +256,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
                 <tbody>
                   {rewards.map(r => (
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                      <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString('en-US')} ₪</td>
                       <td className="px-4 py-3"><Badge variant={statusColor(r.status) as any}>{String(t(`rewards.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
                       <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString(locale)}</td>
                     </tr>
@@ -274,7 +274,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
           <DialogHeader><DialogTitle>{t('rewards.requestPayout')}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <p className="text-sm">{t('rewards.eligibleCount', 'Eligible rewards')}: <strong>{eligibleRewards.length}</strong></p>
-            <p className="text-sm">{t('rewards.totalAmount', 'Total')}: <strong>{availableAmount.toLocaleString()} ₪</strong></p>
+            <p className="text-sm">{t('rewards.totalAmount', 'Total')}: <strong>{availableAmount.toLocaleString('en-US')} ₪</strong></p>
             <div>
               <Label>{t('admin.payouts.notesOptional', 'Notes (optional)')}</Label>
               <Textarea value={requestNotes} onChange={e => setRequestNotes(e.target.value)} className="mt-1" />

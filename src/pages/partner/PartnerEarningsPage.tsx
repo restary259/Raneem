@@ -360,7 +360,7 @@ export default function PartnerEarningsPage() {
                           </Badge>
                         </td>
                         <td className="py-3 px-1 text-end whitespace-nowrap font-bold text-foreground">
-                          ₪{commissionRate.toLocaleString()}
+                          ₪{commissionRate.toLocaleString('en-US')}
                         </td>
                       </tr>
                     );

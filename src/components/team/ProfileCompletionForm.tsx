@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
@@ -261,7 +262,37 @@ export default function ProfileCompletionForm({
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
   const [insuranceId, setInsuranceId] = useState((ex.insurance_id as string) ?? "");
 
+  /* ─── Draft autosave / recovery ───────────────────────────────────── */
+  const draftValue = {
+    firstName, middleName, lastName, dob, gender, cityOfBirth,
+    email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
+    programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
+    accommodationId, insuranceId,
+  };
+  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
+    key: `profile-completion:${caseId}`,
+    version: 1,
+    value: draftValue,
+  });
+
+  useEffect(() => {
+    if (!restoredDraft) return;
+    const d = restoredDraft as typeof draftValue;
+    setFirstName(d.firstName ?? ""); setMiddleName(d.middleName ?? ""); setLastName(d.lastName ?? "");
+    setDob(d.dob ?? ""); setGender(d.gender ?? ""); setCityOfBirth(d.cityOfBirth ?? "");
+    setEmail(d.email ?? ""); setPhone(d.phone ?? "");
+    setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
+    setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
+    setProgramId(d.programId ?? ""); setSchoolId(d.schoolId ?? ""); setStartMonth(d.startMonth ?? "");
+    setArrivalDate(d.arrivalDate ?? ""); setCourseStart(d.courseStart ?? ""); setCourseEnd(d.courseEnd ?? "");
+    setAccommodationId(d.accommodationId ?? ""); setInsuranceId(d.insuranceId ?? "");
+    acknowledgeRestore();
+    toast({ title: t("common.draft.restoredTitle"), description: t("common.draft.restoredBody") });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoredDraft]);
+
   const age = ageFromISO(dob);
+
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
   const selectedProgram = programs.find((p) => p.id === programId);
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
@@ -429,6 +460,7 @@ export default function ProfileCompletionForm({
         p_metadata: { full_name: fullName },
       });
 
+      clearDraft();
       toast({ title: t("case.profileForm.saved") });
       onSuccess();
     } catch (err: any) {

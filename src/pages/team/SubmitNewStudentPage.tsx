@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -235,6 +236,37 @@ export default function SubmitNewStudentPage() {
   const [skipDocuments, setSkipDocuments] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; file: File; category: string }[]>([]);
 
+  /* ─── Draft autosave / recovery (files are never persisted) ────────── */
+  const draftValue = {
+    step, firstName, middleName, lastName, dob, gender, cityOfBirth,
+    email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
+    programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
+    accommodationId, serviceFee,
+  };
+  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
+    key: 'submit-new-student',
+    version: 1,
+    value: draftValue,
+  });
+
+  useEffect(() => {
+    if (!restoredDraft) return;
+    const d = restoredDraft as typeof draftValue;
+    setStep((d.step as StepNum) ?? 1);
+    setFirstName(d.firstName ?? ""); setMiddleName(d.middleName ?? ""); setLastName(d.lastName ?? "");
+    setDob(d.dob ?? ""); setGender(d.gender ?? ""); setCityOfBirth(d.cityOfBirth ?? "");
+    setEmail(d.email ?? ""); setPhone(d.phone ?? "");
+    setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
+    setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
+    setProgramId(d.programId ?? ""); setSchoolId(d.schoolId ?? ""); setStartMonth(d.startMonth ?? "");
+    setArrivalDate(d.arrivalDate ?? ""); setCourseStart(d.courseStart ?? ""); setCourseEnd(d.courseEnd ?? "");
+    setAccommodationId(d.accommodationId ?? ""); setServiceFee(d.serviceFee ?? "");
+    acknowledgeRestore();
+    toast({ title: t('common.draft.restoredTitle'), description: t('common.draft.restoredBody') });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoredDraft]);
+
+
   const selectedProgram = programs.find((p) => p.id === programId);
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
@@ -442,6 +474,7 @@ export default function SubmitNewStudentPage() {
         p_metadata: { full_name: fullName, email },
       });
 
+      clearDraft();
       toast({ title: ss('successTitle') });
       navigate(`/team/cases/${caseId}`);
     } catch (err: any) {

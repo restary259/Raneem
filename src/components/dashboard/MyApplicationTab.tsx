@@ -182,7 +182,7 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
             {submission.service_fee > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('application.serviceFee', 'Service Fee')}</span>
-                <span className="font-medium">{submission.service_fee.toLocaleString()} ILS</span>
+                <span className="font-medium">{submission.service_fee.toLocaleString('en-US')} ILS</span>
               </div>
             )}
             {submission.program_start_date && (

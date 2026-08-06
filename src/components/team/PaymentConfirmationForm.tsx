@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useFormDraft } from '@/hooks/useFormDraft';
 
 interface Props {
   caseId: string;
@@ -22,6 +23,20 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
   const [serviceFee, setServiceFee] = useState('');
   const [paymentReceived, setPaymentReceived] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
+    key: `payment-confirmation:${caseId}`,
+    value: { serviceFee },
+  });
+
+  React.useEffect(() => {
+    if (!restoredDraft) return;
+    const d = restoredDraft as { serviceFee?: string };
+    if (d.serviceFee) setServiceFee(d.serviceFee);
+    acknowledgeRestore();
+    toast({ title: t('common.draft.restoredTitle'), description: t('common.draft.restoredBody') });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoredDraft]);
 
   const total = parseFloat(serviceFee) || 0;
 
@@ -68,10 +83,12 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
         p_metadata: { service_fee: serviceFee },
       });
 
+      clearDraft();
       toast({ title: t('team.payment.confirmed') });
       onSuccess();
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch (err) {
+      console.error('[PaymentConfirmation]', err);
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setSaving(false);
     }

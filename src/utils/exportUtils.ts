@@ -98,7 +98,7 @@ export async function exportPDF({ headers, rows, fileName, title, summaryRows }:
       doc.setFontSize(7);
       doc.setTextColor(150);
       doc.text(
-        `Generated ${new Date().toLocaleDateString()} — Page ${doc.getCurrentPageInfo().pageNumber}`,
+        `Generated ${new Date().toLocaleDateString('en-US')} — Page ${doc.getCurrentPageInfo().pageNumber}`,
         14,
         pageHeight - 8
       );

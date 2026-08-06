@@ -74,7 +74,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('payments.totalPayments')}</p>
-              <p className="text-xl font-bold">{totalAmount.toLocaleString()} ₪</p>
+              <p className="text-xl font-bold">{totalAmount.toLocaleString('en-US')} ₪</p>
             </div>
           </div>
         </CardContent>
@@ -106,7 +106,7 @@ const PaymentsSummary: React.FC<PaymentsSummaryProps> = ({ userId }) => {
                       <div className="flex items-center justify-between">
                         <div>
                           <Badge variant={statusInfo.variant}>{t(`payments.status.${payment.status}`, payment.status)}</Badge>
-                          <p className="font-medium mt-1">{(payment.amount || 0).toLocaleString()} {payment.currency}</p>
+                          <p className="font-medium mt-1">{(payment.amount || 0).toLocaleString('en-US')} {payment.currency}</p>
                           {payment.notes && <p className="text-xs text-gray-500 mt-1">{payment.notes}</p>}
                         </div>
                         <div className="text-xs text-gray-500">

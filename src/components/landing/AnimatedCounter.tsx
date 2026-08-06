@@ -9,7 +9,7 @@ const AnimatedCounter = ({ end }: AnimatedCounterProps) => {
     const { count, ref } = useAnimatedCounter(end);
 
     return (
-        <span ref={ref}>{count.toLocaleString()}</span>
+        <span ref={ref}>{count.toLocaleString('en-US')}</span>
     );
 }
 

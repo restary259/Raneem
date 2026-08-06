@@ -301,7 +301,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
           <Button size="sm" variant="outline" onClick={() => {
             auditFinancialExport('pdf');
             const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
-            const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);
+            const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString('en-US')]);
             const totalIn = filtered.filter(r => r.direction === 'in').reduce((s,r) => s + r.amount, 0);
             const totalOut = filtered.filter(r => r.direction === 'out').reduce((s,r) => s + r.amount, 0);
             exportPDF({ headers, rows, fileName: `money-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study — Financial Report', summaryRows: [['Total Revenue', '', totalIn, '', '', ''], ['Total Expenses', '', totalOut, '', '', ''], ['Net', '', totalIn - totalOut, '', '', '']] });

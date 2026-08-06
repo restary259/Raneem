@@ -68,7 +68,7 @@ export default function TeamStudentProfilePage() {
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Submission</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               {(submission.service_fee as number) > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Service Fee</span><span className="font-medium">{(submission.service_fee as number).toLocaleString()} ILS</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Service Fee</span><span className="font-medium">{(submission.service_fee as number).toLocaleString('en-US')} ILS</span></div>
               )}
               {submission.program_start_date && <div className="flex justify-between"><span className="text-muted-foreground">Start</span><span>{submission.program_start_date as string}</span></div>}
               {submission.program_end_date && <div className="flex justify-between"><span className="text-muted-foreground">End</span><span>{submission.program_end_date as string}</span></div>}

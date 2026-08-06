@@ -19,13 +19,23 @@
     "educationalDestinations": "Educational Destinations",
     "educationalDestinationsDesc": "Discover universities, language schools, and educational services",
     "broadcastDesc": "Watch educational and live videos from our experts",
-    "studentLogin": "Student Login"
+    "studentLogin": "Student Login",
+    "faq": "FAQ",
+    "faqDesc": "Answers to the most common questions about studying in Germany"
   },
   "desktopNav": {
-    "about": { "description": "Learn about our story, vision, and values." },
-    "locations": { "description": "Discover our office locations around the world." },
-    "partnership": { "description": "Join our network as a partner or influencer." },
-    "partners": { "description": "Browse our list of accredited partners." }
+    "about": {
+      "description": "Learn about our story, vision, and values."
+    },
+    "locations": {
+      "description": "Discover our office locations around the world."
+    },
+    "partnership": {
+      "description": "Join our network as a partner or influencer."
+    },
+    "partners": {
+      "description": "Browse our list of accredited partners."
+    }
   },
   "applyNow": "Apply Now",
   "footer": {
@@ -159,21 +169,20 @@
     ]
   },
   "pwa": {
-    "installTitle": "Install Darb App",
-    "installDesc": "For quick access and offline use",
-    "mobileUse": "Mobile use",
-    "offlineUse": "Offline",
-    "installNow": "Install Now",
-    "later": "Later",
-    "iosTitle": "Install Darb App on iOS",
-    "iosDesc": "Follow these steps to add the app",
-    "iosStep1Title": "Tap the Share button",
-    "iosStep1Desc": "Look for the share icon in the Safari toolbar",
-    "iosStep2Title": "Choose \"Add to Home Screen\"",
-    "iosStep2Desc": "Scroll down in the menu until you find it",
-    "iosStep3Title": "Tap \"Add\"",
-    "iosStep3Desc": "The app will appear on your home screen",
-    "understood": "Got it!"
+    "installNow": "Install App",
+    "iosTitle": "Install Darb on iOS",
+    "iosDesc": "Follow these simple steps to add Darb to your home screen",
+    "iosStep1Title": "Tap Share",
+    "iosStep1Desc": "Open this page in Safari and tap the",
+    "iosStep2Title": "Tap Add to Home Screen",
+    "iosStep2Desc": "Scroll down and select 'Add to Home Screen'",
+    "iosStep3Title": "Tap Add",
+    "iosStep3Desc": "Confirm by tapping 'Add' in the top right",
+    "understood": "Got it",
+    "notificationTitle": "Stay Updated",
+    "notificationDesc": "Get notifications about your applications, deadlines, and important updates.",
+    "notificationEnable": "Enable Notifications",
+    "notificationSkip": "Skip for Now"
   },
   "officeLocations": {
     "title": "Our Main Office",
@@ -185,10 +194,26 @@
   "locations": {
     "title": "Where We Operate",
     "items": [
-      { "country": "Germany", "cities": "Heidelberg, Münster, Düsseldorf", "services": "University admissions, visas, language schools, residence permits." },
-      { "country": "Jordan", "cities": "Amman Office", "services": "New services coming soon." },
-      { "country": "Romania", "cities": "Partner institutions in Bucharest", "services": "New services coming soon." },
-      { "country": "Italy", "cities": "Florence (Coming Soon)", "services": "New services coming soon." }
+      {
+        "country": "Germany",
+        "cities": "Heidelberg, Münster, Düsseldorf",
+        "services": "University admissions, visas, language schools, residence permits."
+      },
+      {
+        "country": "Jordan",
+        "cities": "Amman Office",
+        "services": "New services coming soon."
+      },
+      {
+        "country": "Romania",
+        "cities": "Partner institutions in Bucharest",
+        "services": "New services coming soon."
+      },
+      {
+        "country": "Italy",
+        "cities": "Florence (Coming Soon)",
+        "services": "New services coming soon."
+      }
     ]
   },
   "educational": {
@@ -313,22 +338,6 @@
     "locationsDesc": "Discover Darb's office locations and where we operate around the world.",
     "whoWeAreTitle": "Who We Are — Darb",
     "whoWeAreDesc": "Learn about Darb's story, team, values, and what sets us apart in education consulting."
-  },
-  "pwa": {
-    "installNow": "Install App",
-    "iosTitle": "Install Darb on iOS",
-    "iosDesc": "Follow these simple steps to add Darb to your home screen",
-    "iosStep1Title": "Tap Share",
-    "iosStep1Desc": "Open this page in Safari and tap the",
-    "iosStep2Title": "Tap Add to Home Screen",
-    "iosStep2Desc": "Scroll down and select 'Add to Home Screen'",
-    "iosStep3Title": "Tap Add",
-    "iosStep3Desc": "Confirm by tapping 'Add' in the top right",
-    "understood": "Got it",
-    "notificationTitle": "Stay Updated",
-    "notificationDesc": "Get notifications about your applications, deadlines, and important updates.",
-    "notificationEnable": "Enable Notifications",
-    "notificationSkip": "Skip for Now"
   },
   "resetPassword": {
     "title": "Reset Password",

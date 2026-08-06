@@ -1007,7 +1007,13 @@
     "success": "نجاح",
     "saving": "جارٍ الحفظ…",
     "inAppBannerText": "للحصول على أفضل تجربة، افتح في Safari أو Chrome",
-    "copyLink": "نسخ الرابط"
+    "copyLink": "نسخ الرابط",
+    "draft": {
+      "restoredTitle": "تم استرجاع المسودة",
+      "restoredBody": "تم استرجاع التغييرات غير المحفوظة.",
+      "discard": "حذف المسودة",
+      "unsaved": "لديك تغييرات غير محفوظة. هل تريد مغادرة الصفحة؟"
+    }
   },
   "funnel": {
     "new": "عميل جديد",
@@ -1286,7 +1292,15 @@
     "contactLoggedButNotTransitioned": "تم تسجيل التواصل لكن لم يمكن تحديث الحالة.",
     "noCasesHint": "الملفات المعينة لك ستظهر هنا.",
     "deleteAppointmentTitle": "حذف الموعد",
-    "deleteAppointmentDesc": "هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع."
+    "deleteAppointmentDesc": "هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع.",
+    "picker": {
+      "previousDays": "أيام سابقة",
+      "nextDays": "أيام تالية",
+      "booked": "محجوز مسبقًا",
+      "selected": "المحدد",
+      "selectSlot": "يرجى اختيار التاريخ والوقت",
+      "conflict": "هذا الوقت يتعارض مع موعد آخر"
+    }
   },
   "influencerDash": {
     "hi": "مرحبًا",

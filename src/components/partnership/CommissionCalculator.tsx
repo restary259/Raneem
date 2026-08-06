@@ -36,7 +36,7 @@ const CommissionCalculator = () => {
             <div className="text-center pt-4">
               <p className="text-lg text-muted-foreground">{t('commissionCalculator.earningsTitle')}</p>
               <p className="text-4xl font-bold text-accent">
-                {estimatedEarnings.toLocaleString()} {t('commissionCalculator.currency')}
+                {estimatedEarnings.toLocaleString('en-US')} {t('commissionCalculator.currency')}
               </p>
               <p className="text-sm text-muted-foreground mt-2">{t('commissionCalculator.note')}</p>
             </div>

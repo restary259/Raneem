@@ -4,9 +4,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
+import { AlertTriangle } from 'lucide-react';
+import AppointmentPicker from './AppointmentPicker';
 
 interface RescheduleDialogProps {
   appointment: any | null;
@@ -17,33 +16,32 @@ interface RescheduleDialogProps {
 const RescheduleDialog: React.FC<RescheduleDialogProps> = ({ appointment, onClose, refetch }) => {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [slot, setSlot] = useState<Date | null>(null);
+  const [conflict, setConflict] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (appointment) {
-      const d = new Date(appointment.scheduled_at);
-      setDate(format(d, 'yyyy-MM-dd'));
-      setTime(format(d, 'HH:mm'));
+      setSlot(new Date(appointment.scheduled_at));
+      setConflict(false);
     }
   }, [appointment]);
 
   const handleReschedule = async () => {
-    if (!appointment || !date || !time) return;
+    if (!appointment || !slot || conflict) return;
     setSaving(true);
     try {
-      const newScheduledAt = new Date(`${date}T${time}:00`).toISOString();
-      const { error } = await (supabase as any).from('appointments').update({ scheduled_at: newScheduledAt }).eq('id', appointment.id);
-      if (!error) {
-        toast({ title: t('lawyer.appointmentRescheduled') });
-        onClose();
-        try { await refetch(); } catch {}
-      } else {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      const { error } = await (supabase as any)
+        .from('appointments')
+        .update({ scheduled_at: slot.toISOString() })
+        .eq('id', appointment.id);
+      if (error) throw error;
+      toast({ title: t('lawyer.appointmentRescheduled') });
+      onClose();
+      try { await refetch(); } catch { /* ignore */ }
+    } catch (err) {
+      console.error('[RescheduleDialog]', err);
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setSaving(false);
     }
@@ -51,15 +49,29 @@ const RescheduleDialog: React.FC<RescheduleDialogProps> = ({ appointment, onClos
 
   return (
     <Dialog open={!!appointment} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>{t('lawyer.rescheduleAppointment')}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label className="text-xs">{t('lawyer.newDate')}</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
-          <div><Label className="text-xs">{t('lawyer.newTime')}</Label><Input type="time" value={time} onChange={e => setTime(e.target.value)} /></div>
+          <AppointmentPicker
+            teamMemberId={appointment?.team_member_id}
+            value={slot}
+            onChange={setSlot}
+            durationMinutes={appointment?.duration_minutes || 30}
+            ignoreAppointmentId={appointment?.id}
+            onConflictChange={setConflict}
+          />
+          {conflict && (
+            <p className="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {t('lawyer.picker.conflict', 'This time overlaps another appointment')}
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={handleReschedule} disabled={saving || !date || !time}>{saving ? t('common.loading') : t('common.save')}</Button>
+          <Button onClick={handleReschedule} disabled={saving || !slot || conflict}>
+            {saving ? t('common.loading') : t('common.save')}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

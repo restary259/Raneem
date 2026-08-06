@@ -38,12 +38,12 @@ export const ResultsTable = ({ results, targetCurrency }: ResultsTableProps) => 
                     <div className="text-xs text-muted-foreground">{t('currencyComparator.receivingBank')}: {result.bank}</div>
                 </TableCell>
                 <TableCell>
-                    <div>{result.totalFee.toLocaleString()} ILS</div>
+                    <div>{result.totalFee.toLocaleString('en-US')} ILS</div>
                     <div className="text-xs text-muted-foreground">{t('currencyComparator.transferFee')}: {result.serviceFee} + {t('currencyComparator.bankFee')}: {result.bankFee}</div>
                 </TableCell>
                 <TableCell>{result.time}</TableCell>
                 <TableCell className="text-left font-bold text-lg text-primary">
-                  {Math.round(result.received).toLocaleString()} {targetCurrency}
+                  {Math.round(result.received).toLocaleString('en-US')} {targetCurrency}
                 </TableCell>
                 <TableCell>
                   <Button asChild variant="ghost" size="sm">

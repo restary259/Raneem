@@ -33,6 +33,11 @@ const DesktopNav = () => {
 
   const moreComponents: { title: string; href: string; description: string }[] = [
     {
+      title: t('nav.faq'),
+      href: '/faq',
+      description: t('nav.faqDesc'),
+    },
+    {
       title: t('nav.educationalDestinations'),
       href: '/educational-destinations',
       description: t('nav.educationalDestinationsDesc'),
@@ -48,6 +53,7 @@ const DesktopNav = () => {
       description: t('nav.broadcastDesc'),
     },
   ];
+
 
   return (
     <div className="flex justify-center w-full" dir={dir}>

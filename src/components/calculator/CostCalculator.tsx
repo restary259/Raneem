@@ -218,17 +218,17 @@ const CostCalculator = () => {
                     return (
                       <TableRow key={item.key}>
                         <TableCell className="font-medium">{item.label}</TableCell>
-                        <TableCell className="text-left">€{Math.round(val).toLocaleString()}</TableCell>
+                        <TableCell className="text-left">€{Math.round(val).toLocaleString('en-US')}</TableCell>
                       </TableRow>
                     );
                   })}
                   <TableRow className="bg-secondary/50 font-bold text-lg">
                     <TableCell>{t('costCalc.total')}</TableCell>
-                    <TableCell className="text-left">€{Math.round(breakdown.total).toLocaleString()}</TableCell>
+                    <TableCell className="text-left">€{Math.round(breakdown.total).toLocaleString('en-US')}</TableCell>
                   </TableRow>
                   <TableRow className="bg-primary/10 font-bold">
                     <TableCell>{t('costCalc.monthlyAvg')}</TableCell>
-                    <TableCell className="text-left text-primary">€{Math.round(breakdown.monthly).toLocaleString()}</TableCell>
+                    <TableCell className="text-left text-primary">€{Math.round(breakdown.monthly).toLocaleString('en-US')}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
