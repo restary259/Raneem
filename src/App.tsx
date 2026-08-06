@@ -24,6 +24,7 @@ import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import PartnerDashboardLayout from "./components/layout/PartnerDashboardLayout";
 
 // Lazy-loaded public pages
 const PartnershipPage = lazy(() => import("./pages/PartnershipPage"));
