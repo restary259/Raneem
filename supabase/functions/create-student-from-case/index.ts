@@ -46,6 +46,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
+
 
     // ── Parse request ──────────────────────────────────────────────────
     const { case_id, student_email, student_full_name, student_phone } = await req.json();
@@ -85,6 +87,17 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Ownership check: a non-admin team member may only create/link a student
+    // account for a case that is assigned to them.
+    if (!isAdmin && caseData.assigned_to !== callerId) {
+      return new Response(JSON.stringify({ error: "This case is not assigned to you" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
 
     // If account already exists for this case, return early
     if (caseData.student_user_id) {

@@ -28,6 +28,7 @@ serve(async (req) => {
     if (!roles?.length) {
       return new Response(JSON.stringify({ error: "Team member access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
 
     const { appointment_id, outcome, outcome_notes, new_scheduled_at } = await req.json();
 
@@ -44,6 +45,24 @@ serve(async (req) => {
     if (apptError || !appt) {
       return new Response(JSON.stringify({ error: "Appointment not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Ownership check: a non-admin team member may only record outcomes for
+    // their own appointments or appointments on a case assigned to them.
+    if (!isAdmin) {
+      let owns = appt.team_member_id === userId;
+      if (!owns && appt.case_id) {
+        const { data: caseRow } = await supabaseAdmin
+          .from("cases")
+          .select("assigned_to")
+          .eq("id", appt.case_id)
+          .maybeSingle();
+        owns = caseRow?.assigned_to === userId;
+      }
+      if (!owns) {
+        return new Response(JSON.stringify({ error: "This appointment is not assigned to you" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
 
     // Update appointment outcome
     await supabaseAdmin.from("appointments").update({
