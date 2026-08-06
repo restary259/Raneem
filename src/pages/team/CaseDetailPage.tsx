@@ -835,7 +835,10 @@ export default function CaseDetailPage() {
 
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
+      <CaseInvoices caseId={caseData.id} canManage />
+
       <CaseTimeline caseId={caseData.id} canAddNote />
+
 
 
       {/* ── Student Profile — resolved names + editable extra_data ── */}
