@@ -6,6 +6,8 @@ import { FileCheck, Calendar, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import CaseTimeline from '@/components/cases/CaseTimeline';
+import CaseInvoices from '@/components/cases/CaseInvoices';
+
 
 
 interface MyApplicationTabProps {
@@ -238,7 +240,10 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
       )}
 
       {/* Case timeline (read-only for students) */}
+      <CaseInvoices caseId={caseData.id} />
+
       <CaseTimeline caseId={caseData.id} />
+
     </div>
   );
 };
