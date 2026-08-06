@@ -997,7 +997,16 @@
       "restoredBody": "We recovered your unsaved changes.",
       "discard": "Discard draft",
       "unsaved": "You have unsaved changes. Leave this page?"
-    }
+    },
+    "pagination": {
+      "showing": "Showing {{from}}–{{to}} of {{total}}",
+      "perPage": "{{count}} / page",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
+    "caseReference": "Case reference",
+    "showMore": "Show more",
+    "archived": "Archived"
   },
   "funnel": {
     "new": "Lead Submitted",
