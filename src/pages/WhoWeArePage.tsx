@@ -19,7 +19,7 @@ const WhoWeArePage = () => {
   const features = (t('whoWeAre.features', { returnObjects: true }) as any[]).map((f: any) => ({
     ...f, icon: iconMap[f.icon] || Users
   }));
-  const teamMembers = t('whoWeAre.teamMembers', { returnObjects: true }) as any[];
+  
   const ourValues = (t('whoWeAre.values', { returnObjects: true }) as any[]).map((v: any) => ({
     ...v, icon: iconMap[v.icon] || ShieldCheck
   }));
