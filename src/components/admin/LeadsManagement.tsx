@@ -145,15 +145,38 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
       return;
     }
 
+    // Referral attribution carried over from the lead so the partner/ambassador
+    // who brought the student keeps the case, the commission and the metrics.
+    const l: any = lead;
+    const refOwner: string | null =
+      l.source_type === 'influencer' || l.source_type === 'referral' ? l.source_id ?? null : null;
+    const caseSource =
+      l.source_type === 'influencer'
+        ? 'social_media_partner'
+        : l.source_type === 'referral'
+          ? 'referral'
+          : 'contact_form';
+
     // Step 3: Restore soft-deleted case or insert new one
     if (existingCases?.[0]) {
-      await (supabase as any).from('cases').update({ deleted_at: null }).eq('id', existingCases[0].id);
+      const restore: Record<string, any> = { deleted_at: null };
+      // Backfill attribution when the existing case has no owner yet.
+      if (refOwner && !existingCases[0].partner_id && !existingCases[0].referred_by) {
+        restore.partner_id = refOwner;
+        restore.referred_by = refOwner;
+        restore.source = caseSource;
+        restore.source_attribution_method = l.source_attribution_method ?? 'link';
+      }
+      await (supabase as any).from('cases').update(restore).eq('id', existingCases[0].id);
     } else {
       const { error: caseErr } = await (supabase as any).from('cases').insert({
         full_name: lead.full_name,
         phone_number: lead.phone,
-        source: 'contact_form',
+        source: caseSource,
         city: lead.preferred_city || lead.city || null,
+        partner_id: refOwner,
+        referred_by: refOwner,
+        source_attribution_method: refOwner ? l.source_attribution_method ?? 'link' : null,
       });
       if (caseErr) {
         toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
@@ -161,6 +184,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         return;
       }
     }
+
 
     setActionLoadingId(null);
     toast({ title: t('admin.leads.updated'), description: t('admin.leads.qualifiedAndCaseCreated', { name: lead.full_name }) });
