@@ -299,9 +299,6 @@ const ApplyPage: React.FC = () => {
       }
 
       setSubmitted(true);
-      setTimeout(() => {
-        window.open("https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo", "_blank");
-      }, 5000);
     } catch (err: any) {
       console.error("[ApplyPage] Submission failed:", err);
       toast({
