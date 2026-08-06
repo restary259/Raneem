@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { FileCheck, Calendar, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import CaseTimeline from '@/components/cases/CaseTimeline';
+
 
 interface MyApplicationTabProps {
   userId: string;
@@ -234,8 +236,12 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Case timeline (read-only for students) */}
+      <CaseTimeline caseId={caseData.id} />
     </div>
   );
 };
+
 
 export default MyApplicationTab;

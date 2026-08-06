@@ -2485,5 +2485,55 @@
       "referral": "Referral cases only",
       "referralDesc": "Only cases that came through their referral link"
     }
+  },
+  "caseTimeline": {
+    "title": "Timeline",
+    "internal": "Internal",
+    "system": "System",
+    "empty": "No events yet",
+    "loadMore": "Load more",
+    "addNote": "Add note",
+    "noteAdded": "Note added",
+    "notePlaceholder": "Write an internal note about this case…",
+    "category": {
+      "all": "All",
+      "status": "Stages",
+      "documents": "Documents",
+      "money": "Payments",
+      "appointments": "Appointments",
+      "notes": "Notes"
+    },
+    "event": {
+      "case_created": "Case created",
+      "status_changed": "Stage changed",
+      "case_submitted": "Case submitted",
+      "case_assigned": "Case assigned",
+      "case_archived": "Case archived",
+      "case_unarchived": "Case unarchived",
+      "student_account_created": "Student account created",
+      "document_uploaded": "Document uploaded",
+      "appointment_scheduled": "Appointment scheduled",
+      "appointment_rescheduled": "Appointment rescheduled",
+      "appointment_outcome": "Appointment outcome",
+      "payment_received": "Payment received",
+      "enrollment_paid": "Enrollment fee paid",
+      "note_added": "Note"
+    },
+    "field": {
+      "from": "From",
+      "to": "To",
+      "full_name": "Name",
+      "reference": "Reference",
+      "source": "Source",
+      "file_name": "File",
+      "category": "Category",
+      "scheduled_at": "Scheduled",
+      "duration_minutes": "Duration (min)",
+      "outcome": "Outcome",
+      "amount": "Amount",
+      "service_fee": "Service fee",
+      "currency": "Currency",
+      "text": "Text"
+    }
   }
 }

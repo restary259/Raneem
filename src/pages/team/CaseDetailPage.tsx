@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import CaseTimeline from "@/components/cases/CaseTimeline";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -832,6 +834,9 @@ export default function CaseDetailPage() {
       )}
 
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
+
+      <CaseTimeline caseId={caseData.id} canAddNote />
+
 
       {/* ── Student Profile — resolved names + editable extra_data ── */}
       {submission?.extra_data && Object.keys(submission.extra_data).length > 0 && (

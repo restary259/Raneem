@@ -2503,5 +2503,55 @@
       "referral": "حالات الإحالة فقط",
       "referralDesc": "فقط الحالات القادمة عبر رابط الإحالة الخاص به"
     }
+  },
+  "caseTimeline": {
+    "title": "السجل الزمني",
+    "internal": "داخلي",
+    "system": "النظام",
+    "empty": "لا توجد أحداث بعد",
+    "loadMore": "عرض المزيد",
+    "addNote": "إضافة ملاحظة",
+    "noteAdded": "تمت إضافة الملاحظة",
+    "notePlaceholder": "اكتب ملاحظة داخلية حول هذه الحالة…",
+    "category": {
+      "all": "الكل",
+      "status": "المراحل",
+      "documents": "المستندات",
+      "money": "المدفوعات",
+      "appointments": "المواعيد",
+      "notes": "الملاحظات"
+    },
+    "event": {
+      "case_created": "تم إنشاء الحالة",
+      "status_changed": "تغيّرت المرحلة",
+      "case_submitted": "تم تقديم الحالة",
+      "case_assigned": "تم إسناد الحالة",
+      "case_archived": "تمت أرشفة الحالة",
+      "case_unarchived": "تم إلغاء الأرشفة",
+      "student_account_created": "تم إنشاء حساب الطالب",
+      "document_uploaded": "تم رفع مستند",
+      "appointment_scheduled": "تم تحديد موعد",
+      "appointment_rescheduled": "تم تغيير الموعد",
+      "appointment_outcome": "نتيجة الموعد",
+      "payment_received": "تم استلام دفعة",
+      "enrollment_paid": "تم دفع رسوم التسجيل",
+      "note_added": "ملاحظة"
+    },
+    "field": {
+      "from": "من",
+      "to": "إلى",
+      "full_name": "الاسم",
+      "reference": "المرجع",
+      "source": "المصدر",
+      "file_name": "الملف",
+      "category": "التصنيف",
+      "scheduled_at": "الموعد",
+      "duration_minutes": "المدة (دقيقة)",
+      "outcome": "النتيجة",
+      "amount": "المبلغ",
+      "service_fee": "رسوم الخدمة",
+      "currency": "العملة",
+      "text": "النص"
+    }
   }
 }
