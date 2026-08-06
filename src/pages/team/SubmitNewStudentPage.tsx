@@ -433,10 +433,16 @@ export default function SubmitNewStudentPage() {
       });
 
       for (const doc of uploadedFiles) {
+        const invalid = validateUploadFile(doc.file);
+        if (invalid) {
+          toast({ variant: "destructive", description: `${doc.file.name}: ${invalid}` });
+          continue;
+        }
         const path = `${caseId}/${doc.category}_${doc.file.name}`;
         const { data: uploadData } = await supabase.storage
           .from("student-documents")
           .upload(path, doc.file, { upsert: true });
+
         if (uploadData?.path) {
           const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(uploadData.path);
           await supabase.from("documents").insert({
