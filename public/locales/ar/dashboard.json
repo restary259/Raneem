@@ -2553,5 +2553,46 @@
       "currency": "العملة",
       "text": "النص"
     }
+  },
+  "invoices": {
+    "title": "الفواتير",
+    "new": "فاتورة جديدة",
+    "loading": "جارٍ التحميل…",
+    "empty": "لا توجد فواتير بعد",
+    "created": "تم إنشاء الفاتورة",
+    "error": "تعذّر تنفيذ العملية",
+    "needItems": "أضف بندًا واحدًا على الأقل قبل الإرسال",
+    "invalidItem": "يرجى إدخال وصف ومبلغ وكمية صحيحة",
+    "total": "الإجمالي",
+    "grandTotal": "مجموع الفواتير",
+    "issuedAt": "تاريخ الإصدار",
+    "addItem": "إضافة بند",
+    "saveItem": "حفظ البند",
+    "removeItem": "حذف البند",
+    "cancel": "إلغاء",
+    "send": "إرسال الفاتورة",
+    "markPaid": "تعليم كمدفوعة",
+    "void": "إلغاء الفاتورة",
+    "delete": "حذف",
+    "itemDescription": "الوصف",
+    "itemCategory": "التصنيف",
+    "itemAmount": "المبلغ (₪)",
+    "itemQuantity": "الكمية",
+    "status": {
+      "draft": "مسودة",
+      "sent": "مُرسلة",
+      "paid": "مدفوعة",
+      "void": "ملغاة"
+    },
+    "category": {
+      "application_fee": "رسوم التقديم",
+      "housing": "السكن",
+      "insurance": "التأمين",
+      "visa": "التأشيرة",
+      "semester_fee": "رسوم الفصل الدراسي",
+      "language_school": "معهد اللغة",
+      "service_fee": "رسوم الخدمة",
+      "other": "أخرى"
+    }
   }
 }
