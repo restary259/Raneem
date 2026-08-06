@@ -96,6 +96,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
   const { t } = useTranslation('dashboard');
   const { translate } = useSheetLabels();
   const { author, locale, rtl } = useExportContext();
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [visible, setVisible] = useState<Set<string>>(
     () => new Set(columns.filter(c => !c.hidden).map(c => c.key)),
