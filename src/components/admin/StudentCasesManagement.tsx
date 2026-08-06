@@ -33,6 +33,7 @@ const READY_STATUSES = ['submitted', 'enrollment_paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
