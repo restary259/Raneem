@@ -19,8 +19,8 @@ test.describe('public journey', () => {
   });
 
   test('unauthenticated team route does not render the dashboard', async ({ page }) => {
-    await page.goto('/team-dashboard');
+    await page.goto('/team');
     await page.waitForLoadState('networkidle');
-    expect(page.url()).not.toMatch(/\/team-dashboard(\/|$)/);
+    expect(page.url()).not.toMatch(/\/team(\/|$)/);
   });
 });
