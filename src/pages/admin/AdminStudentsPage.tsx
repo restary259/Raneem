@@ -13,6 +13,9 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { usePagination } from "@/hooks/usePagination";
+import TablePagination from "@/components/common/TablePagination";
+
 import {
   RefreshCw,
   Search,
@@ -641,7 +644,10 @@ export default function AdminStudentsPage() {
     return s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q);
   });
 
+  const pagination = usePagination(filtered, 25);
+
   const DOC_CATEGORIES = ["passport", "certificate", "visa", "financial", "application", "other"];
+
 
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
@@ -694,7 +700,7 @@ export default function AdminStudentsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((s) => (
+          {pagination.items.map((s) => (
             <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow border-border" onClick={() => openStudent(s)}>
               <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
@@ -724,8 +730,10 @@ export default function AdminStudentsPage() {
               </CardContent>
             </Card>
           ))}
+          <TablePagination pagination={pagination as any} />
         </div>
       )}
+
 
       {/* ── Student Detail Sheet ── */}
       <Sheet open={!!selected} onOpenChange={(open) => { if (!open) { setSelected(null); setEditing(false); } }}>

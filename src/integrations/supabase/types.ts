@@ -499,8 +499,11 @@ export type Database = {
       }
       cases: {
         Row: {
+          archived: boolean
+          archived_at: string | null
           assigned_to: string | null
           bagrut_score: number | null
+          case_reference: string | null
           city: string | null
           commission_split_done: boolean
           created_at: string
@@ -534,8 +537,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
           assigned_to?: string | null
           bagrut_score?: number | null
+          case_reference?: string | null
           city?: string | null
           commission_split_done?: boolean
           created_at?: string
@@ -569,8 +575,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
           assigned_to?: string | null
           bagrut_score?: number | null
+          case_reference?: string | null
           city?: string | null
           commission_split_done?: boolean
           created_at?: string
@@ -2429,8 +2438,11 @@ export type Database = {
       get_forgotten_cases: {
         Args: never
         Returns: {
+          archived: boolean
+          archived_at: string | null
           assigned_to: string | null
           bagrut_score: number | null
+          case_reference: string | null
           city: string | null
           commission_split_done: boolean
           created_at: string

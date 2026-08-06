@@ -212,7 +212,10 @@ function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () =
   );
 }
 
+const COLUMN_PAGE_SIZE = 25;
+
 /* ─────────────────────────── main component ─────────────────────────── */
+
 
 const AdminPipelinePage = () => {
   const { t, i18n } = useTranslation("dashboard");
@@ -234,6 +237,8 @@ const AdminPipelinePage = () => {
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [colLimits, setColLimits] = useState<Record<string, number>>({});
+
 
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
@@ -241,7 +246,7 @@ const AdminPipelinePage = () => {
       const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
       const teamIds = (rolesRes.data ?? []).map((r) => r.user_id);
       const [casesRes, profilesRes] = await Promise.all([
-        supabase.from("cases").select("*").not("status", "in", '("forgotten","cancelled")'),
+        supabase.from("cases").select("*").eq("archived", false).not("status", "in", '("forgotten","cancelled")'),
         teamIds.length > 0
           ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
           : Promise.resolve({ data: [], error: null }),
@@ -465,7 +470,9 @@ const AdminPipelinePage = () => {
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
           {STATUSES.map((status) => {
-            const statusCases = getCasesForStatus(status);
+            const allStatusCases = getCasesForStatus(status);
+            const shown = colLimits[status] ?? COLUMN_PAGE_SIZE;
+            const statusCases = allStatusCases.slice(0, shown);
             const meta = STATUS_LABELS[status];
             return (
               <div key={status} className="w-64 shrink-0">
@@ -473,7 +480,7 @@ const AdminPipelinePage = () => {
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${meta.color}`}>
                     {label(status)}
                   </span>
-                  <span className="text-xs text-muted-foreground font-medium">{statusCases.length}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{allStatusCases.length.toLocaleString("en-US")}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -487,6 +494,7 @@ const AdminPipelinePage = () => {
                     </div>
                   ) : (
                     statusCases.map((c) => {
+
                       const days = daysSince(c.last_activity_at);
                       const isRedStale = (status === "new" && days >= 3) || c.is_no_show;
                       const isOrangeStale =
@@ -599,7 +607,25 @@ const AdminPipelinePage = () => {
                       );
                     })
                   )}
+                  {!loading && allStatusCases.length > statusCases.length && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-8 text-xs"
+                      onClick={() =>
+                        setColLimits((prev) => ({
+                          ...prev,
+                          [status]: (prev[status] ?? COLUMN_PAGE_SIZE) + COLUMN_PAGE_SIZE,
+                        }))
+                      }
+                    >
+                      {t("common.showMore", "Show more")} (
+                      {(allStatusCases.length - statusCases.length).toLocaleString("en-US")})
+                    </Button>
+                  )}
                 </div>
+
               </div>
             );
           })}

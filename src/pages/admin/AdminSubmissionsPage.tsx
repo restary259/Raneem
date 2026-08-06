@@ -14,6 +14,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { CopyButton } from "@/components/common/CopyButton";
+import { usePagination } from "@/hooks/usePagination";
+import TablePagination from "@/components/common/TablePagination";
+
 
 interface SubmittedCase {
   id: string;
@@ -64,6 +67,9 @@ const AdminSubmissionsPage = () => {
   const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
   const [cases, setCases] = useState<SubmittedCase[]>([]);
   const [completedCases, setCompletedCases] = useState<SubmittedCase[]>([]);
+  const pendingPagination = usePagination(cases, 25);
+  const completedPagination = usePagination(completedCases, 25);
+
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubmittedCase | null>(null);
   const [marking, setMarking] = useState(false);
@@ -351,7 +357,7 @@ const AdminSubmissionsPage = () => {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {cases.map((c) => (
+                {pendingPagination.items.map((c) => (
                   <div
                     key={c.id}
                     className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -373,7 +379,9 @@ const AdminSubmissionsPage = () => {
                     </div>
                   </div>
                 ))}
+                <TablePagination pagination={pendingPagination as any} />
               </div>
+
             )
           ) : (
             completedCases.length === 0 ? (
@@ -382,7 +390,7 @@ const AdminSubmissionsPage = () => {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {completedCases.map((c) => (
+                {completedPagination.items.map((c) => (
                   <div
                     key={c.id}
                     className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -408,7 +416,9 @@ const AdminSubmissionsPage = () => {
                     </div>
                   </div>
                 ))}
+                <TablePagination pagination={completedPagination as any} />
               </div>
+
             )
           )}
         </CardContent>
