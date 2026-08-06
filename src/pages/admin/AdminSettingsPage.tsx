@@ -373,7 +373,9 @@ const AdminSettingsPage = () => {
             <DollarSign className="h-3.5 w-3.5 me-1" />
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
+          <TabsTrigger value="pipeline">{t("admin.settings.pipeline.tab", "Pipeline stages")}</TabsTrigger>
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
+
           <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
           <TabsTrigger value="reset" className="text-destructive data-[state=active]:text-destructive">
             {t('admin.settings.resetTabLabel', '⚠️ Data Reset')}
