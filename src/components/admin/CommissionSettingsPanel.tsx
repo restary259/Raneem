@@ -86,15 +86,33 @@ export default function CommissionSettingsPanel() {
   });
   const [newTeamOverride, setNewTeamOverride] = useState({ team_member_id: "", amount: "", notes: "" });
 
+  // Global flat defaults (ILS per enrolled student) used when no per-person override exists.
+  const [globals, setGlobals] = useState({ id: "", partner: 500, ambassador: 300, team: 100 });
+  const [savingGlobals, setSavingGlobals] = useState(false);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [partnerRolesRes, teamRolesRes, partnerOvRes, teamOvRes] = await Promise.all([
-        supabase.from("user_roles" as any).select("user_id").eq("role", "social_media_partner"),
+        supabase.from("user_roles" as any).select("user_id").in("role", ["social_media_partner", "ambassador"]),
         supabase.from("user_roles" as any).select("user_id").eq("role", "team_member"),
         supabase.from("partner_commission_overrides" as any).select("*"),
         supabase.from("team_member_commission_overrides" as any).select("*"),
       ]);
+
+      const { data: settingsRow } = await (supabase as any)
+        .from("platform_settings")
+        .select("id,partner_commission_rate,ambassador_commission_rate,team_member_commission_rate")
+        .limit(1)
+        .maybeSingle();
+      if (settingsRow) {
+        setGlobals({
+          id: settingsRow.id,
+          partner: Number(settingsRow.partner_commission_rate ?? 500),
+          ambassador: Number(settingsRow.ambassador_commission_rate ?? 300),
+          team: Number(settingsRow.team_member_commission_rate ?? 100),
+        });
+      }
 
       const partnerIds = (partnerRolesRes.data || []).map((r: any) => r.user_id);
       const teamIds = (teamRolesRes.data || []).map((r: any) => r.user_id);
@@ -174,6 +192,29 @@ export default function CommissionSettingsPanel() {
     }
   };
 
+  const saveGlobals = async () => {
+    if (!globals.id) return;
+    setSavingGlobals(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("platform_settings")
+        .update({
+          partner_commission_rate: globals.partner,
+          ambassador_commission_rate: globals.ambassador,
+          team_member_commission_rate: globals.team,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", globals.id);
+      if (error) throw error;
+      toast({ description: "Default commission amounts saved ✓" });
+      fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSavingGlobals(false);
+    }
+  };
+
   const deletePartnerOverride = async (id: string) => {
     await (supabase as any).from("partner_commission_overrides").delete().eq("id", id);
     fetchData();
@@ -198,10 +239,59 @@ export default function CommissionSettingsPanel() {
       <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/40 border border-border text-sm text-muted-foreground">
         <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
         <p>
-          Commission amounts set here are the exact amounts that will appear on each account's earnings dashboard per enrolled student.
-          Configure each account individually below.
+          All commissions are a <strong>flat amount in shekels (₪)</strong> per enrolled student — there are no
+          percentages and no tiers. Each role has a default amount below. If an individual account is given its
+          own amount, <strong>that per-person amount always wins</strong> over the default.
         </p>
       </div>
+
+      {/* Global flat defaults */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings2 className="h-4 w-4 text-primary" />
+            Default Commission per Enrolled Student (₪)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Partner</label>
+              <Input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={globals.partner}
+                onChange={(e) => setGlobals((g) => ({ ...g, partner: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ambassador</label>
+              <Input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={globals.ambassador}
+                onChange={(e) => setGlobals((g) => ({ ...g, ambassador: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Team Member</label>
+              <Input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={globals.team}
+                onChange={(e) => setGlobals((g) => ({ ...g, team: Number(e.target.value) || 0 }))}
+              />
+            </div>
+          </div>
+          <Button size="sm" onClick={saveGlobals} disabled={savingGlobals || !globals.id}>
+            {savingGlobals && <Loader2 className="h-3.5 w-3.5 me-2 animate-spin" />}
+            Save defaults
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Partner Commission — per account */}
       <Card>
@@ -209,7 +299,7 @@ export default function CommissionSettingsPanel() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-4 w-4 text-primary" />
-              Partner Commission
+              Partner &amp; Ambassador Commission (per account)
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchData}>
               <RefreshCw className="h-3.5 w-3.5" />
@@ -242,7 +332,7 @@ export default function CommissionSettingsPanel() {
           )}
 
           {partnerOverrides.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-3">No partner commissions configured yet.</p>
+            <p className="text-sm text-muted-foreground text-center py-3">No per-account amounts configured — everyone uses the default above.</p>
           )}
 
           {/* Add / update form */}
@@ -255,7 +345,7 @@ export default function CommissionSettingsPanel() {
                 onValueChange={(v) => setNewPartnerOverride((p) => ({ ...p, partner_id: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select partner account" />
+                  <SelectValue placeholder="Select partner / ambassador account" />
                 </SelectTrigger>
                 <SelectContent>
                   {partners.map((p) => (
