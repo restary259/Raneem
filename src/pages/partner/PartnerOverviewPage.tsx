@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
@@ -46,11 +47,11 @@ export default function PartnerOverviewPage() {
   const [isPoolMode, setIsPoolMode] = useState(false);
 
   const load = useCallback(async (uid: string) => {
-    const [profRes, settingsRes, overrideRes] = await Promise.all([
+    const [profRes, settingsRes, overrideRes, roleRes] = await Promise.all([
       (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
       (supabase as any)
         .from("platform_settings")
-        .select("partner_commission_rate,partner_dashboard_show_all_cases")
+        .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
         .limit(1)
         .maybeSingle(),
       (supabase as any)
@@ -58,11 +59,15 @@ export default function PartnerOverviewPage() {
         .select("commission_amount,show_all_cases")
         .eq("partner_id", uid)
         .maybeSingle(),
+      (supabase as any).rpc("get_my_role"),
     ]);
 
     if (profRes.data) setProfile(profRes.data);
 
-    const rate = settingsRes.data?.partner_commission_rate ?? 500;
+    const isAmbassador = roleRes.data === "ambassador";
+    const rate = isAmbassador
+      ? (settingsRes.data?.ambassador_commission_rate ?? 300)
+      : (settingsRes.data?.partner_commission_rate ?? 500);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? rate));
@@ -186,6 +191,9 @@ export default function PartnerOverviewPage() {
           {t("partner.partnerDashboard")}
         </p>
       </div>
+
+      {/* My referral link */}
+      <ReferralLinkCard userId={userId} />
 
       {/* Earnings Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">

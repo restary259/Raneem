@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
+import { captureReferralCode, getReferralCode } from "@/lib/referral";
+
 
 const PASSPORT_TYPES = [
   { value: "israeli_blue", label: "جواز أزرق (إسرائيلي)", labelEn: "Israeli Blue Passport" },
@@ -83,9 +85,13 @@ const ApplyPage: React.FC = () => {
     },
   ]);
 
-  // Source tracking (no referral links — partner cases are linked by admin)
-  const sourceType = "organic";
-  const sourceId: string | null = null;
+  // Referral attribution — captured from ?ref= and persisted for 90 days.
+  // The code is always resolved server-side, never trusted as a raw user id.
+  const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
+  useEffect(() => {
+    setRefCode(captureReferralCode(searchParams.toString()));
+  }, [searchParams]);
+
 
   const isValidPhone = (p: string) => {
     const cleaned = p.replace(/[\s\-()]/g, "");
@@ -156,7 +162,8 @@ const ApplyPage: React.FC = () => {
         full_name: fullName.trim(),
         phone_number: phone.trim(),
         source: "apply_page",
-        partner_id: null,
+        ref_code: refCode,
+
         city: city.trim() || null,
         education_level: educationLevel || null,
         bagrut_score: null,
@@ -195,8 +202,8 @@ const ApplyPage: React.FC = () => {
           p_math_units: mathUnits ? parseInt(mathUnits) : null,
           p_education_level: educationLevel || null,
           p_german_level: null,
-          p_source_type: sourceType,
-          p_source_id: sourceId,
+          p_ref_code: refCode,
+
           p_preferred_major: preferredMajor || null,
         } as any);
         if (leadErr) console.warn("[ApplyPage] Lead RPC warning (non-critical):", leadErr.message);
@@ -219,7 +226,7 @@ const ApplyPage: React.FC = () => {
                 full_name: c.name.trim(),
                 phone_number: c.phone.trim(),
                 source: "apply_page",
-                partner_id: null,
+                ref_code: refCode,
                 city: c.city.trim() || null,
                 education_level: c.education || null,
                 passport_type: c.passportType || null,
@@ -255,8 +262,8 @@ const ApplyPage: React.FC = () => {
               p_math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
               p_preferred_major: c.preferredMajor.trim() || null,
               p_german_level: null,
-              p_source_type: sourceType,
-              p_source_id: sourceId,
+              p_ref_code: refCode,
+
             } as any);
             if (cErr) console.warn("[ApplyPage] Companion lead warning (non-critical):", cErr.message);
             else console.log("[ApplyPage] Companion lead saved:", c.phone.trim());

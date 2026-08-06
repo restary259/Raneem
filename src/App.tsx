@@ -24,6 +24,7 @@ import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import PartnerDashboardLayout from "./components/layout/PartnerDashboardLayout";
 
 // Lazy-loaded public pages
 const PartnershipPage = lazy(() => import("./pages/PartnershipPage"));
@@ -215,12 +216,12 @@ const App = () => {
               <Route path="bagrut" element={<TeamBagrutConverter />} />
             </Route>
 
-            {/* ── Partner Dashboard (/partner/*) ── */}
+            {/* ── Partner + Ambassador Dashboard (/partner/*) ── */}
             <Route
               path="/partner"
               element={
-                <ProtectedRoute allowedRoles={["social_media_partner"]}>
-                  <DashboardLayout role="social_media_partner" />
+                <ProtectedRoute allowedRoles={["social_media_partner", "ambassador"]}>
+                  <PartnerDashboardLayout />
                 </ProtectedRoute>
               }
             >

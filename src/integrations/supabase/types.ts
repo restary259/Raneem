@@ -528,6 +528,7 @@ export type Database = {
           referred_by: string | null
           school_commission: number
           source: string
+          source_attribution_method: string | null
           status: string
           student_user_id: string | null
           updated_at: string
@@ -562,6 +563,7 @@ export type Database = {
           referred_by?: string | null
           school_commission?: number
           source?: string
+          source_attribution_method?: string | null
           status?: string
           student_user_id?: string | null
           updated_at?: string
@@ -596,6 +598,7 @@ export type Database = {
           referred_by?: string | null
           school_commission?: number
           source?: string
+          source_attribution_method?: string | null
           status?: string
           student_user_id?: string | null
           updated_at?: string
@@ -1038,6 +1041,7 @@ export type Database = {
           preferred_major: string | null
           ref_code: string | null
           service_requested: string | null
+          source_attribution_method: string | null
           source_id: string | null
           source_type: string
           status: string
@@ -1073,6 +1077,7 @@ export type Database = {
           preferred_major?: string | null
           ref_code?: string | null
           service_requested?: string | null
+          source_attribution_method?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
@@ -1108,6 +1113,7 @@ export type Database = {
           preferred_major?: string | null
           ref_code?: string | null
           service_requested?: string | null
+          source_attribution_method?: string | null
           source_id?: string | null
           source_type?: string
           status?: string
@@ -1542,6 +1548,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          ambassador_commission_rate: number
           forgotten_contacted_days: number
           forgotten_new_case_days: number
           id: string
@@ -1553,6 +1560,7 @@ export type Database = {
           vat_rate: number
         }
         Insert: {
+          ambassador_commission_rate?: number
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
@@ -1564,6 +1572,7 @@ export type Database = {
           vat_rate?: number
         }
         Update: {
+          ambassador_commission_rate?: number
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
@@ -1617,6 +1626,8 @@ export type Database = {
           passport_number: string | null
           phone_number: string | null
           previous_legal_name: string | null
+          referral_code: string | null
+          referral_code_enabled: boolean
           second_passport_country: string | null
           student_status: string
           university_name: string | null
@@ -1664,6 +1675,8 @@ export type Database = {
           passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
+          referral_code?: string | null
+          referral_code_enabled?: boolean
           second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
@@ -1711,6 +1724,8 @@ export type Database = {
           passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
+          referral_code?: string | null
+          referral_code_enabled?: boolean
           second_passport_country?: string | null
           student_status?: string
           university_name?: string | null
@@ -1879,6 +1894,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           amount: number
+          case_id: string | null
           created_at: string
           currency: string
           id: string
@@ -1891,6 +1907,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           amount?: number
+          case_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -1903,6 +1920,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           amount?: number
+          case_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -1912,7 +1930,15 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rewards_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -2382,6 +2408,7 @@ export type Database = {
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      generate_referral_code: { Args: { p_full_name: string }; Returns: string }
       get_auth_failure_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
@@ -2424,6 +2451,7 @@ export type Database = {
           referred_by: string | null
           school_commission: number
           source: string
+          source_attribution_method: string | null
           status: string
           student_user_id: string | null
           updated_at: string
@@ -2480,27 +2508,50 @@ export type Database = {
         }
         Returns: boolean
       }
-      insert_lead_from_apply: {
-        Args: {
-          p_accommodation?: boolean
-          p_budget_range?: string
-          p_city?: string
-          p_companion_name?: string
-          p_companion_phone?: string
-          p_education_level?: string
-          p_english_units?: number
-          p_full_name: string
-          p_german_level?: string
-          p_math_units?: number
-          p_passport_type?: string
-          p_phone: string
-          p_preferred_city?: string
-          p_preferred_major?: string
-          p_source_id?: string
-          p_source_type?: string
-        }
-        Returns: undefined
-      }
+      insert_lead_from_apply:
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_companion_name?: string
+              p_companion_phone?: string
+              p_education_level?: string
+              p_english_units?: number
+              p_full_name: string
+              p_german_level?: string
+              p_math_units?: number
+              p_passport_type?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_preferred_major?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_accommodation?: boolean
+              p_budget_range?: string
+              p_city?: string
+              p_companion_name?: string
+              p_companion_phone?: string
+              p_education_level?: string
+              p_english_units?: number
+              p_full_name: string
+              p_german_level?: string
+              p_math_units?: number
+              p_passport_type?: string
+              p_phone: string
+              p_preferred_city?: string
+              p_preferred_major?: string
+              p_ref_code?: string
+              p_source_id?: string
+              p_source_type?: string
+            }
+            Returns: undefined
+          }
       log_activity: {
         Args: {
           p_action: string
@@ -2540,10 +2591,16 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_referral_code: { Args: { p_code: string }; Returns: string }
       validate_influencer_ref: { Args: { ref_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "team_member" | "social_media_partner" | "student"
+      app_role:
+        | "admin"
+        | "team_member"
+        | "social_media_partner"
+        | "student"
+        | "ambassador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2671,7 +2728,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "team_member", "social_media_partner", "student"],
+      app_role: [
+        "admin",
+        "team_member",
+        "social_media_partner",
+        "student",
+        "ambassador",
+      ],
     },
   },
 } as const
