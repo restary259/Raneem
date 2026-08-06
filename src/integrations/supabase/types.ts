@@ -1711,6 +1711,33 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          label_ar?: string
+          label_en?: string
+        }
+        Relationships: []
+      }
       pipeline_statuses: {
         Row: {
           color: string
@@ -2140,6 +2167,35 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
             referencedColumns: ["id"]
           },
         ]
@@ -2731,6 +2787,7 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
         Args: { p_sources?: string[] }
@@ -2752,6 +2809,10 @@ export type Database = {
           id: string
           role: string
         }[]
+      }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
