@@ -1,45 +1,43 @@
-# Final hardening, deep audit and end-to-end test run
+# Authorization-failure monitoring + E2E CI
 
-Everything from the previous plan is shipped. This plan closes the last confirmed defects found in a fresh read-only pass, then runs a real end-to-end test (creating an actual case and driving it through the pipeline in a headless browser).
+Two additions: (1) catch and surface repeated permission failures (RLS denials, 401/403 from backend functions) so regressions are noticed the day they ship, and (2) an automated end-to-end test that runs in CI on every push.
 
-## 1. Partner case visibility (Critical — confirmed)
+## 1. Capture authorization failures
 
-The `cases` table has a policy `Partner can view all cases` whose condition is only "is a partner" — every partner can read every case row (names, phone numbers, education data), regardless of who referred them.
+New table `auth_failure_log` records every denied request:
 
-The partner dashboards do intentionally support a "pool mode" (`platform_settings.partner_dashboard_show_all_cases`), so the fix must keep that feature working while removing the blanket read:
+- who (user id, role, anonymous flag)
+- what (source: `rls` or `edge_function`, the table/function name, the operation)
+- outcome (HTTP status 401/403 or the Postgres error code)
+- when, plus a short redacted error message and the page path
 
-- Replace the policy with one that allows a partner to read only their own cases (`partner_id = auth.uid()` or `referred_by = auth.uid()`).
-- Add a security-definer function that returns pool-mode cases with a reduced column set (no phone number, no intake notes) and only when the pool-mode setting is on; point the partner overview and earnings pages at it.
+Writes are allowed for any signed-in or anonymous caller (it is a failure receipt, not sensitive data), reads are admin-only, and no one can update or delete rows.
 
-## 2. Settings readable by everyone (High — confirmed)
+## 2. Report failures from both sides
 
-`platform_settings` is readable by any signed-in user, including students, which exposes commission rates.
+- **Frontend**: a small shared helper wraps backend responses. When a query comes back with a permission error (`42501`, `PGRST301`) or a function call returns 401/403, it writes one row to `auth_failure_log` and shows the existing generic error toast. It is wired into the shared data layer (`dataService`) and the function-invoke call sites, not sprinkled per component.
+- **Backend functions**: the shared `requireAuth` guard already returns 401/403 in one place — it will log the denial there, so every guarded function is covered automatically.
 
-- Restrict the read policy to admins, team members and partners.
-- Confirm no student-facing screen reads the table (partner and admin pages are the only callers).
+Logging never blocks the user action and never throws.
 
-## 3. Referral features querying a non-existent column (High — confirmed)
+## 3. Admin alerting
 
-The `referrals` table has `referrer_user_id` and no `status` column, but three places query `referrer_id` and one filters on `status`:
+- New **Auth Failures** section inside the existing Security & Audit tab: recent denials, grouped by function/table with counts for the last 24h and 7d, filterable by source and status.
+- A red banner appears at the top of the admin dashboard when a spike is detected — default threshold **10 or more failures on the same table/function within 1 hour**, or any failure on a table that had none in the previous 7 days (a likely new regression).
+- The existing weekly digest function gains an authorization-failure summary, and a spike also creates an in-app notification for every admin so it is not missed between digests.
 
-- `src/components/dashboard/ReferralTracker.tsx` — `referrer_id`
-- `src/components/admin/ReferralManagement.tsx` — `referrer_id` plus `.eq('status','paid')`
-- `src/components/admin/SecurityPanel.tsx` — `referrer_id` in the fraud check
+## 4. E2E test in CI
 
-These fail silently (queries error, lists render empty). Fix them to use `referrer_user_id`, and base the milestone count on referrals whose linked case reached `enrollment_paid` instead of the missing `status` column.
-
-## 4. Full end-to-end test run
-
-- Typecheck the whole project.
-- Database linter and security scan; confirm the only remaining warnings are the trigger functions and RLS helpers that must stay as-is, and that the partner and settings findings are gone.
-- Headless browser run against the live app, signed in with the available session:
-  - Create a real case through the team "submit new student" flow.
-  - Walk it through the pipeline stages (contacted, appointment, profile, payment, submitted) and confirm each transition sticks.
-  - Open the case detail page, the payouts tab and the pipeline list; capture console errors.
-  - Verify the commission and revenue rows written for that case are correct (team commission recorded, `platform_revenue_ils` non-zero, `commission_split_done` set once).
-  - Clean up the test case afterwards so the database is left as found.
-- Re-smoke the guarded edge functions: 401 without a token, no 500 with one.
+- Add Vitest + Playwright with a `test` and `test:e2e` script.
+- E2E spec covers the public path that needs no credentials: landing page loads, navigation to the apply page, apply-form validation, and a check that protected routes (`/admin`, `/team-dashboard`) redirect to sign-in instead of rendering.
+- Add an authorization-regression spec: unauthenticated calls to guarded backend functions must return 401, and an anonymous read of a protected table must be denied. This is the test that fails loudly if a policy is loosened.
+- New GitHub Actions workflow runs typecheck, unit tests, build, then Playwright against the built preview server on every push and pull request. The existing deploy workflow is left as-is.
 
 ## Technical notes
 
-Steps 1 and 2 need one migration (policy replacement plus a new security-definer reader for pool mode). Step 3 is client-only. The database currently holds no live cases, so the policy change carries no data-loss risk. `verify_jwt` stays `false`; in-code `requireAuth` remains the enforcement point.
+- Migration: `create table public.auth_failure_log`, followed by `GRANT INSERT` to `anon`+`authenticated`, `GRANT SELECT` to `authenticated` (admin-gated by policy), `GRANT ALL` to `service_role`, then RLS enable and policies (`INSERT with check (true)`, `SELECT using has_role(auth.uid(),'admin')`, no update/delete policies). Index on `(created_at desc)` and `(target, created_at desc)`.
+- Spike detection via a `SECURITY DEFINER` function `get_auth_failure_spikes(p_window interval, p_threshold int)` returning grouped counts; `EXECUTE` revoked from `anon`.
+- Frontend helper `src/lib/authFailureLog.ts`; admin UI `src/components/admin/AuthFailuresPanel.tsx` mounted in `SecurityAuditPanel.tsx`; banner in `src/components/admin/AdminOverview.tsx`.
+- Backend logging inside `supabase/functions/_shared/auth.ts` using the service-role client already available there.
+- Test config: `vitest.config.ts`, `playwright.config.ts`, specs under `e2e/`, workflow at `.github/workflows/ci.yml`. Playwright uses the publishable key only — no secrets in CI.
+- All new user-facing strings go through `t()` with keys added to both `ar` and `en` locale files.
