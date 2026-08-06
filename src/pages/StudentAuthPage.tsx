@@ -223,7 +223,7 @@ const StudentAuthPage = () => {
 
             <Button
               type="submit"
-              className="w-full font-semibold py-2.5 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -236,9 +236,9 @@ const StudentAuthPage = () => {
               )}
             </Button>
           </form>
+          </div>
         </div>
 
-        {/* Footer note removed for cleaner UI */}
       </div>
 
       <PasswordResetModal isOpen={showResetModal} onClose={() => setShowResetModal(false)} />
