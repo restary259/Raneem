@@ -778,7 +778,12 @@ export default function CaseDetailPage() {
                 {caseData.passport_type && (
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">{t("case.detail.passportType")}</p>
-                    <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
+                    <p className="text-sm font-medium">
+                      {t(`case.passportTypes.${caseData.passport_type}`, {
+                        defaultValue: caseData.passport_type.replace(/_/g, " "),
+                      })}
+                    </p>
+
                   </div>
                 )}
                 {caseData.education_level && (
