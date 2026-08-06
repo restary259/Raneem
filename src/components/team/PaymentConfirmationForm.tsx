@@ -47,8 +47,17 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       }, { onConflict: 'case_id' });
       if (subErr) throw subErr;
 
-      const { error: caseErr } = await supabase.from('cases').update({ status: 'payment_confirmed' }).eq('id', caseId);
+      // .select() is required: a row-level-security block matches zero rows and
+      // returns no error, so without it a failed status change looks like success.
+      const { data: updatedCase, error: caseErr } = await supabase
+        .from('cases')
+        .update({ status: 'payment_confirmed' })
+        .eq('id', caseId)
+        .select('id')
+        .maybeSingle();
       if (caseErr) throw caseErr;
+      if (!updatedCase) throw new Error(t('team.payment.statusFailed'));
+
 
       await supabase.rpc('log_activity' as any, {
         p_actor_id: actorId,

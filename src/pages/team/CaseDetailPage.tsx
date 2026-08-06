@@ -372,7 +372,9 @@ export default function CaseDetailPage() {
       if (allowed !== newStatus) {
         toast({
           variant: "destructive",
-          description: `Cannot skip stages. Next allowed: ${allowed?.replace(/_/g, " ") ?? "none"}`,
+          description: t("case.detail.cannotSkip", {
+            next: allowed ? t(`case.status.${allowed}`, { defaultValue: allowed }) : t("case.detail.noneStage"),
+          }),
         });
         return;
       }
@@ -380,7 +382,12 @@ export default function CaseDetailPage() {
     setUpdatingStatus(true);
     try {
       await supabase.from("cases").update({ status: newStatus }).eq("id", caseData.id);
-      toast({ title: `Status updated to ${newStatus.replace(/_/g, " ")}` });
+      toast({
+        title: t("case.detail.statusUpdated", {
+          status: t(`case.status.${newStatus}`, { defaultValue: newStatus }),
+        }),
+      });
+
       fetchData();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -716,7 +723,10 @@ export default function CaseDetailPage() {
         {/* Row 3: status badges + delete */}
         <div className="flex items-center gap-2 flex-wrap justify-between ps-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
+            <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>
+              {t(`case.status.${caseData.status}`, { defaultValue: caseData.status.replace(/_/g, " ") })}
+            </Badge>
+
             {caseData.student_user_id && (
               <Badge variant="secondary" className="gap-1 text-xs">
                 <User className="h-3 w-3" />
@@ -768,7 +778,12 @@ export default function CaseDetailPage() {
                 {caseData.passport_type && (
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">{t("case.detail.passportType")}</p>
-                    <p className="text-sm font-medium capitalize">{caseData.passport_type.replace(/_/g, " ")}</p>
+                    <p className="text-sm font-medium">
+                      {t(`case.passportTypes.${caseData.passport_type}`, {
+                        defaultValue: caseData.passport_type.replace(/_/g, " "),
+                      })}
+                    </p>
+
                   </div>
                 )}
                 {caseData.education_level && (
@@ -863,16 +878,22 @@ export default function CaseDetailPage() {
               {Object.entries(submission.extra_data).map(([key, val]) => {
                 if (SKIP_EXTRA_KEYS.has(key)) return null;
                 if (!val && val !== 0) return null;
-                const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                // Fall back to a humanised key so a missing translation still reads sensibly.
+                const fallback = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                const label = t(`case.extra.${key}`, { defaultValue: fallback });
+                const raw = editedExtra[key] ?? String(val);
+                const display =
+                  key === "gender" ? t(`case.profileForm.genderOpts.${raw}`, { defaultValue: raw }) : raw;
                 return (
                   <EditableField
                     key={key}
                     label={label}
-                    value={editedExtra[key] ?? String(val)}
+                    value={display}
                     onSave={(v) => saveExtraField(key, v)}
                   />
                 );
               })}
+
             </div>
           </CardContent>
         </Card>
