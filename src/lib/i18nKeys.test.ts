@@ -44,16 +44,18 @@ describe("i18n coverage", () => {
 
     for (const file of walk(path.join(ROOT, "src"))) {
       const src = fs.readFileSync(file, "utf8");
-      const nsMatch = src.match(/useTranslation\(\s*(\[[^\]]*\]|'[^']*'|"[^"]*")/);
-      if (!nsMatch) continue;
-      const namespaces = [...nsMatch[1].matchAll(/['"]([^'"]+)['"]/g)].map((m) => m[1]);
-      if (!namespaces.length) continue;
+      if (!/useTranslation\(/.test(src)) continue;
+      // A file may call useTranslation several times; the default namespace is "common".
+      const namespaces = new Set<string>(["common"]);
+      for (const nsCall of src.matchAll(/useTranslation\(\s*(\[[^\]]*\]|'[^']*'|"[^"]*")/g)) {
+        for (const n of nsCall[1].matchAll(/['"]([^'"]+)['"]/g)) namespaces.add(n[1]);
+      }
 
       const callRe = /\bt\(\s*['"]([a-zA-Z0-9_.]+)['"]\s*(?:,\s*\{[^}]*ns:\s*['"]([a-zA-Z0-9_]+)['"])?/g;
       for (const m of src.matchAll(callRe)) {
         const key = m[1];
         if (!key.includes(".")) continue; // not a namespaced lookup
-        const candidates = m[2] ? [m[2]] : namespaces;
+        const candidates = m[2] ? [m[2]] : [...namespaces];
         for (const lang of LOCALES) {
           const found = candidates.some((ns) => dicts[lang][ns] && hasKey(dicts[lang][ns], key));
           if (!found) missing.push(`${lang}: ${key} (${path.relative(ROOT, file)})`);
