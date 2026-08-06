@@ -39,11 +39,12 @@
   },
   "applyNow": "Apply Now",
   "footer": {
-    "quote": "I wish all our students success, safety, and purpose at every step of their journey abroad.",
+    "quote": "Darb — your path to studying in Germany",
     "instagram": "Instagram",
     "tiktok": "TikTok",
     "facebook": "Facebook",
-    "copyright": "© {{year}} Darb Study International. All rights reserved."
+    "copyright": "© {{year}} Darb. All rights reserved.",
+    "faq": "FAQ"
   },
   "notFound": {
     "title": "404",
