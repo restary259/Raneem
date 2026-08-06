@@ -205,14 +205,42 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       const loaded = await Promise.all(
         sheets.map(async s => ({ def: s, rows: data[s.key] ?? (await s.load()) })),
       );
-      await exportWorkbook(
-        loaded.map(({ def, rows }) => ({
-          name: def.label,
-          headers: def.columns.filter(col => !col.hidden).map(col => col.label),
-          rows: rows.map(r => def.columns.filter(col => !col.hidden).map(col => formatCell(r[col.key], col, translate))),
-        })),
-        `DARB-${scope}-workbook-${new Date().toISOString().slice(0, 10)}`,
-      );
+      const visibleColumns = (def: SheetDef) => def.columns.filter(col => !(col.hidden && scope === 'team'));
+
+      const cover = {
+        name: t('sheets.cover', 'Contents'),
+        title: t('sheets.title'),
+        subtitle: t('sheets.subtitle'),
+        columns: [
+          { header: t('sheets.coverSheet', 'Report'), type: 'text' as const },
+          { header: t('sheets.coverRecords', 'Records'), type: 'number' as const },
+          { header: t('sheets.coverScope', 'Scope'), type: 'text' as const },
+        ],
+        rows: loaded.map(({ def, rows }) => [
+          def.label,
+          rows.length,
+          scope === 'team' ? t('sheets.scopeTeam', 'Assigned to me') : t('sheets.scopeAdmin', 'All records'),
+        ]),
+      };
+
+      await exportCorporateWorkbook({
+        fileName: `DARB-${scope}-report-${new Date().toISOString().slice(0, 10)}`,
+        title: t('sheets.title'),
+        subtitle: t('sheets.subtitle'),
+        author,
+        locale,
+        rtl,
+        sheets: [
+          cover,
+          ...loaded.map(({ def, rows }) => ({
+            name: def.label,
+            title: def.label,
+            subtitle: t(`sheets.desc.${def.key}`, ''),
+            columns: toExportColumns(visibleColumns(def)),
+            rows: toExportRows(rows, visibleColumns(def), translate),
+          })),
+        ],
+      });
     } catch {
       toast({ variant: 'destructive', description: t('sheets.exportFailed') });
     } finally {
