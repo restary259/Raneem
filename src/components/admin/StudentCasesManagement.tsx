@@ -13,6 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { Download } from 'lucide-react';
 import { Search, FileText, User, Package, DollarSign, StickyNote, CheckCircle, Unlock } from 'lucide-react';
 import PullToRefresh from '@/components/common/PullToRefresh';
 
@@ -30,6 +33,7 @@ const READY_STATUSES = ['submitted', 'enrollment_paid'];
 
 const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, leads, lawyers, influencers, onRefresh, initialFilter }) => {
   const { t } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -125,6 +129,38 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
     exportPDF({ headers, rows, fileName: `student-intake-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Student Intake' });
   };
 
+  const bulkExportExcel = () =>
+    exportCorporateWorkbook({
+      fileName: `DARB-student-intake-${new Date().toISOString().slice(0, 10)}`,
+      title: t('studentCases.reportTitle', 'Student Intake Report'),
+      author,
+      locale: exportLocale,
+      rtl,
+      sheets: [{
+        name: t('studentCases.reportTitle', 'Student Intake Report'),
+        columns: [
+          { header: t('admin.ready.fullName', 'Full Name'), type: 'text' },
+          { header: t('admin.ready.phone', 'Phone'), type: 'text' },
+          { header: t('admin.ready.passportNumber', 'Passport'), type: 'text' },
+          { header: t('admin.ready.destinationCity', 'City'), type: 'text' },
+          { header: t('admin.students.status', 'Status'), type: 'status' },
+          { header: t('money.serviceFee', 'Service Fee'), type: 'currency', currency: 'ILS', total: 'sum' },
+          { header: t('money.netProfit', 'Net Profit'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
+          { header: t('admin.students.createdAt', 'Created'), type: 'date' },
+        ],
+        rows: filtered.map(c => [
+          c.full_name || '',
+          c.phone_number || '',
+          c.passport_type || '',
+          c.city || '',
+          String(t(`cases.statuses.${c.status}`, { defaultValue: c.status })),
+          Number(c.service_fee) || 0,
+          getNetProfit(c),
+          c.created_at || null,
+        ]),
+      }],
+    });
+
   return (
     <PullToRefresh onRefresh={async () => { onRefresh(); }} disabled={loading}>
     <div className="space-y-4">
@@ -142,6 +178,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             </SelectContent>
           </Select>
         </div>
+        <Button variant="outline" size="sm" onClick={bulkExportExcel}><Download className="h-4 w-4 me-1" />{t('studentCases.bulkExcel', { defaultValue: 'Bulk Excel Export' })}</Button>
         <Button variant="outline" size="sm" onClick={bulkExportPDF}><FileText className="h-4 w-4 me-1" />{t('studentCases.bulkPDF', { defaultValue: 'Bulk PDF Export' })}</Button>
       </div>
 

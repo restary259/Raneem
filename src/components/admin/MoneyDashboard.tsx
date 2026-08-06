@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
 import { guardedAction } from '@/lib/conflictPrevention';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +62,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   cases, leads, rewards, commissions, influencers, lawyers, onRefresh, payoutRequests = [],
 }) => {
   const { t } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [typeFilter, setTypeFilter] = useState('all');
@@ -268,6 +271,33 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         </Select>
         <div className="flex-1" />
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => {
+            auditFinancialExport('xlsx');
+            exportCorporateWorkbook({
+              fileName: `DARB-financial-report-${new Date().toISOString().slice(0, 10)}`,
+              title: t('money.reportTitle', 'Financial Report'),
+              author, locale: exportLocale, rtl,
+              sheets: [{
+                name: t('money.reportTitle', 'Financial Report'),
+                columns: [
+                  { header: t('money.student'), type: 'text' },
+                  { header: t('money.revenueType'), type: 'text' },
+                  { header: t('money.amount'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
+                  { header: t('money.currency'), type: 'text' },
+                  { header: t('money.status'), type: 'status' },
+                  { header: t('money.date'), type: 'date' },
+                ],
+                rows: filtered.map(r => [
+                  r.studentName,
+                  typeLabel(r.type),
+                  r.direction === 'out' ? -Math.abs(r.amount) : r.amount,
+                  r.currency,
+                  statusLabel(r.status),
+                  r.date,
+                ]),
+              }],
+            });
+          }}><FileText className="h-4 w-4 me-1" />Excel</Button>
           <Button size="sm" variant="outline" onClick={() => {
             auditFinancialExport('pdf');
             const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];

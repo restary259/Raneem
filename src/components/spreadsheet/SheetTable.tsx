@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
-import { exportXLSX } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { toExportColumns, toExportRows } from './exportMapping';
 import { useToast } from '@/hooks/use-toast';
 
 import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
@@ -93,6 +95,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
 }) => {
   const { t } = useTranslation('dashboard');
   const { translate } = useSheetLabels();
+  const { author, locale, rtl } = useExportContext();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [visible, setVisible] = useState<Set<string>>(
@@ -132,18 +135,28 @@ const SheetTable: React.FC<SheetTableProps> = ({
 
   const handleExport = async () => {
     try {
-      await exportXLSX({
-        headers: activeColumns.map(c => c.label),
-        rows: filteredRows.map(r => activeColumns.map(c => formatCell(r[c.key], c, translate))),
-        summaryRows: totals
-          ? [
-              activeColumns.map(c =>
-                c.total ? formatCell(totals[c.key], c, translate) : c === activeColumns[0] ? t('sheets.total') : '',
-              ),
-            ]
-          : undefined,
+      const rowsOut = toExportRows(filteredRows, activeColumns, translate);
+      if (totals) {
+        rowsOut.push(
+          activeColumns.map((c, i) => (c.total ? totals[c.key] : i === 0 ? t('sheets.total') : null)),
+        );
+      }
+      await exportCorporateWorkbook({
         fileName,
         title,
+        subtitle: description,
+        author,
+        locale,
+        rtl,
+        sheets: [
+          {
+            name: title,
+            title,
+            subtitle: description,
+            columns: toExportColumns(activeColumns),
+            rows: totals ? rowsOut.slice(0, -1) : rowsOut,
+          },
+        ],
       });
     } catch {
       toast({ variant: 'destructive', description: t('sheets.exportFailed') });

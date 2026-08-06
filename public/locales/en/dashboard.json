@@ -784,7 +784,8 @@
       "delete": "Delete",
       "deleteConfirm": "Are you sure you want to delete this lead?",
       "assignNotes": "Notes",
-      "scoreLabel": "Eligibility Score"
+      "scoreLabel": "Eligibility Score",
+      "reportTitle": "Leads Report"
     },
     "ready": {
       "fullName": "Full Name",
@@ -879,7 +880,12 @@
         "paypal": "PayPal",
         "cash": "Cash",
         "bank_transfer": "Bank Transfer"
-      }
+      },
+      "reportTitle": "Payouts Report",
+      "exportExcel": "Export Excel",
+      "requestId": "Request ID",
+      "approvalDate": "Approval Date",
+      "notes": "Notes"
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -1684,7 +1690,9 @@
       "approved": "Approved",
       "paid": "Paid",
       "completed": "Completed"
-    }
+    },
+    "reportTitle": "Financial Report",
+    "serviceFee": "Service Fee"
   },
   "influencerPayouts": {
     "totalPendingPayout": "Total Pending Payout",
@@ -2237,6 +2245,16 @@
         "nov": "November",
         "dec": "December"
       }
-    }
+    },
+    "cover": "Contents",
+    "coverSheet": "Report",
+    "coverRecords": "Records",
+    "coverScope": "Scope",
+    "scopeTeam": "Assigned to me",
+    "scopeAdmin": "All records"
+  },
+  "studentCases": {
+    "reportTitle": "Student Intake Report",
+    "bulkExcel": "Bulk Excel Export"
   }
 }

@@ -802,7 +802,8 @@
       "delete": "حذف",
       "deleteConfirm": "هل أنت متأكد من حذف هذا العميل؟",
       "assignNotes": "ملاحظات",
-      "scoreLabel": "نقاط الأهلية"
+      "scoreLabel": "نقاط الأهلية",
+      "reportTitle": "تقرير العملاء المحتملين"
     },
     "ready": {
       "fullName": "الاسم الكامل",
@@ -897,7 +898,12 @@
         "paypal": "باي بال",
         "cash": "نقداً",
         "bank_transfer": "تحويل بنكي"
-      }
+      },
+      "reportTitle": "تقرير المدفوعات",
+      "exportExcel": "تصدير Excel",
+      "requestId": "رقم الطلب",
+      "approvalDate": "تاريخ الموافقة",
+      "notes": "ملاحظات"
     },
     "authFailures": {
       "title": "إخفاقات الصلاحيات",
@@ -1702,7 +1708,9 @@
       "approved": "معتمد",
       "paid": "مدفوع",
       "completed": "مكتمل"
-    }
+    },
+    "reportTitle": "التقرير المالي",
+    "serviceFee": "رسوم الخدمة"
   },
   "influencerPayouts": {
     "totalPendingPayout": "إجمالي المعلق",
@@ -2255,6 +2263,16 @@
         "nov": "نوفمبر",
         "dec": "ديسمبر"
       }
-    }
+    },
+    "cover": "المحتويات",
+    "coverSheet": "التقرير",
+    "coverRecords": "عدد السجلات",
+    "coverScope": "النطاق",
+    "scopeTeam": "المسندة إليّ",
+    "scopeAdmin": "كل السجلات"
+  },
+  "studentCases": {
+    "reportTitle": "تقرير ملفات الطلاب",
+    "bulkExcel": "تصدير Excel مجمّع"
   }
 }

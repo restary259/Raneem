@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { Download } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +64,7 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 
 
 const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh, initialFilter }) => {
   const { t, i18n } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState(initialFilter || 'all');
@@ -331,6 +335,34 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           </Select>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => {
+            const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
+            exportCorporateWorkbook({
+              fileName: `DARB-leads-${new Date().toISOString().slice(0, 10)}`,
+              title: t('admin.leads.reportTitle', 'Leads Report'),
+              author, locale: exportLocale, rtl,
+              sheets: [{
+                name: t('admin.leads.reportTitle', 'Leads Report'),
+                columns: [
+                  { header: hk.name, type: 'text' },
+                  { header: hk.phone, type: 'text' },
+                  { header: hk.passport, type: 'text' },
+                  { header: hk.english, type: 'number' },
+                  { header: hk.math, type: 'number' },
+                  { header: hk.score, type: 'number', total: 'avg' },
+                  { header: hk.status, type: 'status' },
+                  { header: hk.source, type: 'text' },
+                  { header: t('admin.leads.interestedMajor', 'Major'), type: 'text' },
+                  { header: hk.date, type: 'date' },
+                ],
+                rows: filtered.map(l => [
+                  l.full_name, l.phone, l.passport_type || '', l.english_units ?? null,
+                  l.math_units ?? null, l.eligibility_score ?? null, l.status, l.source_type,
+                  l.preferred_major || '', l.created_at,
+                ]),
+              }],
+            });
+          }}><Download className="h-4 w-4 me-1" />Excel</Button>
           <Button variant="outline" size="sm" onClick={() => {
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
             const headers = [hk.name, hk.phone, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
