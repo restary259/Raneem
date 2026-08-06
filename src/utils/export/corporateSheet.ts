@@ -280,7 +280,8 @@ function renderSheet(
     from: { row: headerRowNumber, column: 1 },
     to: { row: lastDataRow, column: Math.max(columns.length, 1) },
   };
-  ws.printTitlesRow = `${headerRowNumber}:${headerRowNumber}`;
+  // Repeat the header row on every printed page.
+  (ws.pageSetup as unknown as { printTitlesRow?: string }).printTitlesRow = `${headerRowNumber}:${headerRowNumber}`;
 }
 
 /** Builds the styled workbook without touching the DOM (used by tests too). */
