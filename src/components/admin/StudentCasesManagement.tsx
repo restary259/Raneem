@@ -178,6 +178,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
             </SelectContent>
           </Select>
         </div>
+        <Button variant="outline" size="sm" onClick={bulkExportExcel}><Download className="h-4 w-4 me-1" />{t('studentCases.bulkExcel', { defaultValue: 'Bulk Excel Export' })}</Button>
         <Button variant="outline" size="sm" onClick={bulkExportPDF}><FileText className="h-4 w-4 me-1" />{t('studentCases.bulkPDF', { defaultValue: 'Bulk PDF Export' })}</Button>
       </div>
 
