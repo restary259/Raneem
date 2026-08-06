@@ -40,6 +40,8 @@ const BagrutCalculatorPage = lazy(() => import("./pages/BagrutCalculatorPage"));
 const LebenslaufBuilderPage = lazy(() => import("./pages/LebenslaufBuilderPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/legal/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
 
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
