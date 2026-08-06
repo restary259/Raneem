@@ -35,6 +35,8 @@ import {
   Eye,
 } from "lucide-react";
 import CommissionSettingsPanel from "@/components/admin/CommissionSettingsPanel";
+import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
