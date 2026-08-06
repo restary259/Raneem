@@ -129,9 +129,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     // Step 1: Check if a case already exists for this lead by phone (prevents duplicate)
     const { data: existingCases } = await (supabase as any)
       .from('cases')
-      .select('id')
+      .select('id, partner_id, referred_by')
       .eq('phone_number', lead.phone)
       .limit(1);
+
 
     // Step 2: Update lead status to eligible
     const { error: updateErr } = await (supabase as any)
