@@ -730,8 +730,10 @@ export default function AdminStudentsPage() {
               </CardContent>
             </Card>
           ))}
+          <TablePagination pagination={pagination as any} />
         </div>
       )}
+
 
       {/* ── Student Detail Sheet ── */}
       <Sheet open={!!selected} onOpenChange={(open) => { if (!open) { setSelected(null); setEditing(false); } }}>
