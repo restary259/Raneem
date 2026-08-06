@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_pipeline_status_changes() FROM PUBLIC, anon, authenticated;
