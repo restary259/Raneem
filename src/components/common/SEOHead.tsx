@@ -11,7 +11,7 @@ interface SEOHeadProps {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const DEFAULT_TITLE = 'درب | رفيقك الدراسي العالمي';
+const DEFAULT_TITLE = 'درب | الدراسة في ألمانيا للطلاب العرب';
 
 const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
