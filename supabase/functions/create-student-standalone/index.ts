@@ -47,6 +47,22 @@ serve(async (req) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
+    // Non-admin team members may only attach a student to a case assigned to them.
+    if (case_id && !isAdmin) {
+      const { data: ownerCheck } = await supabaseAdmin
+        .from("cases")
+        .select("assigned_to")
+        .eq("id", case_id)
+        .maybeSingle();
+      if (!ownerCheck) {
+        return new Response(JSON.stringify({ error: "Case not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (ownerCheck.assigned_to !== callerId) {
+        return new Response(JSON.stringify({ error: "This case is not assigned to you" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+
     // Check if already registered via profiles table (faster than listUsers)
     const { data: existingProfile } = await supabaseAdmin
       .from("profiles")
