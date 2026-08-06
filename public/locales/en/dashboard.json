@@ -966,6 +966,7 @@
     "edit": "Edit",
     "loading": "Loading...",
     "error": "Error",
+    "actionFailed": "Something went wrong. Please try again or contact support.",
     "success": "Success",
     "saving": "Saving…",
     "inAppBannerText": "For the best experience, open in Safari or Chrome",
