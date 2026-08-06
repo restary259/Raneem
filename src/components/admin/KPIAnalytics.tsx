@@ -154,7 +154,7 @@ const KPIAnalytics: React.FC<KPIAnalyticsProps> = ({ cases, leads, lawyers, infl
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">{t('kpi.netProfit')}</p>
             <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>{totalProfit.toLocaleString('en-US')} ₪</p>
-            <p className="text-[10px] text-muted-foreground">{t('kpi.paidStudents', { n: paidCases.length, count: paidCases.length })}</p>
+            <p className="text-[10px] text-muted-foreground">{t('kpi.paidStudents', { n: paidCases.length })}</p>
           </CardContent>
         </Card>
         <Card className="border-blue-200 bg-blue-50/50">
