@@ -35,6 +35,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const { t } = useTranslation('dashboard');
   const { toast } = useToast();
   const { translate } = useSheetLabels();
+  const { author, locale, rtl } = useExportContext();
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [exporting, setExporting] = useState(false);
