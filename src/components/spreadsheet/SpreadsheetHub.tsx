@@ -6,7 +6,9 @@ import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
-import { exportWorkbook } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { toExportColumns, toExportRows } from './exportMapping';
 import {
   fetchStudentsSheet,
   fetchPaymentsSheet,
