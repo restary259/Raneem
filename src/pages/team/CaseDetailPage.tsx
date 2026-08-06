@@ -723,7 +723,10 @@ export default function CaseDetailPage() {
         {/* Row 3: status badges + delete */}
         <div className="flex items-center gap-2 flex-wrap justify-between ps-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>{caseData.status.replace(/_/g, " ")}</Badge>
+            <Badge className={STATUS_COLORS[caseData.status] ?? "bg-muted"}>
+              {t(`case.status.${caseData.status}`, { defaultValue: caseData.status.replace(/_/g, " ") })}
+            </Badge>
+
             {caseData.student_user_id && (
               <Badge variant="secondary" className="gap-1 text-xs">
                 <User className="h-3 w-3" />
