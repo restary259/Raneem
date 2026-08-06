@@ -7,6 +7,8 @@ interface SEOHeadProps {
   url?: string;
   /** Absolute URL of the social preview image. */
   image?: string;
+  /** Optional JSON-LD structured data for this page. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const DEFAULT_TITLE = 'درب | رفيقك الدراسي العالمي';
