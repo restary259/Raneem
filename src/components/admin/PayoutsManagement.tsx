@@ -272,7 +272,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
             <Button size="sm" variant="destructive" onClick={() => bulkAction('rejected')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
           </>
         )}
-        <Button size="sm" variant="outline" onClick={exportCSV}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportCSV', 'Export CSV')}</Button>
+        <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportExcel', 'Export Excel')}</Button>
         <Button size="sm" variant="outline" onClick={() => {
           const headers = [t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'), t('admin.payouts.paymentMethodCol')];
           const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString()} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
