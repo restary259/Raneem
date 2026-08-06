@@ -1,0 +1,154 @@
+{
+  "seo": {
+    "title": "Studying in Germany FAQ for Arab Students in Israel | DARB",
+    "description": "Source-backed answers on Bagrut recognition, Studienkolleg, uni-assist, costs, the blocked account, residence permits for Israeli passport holders, and working in Germany."
+  },
+  "hero": {
+    "badge": "Answers backed by official sources",
+    "title": "Studying in Germany — Frequently Asked Questions",
+    "subtitle": "Every answer here is based on official German sources (Federal Foreign Office, the German Embassy in Tel Aviv, DAAD, uni-assist) with the source linked so you can verify it yourself. Written for Arab students in Israel holding a Bagrut and an Israeli passport."
+  },
+  "meta": {
+    "updated": "Last updated: August 2026",
+    "sourcesLabel": "Source",
+    "disclaimer": "Note: this is general guidance. Fees, amounts and procedures change. The final decision always rests with the university, the local Ausländerbehörde or the German Embassy. Check the official links before acting.",
+    "ctaTitle": "Didn't find your answer?",
+    "ctaText": "The DARB team walks you through every step, from Bagrut to arriving in Germany.",
+    "ctaButton": "Start your application with DARB",
+    "ctaSecondary": "Contact us"
+  },
+  "categories": [
+    {
+      "id": "admission",
+      "title": "Admission & eligibility",
+      "items": [
+        {
+          "q": "Is the Israeli Bagrut enough for direct admission to a German university?",
+          "a": "The Te'udat Bagrut is evaluated in the anabin database of the Central Office for Foreign Education (ZAB), which determines whether your certificate counts as a university entrance qualification (Hochschulzugangsberechtigung, HZB) directly or requires a preparatory year. The outcome depends on your Bagrut type, units and subjects. The official way to check is the uni-assist admission checker, built on anabin and DAAD data — not an agent's opinion.",
+          "sources": [
+            { "label": "uni-assist – Check university admission", "url": "https://www.uni-assist.de/en/tools/check-university-admission/" },
+            { "label": "uni-assist – Document notes for Israel", "url": "https://www.uni-assist.de/en/tools/info-country-by-country/details-country/country/il/" }
+          ]
+        },
+        {
+          "q": "What is a Studienkolleg and when do I need one?",
+          "a": "A Studienkolleg is a preparatory year for students whose school-leaving certificate is not directly equivalent to the German one. It ends with the Feststellungsprüfung (FSP), which grants the university entrance qualification. Each Studienkolleg has tracks (T for engineering/technology, M for medicine/biology, W for economics, G for humanities, S for languages) — pick the one matching your intended degree, since the FSP opens specific fields only.",
+          "sources": [
+            { "label": "DAAD – Studienkollegs", "url": "https://www.daad.de/en/studying-in-germany/requirements/studienkollegs/" }
+          ]
+        },
+        {
+          "q": "Which Bagrut certificate does uni-assist accept?",
+          "a": "You must submit the official school-leaving certificate issued by the Israeli Ministry of Education. Temporary attestations from the Ministry are accepted only if less than a year old, and examination results issued by your school are not accepted. If you retook Bagrut exams, you need the updated official Ministry certificate.",
+          "sources": [
+            { "label": "uni-assist – Document notes for Israel", "url": "https://www.uni-assist.de/en/tools/info-country-by-country/details-country/country/il/" }
+          ]
+        },
+        {
+          "q": "What is uni-assist and what does applying through it cost?",
+          "a": "uni-assist is a Berlin-based service that evaluates foreign certificates and converts grades into the German system for hundreds of universities — but the admission decision stays with the university. Fees per semester: EUR 75 for the first chosen course of study and EUR 30 for each additional one, payable regardless of the result. Note: uni-assist does not cooperate with commercial agencies and gives no priority to applications submitted through one.",
+          "sources": [
+            { "label": "uni-assist – Handling fees", "url": "https://www.uni-assist.de/en/how-to-apply/pay-all-fees/handling-fees/" },
+            { "label": "uni-assist – FAQs", "url": "https://www.uni-assist.de/en/faqs/get-information/" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "language",
+      "title": "German language & English-taught programmes",
+      "items": [
+        {
+          "q": "Can I study in Germany in English?",
+          "a": "Yes. Fully English-taught programmes exist — mostly at Master's level, fewer at Bachelor's. Search the official DAAD \"International Programmes\" database, which lists the language of instruction, fees and deadlines for each accredited programme. Even studying in English, German remains practically necessary for housing, part-time work and daily life.",
+          "sources": [
+            { "label": "DAAD – International Programmes database", "url": "https://www2.daad.de/deutschland/studienangebote/international-programmes/en/" }
+          ]
+        },
+        {
+          "q": "What German level do German-taught programmes require?",
+          "a": "German-taught degrees normally require an advanced-level certificate such as TestDaF, DSH, Goethe C2 or telc C1 Hochschule, depending on the university's rules. Studienkolleg admission usually requires B1–B2 before you start. The binding reference is always the admission page of the university you apply to.",
+          "sources": [
+            { "label": "DAAD – Admission requirements", "url": "https://www.daad.de/en/studying-in-germany/requirements/" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "costs",
+      "title": "Costs & financing",
+      "items": [
+        {
+          "q": "Is studying in Germany really free?",
+          "a": "Most public universities charge no tuition for Bachelor's degrees (exceptions: Baden-Württemberg charges non-EU students, and some specialised Master's programmes). Every student still pays a semester contribution (Semesterbeitrag) covering student services and usually a transport ticket, typically around EUR 150–400 per semester depending on the university. Private universities charge full tuition.",
+          "sources": [
+            { "label": "DAAD – Cost of living and studying", "url": "https://www.daad.de/en/studying-in-germany/plan-your-studies/cost-of-living/" }
+          ]
+        },
+        {
+          "q": "How much must go into the blocked account (Sperrkonto)?",
+          "a": "According to the German Federal Foreign Office, the annual amount for students is EUR 11,904, released as EUR 992 per month after you arrive. The rate is revised periodically (usually announced in late summer) and some missions may require more. The blocked account can be replaced by other accepted proof, such as a full scholarship or a formal declaration of sponsorship (Verpflichtungserklärung). You choose the provider freely, and bank fees apply on top of the blocked amount.",
+          "sources": [
+            { "label": "Federal Foreign Office – Blocked account", "url": "https://www.auswaertiges-amt.de/en/sperrkonto-388600" },
+            { "label": "German mission – current amounts (EUR 11,904 / 992)", "url": "https://maskat.diplo.de/om-en/service/05-visaeinreise/2164012-2164012" }
+          ]
+        },
+        {
+          "q": "How much is student health insurance in Germany?",
+          "a": "Students enrolled at a German university and under 30 normally fall under the statutory student tariff (KVdS), costing roughly EUR 145–150 per month in 2026 including nursing-care insurance, varying slightly by insurer, age and children. Health insurance is mandatory for university enrolment.",
+          "sources": [
+            { "label": "Student health insurance cost calculator 2026", "url": "https://www.workingstudentjobs.de/tools/health-insurance-calculator" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "visa",
+      "title": "Visa & residence permit (Israeli passport holders)",
+      "items": [
+        {
+          "q": "Do I need a student visa before travelling on an Israeli passport?",
+          "a": "No. According to the German Embassy in Tel Aviv, Israeli nationals generally do not need a visa to enter Germany and can apply for the required residence permit at the Foreigners Authority (Ausländerbehörde) after arrival. That is a significant advantage over most non-EU students. You may still choose to apply in advance at the embassy in Tel Aviv via an online appointment.",
+          "sources": [
+            { "label": "German Embassy Tel Aviv – Student visa", "url": "https://tel-aviv.diplo.de/il-de/2519964-2519964" }
+          ]
+        },
+        {
+          "q": "Which documents does the Tel Aviv embassy require for a student visa?",
+          "a": "Per the embassy: a completed and signed national visa application form, a valid passport (original plus copy), two biometric photos, a signed letter of motivation, a signed detailed CV, evidence of German knowledge if you have any, proof of financial means, and travel insurance covering at least EUR 30,000 valid across the Schengen area until the student health scheme covers you. Add proof of university admission (or a successful application, or a Studienkolleg acceptance) and the Te'udat Bagrut translated into English or German — for a Master's, submit your Bachelor's degree instead.",
+          "sources": [
+            { "label": "German Embassy Tel Aviv – Student visa", "url": "https://tel-aviv.diplo.de/il-de/2519964-2519964" },
+            { "label": "German Embassy Tel Aviv – National visas", "url": "https://tel-aviv.diplo.de/il-de/service/05-visaeinreise/1588084-1588084" }
+          ]
+        },
+        {
+          "q": "How long does a national visa take to process?",
+          "a": "The embassy states that processing a national visa involves the foreigners authority of the German town where you will study, which makes the procedure long and complex, and the local authority may request additional documents after reviewing your file. Start early; no fixed processing time is guaranteed.",
+          "sources": [
+            { "label": "German Embassy Tel Aviv – National visas", "url": "https://tel-aviv.diplo.de/il-de/service/05-visaeinreise/1588084-1588084" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "title": "Working during and after your studies",
+      "items": [
+        {
+          "q": "How many hours may I work as an international student?",
+          "a": "Non-EU students may work 140 full days or 280 half days per year without extra approval from the employment agency, plus student-assistant roles at the university (Werkstudent/HiWi) under specific conditions. Exceeding the limit can affect your health-insurance status and your residence permit, so always check the conditions printed on your permit.",
+          "sources": [
+            { "label": "DAAD – Working while studying", "url": "https://www.daad.de/en/studying-in-germany/organising-your-studies/working-while-studying/" }
+          ]
+        },
+        {
+          "q": "Can I stay in Germany after graduating?",
+          "a": "Yes. Graduates of German universities can receive a residence permit of up to 18 months to look for a job matching their qualification, and may work without restriction during that period. Once you find suitable employment you can switch to a work permit or the EU Blue Card, which is a pathway to permanent residence later on.",
+          "sources": [
+            { "label": "Make it in Germany – After graduation", "url": "https://www.make-it-in-germany.com/en/study-training/studying/after-graduation" }
+          ]
+        }
+      ]
+    }
+  ]
+}

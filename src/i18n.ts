@@ -25,6 +25,7 @@ i18n
       'contact',
       'partners',
       'resources',
+      'faq',
       'broadcast',
       'dashboard',
     ],
