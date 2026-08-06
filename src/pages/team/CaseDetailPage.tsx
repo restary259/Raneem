@@ -372,7 +372,9 @@ export default function CaseDetailPage() {
       if (allowed !== newStatus) {
         toast({
           variant: "destructive",
-          description: `Cannot skip stages. Next allowed: ${allowed?.replace(/_/g, " ") ?? "none"}`,
+          description: t("case.detail.cannotSkip", {
+            next: allowed ? t(`case.status.${allowed}`, { defaultValue: allowed }) : t("case.detail.noneStage"),
+          }),
         });
         return;
       }
@@ -380,7 +382,12 @@ export default function CaseDetailPage() {
     setUpdatingStatus(true);
     try {
       await supabase.from("cases").update({ status: newStatus }).eq("id", caseData.id);
-      toast({ title: `Status updated to ${newStatus.replace(/_/g, " ")}` });
+      toast({
+        title: t("case.detail.statusUpdated", {
+          status: t(`case.status.${newStatus}`, { defaultValue: newStatus }),
+        }),
+      });
+
       fetchData();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
