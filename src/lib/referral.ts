@@ -15,6 +15,36 @@ interface StoredRef {
   savedAt: number;
 }
 
+const SESSION_KEY = 'darb_ref_session';
+
+/** Stable per-browser id used to de-duplicate link clicks. Never sent anywhere else. */
+function getSessionId(): string {
+  try {
+    let id = window.localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      window.localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return 'anonymous';
+  }
+}
+
+/** Fire-and-forget click record for a partner link. Unknown codes are ignored server-side. */
+async function recordClick(code: string): Promise<void> {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    await (supabase as any).rpc('record_partner_click', {
+      p_code: code,
+      p_session_id: getSessionId(),
+      p_user_agent: navigator.userAgent.slice(0, 300),
+    });
+  } catch {
+    /* tracking must never block the visitor */
+  }
+}
+
 /** Reads `?ref=` from the current URL and persists it. Safe to call on every page. */
 export function captureReferralCode(search?: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -28,11 +58,13 @@ export function captureReferralCode(search?: string): string | null {
 
     const payload: StoredRef = { code, savedAt: Date.now() };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    void recordClick(code);
     return code;
   } catch {
     return null;
   }
 }
+
 
 /** Returns the stored referral code, or null when absent or expired. */
 export function getReferralCode(): string | null {

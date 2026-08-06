@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { CaseService } from "@/services";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -245,25 +245,20 @@ const AdminPipelinePage = () => {
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
     try {
-      const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
-      const teamIds = (rolesRes.data ?? []).map((r) => r.user_id);
-      const [casesRes, profilesRes] = await Promise.all([
-        supabase.from("cases").select("*").eq("archived", false).not("status", "in", '("forgotten","cancelled")'),
-        teamIds.length > 0
-          ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
-          : Promise.resolve({ data: [], error: null }),
+      const [caseRows, members] = await Promise.all([
+        CaseService.listActive(),
+        CaseService.listTeamMembers(),
       ]);
-      if (casesRes.error) throw casesRes.error;
       const profileMap: Record<string, string> = {};
-      (profilesRes.data || []).forEach((p) => {
+      members.forEach((p) => {
         profileMap[p.id] = p.full_name;
       });
-      const enriched = (casesRes.data || []).map((c) => ({
+      const enriched = caseRows.map((c: any) => ({
         ...c,
         assignee_name: c.assigned_to ? profileMap[c.assigned_to] : undefined,
       }));
       setCases(enriched);
-      setTeamMembers((profilesRes.data || []).map((p) => ({ id: p.id, full_name: p.full_name, email: p.email || "" })));
+      setTeamMembers(members);
       // keep sheet in sync after refresh
       setSelectedCase((prev) => (prev ? (enriched.find((c) => c.id === prev.id) ?? null) : null));
     } catch (err: any) {
@@ -272,6 +267,7 @@ const AdminPipelinePage = () => {
       setLoading(false);
     }
   }, [toast]);
+
 
   useEffect(() => {
     fetchData();
@@ -291,11 +287,7 @@ const AdminPipelinePage = () => {
   const assignCase = async (caseId: string, userId: string | null) => {
     setAssigning(caseId);
     try {
-      const { error } = await supabase
-        .from("cases")
-        .update({ assigned_to: userId || null })
-        .eq("id", caseId);
-      if (error) throw error;
+      await CaseService.assign(caseId, userId);
       await fetchData();
       toast({ description: t('admin.pipeline.caseAssigned', 'Case assigned successfully') });
     } catch (err: any) {
@@ -310,16 +302,14 @@ const AdminPipelinePage = () => {
     setEditMode(false);
     setDraft(null);
     // Always fetch fresh — never trust the card's cached data
-    const { data, error } = await supabase.from("cases").select("*").eq("id", c.id).single();
-    if (error) {
-      console.error("[openCase] fetch error:", error.message);
+    try {
+      const data = await CaseService.getById(c.id);
+      if (data) {
+        setSelectedCase({ ...(data as any), assignee_name: c.assignee_name } as Case);
+      }
+    } catch (err: any) {
+      console.error("[openCase] fetch error:", err.message);
       setSelectedCase(c); // fallback to card data
-      return;
-    }
-    if (data) {
-      const fresh = { ...(data as any), assignee_name: c.assignee_name } as Case;
-      console.log("[openCase] english_units =", fresh.english_units, "math_units =", fresh.math_units);
-      setSelectedCase(fresh);
     }
   };
 
@@ -343,20 +333,16 @@ const AdminPipelinePage = () => {
     if (!selectedCase || !draft) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("cases")
-        .update({
-          city: draft.city.trim() || null,
-          passport_type: draft.passport_type || null,
-          education_level: draft.education_level || null,
-          english_units: draft.english_units ? parseInt(draft.english_units) : null,
-          math_units: draft.math_units ? parseInt(draft.math_units) : null,
-          english_level: draft.english_level || null,
-          degree_interest: draft.degree_interest.trim() || null,
-          intake_notes: draft.intake_notes.trim() || null,
-        })
-        .eq("id", selectedCase.id);
-      if (error) throw error;
+      await CaseService.update(selectedCase.id, {
+        city: draft.city.trim() || null,
+        passport_type: draft.passport_type || null,
+        education_level: draft.education_level || null,
+        english_units: draft.english_units ? parseInt(draft.english_units) : null,
+        math_units: draft.math_units ? parseInt(draft.math_units) : null,
+        english_level: draft.english_level || null,
+        degree_interest: draft.degree_interest.trim() || null,
+        intake_notes: draft.intake_notes.trim() || null,
+      });
       toast({ description: "Info saved successfully ✓" });
       setEditMode(false);
       setDraft(null);
@@ -373,11 +359,7 @@ const AdminPipelinePage = () => {
     if (!selectedCase) return;
     setDeleting(true);
     try {
-      await supabase.from("documents").delete().eq("case_id", selectedCase.id);
-      await supabase.from("appointments").delete().eq("case_id", selectedCase.id);
-      await supabase.from("case_submissions").delete().eq("case_id", selectedCase.id);
-      const { error } = await supabase.from("cases").delete().eq("id", selectedCase.id);
-      if (error) throw error;
+      await CaseService.remove(selectedCase.id);
       toast({ description: "Case deleted" });
       setSelectedCase(null);
       setShowDeleteConfirm(false);
@@ -389,6 +371,7 @@ const AdminPipelinePage = () => {
       setDeleting(false);
     }
   };
+
 
   /* ── duplicate phone detection ── */
   const phoneCount = cases.reduce<Record<string, number>>((acc, c) => {

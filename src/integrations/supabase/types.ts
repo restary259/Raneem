@@ -568,6 +568,7 @@ export type Database = {
           math_units: number | null
           origin: string | null
           partner_id: string | null
+          partner_link_id: string | null
           passport_type: string | null
           phone_number: string
           platform_revenue_ils: number
@@ -606,6 +607,7 @@ export type Database = {
           math_units?: number | null
           origin?: string | null
           partner_id?: string | null
+          partner_link_id?: string | null
           passport_type?: string | null
           phone_number: string
           platform_revenue_ils?: number
@@ -644,6 +646,7 @@ export type Database = {
           math_units?: number | null
           origin?: string | null
           partner_id?: string | null
+          partner_link_id?: string | null
           passport_type?: string | null
           phone_number?: string
           platform_revenue_ils?: number
@@ -656,7 +659,15 @@ export type Database = {
           student_user_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cases_partner_link_id_fkey"
+            columns: ["partner_link_id"]
+            isOneToOne: false
+            referencedRelation: "partner_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       checklist_items: {
         Row: {
@@ -1183,6 +1194,7 @@ export type Database = {
           last_contacted: string | null
           math_units: number | null
           notes: string | null
+          partner_link_id: string | null
           passport_type: string | null
           phone: string
           preferred_city: string | null
@@ -1219,6 +1231,7 @@ export type Database = {
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
+          partner_link_id?: string | null
           passport_type?: string | null
           phone: string
           preferred_city?: string | null
@@ -1255,6 +1268,7 @@ export type Database = {
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
+          partner_link_id?: string | null
           passport_type?: string | null
           phone?: string
           preferred_city?: string | null
@@ -1282,6 +1296,13 @@ export type Database = {
             columns: ["companion_lead_id"]
             isOneToOne: false
             referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_partner_link_id_fkey"
+            columns: ["partner_link_id"]
+            isOneToOne: false
+            referencedRelation: "partner_links"
             referencedColumns: ["id"]
           },
         ]
@@ -1563,6 +1584,41 @@ export type Database = {
           },
         ]
       }
+      partner_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          ip_hash: string | null
+          partner_link_id: string
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          ip_hash?: string | null
+          partner_link_id: string
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          ip_hash?: string | null
+          partner_link_id?: string
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_clicks_partner_link_id_fkey"
+            columns: ["partner_link_id"]
+            isOneToOne: false
+            referencedRelation: "partner_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_commission_overrides: {
         Row: {
           commission_amount: number
@@ -1589,6 +1645,39 @@ export type Database = {
           notes?: string | null
           partner_id?: string
           show_all_cases?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      partner_links: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          label: string | null
+          partner_id: string
+          target_path: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          partner_id: string
+          target_path?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          partner_id?: string
+          target_path?: string
           updated_at?: string
         }
         Relationships: []
@@ -1708,6 +1797,33 @@ export type Database = {
           requestor_role?: string
           status?: string
           transaction_ref?: string | null
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          key: string
+          label_ar: string
+          label_en: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          label_ar?: string
+          label_en?: string
         }
         Relationships: []
       }
@@ -2140,6 +2256,35 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
             referencedColumns: ["id"]
           },
         ]
@@ -2696,6 +2841,7 @@ export type Database = {
           math_units: number | null
           origin: string | null
           partner_id: string | null
+          partner_link_id: string | null
           passport_type: string | null
           phone_number: string
           platform_revenue_ils: number
@@ -2731,6 +2877,7 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
         Args: { p_sources?: string[] }
@@ -2752,6 +2899,10 @@ export type Database = {
           id: string
           role: string
         }[]
+      }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -2819,6 +2970,10 @@ export type Database = {
         Args: { p_case_id: string; p_total_payment_ils?: number }
         Returns: undefined
       }
+      record_partner_click: {
+        Args: { p_code: string; p_session_id: string; p_user_agent: string }
+        Returns: undefined
+      }
       request_payout: {
         Args: {
           p_amount: number
@@ -2829,6 +2984,15 @@ export type Database = {
           p_student_names?: string[]
         }
         Returns: string
+      }
+      resolve_partner_link: {
+        Args: { p_code: string }
+        Returns: {
+          link_id: string
+          partner_id: string
+          partner_name: string
+          target_path: string
+        }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
     }

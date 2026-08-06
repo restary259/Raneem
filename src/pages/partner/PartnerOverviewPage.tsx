@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
+import PartnerLinksCard from "@/components/partner/PartnerLinksCard";
+
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
@@ -194,6 +196,9 @@ export default function PartnerOverviewPage() {
 
       {/* My referral link */}
       <ReferralLinkCard userId={userId} />
+
+      <PartnerLinksCard partnerId={userId} />
+
 
       {/* Earnings Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">

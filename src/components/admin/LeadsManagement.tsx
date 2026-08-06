@@ -129,9 +129,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
     // Step 1: Check if a case already exists for this lead by phone (prevents duplicate)
     const { data: existingCases } = await (supabase as any)
       .from('cases')
-      .select('id, partner_id, referred_by')
+      .select('id, partner_id, referred_by, partner_link_id')
       .eq('phone_number', lead.phone)
       .limit(1);
+
 
 
     // Step 2: Update lead status to eligible
@@ -158,6 +159,9 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
           ? 'referral'
           : 'contact_form';
 
+    // The exact partner link is frozen on the case at creation — never re-derived later.
+    const refLinkId: string | null = refOwner ? l.partner_link_id ?? null : null;
+
     // Step 3: Restore soft-deleted case or insert new one
     if (existingCases?.[0]) {
       const restore: Record<string, any> = { deleted_at: null };
@@ -167,6 +171,7 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         restore.referred_by = refOwner;
         restore.source = caseSource;
         restore.source_attribution_method = l.source_attribution_method ?? 'link';
+        if (refLinkId && !existingCases[0].partner_link_id) restore.partner_link_id = refLinkId;
       }
       await (supabase as any).from('cases').update(restore).eq('id', existingCases[0].id);
     } else {
@@ -177,8 +182,10 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         city: lead.preferred_city || lead.city || null,
         partner_id: refOwner,
         referred_by: refOwner,
+        partner_link_id: refLinkId,
         source_attribution_method: refOwner ? l.source_attribution_method ?? 'link' : null,
       });
+
       if (caseErr) {
         toast({ variant: 'destructive', title: t('admin.leads.caseCreationError'), description: caseErr.message });
         setActionLoadingId(null);
