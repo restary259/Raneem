@@ -1550,6 +1550,7 @@ export type Database = {
           team_member_commission_rate: number
           updated_at: string
           updated_by: string | null
+          vat_rate: number
         }
         Insert: {
           forgotten_contacted_days?: number
@@ -1560,6 +1561,7 @@ export type Database = {
           team_member_commission_rate?: number
           updated_at?: string
           updated_by?: string | null
+          vat_rate?: number
         }
         Update: {
           forgotten_contacted_days?: number
@@ -1570,6 +1572,7 @@ export type Database = {
           team_member_commission_rate?: number
           updated_at?: string
           updated_by?: string | null
+          vat_rate?: number
         }
         Relationships: []
       }
@@ -2435,6 +2438,18 @@ export type Database = {
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]
+      }
+      get_monthly_tax_report: {
+        Args: never
+        Returns: {
+          commissions_paid: number
+          gross_collected: number
+          month: string
+          net_before_vat: number
+          net_margin: number
+          transactions_count: number
+          vat_amount: number
+        }[]
       }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
