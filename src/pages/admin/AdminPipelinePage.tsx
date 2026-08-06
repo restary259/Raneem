@@ -241,7 +241,7 @@ const AdminPipelinePage = () => {
       const rolesRes = await supabase.from("user_roles").select("user_id").eq("role", "team_member");
       const teamIds = (rolesRes.data ?? []).map((r) => r.user_id);
       const [casesRes, profilesRes] = await Promise.all([
-        supabase.from("cases").select("*").not("status", "in", '("forgotten","cancelled")'),
+        supabase.from("cases").select("*").eq("archived", false).not("status", "in", '("forgotten","cancelled")'),
         teamIds.length > 0
           ? supabase.from("profiles").select("id, full_name, email").in("id", teamIds)
           : Promise.resolve({ data: [], error: null }),
