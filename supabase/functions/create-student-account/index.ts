@@ -54,6 +54,9 @@ serve(async (req) => {
       });
     }
 
+    const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
+
+
     const body = await req.json();
     const { case_id, email, full_name } = body;
 
@@ -74,7 +77,7 @@ serve(async (req) => {
     // Check if case exists in the cases table
     const { data: caseData, error: caseError } = await supabaseAdmin
       .from("cases")
-      .select("id, student_user_id, phone_number, city, degree_interest")
+      .select("id, student_user_id, phone_number, city, degree_interest, assigned_to")
       .eq("id", case_id)
       .single();
 
@@ -84,6 +87,15 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Non-admin team members may only act on cases assigned to them.
+    if (!isAdmin && caseData.assigned_to !== adminId) {
+      return new Response(JSON.stringify({ error: "This case is not assigned to you" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     if (caseData.student_user_id) {
       return new Response(JSON.stringify({ error: "Student account already exists for this case" }), {
