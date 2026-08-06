@@ -490,7 +490,9 @@ export default function PartnerPayoutsPanel() {
                 type: 'bulk',
                 partnerId: g.userId,
                 partnerName: g.partnerName,
-                rewards: g.pending,
+                // Only truly unrequested rewards; 'approved' ones belong to the
+                // Payout Requests flow and paying them here double-pays.
+                rewards: g.pending.filter(r => r.status === 'pending'),
                 caseMap: g.caseMap,
               })}
             />
