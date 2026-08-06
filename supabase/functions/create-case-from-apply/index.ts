@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       phone_number,
       source = "apply_page",
       partner_id,
+      ref_code,
       actor_id,
       actor_name,
       // Referral fields
@@ -162,18 +163,47 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate partner_id if provided
+    // ── Referral attribution ──────────────────────────────────────
+    // A referral code from the public link is resolved server-side, so a
+    // visitor can never credit an arbitrary user by editing the request.
     let validatedPartnerId: string | null = null;
-    if (partner_id) {
+    let validatedReferrerId: string | null = referrer_user_id ?? null;
+    let attributionMethod: string | null = null;
+
+    if (ref_code && typeof ref_code === "string" && /^[a-zA-Z0-9-]{3,40}$/.test(ref_code.trim())) {
+      const { data: resolvedId } = await supabaseAdmin.rpc("resolve_referral_code", {
+        p_code: ref_code.trim(),
+      });
+
+      if (resolvedId) {
+        const { data: roleRow } = await supabaseAdmin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", resolvedId)
+          .in("role", ["social_media_partner", "ambassador", "student"])
+          .maybeSingle();
+
+        if (roleRow?.role === "student") {
+          validatedReferrerId = resolvedId as string;
+        } else if (roleRow) {
+          validatedPartnerId = resolvedId as string;
+        }
+        if (roleRow) attributionMethod = "link";
+      }
+    }
+
+    // Explicit partner_id (admin / team created cases) still supported.
+    if (!validatedPartnerId && partner_id) {
       const { data: partnerRole } = await supabaseAdmin
         .from("user_roles")
         .select("user_id")
         .eq("user_id", partner_id)
-        .in("role", ["social_media_partner", "influencer"])
+        .in("role", ["social_media_partner", "ambassador"])
         .maybeSingle();
 
       if (partnerRole) {
         validatedPartnerId = partner_id;
+        attributionMethod = "manual";
       }
     }
 
@@ -185,7 +215,8 @@ Deno.serve(async (req) => {
         phone_number: cleanPhone,
         source,
         partner_id: validatedPartnerId,
-        referred_by: referrer_user_id ?? null,
+        referred_by: validatedReferrerId,
+        source_attribution_method: attributionMethod,
         referral_discount: referral_discount ? Number(referral_discount) : 0,
         status: "new",
         // Extended fields
