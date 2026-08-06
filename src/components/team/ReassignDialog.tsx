@@ -38,13 +38,15 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
     }
     setReassigning(true);
     try {
-      const { error } = await (supabase as any).from('cases').update({
-        assigned_to: targetId,
-      }).eq('id', reassignCase.id);
+      // Server-side RPC enforces ownership, the target's role, the
+      // pre-submission status whitelist and writes the audit row.
+      const { error } = await (supabase as any).rpc('reassign_case', {
+        p_case_id: reassignCase.id,
+        p_new_assignee: targetId,
+      });
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'reassign_case', p_target_id: reassignCase.id, p_target_table: 'cases', p_details: `Reassigned to ${targetId}` });
         toast({ title: t('lawyer.caseReassigned') });
         onClose();
         try { await refetch(); } catch {}
