@@ -45,14 +45,14 @@ const ReassignDialog: React.FC<ReassignDialogProps> = ({ reassignCase, allLawyer
         p_new_assignee: targetId,
       });
       if (error) {
-        toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+        toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
       } else {
         toast({ title: t('lawyer.caseReassigned') });
         onClose();
         try { await refetch(); } catch {}
       }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: err?.message || 'Unexpected error' });
+      if (err?.name !== 'AbortError') toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setReassigning(false);
     }

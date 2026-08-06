@@ -80,7 +80,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
     setSavingIban(true);
     const { error } = await (supabase as any).from('profiles').update({ iban: trimmed.toUpperCase(), iban_confirmed_at: new Date().toISOString() }).eq('id', userId);
     setSavingIban(false);
-    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return; }
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') }); return; }
     toast({ title: t('rewards.ibanSaved', 'IBAN saved') });
     fetchData();
   };
@@ -104,7 +104,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
       p_student_names: studentNames,
     });
     if (rpcError) {
-      toast({ variant: 'destructive', title: t('common.error'), description: rpcError.message });
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
       return;
     }
     toast({ title: t('rewards.payoutRequested') });
@@ -118,7 +118,7 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ userId }) => {
     if (!req || req.status !== 'pending') return;
     const { error: cancelError } = await (supabase as any).rpc('cancel_payout_request', { p_request_id: reqId });
     if (cancelError) {
-      toast({ variant: 'destructive', title: t('common.error'), description: cancelError.message });
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
       return;
     }
     toast({ title: t('rewards.requestCancelled', 'Request cancelled') });

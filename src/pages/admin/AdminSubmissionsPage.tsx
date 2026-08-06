@@ -146,7 +146,8 @@ const AdminSubmissionsPage = () => {
         setAccommodationNames(map);
       }
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("[AdminSubmissions]", err);
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setLoading(false);
     }
@@ -274,7 +275,8 @@ const AdminSubmissionsPage = () => {
       setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      console.error("[AdminSubmissions]", err);
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setMarking(false);
     }

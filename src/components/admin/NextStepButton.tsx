@@ -53,7 +53,7 @@ const NextStepButton: React.FC<NextStepButtonProps> = ({
       .eq('id', caseId);
 
     if (error) {
-      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } else {
       toast({ title: t('lawyer.saved'), description: `→ ${t(`cases.statuses.${target}`, target.replace(/_/g, ' '))}` });
       onStatusUpdated?.(target);

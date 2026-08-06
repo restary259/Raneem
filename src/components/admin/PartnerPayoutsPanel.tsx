@@ -357,7 +357,8 @@ export default function PartnerPayoutsPanel() {
         setCaseMap(map);
       }
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      console.error('[PartnerPayouts]', err);
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setLoading(false);
     }
@@ -455,7 +456,8 @@ export default function PartnerPayoutsPanel() {
         confirmedIds.has(r.id) ? { ...r, status: 'paid', paid_at: now } : r
       ));
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      console.error('[PartnerPayouts]', err);
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setIsExecuting(false);
       setShowConfirmDialog(false);
