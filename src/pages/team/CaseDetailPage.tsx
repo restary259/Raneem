@@ -422,7 +422,7 @@ export default function CaseDetailPage() {
       await supabase.from("case_submissions").delete().eq("case_id", caseData.id);
       await supabase.from("cases").delete().eq("id", caseData.id);
       toast({ title: "Case deleted" });
-      navigate("/team/cases");
+      navigate(location.pathname.startsWith("/admin") ? "/admin/pipeline" : "/team/cases");
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
