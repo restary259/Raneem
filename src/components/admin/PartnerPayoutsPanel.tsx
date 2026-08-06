@@ -379,6 +379,12 @@ export default function PartnerPayoutsPanel() {
 
   const executeConfirm = async () => {
     if (!pendingAction || !currentUserId) return;
+    if (pendingAction.rewards.length === 0) {
+      toast({ description: t('admin.partnerPayouts.nothingToPay', 'Nothing to pay — all rewards are already in a payout request.') });
+      setShowConfirmDialog(false);
+      setPendingAction(null);
+      return;
+    }
     setIsExecuting(true);
     try {
       const now = new Date().toISOString();
@@ -425,7 +431,9 @@ export default function PartnerPayoutsPanel() {
   };
 
   /* ── render ──────────────────────────────────────────── */
-  const totalPending = useMemo(() => rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((s, r) => s + r.amount, 0), [rewards]);
+  // 'approved' rewards are already committed to a formal payout request and are
+  // settled from the Payout Requests tab — they are not outstanding here.
+  const totalPending = useMemo(() => rewards.filter(r => r.status === 'pending').reduce((s, r) => s + r.amount, 0), [rewards]);
   const totalPaid = useMemo(() => rewards.filter(r => r.status === 'paid').reduce((s, r) => s + r.amount, 0), [rewards]);
 
   if (loading) {
@@ -488,7 +496,9 @@ export default function PartnerPayoutsPanel() {
                 type: 'bulk',
                 partnerId: g.userId,
                 partnerName: g.partnerName,
-                rewards: g.pending,
+                // Only truly unrequested rewards; 'approved' ones belong to the
+                // Payout Requests flow and paying them here double-pays.
+                rewards: g.pending.filter(r => r.status === 'pending'),
                 caseMap: g.caseMap,
               })}
             />

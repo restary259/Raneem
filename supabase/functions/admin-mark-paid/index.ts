@@ -60,6 +60,19 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
+    // Record the commission split FIRST, with the amount the admin actually
+    // entered. Flipping the status fires the auto_split_payment trigger, which
+    // would latch commission_split_done using case_submissions.service_fee and
+    // make this call a silent no-op.
+    const amount = total_payment_ils ? parseInt(String(total_payment_ils), 10) : 0;
+    if (amount > 0) {
+      const { error: commissionError } = await supabaseAdmin.rpc("record_case_commission", {
+        p_case_id: case_id,
+        p_total_payment_ils: amount,
+      });
+      if (commissionError) throw commissionError;
+    }
+
     // Update case status to enrollment_paid
     const { error: updateError } = await supabaseAdmin
       .from("cases")
@@ -80,13 +93,6 @@ Deno.serve(async (req) => {
       })
       .eq("case_id", case_id);
 
-    // Record commission split (safe integer arithmetic — no floating point)
-    if (total_payment_ils && total_payment_ils > 0) {
-      await supabaseAdmin.rpc("record_case_commission", {
-        p_case_id: case_id,
-        p_total_payment_ils: parseInt(String(total_payment_ils), 10),
-      });
-    }
 
     // Log activity (best-effort — FK on actor_id may not resolve for service-role inserts)
     try {
