@@ -217,6 +217,13 @@ const AdminPipelinePage = () => {
   const { toast } = useToast();
   const isRtl = i18n.language === "ar";
 
+  const { active: activeStatuses, label: pipelineLabel, colorClass: statusColorClass } = usePipelineStatuses();
+  const boardStatuses = activeStatuses.filter((s) => !NON_BOARD_STATUSES.includes(s.key));
+  const statusLabel = (key: string) =>
+    activeStatuses.some((s) => s.key === key) ? pipelineLabel(key, isRtl) : undefined;
+
+
+
   const [searchParams] = useSearchParams();
 
   const [cases, setCases] = useState<Case[]>([]);
