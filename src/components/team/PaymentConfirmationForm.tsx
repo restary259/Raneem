@@ -83,10 +83,12 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
         p_metadata: { service_fee: serviceFee },
       });
 
+      clearDraft();
       toast({ title: t('team.payment.confirmed') });
       onSuccess();
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch (err) {
+      console.error('[PaymentConfirmation]', err);
+      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
     } finally {
       setSaving(false);
     }
