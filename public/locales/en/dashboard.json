@@ -1400,7 +1400,8 @@
       "mustConfirm": "You must confirm payment was received",
       "feeRequired": "Service fee must be greater than 0",
       "confirming": "Saving...",
-      "confirmBtn": "Confirm Payment Received"
+      "confirmBtn": "Confirm Payment Received",
+      "statusFailed": "Payment was recorded but the case status could not be updated. Please refresh and try again."
     },
     "today": {
       "title": "Today",
