@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const CallToAction = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('about');
   return (
     <section className="py-24 bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 text-center">

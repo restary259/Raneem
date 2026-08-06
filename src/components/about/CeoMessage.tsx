@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 
 const CeoMessage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('about');
   return (
     <section className="py-12 md:py-24">
       <div className="container mx-auto px-4">
