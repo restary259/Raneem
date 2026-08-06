@@ -2425,6 +2425,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      reassign_case: {
+        Args: { p_case_id: string; p_new_assignee: string }
+        Returns: undefined
+      }
       record_case_commission: {
         Args: { p_case_id: string; p_total_payment_ils?: number }
         Returns: undefined
