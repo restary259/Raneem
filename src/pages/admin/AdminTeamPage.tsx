@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2 } from 'lucide-react';
 import { buildReferralUrl } from '@/lib/referral';
+import { formatILS } from '@/lib/money';
 
 interface TeamMember {
   id: string;
@@ -276,6 +277,15 @@ const AdminTeamPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{roleLabel(m.role)}</Badge>
+                    <Badge
+                      variant={m.commissionOverridden ? 'default' : 'outline'}
+                      className="font-mono whitespace-nowrap"
+                      title={m.commissionOverridden
+                        ? t('admin.team.commissionCustom', 'Custom amount for this account')
+                        : t('admin.team.commissionDefault', 'Default amount for this role')}
+                    >
+                      {formatILS(m.commission)}
+                    </Badge>
                     <Button
                       variant="ghost"
                       size="icon"
