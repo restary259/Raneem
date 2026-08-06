@@ -41,12 +41,15 @@ export default function PartnerEarningsPage() {
         .maybeSingle(),
       (supabase as any)
         .from("platform_settings")
-        .select("partner_commission_rate,partner_dashboard_show_all_cases")
+        .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
         .limit(1)
         .maybeSingle(),
+      (supabase as any).rpc("get_my_role"),
     ]);
 
-    const globalRate = settingsRes.data?.partner_commission_rate ?? 500;
+    const globalRate = roleRes?.data === "ambassador"
+      ? (settingsRes.data?.ambassador_commission_rate ?? 300)
+      : (settingsRes.data?.partner_commission_rate ?? 500);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? globalRate));
