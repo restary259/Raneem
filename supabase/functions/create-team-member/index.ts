@@ -74,15 +74,14 @@ serve(async (req) => {
       });
     }
 
-    if (!["team_member", "social_media_partner", "influencer", "lawyer"].includes(role)) {
+    if (!["team_member", "social_media_partner", "ambassador"].includes(role)) {
       return new Response(JSON.stringify({ error: "Invalid role" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Map 'lawyer' UI role to 'team_member' DB role
-    const dbRole = role === "lawyer" ? "team_member" : role;
+    const dbRole = role;
 
     const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
 

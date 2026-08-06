@@ -326,6 +326,8 @@
       "noMembers": "No team members yet",
       "teamMemberRole": "Team Member",
       "partnerRole": "Partner",
+      "ambassadorRole": "Ambassador",
+      "copyReferralLink": "Copy referral link",
       "creating": "Creating...",
       "loading": "Loading...",
       "allFieldsRequired": "Please fill all fields",

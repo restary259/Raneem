@@ -326,6 +326,8 @@
       "noMembers": "لا يوجد أعضاء فريق بعد",
       "teamMemberRole": "عضو الفريق",
       "partnerRole": "شريك",
+      "ambassadorRole": "سفير",
+      "copyReferralLink": "نسخ رابط الإحالة",
       "creating": "جار الإنشاء...",
       "loading": "جار التحميل...",
       "allFieldsRequired": "يرجى ملء جميع الحقول",
