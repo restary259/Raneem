@@ -269,6 +269,33 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
         <div className="flex-1" />
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => {
+            auditFinancialExport('xlsx');
+            exportCorporateWorkbook({
+              fileName: `DARB-financial-report-${new Date().toISOString().slice(0, 10)}`,
+              title: t('money.reportTitle', 'Financial Report'),
+              author, locale: exportLocale, rtl,
+              sheets: [{
+                name: t('money.reportTitle', 'Financial Report'),
+                columns: [
+                  { header: t('money.student'), type: 'text' },
+                  { header: t('money.revenueType'), type: 'text' },
+                  { header: t('money.amount'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
+                  { header: t('money.currency'), type: 'text' },
+                  { header: t('money.status'), type: 'status' },
+                  { header: t('money.date'), type: 'date' },
+                ],
+                rows: filtered.map(r => [
+                  r.studentName,
+                  typeLabel(r.type),
+                  r.direction === 'out' ? -Math.abs(r.amount) : r.amount,
+                  r.currency,
+                  statusLabel(r.status),
+                  r.date,
+                ]),
+              }],
+            });
+          }}><FileText className="h-4 w-4 me-1" />Excel</Button>
+          <Button size="sm" variant="outline" onClick={() => {
             auditFinancialExport('pdf');
             const headers = [t('money.student'), t('money.revenueType'), t('money.amount'), t('money.currency'), t('money.status'), t('money.date')];
             const rows = filtered.map(r => [r.studentName, typeLabel(r.type), r.amount, r.currency, statusLabel(r.status), new Date(r.date).toLocaleDateString()]);

@@ -333,6 +333,34 @@ const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influ
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => {
             const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
+            exportCorporateWorkbook({
+              fileName: `DARB-leads-${new Date().toISOString().slice(0, 10)}`,
+              title: t('admin.leads.reportTitle', 'Leads Report'),
+              author, locale: exportLocale, rtl,
+              sheets: [{
+                name: t('admin.leads.reportTitle', 'Leads Report'),
+                columns: [
+                  { header: hk.name, type: 'text' },
+                  { header: hk.phone, type: 'text' },
+                  { header: hk.passport, type: 'text' },
+                  { header: hk.english, type: 'number' },
+                  { header: hk.math, type: 'number' },
+                  { header: hk.score, type: 'number', total: 'avg' },
+                  { header: hk.status, type: 'status' },
+                  { header: hk.source, type: 'text' },
+                  { header: t('admin.leads.interestedMajor', 'Major'), type: 'text' },
+                  { header: hk.date, type: 'date' },
+                ],
+                rows: filtered.map(l => [
+                  l.full_name, l.phone, l.passport_type || '', l.english_units ?? null,
+                  l.math_units ?? null, l.eligibility_score ?? null, l.status, l.source_type,
+                  l.preferred_major || '', l.created_at,
+                ]),
+              }],
+            });
+          }}><Download className="h-4 w-4 me-1" />Excel</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            const hk = t('admin.leads.csvHeaders', { returnObjects: true }) as Record<string, string>;
             const headers = [hk.name, hk.phone, hk.passport, hk.english, hk.math, hk.score, hk.status, hk.source, t('admin.leads.interestedMajor', 'Major'), hk.date];
             const rows = filtered.map(l => [l.full_name, l.phone, l.passport_type || '', l.english_units ?? '', l.math_units ?? '', l.eligibility_score ?? '', l.status, l.source_type, l.preferred_major || '', new Date(l.created_at).toLocaleDateString(locale)]);
             exportPDF({ headers, rows, fileName: `leads-${new Date().toISOString().slice(0,10)}`, title: 'Darb Study International — Leads' });
