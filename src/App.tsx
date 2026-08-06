@@ -40,6 +40,8 @@ const BagrutCalculatorPage = lazy(() => import("./pages/BagrutCalculatorPage"));
 const LebenslaufBuilderPage = lazy(() => import("./pages/LebenslaufBuilderPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/legal/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
 
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
@@ -166,6 +168,8 @@ const App = () => {
             <Route path="/resources/lebenslauf-builder" element={<LebenslaufBuilderPage />} />
             <Route path="/broadcast" element={<BroadcastPage />} />
             <Route path="/faq" element={<FaqPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/ai-advisor" element={<AIAdvisorPage />} />
             <Route path="/apply" element={<ApplyPage />} />
