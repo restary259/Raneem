@@ -234,8 +234,12 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Case timeline (read-only for students) */}
+      <CaseTimeline caseId={caseData.id} />
     </div>
   );
 };
+
 
 export default MyApplicationTab;
