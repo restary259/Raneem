@@ -465,7 +465,9 @@ const AdminPipelinePage = () => {
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
           {STATUSES.map((status) => {
-            const statusCases = getCasesForStatus(status);
+            const allStatusCases = getCasesForStatus(status);
+            const shown = colLimits[status] ?? COLUMN_PAGE_SIZE;
+            const statusCases = allStatusCases.slice(0, shown);
             const meta = STATUS_LABELS[status];
             return (
               <div key={status} className="w-64 shrink-0">
@@ -473,7 +475,7 @@ const AdminPipelinePage = () => {
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${meta.color}`}>
                     {label(status)}
                   </span>
-                  <span className="text-xs text-muted-foreground font-medium">{statusCases.length}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{allStatusCases.length.toLocaleString("en-US")}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -487,6 +489,7 @@ const AdminPipelinePage = () => {
                     </div>
                   ) : (
                     statusCases.map((c) => {
+
                       const days = daysSince(c.last_activity_at);
                       const isRedStale = (status === "new" && days >= 3) || c.is_no_show;
                       const isOrangeStale =
