@@ -460,6 +460,7 @@ export default function ProfileCompletionForm({
         p_metadata: { full_name: fullName },
       });
 
+      clearDraft();
       toast({ title: t("case.profileForm.saved") });
       onSuccess();
     } catch (err: any) {
