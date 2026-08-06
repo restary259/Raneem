@@ -111,6 +111,12 @@ const TeamDashboardPage = () => {
   useEffect(() => {
     if (!authReady) return;
     const fetchLawyers = async () => {
+      // Safe directory: names + roles only, never bank/identity fields
+      const loadDirectory = async () => {
+        const { data } = await (supabase as any).rpc("get_staff_directory");
+        const members = (data ?? []).filter((m: any) => m.role === "team_member" || m.role === "admin");
+        if (members.length) setAllLawyers(members.map((m: any) => ({ id: m.id, full_name: m.full_name })));
+      };
       try {
         const {
           data: { session },
@@ -123,28 +129,14 @@ const TeamDashboardPage = () => {
           const result = await resp.json();
           setAllLawyers(result.members || []);
         } else {
-        const { data } = await (supabase as any)
-            .from("profiles")
-            .select("id, full_name")
-            .in(
-              "id",
-              (await (supabase as any).from("user_roles").select("user_id").eq("role", "team_member")).data?.map(
-                (r: any) => r.user_id,
-              ) ?? [],
-            );
-          if (data) setAllLawyers(data);
+          await loadDirectory();
         }
       } catch {
-        const { data } = await (supabase as any)
-          .from("profiles")
-          .select("id, full_name")
-          .in(
-            "id",
-            (await (supabase as any).from("user_roles").select("user_id").eq("role", "team_member")).data?.map(
-              (r: any) => r.user_id,
-            ) ?? [],
-          );
-        if (data) setAllLawyers(data);
+        try {
+          await loadDirectory();
+        } catch {
+          /* ignore */
+        }
       }
     };
     fetchLawyers();
