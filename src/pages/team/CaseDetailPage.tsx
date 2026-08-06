@@ -639,7 +639,7 @@ export default function CaseDetailPage() {
               {submission.service_fee > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t("case.detail.serviceFee")}</span>
-                  <span className="font-medium text-foreground">{submission.service_fee.toLocaleString()} ILS</span>
+                  <span className="font-medium text-foreground">{submission.service_fee.toLocaleString('en-US')} ILS</span>
                 </div>
               )}
               {submission.program_start_date && (
@@ -861,7 +861,7 @@ export default function CaseDetailPage() {
                     <p className="text-xs text-muted-foreground">{t("case.detail.accommodation")}</p>
                     <p className="text-sm font-medium">
                       {resolved.accommodationName}
-                      {resolved.accommodationPrice ? ` — ${resolved.accommodationPrice.toLocaleString()}/mo` : ""}
+                      {resolved.accommodationPrice ? ` — ${resolved.accommodationPrice.toLocaleString('en-US')}/mo` : ""}
                     </p>
                   </div>
                 )}

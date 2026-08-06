@@ -228,21 +228,21 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           <div className="p-2.5 rounded-xl bg-amber-500"><Clock className="h-5 w-5 text-white" /></div>
           <div>
             <p className="text-xs text-muted-foreground">{t('admin.payouts.pendingInfluencer', 'Partner Pending')}</p>
-            <p className="text-xl font-bold">{pendingInfluencer.toLocaleString()} ₪</p>
+            <p className="text-xl font-bold">{pendingInfluencer.toLocaleString('en-US')} ₪</p>
             <p className="text-[10px] text-muted-foreground/70 mt-0.5">{t('admin.payouts.partnerPendingHint', 'Partner payout requests')}</p>
           </div>
         </CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-amber-500"><Clock className="h-5 w-5 text-white" /></div>
-          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.pendingStudent', 'Student Pending')}</p><p className="text-xl font-bold">{pendingStudent.toLocaleString()} ₪</p></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.pendingStudent', 'Student Pending')}</p><p className="text-xl font-bold">{pendingStudent.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-emerald-600"><CheckCircle className="h-5 w-5 text-white" /></div>
-          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalPaid')}</p><p className="text-xl font-bold">{totalPaid.toLocaleString()} ₪</p></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalPaid')}</p><p className="text-xl font-bold">{totalPaid.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-destructive"><XCircle className="h-5 w-5 text-white" /></div>
-          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalRejected', 'Rejected')}</p><p className="text-xl font-bold">{totalRejected.toLocaleString()} ₪</p></div>
+          <div><p className="text-xs text-muted-foreground">{t('admin.payouts.totalRejected', 'Rejected')}</p><p className="text-xl font-bold">{totalRejected.toLocaleString('en-US')} ₪</p></div>
         </CardContent></Card>
       </div>
 
@@ -275,7 +275,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportExcel', 'Export Excel')}</Button>
         <Button size="sm" variant="outline" onClick={() => {
           const headers = [t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'), t('admin.payouts.paymentMethodCol')];
-          const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString()} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
+          const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString('en-US')} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
           exportPDF({ headers, rows: pdfRows, fileName: `payouts-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Payouts' });
         }}><FileText className="h-4 w-4 me-1" />PDF</Button>
       </div>
@@ -297,7 +297,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-bold text-lg">{Number(r.amount).toLocaleString()} ₪</span>
+                  <span className="font-bold text-lg">{Number(r.amount).toLocaleString('en-US')} ₪</span>
                   <span className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</span>
                 </div>
                 {r.linked_student_names?.length > 0 && (
@@ -350,7 +350,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                           </Button>
                         ) : '—'}
                       </td>
-                      <td className="px-3 py-3 font-medium">{Number(r.amount).toLocaleString()} ₪</td>
+                      <td className="px-3 py-3 font-medium">{Number(r.amount).toLocaleString('en-US')} ₪</td>
                       <td className="px-3 py-3"><StatusBadge status={r.status} /></td>
                       <td className="px-3 py-3 text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
                       <td className="px-3 py-3 text-xs">{r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—'}</td>

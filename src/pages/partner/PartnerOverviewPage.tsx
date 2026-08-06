@@ -168,7 +168,7 @@ export default function PartnerOverviewPage() {
     },
     {
       label: t("partner.perCaseComm"),
-      value: `₪${commissionRate.toLocaleString()}`,
+      value: `₪${commissionRate.toLocaleString('en-US')}`,
       icon: CheckCircle,
       color: "text-sky-600 bg-sky-50",
     },
@@ -192,7 +192,7 @@ export default function PartnerOverviewPage() {
         <div>
           <p className="text-sm font-bold text-foreground">{t("partner.projectedEarnings")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString() })}
+            {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString('en-US') })}
           </p>
           {paidAllTime > 0 && (
             <p className="text-xs text-emerald-600 mt-1 font-semibold">
@@ -200,7 +200,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">₪{(paid * commissionRate).toLocaleString()}</p>
+        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">₪{(paid * commissionRate).toLocaleString('en-US')}</p>
       </div>
 
       {/* KPI Cards */}

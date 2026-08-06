@@ -232,7 +232,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">{t('admin.leads.date', 'Registered')}</p>
-                  <p className="font-medium">{new Date(selectedStudent.created_at).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(selectedStudent.created_at).toLocaleDateString('en-US')}</p>
                 </div>
               </div>
 
@@ -281,7 +281,7 @@ const StudentProfilesManagement: React.FC<StudentProfilesManagementProps> = ({
                       <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                          <p className="text-xs text-muted-foreground">{doc.category} • {new Date(doc.created_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground">{doc.category} • {new Date(doc.created_at).toLocaleDateString('en-US')}</p>
                         </div>
                         <Button size="sm" variant="ghost" onClick={() => downloadDoc(doc)}>
                           <Download className="h-4 w-4" />

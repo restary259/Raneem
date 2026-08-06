@@ -95,7 +95,7 @@ const SecurityPanel: React.FC<SecurityPanelProps> = ({ loginAttempts }) => {
         const sumByUser: Record<string, number> = {};
         recentRewards.forEach((r: any) => { sumByUser[r.user_id] = (sumByUser[r.user_id] || 0) + Number(r.amount); });
         Object.entries(sumByUser).filter(([, sum]) => sum >= 2000).forEach(([id, sum]) => {
-          alerts.push({ type: 'commission_spike', severity: 'medium', message: isAr ? 'ارتفاع مفاجئ في العمولات' : 'Commission spike detected', details: `User ${id.slice(0, 8)}...: ₪${sum.toLocaleString()} in 24h` });
+          alerts.push({ type: 'commission_spike', severity: 'medium', message: isAr ? 'ارتفاع مفاجئ في العمولات' : 'Commission spike detected', details: `User ${id.slice(0, 8)}...: ₪${sum.toLocaleString('en-US')} in 24h` });
         });
       }
 

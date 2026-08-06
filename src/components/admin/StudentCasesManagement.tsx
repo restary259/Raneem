@@ -461,7 +461,7 @@ const StudentCasesManagement: React.FC<StudentCasesManagementProps> = ({ cases, 
               return (
                 <div className="p-3 bg-muted/50 rounded-lg space-y-1">
                   <p><strong>{t('studentCases.studentLabel', { defaultValue: 'Student' })}:</strong> {pc?.student_full_name || pc?.lead?.full_name || '—'}</p>
-                  <p><strong>{t('studentCases.payoutEligible', { defaultValue: 'Payout eligible after' })}:</strong> {payoutDate.toLocaleDateString()}</p>
+                  <p><strong>{t('studentCases.payoutEligible', { defaultValue: 'Payout eligible after' })}:</strong> {payoutDate.toLocaleDateString('en-US')}</p>
                 </div>
               );
             })()}

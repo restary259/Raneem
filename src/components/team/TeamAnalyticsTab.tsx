@@ -44,8 +44,8 @@ const TeamAnalyticsTab: React.FC<TeamAnalyticsTabProps> = ({ kpis, cases, leads,
         <KPICard icon={<CalendarDays className="h-4 w-4 text-purple-600" />} label={t('lawyer.kpi.todayAppts')} value={String(kpis.todayAppts)} />
         <KPICard icon={<AlertTriangle className={`h-4 w-4 ${kpis.slaWarnings > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />} label={t('lawyer.kpi.slaWarnings')} value={String(kpis.slaWarnings)} highlight={kpis.slaWarnings > 0} />
         <KPICard icon={<CreditCard className="h-4 w-4 text-emerald-600" />} label={t('lawyer.kpi.paidThisMonth')} value={String(kpis.paidThisMonth)} />
-        <KPICard icon={<DollarSign className="h-4 w-4 text-emerald-600" />} label={t('lawyer.kpi.myEarnings')} value={`${kpis.totalEarnings.toLocaleString()} ₪`} />
-        <KPICard icon={<TrendingUp className="h-4 w-4 text-blue-600" />} label={t('lawyer.kpi.totalRevenue')} value={`${kpis.totalServiceFees.toLocaleString()} ₪`} />
+        <KPICard icon={<DollarSign className="h-4 w-4 text-emerald-600" />} label={t('lawyer.kpi.myEarnings')} value={`${kpis.totalEarnings.toLocaleString('en-US')} ₪`} />
+        <KPICard icon={<TrendingUp className="h-4 w-4 text-blue-600" />} label={t('lawyer.kpi.totalRevenue')} value={`${kpis.totalServiceFees.toLocaleString('en-US')} ₪`} />
         <KPICard icon={<CheckCircle className="h-4 w-4 text-green-600" />} label={t('lawyer.kpi.conversionRate', 'Conversion')} value={`${kpis.conversionRate}%`} />
         <KPICard icon={<CalendarDays className="h-4 w-4 text-indigo-600" />} label={t('lawyer.kpi.showRate', 'Show Rate')} value={`${kpis.showRate}%`} />
       </div>

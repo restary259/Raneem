@@ -29,7 +29,7 @@ export const ApproveModal: React.FC<ApproveModalProps> = ({ open, onOpenChange, 
         <DialogHeader>
           <DialogTitle>{t('admin.payouts.approveTitle', 'Approve Payout')}</DialogTitle>
         </DialogHeader>
-        {amount !== undefined && <p className="text-sm text-muted-foreground">{t('admin.payouts.amount')}: <strong>{amount.toLocaleString()} ₪</strong></p>}
+        {amount !== undefined && <p className="text-sm text-muted-foreground">{t('admin.payouts.amount')}: <strong>{amount.toLocaleString('en-US')} ₪</strong></p>}
         <div>
           <Label>{t('admin.payouts.notesOptional', 'Notes (optional)')}</Label>
           <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="mt-1" />
@@ -105,7 +105,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({ open, onOpenChange
         <DialogHeader>
           <DialogTitle>{t('admin.payouts.markPaidTitle', 'Mark as Paid')}</DialogTitle>
         </DialogHeader>
-        {amount !== undefined && <p className="text-sm text-muted-foreground">{t('admin.payouts.amount')}: <strong>{amount.toLocaleString()} ₪</strong></p>}
+        {amount !== undefined && <p className="text-sm text-muted-foreground">{t('admin.payouts.amount')}: <strong>{amount.toLocaleString('en-US')} ₪</strong></p>}
         <div className="space-y-3">
           <div>
             <Label>{t('admin.payouts.paymentMethod', 'Payment Method')}</Label>
