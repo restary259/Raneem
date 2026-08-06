@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
-import { exportXLSX } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { toExportColumns, toExportRows } from './exportMapping';
 import { useToast } from '@/hooks/use-toast';
 
 import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
@@ -93,7 +95,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
 }) => {
   const { t } = useTranslation('dashboard');
   const { translate } = useSheetLabels();
-  const { toast } = useToast();
+  const { author, locale, rtl } = useExportContext();
   const [search, setSearch] = useState('');
   const [visible, setVisible] = useState<Set<string>>(
     () => new Set(columns.filter(c => !c.hidden).map(c => c.key)),
