@@ -41,6 +41,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 interface StudentRecord {
   id: string;
