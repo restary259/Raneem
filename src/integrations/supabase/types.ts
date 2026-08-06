@@ -262,6 +262,45 @@ export type Database = {
           },
         ]
       }
+      auth_failure_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          is_anonymous: boolean
+          operation: string | null
+          path: string | null
+          source: string
+          status_code: string | null
+          target: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_anonymous?: boolean
+          operation?: string | null
+          path?: string | null
+          source?: string
+          status_code?: string | null
+          target: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_anonymous?: boolean
+          operation?: string | null
+          path?: string | null
+          source?: string
+          status_code?: string | null
+          target?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       case_payments: {
         Row: {
           amount: number
@@ -2328,6 +2367,16 @@ export type Database = {
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
+      }
+      get_auth_failure_spikes: {
+        Args: { p_threshold?: number; p_window?: string }
+        Returns: {
+          failure_count: number
+          is_new: boolean
+          last_seen: string
+          source: string
+          target: string
+        }[]
       }
       get_forgotten_cases: {
         Args: never
