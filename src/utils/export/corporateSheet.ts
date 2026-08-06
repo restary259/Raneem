@@ -121,16 +121,25 @@ function renderSheet(
   titleRow.getCell(1).font = { name: FONTS.family, size: FONTS.titleSize, bold: true, color: { argb: COLORS.navy } };
   titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: report.rtl ? 'right' : 'left' };
 
-  const metaParts = [BRAND.company];
-  if (sheet.subtitle || report.subtitle) metaParts.push(String(sheet.subtitle || report.subtitle));
-  metaParts.push(`Generated ${generatedStamp(report.locale)} (${BRAND.timeZone})`);
-  if (report.author) metaParts.push(`Exported by ${report.author}`);
-  metaParts.push(`${sheet.rows.length} record${sheet.rows.length === 1 ? '' : 's'}`);
+  const metaLines: string[] = [];
+  metaLines.push(
+    [BRAND.company, sheet.subtitle || report.subtitle]
+      .filter(Boolean)
+      .map(String)
+      .join('  ·  '),
+  );
+  const stampParts = [`Generated ${generatedStamp(report.locale)} (${BRAND.timeZone})`];
+  if (report.author) stampParts.push(`Exported by ${report.author}`);
+  stampParts.push(`${sheet.rows.length} record${sheet.rows.length === 1 ? '' : 's'}`);
+  metaLines.push(stampParts.join('  ·  '));
 
-  const metaRow = ws.addRow([metaParts.join('  ·  ')]);
-  ws.mergeCells(`A${metaRow.number}:${lastCol}${metaRow.number}`);
-  metaRow.getCell(1).font = { name: FONTS.family, size: FONTS.subtitleSize, color: { argb: COLORS.muted } };
-  metaRow.getCell(1).alignment = { vertical: 'middle', horizontal: report.rtl ? 'right' : 'left' };
+  // Left unmerged on purpose: merged cells clip overflow, these lines are longer
+  // than the table width and must stay fully readable.
+  for (const line of metaLines) {
+    const metaRow = ws.addRow([line]);
+    metaRow.getCell(1).font = { name: FONTS.family, size: FONTS.subtitleSize, color: { argb: COLORS.muted } };
+    metaRow.getCell(1).alignment = { vertical: 'middle', horizontal: report.rtl ? 'right' : 'left' };
+  }
 
   const ruleRow = ws.addRow([]);
   ruleRow.height = 6;
