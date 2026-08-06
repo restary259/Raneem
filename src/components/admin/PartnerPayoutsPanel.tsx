@@ -386,11 +386,13 @@ export default function PartnerPayoutsPanel() {
           email: profile?.email ?? '',
           avatarUrl: profile?.avatar_url ?? null,
           pending: [],
+          inRequest: [],
           paid: [],
           caseMap,
         };
       }
-      if (r.status === 'pending' || r.status === 'approved') byPartner[uid].pending.push(r);
+      if (r.status === 'pending') byPartner[uid].pending.push(r);
+      else if (r.status === 'approved') byPartner[uid].inRequest.push(r);
       else if (r.status === 'paid') byPartner[uid].paid.push(r);
     });
     Object.values(byPartner).forEach(g => { g.caseMap = caseMap; });
@@ -529,7 +531,7 @@ export default function PartnerPayoutsPanel() {
                 partnerName: g.partnerName,
                 // Only truly unrequested rewards; 'approved' ones belong to the
                 // Payout Requests flow and paying them here double-pays.
-                rewards: g.pending.filter(r => r.status === 'pending'),
+                rewards: g.pending,
                 caseMap: g.caseMap,
               })}
             />
