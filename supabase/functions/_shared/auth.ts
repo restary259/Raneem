@@ -68,6 +68,7 @@ export async function requireAuth(
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data?.user) {
+    await logDenial(req, 401, "Invalid or expired token", null);
     return { ok: false, status: 401, error: "Unauthorized" };
   }
 
@@ -83,8 +84,15 @@ export async function requireAuth(
   const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
 
   if (allowedRoles && !roles.some((r) => allowedRoles.includes(r))) {
+    await logDenial(
+      req,
+      403,
+      `Role not allowed (has: ${roles.join(",") || "none"})`,
+      data.user.id,
+    );
     return { ok: false, status: 403, error: "Forbidden" };
   }
+
 
   return { ok: true, userId: data.user.id, isServiceRole: false, roles };
 }
