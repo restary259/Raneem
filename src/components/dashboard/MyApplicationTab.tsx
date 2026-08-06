@@ -240,7 +240,10 @@ const MyApplicationTab: React.FC<MyApplicationTabProps> = ({ userId }) => {
       )}
 
       {/* Case timeline (read-only for students) */}
+      <CaseInvoices caseId={caseData.id} />
+
       <CaseTimeline caseId={caseData.id} />
+
     </div>
   );
 };
