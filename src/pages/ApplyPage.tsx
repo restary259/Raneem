@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
-import { captureReferralCode, getReferralCode } from "@/lib/referral";
+import { captureReferralCode, getReferralCode, verifyReferralCode } from "@/lib/referral";
 
 
 const PASSPORT_TYPES = [
@@ -88,9 +88,34 @@ const ApplyPage: React.FC = () => {
   // Referral attribution — captured from ?ref= and persisted for 90 days.
   // The code is always resolved server-side, never trusted as a raw user id.
   const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
+  const [refOwner, setRefOwner] = useState<string | null>(null);
+  const [refBroken, setRefBroken] = useState(false);
+
   useEffect(() => {
-    setRefCode(captureReferralCode(searchParams.toString()));
+    const code = captureReferralCode(searchParams.toString());
+    setRefCode(code);
+    if (!code) {
+      setRefOwner(null);
+      setRefBroken(false);
+      return;
+    }
+    let active = true;
+    // Health check: a legacy or disabled token must never be sent along,
+    // otherwise the student can be credited to the wrong partner.
+    verifyReferralCode(code).then((health) => {
+      if (!active) return;
+      if (health.valid) {
+        setRefOwner(health.ownerName);
+        setRefBroken(false);
+      } else {
+        setRefCode(null);
+        setRefOwner(null);
+        setRefBroken(true);
+      }
+    });
+    return () => { active = false; };
   }, [searchParams]);
+
 
 
   const isValidPhone = (p: string) => {
@@ -402,6 +427,28 @@ const ApplyPage: React.FC = () => {
           </div>
 
           <Progress value={progressValue} className="h-1.5 w-full" />
+
+          {/* Referral attribution health */}
+          {refOwner && (
+            <div
+              data-testid="referral-valid"
+              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800"
+            >
+              {isAr ? `تمت إحالتك من قِبل ${refOwner}` : `You were referred by ${refOwner}`}
+            </div>
+          )}
+          {refBroken && (
+            <div
+              data-testid="referral-broken"
+              className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800"
+            >
+              {isAr
+                ? "رابط الإحالة غير صالح أو منتهي الصلاحية — سيتم إرسال طلبك بدون إحالة."
+                : "This referral link is no longer valid — your application will be sent without a referral."}
+            </div>
+          )}
+
+
 
           {/* Form */}
           <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">

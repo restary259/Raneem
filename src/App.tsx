@@ -183,6 +183,7 @@ const App = () => {
             >
               <Route index element={<AdminCommandCenter />} />
               <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="team" element={<AdminTeamPage />} />
               <Route path="programs" element={<AdminProgramsPage />} />
               <Route path="submissions" element={<AdminSubmissionsPage />} />

@@ -634,7 +634,7 @@ const AdminSubmissionsPage = () => {
                   onClick={() => {
                     const caseId = selected.id;
                     setSelected(null);
-                    navigate(`/admin/pipeline?case=${caseId}`);
+                    navigate(`/admin/cases/${caseId}`);
                   }}
                 >
                   <ExternalLink className="h-4 w-4" />

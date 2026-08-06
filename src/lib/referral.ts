@@ -61,6 +61,42 @@ export function clearReferralCode(): void {
   }
 }
 
+export interface ReferralHealth {
+  /** The code is known, enabled and owned by an active referring account. */
+  valid: boolean;
+  /** First name of the owner — the only thing the lookup ever returns. */
+  ownerName: string | null;
+}
+
+/**
+ * Health check for a referral token.
+ *
+ * Legacy links, disabled codes and codes belonging to removed accounts all
+ * come back invalid. A failed check also *deletes* the stored token, so a
+ * broken link can never silently attribute a student to the wrong partner on
+ * a later visit.
+ */
+export async function verifyReferralCode(code: string | null): Promise<ReferralHealth> {
+  if (!code) return { valid: false, ownerName: null };
+
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data, error } = await (supabase as any).rpc('check_referral_code', { p_code: code });
+    if (error) throw error;
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row?.valid) return { valid: true, ownerName: row.owner_name ?? null };
+
+    clearReferralCode();
+    return { valid: false, ownerName: null };
+  } catch {
+    // Network/RPC failure is not proof the code is bad — keep it stored, but
+    // do not claim an attribution we could not verify.
+    return { valid: false, ownerName: null };
+  }
+}
+
+
 /**
  * Canonical public site address. Referral links are always built from this and
  * never from `window.location.origin`, so preview/sandbox hosts are never

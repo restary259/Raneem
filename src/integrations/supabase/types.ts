@@ -2398,6 +2398,13 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      check_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          owner_name: string
+          valid: boolean
+        }[]
+      }
       confirm_payout_batch: {
         Args: {
           p_notes?: string
