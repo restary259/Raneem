@@ -414,7 +414,9 @@ const AdminSubmissionsPage = () => {
                     </div>
                   </div>
                 ))}
+                <TablePagination pagination={completedPagination as any} />
               </div>
+
             )
           )}
         </CardContent>
