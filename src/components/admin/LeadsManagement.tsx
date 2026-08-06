@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
+import { Download } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +64,7 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 
 
 const LeadsManagement: React.FC<LeadsManagementProps> = ({ leads, lawyers, influencers = [], onRefresh, initialFilter }) => {
   const { t, i18n } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState(initialFilter || 'all');

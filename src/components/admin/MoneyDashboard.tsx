@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { exportPDF } from '@/utils/exportUtils';
+import { exportCorporateWorkbook } from '@/utils/export';
+import { useExportContext } from '@/utils/export/useExportContext';
 import { guardedAction } from '@/lib/conflictPrevention';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +62,7 @@ const MoneyDashboard: React.FC<MoneyDashboardProps> = ({
   cases, leads, rewards, commissions, influencers, lawyers, onRefresh, payoutRequests = [],
 }) => {
   const { t } = useTranslation('dashboard');
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [typeFilter, setTypeFilter] = useState('all');
