@@ -58,14 +58,7 @@ const RegistrationForm = () => {
         .insert({ form_source: 'partnership', data: values, status: 'new' });
       if (insertError) throw new Error(insertError.message);
 
-      // Email is a notification, not the record of truth.
-      try {
-        await supabase.functions.invoke('send-email', {
-          body: { form_source: 'Partnership Registration Form', ...values },
-        });
-      } catch {
-        /* application is already saved — ignore notification failures */
-      }
+      // Note: no email notification is sent — admins read applications in the admin Inbox.
       return { success: true };
     },
     onSuccess: () => {
