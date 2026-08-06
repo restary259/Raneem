@@ -107,3 +107,36 @@ export async function exportPDF({ headers, rows, fileName, title, summaryRows }:
 
   doc.save(`${fileName}.pdf`);
 }
+
+export interface WorkbookSheet {
+  name: string;
+  headers: string[];
+  rows: (string | number)[][];
+}
+
+/** Export several sheets into one .xlsx workbook. */
+export async function exportWorkbook(sheets: WorkbookSheet[], fileName: string) {
+  const wb = new ExcelJS.Workbook();
+
+  sheets.forEach(sheet => {
+    // Excel sheet names: max 31 chars, no []:*?/\
+    const safeName = sheet.name.replace(/[\[\]:*?/\\]/g, ' ').slice(0, 31) || 'Sheet';
+    const ws = wb.addWorksheet(safeName);
+    const headerRow = ws.addRow(sheet.headers);
+    headerRow.font = { bold: true };
+    sheet.rows.forEach(r => ws.addRow(r));
+    ws.columns = sheet.headers.map((h, i) => {
+      const maxLen = Math.max(h.length, ...sheet.rows.map(r => String(r[i] ?? '').length));
+      return { width: Math.min(maxLen + 4, 40) };
+    });
+  });
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${fileName}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
