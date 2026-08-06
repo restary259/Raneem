@@ -28,76 +28,9 @@ const OverviewTab = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch in parallel: case_submissions for service fees,
-      // ALL rewards (team + partner) for dynamic net revenue calculation,
-      // and cases for enrolled count + discounts
-      const [subRes, allRewardsRes, casesRes] = await Promise.all([
-        supabase
-          .from('case_submissions')
-          .select('service_fee, enrollment_paid_at, case_id')
-          .not('enrollment_paid_at', 'is', null),
-        (supabase as any)
-          .from('rewards')
-          .select('amount, status, admin_notes'),
-        supabase
-          .from('cases')
-          .select('id, discount_amount, platform_revenue_ils, status')
-          .eq('status', 'enrollment_paid'),
-      ]);
-
-      const subs = subRes.data || [];
-      const allRewards: any[] = allRewardsRes.data || [];
-      const cases = casesRes.data || [];
-
-      const enrolledCount = cases.length;
-      const referralDiscounts = cases.reduce((s: number, c: any) => s + (c.discount_amount || 0), 0);
-
-      // Partner commission rewards (pending + approved + paid)
-      const partnerRewards = allRewards.filter((r: any) =>
-        r.admin_notes?.startsWith('Partner commission from case')
-      );
-      const partnerCommissionPending = partnerRewards
-        .filter((r: any) => r.status === 'pending' || r.status === 'approved')
-        .reduce((s: number, r: any) => s + (r.amount || 0), 0);
-      const partnerCommissionPaid = partnerRewards
-        .filter((r: any) => r.status === 'paid')
-        .reduce((s: number, r: any) => s + (r.amount || 0), 0);
-
-      // Team commission rewards (all statuses — cost to platform)
-      const teamCommissionsTotal = allRewards
-        .filter((r: any) => r.admin_notes?.startsWith('Team commission from case'))
-        .reduce((s: number, r: any) => s + (r.amount || 0), 0);
-
-      const partnerCommissionsTotal = partnerRewards.reduce(
-        (s: number, r: any) => s + (r.amount || 0), 0
-      );
-
-      // Primary: sum service_fee from case_submissions (requires enrollment_paid_at)
-      const serviceFeesFromSubs = subs.reduce((s: number, r: any) => s + (r.service_fee || 0), 0);
-
-      // Fallback: if submissions missing (legacy data), derive from cases.platform_revenue_ils + commissions
-      const serviceFeesFromCases = cases.reduce(
-        (s: number, c: any) => s + (c.platform_revenue_ils || 0), 0
-      ) + teamCommissionsTotal + partnerCommissionsTotal;
-
-      const serviceFees = serviceFeesFromSubs > 0
-        ? serviceFeesFromSubs
-        : serviceFeesFromCases;
-
-      // Dynamic admin net: service fees minus all team and partner commissions
-      const platformNetRevenue = Math.max(
-        0,
-        serviceFees - teamCommissionsTotal - partnerCommissionsTotal
-      );
-
-      setData({
-        serviceFees,
-        partnerCommissionPending,
-        partnerCommissionPaid,
-        platformNetRevenue,
-        enrolledCount,
-        referralDiscounts,
-      });
+      const overview = await DashboardService.financialOverview();
+      const { submissions: subs, ...kpiData } = overview;
+      setData(kpiData);
       setSubmissions(subs);
     } catch (err: any) {
       toast({ variant: 'destructive', description: err.message });
@@ -105,6 +38,7 @@ const OverviewTab = () => {
       setLoading(false);
     }
   }, [toast]);
+
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
