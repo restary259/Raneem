@@ -863,16 +863,22 @@ export default function CaseDetailPage() {
               {Object.entries(submission.extra_data).map(([key, val]) => {
                 if (SKIP_EXTRA_KEYS.has(key)) return null;
                 if (!val && val !== 0) return null;
-                const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                // Fall back to a humanised key so a missing translation still reads sensibly.
+                const fallback = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                const label = t(`case.extra.${key}`, { defaultValue: fallback });
+                const raw = editedExtra[key] ?? String(val);
+                const display =
+                  key === "gender" ? t(`case.profileForm.genderOpts.${raw}`, { defaultValue: raw }) : raw;
                 return (
                   <EditableField
                     key={key}
                     label={label}
-                    value={editedExtra[key] ?? String(val)}
+                    value={display}
                     onSave={(v) => saveExtraField(key, v)}
                   />
                 );
               })}
+
             </div>
           </CardContent>
         </Card>
