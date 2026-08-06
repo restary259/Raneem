@@ -22,9 +22,15 @@ const Footer = () => {
           <a href="https://www.tiktok.com/@darb_studyingrmany" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon className="h-6 w-6" /></a>
           <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <Facebook size={24} /></a>
         </div>
-        <div className="flex justify-center mb-6">
+        <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-6">
           <Link to="/faq" className="hover:text-accent transition-colors underline underline-offset-4">
             {t('footer.faq', 'الأسئلة الشائعة عن الدراسة في ألمانيا')}
+          </Link>
+          <Link to="/privacy" className="hover:text-accent transition-colors underline underline-offset-4">
+            {tLegal('footer.privacy')}
+          </Link>
+          <Link to="/terms" className="hover:text-accent transition-colors underline underline-offset-4">
+            {tLegal('footer.terms')}
           </Link>
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
