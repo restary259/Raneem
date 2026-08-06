@@ -12,18 +12,29 @@ import type {
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
+const targetOf = (p: any, fallback: string) => {
+  try {
+    const path = p?.url?.pathname ?? '';
+    const name = String(path).split('/').filter(Boolean).pop();
+    return name || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const safeQuery = async (p: any, target = 'unknown'): Promise<{ data: any; error: any }> => {
   try {
     const result = await p;
-    if (result.error) reportIfAuthFailure(result.error, target, 'rls', 'select');
+    if (result.error) reportIfAuthFailure(result.error, targetOf(p, target), 'rls', 'select');
     return { data: result.data ?? null, error: result.error ?? null };
   } catch (err: any) {
     // AbortError = request cancelled due to unmount or newer fetch — not a real error
     if (err?.name === 'AbortError') return { data: null, error: null };
-    reportIfAuthFailure(err, target, 'rls', 'select');
+    reportIfAuthFailure(err, targetOf(p, target), 'rls', 'select');
     return { data: null, error: err };
   }
 };
+
 
 
 // ---------------------------------------------------------------------------

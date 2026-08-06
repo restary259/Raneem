@@ -303,15 +303,11 @@
       "discount": "خصم",
       "filterByTeam": "تصفية حسب عضو الفريق",
       "statusSaved": "تم تحديث الحالة",
-      "emptyColumn": "فارغ",
       "hasInfo": "يحتوي بيانات",
       "btnSave": "حفظ",
       "cancel": "إلغاء",
       "deleting": "جارٍ الحذف…",
       "confirmDelete": "نعم، احذف الملف",
-      "identity": "الهوية",
-      "education": "التعليم",
-      "preferences": "التفضيلات",
       "notes": "ملاحظات",
       "sourceLabelApply": "تقديم",
       "sourceLabelForm": "نموذج",
@@ -617,16 +613,7 @@
       "finalConfirmDesc": "سيتم حذف {{count}} سجل بشكل دائم. لا يمكن التراجع.",
       "deleting": "جار الحذف...",
       "confirmYesDelete": "نعم، احذف",
-      "incorrectPassword": "كلمة المرور غير صحيحة",
-      "contactFormArabicName": "الاسم عربي",
-      "contactFormEnglishName": "الاسم إنجليزي",
-      "contactFormRoleAr": "الدور عربي",
-      "contactFormRoleEn": "الدور إنجليزي",
-      "contactFormPhone": "الهاتف",
-      "contactFormEmail": "البريد الإلكتروني",
-      "contactFormLink": "الرابط",
-      "contactFormCategory": "الفئة",
-      "contactFormOrder": "الترتيب"
+      "incorrectPassword": "كلمة المرور غير صحيحة"
     },
     "spreadsheet": {
       "title": "جدول بيانات الطلاب",
@@ -786,7 +773,8 @@
       "security": "الأمان",
       "audit": "سجل التدقيق",
       "eligibility": "الأهلية",
-      "notifications": "الإشعارات"
+      "notifications": "الإشعارات",
+      "authFailures": "إخفاقات الصلاحيات"
     },
     "leads": {
       "all": "الكل",
@@ -910,6 +898,18 @@
         "cash": "نقداً",
         "bank_transfer": "تحويل بنكي"
       }
+    },
+    "authFailures": {
+      "title": "إخفاقات الصلاحيات",
+      "spikeTitle": "تم رصد ارتفاع في إخفاقات الصلاحيات",
+      "spikeBody": "{{count}} هدف بها رفض صلاحيات متكرر خلال الساعة الماضية: {{targets}}",
+      "failures": "إخفاق",
+      "new": "جديد",
+      "byTarget": "حسب الهدف",
+      "recent": "أحدث حالات الرفض",
+      "empty": "لا توجد إخفاقات صلاحيات مسجلة.",
+      "sourceRls": "قاعدة البيانات",
+      "sourceEdge": "وظيفة الخادم"
     }
   },
   "influencer": {
@@ -2076,7 +2076,7 @@
       "passwordPrompt": "أدخل كلمة مرور المشرف للتأكيد:",
       "confirmButton": "حذف البيانات المحددة",
       "successMsg": "تم حذف البيانات المحددة بنجاح",
-    "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
+      "noneSelected": "يرجى اختيار فئة واحدة على الأقل"
     }
   }
 }
