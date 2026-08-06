@@ -212,7 +212,10 @@ function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () =
   );
 }
 
+const COLUMN_PAGE_SIZE = 25;
+
 /* ─────────────────────────── main component ─────────────────────────── */
+
 
 const AdminPipelinePage = () => {
   const { t, i18n } = useTranslation("dashboard");
