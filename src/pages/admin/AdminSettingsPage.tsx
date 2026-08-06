@@ -416,6 +416,13 @@ const AdminSettingsPage = () => {
           <CommissionSettingsPanel />
         </TabsContent>
 
+        {/* ── Pipeline stages ── */}
+        <TabsContent value="pipeline" className="mt-4">
+          <PipelineStatusesPanel />
+        </TabsContent>
+
+
+
         {/* ── Important Contacts ── */}
         <TabsContent value="contacts" className="space-y-4 mt-4">
           <div className="flex justify-end">
