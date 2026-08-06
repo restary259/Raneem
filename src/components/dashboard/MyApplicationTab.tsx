@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { FileCheck, Calendar, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import CaseTimeline from '@/components/cases/CaseTimeline';
+
 
 interface MyApplicationTabProps {
   userId: string;
