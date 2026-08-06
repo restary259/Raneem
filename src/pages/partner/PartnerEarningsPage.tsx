@@ -33,7 +33,7 @@ export default function PartnerEarningsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const [overrideRes, settingsRes] = await Promise.all([
+    const [overrideRes, settingsRes, roleRes] = await Promise.all([
       (supabase as any)
         .from("partner_commission_overrides")
         .select("commission_amount,show_all_cases")
