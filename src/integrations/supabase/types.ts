@@ -2543,7 +2543,12 @@ export type Database = {
       validate_influencer_ref: { Args: { ref_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "team_member" | "social_media_partner" | "student"
+      app_role:
+        | "admin"
+        | "team_member"
+        | "social_media_partner"
+        | "student"
+        | "ambassador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2671,7 +2676,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "team_member", "social_media_partner", "student"],
+      app_role: [
+        "admin",
+        "team_member",
+        "social_media_partner",
+        "student",
+        "ambassador",
+      ],
     },
   },
 } as const
