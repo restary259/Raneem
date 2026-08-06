@@ -33,7 +33,7 @@ const setLink = (rel: string, href: string) => {
   el.setAttribute('href', href);
 };
 
-const SEOHead = ({ title, description, url, image }: SEOHeadProps) => {
+const SEOHead = ({ title, description, url, image, jsonLd }: SEOHeadProps) => {
   useEffect(() => {
     const pageUrl =
       url ?? (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '/');
@@ -56,10 +56,20 @@ const SEOHead = ({ title, description, url, image }: SEOHeadProps) => {
 
     setLink('canonical', pageUrl);
 
+    let script: HTMLScriptElement | null = null;
+    if (jsonLd) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-page-jsonld', 'true');
+      script.textContent = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
+    }
+
     return () => {
       document.title = DEFAULT_TITLE;
+      script?.remove();
     };
-  }, [title, description, url, image]);
+  }, [title, description, url, image, jsonLd]);
 
   return null;
 };
