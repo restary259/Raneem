@@ -82,7 +82,7 @@ serve(async (req) => {
           target_id: callerId,
           details: JSON.stringify({ ip: req.headers.get("x-forwarded-for") ?? "unknown" }),
         })
-        .catch((e: unknown) => console.warn("audit log warn:", e));
+        .then(({ error }) => { if (error) console.warn("audit log warn:", error); });
 
       return json({ error: "Wrong password" }, 401, corsHeaders);
     }
@@ -105,7 +105,7 @@ serve(async (req) => {
         target_id: callerId,
         details: JSON.stringify({ view_token: viewToken, expires_at: expiresAt }),
       })
-      .catch((e: unknown) => console.warn("audit log warn:", e));
+      .then(({ error }) => { if (error) console.warn("audit log warn:", error); });
 
     // Log the successful verification
     await supabaseAdmin
@@ -117,7 +117,7 @@ serve(async (req) => {
         p_entity_id: callerId,
         p_metadata: { view_token_issued: true },
       })
-      .catch(() => {});
+      .then(() => {}, () => {});
 
     return json({ view_token: viewToken, expires_in: 120 }, 200, corsHeaders);
   } catch (e) {
