@@ -26,7 +26,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
+      return json({ error: "Unauthorized" }, 401, corsHeaders);
     }
 
     const supabaseAdmin = createClient(
@@ -38,7 +38,7 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData?.user) {
-      return json({ error: "Invalid token" }, 401);
+      return json({ error: "Invalid token" }, 401, corsHeaders);
     }
 
     const callerId = userData.user.id;
@@ -52,14 +52,14 @@ serve(async (req) => {
       .eq("role", "admin");
 
     if (!roles?.length) {
-      return json({ error: "Admin access required" }, 403);
+      return json({ error: "Admin access required" }, 403, corsHeaders);
     }
 
     const body = await req.json();
     const { password } = body;
 
     if (!password || typeof password !== "string") {
-      return json({ error: "Password is required" }, 400);
+      return json({ error: "Password is required" }, 400, corsHeaders);
     }
 
     // Verify the password by attempting to sign in with the admin's email
@@ -84,7 +84,7 @@ serve(async (req) => {
         })
         .catch((e: unknown) => console.warn("audit log warn:", e));
 
-      return json({ error: "Wrong password" }, 401);
+      return json({ error: "Wrong password" }, 401, corsHeaders);
     }
 
     // Sign out the temporary session immediately — we only needed verification
@@ -119,14 +119,14 @@ serve(async (req) => {
       })
       .catch(() => {});
 
-    return json({ view_token: viewToken, expires_in: 120 }, 200);
+    return json({ view_token: viewToken, expires_in: 120 }, 200, corsHeaders);
   } catch (e) {
     console.error("verify-admin-password error:", e);
-    return json({ error: "Server error" }, 500);
+    return json({ error: "Server error" }, 500, corsHeaders);
   }
 });
 
-function json(body: unknown, status: number) {
+function json(body: unknown, status: number, corsHeaders: Record<string, string>) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
