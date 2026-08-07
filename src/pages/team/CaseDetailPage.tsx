@@ -996,8 +996,18 @@ export default function CaseDetailPage() {
               {appointments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("case.detail.noAppointments")}</p>
               ) : (
-                <div className="space-y-3">
-                  {appointments.map((a) => (
+                <div className="space-y-4">
+                  {([
+                    ["upcomingAppointments", appointments.filter((a) => !a.outcome && new Date(a.scheduled_at) >= new Date())],
+                    ["pastAppointments", appointments.filter((a) => a.outcome || new Date(a.scheduled_at) < new Date())],
+                  ] as const)
+                    .filter(([, list]) => list.length > 0)
+                    .map(([labelKey, list]) => (
+                      <div key={labelKey} className="space-y-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {t(`case.detail.${labelKey}`)}
+                        </p>
+                        {list.map((a) => (
                     <div
                       key={a.id}
                       className="flex flex-col sm:flex-row items-start justify-between gap-2 pb-3 last:pb-0 border-b last:border-b-0 border-border"
@@ -1011,7 +1021,7 @@ export default function CaseDetailPage() {
                             <Badge
                               className={`text-xs ${OUTCOME_COLORS[a.outcome] ?? "bg-muted text-muted-foreground"}`}
                             >
-                              {a.outcome}
+                              {t(`appointment.outcome.${a.outcome}`, { defaultValue: a.outcome })}
                             </Badge>
                           ) : (
                             <Badge className="text-xs bg-primary/10 text-primary border-primary/20">{t("case.detail.pendingOutcome")}</Badge>
@@ -1052,9 +1062,12 @@ export default function CaseDetailPage() {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                        ))}
+                      </div>
+                    ))}
                 </div>
               )}
+
             </CardContent>
           </Card>
         )}
