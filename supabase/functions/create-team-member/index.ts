@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
-import { z, parseBody, email, personName } from "../_shared/validate.ts";
+import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 
 
 serve(async (req) => {
@@ -50,7 +50,7 @@ serve(async (req) => {
     }
 
     const parsed = await parseBody(req, z.object({
-      email: email,
+      email: emailField,
       full_name: personName,
       role: z.enum(["team_member", "admin", "social_media_partner", "ambassador"]),
       commission_amount: z.number().int().min(0).max(1000000).optional().nullable(),

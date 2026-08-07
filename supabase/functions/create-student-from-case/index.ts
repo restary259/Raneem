@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
-import { z, parseBody, email, personName, phone, uuid } from "../_shared/validate.ts";
+import { z, parseBody, email as emailField, personName, phone, uuid } from "../_shared/validate.ts";
 
 
 serve(async (req) => {
@@ -50,7 +50,7 @@ serve(async (req) => {
     // ── Parse request ──────────────────────────────────────────────────
     const parsed = await parseBody(req, z.object({
       case_id: uuid,
-      student_email: email,
+      student_email: emailField,
       student_full_name: personName,
       student_phone: phoneField.optional().nullable(),
     }));
