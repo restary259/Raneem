@@ -2086,7 +2086,9 @@
       "cityLabel": "المدينة",
       "cannotSkip": "لا يمكن تخطي المراحل. المرحلة التالية المسموحة: {{next}}",
       "noneStage": "لا يوجد",
-      "statusUpdated": "تم تحديث الحالة إلى {{status}}"
+      "statusUpdated": "تم تحديث الحالة إلى {{status}}",
+      "upcomingAppointments": "القادمة",
+      "pastAppointments": "السابقة"
     },
     "profileForm": {
       "steps": {
