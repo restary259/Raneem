@@ -2068,7 +2068,9 @@
       "cityLabel": "City",
       "cannotSkip": "Cannot skip stages. Next allowed: {{next}}",
       "noneStage": "none",
-      "statusUpdated": "Status updated to {{status}}"
+      "statusUpdated": "Status updated to {{status}}",
+      "upcomingAppointments": "Upcoming",
+      "pastAppointments": "Past"
     },
     "profileForm": {
       "steps": {
