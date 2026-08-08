@@ -500,7 +500,16 @@
       "labelTierFrom": "من (شهر)",
       "labelTierTo": "إلى (شهر)",
       "labelTierPrice": "السعر",
-      "tierOpenEnded": "فما فوق"
+      "tierOpenEnded": "فما فوق",
+      "labelAgeRates": "الأسعار الشهرية حسب العمر",
+      "ageRatesHint": "حدّد القسط الشهري لكل فئة عمرية. اترك خانة \"إلى\" فارغة للفئة الأعلى.",
+      "noAgeRates": "لا توجد أسعار حسب العمر — سيتم استخدام السعر الأساسي.",
+      "labelAgeFrom": "من (العمر)",
+      "labelAgeTo": "إلى (العمر)",
+      "labelMonthlyRate": "السعر الشهري ({{currency}})",
+      "ageAndAbove": "فما فوق",
+      "noPriceSet": "لم يتم تحديد السعر بعد"
+
     },
     "submissions": {
       "title": "الطلبات المقدمة",
