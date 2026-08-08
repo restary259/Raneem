@@ -3232,6 +3232,7 @@ export type Database = {
           valid: boolean
         }[]
       }
+      clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       confirm_payout_batch: {
         Args: {
           p_notes?: string
@@ -3242,6 +3243,10 @@ export type Database = {
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      delete_chat_message: {
+        Args: { p_kind: string; p_message_id: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -3420,6 +3425,30 @@ export type Database = {
       is_direct_thread_member: {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
+      }
+      list_payout_requests: {
+        Args: never
+        Returns: {
+          admin_notes: string
+          amount: number
+          approved_at: string
+          case_ids: string[]
+          case_references: string[]
+          id: string
+          linked_reward_ids: string[]
+          linked_student_names: string[]
+          paid_at: string
+          payment_method: string
+          reject_reason: string
+          requested_at: string
+          requestor_email: string
+          requestor_id: string
+          requestor_name: string
+          requestor_role: string
+          status: string
+          thread_id: string
+          transaction_ref: string
+        }[]
       }
       log_activity: {
         Args: {
