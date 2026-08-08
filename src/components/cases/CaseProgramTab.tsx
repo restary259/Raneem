@@ -182,14 +182,22 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
             <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${insurance.coverage_scope}`)}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            {insuranceMonthly > 0 && months
+            {insuranceMonthly && months
               ? t("case.program.insuranceBreakdown", {
-                  monthly: `${insuranceCurrency === "EUR" ? "€" : "₪"}${insuranceMonthly.toLocaleString("en-US")}`,
+                  monthly: `${symbol}${insuranceMonthly.toLocaleString("en-US")}`,
                   months,
-                  total: `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`,
+                  total: `${symbol}${Number(insuranceTotal ?? 0).toLocaleString("en-US")}`,
                 })
-              : `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`}
+              : insuranceTotal
+                ? `${symbol}${Number(insuranceTotal).toLocaleString("en-US")}`
+                : t("admin.programs.noPriceSet")}
           </p>
+          {cost.tier && studentAge !== null && (
+            <p className="text-xs text-muted-foreground">
+              {t("case.program.ageBand", { age: studentAge })}
+            </p>
+          )}
+
           {(insurance?.min_months || insurance?.max_months || insurance?.max_age) && (
             <p className="text-xs text-muted-foreground">
               {insurance?.min_months && insurance?.max_months
