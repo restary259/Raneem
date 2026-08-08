@@ -337,6 +337,7 @@ const AdminTeamPage = () => {
                         onChanged={(next) => setMembers(prev => prev.map(x => (x.id === m.id ? { ...x, is_master_partner: next } : x)))}
                       />
                     )}
+                    <Badge variant="secondary">{roleLabel(m.role)}</Badge>
                     <Badge
                       variant={m.commissionOverridden ? 'default' : 'outline'}
                       className="font-mono whitespace-nowrap"
