@@ -3022,6 +3022,17 @@
     },
     "mute": "Mute",
     "unmute": "Unmute",
-    "directHint": "Private staff conversation."
+    "directHint": "Private staff conversation.",
+    "back": "Back",
+    "presence": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "notify": {
+      "title": "Notifications",
+      "inApp": "In-app notifications",
+      "email": "Email notifications",
+      "hint": "Muted conversations never notify you, even when these are on."
+    }
   }
 }
