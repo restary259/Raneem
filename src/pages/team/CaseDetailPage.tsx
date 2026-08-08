@@ -837,7 +837,31 @@ export default function CaseDetailPage() {
 
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
-      <CaseInvoices caseId={caseData.id} canManage />
+      <CaseFinance
+        caseId={caseData.id}
+        canManage
+        extraLines={[
+          ...(programTotal > 0
+            ? [{
+                label: `${t("case.detail.program")}${resolved.programName ? ` (${resolved.programName})` : ""}`,
+                amount: programTotal,
+              }]
+            : []),
+          ...(accomTotal > 0
+            ? [{
+                label: `${t("case.detail.accommodation")}${resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}`,
+                amount: accomTotal,
+              }]
+            : []),
+          ...(insTotal > 0
+            ? [{
+                label: `${t("case.detail.insurance")}${resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}`,
+                amount: insTotal,
+              }]
+            : []),
+        ]}
+      />
+
 
       <CaseTimeline caseId={caseData.id} canAddNote />
 
