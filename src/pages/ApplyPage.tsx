@@ -385,37 +385,7 @@ const ApplyPage: React.FC = () => {
 
           <Progress value={progressValue} className="h-1.5 w-full" />
 
-          {/* Referral attribution — display name only, never editable, never an ID */}
-          {refOwner && (
-            <div
-              data-testid="referral-valid"
-              className="w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-center gap-3"
-            >
-              <span className="shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                {refOwner.trim().charAt(0).toUpperCase()}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
-                  {isAr ? "تمت إحالتك بواسطة" : "Referred by"}
-                </span>
-                <span className="block text-sm font-semibold text-foreground truncate">{refOwner}</span>
-              </span>
-              <CheckCircle className="h-4 w-4 text-primary ms-auto shrink-0" aria-hidden="true" />
-            </div>
-          )}
-          {refBroken && (
-            <div
-              data-testid="referral-broken"
-              className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"
-            >
-              {isAr
-                ? "رابط الإحالة غير صالح أو منتهي الصلاحية — سيتم إرسال طلبك بدون إحالة."
-                : "This referral link is no longer valid — your application will be sent without a referral."}
-            </div>
-          )}
-
-
-
+          {/* Referral attribution stays server-side only — never shown to the applicant. */}
 
           {/* Form */}
           <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
