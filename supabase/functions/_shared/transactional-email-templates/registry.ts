@@ -2,6 +2,7 @@
 import type * as React from 'npm:react@18.3.1'
 import { template as newMessage } from './new-message.tsx'
 import { template as emailTest } from './email-test.tsx'
+import { template as studentInvite } from './student-invite.tsx'
 
 export interface TemplateEntry {
   component: (props: any) => React.ReactElement
@@ -14,4 +15,6 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-message': newMessage,
   'email-test': emailTest,
+  'student-invite': studentInvite,
 }
+
