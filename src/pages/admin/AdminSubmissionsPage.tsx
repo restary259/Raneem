@@ -280,6 +280,26 @@ const AdminSubmissionsPage = () => {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || "Failed");
 
+      // Create the student account at the moment the case becomes real, if it
+      // doesn't exist yet (this replaces the old separate "Approve" step).
+      if (!selected.student_user_id && approveEmail.trim()) {
+        const accResp = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+            body: JSON.stringify({
+              case_id: selected.id,
+              student_email: approveEmail.trim(),
+              student_full_name: selected.full_name,
+              student_phone: selected.phone_number,
+            }),
+          },
+        );
+        const accResult = await accResp.json().catch(() => ({}));
+        if (!accResp.ok) throw new Error(accResult.error || "Failed to create student account");
+      }
+
       await supabase.rpc("log_user_activity" as any, {
         p_action: "MARK_ENROLLED",
         p_target_id: selected.id,
@@ -290,6 +310,7 @@ const AdminSubmissionsPage = () => {
       toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
       setShowSplitPanel(false);
+      setApproveEmail("");
       setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
