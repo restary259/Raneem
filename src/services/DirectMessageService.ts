@@ -10,6 +10,8 @@ export interface DirectMessage {
   body: string;
   created_at: string;
   attachments: ChatAttachment[] | null;
+  edited_at?: string | null;
+  mentions?: string[] | null;
 }
 
 export function toChatMessage(m: DirectMessage): ChatMessage {
@@ -22,8 +24,11 @@ export function toChatMessage(m: DirectMessage): ChatMessage {
     createdAt: m.created_at,
     attachments: (m.attachments ?? []) as ChatAttachment[],
     kind: "text",
+    editedAt: m.edited_at ?? null,
+    mentions: (m.mentions ?? []) as string[],
   };
 }
+
 
 export interface DirectThread {
   threadId: string;
