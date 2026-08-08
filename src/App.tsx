@@ -79,6 +79,8 @@ const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
 const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPage"));
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
+const PartnerNetworkPage = lazy(() => import("./pages/partner/PartnerNetworkPage"));
+const PartnerPerformancePage = lazy(() => import("./pages/partner/PartnerPerformancePage"));
 
 // Student pages (Phase 5)
 const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
@@ -248,6 +250,8 @@ const App = () => {
               <Route path="messages" element={<PartnerMessagesPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
+              <Route path="network" element={<PartnerNetworkPage />} />
+              <Route path="performance" element={<PartnerPerformancePage />} />
             </Route>
 
 
