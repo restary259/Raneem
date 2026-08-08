@@ -1347,7 +1347,32 @@ const AdminProgramsPage = () => {
                     <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                       💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
                     </span>
+                    {ins.provider && (
+                      <p className="text-xs text-muted-foreground">{ins.provider}</p>
+                    )}
+                    {ins.coverage_scope && (
+                      <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${ins.coverage_scope}`)}</p>
+                    )}
+                    {(ins.min_months || ins.max_months || ins.max_age) && (
+                      <p className="text-xs text-muted-foreground">
+                        {ins.min_months && ins.max_months
+                          ? t('admin.programs.termRange', { min: ins.min_months, max: ins.max_months })
+                          : null}
+                        {ins.max_age ? ` · ${t('admin.programs.maxAgeShort', { age: ins.max_age })}` : null}
+                      </p>
+                    )}
+                    {ins.terms_url && (
+                      <a
+                        href={ins.terms_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block text-xs font-medium text-primary underline"
+                      >
+                        {t('admin.programs.viewTerms')}
+                      </a>
+                    )}
                   </div>
+
                   <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditIns(ins)}>
                       <Pencil className="h-3 w-3" />
