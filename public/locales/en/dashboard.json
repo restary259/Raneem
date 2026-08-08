@@ -2656,7 +2656,8 @@
       "upcomingAppointment": "Upcoming appointment",
       "outstandingBalance": "Outstanding balance",
       "prepareVisa": "Prepare your visa file",
-      "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs."
+      "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs.",
+      "loadError": "We could not load your case securely. Please refresh or contact your advisor."
     }
   },
   "settings": {

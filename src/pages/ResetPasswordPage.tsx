@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
-import { useAuth, ROLE_TO_PATH } from '@/contexts/AuthContext';
+import { useAuth, ROLE_TO_PATH, type AppRole } from '@/contexts/AuthContext';
 
 const ResetPasswordPage = () => {
   const [ready, setReady]         = useState(false);
@@ -78,9 +78,11 @@ const ResetPasswordPage = () => {
           .eq('id', session.user.id);
         if (profileError) throw profileError;
       }
+      const { data: currentRole } = await supabase.rpc('get_my_role');
       await refreshRole();
       toast({ title: t('resetPassword.success'), description: t('resetPassword.successDesc') });
-      navigate(role ? ROLE_TO_PATH[role] : '/student/checklist', { replace: true });
+      const destinationRole = (currentRole as AppRole | null) ?? role;
+      navigate(destinationRole ? ROLE_TO_PATH[destinationRole] : '/student/checklist', { replace: true });
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('resetPassword.error'), description: err.message });
     } finally {
