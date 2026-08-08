@@ -163,6 +163,9 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="font-semibold">{fmt(r.amount)}</p>
+          {r.payout_reference && (
+            <p className="font-mono text-xs text-muted-foreground" dir="ltr">{r.payout_reference}</p>
+          )}
           <p className="text-xs text-muted-foreground">
             {new Date(r.requested_at).toLocaleDateString(locale)}
             {r.case_references?.length ? ` · ${r.case_references.join(', ')}` : ''}
