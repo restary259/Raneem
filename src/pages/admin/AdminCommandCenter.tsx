@@ -98,6 +98,79 @@ const AdminCommandCenter = () => {
     });
 
     setActivity(activityData);
+
+    // ── Action queues ──────────────────────────────────────────────
+    const dayAgo = new Date(Date.now() - 86400000).toISOString();
+    const [reviewRes, unassignedRes, balanceRes, failRes] = await Promise.allSettled([
+      supabase
+        .from('cases')
+        .select('id, full_name, case_reference, last_activity_at')
+        .eq('status', 'submitted')
+        .is('deleted_at', null)
+        .order('last_activity_at')
+        .limit(6),
+      supabase
+        .from('cases')
+        .select('id, full_name, case_reference, created_at')
+        .is('assigned_to', null)
+        .is('deleted_at', null)
+        .eq('archived', false)
+        .order('created_at', { ascending: false })
+        .limit(6),
+      supabase
+        .from('case_submissions')
+        .select('id, case_id, remaining_balance, case:cases(full_name, case_reference)')
+        .gt('remaining_balance', 0)
+        .is('deleted_at', null)
+        .order('remaining_balance', { ascending: false })
+        .limit(6),
+      supabase
+        .from('auth_failure_log')
+        .select('id, target, source, status_code, created_at')
+        .gte('created_at', dayAgo)
+        .order('created_at', { ascending: false })
+        .limit(6),
+    ]);
+
+    const val = <T,>(r: PromiseSettledResult<{ data: T[] | null; error: unknown }>): T[] =>
+      r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : [];
+
+    const shortDate = (iso: string) =>
+      new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    setAwaitingReview(
+      val<any>(reviewRes).map((c) => ({
+        id: c.id,
+        title: c.full_name,
+        subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.last_activity_at)}`,
+        href: '/admin/submissions',
+      })),
+    );
+    setUnassigned(
+      val<any>(unassignedRes).map((c) => ({
+        id: c.id,
+        title: c.full_name,
+        subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.created_at)}`,
+        href: `/admin/cases/${c.id}`,
+      })),
+    );
+    setOutstanding(
+      val<any>(balanceRes).map((s) => ({
+        id: s.id,
+        title: s.case?.full_name ?? '—',
+        subtitle: `₪${Number(s.remaining_balance).toLocaleString('en-US')}`,
+        href: `/admin/cases/${s.case_id}`,
+      })),
+    );
+    setAuthFailures(
+      val<any>(failRes).map((f) => ({
+        id: f.id,
+        title: `${f.source} · ${f.target}`,
+        subtitle: `${f.status_code ?? ''} ${new Date(f.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`.trim(),
+        href: '/admin/settings',
+      })),
+    );
+
     setLoading(false);
   }, [toast]);
 
