@@ -235,6 +235,8 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
+              <ThemeToggle />
+
               {canMessage && (
                 <TooltipProvider>
                   <Tooltip>
