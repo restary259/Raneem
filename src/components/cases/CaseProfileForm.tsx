@@ -302,21 +302,34 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     />
   );
 
-  const dobParts = values.date_of_birth.split("-");
-  const dobYear = dobParts[0] ?? "";
-  const dobMonth = dobParts[1] ?? "";
-  const dobDay = dobParts[2] ?? "";
-  const setDob = (y: string, m: string, d: string) => {
-    if (!y || !m || !d) return;
-    try {
-      handleChange("date_of_birth", normalizeDate(d, m, y));
-    } catch {
-      /* ignore invalid intermediate values */
-    }
-  };
-  const dobDays = Array.from({ length: daysInMonth(parseInt(dobMonth), parseInt(dobYear)) }, (_, i) =>
-    String(i + 1).padStart(2, "0"),
+  const dobYear = dob.year;
+  const dobMonth = dob.month;
+  const dobDay = dob.day;
+  const dobDays = Array.from(
+    { length: dobMonth ? daysInMonth(parseInt(dobMonth), parseInt(dobYear) || 2000) : 31 },
+    (_, i) => String(i + 1).padStart(2, "0"),
   );
+  const setDob = (part: "year" | "month" | "day", v: string) => {
+    setDobState((prev) => {
+      const next = { ...prev, [part]: v };
+      // Clamp the day when the new month/year is shorter (31 Jan → 29/28 Feb).
+      if (next.month) {
+        const max = daysInMonth(parseInt(next.month), parseInt(next.year) || 2000);
+        if (next.day && parseInt(next.day) > max) next.day = String(max).padStart(2, "0");
+      }
+      if (next.year && next.month && next.day) {
+        try {
+          handleChange("date_of_birth", normalizeDate(next.day, next.month, next.year));
+          setDobError(null);
+        } catch (err: any) {
+          setDobError(err?.message ?? null);
+        }
+      } else {
+        setDobError(null);
+      }
+      return next;
+    });
+  };
 
   const savedLabel = draftSavedAt
     ? new Date(draftSavedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
