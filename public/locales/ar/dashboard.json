@@ -296,7 +296,17 @@
       "viewPipeline": "عرض خط الأنابيب",
       "viewSubmissions": "التقديمات",
       "manageTeam": "إدارة الفريق",
-      "viewFinancials": "المالية"
+      "viewFinancials": "المالية",
+      "queueReview": "بانتظار المراجعة",
+      "queueReviewEmpty": "لا يوجد ما ينتظر المراجعة",
+      "queueUnassigned": "ملفات غير مسندة",
+      "queueUnassignedEmpty": "كل ملف له مسؤول",
+      "queuePayments": "أرصدة مستحقة",
+      "queuePaymentsEmpty": "لا توجد أرصدة مستحقة",
+      "queueAuth": "محاولات وصول مرفوضة (24 ساعة)",
+      "queueAuthEmpty": "لا توجد محاولات مرفوضة",
+      "viewAll": "عرض الكل",
+      "open": "فتح"
     },
     "pipeline": {
       "title": "خط أنابيب الطلبات",

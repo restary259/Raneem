@@ -296,7 +296,17 @@
       "viewPipeline": "View Pipeline",
       "viewSubmissions": "Submissions",
       "manageTeam": "Manage Team",
-      "viewFinancials": "Financials"
+      "viewFinancials": "Financials",
+      "queueReview": "Awaiting review",
+      "queueReviewEmpty": "Nothing waiting for review",
+      "queueUnassigned": "Unassigned cases",
+      "queueUnassignedEmpty": "Every case has an owner",
+      "queuePayments": "Outstanding balances",
+      "queuePaymentsEmpty": "No outstanding balances",
+      "queueAuth": "Authorization failures (24h)",
+      "queueAuthEmpty": "No authorization failures",
+      "viewAll": "View all",
+      "open": "Open"
     },
     "pipeline": {
       "title": "Application Pipeline",
