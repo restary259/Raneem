@@ -80,6 +80,7 @@ export default function MessageComposer({
   disabled = false,
   hint,
   mentionables = [],
+  allowCaseMentions = false,
   onTyping,
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
@@ -93,12 +94,56 @@ export default function MessageComposer({
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [caseQuery, setCaseQuery] = useState<string | null>(null);
+  const [caseMatches, setCaseMatches] = useState<MentionableCase[]>([]);
 
   const mentionMatches = useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
     return mentionables.filter((p) => p.name && p.name.toLowerCase().includes(q)).slice(0, 6);
   }, [mentionQuery, mentionables]);
+
+  /** Debounced case lookup for the active `#query`. */
+  useEffect(() => {
+    if (!allowCaseMentions || caseQuery === null) {
+      setCaseMatches([]);
+      return;
+    }
+    let active = true;
+    const handle = window.setTimeout(() => {
+      searchCasesForMention(caseQuery)
+        .then((rows) => {
+          if (!active) return;
+          setCaseMatches(
+            rows.slice(0, 6).map((c) => ({
+              id: c.id,
+              reference: c.case_reference,
+              name: c.full_name,
+              status: c.status,
+            })),
+          );
+        })
+        .catch(() => active && setCaseMatches([]));
+    }, 200);
+    return () => {
+      active = false;
+      window.clearTimeout(handle);
+    };
+  }, [allowCaseMentions, caseQuery]);
+
+  const pickCase = (c: MentionableCase) => {
+    const el = textRef.current;
+    const caret = el?.selectionStart ?? body.length;
+    const next = applyCaseMention(body, caret, caseMentionToken(c));
+    setBody(next.text);
+    setCaseQuery(null);
+    setCaseMatches([]);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(next.caret, next.caret);
+    });
+  };
+
 
   const pickMention = (person: MentionablePerson) => {
     const el = textRef.current;
