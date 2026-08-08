@@ -3606,6 +3606,39 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_case: {
+        Args: never
+        Returns: {
+          archived: boolean
+          archived_at: string
+          assigned_to: string
+          bagrut_score: number
+          case_reference: string
+          city: string
+          created_at: string
+          created_by_team: boolean
+          degree_interest: string
+          education_level: string
+          english_level: string
+          english_units: number
+          full_name: string
+          id: string
+          intake_notes: string
+          is_no_show: boolean
+          last_activity_at: string
+          math_units: number
+          origin: string
+          partner_id: string
+          partner_link_id: string
+          passport_type: string
+          phone_number: string
+          referred_by: string
+          source: string
+          status: string
+          student_user_id: string
+          updated_at: string
+        }[]
+      }
       get_my_network: {
         Args: never
         Returns: {

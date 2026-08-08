@@ -52,14 +52,10 @@ export default function StudentNextStepsPage() {
     }
 
     setFullName(profile?.full_name ?? '');
-    const { data: ownCase, error: caseLookupError } = await (supabase as any)
-      .from('cases')
-      .select('id, status')
-      .eq('student_user_id', uid)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Students read their case through a restricted accessor that excludes
+    // internal commission/revenue columns.
+    const { data: ownCases, error: caseLookupError } = await (supabase as any).rpc('get_my_case');
+    const ownCase = (ownCases ?? [])[0] ?? null;
     if (caseLookupError) {
       setLoadError(caseLookupError.message);
       setLoading(false);
@@ -101,8 +97,7 @@ export default function StudentNextStepsPage() {
     }
 
     if (caseId) {
-      const [caseRes, apptRes, subRes] = await Promise.all([
-        (supabase as any).from('cases').select('status').eq('id', caseId).maybeSingle(),
+      const [apptRes, subRes] = await Promise.all([
         (supabase as any)
           .from('appointments')
           .select('scheduled_at')
@@ -118,7 +113,7 @@ export default function StudentNextStepsPage() {
           .maybeSingle(),
       ]);
 
-      setCaseStatus(ownCase?.status ?? caseRes?.data?.status ?? null);
+      setCaseStatus(ownCase?.status ?? null);
 
       const appt = apptRes?.data?.[0];
       if (appt) {
@@ -144,7 +139,7 @@ export default function StudentNextStepsPage() {
         });
       }
 
-      if (caseRes?.data?.status === 'submitted' || caseRes?.data?.status === 'enrollment_paid') {
+      if (ownCase?.status === 'submitted' || ownCase?.status === 'enrollment_paid') {
         next.push({
           id: 'visa',
           icon: Globe,

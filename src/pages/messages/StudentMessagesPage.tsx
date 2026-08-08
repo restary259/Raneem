@@ -18,12 +18,9 @@ export default function StudentMessagesPage() {
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      const { data, error } = await (supabase as any)
-        .from("cases")
-        .select("id, created_at")
-        .eq("student_user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+      // Restricted accessor: returns the student's own case without internal
+      // commission/revenue columns.
+      const { data, error } = await (supabase as any).rpc("get_my_case");
       if (error) toast({ variant: "destructive", description: error.message });
       setCaseId(data?.[0]?.id ?? null);
       setLoading(false);
