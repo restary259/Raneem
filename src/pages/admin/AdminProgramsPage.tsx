@@ -107,6 +107,23 @@ interface Insurance {
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
+const COVERAGE_SCOPES = ["germany_only", "schengen", "worldwide", "worldwide_incl_usa_canada"];
+
+const emptyInsForm = {
+  name: "",
+  tier: "standard",
+  price: "",
+  currency: "EUR",
+  provider: "",
+  coverage_scope: "worldwide",
+  billing_period: "monthly",
+  min_months: "",
+  max_months: "",
+  max_age: "",
+  terms_url: "",
+  description_ar: "",
+  description_en: "",
+};
 
 // Bypass Supabase generated types for new tables/columns
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
