@@ -2394,7 +2394,8 @@
       "perMonth": "month",
       "insurance": "Health insurance",
       "insuranceBreakdown": "{{monthly}}/month × {{months}} months = {{total}}",
-      "empty": "No program, accommodation or insurance selected yet."
+      "empty": "No program, accommodation or insurance selected yet.",
+      "ageBand": "Rate based on student age {{age}}"
     },
     "messages": {
       "title": "Messages",
