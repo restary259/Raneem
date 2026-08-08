@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, CheckCheck, Clock, CheckCircle2, Lock, Paperclip, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Check,
+  CheckCheck,
+  Clock,
+  CheckCircle2,
+  FolderOpen,
+  Lock,
+  Paperclip,
+  Pencil,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
