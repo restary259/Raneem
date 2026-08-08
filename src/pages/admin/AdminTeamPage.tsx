@@ -68,7 +68,7 @@ const AdminTeamPage = () => {
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
       const [profilesRes, settingsRes, partnerOvRes, teamOvRes] = await Promise.all([
-        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_manager').in('id', userIds),
+        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_manager, is_master_partner').in('id', userIds),
         (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate').limit(1).maybeSingle(),
         (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
         (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
