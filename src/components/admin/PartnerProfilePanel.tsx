@@ -231,6 +231,20 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="p-4 flex flex-wrap items-center gap-2 border-b border-border">
+              <Select value="" onValueChange={attachPartner}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder={t('admin.payouts.attachPartner', 'Attach a partner to this network')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {attachable.length === 0 ? (
+                    <SelectItem value="none" disabled>{t('admin.payouts.noAttachable', 'No available partners')}</SelectItem>
+                  ) : attachable.map(p => (
+                    <SelectItem key={p.partner_id} value={p.partner_id}>{p.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {network.length === 0 ? (
               <p className="p-6 text-center text-sm text-muted-foreground">
                 {t('admin.payouts.networkEmpty', 'No recruited partners yet')}
@@ -243,9 +257,14 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
                       <p className="font-medium truncate">{n.full_name}</p>
                       <p className="text-xs text-muted-foreground truncate">{n.email}{n.city ? ` · ${n.city}` : ''}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(n.created_at).toLocaleDateString(locale)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(n.created_at).toLocaleDateString(locale)}
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => detachPartner(n.id)}>
+                        {t('admin.payouts.detachPartner', 'Remove')}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
