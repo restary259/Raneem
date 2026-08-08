@@ -10,7 +10,9 @@ import {
   MessageSquare,
   Plus,
   Search,
+  Send,
   Settings2,
+
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,9 +44,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import {
   getNotificationPrefs,
+  sendTestNotificationEmail,
   updateNotificationPrefs,
   type NotificationPrefs,
 } from "@/services/NotificationService";
+
 import {
   listMyDirectThreads,
   listStaffDirectory,
