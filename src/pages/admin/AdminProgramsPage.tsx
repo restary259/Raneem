@@ -94,6 +94,15 @@ interface Insurance {
   price: number;
   currency: string;
   is_active: boolean;
+  provider?: string | null;
+  coverage_scope?: string | null;
+  billing_period?: string | null;
+  min_months?: number | null;
+  max_months?: number | null;
+  max_age?: number | null;
+  terms_url?: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
 }
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
