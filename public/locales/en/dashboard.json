@@ -1800,6 +1800,24 @@
       "totalCases": "Total Cases",
       "todayAppts": "Today's Appointments",
       "byStatus": "Cases by Status"
+    },
+    "work": {
+      "title": "My work",
+      "allCases": "All cases",
+      "statToday": "Today's appointments",
+      "statOutcomes": "Outcomes to record",
+      "statReturned": "Returned by admin",
+      "statCases": "Assigned cases",
+      "returnedTitle": "Returned by admin — changes requested",
+      "overdueTitle": "Appointments needing an outcome",
+      "scheduleTitle": "Today's schedule",
+      "staleTitle": "Cases with no activity",
+      "noAppointments": "No appointments today",
+      "noStale": "Every case has recent activity",
+      "recordOutcome": "Record outcome",
+      "openCase": "Open case",
+      "upcoming": "Upcoming",
+      "staleDays": "{{days}} days without activity"
     }
   },
   "application": {
@@ -1962,7 +1980,8 @@
     "bagrut": "Bagrut Tool",
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
-    "inbox": "Inbox"
+    "inbox": "Inbox",
+    "myWork": "My work"
   },
   "case": {
     "status": {

@@ -1818,6 +1818,24 @@
       "totalCases": "إجمالي الحالات",
       "todayAppts": "مواعيد اليوم",
       "byStatus": "الحالات حسب الحالة"
+    },
+    "work": {
+      "title": "مهامي",
+      "allCases": "كل الملفات",
+      "statToday": "مواعيد اليوم",
+      "statOutcomes": "نتائج بانتظار التسجيل",
+      "statReturned": "مُعادة من الإدارة",
+      "statCases": "الملفات المسندة",
+      "returnedTitle": "مُعادة من الإدارة — مطلوب تعديلات",
+      "overdueTitle": "مواعيد تحتاج تسجيل نتيجة",
+      "scheduleTitle": "جدول اليوم",
+      "staleTitle": "ملفات بلا نشاط",
+      "noAppointments": "لا توجد مواعيد اليوم",
+      "noStale": "جميع الملفات عليها نشاط حديث",
+      "recordOutcome": "تسجيل النتيجة",
+      "openCase": "فتح الملف",
+      "upcoming": "قادم",
+      "staleDays": "{{days}} يوم بدون نشاط"
     }
   },
   "application": {
@@ -1980,7 +1998,8 @@
     "bagrut": "أداة البجروت",
     "mainSite": "الموقع الرئيسي",
     "backToMainSite": "العودة إلى الموقع الرئيسي",
-    "inbox": "صندوق الطلبات"
+    "inbox": "صندوق الطلبات",
+    "myWork": "مهامي"
   },
   "case": {
     "status": {
