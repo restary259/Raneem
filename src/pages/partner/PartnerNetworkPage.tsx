@@ -147,7 +147,7 @@ export default function PartnerNetworkPage() {
               </Button>
             </div>
           ) : (
-            <Button onClick={createInviteLink}>{t("master.createInvite", "Create recruiting link")}</Button>
+            <p className="text-sm text-muted-foreground">{t("master.inviteMissing", "No recruiting link yet.")}</p>
           )}
         </CardContent>
       </Card>
@@ -166,13 +166,34 @@ export default function PartnerNetworkPage() {
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {rows.map((r) => (
+              {rows.map((r) => {
+                const s = splits[r.partner_id];
+                const pending = offers.find(
+                  (o) => o.partner_id === r.partner_id && o.status === "pending",
+                );
+                return (
                 <div key={r.partner_id} className="p-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium truncate">{r.full_name}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {r.city ? `${r.city} · ` : ""}{new Date(r.joined_at).toLocaleDateString(locale)}
                     </p>
+                    {s && (
+                      <p className="text-xs mt-1">
+                        {t("master.agreedRate", "Agreed rate")}:{" "}
+                        <span className="font-semibold">{fmt(s.partner)}</span>
+                        {s.master > 0 && (
+                          <span className="text-muted-foreground">
+                            {" "}· {t("master.yourShare", "your share")} {fmt(s.master)}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {pending && (
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        {t("master.offerPending", "Offer pending: {{amount}}", { amount: fmt(pending.partner_amount) })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-xs">
                     <Badge variant={r.status === "active" ? "default" : "secondary"}>
@@ -180,9 +201,20 @@ export default function PartnerNetworkPage() {
                     </Badge>
                     <span>{t("master.colStudents", "Students")}: {Number(r.students_count).toLocaleString("en-US")}</span>
                     <span className="font-semibold">{fmt(r.override_earned)}</span>
+                    {s && (
+                      <RateOfferDialog
+                        partnerId={r.partner_id}
+                        partnerName={r.full_name}
+                        poolAmount={s.pool}
+                        currentPartnerAmount={s.partner}
+                        onSent={load}
+                      />
+                    )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
+
             </div>
           )}
         </CardContent>
