@@ -30,6 +30,7 @@ export interface CaseTaskInput {
   submission: {
     payment_confirmed?: boolean | null;
     payment_confirmed_at?: string | null;
+    profile_completed_at?: string | null;
   } | null;
   documents: { category: string }[];
   appointments: { id: string; scheduled_at: string; outcome: string | null }[];
@@ -65,8 +66,12 @@ export function deriveCaseTasks(input: CaseTaskInput): CaseTask[] {
 
   // 1. Payment confirmation outstanding on a stage that expects it.
   const paymentConfirmed = !!input.submission?.payment_confirmed;
+  // Payment only becomes a task once the student file is saved as complete —
+  // it is a separate step that follows the profile, never part of it.
+  const profileComplete = !!input.submission?.profile_completed_at;
   const paymentDue =
     !paymentConfirmed &&
+    profileComplete &&
     (STAGES_EXPECTING_PAYMENT.includes(input.status) || input.status === "profile_completion");
   if (paymentDue) {
     const overdue = daysSince(input.lastActivityAt, now);
