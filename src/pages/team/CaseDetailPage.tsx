@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucide-react";
 
-import { advanceCaseStage, manualNextStages } from "@/services/CaseStageService";
+import { advanceCaseStage } from "@/services/CaseStageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
@@ -46,6 +46,10 @@ interface CaseRow {
 
 /** Stages where the money side of the case is relevant. */
 const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"];
+
+/** Stages where scheduling another appointment still makes sense. */
+const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
+
 
 /** Digits-only international number for WhatsApp deep links. */
 function whatsappNumber(phone: string): string {
@@ -175,11 +179,6 @@ export default function CaseDetailPage() {
     }
   };
 
-  const nextStages = useMemo(
-    () => (caseData ? manualNextStages(caseData.status) : []),
-    [caseData],
-  );
-
   const handleAdvance = async () => {
     if (!caseData || !pendingStage) return;
     setAdvancing(true);
@@ -197,6 +196,7 @@ export default function CaseDetailPage() {
       setAdvancing(false);
     }
   };
+
 
   const canSubmitToAdmin =
     canManage &&
@@ -290,7 +290,7 @@ export default function CaseDetailPage() {
                 </span>
               </a>
             </Button>
-            {canManage && (
+            {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("case.header.schedule")}</span>
@@ -306,13 +306,7 @@ export default function CaseDetailPage() {
           >
             {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
           </Badge>
-          <CaseProgressRail
-            statuses={statuses}
-            currentKey={caseData.status}
-            nextStages={canManage ? nextStages : undefined}
-            onAdvance={canManage ? (key) => setPendingStage(key) : undefined}
-            advancing={advancing}
-          />
+          <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
         </div>
       </div>
 
@@ -337,15 +331,21 @@ export default function CaseDetailPage() {
         onSchedule={() => setSchedulerOpen(true)}
         onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
         onAdvance={(to) => setPendingStage(to)}
+        onConfirmPayment={() => setPaymentOpen(true)}
         onRefresh={fetchData}
         onSubmitToAdmin={handleSubmitToAdmin}
         submitting={submitting}
-        canSubmitToAdmin={!!canSubmitToAdmin}
       />
 
       {showFinance && (
-        <CaseFinance caseId={caseData.id} canManage={canManage} extraLines={costLines} />
+        <CaseFinance
+          caseId={caseData.id}
+          canManage={canManage && caseData.status !== "enrollment_paid"}
+          extraLines={costLines}
+        />
       )}
+
+
 
       {/* Modals */}
       {canManage && user && (

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { addMonths, format } from "date-fns";
-import { Loader2, Save } from "lucide-react";
+import { Check, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +17,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateIntakeMonths } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, daysInMonth, normalizeDate } from "@/utils/dateUtils";
 import {
+  courseEndFrom,
   fullNameOf,
   missingProfileFields,
+  normalizeEmail,
+  PROFILE_FIELD_LABEL_KEYS,
   readStudentProfile,
   toExtraData,
   type StudentProfileValues,
@@ -43,8 +45,50 @@ interface Props {
 }
 
 /**
+ * A stable, module-level input. Defining this inside the parent's render body
+ * would create a new component type on every keystroke, remounting the input
+ * and dropping focus — that was the original typing bug.
+ */
+const TextField = React.memo(function TextField({
+  name,
+  labelText,
+  value,
+  invalid,
+  error,
+  type = "text",
+  placeholder,
+  onChange,
+}: {
+  name: string;
+  labelText: string;
+  value: string;
+  invalid?: boolean;
+  error?: string;
+  type?: string;
+  placeholder?: string;
+  onChange: (name: string, value: string) => void;
+}) {
+  return (
+    <div data-field={name}>
+      <Label className={invalid ? "text-destructive" : ""}>{labelText}</Label>
+      <Input
+        name={name}
+        className={cn("mt-1", invalid && "border-destructive")}
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        aria-invalid={invalid || undefined}
+        onChange={(e) => onChange(name, e.target.value)}
+      />
+      {invalid && error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
+  );
+});
+
+/**
  * The profile completion step. Field-for-field identical to the
- * "+ New student" form, prefilled from whatever the case already knows.
+ * "+ New student" form, prefilled from whatever the case already knows,
+ * autosaved as a draft while it is being filled in.
  */
 export default function CaseProfileForm({ caseData, submission, onSaved }: Props) {
   const { t, i18n } = useTranslation("dashboard");
@@ -61,9 +105,15 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   const [insurances, setInsurances] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(
+    (submission?.draft_updated_at as string) ?? null,
+  );
+  const [autosaving, setAutosaving] = useState(false);
 
-  const set = <K extends keyof StudentProfileValues>(key: K, value: StudentProfileValues[K]) =>
-    setValues((v) => ({ ...v, [key]: value }));
+  const set = useCallback(
+    (key: string, value: string) => setValues((v) => ({ ...v, [key]: value })),
+    [],
+  );
 
   useEffect(() => {
     Promise.all([
@@ -87,12 +137,15 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   }, []);
 
   const label = (o: Option) => (isAr ? o.name_ar || o.name_en : o.name_en || o.name_ar);
+
+  // A school must be chosen before anything school-specific can be selected,
+  // so an accommodation from another school is simply not offered.
   const filteredPrograms = useMemo(
-    () => programs.filter((p) => !values.school_id || p.school_id === values.school_id),
+    () => (values.school_id ? programs.filter((p) => p.school_id === values.school_id) : []),
     [programs, values.school_id],
   );
   const filteredAccoms = useMemo(
-    () => accommodations.filter((a) => !values.school_id || a.school_id === values.school_id),
+    () => (values.school_id ? accommodations.filter((a) => a.school_id === values.school_id) : []),
     [accommodations, values.school_id],
   );
   const selectedProgram = programs.find((p) => p.id === values.program_id);
@@ -104,46 +157,100 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     const [y, m] = values.start_month.split("-").map(Number);
     const d = selectedProgram.fixed_start_day_of_month;
     set("course_start", `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProgram?.fixed_start_day_of_month, values.start_month]);
+  }, [selectedProgram?.fixed_start_day_of_month, values.start_month, set]);
 
-  // Course end follows the programme duration.
+  // Every course runs 40 weeks — the end date is derived, never typed.
+  const derivedCourseEnd = courseEndFrom(values.course_start);
   useEffect(() => {
-    if (!selectedProgram?.duration_in_months || !values.course_start) return;
-    const end = addMonths(new Date(values.course_start), selectedProgram.duration_in_months);
-    set("course_end", format(end, "yyyy-MM-dd"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProgram?.duration_in_months, values.course_start]);
+    if (derivedCourseEnd && derivedCourseEnd !== values.course_end) {
+      set("course_end", derivedCourseEnd);
+    }
+  }, [derivedCourseEnd, values.course_end, set]);
+
+  /** Write the current values as a draft. Never clears stored values. */
+  const persist = useCallback(
+    async (vals: StudentProfileValues, complete: boolean) => {
+      const payload: Record<string, unknown> = {
+        case_id: caseData.id,
+        program_id: vals.program_id || null,
+        accommodation_id: vals.accommodation_id || null,
+        insurance_id: vals.insurance_id || null,
+        program_start_date: vals.course_start || null,
+        program_end_date: courseEndFrom(vals.course_start) || null,
+        student_email: normalizeEmail(vals.student_email) || null,
+        student_phone: vals.student_phone?.trim() || null,
+        extra_data: toExtraData(vals, (submission?.extra_data as Record<string, unknown>) ?? {}),
+        draft_updated_at: new Date().toISOString(),
+      };
+      if (complete) payload.profile_completed_at = new Date().toISOString();
+
+      const { error } = await (supabase as any)
+        .from("case_submissions")
+        .upsert(payload, { onConflict: "case_id" });
+      if (error) throw error;
+      return payload.draft_updated_at as string;
+    },
+    [caseData.id, submission],
+  );
+
+  // Debounced autosave. Only runs once the user has actually edited something.
+  const dirty = useRef(false);
+  const timer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!dirty.current) return;
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      setAutosaving(true);
+      persist(values, false)
+        .then((at) => setDraftSavedAt(at))
+        .catch(() => {
+          /* transient — the explicit save surfaces real errors */
+        })
+        .finally(() => setAutosaving(false));
+    }, 1200);
+    return () => {
+      if (timer.current) window.clearTimeout(timer.current);
+    };
+  }, [values, persist]);
+
+  const handleChange = useCallback(
+    (name: string, value: string) => {
+      dirty.current = true;
+      set(name, value);
+      setErrors((e) => e.filter((f) => f !== name));
+    },
+    [set],
+  );
+
+  const fieldName = (f: string) => t(PROFILE_FIELD_LABEL_KEYS[f as keyof StudentProfileValues] ?? f);
 
   const handleSave = async () => {
-    const missing = missingProfileFields(values);
-    setErrors(missing as string[]);
+    const missing = missingProfileFields(values) as string[];
+    setErrors(missing);
     if (missing.length > 0) {
-      toast({ variant: "destructive", description: t("case.profile.missingFields") });
+      const el = document.querySelector(`[data-field="${missing[0]}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (el?.querySelector("input, button") as HTMLElement | null)?.focus();
+      toast({
+        variant: "destructive",
+        description:
+          missing.length === 1
+            ? t("case.profile.missingOne", {
+                field: fieldName(missing[0]),
+                defaultValue: `Please complete: ${fieldName(missing[0])}`,
+              })
+            : t("case.profile.missingMany", {
+                field: fieldName(missing[0]),
+                count: missing.length - 1,
+                defaultValue: `Please complete: ${fieldName(missing[0])} (+${missing.length - 1} more)`,
+              }),
+      });
       return;
     }
     setSaving(true);
     try {
-      const payload = {
-        case_id: caseData.id,
-        program_id: values.program_id || null,
-        accommodation_id: values.accommodation_id || null,
-        insurance_id: values.insurance_id || null,
-        program_start_date: values.course_start || null,
-        program_end_date: values.course_end || null,
-        extra_data: toExtraData(values, (submission?.extra_data as Record<string, unknown>) ?? {}),
-      };
-
-      if (submission?.id) {
-        const { error } = await (supabase as any)
-          .from("case_submissions")
-          .update(payload)
-          .eq("id", submission.id);
-        if (error) throw error;
-      } else {
-        const { error } = await (supabase as any).from("case_submissions").insert(payload);
-        if (error) throw error;
-      }
+      const at = await persist(values, true);
+      setDraftSavedAt(at);
 
       const name = fullNameOf(values);
       if (name && name !== caseData.full_name) {
@@ -160,6 +267,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
         p_is_internal: true,
       });
 
+      dirty.current = false;
       toast({ description: t("case.profile.saved") });
       onSaved();
     } catch (err) {
@@ -173,28 +281,25 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   };
 
   const invalid = (field: keyof StudentProfileValues) => errors.includes(field as string);
+  const errText = (field: keyof StudentProfileValues) =>
+    t("case.profile.fieldRequired", { defaultValue: "This field is required" });
 
-  const Field = ({
-    field,
-    labelText,
-    type = "text",
-    placeholder,
-  }: {
-    field: keyof StudentProfileValues;
-    labelText: string;
-    type?: string;
-    placeholder?: string;
-  }) => (
-    <div>
-      <Label className={invalid(field) ? "text-destructive" : ""}>{labelText}</Label>
-      <Input
-        className={cn("mt-1", invalid(field) && "border-destructive")}
-        type={type}
-        value={values[field] as string}
-        placeholder={placeholder}
-        onChange={(e) => set(field, e.target.value as StudentProfileValues[typeof field])}
-      />
-    </div>
+  const field = (
+    name: keyof StudentProfileValues,
+    labelText: string,
+    type?: string,
+    placeholder?: string,
+  ) => (
+    <TextField
+      name={name}
+      labelText={labelText}
+      type={type}
+      placeholder={placeholder}
+      value={values[name]}
+      invalid={invalid(name)}
+      error={errText(name)}
+      onChange={handleChange}
+    />
   );
 
   const dobParts = values.date_of_birth.split("-");
@@ -204,7 +309,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   const setDob = (y: string, m: string, d: string) => {
     if (!y || !m || !d) return;
     try {
-      set("date_of_birth", normalizeDate(d, m, y));
+      handleChange("date_of_birth", normalizeDate(d, m, y));
     } catch {
       /* ignore invalid intermediate values */
     }
@@ -212,6 +317,10 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   const dobDays = Array.from({ length: daysInMonth(parseInt(dobMonth), parseInt(dobYear)) }, (_, i) =>
     String(i + 1).padStart(2, "0"),
   );
+
+  const savedLabel = draftSavedAt
+    ? new Date(draftSavedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
     <div className="space-y-6">
@@ -221,11 +330,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
           {t("case.profile.sections.student")}
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Field field="first_name" labelText={`${t("case.fields.firstName")} *`} />
-          <Field field="middle_name" labelText={t("case.fields.middleName")} />
-          <Field field="last_name" labelText={`${t("case.fields.lastName")} *`} />
+          {field("first_name", `${t("case.fields.firstName")} *`)}
+          {field("middle_name", t("case.fields.middleName"))}
+          {field("last_name", `${t("case.fields.lastName")} *`)}
         </div>
-        <div>
+        <div data-field="date_of_birth">
           <Label className={invalid("date_of_birth") ? "text-destructive" : ""}>
             {`${t("case.fields.dateOfBirth")} *`}
           </Label>
@@ -267,11 +376,14 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </SelectContent>
             </Select>
           </div>
+          {invalid("date_of_birth") && (
+            <p className="mt-1 text-xs text-destructive">{errText("date_of_birth")}</p>
+          )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <Label>{t("case.fields.gender")}</Label>
-            <Select value={values.gender} onValueChange={(v) => set("gender", v)}>
+            <Select value={values.gender} onValueChange={(v) => handleChange("gender", v)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder={t("case.profile.select")} />
               </SelectTrigger>
@@ -281,7 +393,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </SelectContent>
             </Select>
           </div>
-          <Field field="city_of_birth" labelText={t("case.profile.cityOfBirth")} />
+          {field("city_of_birth", t("case.profile.cityOfBirth"))}
         </div>
       </section>
 
@@ -291,21 +403,16 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
           {t("case.profile.sections.contact")}
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field
-            field="student_email"
-            labelText={`${t("case.fields.studentEmail")} *`}
-            type="email"
-            placeholder="student@email.com"
-          />
-          <Field field="student_phone" labelText={`${t("case.fields.studentPhone")} *`} />
-          <Field field="emergency_contact_name" labelText={t("case.profile.emergencyName")} />
-          <Field field="emergency_contact_phone" labelText={t("case.profile.emergencyPhone")} />
+          {field("student_email", `${t("case.fields.studentEmail")} *`, "email", "student@email.com")}
+          {field("student_phone", `${t("case.fields.studentPhone")} *`)}
+          {field("emergency_contact_name", t("case.profile.emergencyName"))}
+          {field("emergency_contact_phone", t("case.profile.emergencyPhone"))}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <Field field="street" labelText={t("case.fields.street")} />
-          <Field field="house_no" labelText={t("case.fields.houseNo")} />
-          <Field field="postcode" labelText={t("case.fields.postcode")} />
-          <Field field="city" labelText={t("case.fields.city")} />
+          {field("street", t("case.fields.street"))}
+          {field("house_no", t("case.fields.houseNo"))}
+          {field("postcode", t("case.fields.postcode"))}
+          {field("city", t("case.fields.city"))}
         </div>
       </section>
 
@@ -315,17 +422,24 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
           {t("case.profile.sections.program")}
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <Label>{t("case.fields.school")}</Label>
+          <div data-field="school_id">
+            <Label className={invalid("school_id") ? "text-destructive" : ""}>
+              {`${t("case.fields.school")} *`}
+            </Label>
             <Select
               value={values.school_id}
               onValueChange={(v) => {
-                set("school_id", v);
-                set("program_id", "");
-                set("accommodation_id", "");
+                dirty.current = true;
+                setErrors((e) => e.filter((f) => f !== "school_id"));
+                setValues((prev) => ({
+                  ...prev,
+                  school_id: v,
+                  program_id: "",
+                  accommodation_id: "",
+                }));
               }}
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className={cn("mt-1", invalid("school_id") && "border-destructive")}>
                 <SelectValue placeholder={t("case.profile.select")} />
               </SelectTrigger>
               <SelectContent>
@@ -336,14 +450,27 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
+            {invalid("school_id") && (
+              <p className="mt-1 text-xs text-destructive">{errText("school_id")}</p>
+            )}
           </div>
-          <div>
+          <div data-field="program_id">
             <Label className={invalid("program_id") ? "text-destructive" : ""}>
               {`${t("case.fields.program")} *`}
             </Label>
-            <Select value={values.program_id} onValueChange={(v) => set("program_id", v)}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={t("case.profile.select")} />
+            <Select
+              value={values.program_id}
+              disabled={!values.school_id}
+              onValueChange={(v) => handleChange("program_id", v)}
+            >
+              <SelectTrigger className={cn("mt-1", invalid("program_id") && "border-destructive")}>
+                <SelectValue
+                  placeholder={
+                    values.school_id
+                      ? t("case.profile.select")
+                      : t("case.profile.pickSchoolFirst", { defaultValue: "Select a school first" })
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {filteredPrograms.map((p) => (
@@ -353,17 +480,20 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
+            {invalid("program_id") && (
+              <p className="mt-1 text-xs text-destructive">{errText("program_id")}</p>
+            )}
           </div>
           <div>
             <Label>{t("case.fields.startMonth")}</Label>
-            <Select value={values.start_month} onValueChange={(v) => set("start_month", v)}>
+            <Select value={values.start_month} onValueChange={(v) => handleChange("start_month", v)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder={t("case.profile.select")} />
               </SelectTrigger>
               <SelectContent className="max-h-56">
-                {monthOptions.map((m: any) => (
-                  <SelectItem key={m.value ?? m} value={m.value ?? m}>
-                    {m.label ?? m}
+                {monthOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -375,10 +505,10 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               type="date"
               className="mt-1"
               value={values.arrival_date}
-              onChange={(e) => set("arrival_date", e.target.value)}
+              onChange={(e) => handleChange("arrival_date", e.target.value)}
             />
           </div>
-          <div>
+          <div data-field="course_start">
             <Label className={invalid("course_start") ? "text-destructive" : ""}>
               {`${t("case.fields.courseStart")} *`}
             </Label>
@@ -386,23 +516,38 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               type="date"
               className={cn("mt-1", invalid("course_start") && "border-destructive")}
               value={values.course_start}
-              onChange={(e) => set("course_start", e.target.value)}
+              onChange={(e) => handleChange("course_start", e.target.value)}
             />
+            {invalid("course_start") && (
+              <p className="mt-1 text-xs text-destructive">{errText("course_start")}</p>
+            )}
           </div>
           <div>
             <Label>{t("case.fields.courseEnd")}</Label>
-            <Input
-              type="date"
-              className="mt-1"
-              value={values.course_end}
-              onChange={(e) => set("course_end", e.target.value)}
-            />
+            <Input type="date" className="mt-1 bg-muted" value={values.course_end} readOnly />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("case.profile.autoEnd", { defaultValue: "Calculated automatically — 40 weeks" })}
+            </p>
           </div>
-          <div>
-            <Label>{t("case.detail.accommodation")}</Label>
-            <Select value={values.accommodation_id} onValueChange={(v) => set("accommodation_id", v)}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={t("case.profile.select")} />
+          <div data-field="accommodation_id">
+            <Label className={invalid("accommodation_id") ? "text-destructive" : ""}>
+              {`${t("case.detail.accommodation")} *`}
+            </Label>
+            <Select
+              value={values.accommodation_id}
+              disabled={!values.school_id}
+              onValueChange={(v) => handleChange("accommodation_id", v)}
+            >
+              <SelectTrigger
+                className={cn("mt-1", invalid("accommodation_id") && "border-destructive")}
+              >
+                <SelectValue
+                  placeholder={
+                    values.school_id
+                      ? t("case.profile.select")
+                      : t("case.profile.pickSchoolFirst", { defaultValue: "Select a school first" })
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {filteredAccoms.map((a) => (
@@ -412,11 +557,16 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
+            {invalid("accommodation_id") && (
+              <p className="mt-1 text-xs text-destructive">{errText("accommodation_id")}</p>
+            )}
           </div>
-          <div>
-            <Label>{t("case.detail.insurance")}</Label>
-            <Select value={values.insurance_id} onValueChange={(v) => set("insurance_id", v)}>
-              <SelectTrigger className="mt-1">
+          <div data-field="insurance_id">
+            <Label className={invalid("insurance_id") ? "text-destructive" : ""}>
+              {`${t("case.detail.insurance")} *`}
+            </Label>
+            <Select value={values.insurance_id} onValueChange={(v) => handleChange("insurance_id", v)}>
+              <SelectTrigger className={cn("mt-1", invalid("insurance_id") && "border-destructive")}>
                 <SelectValue placeholder={t("case.profile.select")} />
               </SelectTrigger>
               <SelectContent>
@@ -427,13 +577,32 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
+            {invalid("insurance_id") && (
+              <p className="mt-1 text-xs text-destructive">{errText("insurance_id")}</p>
+            )}
           </div>
         </div>
       </section>
 
-      <div className="flex justify-end border-t pt-4">
+      <div className="flex items-center justify-between gap-3 border-t pt-4">
+        <p className="text-xs text-muted-foreground">
+          {autosaving
+            ? t("case.profile.savingDraft", { defaultValue: "Saving…" })
+            : savedLabel
+              ? t("case.profile.draftSavedAt", {
+                  time: savedLabel,
+                  defaultValue: `Draft saved ${savedLabel}`,
+                })
+              : ""}
+        </p>
         <Button onClick={handleSave} disabled={saving} className="gap-1.5">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {saving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : errors.length === 0 && !autosaving ? (
+            <Save className="h-4 w-4" />
+          ) : (
+            <Check className="h-4 w-4" />
+          )}
           {t("case.profile.save")}
         </Button>
       </div>

@@ -1,11 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus, PhoneCall, Send } from "lucide-react";
+import { CalendarPlus, PhoneCall, Send, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import CaseProfileForm from "./CaseProfileForm";
 import CaseInviteStudent from "./CaseInviteStudent";
-import { readStudentProfile, isProfileComplete } from "@/lib/studentProfileFields";
+import {
+  missingProfileFields,
+  PROFILE_FIELD_LABEL_KEYS,
+  readStudentProfile,
+  type StudentProfileValues,
+} from "@/lib/studentProfileFields";
 
 export interface AppointmentRow {
   id: string;
@@ -23,10 +35,10 @@ interface Props {
   onSchedule: () => void;
   onRecordOutcome: (appointmentId: string) => void;
   onAdvance: (to: string) => void;
+  onConfirmPayment: () => void;
   onRefresh: () => void;
   onSubmitToAdmin: () => void;
   submitting: boolean;
-  canSubmitToAdmin: boolean;
 }
 
 const fmtDate = (iso: string) =>
@@ -43,6 +55,7 @@ export default function CaseStageBlock(props: Props) {
   const { t } = useTranslation("dashboard");
   const { caseData, submission, appointments, canManage } = props;
   const status = caseData.status as string;
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
 
   const Shell = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <Card>
@@ -127,11 +140,13 @@ export default function CaseStageBlock(props: Props) {
 
   if (status === "profile_completion") {
     const values = readStudentProfile(caseData, submission);
-    const complete = isProfileComplete(values);
+    const missing = missingProfileFields(values);
+    const savedComplete = !!submission?.profile_completed_at && missing.length === 0;
+    const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
     return (
       <Shell title={t("case.detail.completeProfile")}>
         <CaseProfileForm caseData={caseData} submission={submission} onSaved={props.onRefresh} />
-        {complete && (
+        {savedComplete && (
           <CaseInviteStudent
             caseId={caseData.id}
             fullName={caseData.full_name}
@@ -141,24 +156,78 @@ export default function CaseStageBlock(props: Props) {
             onDone={props.onRefresh}
           />
         )}
+        {canManage && (
+          <div className="border-t pt-4">
+            {savedComplete ? (
+              <Button className="gap-1.5" onClick={props.onConfirmPayment}>
+                <Wallet className="h-4 w-4" />
+                {t("case.tasks.action.confirmPayment")}
+              </Button>
+            ) : (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+                <p className="text-sm font-medium text-amber-700">
+                  {t("case.detail.paymentBlocked", {
+                    defaultValue: "Complete and save the student file before confirming payment.",
+                  })}
+                </p>
+                {missing.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {missing.map(fieldName).join(" · ")}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </Shell>
     );
   }
 
   if (status === "payment_confirmed") {
     return (
-      <Shell title={t("case.detail.confirmPayment")}>
+      <Shell title={t("case.detail.submittedToAdmin")}>
         <p className="text-sm text-muted-foreground">{t("case.stageBlock.paymentBody")}</p>
         {canManage && (
           <Button
             className="gap-1.5"
-            disabled={!props.canSubmitToAdmin || props.submitting}
-            onClick={props.onSubmitToAdmin}
+            disabled={props.submitting}
+            onClick={() => setConfirmSubmit(true)}
           >
             <Send className="h-4 w-4" />
             {t("case.submit.action")}
           </Button>
         )}
+        <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {t("case.submit.confirmTitle", {
+                  defaultValue: "Send this student file to Admin?",
+                })}
+              </DialogTitle>
+              <DialogDescription>
+                {t("case.submit.confirmBody", {
+                  defaultValue:
+                    "The case moves to admin review and the student receives an invitation to set up their account.",
+                })}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmSubmit(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                disabled={props.submitting}
+                onClick={() => {
+                  setConfirmSubmit(false);
+                  props.onSubmitToAdmin();
+                }}
+              >
+                {t("case.submit.confirmAction", { defaultValue: "Confirm & send" })}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Shell>
     );
   }

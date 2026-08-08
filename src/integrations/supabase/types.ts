@@ -613,6 +613,7 @@ export type Database = {
           case_id: string
           created_at: string
           deleted_at: string | null
+          draft_updated_at: string | null
           enrollment_paid_at: string | null
           enrollment_paid_by: string | null
           extra_data: Json | null
@@ -622,6 +623,7 @@ export type Database = {
           payment_confirmed: boolean
           payment_confirmed_at: string | null
           payment_confirmed_by: string | null
+          profile_completed_at: string | null
           program_end_date: string | null
           program_id: string | null
           program_price: number
@@ -632,6 +634,8 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           service_fee: number
+          student_email: string | null
+          student_phone: string | null
           submitted_at: string | null
           submitted_by: string | null
           total_paid: number
@@ -643,6 +647,7 @@ export type Database = {
           case_id: string
           created_at?: string
           deleted_at?: string | null
+          draft_updated_at?: string | null
           enrollment_paid_at?: string | null
           enrollment_paid_by?: string | null
           extra_data?: Json | null
@@ -652,6 +657,7 @@ export type Database = {
           payment_confirmed?: boolean
           payment_confirmed_at?: string | null
           payment_confirmed_by?: string | null
+          profile_completed_at?: string | null
           program_end_date?: string | null
           program_id?: string | null
           program_price?: number
@@ -662,6 +668,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           service_fee?: number
+          student_email?: string | null
+          student_phone?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
           total_paid?: number
@@ -673,6 +681,7 @@ export type Database = {
           case_id?: string
           created_at?: string
           deleted_at?: string | null
+          draft_updated_at?: string | null
           enrollment_paid_at?: string | null
           enrollment_paid_by?: string | null
           extra_data?: Json | null
@@ -682,6 +691,7 @@ export type Database = {
           payment_confirmed?: boolean
           payment_confirmed_at?: string | null
           payment_confirmed_by?: string | null
+          profile_completed_at?: string | null
           program_end_date?: string | null
           program_id?: string | null
           program_price?: number
@@ -692,6 +702,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           service_fee?: number
+          student_email?: string | null
+          student_phone?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
           total_paid?: number
