@@ -128,7 +128,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   const { t, i18n } = useTranslation("dashboard");
   const { isMaster } = useIsMasterPartner();
   const baseItems = NAV_CONFIG[role] ?? [];
-  const items = isMaster && role === "social_media_partner"
+  const items: NavItem[] = isMaster && role === "social_media_partner"
     ? [
         ...baseItems,
         { key: "nav.network", icon: Crown, href: "/partner/network" },
