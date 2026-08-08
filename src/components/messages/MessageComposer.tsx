@@ -340,6 +340,32 @@ export default function MessageComposer({
             {t("chat.attach.button")}
           </Button>
 
+          {mentionables.length > 0 && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="gap-1 text-muted-foreground"
+              disabled={disabled}
+              aria-label={t("chat.mention.button")}
+              onClick={() => {
+                const el = textRef.current;
+                const caret = el?.selectionStart ?? body.length;
+                const next = `${body.slice(0, caret)}@${body.slice(caret)}`;
+                setBody(next);
+                setMentionQuery("");
+                requestAnimationFrame(() => {
+                  el?.focus();
+                  el?.setSelectionRange(caret + 1, caret + 1);
+                });
+              }}
+            >
+              <AtSign className="h-4 w-4" />
+            </Button>
+          )}
+
+
+
           {allowRequests && (
             <Button
               type="button"
