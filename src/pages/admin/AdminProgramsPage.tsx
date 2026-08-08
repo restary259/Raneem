@@ -24,6 +24,7 @@ import {
   Building2,
   Shield,
 } from "lucide-react";
+import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
 
 interface Program {
   id: string;
