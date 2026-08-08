@@ -236,6 +236,7 @@ const AdminSubmissionsPage = () => {
 
   const openSplitPanel = async () => {
     if (!selected) return;
+    setApproveEmail("");
     await loadSplitPreview(selected);
     setShowSplitPanel(true);
   };
