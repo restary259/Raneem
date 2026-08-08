@@ -35,25 +35,35 @@ const MasterPartnerToggle: React.FC<Props> = ({
   const [saving, setSaving] = useState(false);
 
   const apply = async () => {
-    if (pending === null) return;
+    // Guard against a second confirmation arriving while the first write is
+    // still in flight: rapid ON/OFF would otherwise race and the slower
+    // response could leave the row showing a stale flag.
+    if (pending === null || saving) return;
     const next = pending;
     setSaving(true);
-    const { error } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from('profiles')
       .update({ is_master_partner: next })
-      .eq('id', partnerId);
+      .eq('id', partnerId)
+      .select('is_master_partner')
+      .maybeSingle();
     setSaving(false);
     setPending(null);
     if (error) {
       toast({ variant: 'destructive', title: t('common.actionFailed', 'Action failed'), description: error.message });
+      // No optimistic update was applied, so the row keeps the last known
+      // persisted value and never gets stuck on a status that did not save.
+      onChanged(isMaster);
       return;
     }
+    // Report the value the database actually stored, not the requested one.
+    const persisted = data ? !!data.is_master_partner : next;
     toast({
-      title: next
+      title: persisted
         ? t('admin.payouts.masterUpgraded', 'Upgraded to Master Partner')
         : t('admin.payouts.masterDowngraded', 'Downgraded to Partner'),
     });
-    onChanged(next);
+    onChanged(persisted);
   };
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
