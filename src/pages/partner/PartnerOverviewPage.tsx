@@ -216,6 +216,44 @@ export default function PartnerOverviewPage() {
         <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">₪{(paid * commissionRate).toLocaleString('en-US')}</p>
       </div>
 
+      {/* Pipeline breakdown */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            {t('partner.pipeline.title', 'Pipeline breakdown')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {total === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              {t('partner.pipeline.empty', 'No cases yet')}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(
+                cases.reduce((acc: Record<string, number>, c: any) => {
+                  acc[c.status] = (acc[c.status] || 0) + 1;
+                  return acc;
+                }, {}),
+              )
+                .sort((a, b) => b[1] - a[1])
+                .map(([status, count]) => (
+                  <div key={status} className="flex items-center gap-3">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium min-w-[110px] text-center ${STATUS_COLOR[status] || 'bg-muted text-muted-foreground'}`}>
+                      {t(`partner.status.${status}`, { defaultValue: status })}
+                    </span>
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${(count / total) * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-semibold w-8 text-end">{count.toLocaleString('en-US')}</span>
+                  </div>
+                ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {kpis.map((kpi) => (
