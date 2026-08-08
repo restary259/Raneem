@@ -126,6 +126,9 @@ export default function CaseProgressRail({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                {t("case.stage.chooseNext", "Choose the next stage")}
+              </DropdownMenuLabel>
               {nextStages.map((key) => (
                 <DropdownMenuItem key={key} onSelect={() => onAdvance(key)}>
                   {label(key)}
