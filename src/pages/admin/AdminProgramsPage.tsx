@@ -1171,7 +1171,7 @@ const AdminProgramsPage = () => {
                 setInsOpen(v);
                 if (!v) {
                   setEditInsId(null);
-                  setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
+                  setInsForm(emptyInsForm);
                 }
               }}
             >
