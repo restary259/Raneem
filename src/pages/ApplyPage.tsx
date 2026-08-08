@@ -9,6 +9,9 @@ import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphon
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode } from "@/lib/referral";
+import FieldGroup from "@/components/common/FieldGroup";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { recordConsent } from "@/lib/consent";
 
 
 const PASSPORT_TYPES = [
@@ -42,6 +45,8 @@ const ApplyPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   // Step 1 — Identity
   const [fullName, setFullName] = useState("");
@@ -150,6 +155,17 @@ const ApplyPage: React.FC = () => {
   const handleSubmit = async () => {
     if (loading) return;
 
+    if (!consentAgreed) {
+      toast({
+        title: isAr ? "الموافقة مطلوبة" : "Consent required",
+        description: isAr
+          ? "يرجى الموافقة على معالجة بياناتك قبل الإرسال"
+          : "Please agree to the processing of your data before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // ── CRITICAL: Validate English units for bagrut applicants (bug fix) ──
     if (educationLevel === "bagrut" && !englishUnits) {
       toast({
@@ -175,6 +191,16 @@ const ApplyPage: React.FC = () => {
     }
 
     setLoading(true);
+
+    void recordConsent({
+      sourceForm: "apply_page",
+      subjectName: fullName,
+      phone,
+      serviceContact: true,
+      marketing: marketingConsent,
+      marketingChannels: marketingConsent ? { email: true, whatsapp: true, sms: false } : undefined,
+      locale: i18n.language,
+    });
 
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -780,6 +806,21 @@ const ApplyPage: React.FC = () => {
                 </div>
               )}
 
+              {step === TOTAL_STEPS && (
+                <ConsentBlock
+                  isAr={isAr}
+                  collected={
+                    isAr
+                      ? "الاسم الكامل، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية"
+                      : "full name, phone number, city, passport type and education details"
+                  }
+                  agreed={consentAgreed}
+                  onAgreedChange={setConsentAgreed}
+                  marketing={marketingConsent}
+                  onMarketingChange={setMarketingConsent}
+                />
+              )}
+
               {/* Navigation */}
               <div className="flex gap-3 pt-2">
                 {step > 1 && (
@@ -801,7 +842,7 @@ const ApplyPage: React.FC = () => {
                   <Button
                     className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
                     onClick={handleSubmit}
-                    disabled={loading || !canGoNext()}
+                    disabled={loading || !canGoNext() || !consentAgreed}
                   >
                     {loading ? "..." : isAr ? "أرسل بياناتي" : "Submit"}
                   </Button>
@@ -838,12 +879,6 @@ const ApplyPage: React.FC = () => {
 
 /* --- Sub-components --- */
 
-const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-foreground/80">{label}</label>
-    {children}
-  </div>
-);
 
 const ApplyTopBar = () => <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />;
 
