@@ -23,6 +23,7 @@ export default function PartnerEarningsPage() {
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
+  const [overrideRewards, setOverrideRewards] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
 
@@ -94,6 +95,16 @@ export default function PartnerEarningsPage() {
       .eq("user_id", uid)
       .like("admin_notes", "Partner commission from case%")
       .order("created_at", { ascending: false });
+
+    // Master-partner network override earnings are tracked separately so they
+    // are never mixed with the partner's own referral commissions.
+    const { data: overrideRows } = await (supabase as any)
+      .from("rewards")
+      .select("id,amount,status,created_at")
+      .eq("user_id", uid)
+      .eq("reward_type", "master_override")
+      .order("created_at", { ascending: false });
+    setOverrideRewards(overrideRows || []);
 
     const allRewards = rewardRows || [];
     setRewards(allRewards);
