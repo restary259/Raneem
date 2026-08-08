@@ -240,7 +240,14 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
                 {t('admin.payouts.masterToggleHint', 'Role upgrade only — earnings, referral code and payout history stay exactly as they are.')}
               </p>
             </div>
-            <Switch checked={isMaster} disabled={savingMaster} onCheckedChange={toggleMaster} />
+            <MasterPartnerToggle
+              partnerId={partner.partner_id}
+              partnerName={partner.full_name}
+              isMaster={isMaster}
+              onChanged={onMasterChanged}
+              variant="plain"
+            />
+
           </div>
         </CardContent>
       </Card>
