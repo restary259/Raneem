@@ -125,7 +125,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const items = NAV_CONFIG[role] ?? [];
-  const unreadMessages = useUnreadCaseMessages(role === "admin" || role === "team_member");
+  const unreadMessages = useUnreadCaseMessages(true);
 
 
   return (
