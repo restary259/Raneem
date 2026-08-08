@@ -34,6 +34,7 @@ export interface PayoutRequestCase {
 
 export interface PayoutRequestDetail {
   id: string;
+  payout_reference: string | null;
   partner_id: string;
   partner_name: string | null;
   partner_role: string | null;

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { matchesRef } from '@/lib/reference';
 import PartnerProfilePanel, { PartnerDirectoryRow } from './PartnerProfilePanel';
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
@@ -66,7 +67,9 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return partners.filter(p => {
-      if (q && ![p.full_name, p.email, p.city, p.referral_code]
+      const refHit = (requestsByPartner[p.partner_id] || [])
+        .some((r: any) => matchesRef(r.payout_reference, q) || (r.case_references || []).some((cr: string) => matchesRef(cr, q)));
+      if (q && !refHit && ![p.full_name, p.email, p.city, p.referral_code]
         .some(v => (v || '').toLowerCase().includes(q))) return false;
       if (filter === 'open') return Number(p.open_requests) > 0;
       if (filter === 'balance') return Number(p.available_amount) > 0 || Number(p.locked_amount) > 0;
@@ -74,7 +77,7 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
       if (filter === 'master') return !!p.is_master_partner;
       return true;
     });
-  }, [partners, search, filter]);
+  }, [partners, search, filter, requestsByPartner]);
 
   const openCount = partners.filter(p => Number(p.open_requests) > 0).length;
   const masterCount = partners.filter(p => !!p.is_master_partner).length;

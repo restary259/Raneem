@@ -3237,7 +3237,9 @@
       "requestedAt": "Requested",
       "approvedAt": "Approved",
       "paidAt": "Paid",
-      "emailPreview": "New payout request"
+      "emailPreview": "New payout request",
+      "copyReference": "Copy reference",
+      "referenceCopied": "Reference copied"
     },
     "section": {
       "direct": "Direct",

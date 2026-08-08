@@ -49,6 +49,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       label: t('sheets.tab.students'),
       load: () => fetchStudentsSheet(opts),
       columns: [
+        { key: 'case_reference', label: c('reference') },
         { key: 'full_name', label: c('name') },
         { key: 'phone', label: c('phone') },
         { key: 'city', label: c('city') },
@@ -74,6 +75,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       label: t('sheets.tab.payments'),
       load: () => fetchPaymentsSheet(opts),
       columns: [
+        { key: 'case_reference', label: c('reference') },
         { key: 'paid_date', label: c('paidDate'), type: 'date' },
         { key: 'student', label: c('student') },
         { key: 'service_fee', label: c('serviceFee'), type: 'currency', total: true },
@@ -131,6 +133,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       label: t('sheets.tab.payouts'),
       load: () => fetchPayoutsSheet(),
       columns: [
+        { key: 'payout_reference', label: c('reference') },
         { key: 'requested_at', label: c('requested'), type: 'date' },
         { key: 'paid_at', label: c('paidAt'), type: 'date' },
         { key: 'person', label: c('person') },

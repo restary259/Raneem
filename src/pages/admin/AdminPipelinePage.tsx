@@ -41,6 +41,7 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
+import { matchesRef } from "@/lib/reference";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
@@ -383,7 +384,10 @@ const AdminPipelinePage = () => {
   /* ── filter ── */
   const filtered = cases.filter((c) => {
     const matchSearch =
-      !search || c.full_name.toLowerCase().includes(search.toLowerCase()) || c.phone_number.includes(search);
+      !search ||
+      c.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone_number.includes(search) ||
+      matchesRef((c as any).case_reference, search);
     const matchTeam =
       filterTeam === "all" || c.assigned_to === filterTeam || (filterTeam === "unassigned" && !c.assigned_to);
     return matchSearch && matchTeam;
