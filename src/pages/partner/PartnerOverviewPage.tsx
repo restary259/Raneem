@@ -231,12 +231,12 @@ export default function PartnerOverviewPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {Object.entries(
+              {(Object.entries(
                 cases.reduce((acc: Record<string, number>, c: any) => {
                   acc[c.status] = (acc[c.status] || 0) + 1;
                   return acc;
-                }, {}),
-              )
+                }, {} as Record<string, number>),
+              ) as [string, number][])
                 .sort((a, b) => b[1] - a[1])
                 .map(([status, count]) => (
                   <div key={status} className="flex items-center gap-3">
