@@ -1997,6 +1997,7 @@ export type Database = {
           commission_amount: number
           created_at: string
           id: string
+          master_override_amount: number | null
           notes: string | null
           partner_id: string
           show_all_cases: boolean | null
@@ -2006,6 +2007,7 @@ export type Database = {
           commission_amount?: number
           created_at?: string
           id?: string
+          master_override_amount?: number | null
           notes?: string | null
           partner_id: string
           show_all_cases?: boolean | null
@@ -2015,6 +2017,7 @@ export type Database = {
           commission_amount?: number
           created_at?: string
           id?: string
+          master_override_amount?: number | null
           notes?: string | null
           partner_id?: string
           show_all_cases?: boolean | null
@@ -2030,6 +2033,7 @@ export type Database = {
           id: string
           label: string | null
           partner_id: string
+          purpose: string
           target_path: string
           updated_at: string
         }
@@ -2040,6 +2044,7 @@ export type Database = {
           id?: string
           label?: string | null
           partner_id: string
+          purpose?: string
           target_path?: string
           updated_at?: string
         }
@@ -2050,6 +2055,7 @@ export type Database = {
           id?: string
           label?: string | null
           partner_id?: string
+          purpose?: string
           target_path?: string
           updated_at?: string
         }
@@ -2242,6 +2248,7 @@ export type Database = {
           forgotten_contacted_days: number
           forgotten_new_case_days: number
           id: string
+          master_partner_override_rate: number
           partner_commission_rate: number
           partner_dashboard_show_all_cases: boolean
           team_member_commission_rate: number
@@ -2254,6 +2261,7 @@ export type Database = {
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
+          master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
           team_member_commission_rate?: number
@@ -2266,6 +2274,7 @@ export type Database = {
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
+          master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
           team_member_commission_rate?: number
@@ -2309,7 +2318,9 @@ export type Database = {
           influencer_id: string | null
           intake_month: string | null
           is_manager: boolean
+          is_master_partner: boolean
           linked_case_id: string | null
+          master_partner_id: string | null
           must_change_password: boolean
           nationality: string | null
           notes: string | null
@@ -2361,7 +2372,9 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           is_manager?: boolean
+          is_master_partner?: boolean
           linked_case_id?: string | null
+          master_partner_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -2413,7 +2426,9 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           is_manager?: boolean
+          is_master_partner?: boolean
           linked_case_id?: string | null
+          master_partner_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -2445,6 +2460,13 @@ export type Database = {
             columns: ["linked_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_master_partner_id_fkey"
+            columns: ["master_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2626,6 +2648,8 @@ export type Database = {
           paid_at: string | null
           payout_requested_at: string | null
           referral_id: string | null
+          reward_type: string
+          source_user_id: string | null
           status: string
           user_id: string
         }
@@ -2639,6 +2663,8 @@ export type Database = {
           paid_at?: string | null
           payout_requested_at?: string | null
           referral_id?: string | null
+          reward_type?: string
+          source_user_id?: string | null
           status?: string
           user_id: string
         }
@@ -2652,6 +2678,8 @@ export type Database = {
           paid_at?: string | null
           payout_requested_at?: string | null
           referral_id?: string | null
+          reward_type?: string
+          source_user_id?: string | null
           status?: string
           user_id?: string
         }
@@ -2661,6 +2689,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rewards_source_user_id_fkey"
+            columns: ["source_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3352,6 +3387,21 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_network: {
+        Args: never
+        Returns: {
+          city: string
+          email: string
+          full_name: string
+          joined_at: string
+          override_earned: number
+          paid_cases: number
+          partner_id: string
+          referral_code: string
+          status: string
+          students_count: number
+        }[]
+      }
       get_my_payout_preview: { Args: never; Returns: Json }
       get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
@@ -3432,15 +3482,20 @@ export type Database = {
           available_amount: number
           city: string
           created_at: string
+          earned_override: number
+          earned_referral: number
           email: string
           full_name: string
+          is_master_partner: boolean
           last_request_at: string
           locked_amount: number
+          master_partner_name: string
           open_request_amount: number
           open_requests: number
           paid_amount: number
           partner_id: string
           phone_number: string
+          recruited_count: number
           referral_code: string
           students_count: number
           total_earned: number
@@ -3507,6 +3562,7 @@ export type Database = {
         Args: { p_thread_id: string }
         Returns: undefined
       }
+      master_announce_to_network: { Args: { p_body: string }; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3559,9 +3615,11 @@ export type Database = {
       resolve_partner_link: {
         Args: { p_code: string }
         Returns: {
+          is_master_partner: boolean
           link_id: string
           partner_id: string
           partner_name: string
+          purpose: string
           target_path: string
         }[]
       }

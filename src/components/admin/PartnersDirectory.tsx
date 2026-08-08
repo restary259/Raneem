@@ -8,13 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, RefreshCw, ChevronRight, Users } from 'lucide-react';
+import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import PartnerProfilePanel, { PartnerDirectoryRow } from './PartnerProfilePanel';
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
-type Filter = 'all' | 'open' | 'balance' | 'settled';
+type Filter = 'all' | 'open' | 'balance' | 'settled' | 'master';
 
 interface Props {
   /** Requests already fetched by the parent (list_payout_requests). */
@@ -71,11 +71,13 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
       if (filter === 'open') return Number(p.open_requests) > 0;
       if (filter === 'balance') return Number(p.available_amount) > 0 || Number(p.locked_amount) > 0;
       if (filter === 'settled') return Number(p.open_requests) === 0 && Number(p.available_amount) === 0;
+      if (filter === 'master') return !!p.is_master_partner;
       return true;
     });
   }, [partners, search, filter]);
 
   const openCount = partners.filter(p => Number(p.open_requests) > 0).length;
+  const masterCount = partners.filter(p => !!p.is_master_partner).length;
 
   const selected = partners.find(p => p.partner_id === selectedId) || null;
   if (selected) {
@@ -91,8 +93,18 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
 
   const PartnerCell = ({ p }: { p: PartnerDirectoryRow }) => (
     <div className="min-w-0">
-      <p className="font-medium truncate">{p.full_name}</p>
-      <p className="text-xs text-muted-foreground truncate">{p.email}{p.city ? ` · ${p.city}` : ''}</p>
+      <p className="font-medium truncate flex items-center gap-1.5">
+        {p.full_name}
+        {p.is_master_partner && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
+          </Badge>
+        )}
+      </p>
+      <p className="text-xs text-muted-foreground truncate">
+        {p.email}{p.city ? ` · ${p.city}` : ''}
+        {p.master_partner_name ? ` · ${t('admin.payouts.recruitedBy', 'Recruited by')} ${p.master_partner_name}` : ''}
+      </p>
     </div>
   );
 
@@ -115,6 +127,7 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
             <SelectItem value="open">{t('admin.payouts.filterOpen', 'Pending requests')} ({openCount})</SelectItem>
             <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')}</SelectItem>
             <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')}</SelectItem>
+            <SelectItem value="master">{t('admin.payouts.filterMaster', 'Master partners')} ({masterCount})</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={refreshAll}><RefreshCw className="h-4 w-4" /></Button>
@@ -152,6 +165,7 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                 <tr className="border-b bg-muted/50">
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colPartner', 'Partner')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colStudents', 'Students')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colRecruited', 'Recruited')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colEarned', 'Earned')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colPaid', 'Paid out')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colLocked', 'Locked (20d)')}</th>
@@ -169,6 +183,7 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                   >
                     <td className="px-4 py-3"><PartnerCell p={p} /></td>
                     <td className="px-4 py-3">{Number(p.students_count).toLocaleString('en-US')}</td>
+                    <td className="px-4 py-3">{p.is_master_partner ? Number(p.recruited_count || 0).toLocaleString('en-US') : '—'}</td>
                     <td className="px-4 py-3">{fmt(p.total_earned)}</td>
                     <td className="px-4 py-3">{fmt(p.paid_amount)}</td>
                     <td className="px-4 py-3">{fmt(p.locked_amount)}</td>
