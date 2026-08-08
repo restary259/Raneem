@@ -58,7 +58,7 @@ const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 
 // Team pages (Phase 3)
-const TeamTodayPage = lazy(() => import("./pages/team/TeamTodayPage"));
+const TeamWorkPage = lazy(() => import("./pages/team/TeamWorkPage"));
 const TeamCasesPage = lazy(() => import("./pages/team/TeamCasesPage"));
 const CaseDetailPage = lazy(() => import("./pages/team/CaseDetailPage"));
 const TeamAppointmentsPage = lazy(() => import("./pages/team/TeamAppointmentsPage"));
@@ -75,6 +75,7 @@ const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPa
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
 
 // Student pages (Phase 5)
+const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
 const StudentChecklistPage = lazy(() => import("./pages/student/StudentChecklistPage"));
 const StudentProfilePage = lazy(() => import("./pages/student/StudentProfilePage"));
 const StudentDocumentsPage = lazy(() => import("./pages/student/StudentDocumentsPage"));
@@ -210,11 +211,11 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<TeamTodayPage />} />
+              <Route index element={<TeamWorkPage />} />
               <Route path="cases" element={<TeamCasesPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
-              <Route path="appointments/today" element={<TeamTodayPage />} />
+              <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />
               <Route path="students" element={<TeamStudentsPage />} />
               <Route path="students/:id" element={<TeamStudentProfilePage />} />
@@ -246,7 +247,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/student/checklist" replace />} />
+              <Route index element={<StudentNextStepsPage />} />
               <Route path="checklist" element={<StudentChecklistPage />} />
               <Route path="profile" element={<StudentProfilePage />} />
               <Route path="documents" element={<StudentDocumentsPage />} />

@@ -296,7 +296,17 @@
       "viewPipeline": "عرض خط الأنابيب",
       "viewSubmissions": "التقديمات",
       "manageTeam": "إدارة الفريق",
-      "viewFinancials": "المالية"
+      "viewFinancials": "المالية",
+      "queueReview": "بانتظار المراجعة",
+      "queueReviewEmpty": "لا يوجد ما ينتظر المراجعة",
+      "queueUnassigned": "ملفات غير مسندة",
+      "queueUnassignedEmpty": "كل ملف له مسؤول",
+      "queuePayments": "أرصدة مستحقة",
+      "queuePaymentsEmpty": "لا توجد أرصدة مستحقة",
+      "queueAuth": "محاولات وصول مرفوضة (24 ساعة)",
+      "queueAuthEmpty": "لا توجد محاولات مرفوضة",
+      "viewAll": "عرض الكل",
+      "open": "فتح"
     },
     "pipeline": {
       "title": "خط أنابيب الطلبات",
@@ -1818,6 +1828,24 @@
       "totalCases": "إجمالي الحالات",
       "todayAppts": "مواعيد اليوم",
       "byStatus": "الحالات حسب الحالة"
+    },
+    "work": {
+      "title": "مهامي",
+      "allCases": "كل الملفات",
+      "statToday": "مواعيد اليوم",
+      "statOutcomes": "نتائج بانتظار التسجيل",
+      "statReturned": "مُعادة من الإدارة",
+      "statCases": "الملفات المسندة",
+      "returnedTitle": "مُعادة من الإدارة — مطلوب تعديلات",
+      "overdueTitle": "مواعيد تحتاج تسجيل نتيجة",
+      "scheduleTitle": "جدول اليوم",
+      "staleTitle": "ملفات بلا نشاط",
+      "noAppointments": "لا توجد مواعيد اليوم",
+      "noStale": "جميع الملفات عليها نشاط حديث",
+      "recordOutcome": "تسجيل النتيجة",
+      "openCase": "فتح الملف",
+      "upcoming": "قادم",
+      "staleDays": "{{days}} يوم بدون نشاط"
     }
   },
   "application": {
@@ -1980,7 +2008,15 @@
     "bagrut": "أداة البجروت",
     "mainSite": "الموقع الرئيسي",
     "backToMainSite": "العودة إلى الموقع الرئيسي",
-    "inbox": "صندوق الطلبات"
+    "inbox": "صندوق الطلبات",
+    "myWork": "مهامي",
+    "group": {
+      "work": "العمل",
+      "money": "المالية",
+      "people": "الأشخاص",
+      "setup": "الإعدادات"
+    },
+    "nextSteps": "الخطوات التالية"
   },
   "case": {
     "status": {
@@ -2284,6 +2320,12 @@
         "recordOutcome": "تسجيل النتيجة",
         "addNote": "إضافة ملاحظة"
       }
+    },
+    "submit": {
+      "action": "إرسال إلى الإدارة",
+      "blocked": "أكّد الدفع وارفع جواز السفر أولاً",
+      "success": "تم الإرسال إلى الإدارة للمراجعة",
+      "changesRequested": "الإدارة طلبت تعديلات"
     }
   },
   "partner": {
@@ -2385,7 +2427,11 @@
     "colName": "الاسم",
     "colDate": "تاريخ التسجيل",
     "colStage": "المرحلة الحالية",
-    "privacyNote": "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب"
+    "privacyNote": "* يتم عرض الاسم الأول فقط للحفاظ على خصوصية الطلاب",
+    "pipeline": {
+      "title": "توزيع مراحل الملفات",
+      "empty": "لا توجد ملفات بعد"
+    }
   },
   "visa": {
     "title": "طلب التأشيرة",
@@ -2442,6 +2488,21 @@
     },
     "checklist": {
       "title": "قائمة المتطلبات"
+    },
+    "next": {
+      "title": "خطواتك التالية",
+      "subtitle": "كل ما يحتاج إلى انتباهك الآن.",
+      "tasks": "المهام",
+      "open": "فتح",
+      "allClear": "لا توجد مهام معلّقة. سنعلمك عند الحاجة إلى أي إجراء.",
+      "completeProfile": "أكمل ملفك الشخصي",
+      "completeProfileDetail": "رقم جواز السفر وتاريخ الميلاد وجهة الاتصال للطوارئ مطلوبة.",
+      "uploadDocuments": "ارفع مستنداتك",
+      "uploadDocumentsDetail": "ابدأ بنسخة جواز السفر والشهادات.",
+      "upcomingAppointment": "موعد قادم",
+      "outstandingBalance": "رصيد مستحق",
+      "prepareVisa": "جهّز ملف التأشيرة",
+      "prepareVisaDetail": "املأ حقول نموذج التأشيرة وارفع الإثباتات المطلوبة."
     }
   },
   "settings": {

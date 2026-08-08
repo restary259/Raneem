@@ -9,6 +9,7 @@ import {
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
   TrendingUp, ListChecks, User, FileText,
   Globe, Heart,
+  Sparkles,
 } from 'lucide-react';
 
 interface NavItem {
@@ -27,7 +28,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
   ],
   team_member: [
-    { key: 'nav.today', icon: LayoutDashboard, href: '/team' },
+    { key: 'nav.myWork', icon: LayoutDashboard, href: '/team' },
     { key: 'nav.cases', icon: ClipboardList, href: '/team/cases' },
     { key: 'nav.appointments', icon: CalendarDays, href: '/team/appointments' },
     { key: 'nav.students', icon: GraduationCap, href: '/team/students' },
@@ -44,11 +45,11 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
   ],
   student: [
+    { key: 'nav.nextSteps', icon: Sparkles, href: '/student' },
     { key: 'nav.checklist', icon: ListChecks, href: '/student/checklist' },
     { key: 'nav.profile', icon: User, href: '/student/profile' },
     { key: 'nav.documents', icon: FileText, href: '/student/documents' },
     { key: 'nav.visa', icon: Globe, href: '/student/visa' },
-    { key: 'nav.refer', icon: Heart, href: '/student/refer' },
   ],
 };
 
@@ -70,7 +71,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.settings': t('nav.settings', 'Settings'),
     'nav.analytics': t('nav.analytics', 'Analytics'),
     'nav.activity': t('nav.activity', 'Activity'),
-    'nav.today': t('nav.today', 'Today'),
+    'nav.myWork': t('nav.myWork', 'My work'),
     'nav.cases': t('nav.cases', 'Cases'),
     'nav.appointments': t('nav.appointments', 'Appts'),
     'nav.todayAppts': t('nav.todayAppts', 'Today'),

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ArrowRight, CalendarPlus, Download, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, Download, Phone, Send } from "lucide-react";
 
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
@@ -85,6 +85,7 @@ export default function CaseDetailPage() {
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const documentsRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = role === "admin" || role === "team_member";
@@ -189,6 +190,43 @@ export default function CaseDetailPage() {
     }
   };
 
+  const hasPassport = documents.some((d) => d.category === "passport");
+  const canSubmitToAdmin =
+    canManage &&
+    !!submission &&
+    !!submission.payment_confirmed &&
+    hasPassport &&
+    caseData?.status !== "submitted" &&
+    caseData?.status !== "payment_confirmed" &&
+    caseData?.status !== "enrollment_paid";
+
+  const handleSubmitToAdmin = async () => {
+    if (!caseData || !submission || !user) return;
+    setSubmitting(true);
+    try {
+      const now = new Date().toISOString();
+      const { error: subErr } = await supabase
+        .from("case_submissions")
+        .update({ submitted_at: now, submitted_by: user.id, review_status: "submitted", review_note: null })
+        .eq("id", submission.id);
+      if (subErr) throw subErr;
+      const { error: caseErr } = await supabase
+        .from("cases")
+        .update({ status: "submitted" })
+        .eq("id", caseData.id);
+      if (caseErr) throw caseErr;
+      toast({ description: t("case.submit.success", "Sent to admin for review") });
+      await fetchData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -280,6 +318,23 @@ export default function CaseDetailPage() {
                 <span className="hidden sm:inline">{t("case.header.schedule", "Schedule")}</span>
               </Button>
             )}
+            {canManage && caseData.status !== "enrollment_paid" && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5"
+                disabled={!canSubmitToAdmin || submitting}
+                title={
+                  canSubmitToAdmin
+                    ? undefined
+                    : t("case.submit.blocked", "Confirm payment and upload the passport first")
+                }
+                onClick={handleSubmitToAdmin}
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t("case.submit.action", "Submit to admin")}</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -293,6 +348,17 @@ export default function CaseDetailPage() {
           <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
         </div>
       </div>
+
+      {canManage && submission?.review_status === "changes_requested" && (
+        <div className="rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
+          <p className="text-sm font-medium text-amber-700">
+            {t("case.submit.changesRequested", "Admin requested changes")}
+          </p>
+          {submission.review_note && (
+            <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
+          )}
+        </div>
+      )}
 
       {canManage && <CaseAttentionPanel tasks={tasks} onAction={handleTask} />}
 

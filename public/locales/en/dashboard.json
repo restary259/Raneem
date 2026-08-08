@@ -296,7 +296,17 @@
       "viewPipeline": "View Pipeline",
       "viewSubmissions": "Submissions",
       "manageTeam": "Manage Team",
-      "viewFinancials": "Financials"
+      "viewFinancials": "Financials",
+      "queueReview": "Awaiting review",
+      "queueReviewEmpty": "Nothing waiting for review",
+      "queueUnassigned": "Unassigned cases",
+      "queueUnassignedEmpty": "Every case has an owner",
+      "queuePayments": "Outstanding balances",
+      "queuePaymentsEmpty": "No outstanding balances",
+      "queueAuth": "Authorization failures (24h)",
+      "queueAuthEmpty": "No authorization failures",
+      "viewAll": "View all",
+      "open": "Open"
     },
     "pipeline": {
       "title": "Application Pipeline",
@@ -1800,6 +1810,24 @@
       "totalCases": "Total Cases",
       "todayAppts": "Today's Appointments",
       "byStatus": "Cases by Status"
+    },
+    "work": {
+      "title": "My work",
+      "allCases": "All cases",
+      "statToday": "Today's appointments",
+      "statOutcomes": "Outcomes to record",
+      "statReturned": "Returned by admin",
+      "statCases": "Assigned cases",
+      "returnedTitle": "Returned by admin — changes requested",
+      "overdueTitle": "Appointments needing an outcome",
+      "scheduleTitle": "Today's schedule",
+      "staleTitle": "Cases with no activity",
+      "noAppointments": "No appointments today",
+      "noStale": "Every case has recent activity",
+      "recordOutcome": "Record outcome",
+      "openCase": "Open case",
+      "upcoming": "Upcoming",
+      "staleDays": "{{days}} days without activity"
     }
   },
   "application": {
@@ -1962,7 +1990,15 @@
     "bagrut": "Bagrut Tool",
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
-    "inbox": "Inbox"
+    "inbox": "Inbox",
+    "myWork": "My work",
+    "group": {
+      "work": "Work",
+      "money": "Money",
+      "people": "People",
+      "setup": "Setup"
+    },
+    "nextSteps": "Next Steps"
   },
   "case": {
     "status": {
@@ -2266,6 +2302,12 @@
         "recordOutcome": "Record outcome",
         "addNote": "Add a note"
       }
+    },
+    "submit": {
+      "action": "Submit to admin",
+      "blocked": "Confirm payment and upload the passport first",
+      "success": "Sent to admin for review",
+      "changesRequested": "Admin requested changes"
     }
   },
   "partner": {
@@ -2367,7 +2409,11 @@
     "colName": "First Name",
     "colDate": "Registration Date",
     "colStage": "Current Stage",
-    "privacyNote": "* First names only shown to protect student privacy"
+    "privacyNote": "* First names only shown to protect student privacy",
+    "pipeline": {
+      "title": "Pipeline breakdown",
+      "empty": "No cases yet"
+    }
   },
   "visa": {
     "title": "Visa Application",
@@ -2424,6 +2470,21 @@
     },
     "checklist": {
       "title": "Your Checklist"
+    },
+    "next": {
+      "title": "Your next steps",
+      "subtitle": "Everything that needs your attention right now.",
+      "tasks": "Tasks",
+      "open": "Open",
+      "allClear": "You are all caught up. We will notify you when something is needed.",
+      "completeProfile": "Complete your profile",
+      "completeProfileDetail": "Passport, date of birth and emergency contact are required.",
+      "uploadDocuments": "Upload your documents",
+      "uploadDocumentsDetail": "Start with your passport copy and certificates.",
+      "upcomingAppointment": "Upcoming appointment",
+      "outstandingBalance": "Outstanding balance",
+      "prepareVisa": "Prepare your visa file",
+      "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs."
     }
   },
   "settings": {

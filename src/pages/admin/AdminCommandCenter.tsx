@@ -26,6 +26,13 @@ interface ActivityEntry {
   metadata: any;
 }
 
+interface QueueRow {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+}
+
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
@@ -34,6 +41,10 @@ const AdminCommandCenter = () => {
 
   const [counts, setCounts] = useState<CaseCounts>({ total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 });
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
+  const [awaitingReview, setAwaitingReview] = useState<QueueRow[]>([]);
+  const [unassigned, setUnassigned] = useState<QueueRow[]>([]);
+  const [outstanding, setOutstanding] = useState<QueueRow[]>([]);
+  const [authFailures, setAuthFailures] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -87,12 +98,124 @@ const AdminCommandCenter = () => {
     });
 
     setActivity(activityData);
+
+    // ── Action queues ──────────────────────────────────────────────
+    const dayAgo = new Date(Date.now() - 86400000).toISOString();
+    const [reviewRes, unassignedRes, balanceRes, failRes] = await Promise.allSettled([
+      supabase
+        .from('cases')
+        .select('id, full_name, case_reference, last_activity_at')
+        .eq('status', 'submitted')
+        .is('deleted_at', null)
+        .order('last_activity_at')
+        .limit(6),
+      supabase
+        .from('cases')
+        .select('id, full_name, case_reference, created_at')
+        .is('assigned_to', null)
+        .is('deleted_at', null)
+        .eq('archived', false)
+        .order('created_at', { ascending: false })
+        .limit(6),
+      supabase
+        .from('case_submissions')
+        .select('id, case_id, remaining_balance, case:cases(full_name, case_reference)')
+        .gt('remaining_balance', 0)
+        .is('deleted_at', null)
+        .order('remaining_balance', { ascending: false })
+        .limit(6),
+      supabase
+        .from('auth_failure_log')
+        .select('id, target, source, status_code, created_at')
+        .gte('created_at', dayAgo)
+        .order('created_at', { ascending: false })
+        .limit(6),
+    ]);
+
+    const val = <T,>(r: PromiseSettledResult<{ data: T[] | null; error: unknown }>): T[] =>
+      r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : [];
+
+    const shortDate = (iso: string) =>
+      new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    setAwaitingReview(
+      val<any>(reviewRes).map((c) => ({
+        id: c.id,
+        title: c.full_name,
+        subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.last_activity_at)}`,
+        href: '/admin/submissions',
+      })),
+    );
+    setUnassigned(
+      val<any>(unassignedRes).map((c) => ({
+        id: c.id,
+        title: c.full_name,
+        subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.created_at)}`,
+        href: `/admin/cases/${c.id}`,
+      })),
+    );
+    setOutstanding(
+      val<any>(balanceRes).map((s) => ({
+        id: s.id,
+        title: s.case?.full_name ?? '—',
+        subtitle: `₪${Number(s.remaining_balance).toLocaleString('en-US')}`,
+        href: `/admin/cases/${s.case_id}`,
+      })),
+    );
+    setAuthFailures(
+      val<any>(failRes).map((f) => ({
+        id: f.id,
+        title: `${f.source} · ${f.target}`,
+        subtitle: `${f.status_code ?? ''} ${new Date(f.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`.trim(),
+        href: '/admin/settings',
+      })),
+    );
+
     setLoading(false);
   }, [toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useRealtimeSubscription('cases', fetchData, true);
   useRealtimeSubscription('activity_log', fetchData, true);
+
+  const queues = [
+    {
+      key: 'review',
+      title: t('admin.commandCenter.queueReview', 'Awaiting review'),
+      empty: t('admin.commandCenter.queueReviewEmpty', 'Nothing waiting for review'),
+      icon: ClipboardCheck,
+      tone: 'text-blue-500',
+      href: '/admin/submissions',
+      rows: awaitingReview,
+    },
+    {
+      key: 'unassigned',
+      title: t('admin.commandCenter.queueUnassigned', 'Unassigned cases'),
+      empty: t('admin.commandCenter.queueUnassignedEmpty', 'Every case has an owner'),
+      icon: Users,
+      tone: 'text-primary',
+      href: '/admin/pipeline',
+      rows: unassigned,
+    },
+    {
+      key: 'payments',
+      title: t('admin.commandCenter.queuePayments', 'Outstanding balances'),
+      empty: t('admin.commandCenter.queuePaymentsEmpty', 'No outstanding balances'),
+      icon: Clock,
+      tone: 'text-amber-600',
+      href: '/admin/financials',
+      rows: outstanding,
+    },
+    {
+      key: 'auth',
+      title: t('admin.commandCenter.queueAuth', 'Authorization failures (24h)'),
+      empty: t('admin.commandCenter.queueAuthEmpty', 'No authorization failures'),
+      icon: AlertTriangle,
+      tone: 'text-destructive',
+      href: '/admin/settings',
+      rows: authFailures,
+    },
+  ];
 
   const kpis = [
     {
@@ -139,7 +262,7 @@ const AdminCommandCenter = () => {
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
-    return d.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
+    return d.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
   };
 
   return (
@@ -236,19 +359,45 @@ const AdminCommandCenter = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: t('admin.commandCenter.viewPipeline', 'View Pipeline'), path: '/admin/pipeline' },
-          { label: t('admin.commandCenter.viewSubmissions', 'Submissions'), path: '/admin/submissions' },
-          { label: t('admin.commandCenter.manageTeam', 'Manage Team'), path: '/admin/team' },
-          { label: t('admin.commandCenter.viewFinancials', 'Financials'), path: '/admin/financials' },
-        ].map((action) => (
-          <Button key={action.path} variant="outline" className="h-auto py-3 text-sm" onClick={() => navigate(action.path)}>
-            {action.label}
-          </Button>
+      {/* Action queues */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {queues.map((q) => (
+          <Card key={q.key}>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <q.icon className={`h-4 w-4 ${q.tone}`} />
+                {q.title}
+                <Badge variant="secondary">{q.rows.length}</Badge>
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate(q.href)}>
+                {t('admin.commandCenter.viewAll', 'View all')}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {q.rows.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">{q.empty}</p>
+              ) : (
+                <div className="divide-y">
+                  {q.rows.map((row) => (
+                    <div key={row.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{row.title}</p>
+                        <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                          {row.subtitle}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => navigate(row.href)}>
+                        {t('admin.commandCenter.open', 'Open')}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         ))}
       </div>
+
     </div>
   );
 };

@@ -44,6 +44,7 @@ import {
   Home,
   Table,
   Calculator,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -53,25 +54,27 @@ interface NavItem {
   key: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
+  /** i18n key of the sidebar group heading this item belongs to */
+  group?: string;
 }
 
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
-    { key: "nav.overview", icon: LayoutDashboard, href: "/admin" },
-    { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline" },
-    { key: "nav.team", icon: Users, href: "/admin/team" },
-    { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
-    { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions" },
-    { key: "nav.financials", icon: DollarSign, href: "/admin/financials" },
-    { key: "nav.students", icon: GraduationCap, href: "/admin/students" },
-    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet" },
-    { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics" },
-    { key: "nav.inbox", icon: Inbox, href: "/admin/inbox" },
-    { key: "nav.activity", icon: Activity, href: "/admin/activity" },
-    { key: "nav.settings", icon: Settings, href: "/admin/settings" },
+    { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
+    { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
+    { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
+    { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
+    { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
+    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
+    { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
+    { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
+    { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
+    { key: "nav.programs", icon: BookOpen, href: "/admin/programs", group: "nav.group.setup" },
+    { key: "nav.activity", icon: Activity, href: "/admin/activity", group: "nav.group.setup" },
+    { key: "nav.settings", icon: Settings, href: "/admin/settings", group: "nav.group.setup" },
   ],
   team_member: [
-    { key: "nav.today", icon: LayoutDashboard, href: "/team" },
+    { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
@@ -91,6 +94,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
   ],
   student: [
+    { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
     { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
     { key: "nav.profile", icon: User, href: "/student/profile" },
     { key: "nav.documents", icon: FileText, href: "/student/documents" },
@@ -124,7 +128,7 @@ function SidebarNav({ role }: { role: AppRole }) {
       </div>
 
       <SidebarMenu className="mt-2 px-2">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isActive =
             location.pathname === item.href ||
             (item.href !== "/admin" &&
@@ -132,24 +136,32 @@ function SidebarNav({ role }: { role: AppRole }) {
               item.href !== "/partner" &&
               item.href !== "/student/checklist" &&
               location.pathname.startsWith(item.href));
+          const showGroup = !!item.group && item.group !== items[index - 1]?.group;
           return (
-            <SidebarMenuItem key={item.key}>
-              <SidebarMenuButton asChild>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    isActive && "bg-primary/10 text-primary font-medium",
-                    collapsed && "justify-center px-2",
-                  )}
-                  title={collapsed ? t(item.key, item.key) : undefined}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{t(item.key, item.key)}</span>}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <React.Fragment key={item.key}>
+              {showGroup && !collapsed && (
+                <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t(item.group as string, item.group as string)}
+                </p>
+              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      isActive && "bg-primary/10 text-primary font-medium",
+                      collapsed && "justify-center px-2",
+                    )}
+                    title={collapsed ? t(item.key, item.key) : undefined}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>{t(item.key, item.key)}</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </React.Fragment>
           );
         })}
       </SidebarMenu>
