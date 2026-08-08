@@ -31,6 +31,8 @@ interface TeamMember {
   commissionOverridden: boolean;
   /** Managers are visible to team members in the internal chat directory. */
   is_manager: boolean;
+  /** Partners upgraded to master partner get the network dashboard. */
+  is_master_partner: boolean;
 }
 
 /** Roles that get a public referral link of their own. */
