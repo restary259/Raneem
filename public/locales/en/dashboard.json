@@ -2403,7 +2403,9 @@
       "changesRequested": "Admin requested changes",
       "confirmTitle": "Send this student file to Admin?",
       "confirmBody": "The case moves to admin review and the file is locked for editing.",
-      "confirmAction": "Confirm & send"
+      "confirmAction": "Confirm & send",
+      "fixAndResend": "Make the requested change below, save the file, then send it back to admin.",
+      "resend": "Send back to admin"
     },
     "program": {
       "program": "Program",
