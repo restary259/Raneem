@@ -1180,7 +1180,8 @@
     },
     "caseReference": "رقم الملف",
     "showMore": "عرض المزيد",
-    "archived": "مؤرشف"
+    "archived": "مؤرشف",
+    "back": "رجوع"
   },
   "funnel": {
     "new": "عميل جديد",

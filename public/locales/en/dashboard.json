@@ -1162,7 +1162,8 @@
     },
     "caseReference": "Case reference",
     "showMore": "Show more",
-    "archived": "Archived"
+    "archived": "Archived",
+    "back": "Back"
   },
   "funnel": {
     "new": "Lead Submitted",
