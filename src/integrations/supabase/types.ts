@@ -1052,6 +1052,7 @@ export type Database = {
           kind: string
           mentions: string[]
           original_body: string | null
+          payout_request_id: string | null
           request_status: string | null
           thread_id: string
         }
@@ -1068,6 +1069,7 @@ export type Database = {
           kind?: string
           mentions?: string[]
           original_body?: string | null
+          payout_request_id?: string | null
           request_status?: string | null
           thread_id: string
         }
@@ -1084,10 +1086,18 @@ export type Database = {
           kind?: string
           mentions?: string[]
           original_body?: string | null
+          payout_request_id?: string | null
           request_status?: string | null
           thread_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "direct_messages_payout_request_id_fkey"
+            columns: ["payout_request_id"]
+            isOneToOne: false
+            referencedRelation: "payout_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "direct_messages_thread_id_fkey"
             columns: ["thread_id"]
@@ -2098,6 +2108,7 @@ export type Database = {
           id: string
           linked_reward_ids: string[]
           linked_student_names: string[] | null
+          message_id: string | null
           paid_at: string | null
           paid_by: string | null
           payment_method: string | null
@@ -2106,6 +2117,7 @@ export type Database = {
           requestor_id: string
           requestor_role: string
           status: string
+          thread_id: string | null
           transaction_ref: string | null
         }
         Insert: {
@@ -2116,6 +2128,7 @@ export type Database = {
           id?: string
           linked_reward_ids?: string[]
           linked_student_names?: string[] | null
+          message_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
@@ -2124,6 +2137,7 @@ export type Database = {
           requestor_id: string
           requestor_role?: string
           status?: string
+          thread_id?: string | null
           transaction_ref?: string | null
         }
         Update: {
@@ -2134,6 +2148,7 @@ export type Database = {
           id?: string
           linked_reward_ids?: string[]
           linked_student_names?: string[] | null
+          message_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
@@ -2142,9 +2157,18 @@ export type Database = {
           requestor_id?: string
           requestor_role?: string
           status?: string
+          thread_id?: string | null
           transaction_ref?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payout_requests_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permissions: {
         Row: {
@@ -3183,6 +3207,15 @@ export type Database = {
       }
     }
     Functions: {
+      admin_respond_payout_request: {
+        Args: {
+          p_action: string
+          p_note?: string
+          p_request_id: string
+          p_transaction_ref?: string
+        }
+        Returns: undefined
+      }
       anonymize_user: { Args: { p_user_id: string }; Returns: undefined }
       can_access_case_thread: {
         Args: { _case_id: string; _user_id: string }
@@ -3314,6 +3347,7 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_payout_preview: { Args: never; Returns: Json }
       get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
@@ -3328,6 +3362,10 @@ export type Database = {
           source: string
           status: string
         }[]
+      }
+      get_payout_request_detail: {
+        Args: { p_request_id: string }
+        Returns: Json
       }
       get_staff_directory: {
         Args: never
@@ -3468,6 +3506,7 @@ export type Database = {
         }
         Returns: string
       }
+      request_payout_via_chat: { Args: { p_notes?: string }; Returns: Json }
       resolve_partner_link: {
         Args: { p_code: string }
         Returns: {
