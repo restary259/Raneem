@@ -4,10 +4,13 @@ import { Check, ChevronRight } from "lucide-react";
 import type { PipelineStatus } from "@/lib/caseStatus";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { stageBlockReason } from "@/services/CaseStageService";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
