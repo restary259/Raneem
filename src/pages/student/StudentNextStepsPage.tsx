@@ -139,7 +139,7 @@ export default function StudentNextStepsPage() {
         });
       }
 
-      if (caseRes?.data?.status === 'submitted' || caseRes?.data?.status === 'enrollment_paid') {
+      if (ownCase?.status === 'submitted' || ownCase?.status === 'enrollment_paid') {
         next.push({
           id: 'visa',
           icon: Globe,
