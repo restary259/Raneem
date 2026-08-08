@@ -3181,7 +3181,23 @@
         "approve": "Payout approved",
         "pay": "Payout marked paid",
         "reject": "Payout rejected"
-      }
+      },
+      "attachments": "Attachments",
+      "noAttachments": "No files attached to this request",
+      "openFile": "Open file",
+      "fileUnavailable": "File unavailable",
+      "confirmPayTitle": "Confirm payment",
+      "confirmPayBody": "Mark {{amount}} as paid to {{partner}}? This records the payment and cannot be undone.",
+      "confirmPayAction": "Confirm payment",
+      "cancel": "Cancel",
+      "requestedAt": "Requested",
+      "approvedAt": "Approved",
+      "paidAt": "Paid"
+    },
+    "section": {
+      "direct": "Direct",
+      "cases": "Cases",
+      "partners": "Partners"
     }
   }
 }
