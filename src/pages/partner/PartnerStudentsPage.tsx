@@ -44,40 +44,44 @@ export default function PartnerStudentsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    // 1. Fetch per-partner visibility override
-    const { data: override } = await (supabase as any)
-      .from("partner_commission_overrides")
-      .select("show_all_cases")
-      .eq("partner_id", uid)
-      .maybeSingle();
+    // Visibility follows the same rules as the overview page: a per-partner
+    // override wins, otherwise the global platform setting decides whether the
+    // partner sees the agency pool or only their own attributed cases.
+    const [settingsRes, overrideRes] = await Promise.all([
+      (supabase as any)
+        .from("platform_settings")
+        .select("partner_dashboard_show_all_cases")
+        .limit(1)
+        .maybeSingle(),
+      (supabase as any)
+        .from("partner_commission_overrides")
+        .select("show_all_cases")
+        .eq("partner_id", uid)
+        .maybeSingle(),
+    ]);
 
-    // 2. Build cases query based on visibility:
-    //    true  → all cases
-    //    false → auto-generated agency leads only (apply_page / contact_form / team-submitted)
-    //    null  → only cases directly attributed to this partner via partner_id
-    let query = (supabase as any)
-      .from("cases")
-      .select("id,full_name,status,created_at,source,partner_id")
-      .order("created_at", { ascending: false });
+    const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
+    const override = overrideRes.data;
 
     // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
     const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
 
+    let sources: string[] | null = null;
     if (override !== null && override !== undefined) {
       if (override.show_all_cases === false) {
-        // Apply/Contact Only: agency-generated leads, no peer referrals
-        query = query.in("source", PARTNER_SOURCES);
-      } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
-        // Referral Cases Only: peer student-to-student referrals (source='referral')
-        query = query.eq("source", "referral");
+        sources = PARTNER_SOURCES;
+      } else if (override.show_all_cases === null) {
+        sources = ["referral"];
       }
-      // show_all_cases === true → no extra filter (show everything)
-    } else {
-      // No override row at all → default: agency-generated leads only
-      query = query.in("source", PARTNER_SOURCES);
+    } else if (!globalShowAll) {
+      sources = PARTNER_SOURCES;
     }
 
-    const { data, error } = await query;
+    // Cases are read through the partner reader so the row set and the reduced
+    // column set are enforced server-side (no phone, no internal notes).
+    const { data, error } = await (supabase as any).rpc("get_partner_pool_cases", {
+      p_sources: sources,
+    });
     if (error) console.error("cases fetch error:", error);
     setCases(data || []);
     setIsLoading(false);
