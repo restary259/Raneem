@@ -45,6 +45,8 @@ interface MessageListProps {
   readState?: ThreadReadState[];
   /** People who can be mentioned, used to highlight @names. */
   mentionables?: MentionablePerson[];
+  /** Staff only: route prefix for `#case` links, e.g. `/admin/cases`. */
+  caseLinkBase?: string;
   /** Saves an edited message body. */
   onEditMessage?: (message: ChatMessage, body: string) => Promise<void>;
   /** People currently typing in this thread. */
@@ -66,6 +68,7 @@ export default function MessageList({
   onlineUserIds,
   readState,
   mentionables = [],
+  caseLinkBase,
   onEditMessage,
   typing = [],
   onLoadOlder,
