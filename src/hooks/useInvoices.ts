@@ -8,8 +8,11 @@ export interface InvoiceItem {
   category: string;
   amount: number;
   quantity: number;
+  discount: number;
+  case_service_id: string | null;
   created_at: string;
 }
+
 
 export interface Invoice {
   id: string;
