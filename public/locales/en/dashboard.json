@@ -386,7 +386,9 @@
       "confirmDelete": "Delete",
       "deleteAccount": "Delete account",
       "deleteConfirmTitle": "Delete account?",
-      "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone."
+      "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
+      "manager": "Manager",
+      "managerHint": "Managers are reachable by all team members in the internal chat"
     },
     "programs": {
       "title": "Programs & Accommodations",
