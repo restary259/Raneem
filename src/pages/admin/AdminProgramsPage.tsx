@@ -593,8 +593,16 @@ const AdminProgramsPage = () => {
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">{t('admin.programs.loading')}</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {programs.map((p) => (
+            <div className="space-y-6">
+              {groupBySchool(programs, schools).map((group) => (
+                <div key={group.key} className="space-y-3">
+                  <div className="flex items-center gap-2 border-b pb-1">
+                    <School className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">{group.label}</h3>
+                    <span className="text-xs text-muted-foreground">({group.items.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {group.items.map((p) => (
                 <Card
                   key={p.id}
                   className={`overflow-hidden hover:shadow-md transition-all ${!p.is_active ? "opacity-60" : ""}`}
@@ -620,9 +628,19 @@ const AdminProgramsPage = () => {
                           <BadgeCheck className="h-3 w-3 me-1" />
                           {p.type.replace("_", " ")}
                         </span>
+                        {p.cefr_range && (
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {p.cefr_range}
+                          </span>
+                        )}
                         {p.price != null && (
                           <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                             💰 {p.price.toLocaleString('en-US')} {p.currency}
+                          </span>
+                        )}
+                        {parseTiers(p.price_tiers).length > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
+                            {t('admin.programs.tiersCount', { count: parseTiers(p.price_tiers).length })}
                           </span>
                         )}
                         {p.duration_in_months && (
@@ -683,9 +701,12 @@ const AdminProgramsPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
               {programs.length === 0 && (
-                <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
+                <p className="text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
               )}
             </div>
           )}
