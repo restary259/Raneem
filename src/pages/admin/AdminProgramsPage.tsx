@@ -342,13 +342,16 @@ const AdminProgramsPage = () => {
         terms_url: insForm.terms_url || null,
         description_ar: insForm.description_ar || null,
         description_en: insForm.description_en || null,
+        age_price_tiers: insRates.filter((r) => r.price != null),
       };
       if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
       else await db.from("insurances").insert(payload);
       setInsOpen(false);
       setEditInsId(null);
       setInsForm(emptyInsForm);
+      setInsRates([]);
       await fetchAll();
+
       toast({ description: editInsId ? t('admin.programs.insUpdated') : t('admin.programs.insCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
