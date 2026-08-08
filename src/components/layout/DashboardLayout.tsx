@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
