@@ -39,6 +39,12 @@ interface Program {
   lessons_per_week: number | null;
   duration_in_months: number | null;
   fixed_start_day_of_month: number | null;
+  school_id: string | null;
+  cefr_range: string | null;
+  hours_per_week: number | null;
+  start_rule: string | null;
+  registration_fee: number | null;
+  price_tiers: unknown;
 }
 interface School {
   id: string;
