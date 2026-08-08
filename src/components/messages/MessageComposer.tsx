@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
+  AtSign,
   FileUp,
   Loader2,
   Lock,
@@ -20,9 +21,13 @@ import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
   MAX_ATTACHMENT_BYTES,
+  activeMentionQuery,
+  applyMention,
   formatFileSize,
+  resolveMentionIds,
   validateAttachmentFile,
   type ChatAttachment,
+  type MentionablePerson,
 } from "@/lib/chatFormat";
 import {
   removeChatAttachment,
@@ -35,13 +40,17 @@ interface MessageComposerProps {
   onSend: (
     body: string,
     attachments: ChatAttachment[],
-    opts: { visibility: "internal" | "shared"; kind: "text" | "request" },
+    opts: { visibility: "internal" | "shared"; kind: "text" | "request"; mentions: string[] },
   ) => Promise<void>;
   /** Staff can toggle internal notes and send document requests. */
   allowInternal?: boolean;
   allowRequests?: boolean;
   disabled?: boolean;
   hint?: string;
+  /** People who can be @mentioned in this thread. */
+  mentionables?: MentionablePerson[];
+  /** Called (throttled by the caller) while the user is typing. */
+  onTyping?: () => void;
 }
 
 type UploadItem = {
@@ -62,16 +71,39 @@ export default function MessageComposer({
   allowRequests = false,
   disabled = false,
   hint,
+  mentionables = [],
+  onTyping,
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
   const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState<"internal" | "shared">("shared");
   const [kind, setKind] = useState<"text" | "request">("text");
   const [items, setItems] = useState<UploadItem[]>([]);
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+
+  const mentionMatches = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return mentionables.filter((p) => p.name && p.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [mentionQuery, mentionables]);
+
+  const pickMention = (person: MentionablePerson) => {
+    const el = textRef.current;
+    const caret = el?.selectionStart ?? body.length;
+    const next = applyMention(body, caret, person.name);
+    setBody(next.text);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(next.caret, next.caret);
+    });
+  };
+
 
   const patch = (id: string, next: Partial<UploadItem>) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...next } : it)));
