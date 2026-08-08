@@ -52,14 +52,10 @@ export default function StudentNextStepsPage() {
     }
 
     setFullName(profile?.full_name ?? '');
-    const { data: ownCase, error: caseLookupError } = await (supabase as any)
-      .from('cases')
-      .select('id, status')
-      .eq('student_user_id', uid)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Students read their case through a restricted accessor that excludes
+    // internal commission/revenue columns.
+    const { data: ownCases, error: caseLookupError } = await (supabase as any).rpc('get_my_case');
+    const ownCase = (ownCases ?? [])[0] ?? null;
     if (caseLookupError) {
       setLoadError(caseLookupError.message);
       setLoading(false);
