@@ -155,7 +155,7 @@ const NotificationBell: React.FC = () => {
               {notifications.map(n => (
                 <button
                   key={n.id}
-                  onClick={() => !n.is_read && markAsRead(n.id)}
+                  onClick={() => handleOpenNotification(n)}
                   className={`w-full text-start px-4 py-3 hover:bg-muted/50 transition-colors ${!n.is_read ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-start gap-2">
