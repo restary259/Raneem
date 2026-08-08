@@ -79,6 +79,8 @@ const AdminInboxPage = () => {
         </div>
       </div>
 
+      <RecruitApplicationsPanel />
+
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
