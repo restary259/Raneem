@@ -347,7 +347,19 @@ export default function CaseMessagesInboxPage() {
                         onClick={() => openDirectWith(member.id)}
                         className="flex w-full items-center justify-between rounded-md p-2 text-start transition-colors hover:bg-muted"
                       >
-                        <span className="text-sm font-medium">{member.full_name}</span>
+                        <span className="flex items-center gap-2 text-sm font-medium">
+                          <span
+                            className={cn(
+                              "h-2 w-2 shrink-0 rounded-full",
+                              online.has(member.id) ? "bg-emerald-500" : "bg-muted-foreground/40",
+                            )}
+                            title={t(
+                              online.has(member.id) ? "chat.presence.online" : "chat.presence.offline",
+                            )}
+                          />
+                          {member.full_name}
+                        </span>
+
                         <Badge variant="outline" className="text-[10px]">
                           {t(`case.messages.role.${member.role}`, member.role)}
                         </Badge>
