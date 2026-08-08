@@ -460,13 +460,14 @@ export default function MessageComposer({
               collisionPadding={12}
               className="z-50 w-56"
             >
-              <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
+              <DropdownMenuItem className="gap-2" onSelect={() => fileRef.current?.click()}>
                 <Paperclip className="h-4 w-4" />
                 {t("chat.attach.button")}
               </DropdownMenuItem>
 
               {mentionables.length > 0 && (
                 <DropdownMenuItem
+                  className="gap-2"
                   onSelect={() => {
                     const el = textRef.current;
                     const caret = el?.selectionStart ?? body.length;
@@ -485,6 +486,7 @@ export default function MessageComposer({
 
               {allowCaseMentions && (
                 <DropdownMenuItem
+                  className="gap-2"
                   onSelect={() => {
                     const el = textRef.current;
                     const caret = el?.selectionStart ?? body.length;
@@ -503,6 +505,7 @@ export default function MessageComposer({
 
               {allowRequests && (
                 <DropdownMenuItem
+                  className="gap-2"
                   onSelect={() => setKind((k) => (k === "request" ? "text" : "request"))}
                 >
                   <FileUp className="h-4 w-4" />
@@ -511,7 +514,7 @@ export default function MessageComposer({
               )}
 
               {onRequestPayout && (
-                <DropdownMenuItem onSelect={() => onRequestPayout()}>
+                <DropdownMenuItem className="gap-2" onSelect={() => onRequestPayout()}>
                   <Banknote className="h-4 w-4" />
                   {t("chat.payout.request")}
                 </DropdownMenuItem>
