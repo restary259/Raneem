@@ -2409,7 +2409,11 @@
     "colName": "First Name",
     "colDate": "Registration Date",
     "colStage": "Current Stage",
-    "privacyNote": "* First names only shown to protect student privacy"
+    "privacyNote": "* First names only shown to protect student privacy",
+    "pipeline": {
+      "title": "Pipeline breakdown",
+      "empty": "No cases yet"
+    }
   },
   "visa": {
     "title": "Visa Application",
@@ -2466,6 +2470,21 @@
     },
     "checklist": {
       "title": "Your Checklist"
+    },
+    "next": {
+      "title": "Your next steps",
+      "subtitle": "Everything that needs your attention right now.",
+      "tasks": "Tasks",
+      "open": "Open",
+      "allClear": "You are all caught up. We will notify you when something is needed.",
+      "completeProfile": "Complete your profile",
+      "completeProfileDetail": "Passport, date of birth and emergency contact are required.",
+      "uploadDocuments": "Upload your documents",
+      "uploadDocumentsDetail": "Start with your passport copy and certificates.",
+      "upcomingAppointment": "Upcoming appointment",
+      "outstandingBalance": "Outstanding balance",
+      "prepareVisa": "Prepare your visa file",
+      "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs."
     }
   },
   "settings": {
