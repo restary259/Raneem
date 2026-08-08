@@ -203,6 +203,21 @@ export default function StudentNextStepsPage() {
           )}
         </CardContent>
       </Card>
+
+      {activeCaseId && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              {t('case.messages.title', 'Messages')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CaseMessages caseId={activeCaseId} />
+          </CardContent>
+        </Card>
+      )}
     </div>
+
   );
 }
