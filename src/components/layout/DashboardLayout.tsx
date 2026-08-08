@@ -71,7 +71,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.settings", icon: Settings, href: "/admin/settings" },
   ],
   team_member: [
-    { key: "nav.today", icon: LayoutDashboard, href: "/team" },
+    { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
