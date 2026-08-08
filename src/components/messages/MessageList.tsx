@@ -196,7 +196,7 @@ export default function MessageList({
   let renderedDay: string | null = null;
 
   return (
-    <div className={cn("space-y-5 p-4", className)}>
+    <div className={cn("space-y-6 p-4 sm:p-5", className)}>
       {hasOlder && onLoadOlder && (
         <div className="flex justify-center">
           <Button size="sm" variant="ghost" disabled={loadingOlder} onClick={onLoadOlder}>
