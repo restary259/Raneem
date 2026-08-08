@@ -306,6 +306,27 @@ export default function PartnerEarningsPage() {
         </Card>
       </div>
 
+      {/* Network override earnings — master partners only, kept apart from referral earnings */}
+      {overrideRewards.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              {isAr ? "أرباح الشبكة (عمولة إضافية)" : "Network override earnings"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-2xl font-bold">
+              ₪{overrideRewards.reduce((s: number, r: any) => s + Number(r.amount), 0).toLocaleString("en-US")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isAr
+                ? `${overrideRewards.length.toLocaleString("en-US")} عمولة من شركاء شبكتك — منفصلة عن إحالاتك المباشرة.`
+                : `${overrideRewards.length.toLocaleString("en-US")} overrides from partners you recruited — separate from your own referrals.`}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Earnings Breakdown Table */}
       <Card>
         <CardHeader className="pb-2">
