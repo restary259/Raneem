@@ -24,7 +24,8 @@ import {
   FileCheck,
   DollarSign,
   BarChart2,
-  Activity, Inbox,
+  Activity,
+  Inbox,
   Settings,
   CalendarDays,
   ClipboardList,
@@ -180,7 +181,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top header */}
-          <header className="h-14 border-b border-border/50 flex items-center justify-between px-4 shrink-0 bg-background/95 backdrop-blur">
+          <header className="h-14 border-b border-border/50 flex items-center justify-between px-4 shrink-0 bg-background/95 backdrop-blur sticky top-0 z-10">
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
@@ -195,10 +196,10 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                       className="gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <Home className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs">{t('nav.mainSite')}</span>
+                      <span className="hidden sm:inline text-xs">{t("nav.mainSite")}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{t('nav.backToMainSite')}</TooltipContent>
+                  <TooltipContent>{t("nav.backToMainSite")}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <Button
