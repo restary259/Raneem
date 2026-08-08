@@ -273,12 +273,14 @@ export default function MessageList({
                   <div
                     key={m.id}
                     className={cn(
-                      "space-y-2 rounded-2xl border px-3.5 py-2.5 shadow-sm",
+                      "w-fit max-w-full space-y-2 overflow-hidden break-words rounded-2xl border px-3.5 py-2.5 shadow-sm",
                       group.mine
                         ? "rounded-ee-sm border-primary/25 bg-primary/10"
                         : "rounded-es-sm border-border bg-card",
-                      m.visibility === "internal" && "border-amber-300/70 bg-amber-50",
-                      m.kind === "request" && "border-sky-300/70 bg-sky-50",
+                      m.visibility === "internal" &&
+                        "border-amber-300/70 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10",
+                      m.kind === "request" &&
+                        "border-sky-300/70 bg-sky-50 dark:border-sky-500/40 dark:bg-sky-500/10",
                     )}
                   >
                     {(m.visibility === "internal" || m.kind === "request") && (
@@ -286,8 +288,9 @@ export default function MessageList({
                         {m.visibility === "internal" && (
                           <Badge
                             variant="outline"
-                            className="gap-1 border-amber-400 bg-amber-100 text-[11px] text-amber-900"
+                            className="gap-1 border-amber-400 bg-amber-100 text-[11px] text-amber-900 dark:border-amber-500/50 dark:bg-amber-500/20 dark:text-amber-200"
                           >
+
                             <Lock className="h-3 w-3" />
                             {t("case.messages.internal")}
                           </Badge>
