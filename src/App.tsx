@@ -32,6 +32,7 @@ const EducationalProgramsPage = lazy(() => import("./pages/EducationalProgramsPa
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const BroadcastPage = lazy(() => import("./pages/BroadcastPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const AIAdvisorPage = lazy(() => import("./pages/AIAdvisorPage"));
 const CostCalculatorPage = lazy(() => import("./pages/CostCalculatorPage"));
@@ -179,6 +180,7 @@ const App = () => {
             <Route path="/apply" element={<ApplyPage />} />
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
             {/* ── Admin Dashboard (/admin/*) ── */}
             <Route

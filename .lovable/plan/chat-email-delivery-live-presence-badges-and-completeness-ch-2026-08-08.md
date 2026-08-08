@@ -1,4 +1,4 @@
-# Chat: email delivery, live presence badges, and completeness checklist
+# Chat: email delivery, live presence badges, and completeness checklist make sure to not stack vhat box and people on top of each other use lovaeable built in emails
 
 ## What I verified first
 
@@ -30,7 +30,8 @@ Reuse the existing presence channel so one connection powers everything:
 ## 3. Recommended checklist for this internal chat tool
 
 Delivered already:
-- Unified inbox (case threads + direct threads), search, filter chips, unread counts
+
+- Unified inbox (case threads + direct threads), search, filter chips, unread counts attach the case we are talking about in the chat 
 - Grouped bubbles, day separators, avatars, timestamps
 - Internal notes (staff-only) vs shared messages
 - Attachments up to 15 MB with progress, image/PDF preview, type and size validation
@@ -40,6 +41,7 @@ Delivered already:
 - Arabic/English throughout, RTL-correct
 
 Recommended next (proposed priority order):
+
 1. Reliable email + test button (section 1)
 2. Presence and typing indicators everywhere (section 2)
 3. Read receipts — "seen by" on the last message of a thread

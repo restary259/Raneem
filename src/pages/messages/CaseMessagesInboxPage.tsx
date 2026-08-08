@@ -10,7 +10,9 @@ import {
   MessageSquare,
   Plus,
   Search,
+  Send,
   Settings2,
+
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,9 +44,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import {
   getNotificationPrefs,
+  sendTestNotificationEmail,
   updateNotificationPrefs,
   type NotificationPrefs,
 } from "@/services/NotificationService";
+
 import {
   listMyDirectThreads,
   listStaffDirectory,
@@ -94,6 +98,20 @@ export default function CaseMessagesInboxPage() {
       toast({ variant: "destructive", description: err.message });
     }
   };
+
+  const [testingEmail, setTestingEmail] = useState(false);
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const to = await sendTestNotificationEmail();
+      toast({ description: t("chat.notify.testEmailSent", { email: to }) });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -287,7 +305,18 @@ export default function CaseMessagesInboxPage() {
                   onCheckedChange={(v) => savePrefs({ notify_email: v })}
                 />
               </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full gap-1"
+                disabled={testingEmail}
+                onClick={handleTestEmail}
+              >
+                <Send className="h-4 w-4" />
+                {t("chat.notify.testEmail")}
+              </Button>
               <p className="text-xs text-muted-foreground">{t("chat.notify.hint")}</p>
+
             </PopoverContent>
           </Popover>
           <Dialog open={staffOpen} onOpenChange={setStaffOpen}>
@@ -318,7 +347,19 @@ export default function CaseMessagesInboxPage() {
                         onClick={() => openDirectWith(member.id)}
                         className="flex w-full items-center justify-between rounded-md p-2 text-start transition-colors hover:bg-muted"
                       >
-                        <span className="text-sm font-medium">{member.full_name}</span>
+                        <span className="flex items-center gap-2 text-sm font-medium">
+                          <span
+                            className={cn(
+                              "h-2 w-2 shrink-0 rounded-full",
+                              online.has(member.id) ? "bg-emerald-500" : "bg-muted-foreground/40",
+                            )}
+                            title={t(
+                              online.has(member.id) ? "chat.presence.online" : "chat.presence.offline",
+                            )}
+                          />
+                          {member.full_name}
+                        </span>
+
                         <Badge variant="outline" className="text-[10px]">
                           {t(`case.messages.role.${member.role}`, member.role)}
                         </Badge>

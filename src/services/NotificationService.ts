@@ -76,3 +76,25 @@ export async function notifyNewMessageEmail(payload: {
     // Email is best-effort; the in-app notification already landed.
   }
 }
+
+/** Sends a delivery-test email to the signed-in user; throws with provider detail on failure. */
+export async function sendTestNotificationEmail(): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('notify-new-message', {
+    body: { test: true },
+  });
+  if (error) {
+    let detail = error.message;
+    const ctx = (error as any)?.context;
+    if (ctx?.text) {
+      try {
+        detail = (await ctx.text()) || detail;
+      } catch {
+        /* keep original message */
+      }
+    }
+    throw new Error(detail);
+  }
+  const body = data as any;
+  if (body?.ok === false) throw new Error(body?.detail ?? 'Email not sent');
+  return body?.to ?? '';
+}
