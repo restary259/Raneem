@@ -28,6 +28,8 @@ import {
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
+import PayoutRequestCard from "@/components/messages/PayoutRequestCard";
+
 import { resolveCaseRefs, type ThreadReadState } from "@/services/CaseMessageService";
 import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
