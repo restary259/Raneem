@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Crown } from 'lucide-react';
+import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
