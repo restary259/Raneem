@@ -85,6 +85,7 @@ export default function CaseDetailPage() {
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const documentsRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = role === "admin" || role === "team_member";
