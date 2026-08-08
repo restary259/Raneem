@@ -58,6 +58,9 @@ const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
+const StudentMessagesPage = lazy(() => import("./pages/messages/StudentMessagesPage"));
+const PartnerMessagesPage = lazy(() => import("./pages/messages/PartnerMessagesPage"));
+
 
 
 // Team pages (Phase 3)
