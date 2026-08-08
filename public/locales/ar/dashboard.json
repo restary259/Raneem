@@ -2225,6 +2225,55 @@
       "palestinian": "فلسطيني",
       "jordanian": "أردني",
       "other": "آخر"
+    },
+    "progressLabel": "تقدّم الملف",
+    "header": {
+      "assignedTo": "مُسند إلى {{name}}",
+      "unassigned": "غير مُسند",
+      "call": "اتصال",
+      "schedule": "تحديد موعد"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "student": "الطالب",
+      "program": "البرنامج",
+      "financial": "المالية",
+      "activity": "النشاط"
+    },
+    "overview": {
+      "notSet": "لم يُحدَّد بعد",
+      "paymentConfirmed": "مؤكَّد",
+      "paymentPending": "بانتظار التأكيد",
+      "docsCount": "{{count}} من {{total}} تم رفعها",
+      "nextAppointment": "الموعد القادم",
+      "noDocuments": "لم يتم رفع أي مستندات بعد"
+    },
+    "docCategory": {
+      "passport": "جواز السفر",
+      "photo": "صورة شخصية",
+      "certificate": "شهادة",
+      "bank": "كشف حساب بنكي",
+      "insurance": "تأمين",
+      "other": "أخرى"
+    },
+    "tasks": {
+      "title": "يحتاج انتباهك الآن",
+      "paymentOverdue": "تأكيد الدفع متأخر بمقدار {{days}} يوم",
+      "paymentPending": "تأكيد الدفع ما زال معلّقًا",
+      "outcomeMissing": "لم تُسجَّل نتيجة موعد {{date}}",
+      "noAppointment": "لا يوجد موعد محدد",
+      "documentMissing": {
+        "passport": "نسخة جواز السفر ما زالت ناقصة"
+      },
+      "noFollowUp": "لا توجد متابعة مسجّلة منذ {{days}} يوم",
+      "confirmPaymentDesc": "سجّل رسوم الخدمة المستلمة لهذا الملف.",
+      "action": {
+        "confirmPayment": "تأكيد الدفع",
+        "uploadDocument": "عرض المستندات",
+        "schedule": "تحديد موعد",
+        "recordOutcome": "تسجيل النتيجة",
+        "addNote": "إضافة ملاحظة"
+      }
     }
   },
   "partner": {

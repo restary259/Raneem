@@ -2207,6 +2207,55 @@
       "palestinian": "Palestinian",
       "jordanian": "Jordanian",
       "other": "Other"
+    },
+    "progressLabel": "Case progress",
+    "header": {
+      "assignedTo": "Assigned to {{name}}",
+      "unassigned": "Unassigned",
+      "call": "Call",
+      "schedule": "Schedule"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "student": "Student",
+      "program": "Program",
+      "financial": "Financial",
+      "activity": "Activity"
+    },
+    "overview": {
+      "notSet": "Not set yet",
+      "paymentConfirmed": "Confirmed",
+      "paymentPending": "Awaiting confirmation",
+      "docsCount": "{{count}} of {{total}} uploaded",
+      "nextAppointment": "Next appointment",
+      "noDocuments": "No documents uploaded yet"
+    },
+    "docCategory": {
+      "passport": "Passport",
+      "photo": "Photo",
+      "certificate": "Certificate",
+      "bank": "Bank statement",
+      "insurance": "Insurance",
+      "other": "Other"
+    },
+    "tasks": {
+      "title": "Needs attention now",
+      "paymentOverdue": "Payment confirmation is overdue by {{days}} days",
+      "paymentPending": "Payment confirmation is still pending",
+      "outcomeMissing": "Outcome not recorded for {{date}}",
+      "noAppointment": "No appointment scheduled",
+      "documentMissing": {
+        "passport": "Passport copy still missing"
+      },
+      "noFollowUp": "No follow-up logged for {{days}} days",
+      "confirmPaymentDesc": "Record the received service fee for this case.",
+      "action": {
+        "confirmPayment": "Confirm payment",
+        "uploadDocument": "View documents",
+        "schedule": "Schedule",
+        "recordOutcome": "Record outcome",
+        "addNote": "Add a note"
+      }
     }
   },
   "partner": {
