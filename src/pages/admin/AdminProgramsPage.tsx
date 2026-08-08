@@ -188,12 +188,19 @@ const AdminProgramsPage = () => {
         lessons_per_week: progForm.lessons_per_week ? Number(progForm.lessons_per_week) : null,
         duration_in_months: progForm.duration_in_months ? Number(progForm.duration_in_months) : null,
         fixed_start_day_of_month: progForm.fixed_start_day_of_month ? Number(progForm.fixed_start_day_of_month) : null,
+        school_id: progForm.school_id || null,
+        cefr_range: progForm.cefr_range || null,
+        hours_per_week: progForm.hours_per_week ? Number(progForm.hours_per_week) : null,
+        start_rule: progForm.start_rule || null,
+        registration_fee: progForm.registration_fee ? Number(progForm.registration_fee) : null,
+        price_tiers: progTiers.filter((tier) => tier.price != null),
       };
       if (editProgId) await db.from("programs").update(payload).eq("id", editProgId);
       else await db.from("programs").insert(payload);
       setProgOpen(false);
       setEditProgId(null);
       setProgForm(emptyProgForm);
+      setProgTiers([]);
       await fetchAll();
       toast({ description: editProgId ? t('admin.programs.programUpdated') : t('admin.programs.programCreated') });
     } catch (err: any) {
