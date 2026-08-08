@@ -87,6 +87,8 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.contacts': t('nav.contacts', 'Contacts'),
     'nav.programs': t('nav.programs', 'Programs'),
     'nav.submissions': t('nav.submissions', 'Submissions'),
+    'nav.messages': t('nav.messages', 'Messages'),
+    'nav.inbox': t('nav.inbox', 'Applications'),
   };
 
   return (
