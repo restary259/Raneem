@@ -2983,5 +2983,45 @@
     "emptyDirect": "No direct chats yet",
     "noMessagesYet": "No messages yet",
     "directBlocked": "Direct chats must include an admin."
+  },
+  "chat": {
+    "day": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "type": {
+      "case": "Case",
+      "direct": "Direct"
+    },
+    "filter": {
+      "all": "All",
+      "cases": "Cases",
+      "direct": "Direct",
+      "unread": "Unread"
+    },
+    "attach": {
+      "button": "Attach file",
+      "remove": "Remove",
+      "only": "Attachment",
+      "error": {
+        "size": "File exceeds the 15 MB limit.",
+        "mime": "File type is not supported."
+      }
+    },
+    "openAttachment": "Open attachment",
+    "request": {
+      "badge": "Document request",
+      "button": "Request document",
+      "placeholder": "Describe the document you need…",
+      "upload": "Upload document",
+      "fulfilled": "Document uploaded.",
+      "status": {
+        "pending": "Awaiting upload",
+        "fulfilled": "Received"
+      }
+    },
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "directHint": "Private staff conversation."
   }
 }
