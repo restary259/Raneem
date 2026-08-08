@@ -261,7 +261,9 @@ const App = () => {
               }
             >
               <Route index element={<StudentNextStepsPage />} />
+              <Route path="messages" element={<StudentMessagesPage />} />
               <Route path="checklist" element={<StudentChecklistPage />} />
+
               <Route path="profile" element={<StudentProfilePage />} />
               <Route path="documents" element={<StudentDocumentsPage />} />
               <Route path="visa" element={<StudentVisaPage />} />
