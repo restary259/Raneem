@@ -109,6 +109,27 @@ export default function PayoutRequestCard({
         <Badge className={STATUS_STYLE[status] ?? ""}>{t(`chat.payout.status.${status}`, status)}</Badge>
       </div>
 
+      {detail.payout_reference && (
+        <div className="flex items-center gap-1.5">
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs" dir="ltr">
+            {detail.payout_reference}
+          </code>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            aria-label={t("chat.payout.copyReference", "Copy reference")}
+            onClick={() => {
+              navigator.clipboard.writeText(detail.payout_reference as string);
+              toast({ description: t("chat.payout.referenceCopied", "Reference copied") });
+            }}
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
           <p className="text-muted-foreground">{t("chat.payout.amount")}</p>
