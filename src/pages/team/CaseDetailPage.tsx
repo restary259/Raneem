@@ -231,6 +231,32 @@ export default function CaseDetailPage() {
     }
   };
 
+  /**
+   * Admin sent the file back for a change: the case sits in profile_completion
+   * again, so put it back through payment_confirmed before resubmitting.
+   */
+  const handleResubmit = async () => {
+    if (!caseData || !submission) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({ status: "payment_confirmed" })
+        .eq("id", caseData.id);
+      if (error) throw error;
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        description: err instanceof Error ? err.message : String(err),
+      });
+      setSubmitting(false);
+      return;
+    }
+    setSubmitting(false);
+    await handleSubmitToAdmin();
+  };
+
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
