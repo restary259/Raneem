@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import RateOfferDialog from "@/components/partner/RateOfferDialog";
 import { Crown, Copy, Check, Users, Megaphone } from "lucide-react";
 
 interface NetworkRow {
