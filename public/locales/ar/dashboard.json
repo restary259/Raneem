@@ -474,7 +474,24 @@
       "typeLanguageSchool": "مدرسة لغة",
       "typeCourse": "دورة",
       "typeUniversity": "جامعة",
-      "typeOther": "أخرى"
+      "typeOther": "أخرى",
+      "labelProvider": "مزوّد التأمين",
+      "labelCoverageScope": "نطاق التغطية",
+      "labelMinMonths": "أقل مدة (أشهر)",
+      "labelMaxMonths": "أقصى مدة (أشهر)",
+      "labelMaxAge": "الحد الأقصى للسن",
+      "labelTermsUrl": "رابط شروط الوثيقة",
+      "labelDescAr": "الوصف (عربي)",
+      "labelDescEn": "الوصف (إنجليزي)",
+      "viewTerms": "عرض الشروط",
+      "termRange": "المدة: {{min}}–{{max}} شهرًا",
+      "maxAgeShort": "حتى سن {{age}}",
+      "coverage": {
+        "germany_only": "داخل ألمانيا فقط",
+        "schengen": "منطقة شنغن",
+        "worldwide": "تغطية عالمية",
+        "worldwide_incl_usa_canada": "عالمية شاملة أمريكا وكندا"
+      }
     },
     "submissions": {
       "title": "الطلبات المقدمة",
