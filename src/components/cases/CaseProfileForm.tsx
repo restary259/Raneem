@@ -109,6 +109,25 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     (submission?.draft_updated_at as string) ?? null,
   );
   const [autosaving, setAutosaving] = useState(false);
+  /**
+   * The three birth-date dropdowns keep their own state so each one shows the
+   * user's pick immediately, in any order — the ISO value is only composed
+   * once all three parts exist.
+   */
+  const [dob, setDobState] = useState(() => {
+    const parts = (values.date_of_birth || "").split("-");
+    return { year: parts[0] ?? "", month: parts[1] ?? "", day: parts[2] ?? "" };
+  });
+  const [dobError, setDobError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const iso = values.date_of_birth || "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    const [y, m, d] = iso.split("-");
+    setDobState((prev) =>
+      prev.year === y && prev.month === m && prev.day === d ? prev : { year: y, month: m, day: d },
+    );
+  }, [values.date_of_birth]);
 
   const set = useCallback(
     (key: string, value: string) => setValues((v) => ({ ...v, [key]: value })),
