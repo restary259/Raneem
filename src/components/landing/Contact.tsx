@@ -11,6 +11,9 @@ import TikTokIcon from "../icons/TikTokIcon";
 import { WHATSAPP_SUPPORT_URL } from '@/lib/contactConfig';
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import FieldGroup from "@/components/common/FieldGroup";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { recordConsent } from "@/lib/consent";
 
 const PASSPORT_TYPES = [
   { value: 'israeli_blue', labelAr: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
@@ -34,12 +37,6 @@ const isValidPhone = (p: string) => {
     /^\+?\d{7,15}$/.test(cleaned);
 };
 
-const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-foreground/80">{label}</label>
-    {children}
-  </div>
-);
 
 const Contact = () => {
   const { t, i18n } = useTranslation(['contact', 'common']);
