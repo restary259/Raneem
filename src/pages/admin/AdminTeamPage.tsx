@@ -14,6 +14,7 @@ import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } fro
 import { Switch } from '@/components/ui/switch';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
+import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 
 interface TeamMember {
   id: string;
@@ -38,6 +39,7 @@ const AdminTeamPage = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
   const isRtl = i18n.language === 'ar';
+  const onlineUsers = useOnlineUsers();
 
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
