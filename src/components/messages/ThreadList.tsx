@@ -85,7 +85,7 @@ export default function ThreadList({
           onClick={() => onSelect(item)}
           className={cn(
             "relative flex w-full items-start gap-3 px-3 py-3 text-start transition-colors",
-            active ? "bg-accent" : "hover:bg-accent/60",
+            active ? "bg-muted" : "hover:bg-muted/60",
           )}
         >
           <span
