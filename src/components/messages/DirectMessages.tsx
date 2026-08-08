@@ -106,6 +106,8 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
           readState={readState}
           mentionables={people}
           caseLinkBase={isStaff ? caseLinkBase : undefined}
+          adminAlias={isStaff ? undefined : t("chat.adminLabel")}
+          viewerIsAdmin={role === "admin"}
           typing={typing}
           hasOlder={hasOlder}
           loadingOlder={loadingOlder}
@@ -127,12 +129,22 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         mentionables={people}
         allowCaseMentions={isStaff}
         onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
+        onRequestPayout={isPartner ? () => openPayout() : undefined}
         onSend={async (body, attachments, opts) => {
           await sendDirectMessage(threadId, body, attachments, opts.mentions);
           void notifyNewMessageEmail({ threadType: "direct", threadId, preview: body });
           await load();
         }}
       />
+
+      <PayoutRequestDialog
+        open={payoutOpen}
+        preview={preview}
+        submitting={submitting}
+        onOpenChange={setPayoutOpen}
+        onConfirm={submitPayout}
+      />
     </div>
   );
 }
+
