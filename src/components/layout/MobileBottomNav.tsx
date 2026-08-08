@@ -9,6 +9,7 @@ import {
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
   TrendingUp, ListChecks, User, FileText,
   Globe, Heart,
+  Sparkles,
 } from 'lucide-react';
 
 interface NavItem {
@@ -49,7 +50,6 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.profile', icon: User, href: '/student/profile' },
     { key: 'nav.documents', icon: FileText, href: '/student/documents' },
     { key: 'nav.visa', icon: Globe, href: '/student/visa' },
-    { key: 'nav.refer', icon: Heart, href: '/student/refer' },
   ],
 };
 
