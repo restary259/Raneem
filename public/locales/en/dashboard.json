@@ -1112,7 +1112,9 @@
         "all": "All",
         "partnership": "Partnership",
         "contact": "Contact"
-      }
+      },
+      "exportRecruits": "Switch to a submissions tab to export",
+      "searchPlaceholder": "Search by name, email or phone"
     },
     "contacts": {
       "searchPlaceholder": "Search by name or email",
@@ -1187,7 +1189,8 @@
         "pending": "Pending",
         "approved": "Approved",
         "rejected": "Rejected"
-      }
+      },
+      "empty": "No recruit applications"
     }
   },
   "influencer": {
@@ -3321,7 +3324,12 @@
     "yourShare": "Your share",
     "inviteMissing": "No recruit link yet",
     "recruitTitle": "Recruit link",
-    "recruitHint": "Share this link to recruit partners into your network."
+    "recruitHint": "Share this link to recruit partners into your network.",
+    "rateApplied": "Rate updated",
+    "setRate": "Set rate",
+    "rateTitle": "Set partner rate",
+    "rateDesc": "This rate applies immediately to future cases, per your signed agreement. Darb's total cost per case does not change.",
+    "rateSave": "Apply rate"
   },
   "theme": {
     "dark": "Dark mode",
