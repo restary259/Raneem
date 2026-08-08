@@ -14,6 +14,8 @@ import {
 import { uploadChatAttachment } from "@/services/ChatAttachmentService";
 import { validateAttachmentFile, type ChatMessage } from "@/lib/chatFormat";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyNewMessageEmail } from "@/services/NotificationService";
+import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 
 interface CaseMessagesProps {
   caseId: string;
@@ -30,6 +32,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   const [loading, setLoading] = useState(true);
   const fulfilRef = useRef<HTMLInputElement>(null);
   const [fulfilTarget, setFulfilTarget] = useState<ChatMessage | null>(null);
+  const online = useOnlineUsers();
 
   const load = useCallback(async () => {
     try {
