@@ -41,6 +41,7 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
+import { matchesRef } from "@/lib/reference";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
