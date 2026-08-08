@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   caseData: Record<string, any>;
+  /** Optional extra block (e.g. the finance summary once payment is done). */
+  children?: React.ReactNode;
 }
+
 
 /**
  * Collapsed-by-default summary of where the case came from and what the
