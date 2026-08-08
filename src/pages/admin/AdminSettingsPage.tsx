@@ -425,6 +425,12 @@ const AdminSettingsPage = () => {
           <PipelineStatusesPanel />
         </TabsContent>
 
+        {/* ── Service catalog ── */}
+        <TabsContent value="catalog" className="mt-4">
+          <ServiceCatalogPanel />
+        </TabsContent>
+
+
 
 
         {/* ── Important Contacts ── */}
