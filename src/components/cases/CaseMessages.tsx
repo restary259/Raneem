@@ -138,6 +138,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           readState={readState}
           mentionables={people}
           caseLinkBase={isStaff ? caseLinkBase : undefined}
+          viewerIsAdmin={role === "admin"}
           typing={typing}
           hasOlder={hasOlder}
           loadingOlder={loadingOlder}
@@ -145,6 +146,14 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           onEditMessage={async (message, body) => {
             try {
               await editCaseMessage(message.id, body);
+              await load();
+            } catch (err: any) {
+              toast({ variant: "destructive", description: err.message });
+            }
+          }}
+          onDeleteMessage={async (message) => {
+            try {
+              await deleteChatMessage(message.id, "case");
               await load();
             } catch (err: any) {
               toast({ variant: "destructive", description: err.message });

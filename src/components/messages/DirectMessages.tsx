@@ -159,6 +159,14 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
               toast({ variant: "destructive", description: err.message });
             }
           }}
+          onDeleteMessage={async (message) => {
+            try {
+              await deleteChatMessage(message.id, "direct");
+              await load();
+            } catch (err: any) {
+              toast({ variant: "destructive", description: err.message });
+            }
+          }}
         />
       </div>
       <MessageComposer
