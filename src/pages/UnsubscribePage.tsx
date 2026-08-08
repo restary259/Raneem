@@ -4,7 +4,6 @@ import { Loader2, MailX, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import SEOHead from "@/components/SEOHead";
 
 type State = "loading" | "valid" | "done" | "invalid";
 
@@ -44,8 +43,6 @@ export default function UnsubscribePage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-16">
-      <SEOHead title="إلغاء الاشتراك | درب" description="إدارة اشتراك البريد الإلكتروني في درب." noindex />
-      <Card className="w-full max-w-md space-y-5 p-8 text-center">
         {state === "loading" && (
           <>
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
