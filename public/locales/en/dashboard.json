@@ -2285,6 +2285,12 @@
         "recordOutcome": "Record outcome",
         "addNote": "Add a note"
       }
+    },
+    "submit": {
+      "action": "Submit to admin",
+      "blocked": "Confirm payment and upload the passport first",
+      "success": "Sent to admin for review",
+      "changesRequested": "Admin requested changes"
     }
   },
   "partner": {
