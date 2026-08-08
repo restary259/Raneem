@@ -38,6 +38,9 @@ interface Props {
   onConfirmPayment: () => void;
   onRefresh: () => void;
   onSubmitToAdmin: () => void;
+  /** Resend a case that admin sent back for changes. */
+  onResubmit: () => void;
+
   submitting: boolean;
 }
 
