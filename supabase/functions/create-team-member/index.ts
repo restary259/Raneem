@@ -190,8 +190,11 @@ serve(async (req) => {
         user_id: userId,
         email,
         role: dbRole,
-        temp_password: tempPassword,
-        message: `${dbRole} account created.`,
+        temp_password: reusedExisting ? null : tempPassword,
+        message: reusedExisting
+          ? `Existing account found — ${dbRole} role added. The user keeps their current password.`
+          : `${dbRole} account created.`,
+
       }),
       {
         status: 200,
