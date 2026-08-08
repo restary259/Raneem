@@ -45,7 +45,7 @@ interface CaseRow {
 }
 
 /** Stages where the money side of the case is relevant. */
-const FINANCE_STAGES = ["payment_confirmed", "submitted", "enrollment_paid"];
+const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"];
 
 /** Digits-only international number for WhatsApp deep links. */
 function whatsappNumber(phone: string): string {
