@@ -5,17 +5,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import {
+  editCaseMessage,
   fulfilDocumentRequest,
+  getThreadReadState,
   listCaseMessages,
   markCaseMessagesRead,
   sendCaseMessage,
   toChatMessage,
+  type ThreadReadState,
 } from "@/services/CaseMessageService";
+import { listStaffDirectory } from "@/services/DirectMessageService";
 import { uploadChatAttachment } from "@/services/ChatAttachmentService";
-import { validateAttachmentFile, type ChatMessage } from "@/lib/chatFormat";
+import {
+  validateAttachmentFile,
+  type ChatMessage,
+  type MentionablePerson,
+} from "@/lib/chatFormat";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+
+const PAGE_SIZE = 50;
 
 interface CaseMessagesProps {
   caseId: string;
@@ -30,25 +41,45 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [readState, setReadState] = useState<ThreadReadState[]>([]);
+  const [people, setPeople] = useState<MentionablePerson[]>([]);
   const fulfilRef = useRef<HTMLInputElement>(null);
   const [fulfilTarget, setFulfilTarget] = useState<ChatMessage | null>(null);
   const online = useOnlineUsers();
+  const { typing, notifyTyping } = useTypingIndicator("case", caseId);
 
-  const load = useCallback(async () => {
-    try {
-      const rows = await listCaseMessages(caseId);
-      setMessages(rows.map(toChatMessage));
-      await markCaseMessagesRead(caseId).catch(() => undefined);
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [caseId, toast]);
+  const load = useCallback(
+    async (nextLimit = limit) => {
+      try {
+        const rows = await listCaseMessages(caseId, nextLimit);
+        setMessages(rows.map(toChatMessage));
+        setHasOlder(rows.length >= nextLimit);
+        await markCaseMessagesRead(caseId).catch(() => undefined);
+        setReadState(await getThreadReadState("case", caseId).catch(() => []));
+      } catch (err: any) {
+        toast({ variant: "destructive", description: err.message });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [caseId, limit, toast],
+  );
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!allowInternal) return;
+    listStaffDirectory()
+      .then((rows) =>
+        setPeople(rows.map((s) => ({ id: s.id, name: s.full_name, role: s.role }))),
+      )
+      .catch(() => setPeople([]));
+  }, [allowInternal]);
 
   useEffect(() => {
     const channel = supabase
@@ -63,6 +94,14 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
       supabase.removeChannel(channel);
     };
   }, [caseId, load]);
+
+  const loadOlder = async () => {
+    setLoadingOlder(true);
+    const next = limit + PAGE_SIZE;
+    setLimit(next);
+    await load(next);
+    setLoadingOlder(false);
+  };
 
   const handleFulfilFile = async (file: File) => {
     if (!fulfilTarget) return;
@@ -94,6 +133,20 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           emptyLabel={t("case.messages.empty")}
           canFulfilRequests
           onlineUserIds={online}
+          readState={readState}
+          mentionables={people}
+          typing={typing}
+          hasOlder={hasOlder}
+          loadingOlder={loadingOlder}
+          onLoadOlder={loadOlder}
+          onEditMessage={async (message, body) => {
+            try {
+              await editCaseMessage(message.id, body);
+              await load();
+            } catch (err: any) {
+              toast({ variant: "destructive", description: err.message });
+            }
+          }}
           onFulfilRequest={(m) => {
             setFulfilTarget(m);
             fulfilRef.current?.click();
@@ -113,8 +166,17 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
         threadId={caseId}
         allowInternal={allowInternal}
         allowRequests={allowInternal}
+        mentionables={people}
+        onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
         onSend={async (body, attachments, opts) => {
-          await sendCaseMessage(caseId, body, opts.visibility, attachments, opts.kind);
+          await sendCaseMessage(
+            caseId,
+            body,
+            opts.visibility,
+            attachments,
+            opts.kind,
+            opts.mentions,
+          );
           if (opts.visibility !== "internal") {
             void notifyNewMessageEmail({ threadType: "case", threadId: caseId, preview: body });
           }
@@ -124,4 +186,3 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
     </div>
   );
 }
-

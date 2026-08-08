@@ -6,14 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import {
+  editDirectMessage,
   listDirectMessages,
   markDirectThreadRead,
   sendDirectMessage,
   toChatMessage,
 } from "@/services/DirectMessageService";
-import type { ChatMessage } from "@/lib/chatFormat";
+import { getThreadReadState, type ThreadReadState } from "@/services/CaseMessageService";
+import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+
+const PAGE_SIZE = 50;
 
 interface DirectMessagesProps {
   threadId: string;
@@ -26,19 +31,29 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [readState, setReadState] = useState<ThreadReadState[]>([]);
   const online = useOnlineUsers();
+  const { typing, notifyTyping } = useTypingIndicator("direct", threadId);
 
-  const load = useCallback(async () => {
-    try {
-      const rows = await listDirectMessages(threadId);
-      setMessages(rows.map(toChatMessage));
-      await markDirectThreadRead(threadId).catch(() => undefined);
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [threadId, toast]);
+  const load = useCallback(
+    async (nextLimit = limit) => {
+      try {
+        const rows = await listDirectMessages(threadId, nextLimit);
+        setMessages(rows.map(toChatMessage));
+        setHasOlder(rows.length >= nextLimit);
+        await markDirectThreadRead(threadId).catch(() => undefined);
+        setReadState(await getThreadReadState("direct", threadId).catch(() => []));
+      } catch (err: any) {
+        toast({ variant: "destructive", description: err.message });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [threadId, limit, toast],
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -64,6 +79,19 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
     };
   }, [threadId, load]);
 
+  /** Thread participants double as the mention list. */
+  const people: MentionablePerson[] = readState
+    .filter((r) => r.user_id !== user?.id && r.full_name)
+    .map((r) => ({ id: r.user_id, name: r.full_name! }));
+
+  const loadOlder = async () => {
+    setLoadingOlder(true);
+    const next = limit + PAGE_SIZE;
+    setLimit(next);
+    await load(next);
+    setLoadingOlder(false);
+  };
+
   return (
     <div className={className}>
       <div className="max-h-[460px] overflow-y-auto bg-muted/20">
@@ -73,14 +101,30 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
           loading={loading}
           emptyLabel={t("case.messages.empty")}
           onlineUserIds={online}
+          readState={readState}
+          mentionables={people}
+          typing={typing}
+          hasOlder={hasOlder}
+          loadingOlder={loadingOlder}
+          onLoadOlder={loadOlder}
+          onEditMessage={async (message, body) => {
+            try {
+              await editDirectMessage(message.id, body);
+              await load();
+            } catch (err: any) {
+              toast({ variant: "destructive", description: err.message });
+            }
+          }}
         />
       </div>
       <MessageComposer
         threadType="direct"
         threadId={threadId}
         hint={t("chat.directHint")}
-        onSend={async (body, attachments) => {
-          await sendDirectMessage(threadId, body, attachments);
+        mentionables={people}
+        onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
+        onSend={async (body, attachments, opts) => {
+          await sendDirectMessage(threadId, body, attachments, opts.mentions);
           void notifyNewMessageEmail({ threadType: "direct", threadId, preview: body });
           await load();
         }}

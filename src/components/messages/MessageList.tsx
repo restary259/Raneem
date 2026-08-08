@@ -1,18 +1,24 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Lock, Paperclip, CheckCircle2, Clock } from "lucide-react";
+import { Check, CheckCheck, Clock, CheckCircle2, Lock, Paperclip, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
+  canEditMessage,
   dayLabel,
   formatTime,
   groupMessages,
   initials,
+  splitMentions,
   type ChatMessage,
+  type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
+import type { ThreadReadState } from "@/services/CaseMessageService";
+import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -24,6 +30,18 @@ interface MessageListProps {
   onFulfilRequest?: (message: ChatMessage) => void;
   canFulfilRequests?: boolean;
   onlineUserIds?: Set<string>;
+  /** Read markers of the other participants — powers read receipts. */
+  readState?: ThreadReadState[];
+  /** People who can be mentioned, used to highlight @names. */
+  mentionables?: MentionablePerson[];
+  /** Saves an edited message body. */
+  onEditMessage?: (message: ChatMessage, body: string) => Promise<void>;
+  /** People currently typing in this thread. */
+  typing?: TypingPerson[];
+  /** Loads the previous page of messages. */
+  onLoadOlder?: () => void;
+  hasOlder?: boolean;
+  loadingOlder?: boolean;
 }
 
 export default function MessageList({
@@ -35,13 +53,62 @@ export default function MessageList({
   onFulfilRequest,
   canFulfilRequests,
   onlineUserIds,
+  readState,
+  mentionables = [],
+  onEditMessage,
+  typing = [],
+  onLoadOlder,
+  hasOlder,
+  loadingOlder,
 }: MessageListProps) {
   const { t } = useTranslation("dashboard");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
+
+  /** Other participants' read markers, newest read first. */
+  const readers = useMemo(
+    () => (readState ?? []).filter((r) => r.user_id !== currentUserId),
+    [readState, currentUserId],
+  );
+
+  const receiptFor = (message: ChatMessage) => {
+    if (!currentUserId || message.authorId !== currentUserId || readers.length === 0) return null;
+    const at = new Date(message.createdAt).getTime();
+    const seenBy = readers.filter(
+      (r) => r.last_read_at && new Date(r.last_read_at).getTime() >= at,
+    );
+    return { seenBy, all: seenBy.length === readers.length };
+  };
+
+  const renderBody = (body: string) =>
+    splitMentions(body, mentionables).map((seg, i) =>
+      seg.mention ? (
+        <span key={i} className="rounded bg-primary/15 px-1 font-medium text-primary">
+          {seg.text}
+        </span>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    );
+
+  const saveEdit = async () => {
+    if (!editing || !onEditMessage) return;
+    const message = messages.find((m) => m.id === editing.id);
+    if (!message) return;
+    setSaving(true);
+    try {
+      await onEditMessage(message, editing.body);
+      setEditing(null);
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -66,6 +133,14 @@ export default function MessageList({
 
   return (
     <div className={cn("space-y-5 p-4", className)}>
+      {hasOlder && onLoadOlder && (
+        <div className="flex justify-center">
+          <Button size="sm" variant="ghost" disabled={loadingOlder} onClick={onLoadOlder}>
+            {loadingOlder ? t("chat.loadingOlder") : t("chat.loadOlder")}
+          </Button>
+        </div>
+      )}
+
       {groups.map((group) => {
         const showDay = group.day !== renderedDay;
         renderedDay = group.day;
@@ -166,8 +241,34 @@ export default function MessageList({
                       </div>
                     )}
 
-                    {m.body && (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.body}</p>
+                    {editing?.id === m.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editing.body}
+                          rows={2}
+                          maxLength={5000}
+                          onChange={(e) => setEditing({ id: m.id, body: e.target.value })}
+                          className="resize-none text-sm"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                            {t("chat.edit.cancel")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={saving || !editing.body.trim()}
+                            onClick={saveEdit}
+                          >
+                            {t("chat.edit.save")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      m.body && (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {renderBody(m.body)}
+                        </p>
+                      )
                     )}
 
                     {m.attachments.length > 0 && (
@@ -190,11 +291,49 @@ export default function MessageList({
 
                     <div
                       className={cn(
-                        "text-[11px] text-muted-foreground",
-                        group.mine ? "text-end" : "text-start",
+                        "flex items-center gap-1.5 text-[11px] text-muted-foreground",
+                        group.mine ? "justify-end" : "justify-start",
                       )}
                     >
-                      {formatTime(m.createdAt)}
+                      <span>{formatTime(m.createdAt)}</span>
+                      {m.editedAt && <span>· {t("chat.edit.edited")}</span>}
+                      {onEditMessage && canEditMessage(m, currentUserId) && !editing && (
+                        <button
+                          type="button"
+                          aria-label={t("chat.edit.button")}
+                          onClick={() => setEditing({ id: m.id, body: m.body })}
+                          className="transition-colors hover:text-foreground"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      )}
+                      {(() => {
+                        const receipt = receiptFor(m);
+                        if (!receipt) return null;
+                        return receipt.all ? (
+                          <span
+                            className="flex items-center gap-0.5 text-primary"
+                            title={t("chat.receipt.readByAll")}
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                          </span>
+                        ) : receipt.seenBy.length > 0 ? (
+                          <span
+                            className="flex items-center gap-0.5"
+                            title={t("chat.receipt.seenBy", {
+                              names: receipt.seenBy.map((r) => r.full_name ?? "—").join(", "),
+                            })}
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            <span>{receipt.seenBy.length}</span>
+                          </span>
+                        ) : (
+                          <span title={t("chat.receipt.sent")}>
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -203,7 +342,23 @@ export default function MessageList({
           </div>
         );
       })}
+
+      {typing.length > 0 && (
+        <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+          <span className="flex gap-1">
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.3s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.15s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70" />
+          </span>
+          <span>
+            {typing.length === 1
+              ? t("chat.typing.one", { name: typing[0].name })
+              : t("chat.typing.many", { count: typing.length })}
+          </span>
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   );
 }
+

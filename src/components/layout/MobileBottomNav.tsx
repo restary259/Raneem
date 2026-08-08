@@ -32,25 +32,27 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.cases', icon: ClipboardList, href: '/team/cases' },
     { key: 'nav.messages', icon: MessageSquare, href: '/team/messages' },
     { key: 'nav.appointments', icon: CalendarDays, href: '/team/appointments' },
-    { key: 'nav.students', icon: GraduationCap, href: '/team/students' },
   ],
   social_media_partner: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
     { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
     { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
   ],
   ambassador: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
     { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
     { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
   ],
   student: [
     { key: 'nav.nextSteps', icon: Sparkles, href: '/student' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
     { key: 'nav.checklist', icon: ListChecks, href: '/student/checklist' },
-    { key: 'nav.profile', icon: User, href: '/student/profile' },
     { key: 'nav.documents', icon: FileText, href: '/student/documents' },
     { key: 'nav.visa', icon: Globe, href: '/student/visa' },
   ],
+
 };
 
 interface MobileBottomNavProps {

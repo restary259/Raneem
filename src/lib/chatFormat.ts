@@ -18,7 +18,97 @@ export interface ChatMessage {
   attachments: ChatAttachment[];
   kind: "text" | "request";
   requestStatus?: string | null;
+  editedAt?: string | null;
+  mentions?: string[];
 }
+
+/** Someone who can be @mentioned in a thread. */
+export interface MentionablePerson {
+  id: string;
+  name: string;
+  role?: string | null;
+}
+
+export const EDIT_WINDOW_MS = 15 * 60 * 1000;
+
+/** Mirrors the server rule: own, plain, attachment-free message within 15 minutes. */
+export function canEditMessage(
+  message: ChatMessage,
+  currentUserId: string | null,
+  now: Date = new Date(),
+): boolean {
+  if (!currentUserId || message.authorId !== currentUserId) return false;
+  if (message.kind !== "text") return false;
+  if (message.attachments.length > 0) return false;
+  return now.getTime() - new Date(message.createdAt).getTime() <= EDIT_WINDOW_MS;
+}
+
+/**
+ * Active `@query` the caret sits in, or null.
+ * Only triggers at the start of a word so emails never open the picker.
+ */
+export function activeMentionQuery(text: string, caret: number): string | null {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("@");
+  if (at === -1) return null;
+  if (at > 0 && !/\s/.test(before[at - 1])) return null;
+  const query = before.slice(at + 1);
+  if (/\s/.test(query)) return null;
+  return query;
+}
+
+/** Replace the active `@query` with the chosen name. Returns new text + caret. */
+export function applyMention(
+  text: string,
+  caret: number,
+  name: string,
+): { text: string; caret: number } {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("@");
+  if (at === -1) return { text, caret };
+  const inserted = `@${name} `;
+  const next = text.slice(0, at) + inserted + text.slice(caret);
+  return { text: next, caret: at + inserted.length };
+}
+
+/** Ids of people whose `@Name` appears in the body. */
+export function resolveMentionIds(body: string, people: MentionablePerson[]): string[] {
+  const ids = new Set<string>();
+  for (const person of people) {
+    if (!person.name) continue;
+    if (body.includes(`@${person.name}`)) ids.add(person.id);
+  }
+  return [...ids];
+}
+
+export type BodySegment = { text: string; mention: boolean };
+
+/** Split a body into plain and `@mention` segments for highlighting. */
+export function splitMentions(body: string, people: MentionablePerson[]): BodySegment[] {
+  const names = people
+    .map((p) => p.name)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  if (names.length === 0) return [{ text: body, mention: false }];
+
+  const segments: BodySegment[] = [];
+  let index = 0;
+  while (index < body.length) {
+    const at = body.indexOf("@", index);
+    if (at === -1) break;
+    const match = names.find((name) => body.startsWith(`@${name}`, at));
+    if (!match) {
+      index = at + 1;
+      continue;
+    }
+    if (at > index) segments.push({ text: body.slice(index, at), mention: false });
+    segments.push({ text: `@${match}`, mention: true });
+    index = at + match.length + 1;
+  }
+  if (index < body.length) segments.push({ text: body.slice(index), mention: false });
+  return segments.length > 0 ? segments : [{ text: body, mention: false }];
+}
+
 
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 

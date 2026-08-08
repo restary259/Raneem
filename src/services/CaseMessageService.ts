@@ -15,6 +15,8 @@ export interface CaseMessage {
   attachments: ChatAttachment[] | null;
   kind: "text" | "request" | null;
   request_status: string | null;
+  edited_at?: string | null;
+  mentions?: string[] | null;
 }
 
 export function toChatMessage(m: CaseMessage): ChatMessage {
@@ -29,19 +31,22 @@ export function toChatMessage(m: CaseMessage): ChatMessage {
     attachments: (m.attachments ?? []) as ChatAttachment[],
     kind: (m.kind ?? "text") as "text" | "request",
     requestStatus: m.request_status,
+    editedAt: m.edited_at ?? null,
+    mentions: (m.mentions ?? []) as string[],
   };
 }
 
 /** Messages on a case, oldest first. RLS decides what the caller may see. */
-export async function listCaseMessages(caseId: string): Promise<CaseMessage[]> {
+export async function listCaseMessages(caseId: string, limit = 50): Promise<CaseMessage[]> {
   const { data, error } = await (supabase as any)
     .from("case_messages")
     .select("*")
     .eq("case_id", caseId)
     .is("deleted_at", null)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(limit);
   if (error) throw error;
-  return (data ?? []) as CaseMessage[];
+  return ((data ?? []) as CaseMessage[]).slice().reverse();
 }
 
 /** Send a message. The server stamps the real author and enforces visibility. */
@@ -51,6 +56,7 @@ export async function sendCaseMessage(
   visibility: MessageVisibility = "shared",
   attachments: ChatAttachment[] = [],
   kind: "text" | "request" = "text",
+  mentions: string[] = [],
 ): Promise<string> {
   const trimmed = body.trim();
   if (!trimmed && attachments.length === 0) throw new Error("Message body required");
@@ -60,10 +66,40 @@ export async function sendCaseMessage(
     p_visibility: visibility,
     p_attachments: attachments,
     p_kind: kind,
+    p_mentions: mentions,
   });
   if (error) throw error;
   return data as string;
 }
+
+/** Edit your own plain message inside the 15-minute window. */
+export async function editCaseMessage(messageId: string, body: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("edit_case_message", {
+    p_message_id: messageId,
+    p_body: body.trim(),
+  });
+  if (error) throw error;
+}
+
+export interface ThreadReadState {
+  user_id: string;
+  full_name: string | null;
+  last_read_at: string | null;
+}
+
+/** Who has read this thread and up to when — powers read receipts. */
+export async function getThreadReadState(
+  kind: "case" | "direct",
+  id: string,
+): Promise<ThreadReadState[]> {
+  const { data, error } = await (supabase as any).rpc("get_thread_read_state", {
+    p_kind: kind,
+    p_id: id,
+  });
+  if (error) throw error;
+  return (data ?? []) as ThreadReadState[];
+}
+
 
 /** Upload a file that answers a pending document request. */
 export async function fulfilDocumentRequest(

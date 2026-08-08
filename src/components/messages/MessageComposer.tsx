@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
+  AtSign,
   FileUp,
   Loader2,
   Lock,
@@ -20,9 +21,13 @@ import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
   MAX_ATTACHMENT_BYTES,
+  activeMentionQuery,
+  applyMention,
   formatFileSize,
+  resolveMentionIds,
   validateAttachmentFile,
   type ChatAttachment,
+  type MentionablePerson,
 } from "@/lib/chatFormat";
 import {
   removeChatAttachment,
@@ -35,13 +40,17 @@ interface MessageComposerProps {
   onSend: (
     body: string,
     attachments: ChatAttachment[],
-    opts: { visibility: "internal" | "shared"; kind: "text" | "request" },
+    opts: { visibility: "internal" | "shared"; kind: "text" | "request"; mentions: string[] },
   ) => Promise<void>;
   /** Staff can toggle internal notes and send document requests. */
   allowInternal?: boolean;
   allowRequests?: boolean;
   disabled?: boolean;
   hint?: string;
+  /** People who can be @mentioned in this thread. */
+  mentionables?: MentionablePerson[];
+  /** Called (throttled by the caller) while the user is typing. */
+  onTyping?: () => void;
 }
 
 type UploadItem = {
@@ -62,16 +71,39 @@ export default function MessageComposer({
   allowRequests = false,
   disabled = false,
   hint,
+  mentionables = [],
+  onTyping,
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
   const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState<"internal" | "shared">("shared");
   const [kind, setKind] = useState<"text" | "request">("text");
   const [items, setItems] = useState<UploadItem[]>([]);
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+
+  const mentionMatches = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return mentionables.filter((p) => p.name && p.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [mentionQuery, mentionables]);
+
+  const pickMention = (person: MentionablePerson) => {
+    const el = textRef.current;
+    const caret = el?.selectionStart ?? body.length;
+    const next = applyMention(body, caret, person.name);
+    setBody(next.text);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(next.caret, next.caret);
+    });
+  };
+
 
   const patch = (id: string, next: Partial<UploadItem>) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...next } : it)));
@@ -141,10 +173,13 @@ export default function MessageComposer({
       await onSend(trimmed, ready.map((it) => it.attachment!), {
         visibility: allowInternal ? visibility : "shared",
         kind,
+        mentions: resolveMentionIds(trimmed, mentionables),
       });
       setBody("");
       setItems([]);
       setKind("text");
+      setMentionQuery(null);
+
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -222,23 +257,66 @@ export default function MessageComposer({
         </ul>
       )}
 
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder={
-          kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
-        }
-        rows={2}
-        maxLength={5000}
-        disabled={disabled}
-        className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            handleSend();
+      <div className="relative">
+        {mentionMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {mentionMatches.map((person) => (
+              <li key={person.id}>
+                <button
+                  type="button"
+                  onClick={() => pickMention(person)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="truncate">{person.name}</span>
+                  {person.role && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.messages.role.${person.role}`, person.role)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Textarea
+          ref={textRef}
+          value={body}
+          onChange={(e) => {
+            setBody(e.target.value);
+            setMentionQuery(
+              mentionables.length > 0
+                ? activeMentionQuery(e.target.value, e.target.selectionStart ?? 0)
+                : null,
+            );
+            if (e.target.value.trim()) onTyping?.();
+          }}
+          onBlur={() => window.setTimeout(() => setMentionQuery(null), 150)}
+          placeholder={
+            kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
-        }}
-      />
+          rows={2}
+          maxLength={5000}
+          disabled={disabled}
+          className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && mentionQuery !== null) {
+              setMentionQuery(null);
+              return;
+            }
+            if (e.key === "Tab" && mentionMatches.length > 0) {
+              e.preventDefault();
+              pickMention(mentionMatches[0]);
+              return;
+            }
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+        />
+      </div>
+
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1">
@@ -261,6 +339,32 @@ export default function MessageComposer({
             <Paperclip className="h-4 w-4" />
             {t("chat.attach.button")}
           </Button>
+
+          {mentionables.length > 0 && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="gap-1 text-muted-foreground"
+              disabled={disabled}
+              aria-label={t("chat.mention.button")}
+              onClick={() => {
+                const el = textRef.current;
+                const caret = el?.selectionStart ?? body.length;
+                const next = `${body.slice(0, caret)}@${body.slice(caret)}`;
+                setBody(next);
+                setMentionQuery("");
+                requestAnimationFrame(() => {
+                  el?.focus();
+                  el?.setSelectionRange(caret + 1, caret + 1);
+                });
+              }}
+            >
+              <AtSign className="h-4 w-4" />
+            </Button>
+          )}
+
+
 
           {allowRequests && (
             <Button

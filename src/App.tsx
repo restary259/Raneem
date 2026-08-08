@@ -58,6 +58,9 @@ const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
+const StudentMessagesPage = lazy(() => import("./pages/messages/StudentMessagesPage"));
+const PartnerMessagesPage = lazy(() => import("./pages/messages/PartnerMessagesPage"));
+
 
 
 // Team pages (Phase 3)
@@ -242,9 +245,11 @@ const App = () => {
               }
             >
               <Route index element={<PartnerOverviewPage />} />
+              <Route path="messages" element={<PartnerMessagesPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
             </Route>
+
 
             {/* ── Student Dashboard (/student/*) ── */}
             <Route
@@ -256,7 +261,9 @@ const App = () => {
               }
             >
               <Route index element={<StudentNextStepsPage />} />
+              <Route path="messages" element={<StudentMessagesPage />} />
               <Route path="checklist" element={<StudentChecklistPage />} />
+
               <Route path="profile" element={<StudentProfilePage />} />
               <Route path="documents" element={<StudentDocumentsPage />} />
               <Route path="visa" element={<StudentVisaPage />} />
