@@ -217,6 +217,16 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const canMessage = role === "admin" || role === "team_member";
   const headerUnread = useUnreadCaseMessages(canMessage);
   const messagesHref = role === "admin" ? "/admin/messages" : "/team/messages";
+  const { resolvedTheme } = useTheme();
+
+  /* Dark mode is a dashboard-only affordance: the public site stays light. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", resolvedTheme === "dark");
+    return () => root.classList.remove("dark");
+  }, [resolvedTheme]);
+
+
 
   const handleSignOut = async () => {
     await signOut();
