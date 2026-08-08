@@ -83,6 +83,16 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
         }
 
         if (insRes.data) setInsurance(insRes.data as InsuranceInfo);
+
+        if (submission.case_id) {
+          const profileRes = await (supabase as any)
+            .from("profiles")
+            .select("date_of_birth")
+            .eq("case_id", submission.case_id)
+            .maybeSingle();
+          if (profileRes?.data?.date_of_birth) setStudentDob(profileRes.data.date_of_birth);
+        }
+
       } catch (err) {
         console.error("Error fetching program details:", err);
       } finally {
