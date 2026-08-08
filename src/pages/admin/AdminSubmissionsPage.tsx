@@ -294,7 +294,8 @@ const AdminSubmissionsPage = () => {
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
+
     } finally {
       setMarking(false);
     }
