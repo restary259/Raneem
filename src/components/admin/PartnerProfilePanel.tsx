@@ -86,20 +86,11 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
   useEffect(() => { loadNetwork(); }, [loadNetwork]);
 
   /** Upgrade / downgrade is a pure role flag — earnings, referrals and payout history are untouched. */
-  const toggleMaster = async (next: boolean) => {
-    setSavingMaster(true);
-    const { error } = await (supabase as any)
-      .from('profiles')
-      .update({ is_master_partner: next })
-      .eq('id', partner.partner_id);
-    setSavingMaster(false);
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
-      return;
-    }
+  const onMasterChanged = (next: boolean) => {
     setIsMaster(next);
     onRefresh();
   };
+
 
   /** Partners that are not this master and not already in someone's network. */
   const attachable = useMemo(
