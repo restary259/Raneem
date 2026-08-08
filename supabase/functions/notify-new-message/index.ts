@@ -4,36 +4,47 @@ import { requireAuth } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 
 const BodySchema = z.object({
-  thread_type: z.enum(["case", "direct"]),
-  thread_id: z.string().uuid(),
+  thread_type: z.enum(["case", "direct"]).optional(),
+  thread_id: z.string().uuid().optional(),
   preview: z.string().max(300).optional().default(""),
+  /** Admin/staff-triggered delivery test: emails the caller only. */
+  test: z.boolean().optional().default(false),
 });
 
 /** Debounce window: one email per recipient per thread per 10 minutes. */
 const DEBOUNCE_MS = 10 * 60 * 1000;
 const lastSent = new Map<string, number>();
 
-async function sendEmail(to: string, subject: string, text: string, link: string) {
-  const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) {
-    console.log(`[chat-email skipped: no provider] to=${to} subject=${subject}`);
-    return;
-  }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "Darb Agency <notifications@darb.agency>",
-      to: [to],
-      subject,
-      html: `<div dir="auto" style="font-family:system-ui,sans-serif;line-height:1.6">
-        <p>${text}</p>
-        <p><a href="${link}">${link}</a></p>
-        <p style="color:#888;font-size:12px">Darb Agency</p>
-      </div>`,
-    }),
+const APP_URL = "https://darb-agency.lovable.app";
+
+type Admin = ReturnType<typeof createClient>;
+
+/** Queue a branded email through Lovable Emails (send-transactional-email). */
+async function sendTemplate(
+  admin: Admin,
+  templateName: string,
+  recipientEmail: string,
+  templateData: Record<string, unknown>,
+  idempotencyKey: string,
+): Promise<{ ok: boolean; detail?: string }> {
+  const { data, error } = await admin.functions.invoke("send-transactional-email", {
+    body: { templateName, recipientEmail, idempotencyKey, templateData },
   });
-  if (!res.ok) console.error("[chat-email failed]", res.status, await res.text());
+  if (error) {
+    const detail =
+      // deno-lint-ignore no-explicit-any
+      (await (error as any)?.context?.text?.().catch(() => null)) ?? error.message;
+    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName}`, detail);
+    return { ok: false, detail: String(detail) };
+  }
+  // deno-lint-ignore no-explicit-any
+  const body = data as any;
+  if (body && body.success === false) {
+    console.warn(`[chat-email not sent] to=${recipientEmail} reason=${body.reason}`);
+    return { ok: false, detail: String(body.reason ?? "not_sent") };
+  }
+  console.log(`[chat-email queued] to=${recipientEmail} template=${templateName}`);
+  return { ok: true };
 }
 
 Deno.serve(async (req) => {
@@ -55,7 +66,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const { thread_type, thread_id, preview } = parsed.data;
+  const { thread_type, thread_id, preview, test } = parsed.data;
   const senderId = auth.userId;
 
   const admin = createClient(
@@ -64,10 +75,46 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // --- Delivery test: send only to the caller, no debounce, report errors ---
+    if (test) {
+      const { data: me } = await admin
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", senderId)
+        .maybeSingle();
+      if (!me?.email) {
+        return new Response(JSON.stringify({ error: "No email on your profile" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const result = await sendTemplate(
+        admin,
+        "email-test",
+        me.email,
+        { recipientName: me.full_name ?? "", sentAt: new Date().toISOString().slice(0, 16).replace("T", " ") },
+        `email-test-${senderId}-${Date.now()}`,
+      );
+      return new Response(
+        JSON.stringify({ ok: result.ok, sent: result.ok ? 1 : 0, to: me.email, detail: result.detail }),
+        {
+          status: result.ok ? 200 : 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    if (!thread_type || !thread_id) {
+      return new Response(JSON.stringify({ error: "thread_type and thread_id are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Recipients
     let recipientIds: string[] = [];
-    let subject = "New message — Darb Agency";
-    let link = "https://darb-agency.lovable.app/team/messages";
+    let threadTitle = "";
+    let link = `${APP_URL}/team/messages`;
 
     if (thread_type === "direct") {
       const { data: participants } = await admin
@@ -80,7 +127,7 @@ Deno.serve(async (req) => {
     } else {
       const { data: row } = await admin
         .from("cases")
-        .select("assigned_to, student_user_id")
+        .select("assigned_to, student_user_id, case_reference")
         .eq("id", thread_id)
         .maybeSingle();
       if (!row) {
@@ -91,8 +138,8 @@ Deno.serve(async (req) => {
       recipientIds = [row.assigned_to, row.student_user_id].filter(
         (id: string | null): id is string => !!id && id !== senderId,
       );
-      subject = "New message on your case — Darb Agency";
-      link = `https://darb-agency.lovable.app/team/cases/${thread_id}`;
+      threadTitle = row.case_reference ?? "";
+      link = `${APP_URL}/team/cases/${thread_id}`;
     }
 
     if (recipientIds.length === 0) {
@@ -100,6 +147,13 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Sender display name
+    const { data: sender } = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", senderId)
+      .maybeSingle();
 
     // Muted threads
     const { data: mutes } = await admin
@@ -123,15 +177,21 @@ Deno.serve(async (req) => {
       const previousSend = lastSent.get(key) ?? 0;
       if (now - previousSend < DEBOUNCE_MS) continue;
       lastSent.set(key, now);
-      await sendEmail(
+      const result = await sendTemplate(
+        admin,
+        "new-message",
         p.email,
-        subject,
-        `${p.full_name ?? ""}${p.full_name ? ", " : ""}you have a new message on Darb Agency${
-          preview ? `: “${preview}”` : "."
-        }`,
-        link,
+        {
+          recipientName: p.full_name ?? "",
+          senderName: sender?.full_name ?? "",
+          threadTitle,
+          preview,
+          link,
+        },
+        `chat-${thread_type}-${thread_id}-${p.id}-${Math.floor(now / DEBOUNCE_MS)}`,
       );
-      sent += 1;
+      if (result.ok) sent += 1;
+      else lastSent.delete(key);
     }
 
     return new Response(JSON.stringify({ ok: true, sent }), {
