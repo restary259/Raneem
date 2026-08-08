@@ -3041,7 +3041,9 @@
       "title": "Notifications",
       "inApp": "In-app notifications",
       "email": "Email notifications",
-      "hint": "Muted conversations never notify you, even when these are on."
+      "hint": "Muted conversations never notify you, even when these are on.",
+      "testEmail": "Send test email",
+      "testEmailSent": "Test email sent to {{email}}"
     }
   }
 }
