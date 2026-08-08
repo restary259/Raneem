@@ -64,6 +64,12 @@ interface Accommodation {
   description: string | null;
   is_active: boolean;
   school_id: string | null;
+  deposit: number | null;
+  placement_fee: number | null;
+  meals: string | null;
+  room_type: string | null;
+  distance_note: string | null;
+  price_tiers: unknown;
 }
 interface Insurance {
   id: string;
