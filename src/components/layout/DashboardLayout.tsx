@@ -142,23 +142,24 @@ function SidebarNav({ role }: { role: AppRole }) {
                   {t(item.group as string, item.group as string)}
                 </p>
               )}
-            <SidebarMenuItem key={item.key}>
-              <SidebarMenuButton asChild>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    isActive && "bg-primary/10 text-primary font-medium",
-                    collapsed && "justify-center px-2",
-                  )}
-                  title={collapsed ? t(item.key, item.key) : undefined}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{t(item.key, item.key)}</span>}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      isActive && "bg-primary/10 text-primary font-medium",
+                      collapsed && "justify-center px-2",
+                    )}
+                    title={collapsed ? t(item.key, item.key) : undefined}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>{t(item.key, item.key)}</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </React.Fragment>
           );
         })}
       </SidebarMenu>
