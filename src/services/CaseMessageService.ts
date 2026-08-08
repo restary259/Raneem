@@ -258,3 +258,40 @@ export async function setThreadMuted(
     if (error) throw error;
   }
 }
+
+/* ── Case mentions (#REF) ───────────────────────────────────────────────── */
+
+export interface CaseMentionResult {
+  id: string;
+  case_reference: string | null;
+  full_name: string;
+  status: string;
+}
+
+/** Staff-only case search backing the `#` mention picker. */
+export async function searchCasesForMention(query: string): Promise<CaseMentionResult[]> {
+  const { data, error } = await (supabase as any).rpc("search_cases_for_mention", {
+    p_query: query,
+  });
+  if (error) throw error;
+  return (data ?? []) as CaseMentionResult[];
+}
+
+/**
+ * Map `#REF` tokens found in messages back to case ids so they can be linked.
+ * Falls back to a short-id match for cases that have no reference yet.
+ */
+export async function resolveCaseRefs(refs: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const results = await Promise.all(
+    refs.map((ref) => searchCasesForMention(ref).catch(() => [] as CaseMentionResult[])),
+  );
+  refs.forEach((ref, i) => {
+    const lower = ref.toLowerCase();
+    const hit = results[i].find(
+      (c) => c.case_reference?.toLowerCase() === lower || c.id.slice(0, 8).toLowerCase() === lower,
+    );
+    if (hit) map.set(ref, hit.id);
+  });
+  return map;
+}
