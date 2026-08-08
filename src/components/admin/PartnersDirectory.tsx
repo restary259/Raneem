@@ -85,6 +85,7 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
       <PartnerProfilePanel
         partner={selected}
         requests={requestsByPartner[selected.partner_id] || []}
+        allPartners={partners}
         onBack={() => setSelectedId(null)}
         onRefresh={refreshAll}
       />

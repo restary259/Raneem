@@ -261,7 +261,7 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
           </CardHeader>
           <CardContent className="p-0">
             <div className="p-4 flex flex-wrap items-center gap-2 border-b border-border">
-              <Select value="" onValueChange={attachPartner}>
+              <Select onValueChange={attachPartner}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder={t('admin.payouts.attachPartner', 'Attach a partner to this network')} />
                 </SelectTrigger>
