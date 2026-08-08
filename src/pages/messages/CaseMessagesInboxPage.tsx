@@ -508,7 +508,7 @@ export default function CaseMessagesInboxPage() {
                     key={activeCase.caseId}
                     caseId={activeCase.caseId}
                     allowInternal
-                    className="flex min-h-0 flex-1 flex-col [&>div:first-child]:max-h-none [&>div:first-child]:flex-1"
+                    className="flex min-h-0 flex-1 flex-col"
                   />
                 ) : (
                   <DirectMessages
