@@ -17,6 +17,7 @@ import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
+import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
 
 import {
   LayoutDashboard,
@@ -49,6 +50,7 @@ import {
   Table,
   Calculator,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -124,7 +126,15 @@ function SidebarNav({ role }: { role: AppRole }) {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
-  const items = NAV_CONFIG[role] ?? [];
+  const { isMaster } = useIsMasterPartner();
+  const baseItems = NAV_CONFIG[role] ?? [];
+  const items = isMaster && role === "social_media_partner"
+    ? [
+        ...baseItems,
+        { key: "nav.network", icon: Crown, href: "/partner/network" },
+        { key: "nav.performance", icon: BarChart2, href: "/partner/performance" },
+      ]
+    : baseItems;
   const unreadMessages = useUnreadCaseMessages(true);
 
 
