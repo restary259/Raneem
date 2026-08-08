@@ -1,18 +1,24 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Lock, Paperclip, CheckCircle2, Clock } from "lucide-react";
+import { Check, CheckCheck, Clock, CheckCircle2, Lock, Paperclip, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
+  canEditMessage,
   dayLabel,
   formatTime,
   groupMessages,
   initials,
+  splitMentions,
   type ChatMessage,
+  type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
+import type { ThreadReadState } from "@/services/CaseMessageService";
+import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -24,6 +30,18 @@ interface MessageListProps {
   onFulfilRequest?: (message: ChatMessage) => void;
   canFulfilRequests?: boolean;
   onlineUserIds?: Set<string>;
+  /** Read markers of the other participants — powers read receipts. */
+  readState?: ThreadReadState[];
+  /** People who can be mentioned, used to highlight @names. */
+  mentionables?: MentionablePerson[];
+  /** Saves an edited message body. */
+  onEditMessage?: (message: ChatMessage, body: string) => Promise<void>;
+  /** People currently typing in this thread. */
+  typing?: TypingPerson[];
+  /** Loads the previous page of messages. */
+  onLoadOlder?: () => void;
+  hasOlder?: boolean;
+  loadingOlder?: boolean;
 }
 
 export default function MessageList({
@@ -35,13 +53,62 @@ export default function MessageList({
   onFulfilRequest,
   canFulfilRequests,
   onlineUserIds,
+  readState,
+  mentionables = [],
+  onEditMessage,
+  typing = [],
+  onLoadOlder,
+  hasOlder,
+  loadingOlder,
 }: MessageListProps) {
   const { t } = useTranslation("dashboard");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
+
+  /** Other participants' read markers, newest read first. */
+  const readers = useMemo(
+    () => (readState ?? []).filter((r) => r.user_id !== currentUserId),
+    [readState, currentUserId],
+  );
+
+  const receiptFor = (message: ChatMessage) => {
+    if (!currentUserId || message.authorId !== currentUserId || readers.length === 0) return null;
+    const at = new Date(message.createdAt).getTime();
+    const seenBy = readers.filter(
+      (r) => r.last_read_at && new Date(r.last_read_at).getTime() >= at,
+    );
+    return { seenBy, all: seenBy.length === readers.length };
+  };
+
+  const renderBody = (body: string) =>
+    splitMentions(body, mentionables).map((seg, i) =>
+      seg.mention ? (
+        <span key={i} className="rounded bg-primary/15 px-1 font-medium text-primary">
+          {seg.text}
+        </span>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    );
+
+  const saveEdit = async () => {
+    if (!editing || !onEditMessage) return;
+    const message = messages.find((m) => m.id === editing.id);
+    if (!message) return;
+    setSaving(true);
+    try {
+      await onEditMessage(message, editing.body);
+      setEditing(null);
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   if (loading) {
     return (
