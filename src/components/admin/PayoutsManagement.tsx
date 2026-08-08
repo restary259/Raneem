@@ -36,19 +36,12 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const fetchRequests = async () => {
-    const { data } = await (supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false });
-    if (data) {
-      setRequests(data);
-      const userIds = [...new Set(data.map((r: any) => r.requestor_id))];
-      if (userIds.length > 0) {
-        const { data: profs } = await (supabase as any).from('profiles').select('id, full_name, email').in('id', userIds);
-        if (profs) {
-          const map: Record<string, any> = {};
-          profs.forEach((p: any) => { map[p.id] = { full_name: p.full_name, email: p.email }; });
-          setProfiles(map);
-        }
-      }
+    const { data, error } = await (supabase as any).rpc('list_payout_requests');
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
+      return;
     }
+    setRequests(data || []);
   };
 
   useEffect(() => { fetchRequests(); }, []);
@@ -66,87 +59,74 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const totalPaid = requests.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount), 0);
   const totalRejected = requests.filter(r => r.status === 'rejected').reduce((s, r) => s + Number(r.amount), 0);
 
-  const getName = (id: string) => profiles[id]?.full_name || t('admin.payouts.unknownRequester');
-  const getEmail = (id: string) => profiles[id]?.email || '';
+  const getName = (r: any) => r?.requestor_name || t('admin.payouts.unknownRequester');
+  const getEmail = (r: any) => r?.requestor_email || '';
 
-  const auditLog = async (action: string, targetId: string, details: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await (supabase as any).from('admin_audit_log').insert({
-          admin_id: session.user.id, action, target_id: targetId,
-          target_table: 'payout_requests', details,
-        });
-      }
-    } catch {}
+  // Every write goes through admin_respond_payout_request() — no direct client
+  // writes to payout_requests. The RPC also audits, syncs rewards and posts the
+  // status message back into the requester's chat thread.
+  const respond = async (req: any, action: 'approve' | 'reject' | 'pay', note?: string, transactionRef?: string) => {
+    const { error } = await (supabase as any).rpc('admin_respond_payout_request', {
+      p_request_id: req.id,
+      p_action: action,
+      p_note: note || null,
+      p_transaction_ref: transactionRef || null,
+    });
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
+      return false;
+    }
+    return true;
   };
 
   const handleApprove = async (notes: string) => {
     if (!approveTarget) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    await (supabase as any).from('payout_requests').update({
-      status: 'approved', admin_notes: notes || null,
-      approved_at: new Date().toISOString(),
-      approved_by: session?.user?.id || null,
-    }).eq('id', approveTarget.id);
-    auditLog('payout_approved', approveTarget.id, `Approved ${approveTarget.amount} NIS for ${getName(approveTarget.requestor_id)}`);
-    toast({ title: t('admin.payouts.statusUpdated') });
+    const ok = await respond(approveTarget, 'approve', notes);
     setApproveTarget(null);
+    if (!ok) return;
+    toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
 
   const handleReject = async (reason: string) => {
     if (!rejectTarget) return;
-    await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', rejectTarget.id);
-    auditLog('payout_rejected', rejectTarget.id, `Rejected ${rejectTarget.amount} NIS for ${getName(rejectTarget.requestor_id)}: ${reason}`);
-    toast({ title: t('admin.payouts.statusUpdated') });
+    const ok = await respond(rejectTarget, 'reject', reason);
     setRejectTarget(null);
+    if (!ok) return;
+    toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
 
   const handleMarkPaid = async (paymentMethod: string, transactionRef: string, notes: string) => {
     if (!payTarget) return;
-    try {
-      const { error } = await (supabase as any).rpc('confirm_payout_batch', {
-        p_payout_request_id: payTarget.id,
-        p_payment_method: paymentMethod,
-        p_transaction_ref: transactionRef,
-        p_notes: notes,
-      });
-      if (error) throw error;
-      auditLog('payout_paid', payTarget.id, `Paid ${payTarget.amount} NIS to ${getName(payTarget.requestor_id)} via ${paymentMethod}`);
-      toast({ title: t('admin.payouts.statusUpdated') });
-      setPayTarget(null);
-      fetchRequests();
-      onRefresh?.();
-    } catch {
-      toast({ variant: 'destructive', title: t('common.actionFailed'), description: t('admin.payouts.payError') });
-    }
-  };
-
-  const bulkAction = async (action: 'approved' | 'rejected') => {
-    const ids = [...selected];
-    if (!ids.length) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const adminId = session?.user?.id || null;
-    for (const id of ids) {
-      const req = requests.find(r => r.id === id);
-      await (supabase as any).from('payout_requests').update({
-        status: action,
-        ...(action === 'approved' ? { approved_at: new Date().toISOString(), approved_by: adminId } : {}),
-      }).eq('id', id);
-      // Audit log for each bulk action
-      if (req) {
-        auditLog(`bulk_payout_${action}`, id, `Bulk ${action} ${req.amount} NIS for ${getName(req.requestor_id)}`);
-      }
-    }
-    setSelected(new Set());
+    const note = [notes, paymentMethod ? `method: ${paymentMethod}` : ''].filter(Boolean).join(' — ');
+    const ok = await respond(payTarget, 'pay', note, transactionRef);
+    setPayTarget(null);
+    if (!ok) return;
     toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
+
+  const bulkAction = async (action: 'approve' | 'reject') => {
+    const ids = [...selected];
+    if (!ids.length) return;
+    let failures = 0;
+    for (const id of ids) {
+      const req = requests.find(r => r.id === id);
+      if (!req) continue;
+      const ok = await respond(req, action, action === 'reject' ? t('admin.payouts.bulkRejectReason', 'Rejected in bulk review') : undefined);
+      if (!ok) failures++;
+    }
+    setSelected(new Set());
+    if (failures === 0) toast({ title: t('admin.payouts.statusUpdated') });
+    fetchRequests();
+    onRefresh?.();
+  };
+
+
 
   const exportExcel = () =>
     exportCorporateWorkbook({
