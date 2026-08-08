@@ -26,6 +26,13 @@ interface ActivityEntry {
   metadata: any;
 }
 
+interface QueueRow {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+}
+
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
