@@ -34,6 +34,10 @@ const AdminCommandCenter = () => {
 
   const [counts, setCounts] = useState<CaseCounts>({ total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 });
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
+  const [awaitingReview, setAwaitingReview] = useState<QueueRow[]>([]);
+  const [unassigned, setUnassigned] = useState<QueueRow[]>([]);
+  const [outstanding, setOutstanding] = useState<QueueRow[]>([]);
+  const [authFailures, setAuthFailures] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
