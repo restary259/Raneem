@@ -101,6 +101,7 @@ const AdminTeamPage = () => {
         commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
         commissionOverridden: overrideMap[r.user_id] !== undefined,
         is_manager: profileMap[r.user_id]?.is_manager === true,
+        is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
       }));
 
 
