@@ -2304,7 +2304,8 @@
       "student": "Student",
       "program": "Program",
       "financial": "Financial",
-      "activity": "Activity"
+      "activity": "Activity",
+      "messages": "Messages"
     },
     "stage": {
       "advance": "Move to next stage",
@@ -2376,6 +2377,22 @@
       "insurance": "Health insurance",
       "insuranceBreakdown": "{{monthly}}/month × {{months}} months = {{total}}",
       "empty": "No program, accommodation or insurance selected yet."
+    },
+    "messages": {
+      "title": "Messages",
+      "empty": "No messages yet. Start the conversation.",
+      "placeholder": "Write your message…",
+      "send": "Send",
+      "internal": "Internal note",
+      "shared": "Visible to student",
+      "internalHint": "Only the Darb team sees this note — the student does not.",
+      "sharedHint": "The student will be notified about this message.",
+      "studentHint": "Your message goes to the advisor handling your case.",
+      "role": {
+        "admin": "Admin",
+        "team_member": "Advisor",
+        "student": "Student"
+      }
     }
   },
   "partner": {
