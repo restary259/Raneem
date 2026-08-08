@@ -1539,7 +1539,9 @@
       "booked": "محجوز مسبقًا",
       "selected": "المحدد",
       "selectSlot": "يرجى اختيار التاريخ والوقت",
-      "conflict": "هذا الوقت يتعارض مع موعد آخر"
+      "conflict": "هذا الوقت يتعارض مع موعد آخر",
+      "notAllowed": "لا تملك صلاحية تحديد موعد لهذه الحالة",
+      "stageFailed": "تم حفظ الموعد لكن لم تتغير مرحلة الحالة"
     }
   },
   "influencerDash": {
@@ -2204,7 +2206,9 @@
       "upcomingAppointments": "القادمة",
       "pastAppointments": "السابقة",
       "keyFacts": "معلومات أساسية",
-      "paymentBlocked": "أكمل ملف الطالب واحفظه قبل تأكيد الدفع."
+      "paymentBlocked": "أكمل ملف الطالب واحفظه قبل تأكيد الدفع.",
+      "editProfile": "تعديل ملف الطالب",
+      "editProfileDesc": "يمكنك تصحيح ملف الطالب قبل إرساله إلى الإدارة."
     },
     "profileForm": {
       "steps": {

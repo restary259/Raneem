@@ -1521,7 +1521,9 @@
       "booked": "Already booked",
       "selected": "Selected",
       "selectSlot": "Please pick a date and time",
-      "conflict": "This time overlaps another appointment"
+      "conflict": "This time overlaps another appointment",
+      "notAllowed": "You are not allowed to schedule on this case",
+      "stageFailed": "The appointment was saved but the case stage did not change"
     }
   },
   "influencerDash": {
@@ -2186,7 +2188,9 @@
       "upcomingAppointments": "Upcoming",
       "pastAppointments": "Past",
       "keyFacts": "Key facts",
-      "paymentBlocked": "Complete and save the student file before confirming payment."
+      "paymentBlocked": "Complete and save the student file before confirming payment.",
+      "editProfile": "Edit student profile",
+      "editProfileDesc": "You can still correct the student file before sending it to admin."
     },
     "profileForm": {
       "steps": {
