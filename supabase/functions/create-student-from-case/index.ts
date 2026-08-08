@@ -319,40 +319,10 @@ serve(async (req) => {
     }
 
     // ── Invitation email ───────────────────────────────────────────────
-    // The team member owns the invite, so the student is emailed their login
-    // details as soon as the account is created or linked.
-    let emailSent = false;
-    try {
-      const { data: caseRef } = await supabaseAdmin
-        .from("cases")
-        .select("case_reference")
-        .eq("id", case_id)
-        .maybeSingle();
+    // The team member owns the invite, so the student gets their login
+    // details the moment the account is created.
+    const emailSent = await sendInvite(student_email, student_full_name, tempPassword);
 
-      const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          templateName: "student-invite",
-          recipientEmail: student_email,
-          idempotencyKey: `student-invite:${case_id}:${studentId}`,
-          templateData: {
-            studentName: student_full_name,
-            email: student_email,
-            tempPassword,
-            caseReference: caseRef?.case_reference ?? null,
-            loginUrl: "https://darb-agency.lovable.app/student-auth",
-          },
-        }),
-      });
-      emailSent = resp.ok;
-      if (!resp.ok) console.error("invite email failed", await resp.text());
-    } catch (e) {
-      console.error("invite email error", e);
-    }
 
     // ── Response ───────────────────────────────────────────────────────
     const responsePayload: Record<string, unknown> = {
