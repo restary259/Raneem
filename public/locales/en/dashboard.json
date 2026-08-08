@@ -1176,6 +1176,18 @@
       "deleteBtn": "Delete",
       "cancelBtn": "Cancel",
       "deleted": "Deleted"
+    },
+    "recruit": {
+      "title": "Master partner recruits",
+      "recruitedBy": "Recruited by",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Partner approved",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     }
   },
   "influencer": {
@@ -3286,6 +3298,29 @@
     "status": {
       "active": "Active",
       "pending": "Pending"
-    }
+    },
+    "negotiate": "Negotiate rate",
+    "offerSent": "Offer sent to the partner",
+    "offerTitle": "Propose a commission split",
+    "offerDesc": "Darb always pays ₪1,000 per case. Whatever you leave the partner is theirs; the rest goes to you.",
+    "offerAmount": "Partner's share (₪)",
+    "offerPool": "Commission pool",
+    "offerPartnerGets": "Partner receives",
+    "offerYouGet": "You receive",
+    "offerDarbCost": "Darb's cost (unchanged)",
+    "offerNote": "Note to the partner (optional)",
+    "offerSend": "Send offer",
+    "offerInboxTitle": "New commission offer",
+    "offerInboxBody": "Your master partner proposed a new split for future cases.",
+    "offerAccept": "Accept",
+    "offerDecline": "Decline",
+    "offerAccepted": "Offer accepted",
+    "offerDeclined": "Offer declined",
+    "offerPending": "Offer pending",
+    "agreedRate": "Agreed rate",
+    "yourShare": "Your share",
+    "inviteMissing": "No recruit link yet",
+    "recruitTitle": "Recruit link",
+    "recruitHint": "Share this link to recruit partners into your network."
   }
 }

@@ -10,10 +10,22 @@
   "whyJoinUs": {
     "title": "Why Join Us?",
     "benefits": [
-      { "icon": "ShieldCheck", "text": "Represent a trusted and accredited agency" },
-      { "icon": "TrendingUp", "text": "Attractive commissions per student" },
-      { "icon": "FileText", "text": "Marketing support and collaboration" },
-      { "icon": "UserPlus", "text": "No prior experience needed — just passion and credibility" }
+      {
+        "icon": "ShieldCheck",
+        "text": "Represent a trusted and accredited agency"
+      },
+      {
+        "icon": "TrendingUp",
+        "text": "Attractive commissions per student"
+      },
+      {
+        "icon": "FileText",
+        "text": "Marketing support and collaboration"
+      },
+      {
+        "icon": "UserPlus",
+        "text": "No prior experience needed — just passion and credibility"
+      }
     ]
   },
   "commissionCalculator": {
@@ -41,10 +53,17 @@
     "email": "Email",
     "phone": "Phone Number (with country code)",
     "preferredContact": "Preferred Contact Method",
-    "contactOptions": { "whatsapp": "WhatsApp", "call": "Phone Call", "email": "Email" },
+    "contactOptions": {
+      "whatsapp": "WhatsApp",
+      "call": "Phone Call",
+      "email": "Email"
+    },
     "aboutYou": "About You or Your Background (optional)",
     "previousExperience": "Do you have prior experience in student services or sales?",
-    "experienceOptions": { "yes": "Yes", "no": "No" },
+    "experienceOptions": {
+      "yes": "Yes",
+      "no": "No"
+    },
     "whyDarb": "What makes you interested in representing Darb?",
     "instagramLink": "Instagram Link",
     "socialLinks": "Other Social Media Links",
@@ -70,9 +89,21 @@
   "trustSection": {
     "title": "Built on Transparency & Trust",
     "pillars": [
-      { "icon": "Eye", "title": "Clear Processes", "description": "Every step is documented and visible" },
-      { "icon": "Scale", "title": "Fair Commission Rules", "description": "20-day protection period for everyone" },
-      { "icon": "Building2", "title": "Professional Structure", "description": "Organized monthly cycles and historical data" }
+      {
+        "icon": "Eye",
+        "title": "Clear Processes",
+        "description": "Every step is documented and visible"
+      },
+      {
+        "icon": "Scale",
+        "title": "Fair Commission Rules",
+        "description": "20-day protection period for everyone"
+      },
+      {
+        "icon": "Building2",
+        "title": "Professional Structure",
+        "description": "Organized monthly cycles and historical data"
+      }
     ]
   },
   "closingCta": {
@@ -115,14 +146,46 @@
   "howItWorks": {
     "title": "How Does the Program Work?",
     "steps": [
-      { "icon": "UserCheck", "title": "Register for the Program", "description": "Sign up for the partnership program. After approval, you get a personalized page." },
-      { "icon": "Globe", "title": "Your Personal Page", "description": "You get a unique page, a custom registration form, and a tracking link you can share on Instagram stories, Linktree, highlights, or bio." },
-      { "icon": "Palette", "title": "Content Freedom", "description": "Choose your style, method, and the platform that suits you. Create promotional content freely to match your audience." },
-      { "icon": "MousePointerClick", "title": "Student Registration", "description": "Students click your special link and fill out the form. Each student is automatically linked to your name." },
-      { "icon": "Table2", "title": "Data Transparency", "description": "A shared spreadsheet is created for each partner. You can see student names, their status, and progress. The spreadsheet is read-only — transparent and reliable." },
-      { "icon": "Activity", "title": "Track Student Status", "description": "Each student is categorized: qualified, unqualified, contacted, in progress, paid, transferred." },
-      { "icon": "CalendarClock", "title": "Monthly Cycle", "description": "At the end of each month, the spreadsheet is closed and a new one opens for the next month. All data remains visible for history and transparency." },
-      { "icon": "Wallet", "title": "Commission & Payment", "description": "Commission is paid 20 days after student payment. The 20-day period is mandatory to protect against cancellations or refunds. This rule is clear and binding." }
+      {
+        "icon": "UserCheck",
+        "title": "Register for the Program",
+        "description": "Sign up for the partnership program. After approval, you get a personalized page."
+      },
+      {
+        "icon": "Globe",
+        "title": "Your Personal Page",
+        "description": "You get a unique page, a custom registration form, and a tracking link you can share on Instagram stories, Linktree, highlights, or bio."
+      },
+      {
+        "icon": "Palette",
+        "title": "Content Freedom",
+        "description": "Choose your style, method, and the platform that suits you. Create promotional content freely to match your audience."
+      },
+      {
+        "icon": "MousePointerClick",
+        "title": "Student Registration",
+        "description": "Students click your special link and fill out the form. Each student is automatically linked to your name."
+      },
+      {
+        "icon": "Table2",
+        "title": "Data Transparency",
+        "description": "A shared spreadsheet is created for each partner. You can see student names, their status, and progress. The spreadsheet is read-only — transparent and reliable."
+      },
+      {
+        "icon": "Activity",
+        "title": "Track Student Status",
+        "description": "Each student is categorized: qualified, unqualified, contacted, in progress, paid, transferred."
+      },
+      {
+        "icon": "CalendarClock",
+        "title": "Monthly Cycle",
+        "description": "At the end of each month, the spreadsheet is closed and a new one opens for the next month. All data remains visible for history and transparency."
+      },
+      {
+        "icon": "Wallet",
+        "title": "Commission & Payment",
+        "description": "Commission is paid 20 days after student payment. The 20-day period is mandatory to protect against cancellations or refunds. This rule is clear and binding."
+      }
     ]
   },
   "successStories": {
@@ -161,5 +224,25 @@
       "commissionsPaid": "Commissions Paid",
       "satisfactionRate": "Agent Satisfaction"
     }
+  },
+  "join": {
+    "title": "Join Darb as a partner",
+    "subtitle": "A short application — you were invited directly, so we already know who referred you.",
+    "invitedBy": "Invited by",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone number",
+    "city": "City",
+    "social": "Social media link (optional)",
+    "note": "Tell us briefly about your audience (optional)",
+    "consent": "I agree to Darb's privacy policy and to being contacted about this application.",
+    "submit": "Send application",
+    "doneTitle": "Application received",
+    "doneBody": "Our team will review it and contact you with your account details.",
+    "invalidTitle": "This recruit link is not valid",
+    "invalidBody": "The link may have expired. You can still apply through our public partnership page.",
+    "goPublic": "Go to the partnership page",
+    "seoTitle": "Join Darb as a partner",
+    "seoDesc": "Apply to become a Darb partner through your recruiter's invitation link."
   }
 }
