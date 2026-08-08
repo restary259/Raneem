@@ -94,18 +94,18 @@ export default function CaseProgressRail({
 
       {onAdvance &&
         (nextStages.length === 0 ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0 gap-1.5"
-            disabled
-            title={t(
-              "case.stage.automatedHint",
-              "The next stage happens automatically once payment or admin review completes",
-            )}
-          >
-            {t("case.stage.advance", "Move to next stage")}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0" tabIndex={0} aria-describedby={hintId}>
+                <Button size="sm" variant="outline" className="pointer-events-none gap-1.5" disabled>
+                  {t("case.stage.advance", "Move to next stage")}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent id={hintId} className="max-w-[16rem] text-center">
+              {blockHint}
+            </TooltipContent>
+          </Tooltip>
         ) : nextStages.length === 1 ? (
           <Button
             size="sm"
