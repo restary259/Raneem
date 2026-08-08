@@ -87,12 +87,8 @@ const AdminSubmissionsPage = () => {
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
 
-  // Review state (approve / request changes)
-  const [showApprove, setShowApprove] = useState(false);
-  const [showChanges, setShowChanges] = useState(false);
+  // Student account email captured during enrollment confirmation
   const [approveEmail, setApproveEmail] = useState("");
-  const [changeNote, setChangeNote] = useState("");
-  const [reviewing, setReviewing] = useState(false);
 
 
 
