@@ -119,17 +119,30 @@ const AdminProgramsPage = () => {
     lessons_per_week: "",
     duration_in_months: "",
     fixed_start_day_of_month: "",
+    school_id: "",
+    cefr_range: "",
+    hours_per_week: "",
+    start_rule: "",
+    registration_fee: "",
   };
-  const [progForm, setProgForm] = useState(emptyProgForm);
-  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
-  const [accomForm, setAccomForm] = useState({
+  const emptyAccomForm = {
     name_ar: "",
     name_en: "",
     price: "",
     currency: "EUR",
     description: "",
     school_id: "",
-  });
+    room_type: "",
+    meals: "",
+    deposit: "",
+    placement_fee: "",
+    distance_note: "",
+  };
+  const [progForm, setProgForm] = useState(emptyProgForm);
+  const [progTiers, setProgTiers] = useState<PriceTier[]>([]);
+  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
+  const [accomForm, setAccomForm] = useState(emptyAccomForm);
+  const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
 
   const fetchAll = useCallback(async () => {
