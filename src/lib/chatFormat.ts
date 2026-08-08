@@ -160,6 +160,32 @@ export function splitMentions(body: string, people: MentionablePerson[]): BodySe
   return segments.length > 0 ? segments : [{ text: body, mention: false }];
 }
 
+/** Split a plain run into text and `#case` segments. */
+function splitCaseRefs(text: string): BodySegment[] {
+  const out: BodySegment[] = [];
+  let index = 0;
+  for (const m of text.matchAll(CASE_TOKEN)) {
+    const lead = m[1] ?? "";
+    const start = (m.index ?? 0) + lead.length;
+    if (start > index) out.push({ text: text.slice(index, start), mention: false });
+    out.push({ text: `#${m[2]}`, mention: false, caseRef: m[2] });
+    index = start + m[2].length + 1;
+  }
+  if (index < text.length) out.push({ text: text.slice(index), mention: false });
+  return out;
+}
+
+/**
+ * Split a body into plain, `@mention` and `#case` segments.
+ * Case segments carry `caseRef` so the UI can render them as links.
+ */
+export function splitChatBody(body: string, people: MentionablePerson[]): BodySegment[] {
+  return splitMentions(body, people).flatMap((seg) =>
+    seg.mention ? [seg] : splitCaseRefs(seg.text),
+  );
+}
+
+
 
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 
