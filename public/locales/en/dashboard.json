@@ -500,7 +500,16 @@
       "labelTierFrom": "From (month)",
       "labelTierTo": "To (month)",
       "labelTierPrice": "Price",
-      "tierOpenEnded": "and above"
+      "tierOpenEnded": "and above",
+      "labelAgeRates": "Monthly rates by age",
+      "ageRatesHint": "Set the monthly premium for each age band. Leave \"to\" empty for the top band.",
+      "noAgeRates": "No age rates — the base monthly price will be used.",
+      "labelAgeFrom": "From (age)",
+      "labelAgeTo": "To (age)",
+      "labelMonthlyRate": "Monthly rate ({{currency}})",
+      "ageAndAbove": "and above",
+      "noPriceSet": "Price not set yet"
+
     },
     "submissions": {
       "title": "Submitted Applications",
