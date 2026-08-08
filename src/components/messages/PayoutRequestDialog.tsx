@@ -75,10 +75,10 @@ export default function PayoutRequestDialog({
                   key={c.reward_id}
                   className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-sm"
                 >
-                  <span className="min-w-0 truncate">
-                    {c.student_name || "—"}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate">{c.student_name || "—"}</span>
                     {c.case_reference && (
-                      <span className="ms-2 font-mono text-xs text-muted-foreground">
+                      <span className="shrink-0 font-mono text-xs text-muted-foreground">
                         {c.case_reference}
                       </span>
                     )}

@@ -2461,7 +2461,9 @@
       "role": {
         "admin": "الإدارة",
         "team_member": "المستشار",
-        "student": "الطالب"
+        "student": "الطالب",
+        "social_media_partner": "شريك",
+        "ambassador": "سفير"
       }
     },
     "profile": {

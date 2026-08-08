@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import DirectMessages from "@/components/messages/DirectMessages";
+import { chatDisplayName } from "@/lib/chatIdentity";
 import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
 import {
   listMyDirectThreads,
@@ -81,10 +82,13 @@ export default function PartnerMessagesPage() {
     }
   };
 
+  const displayName = (name: string | null | undefined, role: string | null | undefined) =>
+    chatDisplayName(name, role, "social_media_partner", t("chat.adminLabel"));
+
   const items: ThreadListItem[] = threads.map((thread) => ({
     id: thread.threadId,
     type: "direct",
-    title: thread.otherUserName,
+    title: displayName(thread.otherUserName, thread.otherUserRole),
     subtitle: thread.otherUserRole
       ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
       : null,
@@ -176,7 +180,9 @@ export default function PartnerMessagesPage() {
             <>
               <div className="flex items-center justify-between gap-2 border-b p-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{active.otherUserName}</p>
+                  <p className="truncate font-medium">
+                    {displayName(active.otherUserName, active.otherUserRole)}
+                  </p>
                   {active.otherUserId && online.has(active.otherUserId) && (
                     <p className="flex items-center gap-1 text-[11px] text-emerald-600">
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />

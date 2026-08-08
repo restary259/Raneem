@@ -135,7 +135,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
 
   return (
     <div className={className}>
-      <div className="max-h-[460px] overflow-y-auto bg-muted/20">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-muted/20">
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}
