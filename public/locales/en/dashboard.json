@@ -490,7 +490,16 @@
       "emptyCompleted": "No completed cases yet",
       "paymentSplit": "Payment split",
       "paymentSplitDesc": "Review how the service fee will be split before confirming enrollment.",
-      "splitNote": "Commissions are configured in Settings → Money Split. Confirm with your password to continue."
+      "splitNote": "Commissions are configured in Settings → Money Split. Confirm with your password to continue.",
+      "approve": "Approve",
+      "requestChanges": "Request changes",
+      "approved": "Submission approved",
+      "changesRequested": "Change request sent",
+      "changeNote": "What needs to change?",
+      "studentEmail": "Student email",
+      "invalidEmail": "Invalid email address",
+      "approveCreatesAccount": "Approving creates a student account and links it to this case.",
+      "approveExistingAccount": "A student account is already linked to this case. Approving only records the review."
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -2743,55 +2752,14 @@
       "text": "Text"
     }
   },
-  "invoices": {
-    "title": "Invoices",
-    "new": "New invoice",
-    "loading": "Loading…",
-    "empty": "No invoices yet",
-    "created": "Invoice created",
-    "error": "The action could not be completed",
-    "needItems": "Add at least one line before sending",
-    "invalidItem": "Enter a valid description, amount and quantity",
-    "total": "Total",
-    "grandTotal": "Invoiced total",
-    "issuedAt": "Issued",
-    "addItem": "Add line",
-    "saveItem": "Save line",
-    "removeItem": "Remove line",
-    "cancel": "Cancel",
-    "send": "Send invoice",
-    "markPaid": "Mark as paid",
-    "void": "Void",
-    "delete": "Delete",
-    "itemDescription": "Description",
-    "itemCategory": "Category",
-    "itemAmount": "Amount (₪)",
-    "itemQuantity": "Quantity",
-    "status": {
-      "draft": "Draft",
-      "sent": "Sent",
-      "paid": "Paid",
-      "void": "Void"
-    },
-    "category": {
-      "application_fee": "Application fee",
-      "housing": "Housing",
-      "insurance": "Insurance",
-      "visa": "Visa",
-      "semester_fee": "Semester fee",
-      "language_school": "Language school",
-      "service_fee": "Service fee",
-      "other": "Other"
-    }
-  },
   "finance": {
     "title": "Finance",
     "summary": {
       "services": "Services",
-      "invoiced": "Invoiced",
       "paid": "Paid",
       "remaining": "Remaining",
-      "programCosts": "Programme costs"
+      "programCosts": "Programme costs",
+      "discounts": "Discounts"
     },
     "services": {
       "title": "Services on this case",
@@ -2825,6 +2793,11 @@
         "pending": "Pending",
         "failed": "Failed"
       }
+    },
+    "status": {
+      "unpaid": "Unpaid",
+      "partial": "Partially paid",
+      "settled": "Settled"
     }
   }
 }

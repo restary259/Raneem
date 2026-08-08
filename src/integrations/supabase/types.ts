@@ -351,7 +351,6 @@ export type Database = {
           case_id: string
           created_at: string
           id: string
-          invoice_id: string | null
           note: string | null
           paid_date: string | null
           paid_status: string
@@ -363,7 +362,6 @@ export type Database = {
           case_id: string
           created_at?: string
           id?: string
-          invoice_id?: string | null
           note?: string | null
           paid_date?: string | null
           paid_status?: string
@@ -375,29 +373,13 @@ export type Database = {
           case_id?: string
           created_at?: string
           id?: string
-          invoice_id?: string | null
           note?: string | null
           paid_date?: string | null
           paid_status?: string
           payment_type?: string
           recorded_by?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "case_payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_totals"
-            referencedColumns: ["invoice_id"]
-          },
-          {
-            foreignKeyName: "case_payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       case_service_snapshots: {
         Row: {
@@ -536,6 +518,10 @@ export type Database = {
           program_price: number
           program_start_date: string | null
           remaining_balance: number
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           service_fee: number
           submitted_at: string | null
           submitted_by: string | null
@@ -562,6 +548,10 @@ export type Database = {
           program_price?: number
           program_start_date?: string | null
           remaining_balance?: number
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           service_fee?: number
           submitted_at?: string | null
           submitted_by?: string | null
@@ -588,6 +578,10 @@ export type Database = {
           program_price?: number
           program_start_date?: string | null
           remaining_balance?: number
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           service_fee?: number
           submitted_at?: string | null
           submitted_by?: string | null
@@ -1160,114 +1154,6 @@ export type Database = {
         }
         Relationships: []
       }
-      invoice_items: {
-        Row: {
-          amount: number
-          case_service_id: string | null
-          category: string
-          created_at: string
-          description: string
-          discount: number
-          id: string
-          invoice_id: string
-          quantity: number
-        }
-        Insert: {
-          amount?: number
-          case_service_id?: string | null
-          category?: string
-          created_at?: string
-          description: string
-          discount?: number
-          id?: string
-          invoice_id: string
-          quantity?: number
-        }
-        Update: {
-          amount?: number
-          case_service_id?: string | null
-          category?: string
-          created_at?: string
-          description?: string
-          discount?: number
-          id?: string
-          invoice_id?: string
-          quantity?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoice_items_case_service_id_fkey"
-            columns: ["case_service_id"]
-            isOneToOne: false
-            referencedRelation: "case_services"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoice_items_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_totals"
-            referencedColumns: ["invoice_id"]
-          },
-          {
-            foreignKeyName: "invoice_items_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invoices: {
-        Row: {
-          case_id: string
-          created_at: string
-          created_by: string | null
-          currency: string
-          due_at: string | null
-          id: string
-          invoice_number: string | null
-          issued_at: string | null
-          notes: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          case_id: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          due_at?: string | null
-          id?: string
-          invoice_number?: string | null
-          issued_at?: string | null
-          notes?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          case_id?: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          due_at?: string | null
-          id?: string
-          invoice_number?: string | null
-          issued_at?: string | null
-          notes?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       leads: {
         Row: {
           accommodation: boolean
@@ -1785,7 +1671,6 @@ export type Database = {
           created_at: string
           currency: string
           id: string
-          invoice_id: string | null
           notes: string | null
           payment_date: string | null
           service_id: string | null
@@ -1797,7 +1682,6 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
-          invoice_id?: string | null
           notes?: string | null
           payment_date?: string | null
           service_id?: string | null
@@ -1809,7 +1693,6 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
-          invoice_id?: string | null
           notes?: string | null
           payment_date?: string | null
           service_id?: string | null
@@ -1817,20 +1700,6 @@ export type Database = {
           student_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoice_totals"
-            referencedColumns: ["invoice_id"]
-          },
-          {
-            foreignKeyName: "payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "payments_service_id_fkey"
             columns: ["service_id"]
@@ -2753,44 +2622,6 @@ export type Database = {
       }
     }
     Views: {
-      invoice_totals: {
-        Row: {
-          case_id: string | null
-          currency: string | null
-          invoice_id: string | null
-          item_count: number | null
-          paid_amount: number | null
-          status: string | null
-          total: number | null
-        }
-        Insert: {
-          case_id?: string | null
-          currency?: string | null
-          invoice_id?: string | null
-          item_count?: never
-          paid_amount?: never
-          status?: string | null
-          total?: never
-        }
-        Update: {
-          case_id?: string | null
-          currency?: string | null
-          invoice_id?: string | null
-          item_count?: never
-          paid_amount?: never
-          status?: string | null
-          total?: never
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       leads_lawyer_safe: {
         Row: {
           accommodation: boolean | null

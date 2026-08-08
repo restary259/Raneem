@@ -9,7 +9,7 @@
  */
 export * from './CaseService';
 export * from './StudentService';
-export * from './InvoiceService';
+
 export * from './PartnerService';
 export * from './PaymentService';
 export * from './NotificationService';
