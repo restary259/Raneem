@@ -128,6 +128,7 @@ export default function PartnerEarningsPage() {
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("payout_requests", () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
