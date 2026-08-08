@@ -2972,6 +2972,15 @@
     "empty": "No conversations yet.",
     "selectThread": "Select a conversation to read it.",
     "openCase": "Open case file",
-    "unreadTotal": "{{count}} unread"
+    "unreadTotal": "{{count}} unread",
+    "newDirect": "New chat",
+    "pickStaff": "Pick a staff member",
+    "noStaff": "No staff available",
+    "directHint": "Direct chats always include an admin.",
+    "tabCases": "Case threads",
+    "tabDirect": "Direct chats",
+    "emptyDirect": "No direct chats yet",
+    "noMessagesYet": "No messages yet",
+    "directBlocked": "Direct chats must include an admin."
   }
 }
