@@ -133,6 +133,14 @@ export default function MessageList({
 
   return (
     <div className={cn("space-y-5 p-4", className)}>
+      {hasOlder && onLoadOlder && (
+        <div className="flex justify-center">
+          <Button size="sm" variant="ghost" disabled={loadingOlder} onClick={onLoadOlder}>
+            {loadingOlder ? t("chat.loadingOlder") : t("chat.loadOlder")}
+          </Button>
+        </div>
+      )}
+
       {groups.map((group) => {
         const showDay = group.day !== renderedDay;
         renderedDay = group.day;
