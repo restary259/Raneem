@@ -23,8 +23,23 @@ import {
   Pencil,
   Building2,
   Shield,
+  GraduationCap as School,
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+
+function groupBySchool<T extends { school_id: string | null }>(
+  items: T[],
+  schools: { id: string; name_en: string }[],
+): { key: string; label: string; items: T[] }[] {
+  const groups: { key: string; label: string; items: T[] }[] = [];
+  for (const school of schools) {
+    const list = items.filter((i) => i.school_id === school.id);
+    if (list.length) groups.push({ key: school.id, label: school.name_en, items: list });
+  }
+  const ungrouped = items.filter((i) => !i.school_id || !schools.some((s) => s.id === i.school_id));
+  if (ungrouped.length) groups.push({ key: "none", label: "Other", items: ungrouped });
+  return groups;
+}
 
 interface Program {
   id: string;
