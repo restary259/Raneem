@@ -5,6 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
+import PayoutRequestDialog from "@/components/messages/PayoutRequestDialog";
+import {
+  getMyPayoutPreview,
+  requestPayoutViaChat,
+  type PayoutPreview,
+} from "@/services/PayoutRequestService";
+
 import {
   editDirectMessage,
   listDirectMessages,
