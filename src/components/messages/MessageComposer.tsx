@@ -145,6 +145,14 @@ export default function MessageComposer({
     };
   }, [allowCaseMentions, caseQuery]);
 
+  /** Grow the composer with the message, up to a capped height. */
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+  }, [body]);
+
   const pickCase = (c: MentionableCase) => {
     const el = textRef.current;
     const caret = el?.selectionStart ?? body.length;
@@ -393,14 +401,7 @@ export default function MessageComposer({
           rows={1}
           maxLength={5000}
           disabled={disabled}
-          style={{ height: "auto" }}
-          ref={(el) => {
-            textRef.current = el;
-            if (el) {
-              el.style.height = "auto";
-              el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
-            }
-          }}
+          ref={textRef}
           /* 16px on mobile keeps iOS Safari from zooming the page on focus. */
           className="max-h-[140px] min-h-[24px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0 sm:text-sm"
           onKeyDown={(e) => {
