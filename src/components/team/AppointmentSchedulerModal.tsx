@@ -17,12 +17,23 @@ interface Props {
   teamMemberId: string;
   actorName: string;
   guestName?: string;
+  /** Current pipeline stage — the case only advances when it is still `contacted`. */
+  caseStatus?: string;
   onSuccess: () => void;
 }
 
 const DURATIONS = [15, 30, 45, 60, 90];
 
-export default function AppointmentSchedulerModal({ open, onClose, caseId, teamMemberId, actorName, guestName, onSuccess }: Props) {
+/** Turns a database STAGE_BLOCKED error into a readable sentence. */
+function readableError(err: unknown): string {
+  const raw =
+    typeof err === 'object' && err !== null && 'message' in err
+      ? String((err as { message: unknown }).message)
+      : String(err);
+  return raw.replace(/^STAGE_BLOCKED:\s*/i, '');
+}
+
+export default function AppointmentSchedulerModal({ open, onClose, caseId, teamMemberId, actorName, guestName, caseStatus, onSuccess }: Props) {
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
   const [slot, setSlot] = useState<Date | null>(null);
@@ -42,17 +53,34 @@ export default function AppointmentSchedulerModal({ open, onClose, caseId, teamM
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from('appointments').insert({
-        case_id: caseId,
-        team_member_id: teamMemberId,
-        guest_name: guestName || null,
-        scheduled_at: slot.toISOString(),
-        duration_minutes: duration,
-        notes: notes || null,
-      });
+      // .select() is required: a row blocked by row-level security returns no
+      // error and no rows, so without it a silent failure looks like success.
+      const { data: inserted, error } = await supabase
+        .from('appointments')
+        .insert({
+          case_id: caseId,
+          team_member_id: teamMemberId,
+          guest_name: guestName || null,
+          scheduled_at: slot.toISOString(),
+          duration_minutes: duration,
+          notes: notes || null,
+        })
+        .select('id')
+        .maybeSingle();
       if (error) throw error;
+      if (!inserted) throw new Error(t('lawyer.picker.notAllowed', 'You are not allowed to schedule on this case'));
 
-      await supabase.from('cases').update({ status: 'appointment_scheduled' }).eq('id', caseId);
+      // Only the first appointment moves the case forward.
+      if (caseStatus === 'contacted') {
+        const { data: moved, error: caseErr } = await supabase
+          .from('cases')
+          .update({ status: 'appointment_scheduled' })
+          .eq('id', caseId)
+          .select('id')
+          .maybeSingle();
+        if (caseErr) throw caseErr;
+        if (!moved) throw new Error(t('lawyer.picker.stageFailed', 'The appointment was saved but the case stage did not change'));
+      }
 
       await supabase.rpc('log_activity' as any, {
         p_actor_id: teamMemberId,
@@ -68,11 +96,12 @@ export default function AppointmentSchedulerModal({ open, onClose, caseId, teamM
       onClose();
     } catch (err) {
       console.error('[AppointmentScheduler]', err);
-      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
+      toast({ variant: 'destructive', title: t('common.error'), description: readableError(err) });
     } finally {
       setSaving(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
