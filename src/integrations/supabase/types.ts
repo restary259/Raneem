@@ -1141,34 +1141,64 @@ export type Database = {
       }
       insurances: {
         Row: {
+          billing_period: string
+          coverage_scope: string | null
           created_at: string
           currency: string
+          description_ar: string | null
+          description_en: string | null
           id: string
           is_active: boolean
+          max_age: number | null
+          max_months: number | null
+          min_months: number | null
           name: string
           price: number
+          provider: string | null
+          terms_url: string | null
           tier: string
           updated_at: string
+          waiting_periods: Json
         }
         Insert: {
+          billing_period?: string
+          coverage_scope?: string | null
           created_at?: string
           currency?: string
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           is_active?: boolean
+          max_age?: number | null
+          max_months?: number | null
+          min_months?: number | null
           name: string
           price?: number
+          provider?: string | null
+          terms_url?: string | null
           tier?: string
           updated_at?: string
+          waiting_periods?: Json
         }
         Update: {
+          billing_period?: string
+          coverage_scope?: string | null
           created_at?: string
           currency?: string
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           is_active?: boolean
+          max_age?: number | null
+          max_months?: number | null
+          min_months?: number | null
           name?: string
           price?: number
+          provider?: string | null
+          terms_url?: string | null
           tier?: string
           updated_at?: string
+          waiting_periods?: Json
         }
         Relationships: []
       }
