@@ -55,8 +55,10 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
+  let requestedCategory: string | undefined
   try {
     const body = await req.json()
+    requestedCategory = body.category
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
     messageId = crypto.randomUUID()
@@ -120,12 +122,28 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // 2. Check suppression list (fail-closed: if we can't verify, don't send)
-  const { data: suppressed, error: suppressionError } = await supabase
+  // Message category: 'transactional' (service messages such as appointment
+  // reminders and payment confirmations) or 'marketing'. Templates may declare
+  // their own category; the caller can override it explicitly.
+  const category: 'transactional' | 'marketing' =
+    (requestedCategory ?? (template as { category?: string }).category ?? 'transactional') ===
+    'marketing'
+      ? 'marketing'
+      : 'transactional'
+
+  // 2. Check suppression list (fail-closed: if we can't verify, don't send).
+  // scope='all' blocks everything (hard bounce / spam complaint);
+  // scope='marketing' only blocks marketing messages, so service emails
+  // keep flowing after a marketing unsubscribe.
+  const { data: suppressionRows, error: suppressionError } = await supabase
     .from('suppressed_emails')
-    .select('id')
+    .select('id, scope')
     .eq('email', effectiveRecipient.toLowerCase())
-    .maybeSingle()
+
+  const suppressed = (suppressionRows ?? []).some(
+    (row: { scope?: string | null }) =>
+      (row.scope ?? 'all') === 'all' || category === 'marketing'
+  )
 
   if (suppressionError) {
     console.error('Suppression check failed — refusing to send', {
@@ -148,6 +166,7 @@ Deno.serve(async (req) => {
       template_name: templateName,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
+      category,
     })
 
     console.log('Email suppressed', { effectiveRecipient, templateName })
@@ -301,6 +320,7 @@ Deno.serve(async (req) => {
     template_name: templateName,
     recipient_email: effectiveRecipient,
     status: 'pending',
+    category,
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
@@ -313,10 +333,12 @@ Deno.serve(async (req) => {
       subject: resolvedSubject,
       html,
       text: plainText,
-      purpose: 'transactional',
+      purpose: category,
       label: templateName,
       idempotency_key: idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
+      // Unsubscribe links belong on marketing mail only — service messages
+      // (appointments, payments) must not be unsubscribable.
+      unsubscribe_token: category === 'marketing' ? unsubscribeToken : undefined,
       queued_at: new Date().toISOString(),
     },
   })
@@ -334,6 +356,7 @@ Deno.serve(async (req) => {
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
+      category,
     })
 
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
