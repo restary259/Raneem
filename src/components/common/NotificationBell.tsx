@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Bell, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,9 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   source: string;
+  link: string | null;
 }
+
 
 function timeAgo(date: string, t: (key: string, opts?: any) => string): string {
   const now = Date.now();
