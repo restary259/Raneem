@@ -97,8 +97,7 @@ export default function StudentNextStepsPage() {
     }
 
     if (caseId) {
-      const [caseRes, apptRes, subRes] = await Promise.all([
-        (supabase as any).from('cases').select('status').eq('id', caseId).maybeSingle(),
+      const [apptRes, subRes] = await Promise.all([
         (supabase as any)
           .from('appointments')
           .select('scheduled_at')
@@ -114,7 +113,7 @@ export default function StudentNextStepsPage() {
           .maybeSingle(),
       ]);
 
-      setCaseStatus(ownCase?.status ?? caseRes?.data?.status ?? null);
+      setCaseStatus(ownCase?.status ?? null);
 
       const appt = apptRes?.data?.[0];
       if (appt) {
