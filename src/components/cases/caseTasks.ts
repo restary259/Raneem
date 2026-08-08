@@ -30,6 +30,7 @@ export interface CaseTaskInput {
   submission: {
     payment_confirmed?: boolean | null;
     payment_confirmed_at?: string | null;
+    profile_completed_at?: string | null;
   } | null;
   documents: { category: string }[];
   appointments: { id: string; scheduled_at: string; outcome: string | null }[];
