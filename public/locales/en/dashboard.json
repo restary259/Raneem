@@ -490,7 +490,16 @@
       "emptyCompleted": "No completed cases yet",
       "paymentSplit": "Payment split",
       "paymentSplitDesc": "Review how the service fee will be split before confirming enrollment.",
-      "splitNote": "Commissions are configured in Settings → Money Split. Confirm with your password to continue."
+      "splitNote": "Commissions are configured in Settings → Money Split. Confirm with your password to continue.",
+      "approve": "Approve",
+      "requestChanges": "Request changes",
+      "approved": "Submission approved",
+      "changesRequested": "Change request sent",
+      "changeNote": "What needs to change?",
+      "studentEmail": "Student email",
+      "invalidEmail": "Invalid email address",
+      "approveCreatesAccount": "Approving creates a student account and links it to this case.",
+      "approveExistingAccount": "A student account is already linked to this case. Approving only records the review."
     },
     "financials": {
       "title": "Financial Dashboard",
