@@ -1284,7 +1284,8 @@
     "showMore": "Show more",
     "archived": "Archived",
     "back": "Back",
-    "copy": "Copy"
+    "copy": "Copy",
+    "confirm": "Confirm"
   },
   "funnel": {
     "new": "Lead Submitted",
