@@ -439,57 +439,7 @@ export default function PartnerEarningsPage() {
         {t("partner.privacyNote")}
       </p>
 
-      {/* Request Payout Dialog */}
-      <Dialog open={showPayoutDialog} onOpenChange={setShowPayoutDialog}>
-        <DialogContent dir={dir} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-primary" />
-              {isAr ? "طلب صرف" : "Request Payout"}
-            </DialogTitle>
-            <DialogDescription>
-              {isAr
-                ? "سيتم إرسال طلب الصرف للمراجعة. سيتم دفع المبلغ بعد موافقة الإدارة."
-                : "Your payout request will be sent for review. Payment will be processed after admin approval."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 py-2">
-            <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
-              <p className="text-3xl font-black text-primary">₪{unlockedAmount.toLocaleString("en-US")}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {unlockedPending.length} {isAr ? "حالة مؤهلة" : "qualifying case(s)"}
-              </p>
-            </div>
-            <div className="rounded-xl bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
-              {unlockedPending.map((r: any) => {
-                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-                const name = paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
-                return (
-                  <div key={r.id} className="flex justify-between">
-                    <span>{name}</span>
-                    <span className="font-semibold text-foreground">₪{Number(r.amount).toLocaleString("en-US")}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowPayoutDialog(false)} disabled={isSubmitting}>
-              {isAr ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button onClick={handleRequestPayout} disabled={isSubmitting} className="gap-2">
-              {isSubmitting ? (
-                <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              {isAr ? "تأكيد الطلب" : "Submit Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+
