@@ -183,21 +183,42 @@ export default function CaseDetailPage() {
         if (task.appointmentId) setOutcomeApptId(task.appointmentId);
         break;
       case "upload_document":
-        setTab("overview");
+        setTab("history");
         requestAnimationFrame(() => documentsRef.current?.scrollIntoView({ behavior: "smooth" }));
         break;
       case "add_note":
-        setTab("activity");
+        setTab("history");
         break;
     }
   };
 
-  const hasPassport = documents.some((d) => d.category === "passport");
+  const nextStages = useMemo(
+    () => (caseData ? manualNextStages(caseData.status) : []),
+    [caseData],
+  );
+
+  const handleAdvance = async () => {
+    if (!caseData || !pendingStage) return;
+    setAdvancing(true);
+    try {
+      await advanceCaseStage(caseData.id, caseData.status, pendingStage);
+      toast({ description: t("case.stage.moved", "Case moved to the next stage") });
+      setPendingStage(null);
+      await fetchData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
   const canSubmitToAdmin =
     canManage &&
     !!submission &&
     !!submission.payment_confirmed &&
-    hasPassport &&
     caseData?.status !== "submitted" &&
     caseData?.status !== "payment_confirmed" &&
     caseData?.status !== "enrollment_paid";
