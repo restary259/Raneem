@@ -2014,6 +2014,8 @@
     "ok": "OK"
   },
   "nav": {
+    "inbox": "Applications",
+    "messages": "Messages",
     "overview": "Overview",
     "pipeline": "Pipeline",
     "team": "Team",
