@@ -3462,6 +3462,15 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
+      search_cases_for_mention: {
+        Args: { p_query: string }
+        Returns: {
+          case_reference: string
+          full_name: string
+          id: string
+          status: string
+        }[]
+      }
       send_case_message: {
         Args: {
           p_attachments?: Json

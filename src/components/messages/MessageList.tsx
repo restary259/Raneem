@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, CheckCheck, Clock, CheckCircle2, Lock, Paperclip, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Check,
+  CheckCheck,
+  Clock,
+  CheckCircle2,
+  FolderOpen,
+  Lock,
+  Paperclip,
+  Pencil,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,15 +19,16 @@ import { cn } from "@/lib/utils";
 import {
   canEditMessage,
   dayLabel,
+  extractCaseRefs,
   formatTime,
   groupMessages,
   initials,
-  splitMentions,
+  splitChatBody,
   type ChatMessage,
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
-import type { ThreadReadState } from "@/services/CaseMessageService";
+import { resolveCaseRefs, type ThreadReadState } from "@/services/CaseMessageService";
 import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
 interface MessageListProps {
@@ -34,6 +45,8 @@ interface MessageListProps {
   readState?: ThreadReadState[];
   /** People who can be mentioned, used to highlight @names. */
   mentionables?: MentionablePerson[];
+  /** Staff only: route prefix for `#case` links, e.g. `/admin/cases`. */
+  caseLinkBase?: string;
   /** Saves an edited message body. */
   onEditMessage?: (message: ChatMessage, body: string) => Promise<void>;
   /** People currently typing in this thread. */
@@ -55,6 +68,7 @@ export default function MessageList({
   onlineUserIds,
   readState,
   mentionables = [],
+  caseLinkBase,
   onEditMessage,
   typing = [],
   onLoadOlder,
@@ -85,16 +99,53 @@ export default function MessageList({
     return { seenBy, all: seenBy.length === readers.length };
   };
 
+  /** `#REF` tokens the viewer may open, mapped to their case id. */
+  const [caseLinks, setCaseLinks] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    if (!caseLinkBase) return;
+    const refs = [...new Set(messages.flatMap((m) => extractCaseRefs(m.body)))];
+    if (refs.length === 0) {
+      setCaseLinks(new Map());
+      return;
+    }
+    let active = true;
+    resolveCaseRefs(refs)
+      .then((map) => active && setCaseLinks(map))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [messages, caseLinkBase]);
+
   const renderBody = (body: string) =>
-    splitMentions(body, mentionables).map((seg, i) =>
-      seg.mention ? (
-        <span key={i} className="rounded bg-primary/15 px-1 font-medium text-primary">
-          {seg.text}
-        </span>
-      ) : (
-        <span key={i}>{seg.text}</span>
-      ),
-    );
+    splitChatBody(body, mentionables).map((seg, i) => {
+      if (seg.mention) {
+        return (
+          <span key={i} className="rounded bg-primary/15 px-1 font-medium text-primary">
+            {seg.text}
+          </span>
+        );
+      }
+      if (seg.caseRef) {
+        const caseId = caseLinks.get(seg.caseRef);
+        const chip = (
+          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 font-medium text-secondary-foreground">
+            <FolderOpen className="h-3 w-3" />
+            {seg.text}
+          </span>
+        );
+        return caseId && caseLinkBase ? (
+          <Link key={i} to={`${caseLinkBase}/${caseId}`} className="hover:underline">
+            {chip}
+          </Link>
+        ) : (
+          <span key={i}>{chip}</span>
+        );
+      }
+      return <span key={i}>{seg.text}</span>;
+    });
+
 
   const saveEdit = async () => {
     if (!editing || !onEditMessage) return;

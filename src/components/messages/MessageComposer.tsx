@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   AtSign,
+  Hash,
   FileUp,
   Loader2,
   Lock,
@@ -21,14 +22,19 @@ import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
   MAX_ATTACHMENT_BYTES,
+  activeCaseQuery,
   activeMentionQuery,
+  applyCaseMention,
   applyMention,
+  caseMentionToken,
   formatFileSize,
   resolveMentionIds,
   validateAttachmentFile,
   type ChatAttachment,
+  type MentionableCase,
   type MentionablePerson,
 } from "@/lib/chatFormat";
+import { searchCasesForMention } from "@/services/CaseMessageService";
 import {
   removeChatAttachment,
   uploadChatAttachmentWithProgress,
@@ -49,6 +55,8 @@ interface MessageComposerProps {
   hint?: string;
   /** People who can be @mentioned in this thread. */
   mentionables?: MentionablePerson[];
+  /** Staff only: allow referencing a case file with `#`. */
+  allowCaseMentions?: boolean;
   /** Called (throttled by the caller) while the user is typing. */
   onTyping?: () => void;
 }
@@ -72,6 +80,7 @@ export default function MessageComposer({
   disabled = false,
   hint,
   mentionables = [],
+  allowCaseMentions = false,
   onTyping,
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
@@ -85,12 +94,56 @@ export default function MessageComposer({
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [caseQuery, setCaseQuery] = useState<string | null>(null);
+  const [caseMatches, setCaseMatches] = useState<MentionableCase[]>([]);
 
   const mentionMatches = useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
     return mentionables.filter((p) => p.name && p.name.toLowerCase().includes(q)).slice(0, 6);
   }, [mentionQuery, mentionables]);
+
+  /** Debounced case lookup for the active `#query`. */
+  useEffect(() => {
+    if (!allowCaseMentions || caseQuery === null) {
+      setCaseMatches([]);
+      return;
+    }
+    let active = true;
+    const handle = window.setTimeout(() => {
+      searchCasesForMention(caseQuery)
+        .then((rows) => {
+          if (!active) return;
+          setCaseMatches(
+            rows.slice(0, 6).map((c) => ({
+              id: c.id,
+              reference: c.case_reference,
+              name: c.full_name,
+              status: c.status,
+            })),
+          );
+        })
+        .catch(() => active && setCaseMatches([]));
+    }, 200);
+    return () => {
+      active = false;
+      window.clearTimeout(handle);
+    };
+  }, [allowCaseMentions, caseQuery]);
+
+  const pickCase = (c: MentionableCase) => {
+    const el = textRef.current;
+    const caret = el?.selectionStart ?? body.length;
+    const next = applyCaseMention(body, caret, caseMentionToken(c));
+    setBody(next.text);
+    setCaseQuery(null);
+    setCaseMatches([]);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(next.caret, next.caret);
+    });
+  };
+
 
   const pickMention = (person: MentionablePerson) => {
     const el = textRef.current;
@@ -279,19 +332,48 @@ export default function MessageComposer({
           </ul>
         )}
 
+        {caseMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {caseMatches.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => pickCase(c)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium">{caseMentionToken(c)}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{c.name}</span>
+                  </span>
+                  {c.status && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.status.${c.status}`, c.status)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <Textarea
           ref={textRef}
           value={body}
           onChange={(e) => {
+            const caret = e.target.selectionStart ?? 0;
             setBody(e.target.value);
             setMentionQuery(
-              mentionables.length > 0
-                ? activeMentionQuery(e.target.value, e.target.selectionStart ?? 0)
-                : null,
+              mentionables.length > 0 ? activeMentionQuery(e.target.value, caret) : null,
             );
+            setCaseQuery(allowCaseMentions ? activeCaseQuery(e.target.value, caret) : null);
             if (e.target.value.trim()) onTyping?.();
           }}
-          onBlur={() => window.setTimeout(() => setMentionQuery(null), 150)}
+          onBlur={() =>
+            window.setTimeout(() => {
+              setMentionQuery(null);
+              setCaseQuery(null);
+            }, 150)
+          }
           placeholder={
             kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
@@ -300,13 +382,19 @@ export default function MessageComposer({
           disabled={disabled}
           className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
           onKeyDown={(e) => {
-            if (e.key === "Escape" && mentionQuery !== null) {
+            if (e.key === "Escape" && (mentionQuery !== null || caseQuery !== null)) {
               setMentionQuery(null);
+              setCaseQuery(null);
               return;
             }
             if (e.key === "Tab" && mentionMatches.length > 0) {
               e.preventDefault();
               pickMention(mentionMatches[0]);
+              return;
+            }
+            if (e.key === "Tab" && caseMatches.length > 0) {
+              e.preventDefault();
+              pickCase(caseMatches[0]);
               return;
             }
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -361,6 +449,30 @@ export default function MessageComposer({
               }}
             >
               <AtSign className="h-4 w-4" />
+            </Button>
+          )}
+
+          {allowCaseMentions && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="gap-1 text-muted-foreground"
+              disabled={disabled}
+              aria-label={t("chat.caseMention.button")}
+              onClick={() => {
+                const el = textRef.current;
+                const caret = el?.selectionStart ?? body.length;
+                const next = `${body.slice(0, caret)}#${body.slice(caret)}`;
+                setBody(next);
+                setCaseQuery("");
+                requestAnimationFrame(() => {
+                  el?.focus();
+                  el?.setSelectionRange(caret + 1, caret + 1);
+                });
+              }}
+            >
+              <Hash className="h-4 w-4" />
             </Button>
           )}
 

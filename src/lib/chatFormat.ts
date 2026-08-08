@@ -81,7 +81,58 @@ export function resolveMentionIds(body: string, people: MentionablePerson[]): st
   return [...ids];
 }
 
-export type BodySegment = { text: string; mention: boolean };
+/** A case file that can be referenced in a message with `#`. */
+export interface MentionableCase {
+  id: string;
+  reference: string | null;
+  name: string;
+  status?: string | null;
+}
+
+/** The token written into the body for a case, e.g. `#DRB-2026-0012`. */
+export function caseMentionToken(c: MentionableCase): string {
+  return `#${c.reference ?? c.id.slice(0, 8)}`;
+}
+
+/**
+ * Active `#query` the caret sits in, or null.
+ * Only triggers at the start of a word, so `a#b` and URLs never open the picker.
+ */
+export function activeCaseQuery(text: string, caret: number): string | null {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("#");
+  if (at === -1) return null;
+  if (at > 0 && !/\s/.test(before[at - 1])) return null;
+  const query = before.slice(at + 1);
+  if (/\s/.test(query)) return null;
+  return query;
+}
+
+/** Replace the active `#query` with the case token. Returns new text + caret. */
+export function applyCaseMention(
+  text: string,
+  caret: number,
+  token: string,
+): { text: string; caret: number } {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("#");
+  if (at === -1) return { text, caret };
+  const inserted = `${token} `;
+  const next = text.slice(0, at) + inserted + text.slice(caret);
+  return { text: next, caret: at + inserted.length };
+}
+
+const CASE_TOKEN = /(^|\s)#([A-Za-z0-9][A-Za-z0-9_-]{2,})/g;
+
+/** Distinct case references written as `#REF` in a body. */
+export function extractCaseRefs(body: string): string[] {
+  const refs = new Set<string>();
+  for (const m of body.matchAll(CASE_TOKEN)) refs.add(m[2]);
+  return [...refs];
+}
+
+export type BodySegment = { text: string; mention: boolean; caseRef?: string };
+
 
 /** Split a body into plain and `@mention` segments for highlighting. */
 export function splitMentions(body: string, people: MentionablePerson[]): BodySegment[] {
@@ -108,6 +159,32 @@ export function splitMentions(body: string, people: MentionablePerson[]): BodySe
   if (index < body.length) segments.push({ text: body.slice(index), mention: false });
   return segments.length > 0 ? segments : [{ text: body, mention: false }];
 }
+
+/** Split a plain run into text and `#case` segments. */
+function splitCaseRefs(text: string): BodySegment[] {
+  const out: BodySegment[] = [];
+  let index = 0;
+  for (const m of text.matchAll(CASE_TOKEN)) {
+    const lead = m[1] ?? "";
+    const start = (m.index ?? 0) + lead.length;
+    if (start > index) out.push({ text: text.slice(index, start), mention: false });
+    out.push({ text: `#${m[2]}`, mention: false, caseRef: m[2] });
+    index = start + m[2].length + 1;
+  }
+  if (index < text.length) out.push({ text: text.slice(index), mention: false });
+  return out;
+}
+
+/**
+ * Split a body into plain, `@mention` and `#case` segments.
+ * Case segments carry `caseRef` so the UI can render them as links.
+ */
+export function splitChatBody(body: string, people: MentionablePerson[]): BodySegment[] {
+  return splitMentions(body, people).flatMap((seg) =>
+    seg.mention ? [seg] : splitCaseRefs(seg.text),
+  );
+}
+
 
 
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;

@@ -3067,6 +3067,9 @@
     "typing": {
       "one": "{{name}} is typing…",
       "many": "Several people are typing…"
+    },
+    "caseMention": {
+      "button": "Reference a case"
     }
   }
 }
