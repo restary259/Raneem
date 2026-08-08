@@ -3,21 +3,30 @@ import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   AtSign,
+  Banknote,
   Hash,
   FileUp,
   Loader2,
   Lock,
   Paperclip,
+  Plus,
   RotateCw,
   Send,
   Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
 import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
@@ -59,6 +68,9 @@ interface MessageComposerProps {
   allowCaseMentions?: boolean;
   /** Called (throttled by the caller) while the user is typing. */
   onTyping?: () => void;
+  /** Partners only: opens the structured payout-request flow from the `+` menu. */
+  onRequestPayout?: () => void;
+
 }
 
 type UploadItem = {
@@ -82,6 +94,8 @@ export default function MessageComposer({
   mentionables = [],
   allowCaseMentions = false,
   onTyping,
+  onRequestPayout,
+
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
@@ -406,8 +420,8 @@ export default function MessageComposer({
       </div>
 
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1">
           <input
             ref={fileRef}
             type="file"
@@ -416,79 +430,84 @@ export default function MessageComposer({
             accept={ALLOWED_ATTACHMENT_MIMES.join(",")}
             onChange={(e) => e.target.files && addFiles(e.target.files)}
           />
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="gap-1 text-muted-foreground"
-            disabled={disabled}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Paperclip className="h-4 w-4" />
-            {t("chat.attach.button")}
-          </Button>
 
-          {mentionables.length > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="gap-1 text-muted-foreground"
-              disabled={disabled}
-              aria-label={t("chat.mention.button")}
-              onClick={() => {
-                const el = textRef.current;
-                const caret = el?.selectionStart ?? body.length;
-                const next = `${body.slice(0, caret)}@${body.slice(caret)}`;
-                setBody(next);
-                setMentionQuery("");
-                requestAnimationFrame(() => {
-                  el?.focus();
-                  el?.setSelectionRange(caret + 1, caret + 1);
-                });
-              }}
-            >
-              <AtSign className="h-4 w-4" />
-            </Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full border text-muted-foreground"
+                disabled={disabled}
+                aria-label={t("chat.actions.menu")}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
+                <Paperclip className="h-4 w-4" />
+                {t("chat.attach.button")}
+              </DropdownMenuItem>
 
-          {allowCaseMentions && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="gap-1 text-muted-foreground"
-              disabled={disabled}
-              aria-label={t("chat.caseMention.button")}
-              onClick={() => {
-                const el = textRef.current;
-                const caret = el?.selectionStart ?? body.length;
-                const next = `${body.slice(0, caret)}#${body.slice(caret)}`;
-                setBody(next);
-                setCaseQuery("");
-                requestAnimationFrame(() => {
-                  el?.focus();
-                  el?.setSelectionRange(caret + 1, caret + 1);
-                });
-              }}
-            >
-              <Hash className="h-4 w-4" />
-            </Button>
-          )}
+              {mentionables.length > 0 && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    const el = textRef.current;
+                    const caret = el?.selectionStart ?? body.length;
+                    setBody(`${body.slice(0, caret)}@${body.slice(caret)}`);
+                    setMentionQuery("");
+                    requestAnimationFrame(() => {
+                      el?.focus();
+                      el?.setSelectionRange(caret + 1, caret + 1);
+                    });
+                  }}
+                >
+                  <AtSign className="h-4 w-4" />
+                  {t("chat.mention.button")}
+                </DropdownMenuItem>
+              )}
 
+              {allowCaseMentions && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    const el = textRef.current;
+                    const caret = el?.selectionStart ?? body.length;
+                    setBody(`${body.slice(0, caret)}#${body.slice(caret)}`);
+                    setCaseQuery("");
+                    requestAnimationFrame(() => {
+                      el?.focus();
+                      el?.setSelectionRange(caret + 1, caret + 1);
+                    });
+                  }}
+                >
+                  <Hash className="h-4 w-4" />
+                  {t("chat.caseMention.button")}
+                </DropdownMenuItem>
+              )}
 
+              {allowRequests && (
+                <DropdownMenuItem
+                  onSelect={() => setKind((k) => (k === "request" ? "text" : "request"))}
+                >
+                  <FileUp className="h-4 w-4" />
+                  {t("chat.request.button")}
+                </DropdownMenuItem>
+              )}
 
-          {allowRequests && (
-            <Button
-              type="button"
-              size="sm"
-              variant={kind === "request" ? "secondary" : "ghost"}
-              className={cn("gap-1", kind !== "request" && "text-muted-foreground")}
-              onClick={() => setKind((k) => (k === "request" ? "text" : "request"))}
-            >
-              <FileUp className="h-4 w-4" />
-              {t("chat.request.button")}
-            </Button>
+              {onRequestPayout && (
+                <DropdownMenuItem onSelect={() => onRequestPayout()}>
+                  <Banknote className="h-4 w-4" />
+                  {t("chat.payout.request")}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {kind === "request" && (
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900">
+              {t("chat.request.badge")}
+            </span>
           )}
 
           {allowInternal && (
@@ -524,15 +543,16 @@ export default function MessageComposer({
         </div>
 
         <Button
-          size="sm"
+          size="icon"
           onClick={handleSend}
+          aria-label={t("case.messages.send")}
           disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-          className="gap-1"
+          className="h-9 w-9 shrink-0 rounded-full"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {t("case.messages.send")}
         </Button>
       </div>
+
 
       <p className="text-[11px] text-muted-foreground">
         {hint ??

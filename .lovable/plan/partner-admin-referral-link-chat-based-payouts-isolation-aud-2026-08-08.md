@@ -2,7 +2,7 @@
 
 ## What I verified before writing this
 
-- `rewards.case_id` **exists** in the database, but `PartnerEarningsPage.tsx` still resolves a reward's case by parsing `admin_notes` ("Partner commission from case <uuid>"). That contradicts COMMISSION_RULES §6 and is the root cause of fragile case references in payout requests.
+- `rewards.case_id` **exists** in the database, but `PartnerEarningsPage.tsx` still resolves a reward's case by parsing `admin_notes` ("Partner commission from case &nbsp;"). That contradicts COMMISSION_RULES §6 and is the root cause of fragile case references in payout requests.
 - `request_payout` (SECURITY DEFINER) already enforces the important money rules server-side: caller ownership of each reward, `status = 'pending'`, the 20-day hold, "already in a non-rejected payout request", and it **recomputes the amount from the rewards** (client `p_amount` is ignored). So a chat-driven request can reuse it safely.
 - `payout_requests` has no link to a chat thread or message today (`requestor_id, linked_reward_ids, linked_student_names, amount, status, paid_by, transaction_ref, ...`).
 - `direct_messages` already has `kind` and `request_status` columns, but the client type (`chatFormat.ts`) narrows kind to `"text" | "request"` and `DirectMessageService.toChatMessage` hardcodes `kind: "text"`.
@@ -74,4 +74,155 @@ Playwright + direct SQL, in this order: partner login → one referral link → 
 
 - Migrations needed: `payout_requests.thread_id`, a payout-request link on `direct_messages`, the `request_payout_via_chat` RPC, and grants/policies for both.
 - No change to `record_case_commission`, the 20-day rule, or the flat-ILS commission model.
-- Existing payout admin screens (`PayoutsManagement`, `PartnerPayoutsPanel`, `PayoutActionModals`) are kept and wired to the same records — the chat card is an additional entry point, not a replacement.
+- Existing payout admin screens (`PayoutsManagement`, `PartnerPayoutsPanel`, `PayoutActionModals`) are kept and wired to the same records — the chat card is an additional entry point, not a replacement.      2. I'd change the payout architecture slightly
+  This is the strongest part of your proposal:
+  > **chat is the interface,** `payout_requests` **stays the source of truth.**
+  **Keep this. Absolutely.**
+  That's the right architecture.
+  But I'd make one change:
+  Instead of having:
+  > `request_payout_via_chat(p_thread_id)`
+  make the RPC itself determine the correct Administration thread rather than trusting a client-supplied thread ID.
+  Otherwise a malicious client could theoretically try to submit a payout into another thread.         . Don't let Lovable create a second payout system
+  You already caught this nicely:
+  > "Existing payout admin screens ... are kept and wired to the same records"
+  **Definitely keep that.**
+  The architecture should be:
+  ```
+
+  ```
+  ```
+                   ┌── Partner Chat
+                   │
+  Eligible rewards ┤
+                   │
+                   └── Admin Payout Dashboard
+                           │
+                           ↓
+                    payout_requests
+                           │
+                           ↓
+                       rewards
+  ```
+  Not:
+  ```
+
+  ```
+  ```
+  Chat payout system
+          +
+  Old payout system
+          +
+  New payout database
+  ```
+  That would become a nightmare.      4. One thing I'd add: payout idempotency
+  This is important because you are dealing with money.
+  Tell Lovable explicitly:
+  > A payout request operation must be idempotent. Double-clicking "Request payout", refreshing, retrying a failed network request, or sending the same request concurrently must never create duplicate payout requests or pay the same reward twice.
+  You already have duplicate-payment protection, but I'd explicitly require **duplicate request protection too**.
+  ---
+  ### 5. One potential inconsistency
+  You say:
+  > `direct_messages` already has `kind` and `request_status`
+  but then:
+  > `direct_messages.payout_request_id`
+  That's fine, but I'd prefer a proper dedicated relationship rather than overloading `request_status`.
+  Something like:
+  ```
+
+  ```
+  ```
+  direct_messages
+      id
+      thread_id
+      sender_id
+      kind = payout_request
+      payout_request_id
+  ```
+  That's clean.
+  Then:
+  ```
+
+  ```
+  ```
+  payout_requests
+      id
+      partner_id
+      thread_id
+      amount
+      status
+  ```
+  Very easy to reason about.
+  ---
+  ### 6. Add a hard security rule around payout calculations
+  I'd add this sentence:
+  > **Never trust** `amount`**,** `reward_ids`**,** `partner_id`**,** `thread_id`**, or case IDs supplied by the client. The backend must derive all of them from the authenticated Partner and eligible database records.**
+  That's probably the most important sentence I'd add to the whole prompt.
+  ---
+  ### 7. Your final E2E is very good
+  This:
+  > Playwright + direct SQL, in this order...
+  is exactly the kind of testing you want.
+  I'd only add:
+  **Run the E2E twice with two different Partner accounts.**
+  Because one Partner working doesn't prove isolation.
+  You want:
+  ```
+
+  ```
+  ```
+  Partner A
+   ↓
+  Referral
+   ↓
+  Case A
+   ↓
+  Payout A
+
+  Partner B
+   ↓
+  Referral
+   ↓
+  Case B
+   ↓
+  Payout B
+  ```
+  Then verify A cannot see B and B cannot see A.
+  ---
+  ## My verdict
+  **Yes, send this to Lovable — with the small changes above.**
+  And honestly, the fact that you already discovered:
+  > `rewards.case_id` exists but the frontend is parsing `admin_notes`
+  is exactly why I wouldn't accept a superficial "audit". **That's a real architectural bug hiding underneath a working UI.**
+  Your prompt is now telling Lovable to look for exactly those kinds of problems.
+  The architecture I'd want Lovable to end up with is:
+  ```
+
+  ```
+  ```
+  PARTNER
+     │
+     ├── ONE referral link
+     │       ↓
+     │    APPLY FORM
+     │       ↓
+     │    CASE
+     │       ↓
+     │  partner_id
+     │
+     ├── ADMINISTRATION CHAT
+     │       │
+     │       ├── Messages
+     │       ├── Files
+     │       └── Request Payout
+     │                    ↓
+     │             payout_requests
+     │                    ↓
+     │              eligible rewards
+     │                    ↓
+     │              referenced cases
+     │
+     └── Partner Dashboard
+               ↓
+         Available / Pending / Paid
+  ```

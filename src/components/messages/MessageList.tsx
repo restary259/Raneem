@@ -28,6 +28,8 @@ import {
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
+import PayoutRequestCard from "@/components/messages/PayoutRequestCard";
+
 import { resolveCaseRefs, type ThreadReadState } from "@/services/CaseMessageService";
 import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
@@ -55,6 +57,10 @@ interface MessageListProps {
   onLoadOlder?: () => void;
   hasOlder?: boolean;
   loadingOlder?: boolean;
+  /** Label shown instead of an admin's real name on partner/student surfaces. */
+  adminAlias?: string;
+  /** Admins get the payout review actions on payout-request cards. */
+  viewerIsAdmin?: boolean;
 }
 
 export default function MessageList({
@@ -74,7 +80,10 @@ export default function MessageList({
   onLoadOlder,
   hasOlder,
   loadingOlder,
+  adminAlias,
+  viewerIsAdmin = false,
 }: MessageListProps) {
+
   const { t } = useTranslation("dashboard");
   const bottomRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
@@ -239,13 +248,16 @@ export default function MessageList({
               <div className={cn("flex max-w-[78%] flex-col gap-1", group.mine && "items-end")}>
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    {group.authorName ||
-                      t(`case.messages.role.${group.authorRole}`, group.authorRole ?? "")}
+                    {adminAlias && group.authorRole === "admin"
+                      ? adminAlias
+                      : group.authorName ||
+                        t(`case.messages.role.${group.authorRole}`, group.authorRole ?? "")}
                   </span>
-                  {group.authorRole && (
+                  {group.authorRole && !(adminAlias && group.authorRole === "admin") && (
                     <span>{t(`case.messages.role.${group.authorRole}`, group.authorRole)}</span>
                   )}
                 </div>
+
 
                 {group.messages.map((m) => (
                   <div
@@ -322,6 +334,14 @@ export default function MessageList({
                       )
                     )}
 
+                    {m.kind === "payout_request" && m.payoutRequestId && (
+                      <PayoutRequestCard
+                        requestId={m.payoutRequestId}
+                        isAdmin={viewerIsAdmin}
+                        caseLinkBase={caseLinkBase}
+                      />
+                    )}
+
                     {m.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {m.attachments.map((att) => (
@@ -329,6 +349,7 @@ export default function MessageList({
                         ))}
                       </div>
                     )}
+
 
                     {m.kind === "request" &&
                       m.requestStatus !== "fulfilled" &&

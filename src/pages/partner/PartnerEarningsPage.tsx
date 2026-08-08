@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
 import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
@@ -24,8 +24,8 @@ export default function PartnerEarningsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
-  const [showPayoutDialog, setShowPayoutDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -155,46 +155,8 @@ export default function PartnerEarningsPage() {
   const unlockedAmount = unlockedPending.reduce((s: number, r: any) => s + Number(r.amount), 0);
   const canRequestPayout = unlockedPending.length > 0;
 
-  const handleRequestPayout = async () => {
-    if (!userId || unlockedPending.length === 0) return;
-    setIsSubmitting(true);
-    try {
-      const rewardIds = unlockedPending.map((r: any) => r.id);
-      const studentNames = unlockedPending.map((r: any) => {
-        const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-        return paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
-      });
 
-      const { data, error } = await (supabase as any).rpc("request_payout", {
-        p_reward_ids: rewardIds,
-        p_amount: unlockedAmount,
-        p_notes: null,
-        p_payment_method: "bank_transfer",
-        p_requestor_role: "social_media_partner",
-        p_student_names: studentNames,
-      });
 
-      if (error) throw error;
-
-      toast({
-        title: isAr ? "تم تقديم طلب الصرف ✅" : "Payout Request Submitted ✅",
-        description: isAr
-          ? `تم تقديم طلب صرف بمبلغ ₪${unlockedAmount.toLocaleString("en-US")} بنجاح.`
-          : `Your payout request for ₪${unlockedAmount.toLocaleString("en-US")} has been submitted.`,
-      });
-      setShowPayoutDialog(false);
-      load(userId);
-    } catch (err: any) {
-      console.error("[PartnerEarnings] payout request failed:", err);
-      toast({
-        variant: "destructive",
-        title: isAr ? "خطأ" : "Error",
-        description: isAr ? "تعذر تقديم طلب الصرف. يرجى المحاولة مرة أخرى." : "Unable to submit payout request. Please try again.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const getCaseRewardInfo = (caseId: string) => {
     const reward = rewards.find((r: any) => r.admin_notes?.includes(caseId));
@@ -234,17 +196,18 @@ export default function PartnerEarningsPage() {
           <DollarSign className="h-6 w-6 text-primary" />
           {t("partner.earningsTitle")}
         </h1>
-        {/* Request Payout CTA */}
+        {/* Payout is requested inside the Administration chat. */}
         {canRequestPayout && (
-          <Button
-            onClick={() => setShowPayoutDialog(true)}
-            className="gap-2 shrink-0"
-            size="sm"
-          >
-            <Send className="h-4 w-4" />
-            {isAr ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")}` : `Request Payout ₪${unlockedAmount.toLocaleString("en-US")}`}
+          <Button asChild className="gap-2 shrink-0" size="sm">
+            <Link to="/partner/messages">
+              <Send className="h-4 w-4" />
+              {isAr
+                ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")} عبر المحادثة`
+                : `Request payout ₪${unlockedAmount.toLocaleString("en-US")} in chat`}
+            </Link>
           </Button>
         )}
+
         {lockedPending.length > 0 && !canRequestPayout && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-full px-3 py-1.5">
             <Lock className="h-3.5 w-3.5" />
@@ -439,57 +402,7 @@ export default function PartnerEarningsPage() {
         {t("partner.privacyNote")}
       </p>
 
-      {/* Request Payout Dialog */}
-      <Dialog open={showPayoutDialog} onOpenChange={setShowPayoutDialog}>
-        <DialogContent dir={dir} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-primary" />
-              {isAr ? "طلب صرف" : "Request Payout"}
-            </DialogTitle>
-            <DialogDescription>
-              {isAr
-                ? "سيتم إرسال طلب الصرف للمراجعة. سيتم دفع المبلغ بعد موافقة الإدارة."
-                : "Your payout request will be sent for review. Payment will be processed after admin approval."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 py-2">
-            <div className="rounded-xl bg-muted/50 border border-border p-4 text-center">
-              <p className="text-3xl font-black text-primary">₪{unlockedAmount.toLocaleString("en-US")}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {unlockedPending.length} {isAr ? "حالة مؤهلة" : "qualifying case(s)"}
-              </p>
-            </div>
-            <div className="rounded-xl bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
-              {unlockedPending.map((r: any) => {
-                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-                const name = paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
-                return (
-                  <div key={r.id} className="flex justify-between">
-                    <span>{name}</span>
-                    <span className="font-semibold text-foreground">₪{Number(r.amount).toLocaleString("en-US")}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowPayoutDialog(false)} disabled={isSubmitting}>
-              {isAr ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button onClick={handleRequestPayout} disabled={isSubmitting} className="gap-2">
-              {isSubmitting ? (
-                <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              {isAr ? "تأكيد الطلب" : "Submit Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+

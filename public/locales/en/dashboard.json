@@ -3140,6 +3140,46 @@
     },
     "caseMention": {
       "button": "Reference a case"
+    },
+    "actions": {
+      "menu": "More actions"
+    },
+    "adminLabel": "Administration",
+    "payout": {
+      "title": "Payout request",
+      "request": "Request payout",
+      "loading": "Loading payout request…",
+      "amount": "Amount",
+      "cases": "Cases",
+      "partner": "Partner",
+      "viewCases": "View cases",
+      "caseStatus": "Case",
+      "eligibleAt": "Eligible",
+      "openCase": "Open case",
+      "approve": "Approve",
+      "markPaid": "Mark paid",
+      "reject": "Reject",
+      "notePlaceholder": "Note for the partner (optional)",
+      "refPlaceholder": "Transaction reference (optional)",
+      "eligible": "Eligible now",
+      "locked": "Still locked",
+      "nextUnlock": "Next unlock",
+      "reviewHint": "Review the amount and cases below. The figures come from your approved earnings.",
+      "openRequest": "You already have a payout request awaiting review.",
+      "noneEligible": "No earnings are eligible yet — each case unlocks 20 days after it is paid.",
+      "send": "Send request",
+      "sent": "Payout request sent to Administration",
+      "status": {
+        "pending": "Pending review",
+        "approved": "Approved",
+        "paid": "Paid",
+        "rejected": "Rejected"
+      },
+      "done": {
+        "approve": "Payout approved",
+        "pay": "Payout marked paid",
+        "reject": "Payout rejected"
+      }
     }
   }
 }
