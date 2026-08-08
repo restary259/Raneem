@@ -8,7 +8,7 @@ import {
   DollarSign, BarChart2, Activity, Settings,
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
   TrendingUp, ListChecks, User, FileText,
-  Globe, Heart,
+  Globe, Heart, MessageSquare,
   Sparkles,
 } from 'lucide-react';
 
