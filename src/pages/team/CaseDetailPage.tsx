@@ -420,6 +420,7 @@ export default function CaseDetailPage() {
           teamMemberId={caseData.assigned_to ?? user.id}
           actorName={user.email ?? ""}
           guestName={caseData.full_name}
+          caseStatus={caseData.status}
           onSuccess={() => {
             setSchedulerOpen(false);
             void fetchData();
