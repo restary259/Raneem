@@ -12,6 +12,8 @@ import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { matchesRef } from '@/lib/reference';
 import PartnerProfilePanel, { PartnerDirectoryRow } from './PartnerProfilePanel';
+import MasterPartnerToggle from './MasterPartnerToggle';
+
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
