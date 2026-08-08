@@ -1991,7 +1991,13 @@
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
     "inbox": "Inbox",
-    "myWork": "My work"
+    "myWork": "My work",
+    "group": {
+      "work": "Work",
+      "money": "Money",
+      "people": "People",
+      "setup": "Setup"
+    }
   },
   "case": {
     "status": {
