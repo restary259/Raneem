@@ -363,6 +363,76 @@ export type Database = {
           },
         ]
       }
+      case_message_reads: {
+        Row: {
+          case_id: string
+          id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          id?: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_message_reads_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_messages: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_role: string
+          body: string
+          case_id: string
+          created_at: string
+          id: string
+          visibility: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_role?: string
+          body: string
+          case_id: string
+          created_at?: string
+          id?: string
+          visibility?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_role?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_payments: {
         Row: {
           amount: number
@@ -3009,6 +3079,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_case_messages_read: {
+        Args: { p_case_id: string }
+        Returns: undefined
+      }
       purge_expired_documents: {
         Args: { p_retention?: string }
         Returns: number
@@ -3046,6 +3120,10 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
+      send_case_message: {
+        Args: { p_body: string; p_case_id: string; p_visibility?: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
