@@ -31,3 +31,48 @@ export const NotificationService = {
     if (error) throw error;
   },
 };
+
+export interface NotificationPrefs {
+  notify_in_app: boolean;
+  notify_email: boolean;
+}
+
+export async function getNotificationPrefs(userId: string): Promise<NotificationPrefs> {
+  const { data, error } = await db
+    .from('profiles')
+    .select('notify_in_app, notify_email')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return {
+    notify_in_app: data?.notify_in_app ?? true,
+    notify_email: data?.notify_email ?? true,
+  };
+}
+
+export async function updateNotificationPrefs(
+  userId: string,
+  prefs: Partial<NotificationPrefs>,
+): Promise<void> {
+  const { error } = await db.from('profiles').update(prefs).eq('id', userId);
+  if (error) throw error;
+}
+
+/** Fire-and-forget email fan-out for a message that was just sent. */
+export async function notifyNewMessageEmail(payload: {
+  threadType: 'case' | 'direct';
+  threadId: string;
+  preview: string;
+}): Promise<void> {
+  try {
+    await supabase.functions.invoke('notify-new-message', {
+      body: {
+        thread_type: payload.threadType,
+        thread_id: payload.threadId,
+        preview: payload.preview.slice(0, 140),
+      },
+    });
+  } catch {
+    // Email is best-effort; the in-app notification already landed.
+  }
+}
