@@ -177,12 +177,6 @@ serve(async (req) => {
         );
       if (linkedRoleError) throw linkedRoleError;
 
-      const { error: linkedProfileError } = await supabaseAdmin
-        .from("profiles")
-        .update({ case_id })
-        .eq("id", caseData.student_user_id);
-      if (linkedProfileError) throw linkedProfileError;
-
       const resent = await sendInvite(linkedEmail, student_full_name);
       return new Response(
         JSON.stringify({
