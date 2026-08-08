@@ -509,7 +509,6 @@
       "labelMonthlyRate": "Monthly rate ({{currency}})",
       "ageAndAbove": "and above",
       "noPriceSet": "Price not set yet"
-
     },
     "submissions": {
       "title": "Submitted Applications",
@@ -2044,7 +2043,6 @@
     "backToMainSite": "Back to Main Website",
     "inbox": "Inbox",
     "messages": "Messages",
-
     "myWork": "My work",
     "group": {
       "work": "Work",
@@ -2965,5 +2963,14 @@
       "partial": "Partially paid",
       "settled": "Settled"
     }
+  },
+  "messagesInbox": {
+    "title": "Case messages",
+    "subtitle": "All conversations across your cases, newest first.",
+    "searchPlaceholder": "Search by student, reference or text",
+    "empty": "No conversations yet.",
+    "selectThread": "Select a conversation to read it.",
+    "openCase": "Open case file",
+    "unreadTotal": "{{count}} unread"
   }
 }

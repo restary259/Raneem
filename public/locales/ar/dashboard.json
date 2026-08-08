@@ -509,7 +509,6 @@
       "labelMonthlyRate": "السعر الشهري ({{currency}})",
       "ageAndAbove": "فما فوق",
       "noPriceSet": "لم يتم تحديد السعر بعد"
-
     },
     "submissions": {
       "title": "الطلبات المقدمة",
@@ -2062,7 +2061,6 @@
     "backToMainSite": "العودة إلى الموقع الرئيسي",
     "inbox": "صندوق الطلبات",
     "messages": "المراسلات",
-
     "myWork": "مهامي",
     "group": {
       "work": "العمل",
@@ -2983,5 +2981,14 @@
       "partial": "مدفوع جزئياً",
       "settled": "مسدد بالكامل"
     }
+  },
+  "messagesInbox": {
+    "title": "مراسلات الملفات",
+    "subtitle": "كل المحادثات على ملفاتك، الأحدث أولاً.",
+    "searchPlaceholder": "ابحث بالاسم أو الرقم المرجعي أو النص",
+    "empty": "لا توجد محادثات بعد.",
+    "selectThread": "اختر محادثة لعرضها.",
+    "openCase": "فتح ملف الحالة",
+    "unreadTotal": "{{count}} غير مقروءة"
   }
 }
