@@ -109,19 +109,55 @@ serve(async (req) => {
 
 
 
-    // If account already exists for this case, return early
+    // Reusable invite mail. Returns true when the message was accepted.
+    async function sendInvite(email: string, name: string, password: string | null) {
+      try {
+        const { data: caseRef } = await supabaseAdmin
+          .from("cases")
+          .select("case_reference")
+          .eq("id", case_id)
+          .maybeSingle();
+        const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            templateName: "student-invite",
+            recipientEmail: email,
+            templateData: {
+              studentName: name,
+              email,
+              tempPassword: password,
+              caseReference: caseRef?.case_reference ?? null,
+              loginUrl: "https://darb-agency.lovable.app/student-auth",
+            },
+          }),
+        });
+        if (!resp.ok) console.error("invite email failed", await resp.text());
+        return resp.ok;
+      } catch (e) {
+        console.error("invite email error", e);
+        return false;
+      }
+    }
+
+    // Account already linked — resend the login instructions instead.
     if (caseData.student_user_id) {
+      const resent = await sendInvite(student_email, student_full_name, null);
       return new Response(
         JSON.stringify({
           success: true,
           user_id: caseData.student_user_id,
           email: student_email,
-          invited: false,
+          invited: resent,
           message: "Student account already exists for this case",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
 
     // ── Fetch case_submission for programme/school dates ──────────────
     const { data: submission } = await supabaseAdmin
