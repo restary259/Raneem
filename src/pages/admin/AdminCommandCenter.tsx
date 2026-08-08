@@ -178,6 +178,45 @@ const AdminCommandCenter = () => {
   useRealtimeSubscription('cases', fetchData, true);
   useRealtimeSubscription('activity_log', fetchData, true);
 
+  const queues = [
+    {
+      key: 'review',
+      title: t('admin.commandCenter.queueReview', 'Awaiting review'),
+      empty: t('admin.commandCenter.queueReviewEmpty', 'Nothing waiting for review'),
+      icon: ClipboardCheck,
+      tone: 'text-blue-500',
+      href: '/admin/submissions',
+      rows: awaitingReview,
+    },
+    {
+      key: 'unassigned',
+      title: t('admin.commandCenter.queueUnassigned', 'Unassigned cases'),
+      empty: t('admin.commandCenter.queueUnassignedEmpty', 'Every case has an owner'),
+      icon: Users,
+      tone: 'text-primary',
+      href: '/admin/pipeline',
+      rows: unassigned,
+    },
+    {
+      key: 'payments',
+      title: t('admin.commandCenter.queuePayments', 'Outstanding balances'),
+      empty: t('admin.commandCenter.queuePaymentsEmpty', 'No outstanding balances'),
+      icon: Clock,
+      tone: 'text-amber-600',
+      href: '/admin/financials',
+      rows: outstanding,
+    },
+    {
+      key: 'auth',
+      title: t('admin.commandCenter.queueAuth', 'Authorization failures (24h)'),
+      empty: t('admin.commandCenter.queueAuthEmpty', 'No authorization failures'),
+      icon: AlertTriangle,
+      tone: 'text-destructive',
+      href: '/admin/settings',
+      rows: authFailures,
+    },
+  ];
+
   const kpis = [
     {
       label: t('admin.commandCenter.activeCases', 'Active Cases'),
