@@ -360,7 +360,9 @@ export default function CaseDetailPage() {
         onConfirmPayment={() => setPaymentOpen(true)}
         onRefresh={fetchData}
         onSubmitToAdmin={handleSubmitToAdmin}
+        onResubmit={handleResubmit}
         submitting={submitting}
+
       />
 
       {showFinance && (
