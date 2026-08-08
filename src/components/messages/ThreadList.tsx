@@ -45,7 +45,7 @@ export default function ThreadList({ items, selectedId, onSelect, emptyLabel }: 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="truncate text-sm font-semibold">{item.title}</span>
-                <Badge variant="outline" className="shrink-0 text-[10px]">
+                <Badge variant="secondary" className="shrink-0 text-[10px]">
                   {t(`chat.type.${item.type}`)}
                 </Badge>
               </div>
