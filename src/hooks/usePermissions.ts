@@ -15,8 +15,6 @@ export type PermissionKey =
   | 'view_documents'
   | 'upload_documents'
   | 'delete_documents'
-  | 'view_invoices'
-  | 'create_invoice'
   | 'view_finance'
   | 'approve_payments'
   | 'approve_payouts'

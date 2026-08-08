@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 export interface CasePayment {
   id: string;
   case_id: string;
-  invoice_id: string | null;
   payment_type: string;
   amount: number;
   paid_status: string;
