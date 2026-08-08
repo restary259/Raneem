@@ -58,6 +58,13 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
 
   const refreshAll = useCallback(() => { fetchPartners(); onRefresh(); }, [fetchPartners, onRefresh]);
 
+  /** Optimistic local flag update after a confirmed master upgrade/downgrade. */
+  const applyMaster = useCallback((partnerId: string, next: boolean) => {
+    setPartners(prev => prev.map(p => (p.partner_id === partnerId ? { ...p, is_master_partner: next } : p)));
+    refreshAll();
+  }, [refreshAll]);
+
+
   const requestsByPartner = useMemo(() => {
     const map: Record<string, any[]> = {};
     requests
