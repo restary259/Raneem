@@ -3207,6 +3207,11 @@
     },
     "delete": {
       "button": "Delete message"
+    },
+    "clearThread": {
+      "button": "Clear thread",
+      "confirm": "Delete all messages in this case thread?",
+      "done": "{{count}} messages deleted"
     }
   }
 }

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import {
+  clearCaseThread,
   deleteChatMessage,
   editCaseMessage,
   fulfilDocumentRequest,
@@ -126,8 +127,30 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
     }
   };
 
+  const handleClearThread = async () => {
+    if (!window.confirm(t("chat.clearThread.confirm", "Delete all messages in this case thread?"))) return;
+    try {
+      const n = await clearCaseThread(caseId);
+      toast({ description: t("chat.clearThread.done", { count: n, defaultValue: "{{count}} messages deleted" }) });
+      await load();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    }
+  };
+
   return (
     <div className={className}>
+      {role === "admin" && messages.length > 0 && (
+        <div className="flex justify-end border-b bg-background px-3 py-1.5">
+          <button
+            type="button"
+            onClick={handleClearThread}
+            className="text-xs text-muted-foreground transition-colors hover:text-destructive"
+          >
+            {t("chat.clearThread.button", "Clear thread")}
+          </button>
+        </div>
+      )}
       <div className="max-h-[460px] overflow-y-auto bg-muted/20">
         <MessageList
           messages={messages}
