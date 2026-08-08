@@ -164,7 +164,14 @@ export default function PayoutRequestCard({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("chat.payout.title")}</DialogTitle>
+            <DialogTitle className="flex flex-wrap items-center gap-2">
+              {t("chat.payout.title")}
+              {detail.payout_reference && (
+                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs" dir="ltr">
+                  {detail.payout_reference}
+                </code>
+              )}
+            </DialogTitle>
             <DialogDescription>
               {formatILS(detail.amount)} · {t("chat.payout.cases")}: {detail.cases.length}
             </DialogDescription>
