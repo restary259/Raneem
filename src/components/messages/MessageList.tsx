@@ -340,6 +340,7 @@ export default function MessageList({
                         requestId={m.payoutRequestId}
                         isAdmin={viewerIsAdmin}
                         caseLinkBase={caseLinkBase}
+                        attachments={m.attachments}
                       />
                     )}
 

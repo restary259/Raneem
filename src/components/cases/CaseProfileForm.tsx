@@ -109,6 +109,25 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     (submission?.draft_updated_at as string) ?? null,
   );
   const [autosaving, setAutosaving] = useState(false);
+  /**
+   * The three birth-date dropdowns keep their own state so each one shows the
+   * user's pick immediately, in any order — the ISO value is only composed
+   * once all three parts exist.
+   */
+  const [dob, setDobState] = useState(() => {
+    const parts = (values.date_of_birth || "").split("-");
+    return { year: parts[0] ?? "", month: parts[1] ?? "", day: parts[2] ?? "" };
+  });
+  const [dobError, setDobError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const iso = values.date_of_birth || "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    const [y, m, d] = iso.split("-");
+    setDobState((prev) =>
+      prev.year === y && prev.month === m && prev.day === d ? prev : { year: y, month: m, day: d },
+    );
+  }, [values.date_of_birth]);
 
   const set = useCallback(
     (key: string, value: string) => setValues((v) => ({ ...v, [key]: value })),
@@ -302,21 +321,34 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     />
   );
 
-  const dobParts = values.date_of_birth.split("-");
-  const dobYear = dobParts[0] ?? "";
-  const dobMonth = dobParts[1] ?? "";
-  const dobDay = dobParts[2] ?? "";
-  const setDob = (y: string, m: string, d: string) => {
-    if (!y || !m || !d) return;
-    try {
-      handleChange("date_of_birth", normalizeDate(d, m, y));
-    } catch {
-      /* ignore invalid intermediate values */
-    }
-  };
-  const dobDays = Array.from({ length: daysInMonth(parseInt(dobMonth), parseInt(dobYear)) }, (_, i) =>
-    String(i + 1).padStart(2, "0"),
+  const dobYear = dob.year;
+  const dobMonth = dob.month;
+  const dobDay = dob.day;
+  const dobDays = Array.from(
+    { length: dobMonth ? daysInMonth(parseInt(dobMonth), parseInt(dobYear) || 2000) : 31 },
+    (_, i) => String(i + 1).padStart(2, "0"),
   );
+  const setDob = (part: "year" | "month" | "day", v: string) => {
+    setDobState((prev) => {
+      const next = { ...prev, [part]: v };
+      // Clamp the day when the new month/year is shorter (31 Jan → 29/28 Feb).
+      if (next.month) {
+        const max = daysInMonth(parseInt(next.month), parseInt(next.year) || 2000);
+        if (next.day && parseInt(next.day) > max) next.day = String(max).padStart(2, "0");
+      }
+      if (next.year && next.month && next.day) {
+        try {
+          handleChange("date_of_birth", normalizeDate(next.day, next.month, next.year));
+          setDobError(null);
+        } catch (err: any) {
+          setDobError(err?.message ?? null);
+        }
+      } else {
+        setDobError(null);
+      }
+      return next;
+    });
+  };
 
   const savedLabel = draftSavedAt
     ? new Date(draftSavedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
@@ -339,7 +371,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             {`${t("case.fields.dateOfBirth")} *`}
           </Label>
           <div className="mt-1 grid grid-cols-3 gap-2">
-            <Select value={dobYear} onValueChange={(v) => setDob(v, dobMonth, dobDay)}>
+            <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.year")} />
               </SelectTrigger>
@@ -351,7 +383,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
-            <Select value={dobMonth} onValueChange={(v) => setDob(dobYear, v, dobDay)}>
+            <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.month")} />
               </SelectTrigger>
@@ -363,7 +395,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
-            <Select value={dobDay} onValueChange={(v) => setDob(dobYear, dobMonth, v)}>
+            <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.day")} />
               </SelectTrigger>
@@ -376,8 +408,8 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </SelectContent>
             </Select>
           </div>
-          {invalid("date_of_birth") && (
-            <p className="mt-1 text-xs text-destructive">{errText("date_of_birth")}</p>
+          {(dobError || invalid("date_of_birth")) && (
+            <p className="mt-1 text-xs text-destructive">{dobError ?? errText("date_of_birth")}</p>
           )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -3199,7 +3199,23 @@
         "approve": "تمت الموافقة على الصرف",
         "pay": "تم تعليم الصرف كمدفوع",
         "reject": "تم رفض الصرف"
-      }
+      },
+      "attachments": "المرفقات",
+      "noAttachments": "لا توجد ملفات مرفقة بهذا الطلب",
+      "openFile": "فتح الملف",
+      "fileUnavailable": "الملف غير متاح",
+      "confirmPayTitle": "تأكيد الدفع",
+      "confirmPayBody": "هل تريد تسجيل {{amount}} كمدفوعة إلى {{partner}}؟ لا يمكن التراجع عن ذلك.",
+      "confirmPayAction": "تأكيد الدفع",
+      "cancel": "إلغاء",
+      "requestedAt": "تاريخ الطلب",
+      "approvedAt": "تمت الموافقة",
+      "paidAt": "تم الدفع"
+    },
+    "section": {
+      "direct": "محادثات مباشرة",
+      "cases": "الملفات",
+      "partners": "الشركاء"
     }
   }
 }
