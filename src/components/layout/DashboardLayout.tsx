@@ -53,22 +53,24 @@ interface NavItem {
   key: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
+  /** i18n key of the sidebar group heading this item belongs to */
+  group?: string;
 }
 
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
-    { key: "nav.overview", icon: LayoutDashboard, href: "/admin" },
-    { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline" },
-    { key: "nav.team", icon: Users, href: "/admin/team" },
-    { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
-    { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions" },
-    { key: "nav.financials", icon: DollarSign, href: "/admin/financials" },
-    { key: "nav.students", icon: GraduationCap, href: "/admin/students" },
-    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet" },
-    { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics" },
-    { key: "nav.inbox", icon: Inbox, href: "/admin/inbox" },
-    { key: "nav.activity", icon: Activity, href: "/admin/activity" },
-    { key: "nav.settings", icon: Settings, href: "/admin/settings" },
+    { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
+    { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
+    { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
+    { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
+    { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
+    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
+    { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
+    { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
+    { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
+    { key: "nav.programs", icon: BookOpen, href: "/admin/programs", group: "nav.group.setup" },
+    { key: "nav.activity", icon: Activity, href: "/admin/activity", group: "nav.group.setup" },
+    { key: "nav.settings", icon: Settings, href: "/admin/settings", group: "nav.group.setup" },
   ],
   team_member: [
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
