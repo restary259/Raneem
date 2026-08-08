@@ -1084,7 +1084,14 @@
       "networkEmpty": "No recruited partners yet",
       "attachPartner": "Attach a partner to this network",
       "noAttachable": "No available partners",
-      "detachPartner": "Remove"
+      "detachPartner": "Remove",
+      "colMaster": "Master partner",
+      "masterConfirmTitle": "Upgrade to Master Partner?",
+      "masterConfirmBody": "{{name}} will get a recruitment invite link and a network dashboard (Network / Students / Performance). Their existing earnings, referral code, referral history and payout history will not be affected.",
+      "masterRevokeTitle": "Remove Master Partner status?",
+      "masterRevokeBody": "{{name}} goes back to a normal partner dashboard. Nothing is deleted — their network, earnings and payout history stay, and partners they recruited keep their records.",
+      "masterUpgraded": "Upgraded to Master Partner",
+      "masterDowngraded": "Downgraded to Partner"
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -1277,7 +1284,8 @@
     "showMore": "Show more",
     "archived": "Archived",
     "back": "Back",
-    "copy": "Copy"
+    "copy": "Copy",
+    "confirm": "Confirm"
   },
   "funnel": {
     "new": "Lead Submitted",

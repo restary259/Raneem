@@ -12,6 +12,8 @@ import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { matchesRef } from '@/lib/reference';
 import PartnerProfilePanel, { PartnerDirectoryRow } from './PartnerProfilePanel';
+import MasterPartnerToggle from './MasterPartnerToggle';
+
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
@@ -55,6 +57,13 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
   useRealtimeSubscription('rewards', fetchPartners, true);
 
   const refreshAll = useCallback(() => { fetchPartners(); onRefresh(); }, [fetchPartners, onRefresh]);
+
+  /** Optimistic local flag update after a confirmed master upgrade/downgrade. */
+  const applyMaster = useCallback((partnerId: string, next: boolean) => {
+    setPartners(prev => prev.map(p => (p.partner_id === partnerId ? { ...p, is_master_partner: next } : p)));
+    refreshAll();
+  }, [refreshAll]);
+
 
   const requestsByPartner = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -148,9 +157,18 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <PartnerCell p={p} />
-                  {Number(p.open_requests) > 0 && (
-                    <Badge variant="secondary">{p.open_requests}</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {Number(p.open_requests) > 0 && (
+                      <Badge variant="secondary">{p.open_requests}</Badge>
+                    )}
+                    <MasterPartnerToggle
+                      partnerId={p.partner_id}
+                      partnerName={p.full_name}
+                      isMaster={!!p.is_master_partner}
+                      onChanged={(next) => applyMaster(p.partner_id, next)}
+                    />
+                  </div>
+
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{p.students_count}</span>
@@ -175,6 +193,8 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colLocked', 'Locked (20d)')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colAvailable', 'Available')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colOpen', 'Open requests')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colMaster', 'Master partner')}</th>
+
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -197,7 +217,16 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                         <Badge variant="secondary">{p.open_requests} · {fmt(p.open_request_amount)}</Badge>
                       ) : '—'}
                     </td>
+                    <td className="px-4 py-3">
+                      <MasterPartnerToggle
+                        partnerId={p.partner_id}
+                        partnerName={p.full_name}
+                        isMaster={!!p.is_master_partner}
+                        onChanged={(next) => applyMaster(p.partner_id, next)}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-end"><ChevronRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 inline" /></td>
+
                   </tr>
                 ))}
               </tbody>

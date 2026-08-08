@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -12,6 +11,8 @@ import {
 } from 'lucide-react';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
+import MasterPartnerToggle from './MasterPartnerToggle';
+
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,7 +68,6 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
   const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
   const { toast } = useToast();
   const [isMaster, setIsMaster] = useState(!!partner.is_master_partner);
-  const [savingMaster, setSavingMaster] = useState(false);
   const [network, setNetwork] = useState<any[]>([]);
 
   useEffect(() => { setIsMaster(!!partner.is_master_partner); }, [partner.is_master_partner, partner.partner_id]);
@@ -86,20 +86,11 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
   useEffect(() => { loadNetwork(); }, [loadNetwork]);
 
   /** Upgrade / downgrade is a pure role flag — earnings, referrals and payout history are untouched. */
-  const toggleMaster = async (next: boolean) => {
-    setSavingMaster(true);
-    const { error } = await (supabase as any)
-      .from('profiles')
-      .update({ is_master_partner: next })
-      .eq('id', partner.partner_id);
-    setSavingMaster(false);
-    if (error) {
-      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
-      return;
-    }
+  const onMasterChanged = (next: boolean) => {
     setIsMaster(next);
     onRefresh();
   };
+
 
   /** Partners that are not this master and not already in someone's network. */
   const attachable = useMemo(
@@ -249,7 +240,14 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
                 {t('admin.payouts.masterToggleHint', 'Role upgrade only — earnings, referral code and payout history stay exactly as they are.')}
               </p>
             </div>
-            <Switch checked={isMaster} disabled={savingMaster} onCheckedChange={toggleMaster} />
+            <MasterPartnerToggle
+              partnerId={partner.partner_id}
+              partnerName={partner.full_name}
+              isMaster={isMaster}
+              onChanged={onMasterChanged}
+              variant="plain"
+            />
+
           </div>
         </CardContent>
       </Card>
