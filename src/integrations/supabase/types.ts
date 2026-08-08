@@ -3462,42 +3462,26 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
-      send_case_message:
-        | {
-            Args: {
-              p_attachments?: Json
-              p_body: string
-              p_case_id: string
-              p_kind?: string
-              p_visibility?: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_attachments?: Json
-              p_body: string
-              p_case_id: string
-              p_kind?: string
-              p_mentions?: string[]
-              p_visibility?: string
-            }
-            Returns: string
-          }
-      send_direct_message:
-        | {
-            Args: { p_attachments?: Json; p_body: string; p_thread_id: string }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_attachments?: Json
-              p_body: string
-              p_mentions?: string[]
-              p_thread_id: string
-            }
-            Returns: string
-          }
+      send_case_message: {
+        Args: {
+          p_attachments?: Json
+          p_body: string
+          p_case_id: string
+          p_kind?: string
+          p_mentions?: string[]
+          p_visibility?: string
+        }
+        Returns: string
+      }
+      send_direct_message: {
+        Args: {
+          p_attachments?: Json
+          p_body: string
+          p_mentions?: string[]
+          p_thread_id: string
+        }
+        Returns: string
+      }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
     }
