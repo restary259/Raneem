@@ -26,6 +26,8 @@ import {
   BarChart2,
   Activity,
   Inbox,
+  MessageSquare,
+
   Settings,
   CalendarDays,
   ClipboardList,
