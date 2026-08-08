@@ -169,6 +169,20 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const { error: linkedRoleError } = await supabaseAdmin
+        .from("user_roles")
+        .upsert(
+          { user_id: caseData.student_user_id, role: "student" },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        );
+      if (linkedRoleError) throw linkedRoleError;
+
+      const { error: linkedProfileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ case_id, must_change_password: true })
+        .eq("id", caseData.student_user_id);
+      if (linkedProfileError) throw linkedProfileError;
+
       const resent = await sendInvite(linkedEmail, student_full_name);
       return new Response(
         JSON.stringify({
@@ -176,7 +190,7 @@ serve(async (req) => {
           user_id: caseData.student_user_id,
           email: linkedEmail,
           invited: resent,
-          message: "Student account already exists for this case",
+          message: "Student account linked and activation link sent",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
