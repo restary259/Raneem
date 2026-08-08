@@ -3453,6 +3453,10 @@ export type Database = {
         Args: { p_code: string; p_session_id: string; p_user_agent: string }
         Returns: undefined
       }
+      request_case_changes: {
+        Args: { p_case_id: string; p_note: string }
+        Returns: undefined
+      }
       request_payout: {
         Args: {
           p_amount: number
@@ -3474,6 +3478,10 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
+      resubmit_case_for_review: {
+        Args: { p_case_id: string }
+        Returns: undefined
+      }
       search_cases_for_mention: {
         Args: { p_query: string }
         Returns: {
