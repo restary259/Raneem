@@ -194,6 +194,9 @@ export default function PartnerOverviewPage() {
         </p>
       </div>
 
+      {/* Pending commission agreement offers from my master partner */}
+      <RateOfferInbox />
+
       {/* My referral link — the single link every partner shares */}
       <ReferralLinkCard userId={userId} />
 
