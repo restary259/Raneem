@@ -557,26 +557,34 @@ export default function CaseDetailPage() {
 
       <Dialog open={!!pendingStage} onOpenChange={(open) => !open && setPendingStage(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("case.stage.advance", "Move to next stage")}</DialogTitle>
-            <DialogDescription>
-              {t("case.stage.confirm", {
-                stage: pendingStage
-                  ? t(
-                      `case.status.${pendingStage}`,
-                      statuses.find((s) => s.key === pendingStage)?.label_en ?? pendingStage,
-                    )
-                  : "",
-                defaultValue: "Move this case to {{stage}}? The change is recorded on the timeline.",
-              })}
-            </DialogDescription>
-          </DialogHeader>
+          {(() => {
+            const stageLabel = (key: string) =>
+              t(`case.status.${key}`, statuses.find((s) => s.key === key)?.label_en ?? key);
+            const target = pendingStage ? stageLabel(pendingStage) : "";
+            return (
+              <DialogHeader>
+                <DialogTitle>
+                  {t("case.stage.confirmTitle", { stage: target, defaultValue: "Move to {{stage}}" })}
+                </DialogTitle>
+                <DialogDescription>
+                  {t("case.stage.confirmBody", {
+                    from: stageLabel(caseData.status),
+                    to: target,
+                    defaultValue:
+                      "This case moves from {{from}} to {{to}}. The change is recorded on the case timeline and is visible to the student.",
+                  })}
+                </DialogDescription>
+              </DialogHeader>
+            );
+          })()}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setPendingStage(null)} disabled={advancing}>
               {t("common.cancel", "Cancel")}
             </Button>
             <Button onClick={handleAdvance} disabled={advancing}>
-              {t("case.stage.confirmAction", "Move")}
+              {advancing
+                ? t("case.stage.confirmPending", "Moving…")
+                : t("case.stage.confirmAction", "Move")}
             </Button>
           </div>
         </DialogContent>
