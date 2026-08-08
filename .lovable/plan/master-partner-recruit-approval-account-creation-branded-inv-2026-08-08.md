@@ -1,4 +1,4 @@
-# Master Partner recruit approval — account creation, branded invite email, inbox spacing
+# Master Partner recruit approval — account creation, branded invite email, inbox spacing double cheak dark mode doesnt stop working 
 
 ## The gap
 

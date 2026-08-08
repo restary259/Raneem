@@ -1190,7 +1190,10 @@
         "approved": "Approved",
         "rejected": "Rejected"
       },
-      "empty": "No recruit applications"
+      "empty": "No recruit applications",
+      "resendInvite": "Resend invite",
+      "inviteSent": "Activation email sent to {{email}}",
+      "inviteFailed": "Account created, but the activation email failed. Use “Resend invite”."
     }
   },
   "influencer": {

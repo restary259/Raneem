@@ -111,7 +111,8 @@ const AdminInboxPage = () => {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -128,7 +129,7 @@ const AdminInboxPage = () => {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
         {/* Toolbar: search + export on top, tabs directly beneath */}
-        <div className="sticky top-14 z-10 -mx-1 space-y-3 bg-background/95 px-1 py-3 backdrop-blur">
+        <div className="sticky top-14 z-10 -mx-4 sm:-mx-6 space-y-3 bg-background/95 px-4 sm:px-6 py-3 backdrop-blur">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
