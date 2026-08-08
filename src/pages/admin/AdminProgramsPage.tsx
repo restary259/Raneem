@@ -1247,6 +1247,12 @@ const AdminProgramsPage = () => {
                       </Select>
                     </div>
                   </div>
+                  <InsuranceRatesEditor
+                    tiers={insRates}
+                    currency={insForm.currency}
+                    onChange={setInsRates}
+                  />
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label>{t('admin.programs.labelProvider')}</Label>
