@@ -3426,6 +3426,26 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      list_partner_directory: {
+        Args: never
+        Returns: {
+          available_amount: number
+          city: string
+          created_at: string
+          email: string
+          full_name: string
+          last_request_at: string
+          locked_amount: number
+          open_request_amount: number
+          open_requests: number
+          paid_amount: number
+          partner_id: string
+          phone_number: string
+          referral_code: string
+          students_count: number
+          total_earned: number
+        }[]
+      }
       list_payout_requests: {
         Args: never
         Returns: {
