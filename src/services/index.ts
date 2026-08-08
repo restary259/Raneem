@@ -8,6 +8,7 @@
  * RLS remains the source of truth — these wrappers never widen access.
  */
 export * from './CaseService';
+export * from './CaseStageService';
 export * from './StudentService';
 
 export * from './PartnerService';

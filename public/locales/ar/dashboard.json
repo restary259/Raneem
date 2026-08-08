@@ -468,7 +468,6 @@
       "insUpdated": "تم تحديث التأمين",
       "loading": "جارٍ التحميل…",
       "accommodationsLinked": "{{n}} سكن مرتبط",
-      "selectSchoolPlaceholder": "اختر مدرسة",
       "tierBasic": "أساسي",
       "tierStandard": "معياري",
       "tierPremium": "مميز",
@@ -2165,7 +2164,8 @@
       "noneStage": "لا يوجد",
       "statusUpdated": "تم تحديث الحالة إلى {{status}}",
       "upcomingAppointments": "القادمة",
-      "pastAppointments": "السابقة"
+      "pastAppointments": "السابقة",
+      "keyFacts": "معلومات أساسية"
     },
     "profileForm": {
       "steps": {
@@ -2299,10 +2299,21 @@
     },
     "tabs": {
       "overview": "نظرة عامة",
+      "case": "الملف",
+      "programFinance": "البرنامج والمالية",
+      "history": "السجل",
       "student": "الطالب",
       "program": "البرنامج",
       "financial": "المالية",
       "activity": "النشاط"
+    },
+    "stage": {
+      "advance": "الانتقال إلى المرحلة التالية",
+      "moveTo": "الانتقال إلى {{stage}}",
+      "moved": "تم نقل الملف إلى المرحلة التالية",
+      "confirm": "هل تريد نقل هذا الملف إلى {{stage}}؟ سيُسجَّل التغيير في السجل الزمني.",
+      "confirmAction": "نقل",
+      "automatedHint": "تتم المرحلة التالية تلقائيًا بعد تأكيد الدفع أو مراجعة الإدارة"
     },
     "overview": {
       "notSet": "لم يُحدَّد بعد",

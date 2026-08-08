@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 /**
  * Case view flow:
  *  - the case file is unreachable signed out
- *  - signed in, a real case opens with header, status chip and all five tabs
+ *  - signed in, a real case opens with header, status chip and all three tabs
  *  - no raw i18n keys or database tokens leak into the rendered page
  */
 const SESSION_JSON = process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON ?? '';
@@ -20,14 +20,14 @@ const RAW_TOKENS = [
   'enrollment_paid',
 ];
 
-const TAB_NAMES = [/Overview|نظرة عامة/, /Student|الطالب/, /Program|البرنامج/, /Financial|المالية/, /Activity|النشاط/];
+const TAB_NAMES = [/^(Case|الملف)$/, /Program & Finance|البرنامج والمالية/, /History|السجل/];
 
 test.describe('case view — signed out', () => {
   for (const path of ['/team/cases/00000000-0000-0000-0000-000000000000', '/admin/cases/00000000-0000-0000-0000-000000000000']) {
     test(`${path} does not render a case file`, async ({ page }) => {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
-      await expect(page.getByRole('tab', { name: /Financial|المالية/ })).toHaveCount(0);
+      await expect(page.getByRole('tab', { name: /Program & Finance|البرنامج والمالية/ })).toHaveCount(0);
     });
   }
 });
@@ -56,11 +56,11 @@ test.describe('case view — signed in', () => {
   }
 
 
-  test('header, status chip and five tabs render', async ({ page }) => {
+  test('header, status chip and three tabs render', async ({ page }) => {
     await openFirstCase(page);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const tabs = page.getByRole('tab');
-    await expect(tabs).toHaveCount(5);
+    await expect(tabs).toHaveCount(3);
     for (const name of TAB_NAMES) {
       await expect(page.getByRole('tab', { name })).toHaveCount(1);
     }

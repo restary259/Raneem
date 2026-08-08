@@ -38,8 +38,12 @@ export interface CaseTaskInput {
   now?: number;
 }
 
-/** Document categories a case cannot progress without. */
-export const REQUIRED_DOCUMENT_CATEGORIES = ["passport"] as const;
+/**
+ * Document categories a case cannot progress without.
+ * Empty on purpose: passport and identity details are collected during the
+ * profile completion step, so re-asking for an upload here is redundant.
+ */
+export const REQUIRED_DOCUMENT_CATEGORIES: readonly string[] = [];
 
 /** Stages where an appointment is expected to exist. */
 const STAGES_EXPECTING_APPOINTMENT = ["contacted", "appointment_scheduled"];

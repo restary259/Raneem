@@ -446,7 +446,7 @@
       "labelDistanceNote": "Distance / notes",
       "weeksShort": "wk",
       "tiersCount": "{{count}} price tiers",
-      "selectSchoolPlaceholder": "Select a school",
+      "selectSchoolPlaceholder": "Select school",
       "noSchoolOption": "No school",
       "startRule": {
         "none": "Not specified",
@@ -468,7 +468,6 @@
       "insUpdated": "Insurance updated",
       "loading": "Loading…",
       "accommodationsLinked": "{{n}} accommodation(s) linked",
-      "selectSchoolPlaceholder": "Select school",
       "tierBasic": "Basic",
       "tierStandard": "Standard",
       "tierPremium": "Premium",
@@ -2147,7 +2146,8 @@
       "noneStage": "none",
       "statusUpdated": "Status updated to {{status}}",
       "upcomingAppointments": "Upcoming",
-      "pastAppointments": "Past"
+      "pastAppointments": "Past",
+      "keyFacts": "Key facts"
     },
     "profileForm": {
       "steps": {
@@ -2281,10 +2281,21 @@
     },
     "tabs": {
       "overview": "Overview",
+      "case": "Case",
+      "programFinance": "Program & Finance",
+      "history": "History",
       "student": "Student",
       "program": "Program",
       "financial": "Financial",
       "activity": "Activity"
+    },
+    "stage": {
+      "advance": "Move to next stage",
+      "moveTo": "Move to {{stage}}",
+      "moved": "Case moved to the next stage",
+      "confirm": "Move this case to {{stage}}? The change is recorded on the timeline.",
+      "confirmAction": "Move",
+      "automatedHint": "The next stage happens automatically once payment or admin review completes"
     },
     "overview": {
       "notSet": "Not set yet",

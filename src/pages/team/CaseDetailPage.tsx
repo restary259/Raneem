@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ArrowRight, CalendarPlus, Download, Phone, Send } from "lucide-react";
 
+import { advanceCaseStage, manualNextStages } from "@/services/CaseStageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
@@ -80,12 +81,14 @@ export default function CaseDetailPage() {
   const [insuranceLabel, setInsuranceLabel] = useState<string | null>(null);
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("case");
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingStage, setPendingStage] = useState<string | null>(null);
+  const [advancing, setAdvancing] = useState(false);
   const documentsRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = role === "admin" || role === "team_member";
@@ -181,21 +184,42 @@ export default function CaseDetailPage() {
         if (task.appointmentId) setOutcomeApptId(task.appointmentId);
         break;
       case "upload_document":
-        setTab("overview");
+        setTab("history");
         requestAnimationFrame(() => documentsRef.current?.scrollIntoView({ behavior: "smooth" }));
         break;
       case "add_note":
-        setTab("activity");
+        setTab("history");
         break;
     }
   };
 
-  const hasPassport = documents.some((d) => d.category === "passport");
+  const nextStages = useMemo(
+    () => (caseData ? manualNextStages(caseData.status) : []),
+    [caseData],
+  );
+
+  const handleAdvance = async () => {
+    if (!caseData || !pendingStage) return;
+    setAdvancing(true);
+    try {
+      await advanceCaseStage(caseData.id, caseData.status, pendingStage);
+      toast({ description: t("case.stage.moved", "Case moved to the next stage") });
+      setPendingStage(null);
+      await fetchData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
   const canSubmitToAdmin =
     canManage &&
     !!submission &&
     !!submission.payment_confirmed &&
-    hasPassport &&
     caseData?.status !== "submitted" &&
     caseData?.status !== "payment_confirmed" &&
     caseData?.status !== "enrollment_paid";
@@ -327,7 +351,7 @@ export default function CaseDetailPage() {
                 title={
                   canSubmitToAdmin
                     ? undefined
-                    : t("case.submit.blocked", "Confirm payment and upload the passport first")
+                    : t("case.submit.blocked", "Complete the profile and confirm payment first")
                 }
                 onClick={handleSubmitToAdmin}
               >
@@ -345,7 +369,13 @@ export default function CaseDetailPage() {
           >
             {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
           </Badge>
-          <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
+          <CaseProgressRail
+            statuses={statuses}
+            currentKey={caseData.status}
+            nextStages={canManage ? nextStages : undefined}
+            onAdvance={canManage ? (key) => setPendingStage(key) : undefined}
+            advancing={advancing}
+          />
         </div>
       </div>
 
@@ -364,18 +394,16 @@ export default function CaseDetailPage() {
 
       {/* Section tabs */}
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">{t("case.tabs.overview", "Overview")}</TabsTrigger>
-          <TabsTrigger value="student">{t("case.tabs.student", "Student")}</TabsTrigger>
-          <TabsTrigger value="program">{t("case.tabs.program", "Program")}</TabsTrigger>
-          <TabsTrigger value="financial">{t("case.tabs.financial", "Financial")}</TabsTrigger>
-          <TabsTrigger value="activity">{t("case.tabs.activity", "Activity")}</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="case">{t("case.tabs.case", "Case")}</TabsTrigger>
+          <TabsTrigger value="program">{t("case.tabs.programFinance", "Program & Finance")}</TabsTrigger>
+          <TabsTrigger value="history">{t("case.tabs.history", "History")}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-3 space-y-3">
+        <TabsContent value="case" className="mt-3 space-y-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.tabs.overview", "Overview")}</CardTitle>
+              <CardTitle className="text-sm">{t("case.detail.keyFacts", "Key facts")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {summary.map((row) => (
@@ -389,62 +417,13 @@ export default function CaseDetailPage() {
             </CardContent>
           </Card>
 
-          <Card ref={documentsRef}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.detail.documents", "Documents")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("case.overview.noDocuments", "No documents uploaded yet")}
-                </p>
-              ) : (
-                <div className="divide-y">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{doc.file_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t(`case.docCategory.${doc.category}`, doc.category)}
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a href={doc.file_url} target="_blank" rel="noreferrer">
-                          <Download className="h-3.5 w-3.5" />
-                          <span className="sr-only">{t("case.detail.download", "Download")}</span>
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="student" className="mt-3">
           <Card>
             <CardHeader className="pb-0">
               <CardTitle className="text-sm">{t("case.tabs.student", "Student")}</CardTitle>
             </CardHeader>
             <CaseStudentTab caseData={caseData} submission={submission} onRefresh={fetchData} />
           </Card>
-        </TabsContent>
 
-        <TabsContent value="program" className="mt-3">
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm">{t("case.tabs.program", "Program")}</CardTitle>
-            </CardHeader>
-            <CaseProgramTab submission={submission} onRefresh={fetchData} />
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="financial" className="mt-3">
-          <CaseFinance caseId={caseData.id} canManage={canManage} />
-        </TabsContent>
-
-        <TabsContent value="activity" className="mt-3 space-y-3">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">{t("case.detail.appointments", "Appointments")}</CardTitle>
@@ -477,9 +456,54 @@ export default function CaseDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="program" className="mt-3 space-y-3">
+          <Card>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm">{t("case.tabs.program", "Program")}</CardTitle>
+            </CardHeader>
+            <CaseProgramTab submission={submission} onRefresh={fetchData} />
+          </Card>
+          <CaseFinance caseId={caseData.id} canManage={canManage} />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-3 space-y-3">
           <CaseTimeline caseId={caseData.id} canAddNote={canManage} />
+          <Card ref={documentsRef}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t("case.detail.documents", "Documents")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {documents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("case.overview.noDocuments", "No documents uploaded yet")}
+                </p>
+              ) : (
+                <div className="divide-y">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{doc.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t(`case.docCategory.${doc.category}`, doc.category)}
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <a href={doc.file_url} target="_blank" rel="noreferrer">
+                          <Download className="h-3.5 w-3.5" />
+                          <span className="sr-only">{t("case.detail.download", "Download")}</span>
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
+
 
       {/* Modals */}
       {canManage && user && (
@@ -530,6 +554,33 @@ export default function CaseDetailPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!pendingStage} onOpenChange={(open) => !open && setPendingStage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("case.stage.advance", "Move to next stage")}</DialogTitle>
+            <DialogDescription>
+              {t("case.stage.confirm", {
+                stage: pendingStage
+                  ? t(
+                      `case.status.${pendingStage}`,
+                      statuses.find((s) => s.key === pendingStage)?.label_en ?? pendingStage,
+                    )
+                  : "",
+                defaultValue: "Move this case to {{stage}}? The change is recorded on the timeline.",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setPendingStage(null)} disabled={advancing}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleAdvance} disabled={advancing}>
+              {t("case.stage.confirmAction", "Move")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
