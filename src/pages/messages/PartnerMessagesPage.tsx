@@ -92,7 +92,10 @@ export default function PartnerMessagesPage() {
     subtitle: thread.otherUserRole
       ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
       : null,
-    preview: thread.lastMessage?.body || t("messagesInbox.noMessagesYet"),
+    preview:
+      thread.lastMessage?.kind === "payout_request"
+        ? t("chat.payout.title")
+        : thread.lastMessage?.body || t("messagesInbox.noMessagesYet"),
     timestamp: thread.lastMessageAt,
     unread: thread.unread,
     otherUserId: thread.otherUserId,
