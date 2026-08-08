@@ -57,3 +57,5 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = true
   [functions.verify-admin-password]
     verify_jwt = true
+  [functions.process-email-queue]
+    verify_jwt = true
