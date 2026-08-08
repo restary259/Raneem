@@ -294,6 +294,11 @@ const AdminTeamPage = () => {
                           {t('chat.presence.online')}
                         </span>
                       )}
+                      {m.is_master_partner && (
+                        <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+                          <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
+                        </Badge>
+                      )}
                     </p>
 
                     <p className="text-xs text-muted-foreground">{m.email}</p>
