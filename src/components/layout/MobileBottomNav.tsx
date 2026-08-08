@@ -23,16 +23,16 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
     { key: 'nav.pipeline', icon: GitBranch, href: '/admin/pipeline' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/admin/messages' },
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.financials', icon: DollarSign, href: '/admin/financials' },
-    { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
   ],
   team_member: [
     { key: 'nav.myWork', icon: LayoutDashboard, href: '/team' },
     { key: 'nav.cases', icon: ClipboardList, href: '/team/cases' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/team/messages' },
     { key: 'nav.appointments', icon: CalendarDays, href: '/team/appointments' },
     { key: 'nav.students', icon: GraduationCap, href: '/team/students' },
-    { key: 'nav.analytics', icon: BarChart2, href: '/team/analytics' },
   ],
   social_media_partner: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
