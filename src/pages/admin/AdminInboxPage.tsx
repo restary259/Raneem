@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ContactsManager from "@/components/admin/ContactsManager";
+import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Inbox } from "lucide-react";
@@ -78,6 +79,8 @@ const AdminInboxPage = () => {
           ))}
         </div>
       </div>
+
+      <RecruitApplicationsPanel />
 
       {loading ? (
         <div className="flex justify-center py-16">

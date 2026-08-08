@@ -40,6 +40,7 @@ const CurrencyConverterPage = lazy(() => import("./pages/CurrencyConverterPage")
 const BagrutCalculatorPage = lazy(() => import("./pages/BagrutCalculatorPage"));
 const LebenslaufBuilderPage = lazy(() => import("./pages/LebenslaufBuilderPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
+const JoinPartnerPage = lazy(() => import("./pages/JoinPartnerPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/legal/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
@@ -183,6 +184,7 @@ const App = () => {
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/ai-advisor" element={<AIAdvisorPage />} />
             <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/join/:code" element={<JoinPartnerPage />} />
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/unsubscribe" element={<UnsubscribePage />} />

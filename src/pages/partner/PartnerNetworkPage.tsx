@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import RateOfferDialog from "@/components/partner/RateOfferDialog";
 import { Crown, Copy, Check, Users, Megaphone } from "lucide-react";
 
 interface NetworkRow {
@@ -41,44 +42,43 @@ export default function PartnerNetworkPage() {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const [sending, setSending] = useState(false);
+  const [splits, setSplits] = useState<Record<string, { pool: number; partner: number; master: number }>>({});
+  const [offers, setOffers] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
-    const [{ data: network }, { data: links }] = await Promise.all([
+    const [{ data: network }, { data: link }, { data: offerRows }] = await Promise.all([
       (supabase as any).rpc("get_my_network"),
-      (supabase as any)
-        .from("partner_links")
-        .select("code, purpose, active")
-        .eq("partner_id", user.id)
-        .eq("purpose", "recruit")
-        .eq("active", true)
-        .limit(1),
+      (supabase as any).rpc("ensure_master_recruit_link"),
+      (supabase as any).rpc("get_my_rate_offers"),
     ]);
-    setRows((network || []) as NetworkRow[]);
-    setInviteCode(links?.[0]?.code ?? null);
+    const list = (network || []) as NetworkRow[];
+    setRows(list);
+    setInviteCode((Array.isArray(link) ? link[0]?.code : null) ?? null);
+    setOffers((offerRows || []) as any[]);
+
+    const entries = await Promise.all(
+      list.map(async (r) => {
+        const { data } = await (supabase as any).rpc("get_effective_partner_split", { p_partner_id: r.partner_id });
+        const s = Array.isArray(data) ? data[0] : null;
+        return [
+          r.partner_id,
+          {
+            pool: Number(s?.pool_amount ?? 0),
+            partner: Number(s?.partner_amount ?? 0),
+            master: Number(s?.master_share ?? 0),
+          },
+        ] as const;
+      }),
+    );
+    setSplits(Object.fromEntries(entries));
     setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
 
-  const createInviteLink = async () => {
-    if (!user) return;
-    const code = `M${user.id.slice(0, 6).toUpperCase()}`;
-    const { error } = await (supabase as any).from("partner_links").insert({
-      partner_id: user.id,
-      code,
-      label: t("master.inviteLabel", "Recruit partners"),
-      target_path: "/partnership",
-      purpose: "recruit",
-    });
-    if (error) {
-      toast({ variant: "destructive", title: t("common.actionFailed"), description: error.message });
-      return;
-    }
-    setInviteCode(code);
-  };
+  const inviteUrl = inviteCode ? `${window.location.origin}/join/${inviteCode}` : "";
 
-  const inviteUrl = inviteCode ? `${window.location.origin}/partnership?ref=${inviteCode}` : "";
 
   const copy = async () => {
     await navigator.clipboard.writeText(inviteUrl);
@@ -148,7 +148,7 @@ export default function PartnerNetworkPage() {
               </Button>
             </div>
           ) : (
-            <Button onClick={createInviteLink}>{t("master.createInvite", "Create recruiting link")}</Button>
+            <p className="text-sm text-muted-foreground">{t("master.inviteMissing", "No recruiting link yet.")}</p>
           )}
         </CardContent>
       </Card>
@@ -167,13 +167,34 @@ export default function PartnerNetworkPage() {
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {rows.map((r) => (
+              {rows.map((r) => {
+                const s = splits[r.partner_id];
+                const pending = offers.find(
+                  (o) => o.partner_id === r.partner_id && o.status === "pending",
+                );
+                return (
                 <div key={r.partner_id} className="p-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium truncate">{r.full_name}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {r.city ? `${r.city} · ` : ""}{new Date(r.joined_at).toLocaleDateString(locale)}
                     </p>
+                    {s && (
+                      <p className="text-xs mt-1">
+                        {t("master.agreedRate", "Agreed rate")}:{" "}
+                        <span className="font-semibold">{fmt(s.partner)}</span>
+                        {s.master > 0 && (
+                          <span className="text-muted-foreground">
+                            {" "}· {t("master.yourShare", "your share")} {fmt(s.master)}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {pending && (
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        {t("master.offerPending", "Offer pending: {{amount}}", { amount: fmt(pending.partner_amount) })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 text-xs">
                     <Badge variant={r.status === "active" ? "default" : "secondary"}>
@@ -181,9 +202,20 @@ export default function PartnerNetworkPage() {
                     </Badge>
                     <span>{t("master.colStudents", "Students")}: {Number(r.students_count).toLocaleString("en-US")}</span>
                     <span className="font-semibold">{fmt(r.override_earned)}</span>
+                    {s && (
+                      <RateOfferDialog
+                        partnerId={r.partner_id}
+                        partnerName={r.full_name}
+                        poolAmount={s.pool}
+                        currentPartnerAmount={s.partner}
+                        onSent={load}
+                      />
+                    )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
+
             </div>
           )}
         </CardContent>

@@ -1194,6 +1194,18 @@
       "deleteBtn": "حذف",
       "cancelBtn": "إلغاء",
       "deleted": "تم الحذف"
+    },
+    "recruit": {
+      "title": "طلبات الانضمام عبر الشركاء الرئيسيين",
+      "recruitedBy": "تم تجنيده بواسطة",
+      "approve": "موافقة",
+      "reject": "رفض",
+      "approved": "تمت الموافقة على الشريك",
+      "status": {
+        "pending": "قيد الانتظار",
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوض"
+      }
     }
   },
   "influencer": {
@@ -3304,6 +3316,29 @@
     "status": {
       "active": "نشط",
       "pending": "قيد الانتظار"
-    }
+    },
+    "negotiate": "التفاوض على النسبة",
+    "offerSent": "تم إرسال العرض إلى الشريك",
+    "offerTitle": "اقتراح تقسيم العمولة",
+    "offerDesc": "دَرب تدفع دائمًا ₪1,000 لكل ملف. ما تتركه للشريك يبقى له، والباقي يعود إليك.",
+    "offerAmount": "حصة الشريك (₪)",
+    "offerPool": "مجمّع العمولة",
+    "offerPartnerGets": "يحصل الشريك على",
+    "offerYouGet": "تحصل أنت على",
+    "offerDarbCost": "تكلفة دَرب (بدون تغيير)",
+    "offerNote": "ملاحظة للشريك (اختياري)",
+    "offerSend": "إرسال العرض",
+    "offerInboxTitle": "عرض عمولة جديد",
+    "offerInboxBody": "اقترح الشريك الرئيسي تقسيمًا جديدًا للملفات القادمة.",
+    "offerAccept": "قبول",
+    "offerDecline": "رفض",
+    "offerAccepted": "تم قبول العرض",
+    "offerDeclined": "تم رفض العرض",
+    "offerPending": "عرض بانتظار الرد",
+    "agreedRate": "النسبة المتفق عليها",
+    "yourShare": "حصتك",
+    "inviteMissing": "لا يوجد رابط تجنيد بعد",
+    "recruitTitle": "رابط التجنيد",
+    "recruitHint": "شارك هذا الرابط لضمّ شركاء إلى شبكتك."
   }
 }

@@ -81,3 +81,36 @@ platform_revenue_ils = max(0, service_fee − team_commission − partner_commis
   with the base ₪1000 referral reward in payouts or reporting.
 - The override applies only to cases referred by partners inside that master
   partner's own network — never company-wide.
+
+## 9. Negotiated recruitment splits (master partner ↔ recruited partner)
+
+The referral commission **pool per case is always ₪1000** (section 1). Darb's
+outlay never changes because of a negotiation — only the way the pool is divided
+between the recruited partner and his master partner.
+
+- **Default (no agreement):** referred partner receives the full ₪1000,
+  master partner receives ₪0 from the pool.
+- **Negotiated:** a master partner may send a rate offer to a partner **he
+  recruited himself** (`profiles.master_partner_id = master.id`). The offer
+  records `pool_amount`, `partner_amount` and
+  `master_amount = pool_amount − partner_amount` in `partner_rate_offers`,
+  with an incrementing `version`, `created_at` and `responded_at`.
+- The offer only takes effect when the **receiving partner accepts** it
+  (`partner_respond_rate_offer`). A master partner can never set a rate
+  silently, and nobody else can accept on the partner's behalf. Superseded
+  offers stay in the table for audit.
+- On payout, the accepted offer splits the pool:
+  `rewards.reward_type = 'referral'` → partner (`partner_amount`),
+  `rewards.reward_type = 'network_split'` → master partner (`master_amount`).
+- The ₪200 `master_override` from section 8 is **separate and unconditional**:
+  it stacks on top of any negotiated split and still comes out of Darb's margin.
+
+Worked example (service fee ₪5000, negotiated ₪700):
+
+| Payee | Default | Negotiated ₪700 |
+|---|---|---|
+| Partner (`referral`) | ₪1000 | ₪700 |
+| Master (`network_split`) | ₪0 | ₪300 |
+| Master (`master_override`) | ₪200 | ₪200 |
+| **Darb total payout** | **₪1200** | **₪1200** |
+| `platform_revenue_ils` | ₪3800 | ₪3800 |
