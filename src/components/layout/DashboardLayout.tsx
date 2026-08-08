@@ -64,6 +64,8 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
     { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
     { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
+    { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.work" },
+
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
     { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
     { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
