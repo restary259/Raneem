@@ -327,7 +327,7 @@ export default function CaseDetailPage() {
                 title={
                   canSubmitToAdmin
                     ? undefined
-                    : t("case.submit.blocked", "Confirm payment and upload the passport first")
+                    : t("case.submit.blocked", "Complete the profile and confirm payment first")
                 }
                 onClick={handleSubmitToAdmin}
               >
@@ -345,7 +345,14 @@ export default function CaseDetailPage() {
           >
             {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
           </Badge>
-          <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
+          <CaseProgressRail
+            statuses={statuses}
+            currentKey={caseData.status}
+            nextStages={canManage ? nextStages : undefined}
+            onAdvance={canManage ? (key) => setPendingStage(key) : undefined}
+            advancing={advancing}
+          />
+        </div>
         </div>
       </div>
 
