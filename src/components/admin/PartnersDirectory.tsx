@@ -175,6 +175,8 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colLocked', 'Locked (20d)')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colAvailable', 'Available')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colOpen', 'Open requests')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colMaster', 'Master partner')}</th>
+
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
