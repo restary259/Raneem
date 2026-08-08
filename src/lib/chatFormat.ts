@@ -81,7 +81,58 @@ export function resolveMentionIds(body: string, people: MentionablePerson[]): st
   return [...ids];
 }
 
-export type BodySegment = { text: string; mention: boolean };
+/** A case file that can be referenced in a message with `#`. */
+export interface MentionableCase {
+  id: string;
+  reference: string | null;
+  name: string;
+  status?: string | null;
+}
+
+/** The token written into the body for a case, e.g. `#DRB-2026-0012`. */
+export function caseMentionToken(c: MentionableCase): string {
+  return `#${c.reference ?? c.id.slice(0, 8)}`;
+}
+
+/**
+ * Active `#query` the caret sits in, or null.
+ * Only triggers at the start of a word, so `a#b` and URLs never open the picker.
+ */
+export function activeCaseQuery(text: string, caret: number): string | null {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("#");
+  if (at === -1) return null;
+  if (at > 0 && !/\s/.test(before[at - 1])) return null;
+  const query = before.slice(at + 1);
+  if (/\s/.test(query)) return null;
+  return query;
+}
+
+/** Replace the active `#query` with the case token. Returns new text + caret. */
+export function applyCaseMention(
+  text: string,
+  caret: number,
+  token: string,
+): { text: string; caret: number } {
+  const before = text.slice(0, caret);
+  const at = before.lastIndexOf("#");
+  if (at === -1) return { text, caret };
+  const inserted = `${token} `;
+  const next = text.slice(0, at) + inserted + text.slice(caret);
+  return { text: next, caret: at + inserted.length };
+}
+
+const CASE_TOKEN = /(^|\s)#([A-Za-z0-9][A-Za-z0-9_-]{2,})/g;
+
+/** Distinct case references written as `#REF` in a body. */
+export function extractCaseRefs(body: string): string[] {
+  const refs = new Set<string>();
+  for (const m of body.matchAll(CASE_TOKEN)) refs.add(m[2]);
+  return [...refs];
+}
+
+export type BodySegment = { text: string; mention: boolean; caseRef?: string };
+
 
 /** Split a body into plain and `@mention` segments for highlighting. */
 export function splitMentions(body: string, people: MentionablePerson[]): BodySegment[] {
