@@ -41,44 +41,43 @@ export default function PartnerNetworkPage() {
   const [copied, setCopied] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const [sending, setSending] = useState(false);
+  const [splits, setSplits] = useState<Record<string, { pool: number; partner: number; master: number }>>({});
+  const [offers, setOffers] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
-    const [{ data: network }, { data: links }] = await Promise.all([
+    const [{ data: network }, { data: link }, { data: offerRows }] = await Promise.all([
       (supabase as any).rpc("get_my_network"),
-      (supabase as any)
-        .from("partner_links")
-        .select("code, purpose, active")
-        .eq("partner_id", user.id)
-        .eq("purpose", "recruit")
-        .eq("active", true)
-        .limit(1),
+      (supabase as any).rpc("ensure_master_recruit_link"),
+      (supabase as any).rpc("get_my_rate_offers"),
     ]);
-    setRows((network || []) as NetworkRow[]);
-    setInviteCode(links?.[0]?.code ?? null);
+    const list = (network || []) as NetworkRow[];
+    setRows(list);
+    setInviteCode((Array.isArray(link) ? link[0]?.code : null) ?? null);
+    setOffers((offerRows || []) as any[]);
+
+    const entries = await Promise.all(
+      list.map(async (r) => {
+        const { data } = await (supabase as any).rpc("get_effective_partner_split", { p_partner_id: r.partner_id });
+        const s = Array.isArray(data) ? data[0] : null;
+        return [
+          r.partner_id,
+          {
+            pool: Number(s?.pool_amount ?? 0),
+            partner: Number(s?.partner_amount ?? 0),
+            master: Number(s?.master_share ?? 0),
+          },
+        ] as const;
+      }),
+    );
+    setSplits(Object.fromEntries(entries));
     setLoading(false);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
 
-  const createInviteLink = async () => {
-    if (!user) return;
-    const code = `M${user.id.slice(0, 6).toUpperCase()}`;
-    const { error } = await (supabase as any).from("partner_links").insert({
-      partner_id: user.id,
-      code,
-      label: t("master.inviteLabel", "Recruit partners"),
-      target_path: "/partnership",
-      purpose: "recruit",
-    });
-    if (error) {
-      toast({ variant: "destructive", title: t("common.actionFailed"), description: error.message });
-      return;
-    }
-    setInviteCode(code);
-  };
+  const inviteUrl = inviteCode ? `${window.location.origin}/join/${inviteCode}` : "";
 
-  const inviteUrl = inviteCode ? `${window.location.origin}/partnership?ref=${inviteCode}` : "";
 
   const copy = async () => {
     await navigator.clipboard.writeText(inviteUrl);
