@@ -272,13 +272,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "appointments_rescheduled_to_fkey"
             columns: ["rescheduled_to"]
             isOneToOne: false
@@ -368,13 +361,6 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "case_events_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
         ]
       }
       case_message_reads: {
@@ -402,13 +388,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_message_reads_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
         ]
@@ -471,13 +450,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_messages_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
         ]
@@ -626,13 +598,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "case_services_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "case_services_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -757,13 +722,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: true
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_submissions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
           {
@@ -977,13 +935,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: true
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "commission_transactions_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
         ]
@@ -1318,13 +1269,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
           {
@@ -2062,13 +2006,6 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "notifications_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
         ]
       }
       partner_clicks: {
@@ -2712,24 +2649,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "profiles_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "profiles_linked_case_id_fkey"
             columns: ["linked_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_linked_case_id_fkey"
-            columns: ["linked_case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
           {
@@ -2905,13 +2828,6 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "referrals_referred_case_id_fkey"
-            columns: ["referred_case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
         ]
       }
       rewards: {
@@ -2966,13 +2882,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rewards_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "my_case"
             referencedColumns: ["id"]
           },
           {
@@ -3332,13 +3241,6 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "visa_applications_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: true
-            referencedRelation: "my_case"
-            referencedColumns: ["id"]
-          },
         ]
       }
       visa_field_values: {
@@ -3534,113 +3436,6 @@ export type Database = {
           },
         ]
       }
-      my_case: {
-        Row: {
-          archived: boolean | null
-          archived_at: string | null
-          assigned_to: string | null
-          bagrut_score: number | null
-          case_reference: string | null
-          city: string | null
-          created_at: string | null
-          created_by_team: boolean | null
-          degree_interest: string | null
-          deleted_at: string | null
-          education_level: string | null
-          english_level: string | null
-          english_units: number | null
-          full_name: string | null
-          id: string | null
-          intake_notes: string | null
-          is_no_show: boolean | null
-          last_activity_at: string | null
-          math_units: number | null
-          origin: string | null
-          partner_id: string | null
-          partner_link_id: string | null
-          passport_type: string | null
-          phone_number: string | null
-          referred_by: string | null
-          source: string | null
-          source_attribution_method: string | null
-          status: string | null
-          student_user_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          archived?: boolean | null
-          archived_at?: string | null
-          assigned_to?: string | null
-          bagrut_score?: number | null
-          case_reference?: string | null
-          city?: string | null
-          created_at?: string | null
-          created_by_team?: boolean | null
-          degree_interest?: string | null
-          deleted_at?: string | null
-          education_level?: string | null
-          english_level?: string | null
-          english_units?: number | null
-          full_name?: string | null
-          id?: string | null
-          intake_notes?: string | null
-          is_no_show?: boolean | null
-          last_activity_at?: string | null
-          math_units?: number | null
-          origin?: string | null
-          partner_id?: string | null
-          partner_link_id?: string | null
-          passport_type?: string | null
-          phone_number?: string | null
-          referred_by?: string | null
-          source?: string | null
-          source_attribution_method?: string | null
-          status?: string | null
-          student_user_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          archived?: boolean | null
-          archived_at?: string | null
-          assigned_to?: string | null
-          bagrut_score?: number | null
-          case_reference?: string | null
-          city?: string | null
-          created_at?: string | null
-          created_by_team?: boolean | null
-          degree_interest?: string | null
-          deleted_at?: string | null
-          education_level?: string | null
-          english_level?: string | null
-          english_units?: number | null
-          full_name?: string | null
-          id?: string | null
-          intake_notes?: string | null
-          is_no_show?: boolean | null
-          last_activity_at?: string | null
-          math_units?: number | null
-          origin?: string | null
-          partner_id?: string | null
-          partner_link_id?: string | null
-          passport_type?: string | null
-          phone_number?: string | null
-          referred_by?: string | null
-          source?: string | null
-          source_attribution_method?: string | null
-          status?: string | null
-          student_user_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cases_partner_link_id_fkey"
-            columns: ["partner_link_id"]
-            isOneToOne: false
-            referencedRelation: "partner_links"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Functions: {
       admin_respond_payout_request: {
@@ -3809,6 +3604,39 @@ export type Database = {
           net_margin: number
           transactions_count: number
           vat_amount: number
+        }[]
+      }
+      get_my_case: {
+        Args: never
+        Returns: {
+          archived: boolean
+          archived_at: string
+          assigned_to: string
+          bagrut_score: number
+          case_reference: string
+          city: string
+          created_at: string
+          created_by_team: boolean
+          degree_interest: string
+          education_level: string
+          english_level: string
+          english_units: number
+          full_name: string
+          id: string
+          intake_notes: string
+          is_no_show: boolean
+          last_activity_at: string
+          math_units: number
+          origin: string
+          partner_id: string
+          partner_link_id: string
+          passport_type: string
+          phone_number: string
+          referred_by: string
+          source: string
+          status: string
+          student_user_id: string
+          updated_at: string
         }[]
       }
       get_my_network: {
