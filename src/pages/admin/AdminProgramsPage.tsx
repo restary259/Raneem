@@ -26,6 +26,9 @@ import {
   GraduationCap as School,
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
+import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
+
 
 function groupBySchool<T extends { school_id: string | null }>(
   items: T[],
