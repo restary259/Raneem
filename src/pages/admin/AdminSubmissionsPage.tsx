@@ -833,6 +833,21 @@ const AdminSubmissionsPage = () => {
                 <span className="font-bold text-emerald-700">₪{splitPreview.platformRevenue.toLocaleString('en-US')}</span>
               </div>
             </div>
+            {!selected?.student_user_id && (
+              <div className="space-y-1.5 rounded-lg border border-border p-3">
+                <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
+                <Input
+                  id="approve-email"
+                  type="email"
+                  autoComplete="off"
+                  value={approveEmail}
+                  onChange={(e) => setApproveEmail(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("admin.submissions.approveCreatesAccount")}
+                </p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {t("admin.submissions.splitNote", "Commissions are set in Settings → Money Split. Confirm with your password to proceed.")}
             </p>
@@ -841,7 +856,10 @@ const AdminSubmissionsPage = () => {
             <Button variant="outline" onClick={() => setShowSplitPanel(false)}>
               {t("admin.submissions.cancel")}
             </Button>
-            <Button onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }} disabled={marking}>
+            <Button
+              onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }}
+              disabled={marking || (!selected?.student_user_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))}
+            >
               <Lock className="h-4 w-4 me-1" />
               {t("admin.submissions.confirmEnroll", "Confirm")}
             </Button>
