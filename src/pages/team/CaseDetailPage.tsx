@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ArrowRight, CalendarPlus, Download, Phone, Send } from "lucide-react";
 
+import { advanceCaseStage, manualNextStages } from "@/services/CaseStageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
