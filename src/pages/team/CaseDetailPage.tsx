@@ -18,6 +18,8 @@ import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
 import CaseStudentTab from "@/components/cases/CaseStudentTab";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
+import CaseMessages from "@/components/cases/CaseMessages";
+
 import CaseFinance from "@/components/cases/CaseFinance";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
@@ -394,11 +396,13 @@ export default function CaseDetailPage() {
 
       {/* Section tabs */}
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="case">{t("case.tabs.case", "Case")}</TabsTrigger>
           <TabsTrigger value="program">{t("case.tabs.programFinance", "Program & Finance")}</TabsTrigger>
+          <TabsTrigger value="messages">{t("case.tabs.messages", "Messages")}</TabsTrigger>
           <TabsTrigger value="history">{t("case.tabs.history", "History")}</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="case" className="mt-3 space-y-3">
           <Card>
@@ -467,6 +471,18 @@ export default function CaseDetailPage() {
           </Card>
           <CaseFinance caseId={caseData.id} canManage={canManage} />
         </TabsContent>
+
+        <TabsContent value="messages" className="mt-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t("case.messages.title", "Messages")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CaseMessages caseId={caseData.id} allowInternal={canManage} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
 
         <TabsContent value="history" className="mt-3 space-y-3">
           <CaseTimeline caseId={caseData.id} canAddNote={canManage} />

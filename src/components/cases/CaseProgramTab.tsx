@@ -1,66 +1,91 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExternalLink } from "lucide-react";
 
 interface CaseProgramTabProps {
   submission: any;
   onRefresh: () => void;
 }
 
-export default function CaseProgramTab({
-  submission,
-  onRefresh,
-}: CaseProgramTabProps) {
-  const { t } = useTranslation("dashboard");
+interface InsuranceInfo {
+  name: string;
+  provider: string | null;
+  currency: string;
+  price: number;
+  coverage_scope: string | null;
+  billing_period: string | null;
+  min_months: number | null;
+  max_months: number | null;
+  max_age: number | null;
+  terms_url: string | null;
+  description_ar: string | null;
+  description_en: string | null;
+}
+
+const monthsBetween = (start?: string | null, end?: string | null) => {
+  if (!start || !end) return null;
+  const s = new Date(start);
+  const e = new Date(end);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
+  const months =
+    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + (e.getDate() >= s.getDate() ? 0 : -1);
+  return months > 0 ? months : 1;
+};
+
+const formatDate = (value?: string | null) =>
+  value ? new Date(value).toLocaleDateString("en-US") : "";
+
+export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
+  const { t, i18n } = useTranslation("dashboard");
+  const isAr = i18n.language?.startsWith("ar");
   const [programName, setProgramName] = useState<string | null>(null);
   const [schoolName, setSchoolName] = useState<string | null>(null);
   const [accommodationName, setAccommodationName] = useState<string | null>(null);
+  const [insurance, setInsurance] = useState<InsuranceInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDetails = async () => {
-      if (!submission) return;
+      if (!submission) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const [progRes, accomRes] = await Promise.all([
+        const [progRes, accomRes, insRes] = await Promise.all([
           submission.program_id
-            ? supabase
-                .from("programs")
-                .select("name_en, school_id")
-                .eq("id", submission.program_id)
-                .maybeSingle()
-            : Promise.resolve({ data: null }),
+            ? supabase.from("programs").select("name_ar, name_en, school_id").eq("id", submission.program_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
           submission.accommodation_id
-            ? supabase
-                .from("accommodations")
-                .select("name_en")
-                .eq("id", submission.accommodation_id)
-                .maybeSingle()
-            : Promise.resolve({ data: null }),
+            ? supabase.from("accommodations").select("name_ar, name_en").eq("id", submission.accommodation_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          submission.insurance_id
+            ? (supabase as any).from("insurances").select("*").eq("id", submission.insurance_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
         ]);
 
-        if (progRes.data?.name_en) {
-          setProgramName(progRes.data.name_en);
-
-          // Fetch school name
+        if (progRes.data) {
+          setProgramName((isAr ? progRes.data.name_ar : progRes.data.name_en) ?? progRes.data.name_en);
           if (progRes.data.school_id) {
             const schoolRes = await supabase
               .from("schools")
-              .select("name_en")
+              .select("name_ar, name_en")
               .eq("id", progRes.data.school_id)
               .maybeSingle();
-            if (schoolRes.data?.name_en) {
-              setSchoolName(schoolRes.data.name_en);
+            if (schoolRes.data) {
+              setSchoolName((isAr ? schoolRes.data.name_ar : schoolRes.data.name_en) ?? schoolRes.data.name_en);
             }
           }
         }
 
-        if (accomRes.data?.name_en) {
-          setAccommodationName(accomRes.data.name_en);
+        if (accomRes.data) {
+          setAccommodationName((isAr ? accomRes.data.name_ar : accomRes.data.name_en) ?? accomRes.data.name_en);
         }
+
+        if (insRes.data) setInsurance(insRes.data as InsuranceInfo);
       } catch (err) {
         console.error("Error fetching program details:", err);
       } finally {
@@ -69,7 +94,7 @@ export default function CaseProgramTab({
     };
 
     fetchDetails();
-  }, [submission]);
+  }, [submission, isAr]);
 
   if (loading) {
     return (
@@ -79,76 +104,107 @@ export default function CaseProgramTab({
     );
   }
 
+  const months = monthsBetween(submission?.program_start_date, submission?.program_end_date);
+  const insuranceMonthly = insurance?.price ?? 0;
+  const insuranceTotal =
+    insurance && months && insurance.billing_period === "monthly"
+      ? insuranceMonthly * months
+      : submission?.insurance_price ?? insuranceMonthly;
+  const insuranceCurrency = insurance?.currency ?? "EUR";
+  const insuranceDescription = insurance ? (isAr ? insurance.description_ar : insurance.description_en) : null;
+
   return (
     <CardContent className="space-y-6 pt-6">
-      {/* Program Details */}
       {programName && (
-        <div className="border-l-4 border-blue-500 pl-4 py-2">
-          <p className="text-xs text-muted-foreground font-semibold uppercase">
-            Program
-          </p>
+        <div className="border-s-4 border-blue-500 ps-4 py-2">
+          <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.program")}</p>
           <p className="text-lg font-semibold text-foreground">{programName}</p>
-          {schoolName && (
-            <p className="text-sm text-muted-foreground mt-1">@ {schoolName}</p>
-          )}
+          {schoolName && <p className="text-sm text-muted-foreground mt-1">{schoolName}</p>}
         </div>
       )}
 
-      {/* Program Dates */}
       {submission?.program_start_date && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground font-semibold">
-              Start Date
-            </p>
-            <p className="text-sm font-medium">{submission.program_start_date}</p>
+            <p className="text-xs text-muted-foreground font-semibold">{t("case.program.startDate")}</p>
+            <p className="text-sm font-medium">{formatDate(submission.program_start_date)}</p>
           </div>
           {submission?.program_end_date && (
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">
-                End Date
-              </p>
-              <p className="text-sm font-medium">{submission.program_end_date}</p>
+              <p className="text-xs text-muted-foreground font-semibold">{t("case.program.endDate")}</p>
+              <p className="text-sm font-medium">{formatDate(submission.program_end_date)}</p>
+            </div>
+          )}
+          {months && (
+            <div>
+              <p className="text-xs text-muted-foreground font-semibold">{t("case.program.duration")}</p>
+              <p className="text-sm font-medium">{t("case.program.monthsCount", { count: months })}</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Accommodation */}
       {accommodationName && (
         <div className="border-t pt-4">
           <p className="text-xs text-muted-foreground font-semibold uppercase mb-2">
-            Accommodation
+            {t("case.program.accommodation")}
           </p>
           <p className="text-sm font-medium">{accommodationName}</p>
-          {submission?.accommodation_price && (
+          {submission?.accommodation_price ? (
             <p className="text-sm text-muted-foreground mt-1">
-              €{submission.accommodation_price.toLocaleString()}/month
+              €{Number(submission.accommodation_price).toLocaleString("en-US")} / {t("case.program.perMonth")}
             </p>
+          ) : null}
+        </div>
+      )}
+
+      {(insurance || submission?.insurance_price) && (
+        <div className="border-t pt-4 space-y-2">
+          <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.insurance")}</p>
+          <p className="text-sm font-medium">
+            {insurance?.name ?? t("case.program.insurance")}
+            {insurance?.provider ? ` — ${insurance.provider}` : ""}
+          </p>
+          {insurance?.coverage_scope && (
+            <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${insurance.coverage_scope}`)}</p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            {insuranceMonthly > 0 && months
+              ? t("case.program.insuranceBreakdown", {
+                  monthly: `${insuranceCurrency === "EUR" ? "€" : "₪"}${insuranceMonthly.toLocaleString("en-US")}`,
+                  months,
+                  total: `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`,
+                })
+              : `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`}
+          </p>
+          {(insurance?.min_months || insurance?.max_months || insurance?.max_age) && (
+            <p className="text-xs text-muted-foreground">
+              {insurance?.min_months && insurance?.max_months
+                ? t("admin.programs.termRange", { min: insurance.min_months, max: insurance.max_months })
+                : ""}
+              {insurance?.max_age ? ` · ${t("admin.programs.maxAgeShort", { age: insurance.max_age })}` : ""}
+            </p>
+          )}
+          {insuranceDescription && (
+            <p className="text-xs text-muted-foreground leading-relaxed">{insuranceDescription}</p>
+          )}
+          {insurance?.terms_url && (
+            <a
+              href={insurance.terms_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              {t("admin.programs.viewTerms")}
+            </a>
           )}
         </div>
       )}
 
-      {/* Insurance */}
-      {submission?.insurance_price && (
-        <div className="border-t pt-4">
-          <p className="text-xs text-muted-foreground font-semibold uppercase mb-2">
-            Insurance
-          </p>
-          <p className="text-sm font-medium">
-            €{submission.insurance_price.toLocaleString()}
-          </p>
-        </div>
+      {!programName && !accommodationName && !insurance && (
+        <p className="text-sm text-muted-foreground text-center py-6">{t("case.program.empty")}</p>
       )}
-
-      <div className="flex gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" className="flex-1">
-          Change Program
-        </Button>
-        <Button variant="outline" size="sm" className="flex-1">
-          Update Dates
-        </Button>
-      </div>
     </CardContent>
   );
 }

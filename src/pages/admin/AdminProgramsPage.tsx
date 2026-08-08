@@ -94,10 +94,36 @@ interface Insurance {
   price: number;
   currency: string;
   is_active: boolean;
+  provider?: string | null;
+  coverage_scope?: string | null;
+  billing_period?: string | null;
+  min_months?: number | null;
+  max_months?: number | null;
+  max_age?: number | null;
+  terms_url?: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
 }
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
+const COVERAGE_SCOPES = ["germany_only", "schengen", "worldwide", "worldwide_incl_usa_canada"];
+
+const emptyInsForm = {
+  name: "",
+  tier: "standard",
+  price: "",
+  currency: "EUR",
+  provider: "",
+  coverage_scope: "worldwide",
+  billing_period: "monthly",
+  min_months: "",
+  max_months: "",
+  max_age: "",
+  terms_url: "",
+  description_ar: "",
+  description_en: "",
+};
 
 // Bypass Supabase generated types for new tables/columns
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -159,7 +185,7 @@ const AdminProgramsPage = () => {
   const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
-  const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
+  const [insForm, setInsForm] = useState(emptyInsForm);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -300,12 +326,21 @@ const AdminProgramsPage = () => {
         tier: insForm.tier,
         price: Number(insForm.price) || 0,
         currency: insForm.currency,
+        provider: insForm.provider || null,
+        coverage_scope: insForm.coverage_scope || null,
+        billing_period: insForm.billing_period || "monthly",
+        min_months: insForm.min_months ? Number(insForm.min_months) : null,
+        max_months: insForm.max_months ? Number(insForm.max_months) : null,
+        max_age: insForm.max_age ? Number(insForm.max_age) : null,
+        terms_url: insForm.terms_url || null,
+        description_ar: insForm.description_ar || null,
+        description_en: insForm.description_en || null,
       };
       if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
       else await db.from("insurances").insert(payload);
       setInsOpen(false);
       setEditInsId(null);
-      setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
+      setInsForm(emptyInsForm);
       await fetchAll();
       toast({ description: editInsId ? t('admin.programs.insUpdated') : t('admin.programs.insCreated') });
     } catch (err: any) {
@@ -376,7 +411,21 @@ const AdminProgramsPage = () => {
 
   const openEditIns = (i: Insurance) => {
     setEditInsId(i.id);
-    setInsForm({ name: i.name, tier: i.tier, price: i.price.toString(), currency: i.currency });
+    setInsForm({
+      name: i.name,
+      tier: i.tier,
+      price: i.price.toString(),
+      currency: i.currency,
+      provider: i.provider ?? "",
+      coverage_scope: i.coverage_scope ?? "worldwide",
+      billing_period: i.billing_period ?? "monthly",
+      min_months: i.min_months?.toString() ?? "",
+      max_months: i.max_months?.toString() ?? "",
+      max_age: i.max_age?.toString() ?? "",
+      terms_url: i.terms_url ?? "",
+      description_ar: i.description_ar ?? "",
+      description_en: i.description_en ?? "",
+    });
     setInsOpen(true);
   };
 
@@ -1122,7 +1171,7 @@ const AdminProgramsPage = () => {
                 setInsOpen(v);
                 if (!v) {
                   setEditInsId(null);
-                  setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
+                  setInsForm(emptyInsForm);
                 }
               }}
             >
@@ -1132,7 +1181,8 @@ const AdminProgramsPage = () => {
                   {t('admin.programs.addInsurance')}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+
                 <DialogHeader>
                   <DialogTitle>{editInsId ? t('admin.programs.editInsurance') : t('admin.programs.addInsurance')}</DialogTitle>
                 </DialogHeader>
@@ -1185,6 +1235,89 @@ const AdminProgramsPage = () => {
                       </Select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelProvider')}</Label>
+                      <Input
+                        value={insForm.provider}
+                        onChange={(e) => setInsForm((f) => ({ ...f, provider: e.target.value }))}
+                        placeholder="MAWISTA"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelCoverageScope')}</Label>
+                      <Select
+                        value={insForm.coverage_scope}
+                        onValueChange={(v) => setInsForm((f) => ({ ...f, coverage_scope: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COVERAGE_SCOPES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {t(`admin.programs.coverage.${s}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMinMonths')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.min_months}
+                        onChange={(e) => setInsForm((f) => ({ ...f, min_months: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMaxMonths')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.max_months}
+                        onChange={(e) => setInsForm((f) => ({ ...f, max_months: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMaxAge')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.max_age}
+                        onChange={(e) => setInsForm((f) => ({ ...f, max_age: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelTermsUrl')}</Label>
+                    <Input
+                      value={insForm.terms_url}
+                      onChange={(e) => setInsForm((f) => ({ ...f, terms_url: e.target.value }))}
+                      placeholder="https://…"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDescAr')}</Label>
+                      <textarea
+                        dir="rtl"
+                        rows={3}
+                        className="w-full rounded-md border bg-background p-2 text-sm"
+                        value={insForm.description_ar}
+                        onChange={(e) => setInsForm((f) => ({ ...f, description_ar: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDescEn')}</Label>
+                      <textarea
+                        rows={3}
+                        className="w-full rounded-md border bg-background p-2 text-sm"
+                        value={insForm.description_en}
+                        onChange={(e) => setInsForm((f) => ({ ...f, description_en: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                   <Button className="w-full" onClick={saveIns} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -1214,7 +1347,32 @@ const AdminProgramsPage = () => {
                     <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                       💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
                     </span>
+                    {ins.provider && (
+                      <p className="text-xs text-muted-foreground">{ins.provider}</p>
+                    )}
+                    {ins.coverage_scope && (
+                      <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${ins.coverage_scope}`)}</p>
+                    )}
+                    {(ins.min_months || ins.max_months || ins.max_age) && (
+                      <p className="text-xs text-muted-foreground">
+                        {ins.min_months && ins.max_months
+                          ? t('admin.programs.termRange', { min: ins.min_months, max: ins.max_months })
+                          : null}
+                        {ins.max_age ? ` · ${t('admin.programs.maxAgeShort', { age: ins.max_age })}` : null}
+                      </p>
+                    )}
+                    {ins.terms_url && (
+                      <a
+                        href={ins.terms_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block text-xs font-medium text-primary underline"
+                      >
+                        {t('admin.programs.viewTerms')}
+                      </a>
+                    )}
                   </div>
+
                   <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditIns(ins)}>
                       <Pencil className="h-3 w-3" />

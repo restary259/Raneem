@@ -474,7 +474,33 @@
       "typeLanguageSchool": "مدرسة لغة",
       "typeCourse": "دورة",
       "typeUniversity": "جامعة",
-      "typeOther": "أخرى"
+      "typeOther": "أخرى",
+      "labelProvider": "مزوّد التأمين",
+      "labelCoverageScope": "نطاق التغطية",
+      "labelMinMonths": "أقل مدة (أشهر)",
+      "labelMaxMonths": "أقصى مدة (أشهر)",
+      "labelMaxAge": "الحد الأقصى للسن",
+      "labelTermsUrl": "رابط شروط الوثيقة",
+      "labelDescAr": "الوصف (عربي)",
+      "labelDescEn": "الوصف (إنجليزي)",
+      "viewTerms": "عرض الشروط",
+      "termRange": "المدة: {{min}}–{{max}} شهرًا",
+      "maxAgeShort": "حتى سن {{age}}",
+      "coverage": {
+        "germany_only": "داخل ألمانيا فقط",
+        "schengen": "منطقة شنغن",
+        "worldwide": "تغطية عالمية",
+        "worldwide_incl_usa_canada": "عالمية شاملة أمريكا وكندا"
+      },
+      "labelPriceTiers": "شرائح التسعير",
+      "priceTiersHint": "حدّد السعر حسب عدد الأشهر. اترك خانة \"إلى\" فارغة لشريحة مفتوحة.",
+      "noPriceTiers": "لا توجد شرائح — سيتم استخدام السعر الأساسي.",
+      "addTier": "إضافة شريحة",
+      "removeTier": "حذف الشريحة",
+      "labelTierFrom": "من (شهر)",
+      "labelTierTo": "إلى (شهر)",
+      "labelTierPrice": "السعر",
+      "tierOpenEnded": "فما فوق"
     },
     "submissions": {
       "title": "الطلبات المقدمة",
@@ -2305,7 +2331,8 @@
       "student": "الطالب",
       "program": "البرنامج",
       "financial": "المالية",
-      "activity": "النشاط"
+      "activity": "النشاط",
+      "messages": "المراسلات"
     },
     "stage": {
       "advance": "الانتقال إلى المرحلة التالية",
@@ -2365,6 +2392,34 @@
       "blocked": "أكّد الدفع وارفع جواز السفر أولاً",
       "success": "تم الإرسال إلى الإدارة للمراجعة",
       "changesRequested": "الإدارة طلبت تعديلات"
+    },
+    "program": {
+      "program": "البرنامج",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "duration": "المدة",
+      "monthsCount": "{{count}} شهر",
+      "accommodation": "السكن",
+      "perMonth": "شهريًا",
+      "insurance": "التأمين الصحي",
+      "insuranceBreakdown": "{{monthly}} شهريًا × {{months}} شهر = {{total}}",
+      "empty": "لم يتم اختيار برنامج أو سكن أو تأمين بعد."
+    },
+    "messages": {
+      "title": "المراسلات",
+      "empty": "لا توجد رسائل بعد. ابدأ المحادثة.",
+      "placeholder": "اكتب رسالتك…",
+      "send": "إرسال",
+      "internal": "ملاحظة داخلية",
+      "shared": "مرئية للطالب",
+      "internalHint": "هذه الملاحظة يراها فريق درب فقط ولا يراها الطالب.",
+      "sharedHint": "سيتم إشعار الطالب بهذه الرسالة.",
+      "studentHint": "رسالتك تصل إلى المستشار المسؤول عن ملفك.",
+      "role": {
+        "admin": "الإدارة",
+        "team_member": "المستشار",
+        "student": "الطالب"
+      }
     }
   },
   "partner": {
