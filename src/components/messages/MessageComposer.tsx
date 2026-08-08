@@ -265,7 +265,7 @@ export default function MessageComposer({
   return (
     <div
       className={cn(
-        "space-y-1.5 border-t bg-card px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+        "space-y-2 border-t bg-card px-3 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-3",
         dragging && "bg-primary/5 ring-1 ring-inset ring-primary",
       )}
       onDragOver={(e) => {
@@ -332,7 +332,7 @@ export default function MessageComposer({
         </ul>
       )}
 
-      <div className="relative">
+      <div className="relative rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
         {mentionMatches.length > 0 && (
           <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
             {mentionMatches.map((person) => (
@@ -523,7 +523,7 @@ export default function MessageComposer({
           </DropdownMenu>
 
           {kind === "request" && (
-            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900">
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900 dark:bg-sky-500/20 dark:text-sky-200">
               {t("chat.request.badge")}
             </span>
           )}

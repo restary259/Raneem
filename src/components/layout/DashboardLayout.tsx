@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,6 +16,7 @@ import NotificationBell from "@/components/common/NotificationBell";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import ThemeToggle from "@/components/common/ThemeToggle";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
@@ -215,6 +217,16 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const canMessage = role === "admin" || role === "team_member";
   const headerUnread = useUnreadCaseMessages(canMessage);
   const messagesHref = role === "admin" ? "/admin/messages" : "/team/messages";
+  const { resolvedTheme } = useTheme();
+
+  /* Dark mode is a dashboard-only affordance: the public site stays light. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", resolvedTheme === "dark");
+    return () => root.classList.remove("dark");
+  }, [resolvedTheme]);
+
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -234,6 +246,8 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
+              <ThemeToggle />
+
               {canMessage && (
                 <TooltipProvider>
                   <Tooltip>

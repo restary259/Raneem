@@ -26,6 +26,13 @@ export function useUnreadCaseMessages(enabled = true): number {
     load();
   }, [load]);
 
+  /* Reading a thread dispatches this so the badge clears without a round trip. */
+  useEffect(() => {
+    const onRead = () => load();
+    window.addEventListener("darb:threads-read", onRead);
+    return () => window.removeEventListener("darb:threads-read", onRead);
+  }, [load]);
+
   useEffect(() => {
     if (!enabled || !user?.id) return;
     const channel = supabase
@@ -37,11 +44,17 @@ export function useUnreadCaseMessages(enabled = true): number {
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () =>
         load(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "direct_thread_participants" },
+        () => load(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [enabled, user?.id, load]);
+
 
   return count;
 }

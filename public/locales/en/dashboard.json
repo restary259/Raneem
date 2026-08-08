@@ -3322,5 +3322,9 @@
     "inviteMissing": "No recruit link yet",
     "recruitTitle": "Recruit link",
     "recruitHint": "Share this link to recruit partners into your network."
+  },
+  "theme": {
+    "dark": "Dark mode",
+    "light": "Light mode"
   }
 }

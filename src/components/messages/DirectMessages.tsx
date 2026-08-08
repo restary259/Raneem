@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import PayoutRequestDialog from "@/components/messages/PayoutRequestDialog";
@@ -145,8 +146,9 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
 
 
   return (
-    <div className={className}>
+    <div className={cn("flex min-h-0 flex-col", className)}>
       <div className="min-h-0 flex-1 overflow-y-auto bg-muted/20">
+
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}

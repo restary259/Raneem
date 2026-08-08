@@ -196,7 +196,7 @@ export default function MessageList({
   let renderedDay: string | null = null;
 
   return (
-    <div className={cn("space-y-5 p-4", className)}>
+    <div className={cn("space-y-6 p-4 sm:p-5", className)}>
       {hasOlder && onLoadOlder && (
         <div className="flex justify-center">
           <Button size="sm" variant="ghost" disabled={loadingOlder} onClick={onLoadOlder}>
@@ -213,7 +213,7 @@ export default function MessageList({
         const isOnline = !!group.authorId && !!onlineUserIds?.has(group.authorId);
 
         return (
-          <div key={`${group.day}-${group.messages[0].id}`} className="space-y-2">
+          <div key={`${group.day}-${group.messages[0].id}`} className="space-y-3">
             {showDay && (
               <div className="flex items-center gap-3 py-1">
                 <span className="h-px flex-1 bg-border" />
@@ -224,7 +224,7 @@ export default function MessageList({
               </div>
             )}
 
-            <div className={cn("flex gap-2", group.mine ? "flex-row-reverse" : "flex-row")}>
+            <div className={cn("flex gap-2.5", group.mine ? "flex-row-reverse" : "flex-row")}>
               <div className="relative mt-1 shrink-0">
                 <div
                   className={cn(
@@ -249,7 +249,13 @@ export default function MessageList({
                 )}
               </div>
 
-              <div className={cn("flex max-w-[78%] flex-col gap-1", group.mine && "items-end")}>
+              <div
+                className={cn(
+                  "flex min-w-0 max-w-[85%] flex-col gap-1.5 sm:max-w-[75%]",
+                  group.mine && "items-end",
+                )}
+              >
+
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="font-semibold text-foreground">
                     {adminAlias && group.authorRole === "admin"
@@ -267,12 +273,14 @@ export default function MessageList({
                   <div
                     key={m.id}
                     className={cn(
-                      "space-y-2 rounded-2xl border px-3.5 py-2.5 shadow-sm",
+                      "w-fit max-w-full space-y-2 overflow-hidden break-words rounded-2xl border px-3.5 py-2.5 shadow-sm",
                       group.mine
                         ? "rounded-ee-sm border-primary/25 bg-primary/10"
                         : "rounded-es-sm border-border bg-card",
-                      m.visibility === "internal" && "border-amber-300/70 bg-amber-50",
-                      m.kind === "request" && "border-sky-300/70 bg-sky-50",
+                      m.visibility === "internal" &&
+                        "border-amber-300/70 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10",
+                      m.kind === "request" &&
+                        "border-sky-300/70 bg-sky-50 dark:border-sky-500/40 dark:bg-sky-500/10",
                     )}
                   >
                     {(m.visibility === "internal" || m.kind === "request") && (
@@ -280,8 +288,9 @@ export default function MessageList({
                         {m.visibility === "internal" && (
                           <Badge
                             variant="outline"
-                            className="gap-1 border-amber-400 bg-amber-100 text-[11px] text-amber-900"
+                            className="gap-1 border-amber-400 bg-amber-100 text-[11px] text-amber-900 dark:border-amber-500/50 dark:bg-amber-500/20 dark:text-amber-200"
                           >
+
                             <Lock className="h-3 w-3" />
                             {t("case.messages.internal")}
                           </Badge>

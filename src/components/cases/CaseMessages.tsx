@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import {
@@ -139,9 +140,9 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   };
 
   return (
-    <div className={className}>
+    <div className={cn("flex min-h-0 flex-col", className)}>
       {role === "admin" && messages.length > 0 && (
-        <div className="flex justify-end border-b bg-background px-3 py-1.5">
+        <div className="flex shrink-0 justify-end border-b bg-background px-3 py-1.5">
           <button
             type="button"
             onClick={handleClearThread}
@@ -151,7 +152,13 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           </button>
         </div>
       )}
-      <div className="max-h-[460px] overflow-y-auto bg-muted/20">
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto bg-muted/20",
+          !className && "max-h-[460px]",
+        )}
+      >
+
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}
