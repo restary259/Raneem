@@ -234,17 +234,18 @@ export default function PartnerEarningsPage() {
           <DollarSign className="h-6 w-6 text-primary" />
           {t("partner.earningsTitle")}
         </h1>
-        {/* Request Payout CTA */}
+        {/* Payout is requested inside the Administration chat. */}
         {canRequestPayout && (
-          <Button
-            onClick={() => setShowPayoutDialog(true)}
-            className="gap-2 shrink-0"
-            size="sm"
-          >
-            <Send className="h-4 w-4" />
-            {isAr ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")}` : `Request Payout ₪${unlockedAmount.toLocaleString("en-US")}`}
+          <Button asChild className="gap-2 shrink-0" size="sm">
+            <Link to="/partner/messages">
+              <Send className="h-4 w-4" />
+              {isAr
+                ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")} عبر المحادثة`
+                : `Request payout ₪${unlockedAmount.toLocaleString("en-US")} in chat`}
+            </Link>
           </Button>
         )}
+
         {lockedPending.length > 0 && !canRequestPayout && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-full px-3 py-1.5">
             <Lock className="h-3.5 w-3.5" />
