@@ -15,6 +15,7 @@ import NotificationBell from "@/components/common/NotificationBell";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import ThemeToggle from "@/components/common/ThemeToggle";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
