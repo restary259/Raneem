@@ -40,9 +40,16 @@ export const INVOICE_CATEGORIES = [
   "other",
 ] as const;
 
-export function invoiceTotal(items: Pick<InvoiceItem, "amount" | "quantity">[]): number {
-  return items.reduce((sum, it) => sum + Number(it.amount || 0) * Number(it.quantity || 0), 0);
+export function invoiceTotal(
+  items: Pick<InvoiceItem, "amount" | "quantity" | "discount">[],
+): number {
+  return items.reduce(
+    (sum, it) =>
+      sum + Number(it.amount || 0) * Number(it.quantity || 0) - Number(it.discount || 0),
+    0,
+  );
 }
+
 
 export function useInvoices(caseId: string | undefined) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
