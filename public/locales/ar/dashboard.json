@@ -1090,7 +1090,19 @@
       "noOpenRequests": "لا توجد طلبات مفتوحة",
       "payoutHistory": "سجل الصرف",
       "markTransferred": "تأكيد التحويل",
-      "otherRequestsHint": "تتم مراجعة طلبات صرف السفراء والطلاب هنا — وهي ليست جزءاً من دليل الشركاء."
+      "otherRequestsHint": "تتم مراجعة طلبات صرف السفراء والطلاب هنا — وهي ليست جزءاً من دليل الشركاء.",
+      "masterBadge": "شريك رئيسي",
+      "recruitedBy": "تم تجنيده بواسطة",
+      "filterMaster": "الشركاء الرئيسيون",
+      "colRecruited": "المجنّدون",
+      "colOverride": "عمولة الشبكة",
+      "masterToggle": "شريك رئيسي",
+      "masterToggleHint": "ترقية دور فقط — الأرباح ورمز الإحالة وسجل الصرف تبقى كما هي.",
+      "networkTitle": "الشبكة المجنّدة",
+      "networkEmpty": "لا يوجد شركاء مجنّدون بعد",
+      "attachPartner": "إضافة شريك إلى هذه الشبكة",
+      "noAttachable": "لا يوجد شركاء متاحون",
+      "detachPartner": "إزالة"
     },
     "authFailures": {
       "title": "إخفاقات الصلاحيات",
@@ -1282,7 +1294,8 @@
     "caseReference": "رقم الملف",
     "showMore": "عرض المزيد",
     "archived": "مؤرشف",
-    "back": "رجوع"
+    "back": "رجوع",
+    "copy": "نسخ"
   },
   "funnel": {
     "new": "عميل جديد",
@@ -2102,7 +2115,9 @@
       "setup": "الإعدادات",
       "comms": "المراسلات"
     },
-    "nextSteps": "الخطوات التالية"
+    "nextSteps": "الخطوات التالية",
+    "network": "شبكتي",
+    "performance": "أداء الشبكة"
   },
   "case": {
     "status": {
@@ -3254,6 +3269,31 @@
       "button": "مسح المحادثة",
       "confirm": "حذف جميع الرسائل في محادثة هذه الحالة؟",
       "done": "تم حذف {{count}} رسالة"
+    }
+  },
+  "master": {
+    "networkTitle": "شبكتي",
+    "networkSubtitle": "الشركاء الذين جنّدتهم والعمولة الإضافية التي يحققونها.",
+    "kpiPartners": "شركاء مجنّدون",
+    "kpiStudents": "طلاب الشبكة",
+    "kpiOverride": "عمولة الشبكة المحققة",
+    "inviteTitle": "رابط التجنيد",
+    "inviteLabel": "تجنيد شركاء",
+    "inviteHint": "شارك هذا الرابط مع الشركاء الذين تريد تجنيدهم. الطلبات عبره تُضاف إلى شبكتك بعد موافقة درب.",
+    "createInvite": "إنشاء رابط تجنيد",
+    "partnersTitle": "الشركاء المجنّدون",
+    "noPartners": "لا يوجد شركاء مجنّدون بعد",
+    "colStudents": "الطلاب",
+    "colPaid": "حالات مدفوعة",
+    "announceTitle": "إعلان لشبكتي",
+    "announcePlaceholder": "اكتب تحديثاً قصيراً لشركائك…",
+    "announceSend": "إرسال الإعلان",
+    "announceSent": "تم إرسال الإعلان",
+    "performanceTitle": "أداء الشبكة",
+    "perPartner": "لكل شريك",
+    "status": {
+      "active": "نشط",
+      "pending": "قيد الانتظار"
     }
   }
 }

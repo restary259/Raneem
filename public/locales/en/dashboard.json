@@ -1072,7 +1072,19 @@
       "noOpenRequests": "No open requests",
       "payoutHistory": "Payout history",
       "markTransferred": "Mark transferred",
-      "otherRequestsHint": "Ambassador and student payout requests are reviewed here — they are not part of the partner directory."
+      "otherRequestsHint": "Ambassador and student payout requests are reviewed here — they are not part of the partner directory.",
+      "masterBadge": "Master",
+      "recruitedBy": "Recruited by",
+      "filterMaster": "Master partners",
+      "colRecruited": "Recruited",
+      "colOverride": "Network override",
+      "masterToggle": "Master partner",
+      "masterToggleHint": "Role upgrade only — earnings, referral code and payout history stay exactly as they are.",
+      "networkTitle": "Recruited network",
+      "networkEmpty": "No recruited partners yet",
+      "attachPartner": "Attach a partner to this network",
+      "noAttachable": "No available partners",
+      "detachPartner": "Remove"
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -1264,7 +1276,8 @@
     "caseReference": "Case reference",
     "showMore": "Show more",
     "archived": "Archived",
-    "back": "Back"
+    "back": "Back",
+    "copy": "Copy"
   },
   "funnel": {
     "new": "Lead Submitted",
@@ -2084,7 +2097,9 @@
       "setup": "Setup",
       "comms": "Communication"
     },
-    "nextSteps": "Next Steps"
+    "nextSteps": "Next Steps",
+    "network": "My network",
+    "performance": "Network performance"
   },
   "case": {
     "status": {
@@ -3236,6 +3251,31 @@
       "button": "Clear thread",
       "confirm": "Delete all messages in this case thread?",
       "done": "{{count}} messages deleted"
+    }
+  },
+  "master": {
+    "networkTitle": "My network",
+    "networkSubtitle": "Partners you recruited and the override they generate.",
+    "kpiPartners": "Recruited partners",
+    "kpiStudents": "Network students",
+    "kpiOverride": "Network override earned",
+    "inviteTitle": "Recruiting link",
+    "inviteLabel": "Recruit partners",
+    "inviteHint": "Share this link with partners you want to recruit. Applications through it are attached to your network after Darb approves them.",
+    "createInvite": "Create recruiting link",
+    "partnersTitle": "Recruited partners",
+    "noPartners": "No recruited partners yet",
+    "colStudents": "Students",
+    "colPaid": "Paid cases",
+    "announceTitle": "Announce to my network",
+    "announcePlaceholder": "Write a short update for your partners…",
+    "announceSend": "Send announcement",
+    "announceSent": "Announcement sent",
+    "performanceTitle": "Network performance",
+    "perPartner": "Per partner",
+    "status": {
+      "active": "Active",
+      "pending": "Pending"
     }
   }
 }

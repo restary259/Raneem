@@ -52,10 +52,28 @@ const RegistrationForm = () => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      // A master partner's recruiting link carries ?ref=CODE — resolve it so the
+      // application records who recruited this applicant.
+      const refCode = new URLSearchParams(window.location.search).get('ref');
+      let recruiter: { partner_id: string; partner_name: string } | null = null;
+      if (refCode) {
+        const { data } = await (supabase as any).rpc('resolve_partner_link', { p_code: refCode });
+        const row = Array.isArray(data) ? data[0] : null;
+        if (row?.purpose === 'recruit') {
+          recruiter = { partner_id: row.partner_id, partner_name: row.partner_name };
+        }
+      }
+
       // Store first: an application must survive an email delivery failure.
       const { error: insertError } = await (supabase as any)
         .from('contact_submissions')
-        .insert({ form_source: 'partnership', data: values, status: 'new' });
+        .insert({
+          form_source: 'partnership',
+          data: recruiter
+            ? { ...values, recruited_by_code: refCode, recruited_by_id: recruiter.partner_id, recruited_by_name: recruiter.partner_name }
+            : values,
+          status: 'new',
+        });
       if (insertError) throw new Error(insertError.message);
 
       // Note: no email notification is sent — admins read applications in the admin Inbox.
