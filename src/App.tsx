@@ -197,6 +197,8 @@ const App = () => {
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
+              <Route path="messages" element={<CaseMessagesInboxPage />} />
+
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
