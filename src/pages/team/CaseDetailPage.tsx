@@ -189,6 +189,43 @@ export default function CaseDetailPage() {
     }
   };
 
+  const hasPassport = documents.some((d) => d.category === "passport");
+  const canSubmitToAdmin =
+    canManage &&
+    !!submission &&
+    !!submission.payment_confirmed &&
+    hasPassport &&
+    caseData?.status !== "submitted" &&
+    caseData?.status !== "payment_confirmed" &&
+    caseData?.status !== "enrollment_paid";
+
+  const handleSubmitToAdmin = async () => {
+    if (!caseData || !submission || !user) return;
+    setSubmitting(true);
+    try {
+      const now = new Date().toISOString();
+      const { error: subErr } = await supabase
+        .from("case_submissions")
+        .update({ submitted_at: now, submitted_by: user.id, review_status: "submitted", review_note: null })
+        .eq("id", submission.id);
+      if (subErr) throw subErr;
+      const { error: caseErr } = await supabase
+        .from("cases")
+        .update({ status: "submitted" })
+        .eq("id", caseData.id);
+      if (caseErr) throw caseErr;
+      toast({ description: t("case.submit.success", "Sent to admin for review") });
+      await fetchData();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
