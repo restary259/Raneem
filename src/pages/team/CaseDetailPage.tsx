@@ -18,6 +18,8 @@ import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
 import CaseStudentTab from "@/components/cases/CaseStudentTab";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
+import CaseMessages from "@/components/cases/CaseMessages";
+
 import CaseFinance from "@/components/cases/CaseFinance";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
