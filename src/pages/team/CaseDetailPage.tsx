@@ -353,7 +353,6 @@ export default function CaseDetailPage() {
             advancing={advancing}
           />
         </div>
-        </div>
       </div>
 
       {canManage && submission?.review_status === "changes_requested" && (
