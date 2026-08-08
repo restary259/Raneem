@@ -1,17 +1,33 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FileUp, Loader2, Lock, Paperclip, Send, Users, X } from "lucide-react";
+import {
+  AlertCircle,
+  FileUp,
+  Loader2,
+  Lock,
+  Paperclip,
+  RotateCw,
+  Send,
+  Users,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
+  ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
+  MAX_ATTACHMENT_BYTES,
   formatFileSize,
   validateAttachmentFile,
   type ChatAttachment,
 } from "@/lib/chatFormat";
-import { uploadChatAttachment } from "@/services/ChatAttachmentService";
+import {
+  removeChatAttachment,
+  uploadChatAttachmentWithProgress,
+} from "@/services/ChatAttachmentService";
 
 interface MessageComposerProps {
   threadType: "case" | "direct";
@@ -28,6 +44,16 @@ interface MessageComposerProps {
   hint?: string;
 }
 
+type UploadItem = {
+  id: string;
+  file: File;
+  status: "uploading" | "done" | "error";
+  progress: number;
+  error?: string;
+  attachment?: ChatAttachment;
+  cancel?: () => void;
+};
+
 export default function MessageComposer({
   threadType,
   threadId,
@@ -43,41 +69,81 @@ export default function MessageComposer({
   const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState<"internal" | "shared">("shared");
   const [kind, setKind] = useState<"text" | "request">("text");
-  const [pending, setPending] = useState<ChatAttachment[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [items, setItems] = useState<UploadItem[]>([]);
   const [sending, setSending] = useState(false);
   const [dragging, setDragging] = useState(false);
 
-  const addFiles = async (files: FileList | File[]) => {
-    const list = Array.from(files);
-    if (list.length === 0) return;
-    setUploading(true);
-    try {
-      for (const file of list) {
-        const invalid = validateAttachmentFile(file);
-        if (invalid) {
-          toast({ variant: "destructive", description: t(`chat.attach.error.${invalid}`) });
-          continue;
+  const patch = (id: string, next: Partial<UploadItem>) =>
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...next } : it)));
+
+  const startUpload = (item: UploadItem) => {
+    const handle = uploadChatAttachmentWithProgress(threadType, threadId, item.file, (p) =>
+      patch(item.id, { progress: p }),
+    );
+    patch(item.id, { status: "uploading", progress: 0, error: undefined, cancel: handle.cancel });
+    handle.promise
+      .then((att) => patch(item.id, { status: "done", progress: 100, attachment: att }))
+      .catch((err: any) => {
+        if (err?.name === "AbortError") {
+          setItems((prev) => prev.filter((it) => it.id !== item.id));
+          return;
         }
-        const att = await uploadChatAttachment(threadType, threadId, file);
-        setPending((prev) => [...prev, att]);
-      }
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
+        patch(item.id, {
+          status: "error",
+          error: err?.message === "network" ? t("chat.attach.error.network") : err?.message,
+        });
+      });
   };
+
+  const addFiles = (files: FileList | File[]) => {
+    for (const file of Array.from(files)) {
+      const invalid = validateAttachmentFile(file);
+      if (invalid) {
+        toast({
+          variant: "destructive",
+          title: file.name,
+          description:
+            invalid === "size"
+              ? t("chat.attach.error.sizeDetail", {
+                  size: formatFileSize(file.size),
+                  max: formatFileSize(MAX_ATTACHMENT_BYTES),
+                })
+              : t("chat.attach.error.mimeDetail", { types: ALLOWED_ATTACHMENT_LABEL }),
+        });
+        continue;
+      }
+      const item: UploadItem = {
+        id: crypto.randomUUID(),
+        file,
+        status: "uploading",
+        progress: 0,
+      };
+      setItems((prev) => [...prev, item]);
+      startUpload(item);
+    }
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const removeItem = (item: UploadItem) => {
+    item.cancel?.();
+    if (item.attachment) removeChatAttachment(item.attachment.path).catch(() => undefined);
+    setItems((prev) => prev.filter((it) => it.id !== item.id));
+  };
+
+  const uploading = items.some((it) => it.status === "uploading");
+  const ready = items.filter((it) => it.status === "done" && it.attachment);
 
   const handleSend = async () => {
     const trimmed = body.trim();
-    if ((!trimmed && pending.length === 0) || sending) return;
+    if ((!trimmed && ready.length === 0) || sending || uploading) return;
     setSending(true);
     try {
-      await onSend(trimmed, pending, { visibility: allowInternal ? visibility : "shared", kind });
+      await onSend(trimmed, ready.map((it) => it.attachment!), {
+        visibility: allowInternal ? visibility : "shared",
+        kind,
+      });
       setBody("");
-      setPending([]);
+      setItems([]);
       setKind("text");
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -89,8 +155,8 @@ export default function MessageComposer({
   return (
     <div
       className={cn(
-        "space-y-2 border-t bg-background p-3",
-        dragging && "ring-2 ring-primary ring-offset-2",
+        "space-y-2 border-t bg-card px-3 py-2.5",
+        dragging && "bg-primary/5 ring-1 ring-inset ring-primary",
       )}
       onDragOver={(e) => {
         e.preventDefault();
@@ -103,34 +169,69 @@ export default function MessageComposer({
         if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
       }}
     >
-      {pending.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {pending.map((att) => (
-            <span
-              key={att.path}
-              className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1 text-xs"
+      {items.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className={cn(
+                "w-56 rounded-lg border bg-muted/40 px-2.5 py-2",
+                item.status === "error" && "border-destructive/40 bg-destructive/5",
+              )}
             >
-              <span className="max-w-[160px] truncate">{att.name}</span>
-              <span className="text-[10px] text-muted-foreground">{formatFileSize(att.size)}</span>
-              <button
-                type="button"
-                aria-label={t("chat.attach.remove")}
-                onClick={() => setPending((prev) => prev.filter((p) => p.path !== att.path))}
-              >
-                <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-              </button>
-            </span>
+              <div className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                  {item.file.name}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {formatFileSize(item.file.size)}
+                </span>
+                {item.status === "error" && (
+                  <button
+                    type="button"
+                    aria-label={t("chat.attach.retry")}
+                    onClick={() => startUpload(item)}
+                  >
+                    <RotateCw className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label={t("chat.attach.remove")}
+                  onClick={() => removeItem(item)}
+                >
+                  <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              </div>
+              {item.status === "uploading" && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Progress value={item.progress} className="h-1.5 flex-1" />
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                    {item.progress}%
+                  </span>
+                </div>
+              )}
+              {item.status === "error" && (
+                <p className="mt-1 flex items-center gap-1 text-[11px] text-destructive">
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{item.error ?? t("chat.attach.error.failed")}</span>
+                </p>
+              )}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <Textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder={kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")}
-        rows={3}
+        placeholder={
+          kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
+        }
+        rows={2}
         maxLength={5000}
         disabled={disabled}
+        className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
@@ -152,12 +253,12 @@ export default function MessageComposer({
           <Button
             type="button"
             size="sm"
-            variant="outline"
-            className="gap-1"
-            disabled={disabled || uploading}
+            variant="ghost"
+            className="gap-1 text-muted-foreground"
+            disabled={disabled}
             onClick={() => fileRef.current?.click()}
           >
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+            <Paperclip className="h-4 w-4" />
             {t("chat.attach.button")}
           </Button>
 
@@ -165,45 +266,51 @@ export default function MessageComposer({
             <Button
               type="button"
               size="sm"
-              variant={kind === "request" ? "default" : "outline"}
-              className="gap-1"
+              variant={kind === "request" ? "secondary" : "ghost"}
+              className={cn("gap-1", kind !== "request" && "text-muted-foreground")}
               onClick={() => setKind((k) => (k === "request" ? "text" : "request"))}
             >
-              <FileUp className="h-3.5 w-3.5" />
+              <FileUp className="h-4 w-4" />
               {t("chat.request.button")}
             </Button>
           )}
 
           {allowInternal && (
-            <>
-              <Button
+            <div className="flex items-center rounded-full border p-0.5">
+              <button
                 type="button"
-                size="sm"
-                variant={visibility === "shared" ? "default" : "outline"}
                 onClick={() => setVisibility("shared")}
-                className="gap-1"
+                className={cn(
+                  "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors",
+                  visibility === "shared"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent",
+                )}
               >
                 <Users className="h-3.5 w-3.5" />
                 {t("case.messages.shared")}
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                size="sm"
-                variant={visibility === "internal" ? "default" : "outline"}
                 onClick={() => setVisibility("internal")}
-                className="gap-1"
+                className={cn(
+                  "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors",
+                  visibility === "internal"
+                    ? "bg-amber-500 text-white"
+                    : "text-muted-foreground hover:bg-accent",
+                )}
               >
                 <Lock className="h-3.5 w-3.5" />
                 {t("case.messages.internal")}
-              </Button>
-            </>
+              </button>
+            </div>
           )}
         </div>
 
         <Button
           size="sm"
           onClick={handleSend}
-          disabled={disabled || sending || (!body.trim() && pending.length === 0)}
+          disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
           className="gap-1"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -211,7 +318,7 @@ export default function MessageComposer({
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-[11px] text-muted-foreground">
         {hint ??
           (allowInternal
             ? visibility === "internal"
