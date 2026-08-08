@@ -384,7 +384,7 @@ export default function CaseDetailPage() {
           <TabsContent value="finance">
             <CaseFinance
               caseId={caseData.id}
-              canManage={canManage && caseData.status !== "enrollment_paid"}
+              canManage={role === "admin" && caseData.status !== "enrollment_paid"}
               extraLines={costLines}
             />
           </TabsContent>
@@ -407,7 +407,7 @@ export default function CaseDetailPage() {
             submitting={submitting}
           />
           {showFinance && (
-            <CaseFinance caseId={caseData.id} canManage={canManage} extraLines={costLines} />
+            <CaseFinance caseId={caseData.id} canManage={role === "admin"} extraLines={costLines} />
           )}
         </>
       )}
