@@ -173,10 +173,13 @@ export default function MessageComposer({
       await onSend(trimmed, ready.map((it) => it.attachment!), {
         visibility: allowInternal ? visibility : "shared",
         kind,
+        mentions: resolveMentionIds(trimmed, mentionables),
       });
       setBody("");
       setItems([]);
       setKind("text");
+      setMentionQuery(null);
+
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
