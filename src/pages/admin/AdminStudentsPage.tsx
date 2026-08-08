@@ -157,7 +157,7 @@ const SelectiveDeleteDialog = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
           {t("admin.students.selectCategories")}
