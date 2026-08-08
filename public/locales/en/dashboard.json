@@ -2293,9 +2293,19 @@
       "advance": "Move to next stage",
       "moveTo": "Move to {{stage}}",
       "moved": "Case moved to the next stage",
-      "confirm": "Move this case to {{stage}}? The change is recorded on the timeline.",
+      "confirmTitle": "Move to {{stage}}",
+      "confirmBody": "This case moves from {{from}} to {{to}}. The change is recorded on the case timeline and is visible to the student.",
       "confirmAction": "Move",
-      "automatedHint": "The next stage happens automatically once payment or admin review completes"
+      "confirmPending": "Moving…",
+      "chooseNext": "Choose the next stage",
+      "reasonTerminal": "This case has reached the final stage.",
+      "reasonInactive": "Reopen the case before moving it forward.",
+      "reasonAutomated": "Next stage is {{stage}} — it happens automatically once {{trigger}} is recorded.",
+      "automatedTrigger": {
+        "payment_confirmed": "the payment is confirmed",
+        "submitted": "the admin review is approved",
+        "enrollment_paid": "the enrollment payment is confirmed"
+      }
     },
     "overview": {
       "notSet": "Not set yet",
