@@ -326,12 +326,21 @@ const AdminProgramsPage = () => {
         tier: insForm.tier,
         price: Number(insForm.price) || 0,
         currency: insForm.currency,
+        provider: insForm.provider || null,
+        coverage_scope: insForm.coverage_scope || null,
+        billing_period: insForm.billing_period || "monthly",
+        min_months: insForm.min_months ? Number(insForm.min_months) : null,
+        max_months: insForm.max_months ? Number(insForm.max_months) : null,
+        max_age: insForm.max_age ? Number(insForm.max_age) : null,
+        terms_url: insForm.terms_url || null,
+        description_ar: insForm.description_ar || null,
+        description_en: insForm.description_en || null,
       };
       if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
       else await db.from("insurances").insert(payload);
       setInsOpen(false);
       setEditInsId(null);
-      setInsForm({ name: "", tier: "standard", price: "", currency: "EUR" });
+      setInsForm(emptyInsForm);
       await fetchAll();
       toast({ description: editInsId ? t('admin.programs.insUpdated') : t('admin.programs.insCreated') });
     } catch (err: any) {
