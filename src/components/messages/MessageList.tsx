@@ -249,7 +249,13 @@ export default function MessageList({
                 )}
               </div>
 
-              <div className={cn("flex max-w-[78%] flex-col gap-1", group.mine && "items-end")}>
+              <div
+                className={cn(
+                  "flex min-w-0 max-w-[85%] flex-col gap-1.5 sm:max-w-[75%]",
+                  group.mine && "items-end",
+                )}
+              >
+
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="font-semibold text-foreground">
                     {adminAlias && group.authorRole === "admin"
