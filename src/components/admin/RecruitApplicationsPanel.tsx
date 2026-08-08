@@ -63,16 +63,36 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
 
   const approve = async (row: AppRow) => {
     setBusy(row.id);
-    const { data, error } = await supabase.functions.invoke("create-team-member", {
-      body: {
-        email: row.email,
-        full_name: row.full_name,
-        role: "social_media_partner",
-        master_partner_id: row.master_partner_id,
-      },
+    const { data, error } = await supabase.functions.invoke("approve-partner-recruit", {
+      body: { application_id: row.id, action: "approve" },
     });
-    if (error || !(data as any)?.user_id) {
-      setBusy(null);
+    setBusy(null);
+    if (error || !(data as any)?.success) {
+      toast({
+        variant: "destructive",
+        title: t("common.actionFailed", "Action failed"),
+        description: (data as any)?.error || error?.message || "Failed",
+      });
+      load();
+      return;
+    }
+    toast({
+      title: t("admin.recruit.approved", "Partner approved"),
+      description: (data as any).emailed
+        ? t("admin.recruit.inviteSent", "Activation email sent to {{email}}", { email: row.email })
+        : t("admin.recruit.inviteFailed", "Account created, but the activation email failed. Use “Resend invite”."),
+      variant: (data as any).emailed ? undefined : "destructive",
+    });
+    load();
+  };
+
+  const resendInvite = async (row: AppRow) => {
+    setBusy(row.id);
+    const { data, error } = await supabase.functions.invoke("approve-partner-recruit", {
+      body: { application_id: row.id, action: "resend_invite" },
+    });
+    setBusy(null);
+    if (error || !(data as any)?.emailed) {
       toast({
         variant: "destructive",
         title: t("common.actionFailed", "Action failed"),
@@ -80,21 +100,11 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
       });
       return;
     }
-    const { error: linkError } = await (supabase as any).rpc("approve_recruit_application", {
-      p_id: row.id,
-      p_user_id: (data as any).user_id,
-    });
-    setBusy(null);
-    if (linkError) {
-      toast({ variant: "destructive", title: t("common.actionFailed", "Action failed"), description: linkError.message });
-      return;
-    }
     toast({
-      title: t("admin.recruit.approved", "Partner approved"),
-      description: `${row.email}${(data as any).temp_password ? ` · ${(data as any).temp_password}` : ""}`,
+      title: t("admin.recruit.inviteSent", "Activation email sent to {{email}}", { email: row.email }),
     });
-    load();
   };
+
 
   const reject = async (row: AppRow) => {
     setBusy(row.id);
