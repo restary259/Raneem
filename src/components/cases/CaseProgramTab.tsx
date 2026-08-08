@@ -99,14 +99,20 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
     );
   }
 
-  const months = monthsBetween(submission?.program_start_date, submission?.program_end_date);
-  const insuranceMonthly = insurance?.price ?? 0;
-  const insuranceTotal =
-    insurance && months && insurance.billing_period === "monthly"
-      ? insuranceMonthly * months
-      : submission?.insurance_price ?? insuranceMonthly;
+  const studentAge = ageFromDob(studentDob);
+  const cost = computeInsuranceCost(
+    insurance,
+    studentAge,
+    submission?.program_start_date,
+    submission?.program_end_date,
+  );
+  const months = cost.months;
+  const insuranceMonthly = cost.monthly;
+  const insuranceTotal = cost.total ?? (submission?.insurance_price || null);
   const insuranceCurrency = insurance?.currency ?? "EUR";
+  const symbol = insuranceCurrency === "EUR" ? "€" : "₪";
   const insuranceDescription = insurance ? (isAr ? insurance.description_ar : insurance.description_en) : null;
+
 
   return (
     <CardContent className="space-y-6 pt-6">
