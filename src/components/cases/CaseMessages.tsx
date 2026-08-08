@@ -83,13 +83,14 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
 
   return (
     <div className={className}>
-      <div className="max-h-[460px] overflow-y-auto">
+      <div className="max-h-[460px] overflow-y-auto bg-muted/20">
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}
           loading={loading}
           emptyLabel={t("case.messages.empty")}
           canFulfilRequests
+          onlineUserIds={online}
           onFulfilRequest={(m) => {
             setFulfilTarget(m);
             fulfilRef.current?.click();
@@ -111,9 +112,13 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
         allowRequests={allowInternal}
         onSend={async (body, attachments, opts) => {
           await sendCaseMessage(caseId, body, opts.visibility, attachments, opts.kind);
+          if (opts.visibility !== "internal") {
+            void notifyNewMessageEmail({ threadType: "case", threadId: caseId, preview: body });
+          }
           await load();
         }}
       />
     </div>
   );
 }
+
