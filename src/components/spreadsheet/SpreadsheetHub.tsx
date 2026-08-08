@@ -67,6 +67,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'accommodation_price', label: c('accommodationCost'), type: 'currency', currency: 'EUR', total: true },
         { key: 'insurance_price', label: c('insuranceCost'), type: 'currency', currency: 'EUR', total: true },
         { key: 'total', label: c('totalCost'), type: 'currency', currency: 'EUR', total: true },
+        { key: 'service_fee', label: c('serviceFee'), type: 'currency', currency: 'ILS', total: true },
       ],
     };
 

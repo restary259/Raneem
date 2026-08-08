@@ -21,6 +21,32 @@ const throwIf = (error: any) => {
 
 /* ---------------------------------- Students --------------------------------- */
 
+/** Snapshot price first, catalog price as fallback for rows saved before pricing existed. */
+const priceOf = (snapshot: unknown, catalog: unknown): number => {
+  const snap = Number(snapshot ?? 0);
+  if (snap > 0) return snap;
+  return Number(catalog ?? 0) || 0;
+};
+
+/**
+ * Agency (shekel) fee per case. The submission column is frequently 0 because
+ * the fee lives on `case_services`, so the service lines are the source of
+ * truth and the submission column is only a fallback.
+ */
+const serviceFeeByCase = async (caseIds: string[]): Promise<Record<string, number>> => {
+  const map: Record<string, number> = {};
+  if (caseIds.length === 0) return map;
+  const { data } = await (supabase as any)
+    .from('case_services')
+    .select('case_id, unit_price, quantity, discount')
+    .in('case_id', caseIds);
+  (data || []).forEach((s: any) => {
+    const line = Number(s.unit_price ?? 0) * Number(s.quantity ?? 1) - Number(s.discount ?? 0);
+    map[s.case_id] = (map[s.case_id] ?? 0) + line;
+  });
+  return map;
+};
+
 export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
   const staff = await staffNameMap();
 
@@ -31,9 +57,9 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
       case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id),
-      program:programs(name_en),
-      accommodation:accommodations(name_en),
-      insurance:insurances(name)
+      program:programs(name_en, name_ar, price),
+      accommodation:accommodations(name_en, name_ar, price),
+      insurance:insurances(name, price)
     `)
     .is('deleted_at', null);
 
@@ -42,8 +68,16 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
   const { data, error } = await query;
   throwIf(error);
 
-  return (data || []).map((s: any) => {
+  const rows = data || [];
+  const fees = await serviceFeeByCase(
+    Array.from(new Set(rows.map((s: any) => s.case?.id).filter(Boolean))) as string[],
+  );
+
+  return rows.map((s: any) => {
     const extra = s.extra_data ?? {};
+    const programPrice = priceOf(s.program_price, s.program?.price);
+    const accommodationPrice = priceOf(s.accommodation_price, s.accommodation?.price);
+    const insurancePrice = priceOf(s.insurance_price, s.insurance?.price);
     return {
       id: s.id,
       case_reference: s.case?.case_reference ?? null,
@@ -54,16 +88,18 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       team_member: staff[s.case?.assigned_to]?.name ?? null,
       partner: staff[s.case?.partner_id]?.name ?? null,
       school_name: extra.school_name ?? null,
-      program_name: s.program?.name_en ?? null,
-      accommodation_name: s.accommodation?.name_en ?? null,
+      program_name: s.program?.name_en ?? s.program?.name_ar ?? null,
+      accommodation_name: s.accommodation?.name_en ?? s.accommodation?.name_ar ?? null,
       insurance_name: s.insurance?.name ?? null,
       intake_month: extra.start_month ?? (s.program_start_date ? s.program_start_date.slice(0, 7) : null),
       course_start: s.program_start_date,
       course_end: s.program_end_date,
-      program_price: s.program_price ?? 0,
-      accommodation_price: s.accommodation_price ?? 0,
-      insurance_price: s.insurance_price ?? 0,
-      total: (s.program_price ?? 0) + (s.accommodation_price ?? 0) + (s.insurance_price ?? 0),
+      program_price: programPrice,
+      accommodation_price: accommodationPrice,
+      insurance_price: insurancePrice,
+      // Euro school costs only — the agency fee is billed separately in shekels.
+      total: programPrice + accommodationPrice + insurancePrice,
+      service_fee: fees[s.case?.id] ?? Number(s.service_fee ?? 0) ?? 0,
     };
   });
 };
