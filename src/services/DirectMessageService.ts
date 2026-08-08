@@ -117,7 +117,10 @@ export async function markDirectThreadRead(threadId: string): Promise<void> {
     p_thread_id: threadId,
   });
   if (error) throw error;
+  // Let the header/sidebar badges drop immediately instead of waiting on realtime.
+  window.dispatchEvent(new Event("darb:threads-read"));
 }
+
 
 export async function getDirectLastRead(
   threadId: string,
