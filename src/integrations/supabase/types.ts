@@ -402,8 +402,11 @@ export type Database = {
           case_id: string
           created_at: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
           kind: string
+          mentions: string[]
+          original_body: string | null
           request_status: string | null
           visibility: string
         }
@@ -416,8 +419,11 @@ export type Database = {
           case_id: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           kind?: string
+          mentions?: string[]
+          original_body?: string | null
           request_status?: string | null
           visibility?: string
         }
@@ -430,8 +436,11 @@ export type Database = {
           case_id?: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           kind?: string
+          mentions?: string[]
+          original_body?: string | null
           request_status?: string | null
           visibility?: string
         }
@@ -1026,8 +1035,11 @@ export type Database = {
           body: string
           created_at: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
           kind: string
+          mentions: string[]
+          original_body: string | null
           request_status: string | null
           thread_id: string
         }
@@ -1039,8 +1051,11 @@ export type Database = {
           body: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           kind?: string
+          mentions?: string[]
+          original_body?: string | null
           request_status?: string | null
           thread_id: string
         }
@@ -1052,8 +1067,11 @@ export type Database = {
           body?: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           kind?: string
+          mentions?: string[]
+          original_body?: string | null
           request_status?: string | null
           thread_id?: string
         }
@@ -3183,6 +3201,14 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      edit_case_message: {
+        Args: { p_body: string; p_message_id: string }
+        Returns: undefined
+      }
+      edit_direct_message: {
+        Args: { p_body: string; p_message_id: string }
+        Returns: undefined
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -3298,6 +3324,14 @@ export type Database = {
           id: string
           is_manager: boolean
           role: string
+        }[]
+      }
+      get_thread_read_state: {
+        Args: { p_id: string; p_kind: string }
+        Returns: {
+          full_name: string
+          last_read_at: string
+          user_id: string
         }[]
       }
       has_permission: {
