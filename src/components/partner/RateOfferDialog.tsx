@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Handshake, Loader2 } from "lucide-react";
+import { Loader2, SlidersHorizontal } from "lucide-react";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
@@ -21,7 +21,8 @@ interface Props {
   onSent: () => void;
 }
 
-/** Master partner proposes a lower per-case rate to a partner he recruited. */
+/** Master partner directly sets the per-case rate for a partner he recruited.
+ *  Terms are agreed offline in the signed contract, so no approval round-trip. */
 export default function RateOfferDialog({
   partnerId, partnerName, poolAmount, currentPartnerAmount, onSent,
 }: Props) {
@@ -51,7 +52,7 @@ export default function RateOfferDialog({
     }
     setOpen(false);
     setNote("");
-    toast({ title: t("master.offerSent", "Offer sent for approval") });
+    toast({ title: t("master.rateApplied", "Rate updated") });
     onSent();
   };
 
@@ -59,15 +60,15 @@ export default function RateOfferDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-1.5">
-          <Handshake className="h-3.5 w-3.5" />
-          {t("master.negotiate", "Negotiate rate")}
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          {t("master.setRate", "Set rate")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("master.offerTitle", "Rate offer")} — {partnerName}</DialogTitle>
+          <DialogTitle>{t("master.rateTitle", "Set partner rate")} — {partnerName}</DialogTitle>
           <DialogDescription>
-            {t("master.offerDesc", "The partner must accept this offer before it takes effect. Darb's total cost per case does not change.")}
+            {t("master.rateDesc", "This rate applies immediately to future cases, per your signed agreement. Darb's total cost per case does not change.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +113,7 @@ export default function RateOfferDialog({
           <Button variant="ghost" onClick={() => setOpen(false)}>{t("common.cancel", "Cancel")}</Button>
           <Button onClick={send} disabled={!valid || saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-            {t("master.offerSend", "Send offer")}
+            {t("master.rateSave", "Apply rate")}
           </Button>
         </DialogFooter>
       </DialogContent>
