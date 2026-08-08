@@ -286,7 +286,7 @@ export default function CaseDetailPage() {
                 </span>
               </a>
             </Button>
-            {canManage && (
+            {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("case.header.schedule")}</span>
@@ -302,13 +302,7 @@ export default function CaseDetailPage() {
           >
             {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
           </Badge>
-          <CaseProgressRail
-            statuses={statuses}
-            currentKey={caseData.status}
-            nextStages={canManage ? nextStages : undefined}
-            onAdvance={canManage ? (key) => setPendingStage(key) : undefined}
-            advancing={advancing}
-          />
+          <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
         </div>
       </div>
 
@@ -333,15 +327,21 @@ export default function CaseDetailPage() {
         onSchedule={() => setSchedulerOpen(true)}
         onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
         onAdvance={(to) => setPendingStage(to)}
+        onConfirmPayment={() => setPaymentOpen(true)}
         onRefresh={fetchData}
         onSubmitToAdmin={handleSubmitToAdmin}
         submitting={submitting}
-        canSubmitToAdmin={!!canSubmitToAdmin}
       />
 
       {showFinance && (
-        <CaseFinance caseId={caseData.id} canManage={canManage} extraLines={costLines} />
+        <CaseFinance
+          caseId={caseData.id}
+          canManage={canManage && caseData.status !== "enrollment_paid"}
+          extraLines={costLines}
+        />
       )}
+
+
 
       {/* Modals */}
       {canManage && user && (
