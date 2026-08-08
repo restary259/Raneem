@@ -32,6 +32,7 @@ function timeAgo(date: string, t: (key: string, opts?: any) => string): string {
 
 const NotificationBell: React.FC = () => {
   const { t } = useTranslation('dashboard');
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -40,10 +41,11 @@ const NotificationBell: React.FC = () => {
   const fetchNotifications = useCallback(async (uid: string) => {
     const { data } = await (supabase as any)
       .from('notifications')
-      .select('id, title, body, is_read, created_at, source')
+      .select('id, title, body, is_read, created_at, source, link')
       .eq('user_id', uid)
       .order('created_at', { ascending: false })
       .limit(20);
+
     if (data) {
       setNotifications(data);
       setUnreadCount(data.filter((n: Notification) => !n.is_read).length);
