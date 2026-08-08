@@ -554,6 +554,33 @@ export default function CaseDetailPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!pendingStage} onOpenChange={(open) => !open && setPendingStage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("case.stage.advance", "Move to next stage")}</DialogTitle>
+            <DialogDescription>
+              {t("case.stage.confirm", {
+                stage: pendingStage
+                  ? t(
+                      `case.status.${pendingStage}`,
+                      statuses.find((s) => s.key === pendingStage)?.label_en ?? pendingStage,
+                    )
+                  : "",
+                defaultValue: "Move this case to {{stage}}? The change is recorded on the timeline.",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setPendingStage(null)} disabled={advancing}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleAdvance} disabled={advancing}>
+              {t("case.stage.confirmAction", "Move")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
