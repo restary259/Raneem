@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, User } from 'lucide-react';
+import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, MessageSquare, User } from 'lucide-react';
+import CaseMessages from '@/components/cases/CaseMessages';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -32,6 +33,7 @@ export default function StudentNextStepsPage() {
   const [fullName, setFullName] = useState('');
   const [caseStatus, setCaseStatus] = useState<string | null>(null);
   const [steps, setSteps] = useState<StepRow[]>([]);
+  const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
@@ -44,6 +46,7 @@ export default function StudentNextStepsPage() {
 
     setFullName(profile?.full_name ?? '');
     const caseId: string | null = profile?.case_id ?? profile?.linked_case_id ?? null;
+    setActiveCaseId(caseId);
 
     const next: StepRow[] = [];
 
