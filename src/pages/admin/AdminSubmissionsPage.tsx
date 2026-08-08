@@ -651,12 +651,37 @@ const AdminSubmissionsPage = () => {
                   {t("admin.submissions.openFullCase")}
                 </Button>
                 {selected.status !== "enrollment_paid" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => setShowChanges(true)}
+                      disabled={reviewing}
+                    >
+                      <Undo2 className="h-4 w-4" />
+                      {t("admin.submissions.requestChanges")}
+                    </Button>
+                    <Button
+                      className="gap-2"
+                      onClick={() => {
+                        setApproveEmail("");
+                        setShowApprove(true);
+                      }}
+                      disabled={reviewing}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("admin.submissions.approve")}
+                    </Button>
+                  </div>
+                )}
+                {selected.status !== "enrollment_paid" && (
                   <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
                     <SplitSquareHorizontal className="h-4 w-4" />
                     {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
                   </Button>
                 )}
               </div>
+
             </div>
           )}
         </DialogContent>
