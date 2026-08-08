@@ -109,9 +109,24 @@ serve(async (req) => {
 
 
 
-    // Reusable invite mail. Returns true when the message was accepted.
-    async function sendInvite(email: string, name: string, password: string | null) {
+    // Generate a short-lived, single-use password setup link. The application
+    // never emails or stores a reusable plaintext credential.
+    async function createActivationLink(email: string) {
+      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+        options: { redirectTo: "https://darb-agency.lovable.app/reset-password" },
+      });
+      if (error || !data?.properties?.action_link) {
+        throw error ?? new Error("Could not create activation link");
+      }
+      return data.properties.action_link;
+    }
+
+    // Reusable activation mail. Returns true when the message was accepted.
+    async function sendInvite(email: string, name: string) {
       try {
+        const activationUrl = await createActivationLink(email);
         const { data: caseRef } = await supabaseAdmin
           .from("cases")
           .select("case_reference")
@@ -129,9 +144,8 @@ serve(async (req) => {
             templateData: {
               studentName: name,
               email,
-              tempPassword: password,
               caseReference: caseRef?.case_reference ?? null,
-              loginUrl: "https://darb-agency.lovable.app/student-auth",
+              activationUrl,
             },
           }),
         });
@@ -143,16 +157,34 @@ serve(async (req) => {
       }
     }
 
-    // Account already linked — resend the login instructions instead.
+    // Account already linked — issue a fresh one-time activation link.
     if (caseData.student_user_id) {
-      const resent = await sendInvite(student_email, student_full_name, null);
+      const { data: linkedUser, error: linkedUserError } = await supabaseAdmin.auth.admin.getUserById(
+        caseData.student_user_id,
+      );
+      const linkedEmail = linkedUser?.user?.email;
+      if (linkedUserError || !linkedEmail) {
+        return new Response(JSON.stringify({ error: "Linked student account not found" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error: linkedRoleError } = await supabaseAdmin
+        .from("user_roles")
+        .upsert(
+          { user_id: caseData.student_user_id, role: "student" },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        );
+      if (linkedRoleError) throw linkedRoleError;
+
+      const resent = await sendInvite(linkedEmail, student_full_name);
       return new Response(
         JSON.stringify({
           success: true,
           user_id: caseData.student_user_id,
-          email: student_email,
+          email: linkedEmail,
           invited: resent,
-          message: "Student account already exists for this case",
+          message: "Student account linked and activation link sent",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -196,7 +228,7 @@ serve(async (req) => {
 
     // ── Check if auth user already exists ─────────────────────────────
     let studentId: string;
-    let tempPassword: string | null = null;
+    let accountCreated = false;
 
     const existingUsersList = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
     const existingUser = existingUsersList.data?.users?.find(
@@ -207,18 +239,17 @@ serve(async (req) => {
       // Reuse existing auth account — just link it
       studentId = existingUser.id;
     } else {
-      // Generate a secure temporary password.
-      // Format: 9 random alphanum chars + "Aa1!" suffix = always passes
-      // Supabase's default password policy (min 6 chars, mixed case, digit).
+      // The random bootstrap credential is never returned or emailed. The
+      // student chooses their own password through the one-time link below.
       const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-      tempPassword =
+      const bootstrapPassword =
         Array.from(crypto.getRandomValues(new Uint8Array(9)))
           .map((b) => alphabet[b % alphabet.length])
           .join("") + "Aa1!";
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: student_email,
-        password: tempPassword,
+        password: bootstrapPassword,
         email_confirm: true, // skip email verification — admin handles onboarding
         user_metadata: {
           full_name: student_full_name,
@@ -234,6 +265,7 @@ serve(async (req) => {
       }
 
       studentId = newUser.user.id;
+      accountCreated = true;
     }
 
     // ── Assign student role ────────────────────────────────────────────
@@ -304,7 +336,7 @@ serve(async (req) => {
           student_email,
           student_full_name,
           student_id: studentId,
-          temp_password_issued: tempPassword !== null,
+          activation_link_issued: true,
           data_exported: {
             city: !!caseData.city,
             intake_month: !!intakeMonth,
@@ -319,9 +351,7 @@ serve(async (req) => {
     }
 
     // ── Invitation email ───────────────────────────────────────────────
-    // The team member owns the invite, so the student gets their login
-    // details the moment the account is created.
-    const emailSent = await sendInvite(student_email, student_full_name, tempPassword);
+    const emailSent = await sendInvite(student_email, student_full_name);
 
 
     // ── Response ───────────────────────────────────────────────────────
@@ -330,16 +360,10 @@ serve(async (req) => {
       user_id: studentId,
       email: student_email,
       invited: emailSent,
-      message: tempPassword
-        ? "Student account created with temporary password"
-        : "Student account linked to existing user",
+      message: accountCreated
+        ? "Student account created and activation link sent"
+        : "Existing student account linked and activation link sent",
     };
-
-
-    if (tempPassword) {
-      // Only returned once — never logged
-      responsePayload.temp_password = tempPassword;
-    }
 
     return new Response(JSON.stringify(responsePayload), {
       status: 200,

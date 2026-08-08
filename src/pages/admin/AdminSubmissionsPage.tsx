@@ -368,26 +368,11 @@ const AdminSubmissionsPage = () => {
     if (!selected?.submission?.id || !changeNote.trim()) return;
     setReviewing(true);
     try {
-      const { error } = await (supabase as any)
-        .from("case_submissions")
-        .update({
-          review_status: "changes_requested",
-          reviewed_by: user?.id ?? null,
-          reviewed_at: new Date().toISOString(),
-          review_note: changeNote.trim(),
-        })
-        .eq("id", selected.submission.id);
+      const { error } = await supabase.rpc("request_case_changes", {
+        p_case_id: selected.id,
+        p_note: changeNote.trim(),
+      });
       if (error) throw error;
-
-      // Reopen the profile step so the assigned team member can actually make
-      // the change and resubmit — a note alone leaves the case stuck.
-      if (selected.status === "submitted") {
-        const { error: caseErr } = await (supabase as any)
-          .from("cases")
-          .update({ status: "profile_completion" })
-          .eq("id", selected.id);
-        if (caseErr) throw caseErr;
-      }
 
       await supabase.rpc("log_user_activity" as any, {
         p_action: "REQUEST_SUBMISSION_CHANGES",

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
+import { useAuth, ROLE_TO_PATH, type AppRole } from '@/contexts/AuthContext';
 
 const ResetPasswordPage = () => {
   const [ready, setReady]         = useState(false);
@@ -21,6 +22,7 @@ const ResetPasswordPage = () => {
   const { toast }  = useToast();
   const navigate   = useNavigate();
   const { t }      = useTranslation();
+  const { role, refreshRole } = useAuth();
 
   useEffect(() => {
     // Supabase JS automatically parses the #access_token hash from the email link
@@ -68,9 +70,19 @@ const ResetPasswordPage = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ must_change_password: false })
+          .eq('id', session.user.id);
+        if (profileError) throw profileError;
+      }
+      const { data: currentRole } = await supabase.rpc('get_my_role');
+      await refreshRole();
       toast({ title: t('resetPassword.success'), description: t('resetPassword.successDesc') });
-      await supabase.auth.signOut();
-      navigate('/student-auth');
+      const destinationRole = (currentRole as AppRole | null) ?? role;
+      navigate(destinationRole ? ROLE_TO_PATH[destinationRole] : '/student/checklist', { replace: true });
     } catch (err: any) {
       toast({ variant: 'destructive', title: t('resetPassword.error'), description: err.message });
     } finally {

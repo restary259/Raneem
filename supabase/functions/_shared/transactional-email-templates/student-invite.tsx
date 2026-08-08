@@ -16,12 +16,11 @@ import type { TemplateEntry } from './registry.ts'
 interface Props {
   studentName?: string
   email?: string
-  tempPassword?: string | null
   caseReference?: string
-  loginUrl?: string
+  activationUrl?: string
 }
 
-const Email = ({ studentName, email, tempPassword, caseReference, loginUrl }: Props) => (
+const Email = ({ studentName, email, caseReference, activationUrl }: Props) => (
   <Html lang="ar" dir="rtl">
     <Head />
     <Preview>تم إنشاء حسابك في درب — تابع ملفك الدراسي</Preview>
@@ -40,22 +39,14 @@ const Email = ({ studentName, email, tempPassword, caseReference, loginUrl }: Pr
           <Text style={boxRow}>
             <strong>البريد الإلكتروني:</strong> {email}
           </Text>
-          {tempPassword ? (
-            <Text style={boxRow}>
-              <strong>كلمة المرور المؤقتة:</strong> {tempPassword}
-            </Text>
-          ) : (
-            <Text style={boxRow}>استخدم كلمة المرور الحالية لحسابك.</Text>
-          )}
+          <Text style={boxRow}>استخدم الرابط الآمن أدناه لاختيار كلمة مرور جديدة.</Text>
         </Section>
 
-        {tempPassword ? (
-          <Text style={text}>سيُطلب منك تغيير كلمة المرور عند أول تسجيل دخول.</Text>
-        ) : null}
+        <Text style={text}>الرابط صالح للاستخدام مرة واحدة فقط. لا تشاركه مع أي شخص.</Text>
 
-        {loginUrl ? (
-          <Button style={button} href={loginUrl}>
-            تسجيل الدخول إلى حسابي
+        {activationUrl ? (
+          <Button style={button} href={activationUrl}>
+            تفعيل الحساب واختيار كلمة المرور
           </Button>
         ) : null}
 
@@ -70,14 +61,13 @@ const Email = ({ studentName, email, tempPassword, caseReference, loginUrl }: Pr
 
 export const template = {
   component: Email,
-  subject: 'حسابك في درب جاهز — بيانات الدخول',
+  subject: 'حسابك في درب جاهز — فعّل حسابك',
   displayName: 'Student account invite',
   previewData: {
     studentName: 'آدم خليل',
     email: 'student@example.com',
-    tempPassword: 'Xk7Rt9pQzAa1!',
     caseReference: 'DARB-1042',
-    loginUrl: 'https://darb-agency.lovable.app/student-auth',
+    activationUrl: 'https://darb-agency.lovable.app/reset-password',
   },
 } satisfies TemplateEntry
 
