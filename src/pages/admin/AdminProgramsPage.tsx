@@ -1181,7 +1181,8 @@ const AdminProgramsPage = () => {
                   {t('admin.programs.addInsurance')}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+
                 <DialogHeader>
                   <DialogTitle>{editInsId ? t('admin.programs.editInsurance') : t('admin.programs.addInsurance')}</DialogTitle>
                 </DialogHeader>
