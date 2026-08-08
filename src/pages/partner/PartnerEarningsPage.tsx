@@ -24,6 +24,7 @@ export default function PartnerEarningsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
   const [overrideRewards, setOverrideRewards] = useState<any[]>([]);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
 
@@ -105,6 +106,14 @@ export default function PartnerEarningsPage() {
       .eq("reward_type", "master_override")
       .order("created_at", { ascending: false });
     setOverrideRewards(overrideRows || []);
+
+    // Payout requests carry the reference number the partner quotes to Darb.
+    const { data: requestRows } = await (supabase as any)
+      .from("payout_requests")
+      .select("id,payout_reference,amount,status,requested_at,paid_at")
+      .eq("requestor_id", uid)
+      .order("requested_at", { ascending: false });
+    setMyRequests(requestRows || []);
 
     const allRewards = rewardRows || [];
     setRewards(allRewards);
