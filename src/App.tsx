@@ -218,7 +218,9 @@ const App = () => {
               <Route index element={<TeamWorkPage />} />
               <Route path="cases" element={<TeamCasesPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
+              <Route path="messages" element={<CaseMessagesInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
+
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />
               <Route path="students" element={<TeamStudentsPage />} />
