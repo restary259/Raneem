@@ -26,6 +26,9 @@ import {
   GraduationCap as School,
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
+import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
+
 
 function groupBySchool<T extends { school_id: string | null }>(
   items: T[],
@@ -103,7 +106,9 @@ interface Insurance {
   terms_url?: string | null;
   description_ar?: string | null;
   description_en?: string | null;
+  age_price_tiers?: unknown;
 }
+
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
@@ -186,6 +191,8 @@ const AdminProgramsPage = () => {
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState(emptyInsForm);
+  const [insRates, setInsRates] = useState<AgePriceTier[]>([]);
+
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -335,13 +342,16 @@ const AdminProgramsPage = () => {
         terms_url: insForm.terms_url || null,
         description_ar: insForm.description_ar || null,
         description_en: insForm.description_en || null,
+        age_price_tiers: insRates.filter((r) => r.price != null),
       };
       if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
       else await db.from("insurances").insert(payload);
       setInsOpen(false);
       setEditInsId(null);
       setInsForm(emptyInsForm);
+      setInsRates([]);
       await fetchAll();
+
       toast({ description: editInsId ? t('admin.programs.insUpdated') : t('admin.programs.insCreated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -426,8 +436,10 @@ const AdminProgramsPage = () => {
       description_ar: i.description_ar ?? "",
       description_en: i.description_en ?? "",
     });
+    setInsRates(parseAgeTiers(i.age_price_tiers));
     setInsOpen(true);
   };
+
 
   const tierColor: Record<string, string> = {
     basic: "bg-blue-100 text-blue-700",
@@ -1172,7 +1184,9 @@ const AdminProgramsPage = () => {
                 if (!v) {
                   setEditInsId(null);
                   setInsForm(emptyInsForm);
+                  setInsRates([]);
                 }
+
               }}
             >
               <DialogTrigger asChild>
@@ -1235,6 +1249,12 @@ const AdminProgramsPage = () => {
                       </Select>
                     </div>
                   </div>
+                  <InsuranceRatesEditor
+                    tiers={insRates}
+                    currency={insForm.currency}
+                    onChange={setInsRates}
+                  />
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label>{t('admin.programs.labelProvider')}</Label>
@@ -1344,9 +1364,24 @@ const AdminProgramsPage = () => {
                         </Badge>
                       </div>
                     </div>
-                    <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                      💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
-                    </span>
+                    {parseAgeTiers(ins.age_price_tiers).length > 0 ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        💰 {formatAgeLadder(
+                          parseAgeTiers(ins.age_price_tiers),
+                          ins.currency === "EUR" ? "€" : "₪",
+                          t('admin.programs.ageAndAbove'),
+                        )}
+                      </span>
+                    ) : ins.price > 0 ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        {t('admin.programs.noPriceSet')}
+                      </span>
+                    )}
+
                     {ins.provider && (
                       <p className="text-xs text-muted-foreground">{ins.provider}</p>
                     )}

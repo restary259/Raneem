@@ -56,6 +56,8 @@ const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage")
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
+const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
+
 
 // Team pages (Phase 3)
 const TeamWorkPage = lazy(() => import("./pages/team/TeamWorkPage"));
@@ -197,6 +199,8 @@ const App = () => {
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
+              <Route path="messages" element={<CaseMessagesInboxPage />} />
+
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
@@ -214,7 +218,9 @@ const App = () => {
               <Route index element={<TeamWorkPage />} />
               <Route path="cases" element={<TeamCasesPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
+              <Route path="messages" element={<CaseMessagesInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
+
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />
               <Route path="students" element={<TeamStudentsPage />} />

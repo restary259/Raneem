@@ -500,7 +500,15 @@
       "labelTierFrom": "من (شهر)",
       "labelTierTo": "إلى (شهر)",
       "labelTierPrice": "السعر",
-      "tierOpenEnded": "فما فوق"
+      "tierOpenEnded": "فما فوق",
+      "labelAgeRates": "الأسعار الشهرية حسب العمر",
+      "ageRatesHint": "حدّد القسط الشهري لكل فئة عمرية. اترك خانة \"إلى\" فارغة للفئة الأعلى.",
+      "noAgeRates": "لا توجد أسعار حسب العمر — سيتم استخدام السعر الأساسي.",
+      "labelAgeFrom": "من (العمر)",
+      "labelAgeTo": "إلى (العمر)",
+      "labelMonthlyRate": "السعر الشهري ({{currency}})",
+      "ageAndAbove": "فما فوق",
+      "noPriceSet": "لم يتم تحديد السعر بعد"
     },
     "submissions": {
       "title": "الطلبات المقدمة",
@@ -2052,6 +2060,7 @@
     "mainSite": "الموقع الرئيسي",
     "backToMainSite": "العودة إلى الموقع الرئيسي",
     "inbox": "صندوق الطلبات",
+    "messages": "المراسلات",
     "myWork": "مهامي",
     "group": {
       "work": "العمل",
@@ -2403,7 +2412,8 @@
       "perMonth": "شهريًا",
       "insurance": "التأمين الصحي",
       "insuranceBreakdown": "{{monthly}} شهريًا × {{months}} شهر = {{total}}",
-      "empty": "لم يتم اختيار برنامج أو سكن أو تأمين بعد."
+      "empty": "لم يتم اختيار برنامج أو سكن أو تأمين بعد.",
+      "ageBand": "السعر محسوب حسب عمر الطالب {{age}}"
     },
     "messages": {
       "title": "المراسلات",
@@ -2972,5 +2982,14 @@
       "partial": "مدفوع جزئياً",
       "settled": "مسدد بالكامل"
     }
+  },
+  "messagesInbox": {
+    "title": "مراسلات الملفات",
+    "subtitle": "كل المحادثات على ملفاتك، الأحدث أولاً.",
+    "searchPlaceholder": "ابحث بالاسم أو الرقم المرجعي أو النص",
+    "empty": "لا توجد محادثات بعد.",
+    "selectThread": "اختر محادثة لعرضها.",
+    "openCase": "فتح ملف الحالة",
+    "unreadTotal": "{{count}} غير مقروءة"
   }
 }

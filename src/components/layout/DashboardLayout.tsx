@@ -16,6 +16,8 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
+import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
+
 import {
   LayoutDashboard,
   GitBranch,
@@ -26,6 +28,8 @@ import {
   BarChart2,
   Activity,
   Inbox,
+  MessageSquare,
+
   Settings,
   CalendarDays,
   ClipboardList,
@@ -64,6 +68,8 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
     { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
     { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
+    { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.work" },
+
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
     { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
     { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
@@ -76,7 +82,9 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   team_member: [
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
+    { key: "nav.messages", icon: MessageSquare, href: "/team/messages" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
+
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
     { key: "nav.students", icon: GraduationCap, href: "/team/students" },
     { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
@@ -110,6 +118,8 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const items = NAV_CONFIG[role] ?? [];
+  const unreadMessages = useUnreadCaseMessages(role === "admin" || role === "team_member");
+
 
   return (
     <SidebarContent>
@@ -158,7 +168,13 @@ function SidebarNav({ role }: { role: AppRole }) {
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     {!collapsed && <span>{t(item.key, item.key)}</span>}
+                    {item.key === "nav.messages" && unreadMessages > 0 && (
+                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadMessages}
+                      </span>
+                    )}
                   </Link>
+
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </React.Fragment>

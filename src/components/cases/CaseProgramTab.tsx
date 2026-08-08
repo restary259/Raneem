@@ -4,6 +4,8 @@ import { CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
+import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+
 
 interface CaseProgramTabProps {
   submission: any;
@@ -25,15 +27,8 @@ interface InsuranceInfo {
   description_en: string | null;
 }
 
-const monthsBetween = (start?: string | null, end?: string | null) => {
-  if (!start || !end) return null;
-  const s = new Date(start);
-  const e = new Date(end);
-  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
-  const months =
-    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + (e.getDate() >= s.getDate() ? 0 : -1);
-  return months > 0 ? months : 1;
-};
+
+
 
 const formatDate = (value?: string | null) =>
   value ? new Date(value).toLocaleDateString("en-US") : "";
@@ -45,7 +40,9 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const [schoolName, setSchoolName] = useState<string | null>(null);
   const [accommodationName, setAccommodationName] = useState<string | null>(null);
   const [insurance, setInsurance] = useState<InsuranceInfo | null>(null);
+  const [studentDob, setStudentDob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -86,6 +83,16 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
         }
 
         if (insRes.data) setInsurance(insRes.data as InsuranceInfo);
+
+        if (submission.case_id) {
+          const profileRes = await (supabase as any)
+            .from("profiles")
+            .select("date_of_birth")
+            .eq("case_id", submission.case_id)
+            .maybeSingle();
+          if (profileRes?.data?.date_of_birth) setStudentDob(profileRes.data.date_of_birth);
+        }
+
       } catch (err) {
         console.error("Error fetching program details:", err);
       } finally {
@@ -104,14 +111,20 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
     );
   }
 
-  const months = monthsBetween(submission?.program_start_date, submission?.program_end_date);
-  const insuranceMonthly = insurance?.price ?? 0;
-  const insuranceTotal =
-    insurance && months && insurance.billing_period === "monthly"
-      ? insuranceMonthly * months
-      : submission?.insurance_price ?? insuranceMonthly;
+  const studentAge = ageFromDob(studentDob);
+  const cost = computeInsuranceCost(
+    insurance,
+    studentAge,
+    submission?.program_start_date,
+    submission?.program_end_date,
+  );
+  const months = cost.months;
+  const insuranceMonthly = cost.monthly;
+  const insuranceTotal = cost.total ?? (submission?.insurance_price || null);
   const insuranceCurrency = insurance?.currency ?? "EUR";
+  const symbol = insuranceCurrency === "EUR" ? "€" : "₪";
   const insuranceDescription = insurance ? (isAr ? insurance.description_ar : insurance.description_en) : null;
+
 
   return (
     <CardContent className="space-y-6 pt-6">
@@ -169,14 +182,22 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
             <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${insurance.coverage_scope}`)}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            {insuranceMonthly > 0 && months
+            {insuranceMonthly && months
               ? t("case.program.insuranceBreakdown", {
-                  monthly: `${insuranceCurrency === "EUR" ? "€" : "₪"}${insuranceMonthly.toLocaleString("en-US")}`,
+                  monthly: `${symbol}${insuranceMonthly.toLocaleString("en-US")}`,
                   months,
-                  total: `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`,
+                  total: `${symbol}${Number(insuranceTotal ?? 0).toLocaleString("en-US")}`,
                 })
-              : `${insuranceCurrency === "EUR" ? "€" : "₪"}${Number(insuranceTotal).toLocaleString("en-US")}`}
+              : insuranceTotal
+                ? `${symbol}${Number(insuranceTotal).toLocaleString("en-US")}`
+                : t("admin.programs.noPriceSet")}
           </p>
+          {cost.tier && studentAge !== null && (
+            <p className="text-xs text-muted-foreground">
+              {t("case.program.ageBand", { age: studentAge })}
+            </p>
+          )}
+
           {(insurance?.min_months || insurance?.max_months || insurance?.max_age) && (
             <p className="text-xs text-muted-foreground">
               {insurance?.min_months && insurance?.max_months

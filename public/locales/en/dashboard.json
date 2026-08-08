@@ -500,7 +500,15 @@
       "labelTierFrom": "From (month)",
       "labelTierTo": "To (month)",
       "labelTierPrice": "Price",
-      "tierOpenEnded": "and above"
+      "tierOpenEnded": "and above",
+      "labelAgeRates": "Monthly rates by age",
+      "ageRatesHint": "Set the monthly premium for each age band. Leave \"to\" empty for the top band.",
+      "noAgeRates": "No age rates — the base monthly price will be used.",
+      "labelAgeFrom": "From (age)",
+      "labelAgeTo": "To (age)",
+      "labelMonthlyRate": "Monthly rate ({{currency}})",
+      "ageAndAbove": "and above",
+      "noPriceSet": "Price not set yet"
     },
     "submissions": {
       "title": "Submitted Applications",
@@ -2034,6 +2042,7 @@
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
     "inbox": "Inbox",
+    "messages": "Messages",
     "myWork": "My work",
     "group": {
       "work": "Work",
@@ -2385,7 +2394,8 @@
       "perMonth": "month",
       "insurance": "Health insurance",
       "insuranceBreakdown": "{{monthly}}/month × {{months}} months = {{total}}",
-      "empty": "No program, accommodation or insurance selected yet."
+      "empty": "No program, accommodation or insurance selected yet.",
+      "ageBand": "Rate based on student age {{age}}"
     },
     "messages": {
       "title": "Messages",
@@ -2954,5 +2964,14 @@
       "partial": "Partially paid",
       "settled": "Settled"
     }
+  },
+  "messagesInbox": {
+    "title": "Case messages",
+    "subtitle": "All conversations across your cases, newest first.",
+    "searchPlaceholder": "Search by student, reference or text",
+    "empty": "No conversations yet.",
+    "selectThread": "Select a conversation to read it.",
+    "openCase": "Open case file",
+    "unreadTotal": "{{count}} unread"
   }
 }
