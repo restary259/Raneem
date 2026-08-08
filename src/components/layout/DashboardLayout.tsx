@@ -16,6 +16,8 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
+import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
+
 import {
   LayoutDashboard,
   GitBranch,
