@@ -398,6 +398,7 @@ const AdminProgramsPage = () => {
                 if (!v) {
                   setEditProgId(null);
                   setProgForm(emptyProgForm);
+                  setProgTiers([]);
                 }
               }}
             >
