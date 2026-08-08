@@ -236,19 +236,45 @@ const AdminCommandCenter = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: t('admin.commandCenter.viewPipeline', 'View Pipeline'), path: '/admin/pipeline' },
-          { label: t('admin.commandCenter.viewSubmissions', 'Submissions'), path: '/admin/submissions' },
-          { label: t('admin.commandCenter.manageTeam', 'Manage Team'), path: '/admin/team' },
-          { label: t('admin.commandCenter.viewFinancials', 'Financials'), path: '/admin/financials' },
-        ].map((action) => (
-          <Button key={action.path} variant="outline" className="h-auto py-3 text-sm" onClick={() => navigate(action.path)}>
-            {action.label}
-          </Button>
+      {/* Action queues */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {queues.map((q) => (
+          <Card key={q.key}>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <q.icon className={`h-4 w-4 ${q.tone}`} />
+                {q.title}
+                <Badge variant="secondary">{q.rows.length}</Badge>
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate(q.href)}>
+                {t('admin.commandCenter.viewAll', 'View all')}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {q.rows.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">{q.empty}</p>
+              ) : (
+                <div className="divide-y">
+                  {q.rows.map((row) => (
+                    <div key={row.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{row.title}</p>
+                        <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                          {row.subtitle}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => navigate(row.href)}>
+                        {t('admin.commandCenter.open', 'Open')}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         ))}
       </div>
+
     </div>
   );
 };
