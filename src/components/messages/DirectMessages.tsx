@@ -30,6 +30,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const { toast } = useToast();
   const { user, role } = useAuth();
   const isStaff = role === "admin" || role === "team_member";
+  const isPartner = role === "social_media_partner" || role === "ambassador";
   const caseLinkBase = role === "admin" ? "/admin/cases" : "/team/cases";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,8 +38,12 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const [hasOlder, setHasOlder] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [readState, setReadState] = useState<ThreadReadState[]>([]);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [preview, setPreview] = useState<PayoutPreview | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const online = useOnlineUsers();
   const { typing, notifyTyping } = useTypingIndicator("direct", threadId);
+
 
   const load = useCallback(
     async (nextLimit = limit) => {
