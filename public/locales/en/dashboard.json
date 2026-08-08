@@ -3005,8 +3005,15 @@
       "only": "Attachment",
       "error": {
         "size": "File exceeds the 15 MB limit.",
-        "mime": "File type is not supported."
-      }
+        "mime": "File type is not supported.",
+        "failed": "Upload failed",
+        "network": "Network error — check your connection",
+        "sizeDetail": "{{name}} is too large ({{size}}). Maximum is 15 MB.",
+        "mimeDetail": "{{name}} has an unsupported type. Allowed: {{allowed}}."
+      },
+      "download": "Download",
+      "loading": "Loading preview…",
+      "retry": "Retry"
     },
     "openAttachment": "Open attachment",
     "request": {
