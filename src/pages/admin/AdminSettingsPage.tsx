@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import CommissionSettingsPanel from "@/components/admin/CommissionSettingsPanel";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
+import ServiceCatalogPanel from "@/components/admin/ServiceCatalogPanel";
+
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
