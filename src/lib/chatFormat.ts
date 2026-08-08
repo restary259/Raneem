@@ -144,3 +144,24 @@ export function initials(name: string | null | undefined): string {
     .map((p) => p[0]!.toUpperCase())
     .join("");
 }
+
+export function isPdfAttachment(att: ChatAttachment): boolean {
+  return att.mime === "application/pdf";
+}
+
+/**
+ * Thread-list timestamp: time for today, weekday within the last week,
+ * short date beyond that. Always en-US so digits stay ASCII in the RTL UI.
+ */
+export function formatThreadTime(iso: string | null, now: Date = new Date()): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  if (dayKey(iso) === dayKey(now.toISOString())) return formatTime(iso);
+  const diff = now.getTime() - d.getTime();
+  if (diff < 7 * 86400000) return d.toLocaleDateString("en-US", { weekday: "short" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/** Human-readable list of the extensions users may attach. */
+export const ALLOWED_ATTACHMENT_LABEL = "PNG, JPG, WEBP, GIF, PDF, DOC(X), XLS(X), TXT";

@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2 } from 'lucide-react';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 
@@ -25,6 +26,8 @@ interface TeamMember {
   commission: number;
   /** True when the amount comes from a per-account override, not the default. */
   commissionOverridden: boolean;
+  /** Managers are visible to team members in the internal chat directory. */
+  is_manager: boolean;
 }
 
 /** Roles that get a public referral link of their own. */
@@ -59,7 +62,7 @@ const AdminTeamPage = () => {
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
       const [profilesRes, settingsRes, partnerOvRes, teamOvRes] = await Promise.all([
-        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled').in('id', userIds),
+        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_manager').in('id', userIds),
         (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate').limit(1).maybeSingle(),
         (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
         (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
@@ -91,6 +94,7 @@ const AdminTeamPage = () => {
             : profileMap[r.user_id]?.referral_code ?? null,
         commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
         commissionOverridden: overrideMap[r.user_id] !== undefined,
+        is_manager: profileMap[r.user_id]?.is_manager === true,
       }));
 
 
@@ -157,6 +161,18 @@ const AdminTeamPage = () => {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const toggleManager = async (memberId: string, next: boolean) => {
+    setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: next } : m)));
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ is_manager: next })
+      .eq('id', memberId);
+    if (error) {
+      setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: !next } : m)));
+      toast({ variant: 'destructive', description: error.message });
     }
   };
 
@@ -276,6 +292,19 @@ const AdminTeamPage = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {m.role === 'team_member' && (
+                      <label
+                        className="flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
+                        title={t('admin.team.managerHint', 'Managers are reachable by all team members in the internal chat')}
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{t('admin.team.manager', 'Manager')}</span>
+                        <Switch
+                          checked={m.is_manager}
+                          onCheckedChange={(v) => toggleManager(m.id, v)}
+                        />
+                      </label>
+                    )}
                     <Badge variant="secondary">{roleLabel(m.role)}</Badge>
                     <Badge
                       variant={m.commissionOverridden ? 'default' : 'outline'}

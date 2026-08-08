@@ -386,7 +386,9 @@
       "confirmDelete": "Delete",
       "deleteAccount": "Delete account",
       "deleteConfirmTitle": "Delete account?",
-      "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone."
+      "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
+      "manager": "Manager",
+      "managerHint": "Managers are reachable by all team members in the internal chat"
     },
     "programs": {
       "title": "Programs & Accommodations",
@@ -3005,8 +3007,15 @@
       "only": "Attachment",
       "error": {
         "size": "File exceeds the 15 MB limit.",
-        "mime": "File type is not supported."
-      }
+        "mime": "File type is not supported.",
+        "failed": "Upload failed",
+        "network": "Network error — check your connection",
+        "sizeDetail": "{{name}} is too large ({{size}}). Maximum is 15 MB.",
+        "mimeDetail": "{{name}} has an unsupported type. Allowed: {{allowed}}."
+      },
+      "download": "Download",
+      "loading": "Loading preview…",
+      "retry": "Retry"
     },
     "openAttachment": "Open attachment",
     "request": {
@@ -3022,6 +3031,17 @@
     },
     "mute": "Mute",
     "unmute": "Unmute",
-    "directHint": "Private staff conversation."
+    "directHint": "Private staff conversation.",
+    "back": "Back",
+    "presence": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "notify": {
+      "title": "Notifications",
+      "inApp": "In-app notifications",
+      "email": "Email notifications",
+      "hint": "Muted conversations never notify you, even when these are on."
+    }
   }
 }

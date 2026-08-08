@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Bell, BellOff, Loader2, MessageSquare, Plus, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  BellOff,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Search,
+  Settings2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,6 +36,15 @@ import {
   setThreadMuted,
   type CaseMessageThread,
 } from "@/services/CaseMessageService";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import {
+  getNotificationPrefs,
+  updateNotificationPrefs,
+  type NotificationPrefs,
+} from "@/services/NotificationService";
 import {
   listMyDirectThreads,
   listStaffDirectory,
@@ -55,6 +74,26 @@ export default function CaseMessagesInboxPage() {
   const [staffOpen, setStaffOpen] = useState(false);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
+  const online = useOnlineUsers();
+  const [prefs, setPrefs] = useState<NotificationPrefs>({ notify_in_app: true, notify_email: true });
+  const isRtl = document.documentElement.dir === "rtl";
+  const BackIcon = isRtl ? ArrowRight : ArrowLeft;
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getNotificationPrefs(user.id).then(setPrefs).catch(() => undefined);
+  }, [user?.id]);
+
+  const savePrefs = async (next: Partial<NotificationPrefs>) => {
+    if (!user?.id) return;
+    const merged = { ...prefs, ...next };
+    setPrefs(merged);
+    try {
+      await updateNotificationPrefs(user.id, next);
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    }
+  };
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -119,6 +158,7 @@ export default function CaseMessagesInboxPage() {
       preview: thread.lastMessage?.body || t("messagesInbox.noMessagesYet"),
       timestamp: thread.lastMessageAt,
       unread: thread.unread,
+      otherUserId: thread.otherUserId,
     }));
 
     const q = query.trim().toLowerCase();
@@ -218,6 +258,38 @@ export default function CaseMessagesInboxPage() {
               {t("messagesInbox.unreadTotal", { count: totalUnread })}
             </Badge>
           )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-1">
+                <Settings2 className="h-4 w-4" />
+                {t("chat.notify.title")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 space-y-4">
+              <p className="text-sm font-medium">{t("chat.notify.title")}</p>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="notify-in-app" className="text-sm font-normal">
+                  {t("chat.notify.inApp")}
+                </Label>
+                <Switch
+                  id="notify-in-app"
+                  checked={prefs.notify_in_app}
+                  onCheckedChange={(v) => savePrefs({ notify_in_app: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="notify-email" className="text-sm font-normal">
+                  {t("chat.notify.email")}
+                </Label>
+                <Switch
+                  id="notify-email"
+                  checked={prefs.notify_email}
+                  onCheckedChange={(v) => savePrefs({ notify_email: v })}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">{t("chat.notify.hint")}</p>
+            </PopoverContent>
+          </Popover>
           <Dialog open={staffOpen} onOpenChange={setStaffOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1" onClick={openStaffPicker}>
@@ -261,8 +333,13 @@ export default function CaseMessagesInboxPage() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[340px_1fr]">
-        <Card className="flex min-h-0 flex-col overflow-hidden">
+      <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]">
+        <Card
+          className={cn(
+            "min-h-0 flex-col overflow-hidden md:flex",
+            selected ? "hidden" : "flex",
+          )}
+        >
           <div className="space-y-2 border-b p-3">
             <div className="relative">
               <Search className="pointer-events-none absolute inset-y-0 my-auto h-4 w-4 text-muted-foreground ltr:left-2 rtl:right-2" />
@@ -304,18 +381,40 @@ export default function CaseMessagesInboxPage() {
                 selectedId={selected?.id ?? null}
                 onSelect={(item) => setSelected({ type: item.type, id: item.id })}
                 emptyLabel={t("messagesInbox.empty")}
+                onlineUserIds={online}
               />
             )}
           </div>
         </Card>
 
-        <Card className="flex min-h-0 flex-col overflow-hidden">
+        <Card
+          className={cn(
+            "min-h-0 flex-col overflow-hidden md:flex",
+            selected ? "flex" : "hidden",
+          )}
+        >
           {activeCase || activeDirect ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="md:hidden"
+                    aria-label={t("chat.back")}
+                    onClick={() => setSelected(null)}
+                  >
+                    <BackIcon className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-0">
+                  <p className="flex items-center gap-2 truncate font-medium">
                     {activeCase ? activeCase.caseName : activeDirect!.otherUserName}
+                    {activeDirect?.otherUserId && online.has(activeDirect.otherUserId) && (
+                      <span className="flex items-center gap-1 text-[11px] font-normal text-emerald-600">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        {t("chat.presence.online")}
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {activeCase
@@ -327,6 +426,7 @@ export default function CaseMessagesInboxPage() {
                           )
                         : t("chat.type.direct")}
                   </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" className="gap-1" onClick={toggleMute}>

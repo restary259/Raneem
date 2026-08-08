@@ -14,6 +14,8 @@ import {
 import { uploadChatAttachment } from "@/services/ChatAttachmentService";
 import { validateAttachmentFile, type ChatMessage } from "@/lib/chatFormat";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyNewMessageEmail } from "@/services/NotificationService";
+import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 
 interface CaseMessagesProps {
   caseId: string;
@@ -30,6 +32,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   const [loading, setLoading] = useState(true);
   const fulfilRef = useRef<HTMLInputElement>(null);
   const [fulfilTarget, setFulfilTarget] = useState<ChatMessage | null>(null);
+  const online = useOnlineUsers();
 
   const load = useCallback(async () => {
     try {
@@ -83,13 +86,14 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
 
   return (
     <div className={className}>
-      <div className="max-h-[460px] overflow-y-auto">
+      <div className="max-h-[460px] overflow-y-auto bg-muted/20">
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}
           loading={loading}
           emptyLabel={t("case.messages.empty")}
           canFulfilRequests
+          onlineUserIds={online}
           onFulfilRequest={(m) => {
             setFulfilTarget(m);
             fulfilRef.current?.click();
@@ -111,9 +115,13 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
         allowRequests={allowInternal}
         onSend={async (body, attachments, opts) => {
           await sendCaseMessage(caseId, body, opts.visibility, attachments, opts.kind);
+          if (opts.visibility !== "internal") {
+            void notifyNewMessageEmail({ threadType: "case", threadId: caseId, preview: body });
+          }
           await load();
         }}
       />
     </div>
   );
 }
+

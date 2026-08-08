@@ -2167,10 +2167,13 @@ export type Database = {
           id: string
           influencer_id: string | null
           intake_month: string | null
+          is_manager: boolean
           linked_case_id: string | null
           must_change_password: boolean
           nationality: string | null
           notes: string | null
+          notify_email: boolean
+          notify_in_app: boolean
           passport_expiry: string | null
           passport_number: string | null
           phone_number: string | null
@@ -2216,10 +2219,13 @@ export type Database = {
           id: string
           influencer_id?: string | null
           intake_month?: string | null
+          is_manager?: boolean
           linked_case_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
+          notify_email?: boolean
+          notify_in_app?: boolean
           passport_expiry?: string | null
           passport_number?: string | null
           phone_number?: string | null
@@ -2265,10 +2271,13 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           intake_month?: string | null
+          is_manager?: boolean
           linked_case_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
+          notify_email?: boolean
+          notify_in_app?: boolean
           passport_expiry?: string | null
           passport_number?: string | null
           phone_number?: string | null
@@ -3167,6 +3176,7 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+          is_manager: boolean
           role: string
         }[]
       }

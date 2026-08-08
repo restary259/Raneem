@@ -12,6 +12,8 @@ import {
   toChatMessage,
 } from "@/services/DirectMessageService";
 import type { ChatMessage } from "@/lib/chatFormat";
+import { notifyNewMessageEmail } from "@/services/NotificationService";
+import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 
 interface DirectMessagesProps {
   threadId: string;
@@ -24,6 +26,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const online = useOnlineUsers();
 
   const load = useCallback(async () => {
     try {
@@ -63,12 +66,13 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
 
   return (
     <div className={className}>
-      <div className="max-h-[460px] overflow-y-auto">
+      <div className="max-h-[460px] overflow-y-auto bg-muted/20">
         <MessageList
           messages={messages}
           currentUserId={user?.id ?? null}
           loading={loading}
           emptyLabel={t("case.messages.empty")}
+          onlineUserIds={online}
         />
       </div>
       <MessageComposer
@@ -77,6 +81,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         hint={t("chat.directHint")}
         onSend={async (body, attachments) => {
           await sendDirectMessage(threadId, body, attachments);
+          void notifyNewMessageEmail({ threadType: "direct", threadId, preview: body });
           await load();
         }}
       />
