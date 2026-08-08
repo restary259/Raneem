@@ -1184,7 +1184,9 @@ const AdminProgramsPage = () => {
                 if (!v) {
                   setEditInsId(null);
                   setInsForm(emptyInsForm);
+                  setInsRates([]);
                 }
+
               }}
             >
               <DialogTrigger asChild>
