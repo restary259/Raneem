@@ -73,6 +73,27 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       if (caseErr) throw caseErr;
       if (!updatedCase) throw new Error(t('team.payment.statusFailed'));
 
+      // The finance panel is the single source of truth for money on a case, so
+      // the confirmed fee has to land there as a real payment row. Service lines
+      // are created first (idempotent) so the amount has something to settle.
+      try {
+        await ensureCaseServices(caseId, actorId);
+      } catch (svcErr) {
+        console.error('[PaymentConfirmation] services', svcErr);
+      }
+
+      const { error: payErr } = await (supabase as any).from('case_payments').insert({
+        case_id: caseId,
+        payment_type: 'service_fee',
+        amount: parseFloat(serviceFee),
+        paid_status: 'paid',
+        paid_date: now,
+        recorded_by: actorId,
+      });
+      if (payErr) throw payErr;
+
+
+
 
       await supabase.rpc('log_activity' as any, {
         p_actor_id: actorId,
