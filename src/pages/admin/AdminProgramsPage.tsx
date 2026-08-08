@@ -1356,9 +1356,24 @@ const AdminProgramsPage = () => {
                         </Badge>
                       </div>
                     </div>
-                    <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                      💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
-                    </span>
+                    {parseAgeTiers(ins.age_price_tiers).length > 0 ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        💰 {formatAgeLadder(
+                          parseAgeTiers(ins.age_price_tiers),
+                          ins.currency === "EUR" ? "€" : "₪",
+                          t('admin.programs.ageAndAbove'),
+                        )}
+                      </span>
+                    ) : ins.price > 0 ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        {t('admin.programs.noPriceSet')}
+                      </span>
+                    )}
+
                     {ins.provider && (
                       <p className="text-xs text-muted-foreground">{ins.provider}</p>
                     )}
