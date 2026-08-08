@@ -69,7 +69,6 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
   const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
   const { toast } = useToast();
   const [isMaster, setIsMaster] = useState(!!partner.is_master_partner);
-  const [savingMaster, setSavingMaster] = useState(false);
   const [network, setNetwork] = useState<any[]>([]);
 
   useEffect(() => { setIsMaster(!!partner.is_master_partner); }, [partner.is_master_partner, partner.partner_id]);
