@@ -41,6 +41,24 @@ export default function CaseProgressRail({
   const label = (key: string) =>
     t(`case.status.${key}`, statuses.find((s) => s.key === key)?.label_en ?? key);
 
+  const blockReason = stageBlockReason(currentKey);
+  const blockHint = !blockReason
+    ? ""
+    : blockReason.kind === "terminal"
+      ? t("case.stage.reasonTerminal", "This case has reached the final stage.")
+      : blockReason.kind === "inactive"
+        ? t("case.stage.reasonInactive", "Reopen the case before moving it forward.")
+        : t("case.stage.reasonAutomated", {
+            stage: label(blockReason.stage),
+            trigger: t(
+              `case.stage.automatedTrigger.${blockReason.stage}`,
+              "the required step completes",
+            ),
+            defaultValue:
+              "Next stage is {{stage}} — it happens automatically once {{trigger}} is recorded.",
+          });
+  const hintId = "case-stage-hint";
+
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
       <div
