@@ -22,14 +22,19 @@ import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
   MAX_ATTACHMENT_BYTES,
+  activeCaseQuery,
   activeMentionQuery,
+  applyCaseMention,
   applyMention,
+  caseMentionToken,
   formatFileSize,
   resolveMentionIds,
   validateAttachmentFile,
   type ChatAttachment,
+  type MentionableCase,
   type MentionablePerson,
 } from "@/lib/chatFormat";
+import { searchCasesForMention } from "@/services/CaseMessageService";
 import {
   removeChatAttachment,
   uploadChatAttachmentWithProgress,
