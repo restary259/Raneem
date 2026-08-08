@@ -38,6 +38,9 @@ interface Props {
   onConfirmPayment: () => void;
   onRefresh: () => void;
   onSubmitToAdmin: () => void;
+  /** Resend a case that admin sent back for changes. */
+  onResubmit: () => void;
+
   submitting: boolean;
 }
 
@@ -142,9 +145,26 @@ export default function CaseStageBlock(props: Props) {
     const values = readStudentProfile(caseData, submission);
     const missing = missingProfileFields(values);
     const savedComplete = !!submission?.profile_completed_at && missing.length === 0;
+    const reopened = submission?.review_status === "changes_requested";
     const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
     return (
       <Shell title={t("case.detail.completeProfile")}>
+        {reopened && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+            <p className="text-sm font-medium text-amber-700">
+              {t("case.submit.changesRequested")}
+            </p>
+            {submission?.review_note && (
+              <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("case.submit.fixAndResend", {
+                defaultValue:
+                  "Make the requested change below, save the file, then send it back to admin.",
+              })}
+            </p>
+          </div>
+        )}
         <CaseProfileForm caseData={caseData} submission={submission} onSaved={props.onRefresh} />
         {savedComplete && (
           <CaseInviteStudent
@@ -158,17 +178,10 @@ export default function CaseStageBlock(props: Props) {
         )}
         {canManage && (
           <div className="border-t pt-4">
-            {savedComplete ? (
-              <Button className="gap-1.5" onClick={props.onConfirmPayment}>
-                <Wallet className="h-4 w-4" />
-                {t("case.tasks.action.confirmPayment")}
-              </Button>
-            ) : (
+            {!savedComplete ? (
               <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
                 <p className="text-sm font-medium text-amber-700">
-                  {t("case.detail.paymentBlocked", {
-                    defaultValue: "Complete and save the student file before confirming payment.",
-                  })}
+                  {t("case.detail.paymentBlocked")}
                 </p>
                 {missing.length > 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -176,12 +189,49 @@ export default function CaseStageBlock(props: Props) {
                   </p>
                 )}
               </div>
+            ) : reopened && submission?.payment_confirmed ? (
+              <Button
+                className="gap-1.5"
+                disabled={props.submitting}
+                onClick={() => setConfirmSubmit(true)}
+              >
+                <Send className="h-4 w-4" />
+                {t("case.submit.resend", { defaultValue: "Send back to admin" })}
+              </Button>
+            ) : (
+              <Button className="gap-1.5" onClick={props.onConfirmPayment}>
+                <Wallet className="h-4 w-4" />
+                {t("case.tasks.action.confirmPayment")}
+              </Button>
             )}
           </div>
         )}
+        <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("case.submit.confirmTitle")}</DialogTitle>
+              <DialogDescription>{t("case.submit.confirmBody")}</DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmSubmit(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                disabled={props.submitting}
+                onClick={() => {
+                  setConfirmSubmit(false);
+                  props.onResubmit();
+                }}
+              >
+                {t("case.submit.confirmAction")}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Shell>
     );
   }
+
 
   if (status === "payment_confirmed") {
     return (

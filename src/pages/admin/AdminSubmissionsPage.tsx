@@ -294,7 +294,8 @@ const AdminSubmissionsPage = () => {
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
+
     } finally {
       setMarking(false);
     }
@@ -378,6 +379,16 @@ const AdminSubmissionsPage = () => {
         .eq("id", selected.submission.id);
       if (error) throw error;
 
+      // Reopen the profile step so the assigned team member can actually make
+      // the change and resubmit — a note alone leaves the case stuck.
+      if (selected.status === "submitted") {
+        const { error: caseErr } = await (supabase as any)
+          .from("cases")
+          .update({ status: "profile_completion" })
+          .eq("id", selected.id);
+        if (caseErr) throw caseErr;
+      }
+
       await supabase.rpc("log_user_activity" as any, {
         p_action: "REQUEST_SUBMISSION_CHANGES",
         p_target_id: selected.id,
@@ -392,7 +403,8 @@ const AdminSubmissionsPage = () => {
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
+
     } finally {
       setReviewing(false);
     }
