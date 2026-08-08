@@ -2,14 +2,13 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
 import { formatILS } from "@/lib/money";
 import { useCaseServices } from "@/hooks/useCaseServices";
 import { useCasePayments } from "@/hooks/useCasePayments";
-import { useInvoices } from "@/hooks/useInvoices";
 import CaseServices from "./CaseServices";
 import CasePayments from "./CasePayments";
-import CaseInvoices from "./CaseInvoices";
 
 export interface FinanceExtraLine {
   label: string;
@@ -25,29 +24,36 @@ interface Props {
   extraLines?: FinanceExtraLine[];
 }
 
+/**
+ * The single financial view of a case: services attached, discounts applied,
+ * money received and what is still outstanding. There is no separate invoice.
+ */
 const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = [] }) => {
   const { t } = useTranslation("dashboard");
   const { services, total: servicesTotal, refetch: refetchServices } = useCaseServices(caseId);
   const { payments, totalPaid, refetch: refetchPayments } = useCasePayments(caseId);
-  const { invoices, refetch: refetchInvoices } = useInvoices(caseId);
 
-  const invoicedTotal = invoices
-    .filter((i) => i.status !== "void")
-    .reduce((sum, i) => sum + i.total, 0);
+  const discountTotal = services.reduce((sum, s) => sum + Number(s.discount || 0), 0);
   const remaining = Math.max(servicesTotal - totalPaid, 0);
-
-  const onServicesChanged = () => {
-    refetchServices();
-    refetchInvoices();
-  };
+  const status: "unpaid" | "partial" | "settled" =
+    servicesTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : totalPaid > 0 ? "partial" : "unpaid";
+  const statusClass =
+    status === "settled"
+      ? "bg-emerald-100 text-emerald-800"
+      : status === "partial"
+        ? "bg-amber-100 text-amber-800"
+        : "bg-slate-100 text-slate-800";
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Wallet className="h-4 w-4" />
-            {t("finance.title")}
+          <CardTitle className="text-base flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              {t("finance.title")}
+            </span>
+            <Badge className={statusClass}>{t(`finance.status.${status}`)}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -57,8 +63,8 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
               <p className="text-sm font-semibold">{formatILS(servicesTotal)}</p>
             </div>
             <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.invoiced")}</p>
-              <p className="text-sm font-semibold">{formatILS(invoicedTotal)}</p>
+              <p className="text-xs text-muted-foreground">{t("finance.summary.discounts")}</p>
+              <p className="text-sm font-semibold">{formatILS(discountTotal)}</p>
             </div>
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
@@ -96,7 +102,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
             caseId={caseId}
             services={services}
             canManage={canManage}
-            onChanged={onServicesChanged}
+            onChanged={refetchServices}
           />
 
           <Separator />
@@ -109,10 +115,9 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
           />
         </CardContent>
       </Card>
-
-      <CaseInvoices caseId={caseId} canManage={canManage} />
     </div>
   );
 };
 
 export default CaseFinance;
+
