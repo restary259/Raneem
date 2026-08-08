@@ -148,9 +148,18 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <PartnerCell p={p} />
-                  {Number(p.open_requests) > 0 && (
-                    <Badge variant="secondary">{p.open_requests}</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {Number(p.open_requests) > 0 && (
+                      <Badge variant="secondary">{p.open_requests}</Badge>
+                    )}
+                    <MasterPartnerToggle
+                      partnerId={p.partner_id}
+                      partnerName={p.full_name}
+                      isMaster={!!p.is_master_partner}
+                      onChanged={(next) => applyMaster(p.partner_id, next)}
+                    />
+                  </div>
+
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{p.students_count}</span>
