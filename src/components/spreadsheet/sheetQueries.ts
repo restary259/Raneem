@@ -30,7 +30,7 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       id, program_start_date, program_end_date, extra_data,
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
-      case:cases!inner(id, full_name, phone_number, city, status, assigned_to, partner_id),
+      case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id),
       program:programs(name_en),
       accommodation:accommodations(name_en),
       insurance:insurances(name)
@@ -46,6 +46,7 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
     const extra = s.extra_data ?? {};
     return {
       id: s.id,
+      case_reference: s.case?.case_reference ?? null,
       full_name: s.case?.full_name ?? '—',
       phone: s.case?.phone_number ?? null,
       city: s.case?.city ?? extra.city ?? null,
@@ -78,7 +79,7 @@ export const fetchPaymentsSheet = async ({ scope, userId }: SheetScope) => {
       id, service_fee, program_price, accommodation_price, insurance_price,
       total_paid, remaining_balance, enrollment_paid_at, enrollment_paid_by,
       payment_confirmed_at, payment_confirmed_by,
-      case:cases!inner(id, full_name, assigned_to, status)
+      case:cases!inner(id, case_reference, full_name, assigned_to, status)
     `)
     .is('deleted_at', null)
     .not('enrollment_paid_at', 'is', null);
@@ -90,6 +91,7 @@ export const fetchPaymentsSheet = async ({ scope, userId }: SheetScope) => {
 
   return (data || []).map((s: any) => ({
     id: s.id,
+    case_reference: s.case?.case_reference ?? null,
     paid_date: s.enrollment_paid_at,
     student: s.case?.full_name ?? '—',
     service_fee: s.service_fee ?? 0,
@@ -115,6 +117,7 @@ export const fetchPayoutsSheet = async () => {
 
   return (data || []).map((p: any) => ({
     id: p.id,
+    payout_reference: p.payout_reference ?? null,
     requested_at: p.requested_at,
     paid_at: p.paid_at,
     person: staff[p.requestor_id]?.name ?? '—',
