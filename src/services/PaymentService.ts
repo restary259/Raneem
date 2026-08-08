@@ -13,11 +13,8 @@ export const PaymentService = {
     return data ?? [];
   },
 
-  async listByInvoice(invoiceId: string): Promise<any[]> {
-    const { data, error } = await db.from('payments').select('*').eq('invoice_id', invoiceId);
-    if (error) throw error;
-    return data ?? [];
-  },
+
+
 
   async record(payment: Record<string, unknown>): Promise<void> {
     const { error } = await db.from('payments').insert(payment);
