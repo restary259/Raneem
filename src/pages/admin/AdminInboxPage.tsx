@@ -111,7 +111,8 @@ const AdminInboxPage = () => {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
