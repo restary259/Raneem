@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
+import MasterPartnerToggle from './MasterPartnerToggle';
+
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
 import { supabase } from '@/integrations/supabase/client';
