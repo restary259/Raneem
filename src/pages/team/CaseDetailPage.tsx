@@ -364,18 +364,16 @@ export default function CaseDetailPage() {
 
       {/* Section tabs */}
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">{t("case.tabs.overview", "Overview")}</TabsTrigger>
-          <TabsTrigger value="student">{t("case.tabs.student", "Student")}</TabsTrigger>
-          <TabsTrigger value="program">{t("case.tabs.program", "Program")}</TabsTrigger>
-          <TabsTrigger value="financial">{t("case.tabs.financial", "Financial")}</TabsTrigger>
-          <TabsTrigger value="activity">{t("case.tabs.activity", "Activity")}</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="case">{t("case.tabs.case", "Case")}</TabsTrigger>
+          <TabsTrigger value="program">{t("case.tabs.programFinance", "Program & Finance")}</TabsTrigger>
+          <TabsTrigger value="history">{t("case.tabs.history", "History")}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-3 space-y-3">
+        <TabsContent value="case" className="mt-3 space-y-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.tabs.overview", "Overview")}</CardTitle>
+              <CardTitle className="text-sm">{t("case.detail.keyFacts", "Key facts")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {summary.map((row) => (
@@ -389,62 +387,13 @@ export default function CaseDetailPage() {
             </CardContent>
           </Card>
 
-          <Card ref={documentsRef}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.detail.documents", "Documents")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("case.overview.noDocuments", "No documents uploaded yet")}
-                </p>
-              ) : (
-                <div className="divide-y">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{doc.file_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t(`case.docCategory.${doc.category}`, doc.category)}
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a href={doc.file_url} target="_blank" rel="noreferrer">
-                          <Download className="h-3.5 w-3.5" />
-                          <span className="sr-only">{t("case.detail.download", "Download")}</span>
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="student" className="mt-3">
           <Card>
             <CardHeader className="pb-0">
               <CardTitle className="text-sm">{t("case.tabs.student", "Student")}</CardTitle>
             </CardHeader>
             <CaseStudentTab caseData={caseData} submission={submission} onRefresh={fetchData} />
           </Card>
-        </TabsContent>
 
-        <TabsContent value="program" className="mt-3">
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm">{t("case.tabs.program", "Program")}</CardTitle>
-            </CardHeader>
-            <CaseProgramTab submission={submission} onRefresh={fetchData} />
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="financial" className="mt-3">
-          <CaseFinance caseId={caseData.id} canManage={canManage} />
-        </TabsContent>
-
-        <TabsContent value="activity" className="mt-3 space-y-3">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">{t("case.detail.appointments", "Appointments")}</CardTitle>
@@ -477,9 +426,54 @@ export default function CaseDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="program" className="mt-3 space-y-3">
+          <Card>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm">{t("case.tabs.program", "Program")}</CardTitle>
+            </CardHeader>
+            <CaseProgramTab submission={submission} onRefresh={fetchData} />
+          </Card>
+          <CaseFinance caseId={caseData.id} canManage={canManage} />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-3 space-y-3">
           <CaseTimeline caseId={caseData.id} canAddNote={canManage} />
+          <Card ref={documentsRef}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t("case.detail.documents", "Documents")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {documents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("case.overview.noDocuments", "No documents uploaded yet")}
+                </p>
+              ) : (
+                <div className="divide-y">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{doc.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t(`case.docCategory.${doc.category}`, doc.category)}
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <a href={doc.file_url} target="_blank" rel="noreferrer">
+                          <Download className="h-3.5 w-3.5" />
+                          <span className="sr-only">{t("case.detail.download", "Download")}</span>
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
+
 
       {/* Modals */}
       {canManage && user && (
