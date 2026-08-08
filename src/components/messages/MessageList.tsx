@@ -224,7 +224,7 @@ export default function MessageList({
               </div>
             )}
 
-            <div className={cn("flex gap-2", group.mine ? "flex-row-reverse" : "flex-row")}>
+            <div className={cn("flex gap-2.5", group.mine ? "flex-row-reverse" : "flex-row")}>
               <div className="relative mt-1 shrink-0">
                 <div
                   className={cn(
