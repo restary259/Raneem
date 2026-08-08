@@ -18,39 +18,57 @@ export type Database = {
         Row: {
           created_at: string
           currency: string
+          deposit: number | null
           description: string | null
+          distance_note: string | null
           id: string
           is_active: boolean
+          meals: string | null
           name_ar: string
           name_en: string
           photos: string[] | null
+          placement_fee: number | null
           price: number | null
+          price_tiers: Json
+          room_type: string | null
           school_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           currency?: string
+          deposit?: number | null
           description?: string | null
+          distance_note?: string | null
           id?: string
           is_active?: boolean
+          meals?: string | null
           name_ar: string
           name_en: string
           photos?: string[] | null
+          placement_fee?: number | null
           price?: number | null
+          price_tiers?: Json
+          room_type?: string | null
           school_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           currency?: string
+          deposit?: number | null
           description?: string | null
+          distance_note?: string | null
           id?: string
           is_active?: boolean
+          meals?: string | null
           name_ar?: string
           name_en?: string
           photos?: string[] | null
+          placement_fee?: number | null
           price?: number | null
+          price_tiers?: Json
+          room_type?: string | null
           school_id?: string | null
           updated_at?: string
         }
@@ -2038,54 +2056,80 @@ export type Database = {
       }
       programs: {
         Row: {
+          cefr_range: string | null
           created_at: string
           currency: string
           description: string | null
           duration: string | null
           duration_in_months: number | null
           fixed_start_day_of_month: number | null
+          hours_per_week: number | null
           id: string
           is_active: boolean
           lessons_per_week: number | null
           name_ar: string
           name_en: string
           price: number | null
+          price_tiers: Json
+          registration_fee: number | null
+          school_id: string | null
+          start_rule: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          cefr_range?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           duration?: string | null
           duration_in_months?: number | null
           fixed_start_day_of_month?: number | null
+          hours_per_week?: number | null
           id?: string
           is_active?: boolean
           lessons_per_week?: number | null
           name_ar: string
           name_en: string
           price?: number | null
+          price_tiers?: Json
+          registration_fee?: number | null
+          school_id?: string | null
+          start_rule?: string | null
           type: string
           updated_at?: string
         }
         Update: {
+          cefr_range?: string | null
           created_at?: string
           currency?: string
           description?: string | null
           duration?: string | null
           duration_in_months?: number | null
           fixed_start_day_of_month?: number | null
+          hours_per_week?: number | null
           id?: string
           is_active?: boolean
           lessons_per_week?: number | null
           name_ar?: string
           name_en?: string
           price?: number | null
+          price_tiers?: Json
+          registration_fee?: number | null
+          school_id?: string | null
+          start_rule?: string | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "programs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
