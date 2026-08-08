@@ -2806,10 +2806,10 @@
     "title": "المالية",
     "summary": {
       "services": "الخدمات",
-      "invoiced": "مفوتر",
       "paid": "مدفوع",
       "remaining": "المتبقي",
-      "programCosts": "تكاليف البرنامج"
+      "programCosts": "تكاليف البرنامج",
+      "discounts": "الخصومات"
     },
     "services": {
       "title": "خدمات هذه الحالة",
@@ -2843,6 +2843,11 @@
         "pending": "قيد الانتظار",
         "failed": "فشل"
       }
+    },
+    "status": {
+      "unpaid": "غير مدفوع",
+      "partial": "مدفوع جزئياً",
+      "settled": "مسدد بالكامل"
     }
   }
 }

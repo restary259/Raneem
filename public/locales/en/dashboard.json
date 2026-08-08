@@ -2788,10 +2788,10 @@
     "title": "Finance",
     "summary": {
       "services": "Services",
-      "invoiced": "Invoiced",
       "paid": "Paid",
       "remaining": "Remaining",
-      "programCosts": "Programme costs"
+      "programCosts": "Programme costs",
+      "discounts": "Discounts"
     },
     "services": {
       "title": "Services on this case",
@@ -2825,6 +2825,11 @@
         "pending": "Pending",
         "failed": "Failed"
       }
+    },
+    "status": {
+      "unpaid": "Unpaid",
+      "partial": "Partially paid",
+      "settled": "Settled"
     }
   }
 }
