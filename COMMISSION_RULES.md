@@ -58,3 +58,26 @@ up which case a reward belongs to.
 A reward cannot be included in a payout request until 20 days after it was
 created (`request_payout` enforces this). Admins can release early through
 `admin-early-release`.
+
+## 8. Master partner network override (additive layer)
+
+Base rates in sections 1–7 are unchanged. On top of them:
+
+- A partner can be upgraded by an admin to **master partner**
+  (`profiles.is_master_partner`). The upgrade is a role flag only — earnings,
+  referral code, referral history and payout history all carry over untouched.
+- Partners recruited by a master partner carry `profiles.master_partner_id`.
+- When a case pays out and the referring partner has a master partner, that
+  master partner earns an extra flat amount, taken **only out of Darb's margin**
+  — never out of the partner's or the team member's commission:
+
+```
+master_override = platform_settings.master_partner_override_rate  (admin-set, default ₪200)
+platform_revenue_ils = max(0, service_fee − team_commission − partner_commission − master_override)
+```
+
+- The override is recorded as a reward with `rewards.reward_type = 'master_override'`
+  and `rewards.source_user_id` = the referring partner, so it is never confused
+  with the base ₪1000 referral reward in payouts or reporting.
+- The override applies only to cases referred by partners inside that master
+  partner's own network — never company-wide.
