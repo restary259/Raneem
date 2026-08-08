@@ -126,7 +126,7 @@ function SidebarNav({ role }: { role: AppRole }) {
       </div>
 
       <SidebarMenu className="mt-2 px-2">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isActive =
             location.pathname === item.href ||
             (item.href !== "/admin" &&
@@ -134,7 +134,14 @@ function SidebarNav({ role }: { role: AppRole }) {
               item.href !== "/partner" &&
               item.href !== "/student/checklist" &&
               location.pathname.startsWith(item.href));
+          const showGroup = !!item.group && item.group !== items[index - 1]?.group;
           return (
+            <React.Fragment key={item.key}>
+              {showGroup && !collapsed && (
+                <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t(item.group as string, item.group as string)}
+                </p>
+              )}
             <SidebarMenuItem key={item.key}>
               <SidebarMenuButton asChild>
                 <Link
