@@ -1234,6 +1234,89 @@ const AdminProgramsPage = () => {
                       </Select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelProvider')}</Label>
+                      <Input
+                        value={insForm.provider}
+                        onChange={(e) => setInsForm((f) => ({ ...f, provider: e.target.value }))}
+                        placeholder="MAWISTA"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelCoverageScope')}</Label>
+                      <Select
+                        value={insForm.coverage_scope}
+                        onValueChange={(v) => setInsForm((f) => ({ ...f, coverage_scope: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COVERAGE_SCOPES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {t(`admin.programs.coverage.${s}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMinMonths')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.min_months}
+                        onChange={(e) => setInsForm((f) => ({ ...f, min_months: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMaxMonths')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.max_months}
+                        onChange={(e) => setInsForm((f) => ({ ...f, max_months: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMaxAge')}</Label>
+                      <Input
+                        type="number"
+                        value={insForm.max_age}
+                        onChange={(e) => setInsForm((f) => ({ ...f, max_age: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelTermsUrl')}</Label>
+                    <Input
+                      value={insForm.terms_url}
+                      onChange={(e) => setInsForm((f) => ({ ...f, terms_url: e.target.value }))}
+                      placeholder="https://…"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDescAr')}</Label>
+                      <textarea
+                        dir="rtl"
+                        rows={3}
+                        className="w-full rounded-md border bg-background p-2 text-sm"
+                        value={insForm.description_ar}
+                        onChange={(e) => setInsForm((f) => ({ ...f, description_ar: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDescEn')}</Label>
+                      <textarea
+                        rows={3}
+                        className="w-full rounded-md border bg-background p-2 text-sm"
+                        value={insForm.description_en}
+                        onChange={(e) => setInsForm((f) => ({ ...f, description_en: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                   <Button className="w-full" onClick={saveIns} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
