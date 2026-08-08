@@ -470,6 +470,18 @@ export default function CaseDetailPage() {
           <CaseFinance caseId={caseData.id} canManage={canManage} />
         </TabsContent>
 
+        <TabsContent value="messages" className="mt-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t("case.messages.title", "Messages")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CaseMessages caseId={caseData.id} allowInternal={canManage} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
         <TabsContent value="history" className="mt-3 space-y-3">
           <CaseTimeline caseId={caseData.id} canAddNote={canManage} />
           <Card ref={documentsRef}>
