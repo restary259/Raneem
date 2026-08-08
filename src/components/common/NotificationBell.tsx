@@ -62,7 +62,7 @@ const NotificationBell: React.FC = () => {
     init();
   }, [fetchNotifications]);
 
-  // Realtime subscription
+  // Realtime subscription — INSERT adds, UPDATE keeps the badge in sync across tabs.
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
@@ -76,24 +76,55 @@ const NotificationBell: React.FC = () => {
           setUnreadCount(prev => prev + 1);
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        (payload: any) => {
+          const updated = payload.new as Notification;
+          setNotifications(prev => {
+            const next = prev.map(n => (n.id === updated.id ? { ...n, ...updated } : n));
+            setUnreadCount(next.filter(n => !n.is_read).length);
+            return next;
+          });
+        }
+      )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
+  /** Optimistic: the badge drops the moment the row is opened, then persists. */
   const markAsRead = async (id: string) => {
-    await (supabase as any).from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
     setUnreadCount(prev => Math.max(0, prev - 1));
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .update({ is_read: true, read: true })
+      .eq('id', id);
+    if (error && userId) fetchNotifications(userId);
+  };
+
+  const handleOpenNotification = async (n: Notification) => {
+    if (!n.is_read) await markAsRead(n.id);
+    if (n.link) {
+      setOpen(false);
+      if (/^https?:\/\//i.test(n.link)) window.open(n.link, '_blank', 'noopener');
+      else navigate(n.link);
+    }
   };
 
   const markAllRead = async () => {
     if (!userId) return;
     const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
     if (unreadIds.length === 0) return;
-    await (supabase as any).from('notifications').update({ is_read: true }).in('id', unreadIds);
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     setUnreadCount(0);
+    const { error } = await (supabase as any)
+      .from('notifications')
+      .update({ is_read: true, read: true })
+      .in('id', unreadIds);
+    if (error) fetchNotifications(userId);
   };
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
