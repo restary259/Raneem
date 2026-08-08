@@ -9,8 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2, Undo2 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
