@@ -233,8 +233,34 @@ export default function MessageList({
                       </div>
                     )}
 
-                    {m.body && (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.body}</p>
+                    {editing?.id === m.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editing.body}
+                          rows={2}
+                          maxLength={5000}
+                          onChange={(e) => setEditing({ id: m.id, body: e.target.value })}
+                          className="resize-none text-sm"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                            {t("chat.edit.cancel")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={saving || !editing.body.trim()}
+                            onClick={saveEdit}
+                          >
+                            {t("chat.edit.save")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      m.body && (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {renderBody(m.body)}
+                        </p>
+                      )
                     )}
 
                     {m.attachments.length > 0 && (
@@ -257,11 +283,46 @@ export default function MessageList({
 
                     <div
                       className={cn(
-                        "text-[11px] text-muted-foreground",
-                        group.mine ? "text-end" : "text-start",
+                        "flex items-center gap-1.5 text-[11px] text-muted-foreground",
+                        group.mine ? "justify-end" : "justify-start",
                       )}
                     >
-                      {formatTime(m.createdAt)}
+                      <span>{formatTime(m.createdAt)}</span>
+                      {m.editedAt && <span>· {t("chat.edit.edited")}</span>}
+                      {onEditMessage && canEditMessage(m, currentUserId) && !editing && (
+                        <button
+                          type="button"
+                          aria-label={t("chat.edit.button")}
+                          onClick={() => setEditing({ id: m.id, body: m.body })}
+                          className="transition-colors hover:text-foreground"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      )}
+                      {(() => {
+                        const receipt = receiptFor(m);
+                        if (!receipt) return null;
+                        return receipt.all ? (
+                          <span
+                            className="flex items-center gap-0.5 text-primary"
+                            title={t("chat.receipt.readByAll")}
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                          </span>
+                        ) : receipt.seenBy.length > 0 ? (
+                          <span
+                            className="flex items-center gap-0.5"
+                            title={t("chat.receipt.seenBy", {
+                              names: receipt.seenBy.map((r) => r.full_name ?? "—").join(", "),
+                            })}
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            <span>{receipt.seenBy.length}</span>
+                          </span>
+                        ) : (
+                          <Check className="h-3.5 w-3.5" title={t("chat.receipt.sent")} />
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -270,7 +331,23 @@ export default function MessageList({
           </div>
         );
       })}
+
+      {typing.length > 0 && (
+        <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+          <span className="flex gap-1">
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.3s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.15s]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/70" />
+          </span>
+          <span>
+            {typing.length === 1
+              ? t("chat.typing.one", { name: typing[0].name })
+              : t("chat.typing.many", { count: typing.length })}
+          </span>
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   );
 }
+
