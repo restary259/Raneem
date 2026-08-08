@@ -191,6 +191,8 @@ const AdminProgramsPage = () => {
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState(emptyInsForm);
+  const [insRates, setInsRates] = useState<AgePriceTier[]>([]);
+
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
