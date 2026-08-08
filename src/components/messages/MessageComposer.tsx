@@ -257,23 +257,66 @@ export default function MessageComposer({
         </ul>
       )}
 
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder={
-          kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
-        }
-        rows={2}
-        maxLength={5000}
-        disabled={disabled}
-        className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            handleSend();
+      <div className="relative">
+        {mentionMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {mentionMatches.map((person) => (
+              <li key={person.id}>
+                <button
+                  type="button"
+                  onClick={() => pickMention(person)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="truncate">{person.name}</span>
+                  {person.role && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.messages.role.${person.role}`, person.role)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Textarea
+          ref={textRef}
+          value={body}
+          onChange={(e) => {
+            setBody(e.target.value);
+            setMentionQuery(
+              mentionables.length > 0
+                ? activeMentionQuery(e.target.value, e.target.selectionStart ?? 0)
+                : null,
+            );
+            if (e.target.value.trim()) onTyping?.();
+          }}
+          onBlur={() => window.setTimeout(() => setMentionQuery(null), 150)}
+          placeholder={
+            kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
-        }}
-      />
+          rows={2}
+          maxLength={5000}
+          disabled={disabled}
+          className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && mentionQuery !== null) {
+              setMentionQuery(null);
+              return;
+            }
+            if (e.key === "Tab" && mentionMatches.length > 0) {
+              e.preventDefault();
+              pickMention(mentionMatches[0]);
+              return;
+            }
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+        />
+      </div>
+
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1">
