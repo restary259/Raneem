@@ -324,7 +324,13 @@ const AdminProgramsPage = () => {
       lessons_per_week: p.lessons_per_week?.toString() ?? "",
       duration_in_months: p.duration_in_months?.toString() ?? "",
       fixed_start_day_of_month: p.fixed_start_day_of_month?.toString() ?? "",
+      school_id: p.school_id ?? "",
+      cefr_range: p.cefr_range ?? "",
+      hours_per_week: p.hours_per_week?.toString() ?? "",
+      start_rule: p.start_rule ?? "",
+      registration_fee: p.registration_fee?.toString() ?? "",
     });
+    setProgTiers(parseTiers(p.price_tiers));
     setProgOpen(true);
   };
 
@@ -337,7 +343,13 @@ const AdminProgramsPage = () => {
       currency: a.currency,
       description: a.description ?? "",
       school_id: a.school_id ?? "",
+      room_type: a.room_type ?? "",
+      meals: a.meals ?? "",
+      deposit: a.deposit?.toString() ?? "",
+      placement_fee: a.placement_fee?.toString() ?? "",
+      distance_note: a.distance_note ?? "",
     });
+    setAccomTiers(parseTiers(a.price_tiers));
     setAccomOpen(true);
   };
 
