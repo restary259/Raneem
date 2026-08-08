@@ -684,6 +684,19 @@
         "active": "Active",
         "caseCount": "Cases",
         "saved": "Pipeline stages saved"
+      },
+      "catalog": {
+        "tab": "Service catalog",
+        "title": "Service catalog",
+        "hint": "These prices fill in automatically when a service is added to a case. You can still override the price per student.",
+        "nameAr": "Name (Arabic)",
+        "nameEn": "Name (English)",
+        "price": "Default price (₪)",
+        "active": "Active",
+        "add": "Add service",
+        "remove": "Delete service",
+        "saved": "Catalog saved",
+        "nameRequired": "Enter both names"
       }
     },
     "spreadsheet": {
@@ -2719,6 +2732,49 @@
       "language_school": "Language school",
       "service_fee": "Service fee",
       "other": "Other"
+    }
+  },
+  "finance": {
+    "title": "Finance",
+    "summary": {
+      "services": "Services",
+      "invoiced": "Invoiced",
+      "paid": "Paid",
+      "remaining": "Remaining",
+      "programCosts": "Programme costs"
+    },
+    "services": {
+      "title": "Services on this case",
+      "add": "Add service",
+      "empty": "No services added yet.",
+      "service": "Service",
+      "selectPlaceholder": "Choose a service",
+      "price": "Price (₪)",
+      "qty": "Qty",
+      "discount": "Discount",
+      "total": "Services total",
+      "save": "Add",
+      "added": "Service added",
+      "removed": "Service removed",
+      "remove": "Remove service",
+      "pickFirst": "Choose a service first"
+    },
+    "payments": {
+      "title": "Payments",
+      "add": "Record payment",
+      "empty": "No payments recorded yet.",
+      "amount": "Amount (₪)",
+      "date": "Date",
+      "note": "Note",
+      "save": "Record",
+      "recorded": "Payment recorded",
+      "remove": "Delete payment",
+      "invalidAmount": "Enter an amount greater than zero",
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "failed": "Failed"
+      }
     }
   }
 }

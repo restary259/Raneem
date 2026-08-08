@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import CaseTimeline from "@/components/cases/CaseTimeline";
-import CaseInvoices from "@/components/cases/CaseInvoices";
+import CaseFinance from "@/components/cases/CaseFinance";
 
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -837,7 +837,31 @@ export default function CaseDetailPage() {
 
       <AdminNotesCard caseId={caseData.id} initialNotes={caseData.intake_notes} onSaved={fetchData} />
 
-      <CaseInvoices caseId={caseData.id} canManage />
+      <CaseFinance
+        caseId={caseData.id}
+        canManage
+        extraLines={[
+          ...(programTotal > 0
+            ? [{
+                label: `${t("case.detail.program")}${resolved.programName ? ` (${resolved.programName})` : ""}`,
+                amount: programTotal,
+              }]
+            : []),
+          ...(accomTotal > 0
+            ? [{
+                label: `${t("case.detail.accommodation")}${resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}`,
+                amount: accomTotal,
+              }]
+            : []),
+          ...(insTotal > 0
+            ? [{
+                label: `${t("case.detail.insurance")}${resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}`,
+                amount: insTotal,
+              }]
+            : []),
+        ]}
+      />
+
 
       <CaseTimeline caseId={caseData.id} canAddNote />
 
@@ -910,65 +934,8 @@ export default function CaseDetailPage() {
         </Card>
       )}
 
-      {/* ── Financial Summary ── */}
-      {submission && grandTotal > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> {t("case.detail.financialSummary")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            {programTotal > 0 && (
-              <div className="flex justify-between gap-2 text-muted-foreground">
-                <span className="truncate flex-1 min-w-0">{t("case.detail.program")}{resolved.programName ? ` (${resolved.programName})` : ""}</span>
-                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{programTotal.toLocaleString("en-US")} EUR</span>
-              </div>
-            )}
-            {accomTotal > 0 && (
-              <div className="flex justify-between gap-2 text-muted-foreground">
-                <span className="truncate flex-1 min-w-0">{t("case.detail.accommodation")}{resolved.accommodationName ? ` (${resolved.accommodationName})` : ""}</span>
-                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{accomTotal.toLocaleString("en-US")} EUR</span>
-              </div>
-            )}
-            {insTotal > 0 && (
-              <div className="flex justify-between gap-2 text-muted-foreground">
-                <span className="truncate flex-1 min-w-0">{t("case.detail.insurance")}{resolved.insuranceName ? ` (${resolved.insuranceName})` : ""}</span>
-                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{insTotal.toLocaleString("en-US")} EUR</span>
-              </div>
-            )}
-            {serviceFee > 0 && (
-              <div className="flex justify-between gap-2 text-muted-foreground">
-                <span className="truncate flex-1 min-w-0">{t("case.detail.serviceFee")}</span>
-                <span className="font-medium text-foreground shrink-0 whitespace-nowrap">{serviceFee.toLocaleString("en-US")} ILS</span>
-              </div>
-            )}
-            <Separator />
-            <div className="flex justify-between gap-2 font-semibold text-base">
-              <span className="truncate flex-1 min-w-0">{t("case.detail.total")}</span>
-              <span className="shrink-0 whitespace-nowrap">{grandTotal.toLocaleString("en-US")}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.amountPaid")}</span>
-              <span className={`shrink-0 whitespace-nowrap ${amountPaid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}`}>
-                {amountPaid.toLocaleString("en-US")} ILS
-              </span>
-            </div>
-            {remaining > 0 && (
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.remaining")}</span>
-                <span className="text-amber-600 font-medium shrink-0 whitespace-nowrap">{remaining.toLocaleString("en-US")}</span>
-              </div>
-            )}
-            <div className="flex justify-between gap-2 pt-1">
-              <span className="text-muted-foreground truncate flex-1 min-w-0">{t("case.detail.paymentStatus")}</span>
-              <span className={`shrink-0 whitespace-nowrap ${submission.payment_confirmed ? "text-green-600 font-medium" : "text-amber-600"}`}>
-                {submission.payment_confirmed ? t("case.detail.paymentConfirmed") : t("case.detail.paymentPending")}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Financial details now live in the Finance card above. */}
+
 
       {/* ── Next Action ── */}
       <Card className="border-primary/30 bg-primary/5 overflow-hidden">

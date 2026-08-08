@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import CommissionSettingsPanel from "@/components/admin/CommissionSettingsPanel";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
+import ServiceCatalogPanel from "@/components/admin/ServiceCatalogPanel";
+
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -376,6 +378,8 @@ const AdminSettingsPage = () => {
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
           <TabsTrigger value="pipeline">{t("admin.settings.pipeline.tab", "Pipeline stages")}</TabsTrigger>
+          <TabsTrigger value="catalog">{t("admin.settings.catalog.tab", "Service catalog")}</TabsTrigger>
+
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
 
           <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
@@ -422,6 +426,12 @@ const AdminSettingsPage = () => {
         <TabsContent value="pipeline" className="mt-4">
           <PipelineStatusesPanel />
         </TabsContent>
+
+        {/* ── Service catalog ── */}
+        <TabsContent value="catalog" className="mt-4">
+          <ServiceCatalogPanel />
+        </TabsContent>
+
 
 
 
