@@ -155,46 +155,8 @@ export default function PartnerEarningsPage() {
   const unlockedAmount = unlockedPending.reduce((s: number, r: any) => s + Number(r.amount), 0);
   const canRequestPayout = unlockedPending.length > 0;
 
-  const handleRequestPayout = async () => {
-    if (!userId || unlockedPending.length === 0) return;
-    setIsSubmitting(true);
-    try {
-      const rewardIds = unlockedPending.map((r: any) => r.id);
-      const studentNames = unlockedPending.map((r: any) => {
-        const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-        return paidCaseMap[caseId]?.split(" ")[0] ?? "Student";
-      });
 
-      const { data, error } = await (supabase as any).rpc("request_payout", {
-        p_reward_ids: rewardIds,
-        p_amount: unlockedAmount,
-        p_notes: null,
-        p_payment_method: "bank_transfer",
-        p_requestor_role: "social_media_partner",
-        p_student_names: studentNames,
-      });
 
-      if (error) throw error;
-
-      toast({
-        title: isAr ? "تم تقديم طلب الصرف ✅" : "Payout Request Submitted ✅",
-        description: isAr
-          ? `تم تقديم طلب صرف بمبلغ ₪${unlockedAmount.toLocaleString("en-US")} بنجاح.`
-          : `Your payout request for ₪${unlockedAmount.toLocaleString("en-US")} has been submitted.`,
-      });
-      setShowPayoutDialog(false);
-      load(userId);
-    } catch (err: any) {
-      console.error("[PartnerEarnings] payout request failed:", err);
-      toast({
-        variant: "destructive",
-        title: isAr ? "خطأ" : "Error",
-        description: isAr ? "تعذر تقديم طلب الصرف. يرجى المحاولة مرة أخرى." : "Unable to submit payout request. Please try again.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const getCaseRewardInfo = (caseId: string) => {
     const reward = rewards.find((r: any) => r.admin_notes?.includes(caseId));
