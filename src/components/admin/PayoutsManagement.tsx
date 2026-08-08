@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter, FileText } from 'lucide-react';
+import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter, FileText, Wallet, HandCoins } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PartnerPayoutsPanel from '@/components/admin/PartnerPayoutsPanel';
 import { useTranslation } from 'react-i18next';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
@@ -22,7 +24,6 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const [requests, setRequests] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
   const [filter, setFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -259,6 +260,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           <SelectContent>
             <SelectItem value="all">{t('admin.payouts.allRoles', 'All Roles')}</SelectItem>
             <SelectItem value="social_media_partner">{t('admin.referralsMgmt.agent')}</SelectItem>
+            <SelectItem value="ambassador">{t('admin.payouts.roleAmbassador', 'Ambassador')}</SelectItem>
             <SelectItem value="student">{t('admin.referralsMgmt.student')}</SelectItem>
           </SelectContent>
         </Select>
