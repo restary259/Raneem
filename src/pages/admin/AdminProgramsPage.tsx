@@ -168,7 +168,7 @@ const AdminProgramsPage = () => {
   const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
-  const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
+  const [insForm, setInsForm] = useState(emptyInsForm);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
