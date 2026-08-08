@@ -2281,10 +2281,21 @@
     },
     "tabs": {
       "overview": "Overview",
+      "case": "Case",
+      "programFinance": "Program & Finance",
+      "history": "History",
       "student": "Student",
       "program": "Program",
       "financial": "Financial",
       "activity": "Activity"
+    },
+    "stage": {
+      "advance": "Move to next stage",
+      "moveTo": "Move to {{stage}}",
+      "moved": "Case moved to the next stage",
+      "confirm": "Move this case to {{stage}}? The change is recorded on the timeline.",
+      "confirmAction": "Move",
+      "automatedHint": "The next stage happens automatically once payment or admin review completes"
     },
     "overview": {
       "notSet": "Not set yet",
