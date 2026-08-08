@@ -2315,7 +2315,8 @@
       "assignedTo": "Assigned to {{name}}",
       "unassigned": "Unassigned",
       "call": "Call",
-      "schedule": "Schedule"
+      "schedule": "Schedule",
+      "whatsapp": "WhatsApp"
     },
     "tabs": {
       "overview": "Overview",
@@ -2352,7 +2353,20 @@
       "paymentPending": "Awaiting confirmation",
       "docsCount": "{{count}} of {{total}} uploaded",
       "nextAppointment": "Next appointment",
-      "noDocuments": "No documents uploaded yet"
+      "noDocuments": "No documents uploaded yet",
+      "title": "Overview",
+      "phone": "Phone",
+      "educationLevel": "Education level",
+      "passportType": "Passport type",
+      "degreeInterest": "Field of interest",
+      "bagrut": "Bagrut score",
+      "englishUnits": "English units",
+      "mathUnits": "Math units",
+      "intake": "Intake note",
+      "source": "Source",
+      "partner": "Partner",
+      "referredBy": "Referred by",
+      "createdAt": "Created"
     },
     "docCategory": {
       "passport": "Passport",
@@ -2383,7 +2397,7 @@
     },
     "submit": {
       "action": "Submit to admin",
-      "blocked": "Confirm payment and upload the passport first",
+      "blocked": "Confirm the payment first",
       "success": "Sent to admin for review",
       "changesRequested": "Admin requested changes"
     },
@@ -2415,6 +2429,38 @@
         "team_member": "Advisor",
         "student": "Student"
       }
+    },
+    "profile": {
+      "sections": {
+        "student": "Student information",
+        "contact": "Contact details",
+        "program": "Program & stay"
+      },
+      "select": "Select",
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "male": "Male",
+      "female": "Female",
+      "cityOfBirth": "City of birth",
+      "emergencyName": "Emergency contact name",
+      "emergencyPhone": "Emergency contact phone",
+      "save": "Save profile",
+      "saved": "Profile saved",
+      "missingFields": "Please fill in all required fields"
+    },
+    "invite": {
+      "title": "Create the student account",
+      "body": "Sends the student a login invite using the email on this case.",
+      "linkedTitle": "Student account linked",
+      "linkedBody": "The student can sign in and follow their case.",
+      "action": "Create account & send invite",
+      "resend": "Resend invite",
+      "sent": "Invite sent to {{email}}",
+      "invalidEmail": "Enter a valid email address"
+    },
+    "stageBlock": {
+      "paymentBody": "Collect the remaining balance below. Once the case is fully paid, send it to the admin to finish the enrollment."
     }
   },
   "partner": {

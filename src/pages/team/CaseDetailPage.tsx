@@ -1,27 +1,25 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { statusColorClasses } from "@/lib/caseStatus";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ArrowRight, CalendarPlus, Download, Phone, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucide-react";
 
 import { advanceCaseStage, manualNextStages } from "@/services/CaseStageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
-import CaseStudentTab from "@/components/cases/CaseStudentTab";
-import CaseProgramTab from "@/components/cases/CaseProgramTab";
-import CaseMessages from "@/components/cases/CaseMessages";
-
+import CaseOverviewPanel from "@/components/cases/CaseOverviewPanel";
+import CaseStageBlock, { type AppointmentRow } from "@/components/cases/CaseStageBlock";
 import CaseFinance from "@/components/cases/CaseFinance";
-import CaseTimeline from "@/components/cases/CaseTimeline";
+import { loadProgrammeCosts, type ProgrammeCostLine } from "@/services/CaseCostingService";
+import { readStudentProfile } from "@/lib/studentProfileFields";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import PaymentConfirmationForm from "@/components/team/PaymentConfirmationForm";
@@ -40,29 +38,22 @@ interface CaseRow {
   phone_number: string;
   status: string;
   assigned_to: string | null;
+  student_user_id: string | null;
   last_activity_at: string;
   created_at: string;
   [key: string]: unknown;
 }
 
-interface AppointmentRow {
-  id: string;
-  scheduled_at: string;
-  duration_minutes: number;
-  outcome: string | null;
-  notes: string | null;
-}
+/** Stages where the money side of the case is relevant. */
+const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"];
 
-interface DocumentRow {
-  id: string;
-  file_name: string;
-  file_url: string;
-  category: string;
-  created_at: string;
+/** Digits-only international number for WhatsApp deep links. */
+function whatsappNumber(phone: string): string {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (digits.startsWith("972")) return digits;
+  if (digits.startsWith("0")) return `972${digits.slice(1)}`;
+  return digits;
 }
-
-const DATE_LOCALE = "en-US";
-const REQUIRED_DOC_COUNT = 6;
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -72,18 +63,16 @@ export default function CaseDetailPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { statuses } = usePipelineStatuses();
   const isRtl = i18n.dir() === "rtl";
+  const isMobile = useIsMobile();
 
   const [caseData, setCaseData] = useState<CaseRow | null>(null);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [submission, setSubmission] = useState<any>(null);
-  const [documents, setDocuments] = useState<DocumentRow[]>([]);
+  const [documents, setDocuments] = useState<{ category: string }[]>([]);
   const [assigneeName, setAssigneeName] = useState<string | null>(null);
-  const [programLabel, setProgramLabel] = useState<string | null>(null);
-  const [accommodationLabel, setAccommodationLabel] = useState<string | null>(null);
-  const [insuranceLabel, setInsuranceLabel] = useState<string | null>(null);
+  const [costLines, setCostLines] = useState<ProgrammeCostLine[]>([]);
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("case");
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -91,7 +80,6 @@ export default function CaseDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
-  const documentsRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = role === "admin" || role === "team_member";
 
@@ -107,7 +95,7 @@ export default function CaseDetailPage() {
           .eq("case_id", id)
           .order("scheduled_at", { ascending: false }),
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
-        supabase.from("documents").select("*").eq("case_id", id).order("created_at", { ascending: false }),
+        supabase.from("documents").select("category").eq("case_id", id),
         supabase.from("platform_settings").select("forgotten_contacted_days").maybeSingle(),
       ]);
 
@@ -116,7 +104,7 @@ export default function CaseDetailPage() {
       setCaseData(row);
       setAppointments((apptRes.data as AppointmentRow[]) ?? []);
       setSubmission(subRes.data ?? null);
-      setDocuments((docsRes.data as DocumentRow[]) ?? []);
+      setDocuments((docsRes.data as { category: string }[]) ?? []);
       if (settingsRes.data?.forgotten_contacted_days) {
         setForgottenDays(settingsRes.data.forgotten_contacted_days);
       }
@@ -131,32 +119,29 @@ export default function CaseDetailPage() {
         setAssigneeName(null);
       }
 
-      const sub = subRes.data as any;
-      const [prog, accom, ins] = await Promise.all([
-        sub?.program_id
-          ? supabase.from("programs").select("name_ar, name_en").eq("id", sub.program_id).maybeSingle()
-          : Promise.resolve({ data: null }),
-        sub?.accommodation_id
-          ? supabase
-              .from("accommodations")
-              .select("name_ar, name_en")
-              .eq("id", sub.accommodation_id)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-        sub?.insurance_id
-          ? supabase.from("insurances").select("name").eq("id", sub.insurance_id).maybeSingle()
-          : Promise.resolve({ data: null }),
-      ]);
-      const pick = (r: any) => (r ? (isRtl ? r.name_ar || r.name_en : r.name_en || r.name_ar) : null);
-      setProgramLabel(pick(prog?.data));
-      setAccommodationLabel(pick(accom?.data));
-      setInsuranceLabel((ins?.data as any)?.name ?? null);
+      if (FINANCE_STAGES.includes(row.status)) {
+        const profile = readStudentProfile(row, subRes.data as any);
+        setCostLines(
+          await loadProgrammeCosts({
+            submission: subRes.data as any,
+            dateOfBirth: profile.date_of_birth || null,
+            isArabic: isRtl,
+            labels: {
+              program: t("case.detail.program"),
+              accommodation: t("case.detail.accommodation"),
+              insurance: t("case.detail.insurance"),
+            },
+          }),
+        );
+      } else {
+        setCostLines([]);
+      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
       setLoading(false);
     }
-  }, [id, user, toast, isRtl]);
+  }, [id, user, toast, isRtl, t]);
 
   useEffect(() => {
     void fetchData();
@@ -185,12 +170,7 @@ export default function CaseDetailPage() {
       case "record_outcome":
         if (task.appointmentId) setOutcomeApptId(task.appointmentId);
         break;
-      case "upload_document":
-        setTab("history");
-        requestAnimationFrame(() => documentsRef.current?.scrollIntoView({ behavior: "smooth" }));
-        break;
-      case "add_note":
-        setTab("history");
+      default:
         break;
     }
   };
@@ -205,7 +185,7 @@ export default function CaseDetailPage() {
     setAdvancing(true);
     try {
       await advanceCaseStage(caseData.id, caseData.status, pendingStage);
-      toast({ description: t("case.stage.moved", "Case moved to the next stage") });
+      toast({ description: t("case.stage.moved") });
       setPendingStage(null);
       await fetchData();
     } catch (err) {
@@ -222,9 +202,7 @@ export default function CaseDetailPage() {
     canManage &&
     !!submission &&
     !!submission.payment_confirmed &&
-    caseData?.status !== "submitted" &&
-    caseData?.status !== "payment_confirmed" &&
-    caseData?.status !== "enrollment_paid";
+    caseData?.status === "payment_confirmed";
 
   const handleSubmitToAdmin = async () => {
     if (!caseData || !submission || !user) return;
@@ -241,7 +219,7 @@ export default function CaseDetailPage() {
         .update({ status: "submitted" })
         .eq("id", caseData.id);
       if (caseErr) throw caseErr;
-      toast({ description: t("case.submit.success", "Sent to admin for review") });
+      toast({ description: t("case.submit.success") });
       await fetchData();
     } catch (err) {
       toast({
@@ -256,54 +234,22 @@ export default function CaseDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
-        {t("case.detail.loading", "Loading...")}
+        {t("case.detail.loading")}
       </div>
     );
   }
 
   if (!caseData) {
-    return <div className="p-6 text-muted-foreground">{t("case.detail.notFound", "Case not found")}</div>;
+    return <div className="p-6 text-muted-foreground">{t("case.detail.notFound")}</div>;
   }
 
   const statusMeta = statuses.find((s) => s.key === caseData.status);
-  const nextAppt = appointments
-    .filter((a) => !a.outcome && new Date(a.scheduled_at).getTime() >= Date.now())
-    .sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at))[0];
   const Back = isRtl ? ArrowRight : ArrowLeft;
-  const notSet = t("case.overview.notSet", "Not set yet");
-
-  const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleString(DATE_LOCALE, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
-  const summary: { label: string; value: string | null }[] = [
-    { label: t("case.detail.program", "Program"), value: programLabel },
-    { label: t("case.detail.accommodation", "Accommodation"), value: accommodationLabel },
-    { label: t("case.detail.insurance", "Insurance"), value: insuranceLabel },
-    {
-      label: t("case.detail.paymentStatus", "Payment Status"),
-      value: submission?.payment_confirmed
-        ? t("case.overview.paymentConfirmed", "Confirmed")
-        : t("case.overview.paymentPending", "Awaiting confirmation"),
-    },
-    {
-      label: t("case.detail.documents", "Documents"),
-      value: t("case.overview.docsCount", {
-        count: documents.length,
-        total: REQUIRED_DOC_COUNT,
-        defaultValue: "{{count}} of {{total}} uploaded",
-      }),
-    },
-    {
-      label: t("case.overview.nextAppointment", "Next appointment"),
-      value: nextAppt ? fmtDate(nextAppt.scheduled_at) : null,
-    },
-  ];
+  const showFinance = FINANCE_STAGES.includes(caseData.status);
+  const contactHref = isMobile
+    ? `tel:${caseData.phone_number}`
+    : `https://wa.me/${whatsappNumber(caseData.phone_number)}`;
+  const ContactIcon = isMobile ? Phone : MessageCircle;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
@@ -316,7 +262,7 @@ export default function CaseDetailPage() {
               size="icon"
               className="h-8 w-8"
               onClick={() => navigate(-1)}
-              aria-label={t("common.back", "Back")}
+              aria-label={t("common.back")}
             >
               <Back className="h-4 w-4" />
             </Button>
@@ -326,39 +272,28 @@ export default function CaseDetailPage() {
                 {caseData.case_reference ?? `#${caseData.id.slice(0, 8)}`}
                 {" · "}
                 {assigneeName
-                  ? t("case.header.assignedTo", { name: assigneeName, defaultValue: "Assigned to {{name}}" })
-                  : t("case.header.unassigned", "Unassigned")}
+                  ? t("case.header.assignedTo", { name: assigneeName })
+                  : t("case.header.unassigned")}
               </p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Button asChild size="sm" variant="outline" className="gap-1.5">
-              <a href={`tel:${caseData.phone_number}`}>
-                <Phone className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("case.header.call", "Call")}</span>
+              <a
+                href={contactHref}
+                target={isMobile ? undefined : "_blank"}
+                rel={isMobile ? undefined : "noreferrer"}
+              >
+                <ContactIcon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {isMobile ? t("case.header.call") : t("case.header.whatsapp")}
+                </span>
               </a>
             </Button>
             {canManage && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("case.header.schedule", "Schedule")}</span>
-              </Button>
-            )}
-            {canManage && caseData.status !== "enrollment_paid" && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="gap-1.5"
-                disabled={!canSubmitToAdmin || submitting}
-                title={
-                  canSubmitToAdmin
-                    ? undefined
-                    : t("case.submit.blocked", "Complete the profile and confirm payment first")
-                }
-                onClick={handleSubmitToAdmin}
-              >
-                <Send className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("case.submit.action", "Submit to admin")}</span>
+                <span className="hidden sm:inline">{t("case.header.schedule")}</span>
               </Button>
             )}
           </div>
@@ -383,9 +318,7 @@ export default function CaseDetailPage() {
 
       {canManage && submission?.review_status === "changes_requested" && (
         <div className="rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
-          <p className="text-sm font-medium text-amber-700">
-            {t("case.submit.changesRequested", "Admin requested changes")}
-          </p>
+          <p className="text-sm font-medium text-amber-700">{t("case.submit.changesRequested")}</p>
           {submission.review_note && (
             <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
           )}
@@ -394,132 +327,25 @@ export default function CaseDetailPage() {
 
       {canManage && <CaseAttentionPanel tasks={tasks} onAction={handleTask} />}
 
-      {/* Section tabs */}
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="case">{t("case.tabs.case", "Case")}</TabsTrigger>
-          <TabsTrigger value="program">{t("case.tabs.programFinance", "Program & Finance")}</TabsTrigger>
-          <TabsTrigger value="messages">{t("case.tabs.messages", "Messages")}</TabsTrigger>
-          <TabsTrigger value="history">{t("case.tabs.history", "History")}</TabsTrigger>
-        </TabsList>
+      <CaseOverviewPanel caseData={caseData} />
 
+      <CaseStageBlock
+        caseData={caseData}
+        submission={submission}
+        appointments={appointments}
+        canManage={canManage}
+        onSchedule={() => setSchedulerOpen(true)}
+        onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
+        onAdvance={(to) => setPendingStage(to)}
+        onRefresh={fetchData}
+        onSubmitToAdmin={handleSubmitToAdmin}
+        submitting={submitting}
+        canSubmitToAdmin={!!canSubmitToAdmin}
+      />
 
-        <TabsContent value="case" className="mt-3 space-y-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.detail.keyFacts", "Key facts")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {summary.map((row) => (
-                <div key={row.label}>
-                  <p className="mb-0.5 text-[11px] text-muted-foreground">{row.label}</p>
-                  <p className={`text-sm ${row.value ? "text-foreground" : "text-muted-foreground"}`}>
-                    {row.value ?? notSet}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm">{t("case.tabs.student", "Student")}</CardTitle>
-            </CardHeader>
-            <CaseStudentTab caseData={caseData} submission={submission} onRefresh={fetchData} />
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.detail.appointments", "Appointments")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {appointments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("case.detail.noAppointments", "No appointments yet")}
-                </p>
-              ) : (
-                <div className="divide-y">
-                  {appointments.map((appt) => (
-                    <div key={appt.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{fmtDate(appt.scheduled_at)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {appt.outcome
-                            ? t(`team.outcome.${appt.outcome}`, appt.outcome)
-                            : t("case.detail.pendingOutcome", "Pending")}
-                        </p>
-                      </div>
-                      {canManage && !appt.outcome && (
-                        <Button size="sm" variant="outline" onClick={() => setOutcomeApptId(appt.id)}>
-                          {t("case.tasks.action.recordOutcome", "Record outcome")}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="program" className="mt-3 space-y-3">
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm">{t("case.tabs.program", "Program")}</CardTitle>
-            </CardHeader>
-            <CaseProgramTab submission={submission} onRefresh={fetchData} />
-          </Card>
-          <CaseFinance caseId={caseData.id} canManage={canManage} />
-        </TabsContent>
-
-        <TabsContent value="messages" className="mt-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.messages.title", "Messages")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CaseMessages caseId={caseData.id} allowInternal={canManage} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-
-        <TabsContent value="history" className="mt-3 space-y-3">
-          <CaseTimeline caseId={caseData.id} canAddNote={canManage} />
-          <Card ref={documentsRef}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t("case.detail.documents", "Documents")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("case.overview.noDocuments", "No documents uploaded yet")}
-                </p>
-              ) : (
-                <div className="divide-y">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{doc.file_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t(`case.docCategory.${doc.category}`, doc.category)}
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a href={doc.file_url} target="_blank" rel="noreferrer">
-                          <Download className="h-3.5 w-3.5" />
-                          <span className="sr-only">{t("case.detail.download", "Download")}</span>
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
+      {showFinance && (
+        <CaseFinance caseId={caseData.id} canManage={canManage} extraLines={costLines} />
+      )}
 
       {/* Modals */}
       {canManage && user && (
@@ -553,10 +379,8 @@ export default function CaseDetailPage() {
         <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t("case.tasks.action.confirmPayment", "Confirm payment")}</DialogTitle>
-              <DialogDescription>
-                {t("case.tasks.confirmPaymentDesc", "Record the received service fee for this case.")}
-              </DialogDescription>
+              <DialogTitle>{t("case.tasks.action.confirmPayment")}</DialogTitle>
+              <DialogDescription>{t("case.tasks.confirmPaymentDesc")}</DialogDescription>
             </DialogHeader>
             <PaymentConfirmationForm
               caseId={caseData.id}
@@ -579,28 +403,19 @@ export default function CaseDetailPage() {
             const target = pendingStage ? stageLabel(pendingStage) : "";
             return (
               <DialogHeader>
-                <DialogTitle>
-                  {t("case.stage.confirmTitle", { stage: target, defaultValue: "Move to {{stage}}" })}
-                </DialogTitle>
+                <DialogTitle>{t("case.stage.confirmTitle", { stage: target })}</DialogTitle>
                 <DialogDescription>
-                  {t("case.stage.confirmBody", {
-                    from: stageLabel(caseData.status),
-                    to: target,
-                    defaultValue:
-                      "This case moves from {{from}} to {{to}}. The change is recorded on the case timeline and is visible to the student.",
-                  })}
+                  {t("case.stage.confirmBody", { from: stageLabel(caseData.status), to: target })}
                 </DialogDescription>
               </DialogHeader>
             );
           })()}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setPendingStage(null)} disabled={advancing}>
-              {t("common.cancel", "Cancel")}
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleAdvance} disabled={advancing}>
-              {advancing
-                ? t("case.stage.confirmPending", "Moving…")
-                : t("case.stage.confirmAction", "Move")}
+              {advancing ? t("case.stage.confirmPending") : t("case.stage.confirmAction")}
             </Button>
           </div>
         </DialogContent>
