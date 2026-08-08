@@ -62,21 +62,26 @@ export async function startDirectThread(otherUserId: string): Promise<string> {
   return data as string;
 }
 
-export async function listDirectMessages(threadId: string): Promise<DirectMessage[]> {
+export async function listDirectMessages(
+  threadId: string,
+  limit = 50,
+): Promise<DirectMessage[]> {
   const { data, error } = await (supabase as any)
     .from("direct_messages")
     .select("*")
     .eq("thread_id", threadId)
     .is("deleted_at", null)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(limit);
   if (error) throw error;
-  return (data ?? []) as DirectMessage[];
+  return ((data ?? []) as DirectMessage[]).slice().reverse();
 }
 
 export async function sendDirectMessage(
   threadId: string,
   body: string,
   attachments: ChatAttachment[] = [],
+  mentions: string[] = [],
 ): Promise<string> {
   const trimmed = body.trim();
   if (!trimmed && attachments.length === 0) throw new Error("Message body required");
@@ -84,10 +89,21 @@ export async function sendDirectMessage(
     p_thread_id: threadId,
     p_body: trimmed,
     p_attachments: attachments,
+    p_mentions: mentions,
   });
   if (error) throw error;
   return data as string;
 }
+
+/** Edit your own message inside the 15-minute window. */
+export async function editDirectMessage(messageId: string, body: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("edit_direct_message", {
+    p_message_id: messageId,
+    p_body: body.trim(),
+  });
+  if (error) throw error;
+}
+
 
 export async function markDirectThreadRead(threadId: string): Promise<void> {
   const { error } = await (supabase as any).rpc("mark_direct_thread_read", {
