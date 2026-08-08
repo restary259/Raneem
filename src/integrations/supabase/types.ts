@@ -2112,6 +2112,145 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_rate_offers: {
+        Row: {
+          created_at: string
+          id: string
+          master_amount: number
+          master_partner_id: string
+          note: string | null
+          offered_at: string
+          partner_amount: number
+          partner_id: string
+          pool_amount: number
+          responded_at: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          master_amount: number
+          master_partner_id: string
+          note?: string | null
+          offered_at?: string
+          partner_amount: number
+          partner_id: string
+          pool_amount: number
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          master_amount?: number
+          master_partner_id?: string
+          note?: string | null
+          offered_at?: string
+          partner_amount?: number
+          partner_id?: string
+          pool_amount?: number
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_rate_offers_master_partner_id_fkey"
+            columns: ["master_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_rate_offers_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_recruit_applications: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_user_id: string | null
+          email: string
+          full_name: string
+          id: string
+          master_partner_id: string
+          note: string | null
+          phone: string
+          recruit_code: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_link: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_user_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          master_partner_id: string
+          note?: string | null
+          phone: string
+          recruit_code: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_link?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_user_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          master_partner_id?: string
+          note?: string | null
+          phone?: string
+          recruit_code?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_link?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_recruit_applications_created_user_id_fkey"
+            columns: ["created_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_recruit_applications_master_partner_id_fkey"
+            columns: ["master_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_recruit_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -3309,6 +3448,10 @@ export type Database = {
         Returns: undefined
       }
       anonymize_user: { Args: { p_user_id: string }; Returns: undefined }
+      approve_recruit_application: {
+        Args: { p_id: string; p_user_id: string }
+        Returns: undefined
+      }
       can_access_case_thread: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
@@ -3356,6 +3499,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_master_recruit_link: {
+        Args: never
+        Returns: {
+          code: string
+          target_path: string
+        }[]
+      }
       fulfil_document_request: {
         Args: { p_attachment: Json; p_message_id: string }
         Returns: undefined
@@ -3378,6 +3528,18 @@ export type Database = {
           actor_name: string
           event_count: number
           last_seen: string
+        }[]
+      }
+      get_effective_partner_split: {
+        Args: { p_partner_id: string }
+        Returns: {
+          accepted_at: string
+          master_partner_id: string
+          master_share: number
+          offer_id: string
+          offer_version: number
+          partner_amount: number
+          pool_amount: number
         }[]
       }
       get_forgotten_cases: {
@@ -3461,6 +3623,24 @@ export type Database = {
       }
       get_my_payout_preview: { Args: never; Returns: Json }
       get_my_permissions: { Args: never; Returns: string[] }
+      get_my_rate_offers: {
+        Args: never
+        Returns: {
+          id: string
+          master_amount: number
+          master_name: string
+          master_partner_id: string
+          note: string
+          offered_at: string
+          partner_amount: number
+          partner_id: string
+          partner_name: string
+          pool_amount: number
+          responded_at: string
+          status: string
+          version: number
+        }[]
+      }
       get_my_role: { Args: never; Returns: string }
       get_partner_pool_cases: {
         Args: { p_sources?: string[] }
@@ -3621,6 +3801,14 @@ export type Database = {
         Returns: undefined
       }
       master_announce_to_network: { Args: { p_body: string }; Returns: number }
+      master_send_rate_offer: {
+        Args: {
+          p_note?: string
+          p_partner_amount: number
+          p_partner_id: string
+        }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3629,6 +3817,11 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      partner_base_pool: { Args: { p_partner_id: string }; Returns: number }
+      partner_respond_rate_offer: {
+        Args: { p_accept: boolean; p_offer_id: string }
+        Returns: undefined
       }
       purge_expired_documents: {
         Args: { p_retention?: string }
@@ -3654,6 +3847,7 @@ export type Database = {
         Args: { p_code: string; p_session_id: string; p_user_agent: string }
         Returns: undefined
       }
+      reject_recruit_application: { Args: { p_id: string }; Returns: undefined }
       request_case_changes: {
         Args: { p_case_id: string; p_note: string }
         Returns: undefined
@@ -3679,6 +3873,13 @@ export type Database = {
           partner_name: string
           purpose: string
           target_path: string
+        }[]
+      }
+      resolve_recruit_code: {
+        Args: { p_code: string }
+        Returns: {
+          recruiter_name: string
+          valid: boolean
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
@@ -3716,6 +3917,18 @@ export type Database = {
         Returns: string
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
+      submit_recruit_application: {
+        Args: {
+          p_city?: string
+          p_code: string
+          p_email: string
+          p_full_name: string
+          p_note?: string
+          p_phone: string
+          p_social_link?: string
+        }
+        Returns: string
+      }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
     }
     Enums: {
