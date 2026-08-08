@@ -2118,6 +2118,7 @@ export type Database = {
           paid_at: string | null
           paid_by: string | null
           payment_method: string | null
+          payout_reference: string | null
           reject_reason: string | null
           requested_at: string
           requestor_id: string
@@ -2138,6 +2139,7 @@ export type Database = {
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
+          payout_reference?: string | null
           reject_reason?: string | null
           requested_at?: string
           requestor_id: string
@@ -2158,6 +2160,7 @@ export type Database = {
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
+          payout_reference?: string | null
           reject_reason?: string | null
           requested_at?: string
           requestor_id?: string
@@ -3514,6 +3517,7 @@ export type Database = {
           linked_student_names: string[]
           paid_at: string
           payment_method: string
+          payout_reference: string
           reject_reason: string
           requested_at: string
           requestor_email: string
