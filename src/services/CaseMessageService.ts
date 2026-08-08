@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { ChatAttachment, ChatMessage } from "@/lib/chatFormat";
 
 export type MessageVisibility = "internal" | "shared";
 
@@ -11,6 +12,24 @@ export interface CaseMessage {
   body: string;
   visibility: MessageVisibility;
   created_at: string;
+  attachments: ChatAttachment[] | null;
+  kind: "text" | "request" | null;
+  request_status: string | null;
+}
+
+export function toChatMessage(m: CaseMessage): ChatMessage {
+  return {
+    id: m.id,
+    authorId: m.author_id,
+    authorName: m.author_name,
+    authorRole: m.author_role,
+    body: m.body,
+    createdAt: m.created_at,
+    visibility: m.visibility,
+    attachments: (m.attachments ?? []) as ChatAttachment[],
+    kind: (m.kind ?? "text") as "text" | "request",
+    requestStatus: m.request_status,
+  };
 }
 
 /** Messages on a case, oldest first. RLS decides what the caller may see. */
@@ -19,6 +38,7 @@ export async function listCaseMessages(caseId: string): Promise<CaseMessage[]> {
     .from("case_messages")
     .select("*")
     .eq("case_id", caseId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as CaseMessage[];
@@ -29,16 +49,32 @@ export async function sendCaseMessage(
   caseId: string,
   body: string,
   visibility: MessageVisibility = "shared",
+  attachments: ChatAttachment[] = [],
+  kind: "text" | "request" = "text",
 ): Promise<string> {
   const trimmed = body.trim();
-  if (!trimmed) throw new Error("Message body required");
+  if (!trimmed && attachments.length === 0) throw new Error("Message body required");
   const { data, error } = await (supabase as any).rpc("send_case_message", {
     p_case_id: caseId,
     p_body: trimmed,
     p_visibility: visibility,
+    p_attachments: attachments,
+    p_kind: kind,
   });
   if (error) throw error;
   return data as string;
+}
+
+/** Upload a file that answers a pending document request. */
+export async function fulfilDocumentRequest(
+  messageId: string,
+  attachment: ChatAttachment,
+): Promise<void> {
+  const { error } = await (supabase as any).rpc("fulfil_document_request", {
+    p_message_id: messageId,
+    p_attachment: attachment,
+  });
+  if (error) throw error;
 }
 
 /** Mark the thread as read for the current user. */
@@ -47,14 +83,19 @@ export async function markCaseMessagesRead(caseId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Number of messages in the thread newer than the caller's last read marker. */
-export async function unreadCaseMessageCount(caseId: string, userId: string): Promise<number> {
-  const { data: marker } = await (supabase as any)
+export async function getCaseLastRead(caseId: string, userId: string): Promise<string | null> {
+  const { data } = await (supabase as any)
     .from("case_message_reads")
     .select("last_read_at")
     .eq("case_id", caseId)
     .eq("user_id", userId)
     .maybeSingle();
+  return data?.last_read_at ?? null;
+}
+
+/** Number of messages in the thread newer than the caller's last read marker. */
+export async function unreadCaseMessageCount(caseId: string, userId: string): Promise<number> {
+  const lastRead = await getCaseLastRead(caseId, userId);
 
   let query = (supabase as any)
     .from("case_messages")
@@ -62,7 +103,7 @@ export async function unreadCaseMessageCount(caseId: string, userId: string): Pr
     .eq("case_id", caseId)
     .neq("author_id", userId);
 
-  if (marker?.last_read_at) query = query.gt("created_at", marker.last_read_at);
+  if (lastRead) query = query.gt("created_at", lastRead);
 
   const { count, error } = await query;
   if (error) throw error;
@@ -86,6 +127,7 @@ export async function listMyCaseThreads(userId: string, limit = 300): Promise<Ca
   const { data: messages, error } = await (supabase as any)
     .from("case_messages")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -145,3 +187,36 @@ export async function totalUnreadCaseMessages(userId: string): Promise<number> {
   return threads.reduce((sum, thread) => sum + thread.unread, 0);
 }
 
+/* ── Mutes ──────────────────────────────────────────────────────────────── */
+
+export async function listMutedThreads(
+  userId: string,
+): Promise<{ thread_type: string; thread_id: string }[]> {
+  const { data } = await (supabase as any)
+    .from("message_thread_mutes")
+    .select("thread_type, thread_id")
+    .eq("user_id", userId);
+  return (data ?? []) as { thread_type: string; thread_id: string }[];
+}
+
+export async function setThreadMuted(
+  userId: string,
+  threadType: "case" | "direct",
+  threadId: string,
+  muted: boolean,
+): Promise<void> {
+  if (muted) {
+    const { error } = await (supabase as any)
+      .from("message_thread_mutes")
+      .insert({ user_id: userId, thread_type: threadType, thread_id: threadId });
+    if (error && error.code !== "23505") throw error;
+  } else {
+    const { error } = await (supabase as any)
+      .from("message_thread_mutes")
+      .delete()
+      .eq("user_id", userId)
+      .eq("thread_type", threadType)
+      .eq("thread_id", threadId);
+    if (error) throw error;
+  }
+}
