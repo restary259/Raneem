@@ -192,8 +192,12 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
+  const canMessage = role === "admin" || role === "team_member";
+  const headerUnread = useUnreadCaseMessages(canMessage);
+  const messagesHref = role === "admin" ? "/admin/messages" : "/team/messages";
 
   const handleSignOut = async () => {
     await signOut();
@@ -213,7 +217,32 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
+              {canMessage && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={location.pathname.startsWith(messagesHref) ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => navigate(messagesHref)}
+                        aria-label={t("nav.messages")}
+                        className="relative gap-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
+                        {headerUnread > 0 && (
+                          <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                            {headerUnread}
+                          </span>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t("nav.messages")}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {user && <NotificationBell />}
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
