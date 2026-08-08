@@ -327,7 +327,8 @@ export default function MessageList({
                         </div>
                       </div>
                     ) : (
-                      m.body && (
+                      m.body &&
+                      m.kind !== "payout_request" && (
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
                           {renderBody(m.body)}
                         </p>
