@@ -127,12 +127,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshRole = async () => {
-    if (!state.user) return;
+    // Fall back to the live session: right after signInWithPassword the context
+    // state may not have been updated by onAuthStateChange yet.
+    let currentUser = state.user;
+    let currentSession = state.session;
+    if (!currentUser) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session ?? null;
+      currentUser = currentSession?.user ?? null;
+    }
+    if (!currentUser) return;
     const [role, mustChangePassword] = await Promise.all([
-      fetchRole(state.user.id),
-      fetchMustChangePassword(state.user.id),
+      fetchRole(currentUser.id),
+      fetchMustChangePassword(currentUser.id),
     ]);
-    setState(prev => ({ ...prev, role, mustChangePassword }));
+    setState(prev => ({
+      ...prev,
+      user: prev.user ?? currentUser,
+      session: prev.session ?? currentSession,
+      role,
+      mustChangePassword,
+      initialized: true,
+    }));
   };
 
   return (
