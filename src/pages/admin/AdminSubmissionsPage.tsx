@@ -899,7 +899,79 @@ const AdminSubmissionsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Approve submission */}
+      <Dialog open={showApprove} onOpenChange={(v) => { if (!v) setShowApprove(false); }}>
+        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              {t("admin.submissions.approve")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {selected?.student_user_id ? (
+              <p className="text-sm text-muted-foreground">
+                {t("admin.submissions.approveExistingAccount")}
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t("admin.submissions.approveCreatesAccount")}
+                </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
+                  <Input
+                    id="approve-email"
+                    type="email"
+                    autoComplete="off"
+                    value={approveEmail}
+                    onChange={(e) => setApproveEmail(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowApprove(false)}>
+              {t("admin.submissions.cancel")}
+            </Button>
+            <Button onClick={approveSubmission} disabled={reviewing}>
+              {reviewing ? "..." : t("admin.submissions.approve")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request changes */}
+      <Dialog open={showChanges} onOpenChange={(v) => { if (!v) setShowChanges(false); }}>
+        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Undo2 className="h-5 w-5 text-amber-600" />
+              {t("admin.submissions.requestChanges")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="change-note">{t("admin.submissions.changeNote")}</Label>
+            <Textarea
+              id="change-note"
+              rows={4}
+              value={changeNote}
+              onChange={(e) => setChangeNote(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChanges(false)}>
+              {t("admin.submissions.cancel")}
+            </Button>
+            <Button onClick={requestChanges} disabled={reviewing || !changeNote.trim()}>
+              {reviewing ? "..." : t("admin.submissions.requestChanges")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
