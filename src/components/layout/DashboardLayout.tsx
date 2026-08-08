@@ -80,7 +80,9 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   team_member: [
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
+    { key: "nav.messages", icon: MessageSquare, href: "/team/messages" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
+
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
     { key: "nav.students", icon: GraduationCap, href: "/team/students" },
     { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
