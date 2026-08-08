@@ -265,7 +265,7 @@ export default function MessageComposer({
   return (
     <div
       className={cn(
-        "space-y-1.5 border-t bg-card px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+        "space-y-2 border-t bg-card px-3 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-3",
         dragging && "bg-primary/5 ring-1 ring-inset ring-primary",
       )}
       onDragOver={(e) => {
