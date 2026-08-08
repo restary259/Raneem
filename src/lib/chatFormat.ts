@@ -16,10 +16,13 @@ export interface ChatMessage {
   createdAt: string;
   visibility?: "internal" | "shared";
   attachments: ChatAttachment[];
-  kind: "text" | "request";
+  kind: "text" | "request" | "payout_request";
   requestStatus?: string | null;
   editedAt?: string | null;
   mentions?: string[];
+  /** Set when the message carries a structured payout request. */
+  payoutRequestId?: string | null;
+
 }
 
 /** Someone who can be @mentioned in a thread. */
