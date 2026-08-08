@@ -40,7 +40,7 @@ const Hero = () => {
           <div className="container mx-auto grid grid-cols-3 gap-3 sm:gap-8 text-white animate-fade-in animation-delay-500">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-accent drop-shadow-lg">
+                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-brand drop-shadow-lg">
                   <AnimatedCounter end={stat.value} />+
                 </p>
                 <p className="text-sm text-white/80">{stat.label}</p>
