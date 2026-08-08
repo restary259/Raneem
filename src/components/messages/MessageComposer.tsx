@@ -3,21 +3,30 @@ import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   AtSign,
+  Banknote,
   Hash,
   FileUp,
   Loader2,
   Lock,
   Paperclip,
+  Plus,
   RotateCw,
   Send,
   Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
 import {
   ALLOWED_ATTACHMENT_LABEL,
   ALLOWED_ATTACHMENT_MIMES,
