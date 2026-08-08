@@ -2443,7 +2443,9 @@
       "role": {
         "admin": "Admin",
         "team_member": "Advisor",
-        "student": "Student"
+        "student": "Student",
+        "social_media_partner": "Partner",
+        "ambassador": "Ambassador"
       }
     },
     "profile": {
