@@ -11,6 +11,9 @@ import TikTokIcon from "../icons/TikTokIcon";
 import { WHATSAPP_SUPPORT_URL } from '@/lib/contactConfig';
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import FieldGroup from "@/components/common/FieldGroup";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { recordConsent } from "@/lib/consent";
 
 const PASSPORT_TYPES = [
   { value: 'israeli_blue', labelAr: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
@@ -34,12 +37,6 @@ const isValidPhone = (p: string) => {
     /^\+?\d{7,15}$/.test(cleaned);
 };
 
-const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="space-y-1.5">
-    <label className="text-xs font-semibold text-foreground/80">{label}</label>
-    {children}
-  </div>
-);
 
 const Contact = () => {
   const { t, i18n } = useTranslation(['contact', 'common']);
@@ -56,6 +53,8 @@ const Contact = () => {
   const [mathUnits, setMathUnits] = useState('');
   const [preferredMajor, setPreferredMajor] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  const [consentAgreed, setConsentAgreed] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const showBagrut = educationLevel === 'bagrut';
 
@@ -68,7 +67,7 @@ const Contact = () => {
     }
   };
 
-  const canSubmit = fullName.trim() && phone.trim() && isValidPhone(phone);
+  const canSubmit = !!fullName.trim() && !!phone.trim() && isValidPhone(phone) && consentAgreed;
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -97,6 +96,16 @@ const Contact = () => {
 
       // Create a case in the unified pipeline — check if duplicate
       let isDuplicate = false;
+      void recordConsent({
+        sourceForm: 'contact_form',
+        subjectName: fullName,
+        phone,
+        serviceContact: true,
+        marketing: marketingConsent,
+        marketingChannels: marketingConsent ? { email: true, whatsapp: true, sms: false } : undefined,
+        locale: isAr ? 'ar' : 'en',
+      });
+
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -146,6 +155,7 @@ const Contact = () => {
       // Reset
       setFullName(''); setPhone(''); setPassportType(''); setCity('');
       setEducationLevel(''); setEnglishUnits(''); setMathUnits(''); setPreferredMajor('');
+      setConsentAgreed(false); setMarketingConsent(false);
     },
     onError: (error: any) => {
       toast({ variant: "destructive", title: isAr ? 'حدث خطأ' : 'Error', description: error.message });
@@ -255,6 +265,17 @@ const Contact = () => {
               <input type="text" name="website" value={honeypot} onChange={e => setHoneypot(e.target.value)}
                 style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
                 tabIndex={-1} autoComplete="off" aria-hidden="true" />
+
+              <ConsentBlock
+                isAr={isAr}
+                collected={isAr
+                  ? 'الاسم الكامل، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية'
+                  : 'full name, phone number, city, passport type and education details'}
+                agreed={consentAgreed}
+                onAgreedChange={setConsentAgreed}
+                marketing={marketingConsent}
+                onMarketingChange={setMarketingConsent}
+              />
 
               <Button type="button" className="w-full font-bold h-12" size="lg" variant="default"
                 disabled={isPending || !canSubmit}

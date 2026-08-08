@@ -65,6 +65,7 @@ async function moveToDlq(
     template_name: (payload.label || queue) as string,
     recipient_email: payload.to,
     status: 'dlq',
+    category: (payload.purpose === 'marketing' ? 'marketing' : 'transactional'),
     error_message: reason,
   })
   const { error } = await supabase.rpc('move_to_dlq', {
@@ -276,6 +277,7 @@ Deno.serve(async (req) => {
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
+          category: payload.purpose === 'marketing' ? 'marketing' : 'transactional',
         })
 
         // Delete from queue

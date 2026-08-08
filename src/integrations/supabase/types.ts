@@ -969,6 +969,51 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_records: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          locale: string | null
+          marketing_channels: Json
+          marketing_consent: boolean
+          phone: string | null
+          policy_version: string
+          service_contact_consent: boolean
+          source_form: string
+          subject_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          locale?: string | null
+          marketing_channels?: Json
+          marketing_consent?: boolean
+          phone?: string | null
+          policy_version: string
+          service_contact_consent?: boolean
+          source_form: string
+          subject_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          locale?: string | null
+          marketing_channels?: Json
+          marketing_consent?: boolean
+          phone?: string | null
+          policy_version?: string
+          service_contact_consent?: boolean
+          source_form?: string
+          subject_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
@@ -1291,6 +1336,7 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          category: string
           created_at: string
           error_message: string | null
           id: string
@@ -1301,6 +1347,7 @@ export type Database = {
           template_name: string
         }
         Insert: {
+          category?: string
           created_at?: string
           error_message?: string | null
           id?: string
@@ -1311,6 +1358,7 @@ export type Database = {
           template_name: string
         }
         Update: {
+          category?: string
           created_at?: string
           error_message?: string | null
           id?: string
@@ -1357,6 +1405,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          scope: string
           token: string
           used_at: string | null
         }
@@ -1364,6 +1413,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          scope?: string
           token: string
           used_at?: string | null
         }
@@ -1371,6 +1421,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          scope?: string
           token?: string
           used_at?: string | null
         }
@@ -2873,6 +2924,7 @@ export type Database = {
           id: string
           metadata: Json | null
           reason: string
+          scope: string
         }
         Insert: {
           created_at?: string
@@ -2880,6 +2932,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason: string
+          scope?: string
         }
         Update: {
           created_at?: string
@@ -2887,6 +2940,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+          scope?: string
         }
         Relationships: []
       }
