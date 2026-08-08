@@ -9,8 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2, Undo2 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -87,12 +86,8 @@ const AdminSubmissionsPage = () => {
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
 
-  // Review state (approve / request changes)
-  const [showApprove, setShowApprove] = useState(false);
-  const [showChanges, setShowChanges] = useState(false);
+  // Student account email captured during enrollment confirmation
   const [approveEmail, setApproveEmail] = useState("");
-  const [changeNote, setChangeNote] = useState("");
-  const [reviewing, setReviewing] = useState(false);
 
 
 
@@ -241,6 +236,7 @@ const AdminSubmissionsPage = () => {
 
   const openSplitPanel = async () => {
     if (!selected) return;
+    setApproveEmail("");
     await loadSplitPreview(selected);
     setShowSplitPanel(true);
   };
@@ -280,41 +276,10 @@ const AdminSubmissionsPage = () => {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || "Failed");
 
-      await supabase.rpc("log_user_activity" as any, {
-        p_action: "MARK_ENROLLED",
-        p_target_id: selected.id,
-        p_target_table: "cases",
-        p_details: `Marked case ${selected.full_name} as enrolled. Split: partner=${splitPreview.partnerCommission}, team=${splitPreview.teamCommission}`,
-      });
-
-      toast({ description: t("admin.submissions.enrolledSuccess") });
-      setSelected(null);
-      setShowSplitPanel(false);
-      setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
-      await fetchCases();
-    } catch (err: any) {
-      console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
-
-    } finally {
-      setMarking(false);
-    }
-  };
-
-  /** Approve the submission: create/link the student account, then stamp the review. */
-  const approveSubmission = async () => {
-    if (!selected) return;
-    const needsAccount = !selected.student_user_id;
-    if (needsAccount && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim())) {
-      toast({ variant: "destructive", description: t("admin.submissions.invalidEmail") });
-      return;
-    }
-    setReviewing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (needsAccount) {
-        const resp = await fetch(
+      // Create the student account at the moment the case becomes real, if it
+      // doesn't exist yet (this replaces the old separate "Approve" step).
+      if (!selected.student_user_id && approveEmail.trim()) {
+        const accResp = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`,
           {
             method: "POST",
@@ -327,73 +292,32 @@ const AdminSubmissionsPage = () => {
             }),
           },
         );
-        const result = await resp.json();
-        if (!resp.ok) throw new Error(result.error || "Failed");
-      }
-
-      if (selected.submission?.id) {
-        const { error } = await (supabase as any)
-          .from("case_submissions")
-          .update({
-            review_status: "approved",
-            reviewed_by: user?.id ?? null,
-            reviewed_at: new Date().toISOString(),
-            review_note: null,
-          })
-          .eq("id", selected.submission.id);
-        if (error) throw error;
+        const accResult = await accResp.json().catch(() => ({}));
+        if (!accResp.ok) throw new Error(accResult.error || "Failed to create student account");
       }
 
       await supabase.rpc("log_user_activity" as any, {
-        p_action: "APPROVE_SUBMISSION",
+        p_action: "MARK_ENROLLED",
         p_target_id: selected.id,
         p_target_table: "cases",
-        p_details: `Approved submission for ${selected.full_name}`,
+        p_details: `Marked case ${selected.full_name} as enrolled. Split: partner=${splitPreview.partnerCommission}, team=${splitPreview.teamCommission}`,
       });
 
-      toast({ description: t("admin.submissions.approved") });
-      setShowApprove(false);
+      toast({ description: t("admin.submissions.enrolledSuccess") });
       setSelected(null);
-      await fetchCases();
-    } catch (err: any) {
-      console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
-    } finally {
-      setReviewing(false);
-    }
-  };
-
-  /** Send the submission back to the assigned team member with a note. */
-  const requestChanges = async () => {
-    if (!selected?.submission?.id || !changeNote.trim()) return;
-    setReviewing(true);
-    try {
-      const { error } = await supabase.rpc("request_case_changes", {
-        p_case_id: selected.id,
-        p_note: changeNote.trim(),
-      });
-      if (error) throw error;
-
-      await supabase.rpc("log_user_activity" as any, {
-        p_action: "REQUEST_SUBMISSION_CHANGES",
-        p_target_id: selected.id,
-        p_target_table: "cases",
-        p_details: changeNote.trim(),
-      });
-
-      toast({ description: t("admin.submissions.changesRequested") });
-      setShowChanges(false);
-      setChangeNote("");
-      setSelected(null);
+      setShowSplitPanel(false);
+      setApproveEmail("");
+      setSplitPreview({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
       toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
 
     } finally {
-      setReviewing(false);
+      setMarking(false);
     }
   };
+
 
 
 
@@ -532,7 +456,7 @@ const AdminSubmissionsPage = () => {
       </Card>
 
       {/* Full Case Detail Dialog */}
-      <Dialog open={!!selected && !showSplitPanel && !showPasswordGate && !showApprove && !showChanges} onOpenChange={() => setSelected(null)}>
+      <Dialog open={!!selected && !showSplitPanel && !showPasswordGate} onOpenChange={() => setSelected(null)}>
         <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -758,30 +682,6 @@ const AdminSubmissionsPage = () => {
                   {t("admin.submissions.openFullCase")}
                 </Button>
                 {selected.status !== "enrollment_paid" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => setShowChanges(true)}
-                      disabled={reviewing}
-                    >
-                      <Undo2 className="h-4 w-4" />
-                      {t("admin.submissions.requestChanges")}
-                    </Button>
-                    <Button
-                      className="gap-2"
-                      onClick={() => {
-                        setApproveEmail("");
-                        setShowApprove(true);
-                      }}
-                      disabled={reviewing}
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      {t("admin.submissions.approve")}
-                    </Button>
-                  </div>
-                )}
-                {selected.status !== "enrollment_paid" && (
                   <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
                     <SplitSquareHorizontal className="h-4 w-4" />
                     {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
@@ -833,6 +733,21 @@ const AdminSubmissionsPage = () => {
                 <span className="font-bold text-emerald-700">₪{splitPreview.platformRevenue.toLocaleString('en-US')}</span>
               </div>
             </div>
+            {!selected?.student_user_id && (
+              <div className="space-y-1.5 rounded-lg border border-border p-3">
+                <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
+                <Input
+                  id="approve-email"
+                  type="email"
+                  autoComplete="off"
+                  value={approveEmail}
+                  onChange={(e) => setApproveEmail(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("admin.submissions.approveCreatesAccount")}
+                </p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {t("admin.submissions.splitNote", "Commissions are set in Settings → Money Split. Confirm with your password to proceed.")}
             </p>
@@ -841,7 +756,10 @@ const AdminSubmissionsPage = () => {
             <Button variant="outline" onClick={() => setShowSplitPanel(false)}>
               {t("admin.submissions.cancel")}
             </Button>
-            <Button onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }} disabled={marking}>
+            <Button
+              onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }}
+              disabled={marking || (!selected?.student_user_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))}
+            >
               <Lock className="h-4 w-4 me-1" />
               {t("admin.submissions.confirmEnroll", "Confirm")}
             </Button>
@@ -892,77 +810,6 @@ const AdminSubmissionsPage = () => {
             </Button>
             <Button onClick={handleReAuth} disabled={reAuthing || !reAuthPassword.trim()}>
               {reAuthing ? "..." : t("admin.submissions.confirmEnroll")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* Approve submission */}
-      <Dialog open={showApprove} onOpenChange={(v) => { if (!v) setShowApprove(false); }}>
-        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              {t("admin.submissions.approve")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {selected?.student_user_id ? (
-              <p className="text-sm text-muted-foreground">
-                {t("admin.submissions.approveExistingAccount")}
-              </p>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {t("admin.submissions.approveCreatesAccount")}
-                </p>
-                <div className="space-y-1.5">
-                  <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
-                  <Input
-                    id="approve-email"
-                    type="email"
-                    autoComplete="off"
-                    value={approveEmail}
-                    onChange={(e) => setApproveEmail(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowApprove(false)}>
-              {t("admin.submissions.cancel")}
-            </Button>
-            <Button onClick={approveSubmission} disabled={reviewing}>
-              {reviewing ? "..." : t("admin.submissions.approve")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Request changes */}
-      <Dialog open={showChanges} onOpenChange={(v) => { if (!v) setShowChanges(false); }}>
-        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Undo2 className="h-5 w-5 text-amber-600" />
-              {t("admin.submissions.requestChanges")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-1.5">
-            <Label htmlFor="change-note">{t("admin.submissions.changeNote")}</Label>
-            <Textarea
-              id="change-note"
-              rows={4}
-              value={changeNote}
-              onChange={(e) => setChangeNote(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChanges(false)}>
-              {t("admin.submissions.cancel")}
-            </Button>
-            <Button onClick={requestChanges} disabled={reviewing || !changeNote.trim()}>
-              {reviewing ? "..." : t("admin.submissions.requestChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>

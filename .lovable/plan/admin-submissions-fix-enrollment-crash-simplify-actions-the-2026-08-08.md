@@ -1,4 +1,4 @@
-# Admin Submissions — fix enrollment crash + simplify actions
+# Admin Submissions — fix enrollment crash + simplify actions- the application in application page must be under the export button and search bar 
 
 ## What's broken
 
@@ -19,11 +19,11 @@ So today: **no case with a partner can be marked as enrolled.** This is not a UI
 Rewrite `get_effective_partner_split` so it never reads an unassigned record:
 
 - Track whether an accepted rate offer was found with an explicit flag (`FOUND`) instead of
-  probing `v_offer.id`.
+probing `v_offer.id`.
 - No-master partner: return the full base pool to the partner, master share 0, no offer fields.
 - Master partner with no accepted offer: same, but return the master id.
 - Master partner with an accepted offer: pool split as today (partner amount capped at the pool,
-  remainder to the master).
+remainder to the master).
 
 Money rules are unchanged — the pool is never exceeded, no new money is created.
 
@@ -58,15 +58,15 @@ component.
 
 - Re-run the enrollment confirmation on a partner-attributed case and confirm it returns 200.
 - Show the real reward rows created for that case and confirm team + partner + any master
-  override never exceeds the fee actually charged.
+override never exceeds the fee actually charged.
 - Confirm the submissions dialog now shows only the two remaining actions, in Arabic and English.
 - Run the existing test suite and the type-check.
 
 ## Technical notes
 
 - Files: `supabase/functions/admin-mark-paid/index.ts` (unchanged logic, verified), a new
-  migration replacing `public.get_effective_partner_split`, `src/pages/admin/AdminSubmissionsPage.tsx`,
-  `src/components/layout/DashboardLayout.tsx`, plus removal of unused
-  `admin.submissions.approve*` / `requestChanges` keys from the locale files.
+migration replacing `public.get_effective_partner_split`, `src/pages/admin/AdminSubmissionsPage.tsx`,
+`src/components/layout/DashboardLayout.tsx`, plus removal of unused
+`admin.submissions.approve*` / `requestChanges` keys from the locale files.
 - `record_case_commission` itself needs no change; it only breaks because of its call into
-  `get_effective_partner_split`.
+`get_effective_partner_split`.
