@@ -468,7 +468,6 @@
       "insUpdated": "تم تحديث التأمين",
       "loading": "جارٍ التحميل…",
       "accommodationsLinked": "{{n}} سكن مرتبط",
-      "selectSchoolPlaceholder": "اختر مدرسة",
       "tierBasic": "أساسي",
       "tierStandard": "معياري",
       "tierPremium": "مميز",
@@ -2165,7 +2164,8 @@
       "noneStage": "لا يوجد",
       "statusUpdated": "تم تحديث الحالة إلى {{status}}",
       "upcomingAppointments": "القادمة",
-      "pastAppointments": "السابقة"
+      "pastAppointments": "السابقة",
+      "keyFacts": "معلومات أساسية"
     },
     "profileForm": {
       "steps": {
