@@ -320,7 +320,10 @@ export default function MessageList({
                             <span>{receipt.seenBy.length}</span>
                           </span>
                         ) : (
-                          <Check className="h-3.5 w-3.5" title={t("chat.receipt.sent")} />
+                          <span title={t("chat.receipt.sent")}>
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+
                         );
                       })()}
                     </div>
