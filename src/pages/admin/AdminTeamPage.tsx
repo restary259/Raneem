@@ -276,7 +276,19 @@ const AdminTeamPage = () => {
               {members.map(m => (
                 <div key={m.id} className="flex items-start justify-between gap-3 p-4 hover:bg-muted/50 transition-colors flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{m.full_name}</p>
+                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${onlineUsers.has(m.id) ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
+                        title={t(onlineUsers.has(m.id) ? 'chat.presence.online' : 'chat.presence.offline')}
+                      />
+                      {m.full_name}
+                      {onlineUsers.has(m.id) && (
+                        <span className="text-[10px] font-normal text-emerald-600">
+                          {t('chat.presence.online')}
+                        </span>
+                      )}
+                    </p>
+
                     <p className="text-xs text-muted-foreground">{m.email}</p>
                     {REFERRING_ROLES.includes(m.role) && m.referral_code && (
                       <button
