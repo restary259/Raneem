@@ -117,7 +117,10 @@ export async function fulfilDocumentRequest(
 export async function markCaseMessagesRead(caseId: string): Promise<void> {
   const { error } = await (supabase as any).rpc("mark_case_messages_read", { p_case_id: caseId });
   if (error) throw error;
+  // Let the header/sidebar badges drop immediately instead of waiting on realtime.
+  window.dispatchEvent(new Event("darb:threads-read"));
 }
+
 
 export async function getCaseLastRead(caseId: string, userId: string): Promise<string | null> {
   const { data } = await (supabase as any)
