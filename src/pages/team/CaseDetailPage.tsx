@@ -394,11 +394,13 @@ export default function CaseDetailPage() {
 
       {/* Section tabs */}
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="case">{t("case.tabs.case", "Case")}</TabsTrigger>
           <TabsTrigger value="program">{t("case.tabs.programFinance", "Program & Finance")}</TabsTrigger>
+          <TabsTrigger value="messages">{t("case.tabs.messages", "Messages")}</TabsTrigger>
           <TabsTrigger value="history">{t("case.tabs.history", "History")}</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="case" className="mt-3 space-y-3">
           <Card>
