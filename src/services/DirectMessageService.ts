@@ -12,9 +12,13 @@ export interface DirectMessage {
   attachments: ChatAttachment[] | null;
   edited_at?: string | null;
   mentions?: string[] | null;
+  kind?: string | null;
+  request_status?: string | null;
+  payout_request_id?: string | null;
 }
 
 export function toChatMessage(m: DirectMessage): ChatMessage {
+  const kind = m.payout_request_id ? "payout_request" : "text";
   return {
     id: m.id,
     authorId: m.author_id,
@@ -23,11 +27,14 @@ export function toChatMessage(m: DirectMessage): ChatMessage {
     body: m.body,
     createdAt: m.created_at,
     attachments: (m.attachments ?? []) as ChatAttachment[],
-    kind: "text",
+    kind,
+    requestStatus: m.request_status ?? null,
+    payoutRequestId: m.payout_request_id ?? null,
     editedAt: m.edited_at ?? null,
     mentions: (m.mentions ?? []) as string[],
   };
 }
+
 
 
 export interface DirectThread {
