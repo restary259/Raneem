@@ -42,6 +42,8 @@ export interface PartnerDirectoryRow {
 interface Props {
   partner: PartnerDirectoryRow;
   requests: any[];
+  /** Every partner in the directory — used to attach someone to this network. */
+  allPartners?: PartnerDirectoryRow[];
   onBack: () => void;
   onRefresh: () => void;
 }
