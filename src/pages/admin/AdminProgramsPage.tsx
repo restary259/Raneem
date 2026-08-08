@@ -23,7 +23,23 @@ import {
   Pencil,
   Building2,
   Shield,
+  GraduationCap as School,
 } from "lucide-react";
+import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+
+function groupBySchool<T extends { school_id: string | null }>(
+  items: T[],
+  schools: { id: string; name_en: string }[],
+): { key: string; label: string; items: T[] }[] {
+  const groups: { key: string; label: string; items: T[] }[] = [];
+  for (const school of schools) {
+    const list = items.filter((i) => i.school_id === school.id);
+    if (list.length) groups.push({ key: school.id, label: school.name_en, items: list });
+  }
+  const ungrouped = items.filter((i) => !i.school_id || !schools.some((s) => s.id === i.school_id));
+  if (ungrouped.length) groups.push({ key: "none", label: "Other", items: ungrouped });
+  return groups;
+}
 
 interface Program {
   id: string;
@@ -39,6 +55,12 @@ interface Program {
   lessons_per_week: number | null;
   duration_in_months: number | null;
   fixed_start_day_of_month: number | null;
+  school_id: string | null;
+  cefr_range: string | null;
+  hours_per_week: number | null;
+  start_rule: string | null;
+  registration_fee: number | null;
+  price_tiers: unknown;
 }
 interface School {
   id: string;
@@ -58,6 +80,12 @@ interface Accommodation {
   description: string | null;
   is_active: boolean;
   school_id: string | null;
+  deposit: number | null;
+  placement_fee: number | null;
+  meals: string | null;
+  room_type: string | null;
+  distance_note: string | null;
+  price_tiers: unknown;
 }
 interface Insurance {
   id: string;
@@ -107,17 +135,30 @@ const AdminProgramsPage = () => {
     lessons_per_week: "",
     duration_in_months: "",
     fixed_start_day_of_month: "",
+    school_id: "",
+    cefr_range: "",
+    hours_per_week: "",
+    start_rule: "",
+    registration_fee: "",
   };
-  const [progForm, setProgForm] = useState(emptyProgForm);
-  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
-  const [accomForm, setAccomForm] = useState({
+  const emptyAccomForm = {
     name_ar: "",
     name_en: "",
     price: "",
     currency: "EUR",
     description: "",
     school_id: "",
-  });
+    room_type: "",
+    meals: "",
+    deposit: "",
+    placement_fee: "",
+    distance_note: "",
+  };
+  const [progForm, setProgForm] = useState(emptyProgForm);
+  const [progTiers, setProgTiers] = useState<PriceTier[]>([]);
+  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
+  const [accomForm, setAccomForm] = useState(emptyAccomForm);
+  const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState({ name: "", tier: "standard", price: "", currency: "EUR" });
 
   const fetchAll = useCallback(async () => {
@@ -162,12 +203,19 @@ const AdminProgramsPage = () => {
         lessons_per_week: progForm.lessons_per_week ? Number(progForm.lessons_per_week) : null,
         duration_in_months: progForm.duration_in_months ? Number(progForm.duration_in_months) : null,
         fixed_start_day_of_month: progForm.fixed_start_day_of_month ? Number(progForm.fixed_start_day_of_month) : null,
+        school_id: progForm.school_id || null,
+        cefr_range: progForm.cefr_range || null,
+        hours_per_week: progForm.hours_per_week ? Number(progForm.hours_per_week) : null,
+        start_rule: progForm.start_rule || null,
+        registration_fee: progForm.registration_fee ? Number(progForm.registration_fee) : null,
+        price_tiers: progTiers.filter((tier) => tier.price != null),
       };
       if (editProgId) await db.from("programs").update(payload).eq("id", editProgId);
       else await db.from("programs").insert(payload);
       setProgOpen(false);
       setEditProgId(null);
       setProgForm(emptyProgForm);
+      setProgTiers([]);
       await fetchAll();
       toast({ description: editProgId ? t('admin.programs.programUpdated') : t('admin.programs.programCreated') });
     } catch (err: any) {
@@ -218,12 +266,19 @@ const AdminProgramsPage = () => {
         currency: accomForm.currency,
         description: accomForm.description || null,
         school_id: accomForm.school_id || null,
+        room_type: accomForm.room_type || null,
+        meals: accomForm.meals || null,
+        deposit: accomForm.deposit ? Number(accomForm.deposit) : null,
+        placement_fee: accomForm.placement_fee ? Number(accomForm.placement_fee) : null,
+        distance_note: accomForm.distance_note || null,
+        price_tiers: accomTiers.filter((tier) => tier.price != null),
       };
       if (editAccomId) await db.from("accommodations").update(payload).eq("id", editAccomId);
       else await db.from("accommodations").insert(payload);
       setAccomOpen(false);
       setEditAccomId(null);
-      setAccomForm({ name_ar: "", name_en: "", price: "", currency: "EUR", description: "", school_id: "" });
+      setAccomForm(emptyAccomForm);
+      setAccomTiers([]);
       await fetchAll();
       toast({ description: editAccomId ? t('admin.programs.accomUpdated') : t('admin.programs.accomCreated') });
     } catch (err: any) {
@@ -284,7 +339,13 @@ const AdminProgramsPage = () => {
       lessons_per_week: p.lessons_per_week?.toString() ?? "",
       duration_in_months: p.duration_in_months?.toString() ?? "",
       fixed_start_day_of_month: p.fixed_start_day_of_month?.toString() ?? "",
+      school_id: p.school_id ?? "",
+      cefr_range: p.cefr_range ?? "",
+      hours_per_week: p.hours_per_week?.toString() ?? "",
+      start_rule: p.start_rule ?? "",
+      registration_fee: p.registration_fee?.toString() ?? "",
     });
+    setProgTiers(parseTiers(p.price_tiers));
     setProgOpen(true);
   };
 
@@ -297,7 +358,13 @@ const AdminProgramsPage = () => {
       currency: a.currency,
       description: a.description ?? "",
       school_id: a.school_id ?? "",
+      room_type: a.room_type ?? "",
+      meals: a.meals ?? "",
+      deposit: a.deposit?.toString() ?? "",
+      placement_fee: a.placement_fee?.toString() ?? "",
+      distance_note: a.distance_note ?? "",
     });
+    setAccomTiers(parseTiers(a.price_tiers));
     setAccomOpen(true);
   };
 
@@ -346,6 +413,7 @@ const AdminProgramsPage = () => {
                 if (!v) {
                   setEditProgId(null);
                   setProgForm(emptyProgForm);
+                  setProgTiers([]);
                 }
               }}
             >
@@ -457,6 +525,73 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
+                    <Label>{t('admin.programs.labelLinkedSchool')}</Label>
+                    <Select
+                      value={progForm.school_id || "none"}
+                      onValueChange={(v) => setProgForm((f) => ({ ...f, school_id: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('admin.programs.noSchoolOption')}</SelectItem>
+                        {schools.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name_en}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelCefr')}</Label>
+                      <Input
+                        value={progForm.cefr_range}
+                        onChange={(e) => setProgForm((f) => ({ ...f, cefr_range: e.target.value }))}
+                        placeholder="A1-C1"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelHoursWeek')}</Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={progForm.hours_per_week}
+                        onChange={(e) => setProgForm((f) => ({ ...f, hours_per_week: e.target.value }))}
+                        placeholder="15"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelRegistrationFee')}</Label>
+                      <Input
+                        type="number"
+                        value={progForm.registration_fee}
+                        onChange={(e) => setProgForm((f) => ({ ...f, registration_fee: e.target.value }))}
+                        placeholder="60"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelStartRule')}</Label>
+                    <Select
+                      value={progForm.start_rule || "none"}
+                      onValueChange={(v) => setProgForm((f) => ({ ...f, start_rule: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('admin.programs.startRule.none')}</SelectItem>
+                        <SelectItem value="every_monday">{t('admin.programs.startRule.every_monday')}</SelectItem>
+                        <SelectItem value="every_monday_a1_first_monday">
+                          {t('admin.programs.startRule.every_monday_a1_first_monday')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <PriceTiersEditor tiers={progTiers} onChange={setProgTiers} />
+                  <div className="space-y-1">
                     <Label>{t('admin.programs.labelDescription')}</Label>
                     <Input
                       value={progForm.description}
@@ -473,8 +608,16 @@ const AdminProgramsPage = () => {
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">{t('admin.programs.loading')}</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {programs.map((p) => (
+            <div className="space-y-6">
+              {groupBySchool(programs, schools).map((group) => (
+                <div key={group.key} className="space-y-3">
+                  <div className="flex items-center gap-2 border-b pb-1">
+                    <School className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">{group.label}</h3>
+                    <span className="text-xs text-muted-foreground">({group.items.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {group.items.map((p) => (
                 <Card
                   key={p.id}
                   className={`overflow-hidden hover:shadow-md transition-all ${!p.is_active ? "opacity-60" : ""}`}
@@ -500,9 +643,19 @@ const AdminProgramsPage = () => {
                           <BadgeCheck className="h-3 w-3 me-1" />
                           {p.type.replace("_", " ")}
                         </span>
+                        {p.cefr_range && (
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {p.cefr_range}
+                          </span>
+                        )}
                         {p.price != null && (
                           <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                             💰 {p.price.toLocaleString('en-US')} {p.currency}
+                          </span>
+                        )}
+                        {parseTiers(p.price_tiers).length > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
+                            {t('admin.programs.tiersCount', { count: parseTiers(p.price_tiers).length })}
                           </span>
                         )}
                         {p.duration_in_months && (
@@ -563,9 +716,12 @@ const AdminProgramsPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
               {programs.length === 0 && (
-                <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
+                <p className="text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
               )}
             </div>
           )}
@@ -710,14 +866,8 @@ const AdminProgramsPage = () => {
                 setAccomOpen(v);
                 if (!v) {
                   setEditAccomId(null);
-                  setAccomForm({
-                    name_ar: "",
-                    name_en: "",
-                    price: "",
-                    currency: "EUR",
-                    description: "",
-                    school_id: "",
-                  });
+                  setAccomForm(emptyAccomForm);
+                  setAccomTiers([]);
                 }
               }}
             >
@@ -801,6 +951,48 @@ const AdminProgramsPage = () => {
                       onChange={(e) => setAccomForm((f) => ({ ...f, description: e.target.value }))}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelRoomType')}</Label>
+                      <Input
+                        value={accomForm.room_type}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, room_type: e.target.value }))}
+                        placeholder="Single / Shared"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMeals')}</Label>
+                      <Input
+                        value={accomForm.meals}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, meals: e.target.value }))}
+                        placeholder="Breakfast / None"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDeposit')}</Label>
+                      <Input
+                        type="number"
+                        value={accomForm.deposit}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, deposit: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelPlacementFee')}</Label>
+                      <Input
+                        type="number"
+                        value={accomForm.placement_fee}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, placement_fee: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelDistanceNote')}</Label>
+                    <Input
+                      value={accomForm.distance_note}
+                      onChange={(e) => setAccomForm((f) => ({ ...f, distance_note: e.target.value }))}
+                    />
+                  </div>
+                  <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -808,8 +1000,16 @@ const AdminProgramsPage = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {accommodations.map((a) => {
+          <div className="space-y-6">
+            {groupBySchool(accommodations, schools).map((group) => (
+              <div key={group.key} className="space-y-3">
+                <div className="flex items-center gap-2 border-b pb-1">
+                  <Building2 className="h-4 w-4 text-amber-600" />
+                  <h3 className="text-sm font-semibold">{group.label}</h3>
+                  <span className="text-xs text-muted-foreground">({group.items.length})</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {group.items.map((a) => {
               const linkedSchool = schools.find((s) => s.id === a.school_id);
               return (
                 <Card
@@ -832,11 +1032,39 @@ const AdminProgramsPage = () => {
                           )}
                         </div>
                       </div>
-                      {a.price != null && (
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                          💰 {a.price.toLocaleString('en-US')} {a.currency}/mo
-                        </span>
-                      )}
+                      <div className="flex flex-wrap gap-1.5">
+                        {a.price != null && (
+                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                            💰 {a.price.toLocaleString('en-US')} {a.currency}/mo
+                          </span>
+                        )}
+                        {a.room_type && (
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {a.room_type}
+                          </span>
+                        )}
+                        {a.meals && (
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {a.meals}
+                          </span>
+                        )}
+                        {a.deposit != null && (
+                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-700">
+                            {t('admin.programs.labelDeposit')}: {a.deposit.toLocaleString('en-US')} {a.currency}
+                          </span>
+                        )}
+                        {a.placement_fee != null && (
+                          <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-xs text-purple-700">
+                            {t('admin.programs.labelPlacementFee')}: {a.placement_fee.toLocaleString('en-US')} {a.currency}
+                          </span>
+                        )}
+                        {parseTiers(a.price_tiers).length > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
+                            {formatTierLadder(parseTiers(a.price_tiers), a.currency, t('admin.programs.weeksShort'))}
+                          </span>
+                        )}
+                      </div>
+                      {a.distance_note && <p className="text-xs text-muted-foreground">{a.distance_note}</p>}
                       {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
                     </div>
                     <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
@@ -875,9 +1103,12 @@ const AdminProgramsPage = () => {
                   </CardContent>
                 </Card>
               );
-            })}
+                  })}
+                </div>
+              </div>
+            ))}
             {!loading && accommodations.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noAccommodations')}</p>
+              <p className="text-center text-sm text-muted-foreground py-8">{t('admin.programs.noAccommodations')}</p>
             )}
           </div>
         </TabsContent>
