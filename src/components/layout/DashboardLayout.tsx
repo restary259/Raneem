@@ -93,6 +93,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
   ],
   student: [
+    { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
     { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
     { key: "nav.profile", icon: User, href: "/student/profile" },
     { key: "nav.documents", icon: FileText, href: "/student/documents" },

@@ -75,6 +75,7 @@ const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPa
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
 
 // Student pages (Phase 5)
+const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
 const StudentChecklistPage = lazy(() => import("./pages/student/StudentChecklistPage"));
 const StudentProfilePage = lazy(() => import("./pages/student/StudentProfilePage"));
 const StudentDocumentsPage = lazy(() => import("./pages/student/StudentDocumentsPage"));
@@ -246,7 +247,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/student/checklist" replace />} />
+              <Route index element={<StudentNextStepsPage />} />
               <Route path="checklist" element={<StudentChecklistPage />} />
               <Route path="profile" element={<StudentProfilePage />} />
               <Route path="documents" element={<StudentDocumentsPage />} />
