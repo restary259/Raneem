@@ -175,11 +175,6 @@ export default function CaseDetailPage() {
     }
   };
 
-  const nextStages = useMemo(
-    () => (caseData ? manualNextStages(caseData.status) : []),
-    [caseData],
-  );
-
   const handleAdvance = async () => {
     if (!caseData || !pendingStage) return;
     setAdvancing(true);
@@ -197,6 +192,7 @@ export default function CaseDetailPage() {
       setAdvancing(false);
     }
   };
+
 
   const canSubmitToAdmin =
     canManage &&
