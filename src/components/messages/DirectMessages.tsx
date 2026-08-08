@@ -106,6 +106,33 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
     setLoadingOlder(false);
   };
 
+  const openPayout = async () => {
+    setPreview(null);
+    setPayoutOpen(true);
+    try {
+      setPreview(await getMyPayoutPreview());
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+      setPayoutOpen(false);
+    }
+  };
+
+  const submitPayout = async () => {
+    setSubmitting(true);
+    try {
+      await requestPayoutViaChat();
+      setPayoutOpen(false);
+      toast({ description: t("chat.payout.sent") });
+      await load();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
+
   return (
     <div className={className}>
       <div className="max-h-[460px] overflow-y-auto bg-muted/20">
