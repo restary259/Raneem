@@ -2185,7 +2185,8 @@
       "statusUpdated": "Status updated to {{status}}",
       "upcomingAppointments": "Upcoming",
       "pastAppointments": "Past",
-      "keyFacts": "Key facts"
+      "keyFacts": "Key facts",
+      "paymentBlocked": "Complete and save the student file before confirming payment."
     },
     "profileForm": {
       "steps": {
@@ -2399,7 +2400,10 @@
       "action": "Submit to admin",
       "blocked": "Confirm the payment first",
       "success": "Sent to admin for review",
-      "changesRequested": "Admin requested changes"
+      "changesRequested": "Admin requested changes",
+      "confirmTitle": "Send this student file to Admin?",
+      "confirmBody": "The case moves to admin review and the file is locked for editing.",
+      "confirmAction": "Confirm & send"
     },
     "program": {
       "program": "Program",
@@ -2447,7 +2451,14 @@
       "emergencyPhone": "Emergency contact phone",
       "save": "Save profile",
       "saved": "Profile saved",
-      "missingFields": "Please fill in all required fields"
+      "missingFields": "Please fill in all required fields",
+      "fieldRequired": "This field is required",
+      "missingOne": "Please complete: {{field}}",
+      "missingMany": "Please complete: {{field}} (+{{count}} more)",
+      "autoEnd": "Calculated automatically — 40 weeks",
+      "pickSchoolFirst": "Select a school first",
+      "savingDraft": "Saving…",
+      "draftSavedAt": "Draft saved {{time}}"
     },
     "invite": {
       "title": "Create the student account",

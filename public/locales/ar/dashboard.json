@@ -2203,7 +2203,8 @@
       "statusUpdated": "تم تحديث الحالة إلى {{status}}",
       "upcomingAppointments": "القادمة",
       "pastAppointments": "السابقة",
-      "keyFacts": "معلومات أساسية"
+      "keyFacts": "معلومات أساسية",
+      "paymentBlocked": "أكمل ملف الطالب واحفظه قبل تأكيد الدفع."
     },
     "profileForm": {
       "steps": {
@@ -2417,7 +2418,10 @@
       "action": "إرسال إلى الإدارة",
       "blocked": "أكّد الدفع أولاً",
       "success": "تم الإرسال إلى الإدارة للمراجعة",
-      "changesRequested": "الإدارة طلبت تعديلات"
+      "changesRequested": "الإدارة طلبت تعديلات",
+      "confirmTitle": "إرسال ملف الطالب إلى الإدارة؟",
+      "confirmBody": "ينتقل الملف إلى مراجعة الإدارة ويُقفل عن التعديل.",
+      "confirmAction": "تأكيد وإرسال"
     },
     "program": {
       "program": "البرنامج",
@@ -2465,7 +2469,14 @@
       "emergencyPhone": "هاتف جهة الطوارئ",
       "save": "حفظ الملف",
       "saved": "تم حفظ الملف",
-      "missingFields": "يرجى تعبئة جميع الحقول المطلوبة"
+      "missingFields": "يرجى تعبئة جميع الحقول المطلوبة",
+      "fieldRequired": "هذا الحقل مطلوب",
+      "missingOne": "يرجى إكمال: {{field}}",
+      "missingMany": "يرجى إكمال: {{field}} (+{{count}} حقول أخرى)",
+      "autoEnd": "يُحتسب تلقائياً — 40 أسبوعاً",
+      "pickSchoolFirst": "اختر المدرسة أولاً",
+      "savingDraft": "جارٍ الحفظ…",
+      "draftSavedAt": "تم حفظ المسودة {{time}}"
     },
     "invite": {
       "title": "إنشاء حساب الطالب",
