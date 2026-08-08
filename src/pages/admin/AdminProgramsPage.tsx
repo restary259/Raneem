@@ -763,14 +763,8 @@ const AdminProgramsPage = () => {
                 setAccomOpen(v);
                 if (!v) {
                   setEditAccomId(null);
-                  setAccomForm({
-                    name_ar: "",
-                    name_en: "",
-                    price: "",
-                    currency: "EUR",
-                    description: "",
-                    school_id: "",
-                  });
+                  setAccomForm(emptyAccomForm);
+                  setAccomTiers([]);
                 }
               }}
             >
