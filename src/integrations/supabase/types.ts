@@ -351,29 +351,53 @@ export type Database = {
           case_id: string
           created_at: string
           id: string
+          invoice_id: string | null
+          note: string | null
           paid_date: string | null
           paid_status: string
           payment_type: string
+          recorded_by: string | null
         }
         Insert: {
           amount?: number
           case_id: string
           created_at?: string
           id?: string
+          invoice_id?: string | null
+          note?: string | null
           paid_date?: string | null
           paid_status?: string
           payment_type?: string
+          recorded_by?: string | null
         }
         Update: {
           amount?: number
           case_id?: string
           created_at?: string
           id?: string
+          invoice_id?: string | null
+          note?: string | null
           paid_date?: string | null
           paid_status?: string
           payment_type?: string
+          recorded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "case_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_totals"
+            referencedColumns: ["invoice_id"]
+          },
+          {
+            foreignKeyName: "case_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       case_service_snapshots: {
         Row: {
@@ -427,6 +451,66 @@ export type Database = {
             columns: ["master_service_id"]
             isOneToOne: false
             referencedRelation: "master_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_services: {
+        Row: {
+          added_by: string | null
+          case_id: string
+          category: string
+          created_at: string
+          description: string
+          discount: number
+          id: string
+          notes: string | null
+          quantity: number
+          service_id: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          case_id: string
+          category?: string
+          created_at?: string
+          description: string
+          discount?: number
+          id?: string
+          notes?: string | null
+          quantity?: number
+          service_id?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          case_id?: string
+          category?: string
+          created_at?: string
+          description?: string
+          discount?: number
+          id?: string
+          notes?: string | null
+          quantity?: number
+          service_id?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_services_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
             referencedColumns: ["id"]
           },
         ]
@@ -1079,32 +1163,45 @@ export type Database = {
       invoice_items: {
         Row: {
           amount: number
+          case_service_id: string | null
           category: string
           created_at: string
           description: string
+          discount: number
           id: string
           invoice_id: string
           quantity: number
         }
         Insert: {
           amount?: number
+          case_service_id?: string | null
           category?: string
           created_at?: string
           description: string
+          discount?: number
           id?: string
           invoice_id: string
           quantity?: number
         }
         Update: {
           amount?: number
+          case_service_id?: string | null
           category?: string
           created_at?: string
           description?: string
+          discount?: number
           id?: string
           invoice_id?: string
           quantity?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "invoice_items_case_service_id_fkey"
+            columns: ["case_service_id"]
+            isOneToOne: false
+            referencedRelation: "case_services"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoice_items_invoice_id_fkey"
             columns: ["invoice_id"]
@@ -2318,6 +2415,42 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          default_price: number
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          default_price?: number
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          default_price?: number
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
