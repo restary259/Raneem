@@ -103,7 +103,9 @@ interface Insurance {
   terms_url?: string | null;
   description_ar?: string | null;
   description_en?: string | null;
+  age_price_tiers?: unknown;
 }
+
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
