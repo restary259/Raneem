@@ -403,7 +403,6 @@ export default function MessageComposer({
             }
           }}
         />
-        />
       </div>
 
 
