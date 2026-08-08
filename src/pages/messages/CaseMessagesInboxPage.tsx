@@ -57,7 +57,7 @@ import {
   type StaffMember,
 } from "@/services/DirectMessageService";
 
-type Filter = "all" | "cases" | "direct" | "unread";
+type Filter = "all" | "cases" | "direct" | "partners" | "unread";
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -161,15 +161,19 @@ export default function CaseMessagesInboxPage() {
     const caseItems: ThreadListItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
+      category: "cases" as const,
       title: thread.caseName,
       subtitle: thread.caseReference,
       preview: thread.lastMessage.body || t("chat.attach.only"),
       timestamp: thread.lastMessage.created_at,
       unread: thread.unread,
     }));
+    const isPartnerRole = (role?: string | null) =>
+      role === "social_media_partner" || role === "ambassador";
     const directItems: ThreadListItem[] = directThreads.map((thread) => ({
       id: thread.threadId,
       type: "direct",
+      category: isPartnerRole(thread.otherUserRole) ? ("partners" as const) : ("direct" as const),
       title: thread.otherUserName,
       subtitle: thread.otherUserRole
         ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
@@ -181,10 +185,11 @@ export default function CaseMessagesInboxPage() {
     }));
 
     const q = query.trim().toLowerCase();
-    return [...caseItems, ...directItems]
+    return [...directItems, ...caseItems]
       .filter((item) => {
-        if (filter === "cases" && item.type !== "case") return false;
-        if (filter === "direct" && item.type !== "direct") return false;
+        if (filter === "cases" && item.category !== "cases") return false;
+        if (filter === "direct" && item.category !== "direct") return false;
+        if (filter === "partners" && item.category !== "partners") return false;
         if (filter === "unread" && item.unread === 0) return false;
         if (!q) return true;
         return (
@@ -199,8 +204,14 @@ export default function CaseMessagesInboxPage() {
   }, [threads, directThreads, query, filter, t]);
 
   const caseUnread = threads.reduce((sum, thread) => sum + thread.unread, 0);
-  const directUnread = directThreads.reduce((sum, thread) => sum + thread.unread, 0);
-  const totalUnread = caseUnread + directUnread;
+  const partnerThreads = directThreads.filter(
+    (thread) =>
+      thread.otherUserRole === "social_media_partner" || thread.otherUserRole === "ambassador",
+  );
+  const partnerUnread = partnerThreads.reduce((sum, thread) => sum + thread.unread, 0);
+  const directUnread =
+    directThreads.reduce((sum, thread) => sum + thread.unread, 0) - partnerUnread;
+  const totalUnread = caseUnread + directUnread + partnerUnread;
 
   const activeCase =
     selected?.type === "case" ? threads.find((x) => x.caseId === selected.id) ?? null : null;
@@ -259,8 +270,9 @@ export default function CaseMessagesInboxPage() {
 
   const filters: { key: Filter; label: string; count?: number }[] = [
     { key: "all", label: t("chat.filter.all") },
-    { key: "cases", label: t("chat.filter.cases"), count: caseUnread },
-    { key: "direct", label: t("chat.filter.direct"), count: directUnread },
+    { key: "direct", label: t("chat.section.direct"), count: directUnread },
+    { key: "cases", label: t("chat.section.cases"), count: caseUnread },
+    { key: "partners", label: t("chat.section.partners"), count: partnerUnread },
     { key: "unread", label: t("chat.filter.unread"), count: totalUnread },
   ];
 
@@ -426,6 +438,7 @@ export default function CaseMessagesInboxPage() {
                 onSelect={(item) => setSelected({ type: item.type, id: item.id })}
                 emptyLabel={t("messagesInbox.empty")}
                 onlineUserIds={online}
+                grouped={filter === "all"}
               />
             )}
           </div>
