@@ -301,12 +301,12 @@ export async function resolveCaseRefs(refs: string[]): Promise<Map<string, strin
  * that also write to admin_audit_log — the client never touches the message rows.
  */
 export async function deleteChatMessage(messageId: string, kind: "case" | "direct"): Promise<void> {
-  const { error } = await db.rpc("delete_chat_message", { p_message_id: messageId, p_kind: kind });
+  const { error } = await (supabase as any).rpc("delete_chat_message", { p_message_id: messageId, p_kind: kind });
   if (error) throw error;
 }
 
 export async function clearCaseThread(caseId: string): Promise<number> {
-  const { data, error } = await db.rpc("clear_case_thread", { p_case_id: caseId });
+  const { data, error } = await (supabase as any).rpc("clear_case_thread", { p_case_id: caseId });
   if (error) throw error;
   return Number(data ?? 0);
 }

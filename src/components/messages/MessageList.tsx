@@ -10,6 +10,7 @@ import {
   Lock,
   Paperclip,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,8 @@ interface MessageListProps {
   caseLinkBase?: string;
   /** Saves an edited message body. */
   onEditMessage?: (message: ChatMessage, body: string) => Promise<void>;
+  /** Admin-only moderation: soft-delete a single message. */
+  onDeleteMessage?: (message: ChatMessage) => Promise<void>;
   /** People currently typing in this thread. */
   typing?: TypingPerson[];
   /** Loads the previous page of messages. */
@@ -76,6 +79,7 @@ export default function MessageList({
   mentionables = [],
   caseLinkBase,
   onEditMessage,
+  onDeleteMessage,
   typing = [],
   onLoadOlder,
   hasOlder,
@@ -379,6 +383,16 @@ export default function MessageList({
                           className="transition-colors hover:text-foreground"
                         >
                           <Pencil className="h-3 w-3" />
+                        </button>
+                      )}
+                      {viewerIsAdmin && onDeleteMessage && (
+                        <button
+                          type="button"
+                          aria-label={t("chat.delete.button", "Delete message")}
+                          onClick={() => onDeleteMessage(m)}
+                          className="transition-colors hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       )}
                       {(() => {
