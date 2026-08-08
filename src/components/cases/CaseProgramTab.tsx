@@ -4,6 +4,8 @@ import { CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
+import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+
 
 interface CaseProgramTabProps {
   submission: any;
