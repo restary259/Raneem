@@ -179,7 +179,7 @@ serve(async (req) => {
 
       const { error: linkedProfileError } = await supabaseAdmin
         .from("profiles")
-        .update({ case_id, must_change_password: true })
+        .update({ case_id })
         .eq("id", caseData.student_user_id);
       if (linkedProfileError) throw linkedProfileError;
 
