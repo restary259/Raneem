@@ -4,10 +4,13 @@ import { Check, ChevronRight } from "lucide-react";
 import type { PipelineStatus } from "@/lib/caseStatus";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { stageBlockReason } from "@/services/CaseStageService";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -37,6 +40,24 @@ export default function CaseProgressRail({
   const currentIndex = stages.findIndex((s) => s.key === currentKey);
   const label = (key: string) =>
     t(`case.status.${key}`, statuses.find((s) => s.key === key)?.label_en ?? key);
+
+  const blockReason = stageBlockReason(currentKey);
+  const blockHint = !blockReason
+    ? ""
+    : blockReason.kind === "terminal"
+      ? t("case.stage.reasonTerminal", "This case has reached the final stage.")
+      : blockReason.kind === "inactive"
+        ? t("case.stage.reasonInactive", "Reopen the case before moving it forward.")
+        : t("case.stage.reasonAutomated", {
+            stage: label(blockReason.stage),
+            trigger: t(
+              `case.stage.automatedTrigger.${blockReason.stage}`,
+              "the required step completes",
+            ),
+            defaultValue:
+              "Next stage is {{stage}} — it happens automatically once {{trigger}} is recorded.",
+          });
+  const hintId = "case-stage-hint";
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -73,18 +94,18 @@ export default function CaseProgressRail({
 
       {onAdvance &&
         (nextStages.length === 0 ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0 gap-1.5"
-            disabled
-            title={t(
-              "case.stage.automatedHint",
-              "The next stage happens automatically once payment or admin review completes",
-            )}
-          >
-            {t("case.stage.advance", "Move to next stage")}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0" tabIndex={0} aria-describedby={hintId}>
+                <Button size="sm" variant="outline" className="pointer-events-none gap-1.5" disabled>
+                  {t("case.stage.advance", "Move to next stage")}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent id={hintId} className="max-w-[16rem] text-center">
+              {blockHint}
+            </TooltipContent>
+          </Tooltip>
         ) : nextStages.length === 1 ? (
           <Button
             size="sm"
@@ -105,6 +126,9 @@ export default function CaseProgressRail({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                {t("case.stage.chooseNext", "Choose the next stage")}
+              </DropdownMenuLabel>
               {nextStages.map((key) => (
                 <DropdownMenuItem key={key} onSelect={() => onAdvance(key)}>
                   {label(key)}
