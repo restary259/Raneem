@@ -40,6 +40,7 @@ const CurrencyConverterPage = lazy(() => import("./pages/CurrencyConverterPage")
 const BagrutCalculatorPage = lazy(() => import("./pages/BagrutCalculatorPage"));
 const LebenslaufBuilderPage = lazy(() => import("./pages/LebenslaufBuilderPage"));
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
+const JoinPartnerPage = lazy(() => import("./pages/JoinPartnerPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/legal/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
