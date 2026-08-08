@@ -101,6 +101,34 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
     onRefresh();
   };
 
+  /** Partners that are not this master and not already in someone's network. */
+  const attachable = useMemo(
+    () => allPartners.filter(p =>
+      p.partner_id !== partner.partner_id &&
+      !p.is_master_partner &&
+      !p.master_partner_name &&
+      !network.some(n => n.id === p.partner_id)),
+    [allPartners, partner.partner_id, network],
+  );
+
+  const setNetworkMembership = async (partnerId: string, masterId: string | null) => {
+    const { error } = await (supabase as any)
+      .from('profiles')
+      .update({ master_partner_id: masterId })
+      .eq('id', partnerId);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
+      return;
+    }
+    await loadNetwork();
+    onRefresh();
+  };
+
+  const attachPartner = (partnerId: string) => setNetworkMembership(partnerId, partner.partner_id);
+  const detachPartner = (partnerId: string) => setNetworkMembership(partnerId, null);
+
+
+
   const open = useMemo(
     () => requests.filter(r => r.status === 'pending' || r.status === 'approved'),
     [requests],
