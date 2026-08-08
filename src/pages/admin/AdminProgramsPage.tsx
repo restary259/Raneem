@@ -1060,7 +1060,7 @@ const AdminProgramsPage = () => {
                         )}
                         {parseTiers(a.price_tiers).length > 0 && (
                           <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
-                            {formatTierLadder(parseTiers(a.price_tiers), a.currency)}
+                            {formatTierLadder(parseTiers(a.price_tiers), a.currency, t('admin.programs.weeksShort'))}
                           </span>
                         )}
                       </div>
