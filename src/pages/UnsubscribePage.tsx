@@ -43,6 +43,8 @@ export default function UnsubscribePage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-16">
+      <Card className="w-full max-w-md space-y-5 p-8 text-center">
+
         {state === "loading" && (
           <>
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
