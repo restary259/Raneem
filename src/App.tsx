@@ -184,6 +184,7 @@ const App = () => {
             <Route path="/quiz" element={<QuizPage />} />
             <Route path="/ai-advisor" element={<AIAdvisorPage />} />
             <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/join/:code" element={<JoinPartnerPage />} />
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/unsubscribe" element={<UnsubscribePage />} />
