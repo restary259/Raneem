@@ -9,15 +9,16 @@ import { cn } from "@/lib/utils";
 import {
   canEditMessage,
   dayLabel,
+  extractCaseRefs,
   formatTime,
   groupMessages,
   initials,
-  splitMentions,
+  splitChatBody,
   type ChatMessage,
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
-import type { ThreadReadState } from "@/services/CaseMessageService";
+import { resolveCaseRefs, type ThreadReadState } from "@/services/CaseMessageService";
 import type { TypingPerson } from "@/hooks/useTypingIndicator";
 
 interface MessageListProps {
