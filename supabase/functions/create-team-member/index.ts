@@ -163,12 +163,14 @@ serve(async (req) => {
       id: userId,
       email,
       full_name,
-      must_change_password: true,
+      // Existing accounts keep their current password state.
+      must_change_password: reusedExisting ? undefined : true,
       commission_amount: typeof commission_amount === "number" ? commission_amount : 0,
       // Only partners can belong to a master partner's network.
       master_partner_id:
         dbRole === "social_media_partner" && master_partner_id ? master_partner_id : null,
     });
+
 
     await supabaseAdmin
       .from("influencer_invites")
