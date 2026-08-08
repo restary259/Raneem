@@ -124,8 +124,15 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const submitPayout = async () => {
     setSubmitting(true);
     try {
-      await requestPayoutViaChat();
+      const res = await requestPayoutViaChat();
       setPayoutOpen(false);
+      // The payout card is posted server-side, so the composer's email hook never
+      // fires — notify the admin thread explicitly.
+      void notifyNewMessageEmail({
+        threadType: "direct",
+        threadId: res?.thread_id ?? threadId,
+        preview: t("chat.payout.emailPreview", "New payout request"),
+      });
       toast({ description: t("chat.payout.sent") });
       await load();
     } catch (err: any) {
