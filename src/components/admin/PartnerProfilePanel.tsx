@@ -54,7 +54,7 @@ const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
  * Partner-first review surface: the admin picks a partner, then approves or
  * pays that partner's requests in the context of their balance and history.
  */
-const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, onBack, onRefresh }) => {
+const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners = [], onBack, onRefresh }) => {
   const { t, i18n } = useTranslation('dashboard');
   const { isRtl } = useDirection();
   const { respond } = usePayoutActions();
