@@ -335,7 +335,7 @@ export default function PartnerEarningsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">₪{Number(r.amount).toLocaleString("en-US")}</span>
-                    <Badge variant="secondary">{t(`chat.payout.status.${r.status}`, r.status)}</Badge>
+                    <Badge variant="secondary">{String(t(`chat.payout.status.${r.status}`, r.status))}</Badge>
                   </div>
                 </div>
               ))}
