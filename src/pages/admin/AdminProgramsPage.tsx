@@ -411,7 +411,21 @@ const AdminProgramsPage = () => {
 
   const openEditIns = (i: Insurance) => {
     setEditInsId(i.id);
-    setInsForm({ name: i.name, tier: i.tier, price: i.price.toString(), currency: i.currency });
+    setInsForm({
+      name: i.name,
+      tier: i.tier,
+      price: i.price.toString(),
+      currency: i.currency,
+      provider: i.provider ?? "",
+      coverage_scope: i.coverage_scope ?? "worldwide",
+      billing_period: i.billing_period ?? "monthly",
+      min_months: i.min_months?.toString() ?? "",
+      max_months: i.max_months?.toString() ?? "",
+      max_age: i.max_age?.toString() ?? "",
+      terms_url: i.terms_url ?? "",
+      description_ar: i.description_ar ?? "",
+      description_en: i.description_en ?? "",
+    });
     setInsOpen(true);
   };
 
