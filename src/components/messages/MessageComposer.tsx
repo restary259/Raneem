@@ -94,6 +94,8 @@ export default function MessageComposer({
   mentionables = [],
   allowCaseMentions = false,
   onTyping,
+  onRequestPayout,
+
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
