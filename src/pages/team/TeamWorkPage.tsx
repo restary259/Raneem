@@ -1,0 +1,386 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
+import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
+
+const STALE_DAYS = 7;
+const DAY_MS = 86_400_000;
+
+interface ApptRow {
+  id: string;
+  case_id: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
+  outcome: string | null;
+  notes: string | null;
+  case?: { full_name: string } | null;
+}
+
+interface CaseRow {
+  id: string;
+  full_name: string;
+  status: string;
+  last_activity_at: string;
+  case_reference: string | null;
+}
+
+interface ReturnedRow {
+  id: string;
+  case_id: string;
+  review_note: string | null;
+  reviewed_at: string | null;
+  case?: { full_name: string; case_reference: string | null } | null;
+}
+
+const timeFmt = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const dateTimeFmt = (iso: string) =>
+  new Date(iso).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+export default function TeamWorkPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation("dashboard");
+  const isRtl = i18n.language === "ar";
+
+  const [loading, setLoading] = useState(true);
+  const [todayAppts, setTodayAppts] = useState<ApptRow[]>([]);
+  const [overdueAppts, setOverdueAppts] = useState<ApptRow[]>([]);
+  const [returned, setReturned] = useState<ReturnedRow[]>([]);
+  const [staleCases, setStaleCases] = useState<CaseRow[]>([]);
+  const [totalCases, setTotalCases] = useState(0);
+  const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const dayStart = new Date();
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date();
+      dayEnd.setHours(23, 59, 59, 999);
+      const staleBefore = new Date(Date.now() - STALE_DAYS * DAY_MS).toISOString();
+
+      const [todayRes, overdueRes, casesRes, staleRes] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, case_id, scheduled_at, duration_minutes, outcome, notes, case:cases(full_name)")
+          .eq("team_member_id", user.id)
+          .gte("scheduled_at", dayStart.toISOString())
+          .lte("scheduled_at", dayEnd.toISOString())
+          .order("scheduled_at"),
+        supabase
+          .from("appointments")
+          .select("id, case_id, scheduled_at, duration_minutes, outcome, notes, case:cases(full_name)")
+          .eq("team_member_id", user.id)
+          .lt("scheduled_at", dayStart.toISOString())
+          .is("outcome", null)
+          .order("scheduled_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("cases")
+          .select("id", { count: "exact", head: true })
+          .eq("assigned_to", user.id)
+          .is("deleted_at", null)
+          .eq("archived", false),
+        supabase
+          .from("cases")
+          .select("id, full_name, status, last_activity_at, case_reference")
+          .eq("assigned_to", user.id)
+          .is("deleted_at", null)
+          .eq("archived", false)
+          .lt("last_activity_at", staleBefore)
+          .not("status", "in", "(enrollment_paid,cancelled)")
+          .order("last_activity_at")
+          .limit(10),
+      ]);
+
+      if (todayRes.error) throw todayRes.error;
+      if (overdueRes.error) throw overdueRes.error;
+      if (casesRes.error) throw casesRes.error;
+      if (staleRes.error) throw staleRes.error;
+
+      setTodayAppts((todayRes.data as unknown as ApptRow[]) ?? []);
+      setOverdueAppts((overdueRes.data as unknown as ApptRow[]) ?? []);
+      setTotalCases(casesRes.count ?? 0);
+      setStaleCases((staleRes.data as CaseRow[]) ?? []);
+
+      const caseIds = ((staleRes.data as CaseRow[]) ?? []).map((c) => c.id);
+      // Returned submissions are scoped by RLS to the cases assigned to this member.
+      const returnedRes = await supabase
+        .from("case_submissions")
+        .select("id, case_id, review_note, reviewed_at, case:cases(full_name, case_reference)")
+        .eq("review_status", "changes_requested")
+        .is("deleted_at", null)
+        .order("reviewed_at", { ascending: false })
+        .limit(10);
+      if (returnedRes.error) throw returnedRes.error;
+      setReturned((returnedRes.data as unknown as ReturnedRow[]) ?? []);
+      void caseIds;
+    } catch (err) {
+      console.error("TeamWorkPage fetchData error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const dateStr = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  const stats = [
+    {
+      icon: CalendarDays,
+      label: t("team.work.statToday", "Today's appointments"),
+      value: todayAppts.length,
+      tone: "text-primary",
+    },
+    {
+      icon: AlertTriangle,
+      label: t("team.work.statOutcomes", "Outcomes to record"),
+      value: overdueAppts.length,
+      tone: "text-destructive",
+    },
+    {
+      icon: RotateCcw,
+      label: t("team.work.statReturned", "Returned by admin"),
+      value: returned.length,
+      tone: "text-amber-600",
+    },
+    {
+      icon: Users,
+      label: t("team.work.statCases", "Assigned cases"),
+      value: totalCases,
+      tone: "text-primary",
+    },
+  ];
+
+  return (
+    <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">{t("team.work.title", "My work")}</h1>
+          <p className="text-sm text-muted-foreground" dir="ltr">
+            {dateStr}
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => navigate("/team/cases")}>
+          {t("team.work.allCases", "All cases")}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <s.icon className={`h-4 w-4 ${s.tone}`} />
+                <span className="text-xs text-muted-foreground">{s.label}</span>
+              </div>
+              <div className="text-2xl font-bold">{s.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {returned.length > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <RotateCcw className="h-4 w-4 text-amber-600" />
+              {t("team.work.returnedTitle", "Returned by admin — changes requested")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {returned.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-start justify-between gap-3 rounded-lg border border-border bg-background p-3"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{r.case?.full_name ?? "—"}</div>
+                  {r.case?.case_reference && (
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {r.case.case_reference}
+                    </div>
+                  )}
+                  {r.review_note && (
+                    <p className="text-sm text-muted-foreground mt-1">{r.review_note}</p>
+                  )}
+                </div>
+                <Button size="sm" onClick={() => navigate(`/team/cases/${r.case_id}`)}>
+                  {t("team.work.openCase", "Open case")}
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {overdueAppts.length > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {t("team.work.overdueTitle", "Appointments needing an outcome")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {overdueAppts.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground" dir="ltr">
+                    {dateTimeFmt(a.scheduled_at)}
+                  </div>
+                </div>
+                <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
+                  {t("team.work.recordOutcome", "Record outcome")}
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              {t("team.work.scheduleTitle", "Today's schedule")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {t("common.loading", "Loading...")}
+              </p>
+            ) : todayAppts.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {t("team.work.noAppointments", "No appointments today")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {todayAppts.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground" dir="ltr">
+                        {timeFmt(a.scheduled_at)} · {a.duration_minutes}m
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {a.outcome ? (
+                        <Badge variant="secondary">
+                          {t(`team.outcome.${a.outcome}`, a.outcome)}
+                        </Badge>
+                      ) : new Date(a.scheduled_at).getTime() < Date.now() ? (
+                        <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
+                          {t("team.work.recordOutcome", "Record outcome")}
+                        </Button>
+                      ) : (
+                        <Badge className="bg-primary/10 text-primary border-primary/20">
+                          {t("team.work.upcoming", "Upcoming")}
+                        </Badge>
+                      )}
+                      {a.case_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/team/cases/${a.case_id}`)}
+                        >
+                          {t("team.work.openCase", "Open case")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-600" />
+              {t("team.work.staleTitle", "Cases with no activity")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {t("common.loading", "Loading...")}
+              </p>
+            ) : staleCases.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                {t("team.work.noStale", "Every case has recent activity")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {staleCases.map((c) => {
+                  const days = Math.floor(
+                    (Date.now() - new Date(c.last_activity_at).getTime()) / DAY_MS,
+                  );
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{c.full_name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {t("team.work.staleDays", "{{days}} days without activity", { days })}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/team/cases/${c.id}`)}
+                      >
+                        {t("team.work.openCase", "Open case")}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {outcomeApptId && (
+        <AppointmentOutcomeModal
+          open={!!outcomeApptId}
+          onClose={() => setOutcomeApptId(null)}
+          appointmentId={outcomeApptId}
+          onSuccess={fetchData}
+        />
+      )}
+    </div>
+  );
+}
