@@ -436,8 +436,10 @@ const AdminProgramsPage = () => {
       description_ar: i.description_ar ?? "",
       description_en: i.description_en ?? "",
     });
+    setInsRates(parseAgeTiers(i.age_price_tiers));
     setInsOpen(true);
   };
+
 
   const tierColor: Record<string, string> = {
     basic: "bg-blue-100 text-blue-700",
