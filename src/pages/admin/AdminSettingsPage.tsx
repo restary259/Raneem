@@ -376,6 +376,8 @@ const AdminSettingsPage = () => {
             {t("admin.settings.commissions", "Commissions")}
           </TabsTrigger>
           <TabsTrigger value="pipeline">{t("admin.settings.pipeline.tab", "Pipeline stages")}</TabsTrigger>
+          <TabsTrigger value="catalog">{t("admin.settings.catalog.tab", "Service catalog")}</TabsTrigger>
+
           <TabsTrigger value="contacts">{t("admin.settings.contacts", "Important Contacts")}</TabsTrigger>
 
           <TabsTrigger value="visa">{t('admin.settings.visaTabLabel', 'Visa Fields')}</TabsTrigger>
