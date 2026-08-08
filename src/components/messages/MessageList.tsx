@@ -246,13 +246,16 @@ export default function MessageList({
               <div className={cn("flex max-w-[78%] flex-col gap-1", group.mine && "items-end")}>
                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    {group.authorName ||
-                      t(`case.messages.role.${group.authorRole}`, group.authorRole ?? "")}
+                    {adminAlias && group.authorRole === "admin"
+                      ? adminAlias
+                      : group.authorName ||
+                        t(`case.messages.role.${group.authorRole}`, group.authorRole ?? "")}
                   </span>
-                  {group.authorRole && (
+                  {group.authorRole && !(adminAlias && group.authorRole === "admin") && (
                     <span>{t(`case.messages.role.${group.authorRole}`, group.authorRole)}</span>
                   )}
                 </div>
+
 
                 {group.messages.map((m) => (
                   <div
