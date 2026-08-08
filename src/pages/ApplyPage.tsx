@@ -217,25 +217,9 @@ const ApplyPage: React.FC = () => {
         console.log("[ApplyPage] Main case created:", caseResult.case_id);
       }
 
-      // 2. Also save lead data (non-critical — don't throw if it fails)
-      try {
-        const { error: leadErr } = await supabase.rpc("insert_lead_from_apply", {
-          p_full_name: fullName.trim(),
-          p_phone: phone.trim(),
-          p_passport_type: passportType || null,
-          p_english_units: englishUnits ? parseInt(englishUnits) : null,
-          p_math_units: mathUnits ? parseInt(mathUnits) : null,
-          p_education_level: educationLevel || null,
-          p_german_level: null,
-          p_ref_code: refCode,
+      // The matching lead row is written by the same server call, so there is
+      // exactly one submission request and one attribution path.
 
-          p_preferred_major: preferredMajor || null,
-        } as any);
-        if (leadErr) console.warn("[ApplyPage] Lead RPC warning (non-critical):", leadErr.message);
-        else console.log("[ApplyPage] Main lead saved for:", phone.trim());
-      } catch (leadErr: any) {
-        console.warn("[ApplyPage] Lead RPC failed (non-critical):", leadErr.message);
-      }
 
       // ── COMPANIONS ──────────────────────────────────────────────
       if (hasCompanions) {
@@ -274,27 +258,8 @@ const ApplyPage: React.FC = () => {
             console.error("[ApplyPage] Companion case error:", compCaseErr.message);
           }
 
-          // 2. Save companion lead (non-critical)
-          try {
-            const { error: cErr } = await supabase.rpc("insert_lead_from_apply", {
-              p_full_name: c.name.trim(),
-              p_phone: c.phone.trim(),
-              p_passport_type: c.passportType || null,
-              p_city: c.city.trim() || null,
-              p_preferred_city: c.city.trim() || null,
-              p_education_level: c.education || null,
-              p_english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
-              p_math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
-              p_preferred_major: c.preferredMajor.trim() || null,
-              p_german_level: null,
-              p_ref_code: refCode,
+          // The lead row is created by the same server call as the case.
 
-            } as any);
-            if (cErr) console.warn("[ApplyPage] Companion lead warning (non-critical):", cErr.message);
-            else console.log("[ApplyPage] Companion lead saved:", c.phone.trim());
-          } catch (cLeadErr: any) {
-            console.warn("[ApplyPage] Companion lead error (non-critical):", cLeadErr.message);
-          }
         }
       }
 
@@ -420,25 +385,35 @@ const ApplyPage: React.FC = () => {
 
           <Progress value={progressValue} className="h-1.5 w-full" />
 
-          {/* Referral attribution health */}
+          {/* Referral attribution — display name only, never editable, never an ID */}
           {refOwner && (
             <div
               data-testid="referral-valid"
-              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800"
+              className="w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-center gap-3"
             >
-              {isAr ? `تمت إحالتك من قِبل ${refOwner}` : `You were referred by ${refOwner}`}
+              <span className="shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                {refOwner.trim().charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">
+                  {isAr ? "تمت إحالتك بواسطة" : "Referred by"}
+                </span>
+                <span className="block text-sm font-semibold text-foreground truncate">{refOwner}</span>
+              </span>
+              <CheckCircle className="h-4 w-4 text-primary ms-auto shrink-0" aria-hidden="true" />
             </div>
           )}
           {refBroken && (
             <div
               data-testid="referral-broken"
-              className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800"
+              className="w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"
             >
               {isAr
                 ? "رابط الإحالة غير صالح أو منتهي الصلاحية — سيتم إرسال طلبك بدون إحالة."
                 : "This referral link is no longer valid — your application will be sent without a referral."}
             </div>
           )}
+
 
 
 

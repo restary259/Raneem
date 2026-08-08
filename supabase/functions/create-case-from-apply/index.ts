@@ -189,20 +189,45 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Explicit partner_id (admin / team created cases) still supported.
+    // Explicit partner_id is only honoured for signed-in admin/team callers.
+    // A public applicant can never credit a partner by editing the request body —
+    // attribution then comes solely from the server-resolved referral code.
     if (!validatedPartnerId && partner_id) {
-      const { data: partnerRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("user_id")
-        .eq("user_id", partner_id)
-        .in("role", ["social_media_partner", "ambassador"])
-        .maybeSingle();
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7).trim()
+        : "";
+      let callerIsStaff = false;
 
-      if (partnerRole) {
-        validatedPartnerId = partner_id;
-        attributionMethod = "manual";
+      if (token) {
+        const { data: userData } = await supabaseAdmin.auth.getUser(token);
+        const callerId = userData?.user?.id;
+        if (callerId) {
+          const { data: callerRole } = await supabaseAdmin
+            .from("user_roles")
+            .select("user_id")
+            .eq("user_id", callerId)
+            .in("role", ["admin", "team_member"])
+            .maybeSingle();
+          callerIsStaff = !!callerRole;
+        }
+      }
+
+      if (callerIsStaff) {
+        const { data: partnerRole } = await supabaseAdmin
+          .from("user_roles")
+          .select("user_id")
+          .eq("user_id", partner_id)
+          .in("role", ["social_media_partner", "ambassador"])
+          .maybeSingle();
+
+        if (partnerRole) {
+          validatedPartnerId = partner_id;
+          attributionMethod = "manual";
+        }
       }
     }
+
 
     // Insert the case with all fields
     const { data: newCase, error: caseError } = await supabaseAdmin
@@ -231,6 +256,26 @@ Deno.serve(async (req) => {
       .single();
 
     if (caseError) throw caseError;
+
+    // Mirror the applicant into the leads table in the SAME server call, so a
+    // referred applicant can never end up with a case but no lead (or the
+    // reverse) when the browser drops a second request.
+    if (source === "apply_page") {
+      const { error: leadError } = await supabaseAdmin.rpc("insert_lead_from_apply", {
+        p_full_name: cleanName,
+        p_phone: cleanPhone,
+        p_passport_type: passport_type ? String(passport_type) : null,
+        p_english_units: cleanEnglishUnits,
+        p_math_units: cleanMathUnits,
+        p_city: city ? stripHtml(String(city)).slice(0, 100) : null,
+        p_education_level: education_level ? String(education_level) : null,
+        p_german_level: null,
+        p_preferred_major: degree_interest ? String(degree_interest) : null,
+        p_ref_code: ref_code ?? null,
+      });
+      if (leadError) console.error("lead mirror failed:", leadError.message);
+    }
+
 
     // Link referral record back to the new case
     if (referral_id && newCase?.id) {
