@@ -535,7 +535,7 @@ const AdminSubmissionsPage = () => {
       </Card>
 
       {/* Full Case Detail Dialog */}
-      <Dialog open={!!selected && !showSplitPanel && !showPasswordGate} onOpenChange={() => setSelected(null)}>
+      <Dialog open={!!selected && !showSplitPanel && !showPasswordGate && !showApprove && !showChanges} onOpenChange={() => setSelected(null)}>
         <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
