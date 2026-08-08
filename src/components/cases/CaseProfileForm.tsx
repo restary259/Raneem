@@ -371,7 +371,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             {`${t("case.fields.dateOfBirth")} *`}
           </Label>
           <div className="mt-1 grid grid-cols-3 gap-2">
-            <Select value={dobYear} onValueChange={(v) => setDob(v, dobMonth, dobDay)}>
+            <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.year")} />
               </SelectTrigger>
@@ -383,7 +383,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
-            <Select value={dobMonth} onValueChange={(v) => setDob(dobYear, v, dobDay)}>
+            <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.month")} />
               </SelectTrigger>
@@ -395,7 +395,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ))}
               </SelectContent>
             </Select>
-            <Select value={dobDay} onValueChange={(v) => setDob(dobYear, dobMonth, v)}>
+            <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
               <SelectTrigger>
                 <SelectValue placeholder={t("case.profile.day")} />
               </SelectTrigger>
@@ -408,8 +408,8 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </SelectContent>
             </Select>
           </div>
-          {invalid("date_of_birth") && (
-            <p className="mt-1 text-xs text-destructive">{errText("date_of_birth")}</p>
+          {(dobError || invalid("date_of_birth")) && (
+            <p className="mt-1 text-xs text-destructive">{dobError ?? errText("date_of_birth")}</p>
           )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
