@@ -329,7 +329,14 @@ const AdminTeamPage = () => {
                         />
                       </label>
                     )}
-                    <Badge variant="secondary">{roleLabel(m.role)}</Badge>
+                    {m.role === 'social_media_partner' && (
+                      <MasterPartnerToggle
+                        partnerId={m.id}
+                        partnerName={m.full_name}
+                        isMaster={m.is_master_partner}
+                        onChanged={(next) => setMembers(prev => prev.map(x => (x.id === m.id ? { ...x, is_master_partner: next } : x)))}
+                      />
+                    )}
                     <Badge
                       variant={m.commissionOverridden ? 'default' : 'outline'}
                       className="font-mono whitespace-nowrap"
