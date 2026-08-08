@@ -62,7 +62,8 @@ type Filter = "all" | "cases" | "direct" | "unread";
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const basePath = pathname.startsWith("/admin") ? "/admin" : "/team";
