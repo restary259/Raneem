@@ -19,7 +19,11 @@ import {
   sendDirectMessage,
   toChatMessage,
 } from "@/services/DirectMessageService";
-import { getThreadReadState, type ThreadReadState } from "@/services/CaseMessageService";
+import {
+  deleteChatMessage,
+  getThreadReadState,
+  type ThreadReadState,
+} from "@/services/CaseMessageService";
 import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
@@ -120,8 +124,15 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const submitPayout = async () => {
     setSubmitting(true);
     try {
-      await requestPayoutViaChat();
+      const res = await requestPayoutViaChat();
       setPayoutOpen(false);
+      // The payout card is posted server-side, so the composer's email hook never
+      // fires — notify the admin thread explicitly.
+      void notifyNewMessageEmail({
+        threadType: "direct",
+        threadId: res?.thread_id ?? threadId,
+        preview: t("chat.payout.emailPreview", "New payout request"),
+      });
       toast({ description: t("chat.payout.sent") });
       await load();
     } catch (err: any) {
@@ -154,6 +165,14 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
           onEditMessage={async (message, body) => {
             try {
               await editDirectMessage(message.id, body);
+              await load();
+            } catch (err: any) {
+              toast({ variant: "destructive", description: err.message });
+            }
+          }}
+          onDeleteMessage={async (message) => {
+            try {
+              await deleteChatMessage(message.id, "direct");
               await load();
             } catch (err: any) {
               toast({ variant: "destructive", description: err.message });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Banknote, ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,10 +126,18 @@ export default function PayoutRequestCard({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
           {t("chat.payout.viewCases")}
         </Button>
+        {detail.cases.length === 1 && detail.cases[0].case_id && caseLinkBase && (
+          <Button asChild size="sm" variant="ghost" className="gap-1.5">
+            <Link to={`${caseLinkBase}/${detail.cases[0].case_id}`}>
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t("chat.payout.openCase")}
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -166,14 +175,14 @@ export default function PayoutRequestCard({
                   <Badge className={STATUS_STYLE[c.reward_status] ?? ""}>
                     {t(`chat.payout.status.${c.reward_status}`, c.reward_status)}
                   </Badge>
-                  {isAdmin && c.case_id && caseLinkBase && (
-                    <a
-                      href={`${caseLinkBase}/${c.case_id}`}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label={t("chat.payout.openCase")}
+                  {c.case_id && caseLinkBase && (
+                    <Link
+                      to={`${caseLinkBase}/${c.case_id}`}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                     >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      {t("chat.payout.openCase")}
+                    </Link>
                   )}
                 </div>
               </div>

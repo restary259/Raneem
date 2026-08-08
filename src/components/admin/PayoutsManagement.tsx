@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter, FileText } from 'lucide-react';
+import { DollarSign, Download, Users, XCircle, CheckCircle, Clock, Filter, FileText, Wallet, HandCoins } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PartnerPayoutsPanel from '@/components/admin/PartnerPayoutsPanel';
 import { useTranslation } from 'react-i18next';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
@@ -22,7 +24,6 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const [requests, setRequests] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, { full_name: string; email: string }>>({});
   const [filter, setFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -36,19 +37,12 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const fetchRequests = async () => {
-    const { data } = await (supabase as any).from('payout_requests').select('*').order('requested_at', { ascending: false });
-    if (data) {
-      setRequests(data);
-      const userIds = [...new Set(data.map((r: any) => r.requestor_id))];
-      if (userIds.length > 0) {
-        const { data: profs } = await (supabase as any).from('profiles').select('id, full_name, email').in('id', userIds);
-        if (profs) {
-          const map: Record<string, any> = {};
-          profs.forEach((p: any) => { map[p.id] = { full_name: p.full_name, email: p.email }; });
-          setProfiles(map);
-        }
-      }
+    const { data, error } = await (supabase as any).rpc('list_payout_requests');
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
+      return;
     }
+    setRequests(data || []);
   };
 
   useEffect(() => { fetchRequests(); }, []);
@@ -66,87 +60,74 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const totalPaid = requests.filter(r => r.status === 'paid').reduce((s, r) => s + Number(r.amount), 0);
   const totalRejected = requests.filter(r => r.status === 'rejected').reduce((s, r) => s + Number(r.amount), 0);
 
-  const getName = (id: string) => profiles[id]?.full_name || t('admin.payouts.unknownRequester');
-  const getEmail = (id: string) => profiles[id]?.email || '';
+  const getName = (r: any) => r?.requestor_name || t('admin.payouts.unknownRequester');
+  const getEmail = (r: any) => r?.requestor_email || '';
 
-  const auditLog = async (action: string, targetId: string, details: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await (supabase as any).from('admin_audit_log').insert({
-          admin_id: session.user.id, action, target_id: targetId,
-          target_table: 'payout_requests', details,
-        });
-      }
-    } catch {}
+  // Every write goes through admin_respond_payout_request() — no direct client
+  // writes to payout_requests. The RPC also audits, syncs rewards and posts the
+  // status message back into the requester's chat thread.
+  const respond = async (req: any, action: 'approve' | 'reject' | 'pay', note?: string, transactionRef?: string) => {
+    const { error } = await (supabase as any).rpc('admin_respond_payout_request', {
+      p_request_id: req.id,
+      p_action: action,
+      p_note: note || null,
+      p_transaction_ref: transactionRef || null,
+    });
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.actionFailed'), description: error.message });
+      return false;
+    }
+    return true;
   };
 
   const handleApprove = async (notes: string) => {
     if (!approveTarget) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    await (supabase as any).from('payout_requests').update({
-      status: 'approved', admin_notes: notes || null,
-      approved_at: new Date().toISOString(),
-      approved_by: session?.user?.id || null,
-    }).eq('id', approveTarget.id);
-    auditLog('payout_approved', approveTarget.id, `Approved ${approveTarget.amount} NIS for ${getName(approveTarget.requestor_id)}`);
-    toast({ title: t('admin.payouts.statusUpdated') });
+    const ok = await respond(approveTarget, 'approve', notes);
     setApproveTarget(null);
+    if (!ok) return;
+    toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
 
   const handleReject = async (reason: string) => {
     if (!rejectTarget) return;
-    await (supabase as any).from('payout_requests').update({ status: 'rejected', reject_reason: reason }).eq('id', rejectTarget.id);
-    auditLog('payout_rejected', rejectTarget.id, `Rejected ${rejectTarget.amount} NIS for ${getName(rejectTarget.requestor_id)}: ${reason}`);
-    toast({ title: t('admin.payouts.statusUpdated') });
+    const ok = await respond(rejectTarget, 'reject', reason);
     setRejectTarget(null);
+    if (!ok) return;
+    toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
 
   const handleMarkPaid = async (paymentMethod: string, transactionRef: string, notes: string) => {
     if (!payTarget) return;
-    try {
-      const { error } = await (supabase as any).rpc('confirm_payout_batch', {
-        p_payout_request_id: payTarget.id,
-        p_payment_method: paymentMethod,
-        p_transaction_ref: transactionRef,
-        p_notes: notes,
-      });
-      if (error) throw error;
-      auditLog('payout_paid', payTarget.id, `Paid ${payTarget.amount} NIS to ${getName(payTarget.requestor_id)} via ${paymentMethod}`);
-      toast({ title: t('admin.payouts.statusUpdated') });
-      setPayTarget(null);
-      fetchRequests();
-      onRefresh?.();
-    } catch {
-      toast({ variant: 'destructive', title: t('common.actionFailed'), description: t('admin.payouts.payError') });
-    }
-  };
-
-  const bulkAction = async (action: 'approved' | 'rejected') => {
-    const ids = [...selected];
-    if (!ids.length) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const adminId = session?.user?.id || null;
-    for (const id of ids) {
-      const req = requests.find(r => r.id === id);
-      await (supabase as any).from('payout_requests').update({
-        status: action,
-        ...(action === 'approved' ? { approved_at: new Date().toISOString(), approved_by: adminId } : {}),
-      }).eq('id', id);
-      // Audit log for each bulk action
-      if (req) {
-        auditLog(`bulk_payout_${action}`, id, `Bulk ${action} ${req.amount} NIS for ${getName(req.requestor_id)}`);
-      }
-    }
-    setSelected(new Set());
+    const note = [notes, paymentMethod ? `method: ${paymentMethod}` : ''].filter(Boolean).join(' — ');
+    const ok = await respond(payTarget, 'pay', note, transactionRef);
+    setPayTarget(null);
+    if (!ok) return;
     toast({ title: t('admin.payouts.statusUpdated') });
     fetchRequests();
     onRefresh?.();
   };
+
+  const bulkAction = async (action: 'approve' | 'reject') => {
+    const ids = [...selected];
+    if (!ids.length) return;
+    let failures = 0;
+    for (const id of ids) {
+      const req = requests.find(r => r.id === id);
+      if (!req) continue;
+      const ok = await respond(req, action, action === 'reject' ? t('admin.payouts.bulkRejectReason', 'Rejected in bulk review') : undefined);
+      if (!ok) failures++;
+    }
+    setSelected(new Set());
+    if (failures === 0) toast({ title: t('admin.payouts.statusUpdated') });
+    fetchRequests();
+    onRefresh?.();
+  };
+
+
 
   const exportExcel = () =>
     exportCorporateWorkbook({
@@ -171,7 +152,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         ],
         rows: filtered.map(r => [
           r.id.slice(0, 8),
-          getName(r.requestor_id),
+          getName(r),
           r.requestor_role,
           (r.linked_student_names || []).join('; '),
           Number(r.amount) || 0,
@@ -221,7 +202,24 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   };
 
   return (
-    <div className="space-y-4">
+    <Tabs defaultValue="requests" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="requests" className="gap-2">
+          <Wallet className="h-4 w-4" />
+          {t('admin.payouts.tabRequests', 'Payout requests')}
+        </TabsTrigger>
+        <TabsTrigger value="partners" className="gap-2">
+          <HandCoins className="h-4 w-4" />
+          {t('admin.payouts.tabPartnerEarnings', 'Partner earnings')}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="partners">
+        <PartnerPayoutsPanel />
+      </TabsContent>
+
+      <TabsContent value="requests" className="space-y-4">
+
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card><CardContent className="p-4 flex items-center gap-3">
@@ -262,20 +260,21 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
           <SelectContent>
             <SelectItem value="all">{t('admin.payouts.allRoles', 'All Roles')}</SelectItem>
             <SelectItem value="social_media_partner">{t('admin.referralsMgmt.agent')}</SelectItem>
+            <SelectItem value="ambassador">{t('admin.payouts.roleAmbassador', 'Ambassador')}</SelectItem>
             <SelectItem value="student">{t('admin.referralsMgmt.student')}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex-1" />
         {selected.size > 0 && (
           <>
-            <Button size="sm" variant="outline" onClick={() => bulkAction('approved')}>{t('admin.payouts.bulkApprove', 'Bulk Approve')} ({selected.size})</Button>
-            <Button size="sm" variant="destructive" onClick={() => bulkAction('rejected')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
+            <Button size="sm" variant="outline" onClick={() => bulkAction('approve')}>{t('admin.payouts.bulkApprove', 'Bulk Approve')} ({selected.size})</Button>
+            <Button size="sm" variant="destructive" onClick={() => bulkAction('reject')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
           </>
         )}
         <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportExcel', 'Export Excel')}</Button>
         <Button size="sm" variant="outline" onClick={() => {
           const headers = [t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'), t('admin.payouts.paymentMethodCol')];
-          const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString('en-US')} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
+          const pdfRows = filtered.map(r => [getName(r), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString('en-US')} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
           exportPDF({ headers, rows: pdfRows, fileName: `payouts-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Payouts' });
         }}><FileText className="h-4 w-4 me-1" />PDF</Button>
       </div>
@@ -288,8 +287,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{getName(r.requestor_id)}</p>
-                    <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                    <p className="font-semibold">{getName(r)}</p>
+                    <p className="text-xs text-muted-foreground">{getEmail(r)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <RoleBadge role={r.requestor_role} />
@@ -339,8 +338,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-3"><Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleSelect(r.id)} /></td>
                       <td className="px-3 py-3">
-                        <p className="font-medium">{getName(r.requestor_id)}</p>
-                        <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                        <p className="font-medium">{getName(r)}</p>
+                        <p className="text-xs text-muted-foreground">{getEmail(r)}</p>
                       </td>
                       <td className="px-3 py-3"><RoleBadge role={r.requestor_role} /></td>
                       <td className="px-3 py-3">
@@ -369,7 +368,9 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       <RejectModal open={!!rejectTarget} onOpenChange={o => { if (!o) setRejectTarget(null); }} onConfirm={handleReject} />
       <MarkPaidModal open={!!payTarget} onOpenChange={o => { if (!o) setPayTarget(null); }} onConfirm={handleMarkPaid} amount={payTarget?.amount} />
       <LinkedStudentsModal open={!!studentsModal} onOpenChange={o => { if (!o) setStudentsModal(null); }} studentNames={studentsModal || []} />
-    </div>
+      </TabsContent>
+    </Tabs>
+
   );
 };
 

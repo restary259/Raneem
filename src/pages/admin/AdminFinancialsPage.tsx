@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock, Info } from 'lucide-react';
 import PayoutsManagement from '@/components/admin/PayoutsManagement';
-import PartnerPayoutsPanel from '@/components/admin/PartnerPayoutsPanel';
 
 const OverviewTab = () => {
   const { t } = useTranslation('dashboard');
@@ -156,37 +155,18 @@ const AdminFinancialsPage = () => {
             <TrendingUp className="h-4 w-4" />
             {t('admin.financials.tabOverview')}
           </TabsTrigger>
-          <TabsTrigger value="agent-payouts" className="gap-2">
+          <TabsTrigger value="payouts" className="gap-2">
             <Wallet className="h-4 w-4" />
-            {t('admin.financials.tabAgentPayouts')}
-          </TabsTrigger>
-          <TabsTrigger value="partner-payouts" className="gap-2">
-            <HandCoins className="h-4 w-4" />
-            {t('admin.financials.tabPartnerPayouts')}
+            {t('admin.financials.tabPayouts', 'Payouts')}
           </TabsTrigger>
         </TabsList>
-
-        {/* Info banner: explains the two payout tracks */}
-        <Alert className="mb-4 border-blue-200 bg-blue-50/60">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-xs text-blue-800 leading-relaxed">
-            <span className="font-semibold">{t('admin.financials.payoutRequestsTab', 'Payout Requests tab')}</span>{' '}
-            {t('admin.financials.payoutRequestsHint', '— handles formal payout requests submitted by partners via their dashboard (reward status: pending → approved → paid).')}
-            {' '}<span className="font-semibold">{t('admin.financials.partnerDirectTab', 'Direct Partner Payouts tab')}</span>{' '}
-            {t('admin.financials.partnerDirectHint', '— admin-initiated payments. Rewards with "Payout Requested" badge must be settled in the Payout Requests tab to avoid double-payment.')}
-          </AlertDescription>
-        </Alert>
 
         <TabsContent value="overview">
           <OverviewTab />
         </TabsContent>
 
-        <TabsContent value="agent-payouts">
+        <TabsContent value="payouts">
           <PayoutsManagement />
-        </TabsContent>
-
-        <TabsContent value="partner-payouts">
-          <PartnerPayoutsPanel />
         </TabsContent>
       </Tabs>
     </div>

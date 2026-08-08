@@ -24,6 +24,7 @@ export default function PartnerEarningsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
+  const [payoutPreview, setPayoutPreview] = useState<any>(null);
 
 
   const navigate = useNavigate();
@@ -82,6 +83,10 @@ export default function PartnerEarningsPage() {
     if (error) console.error("cases fetch error:", error);
     setCases(casesData || []);
 
+    // Single source of truth for payout eligibility (same RPC the payout dialog uses)
+    const { data: preview } = await (supabase as any).rpc("get_my_payout_preview");
+    setPayoutPreview(preview || null);
+
     // Fetch ALL partner commission rewards (pending, approved, paid)
     const { data: rewardRows } = await (supabase as any)
       .from("rewards")
@@ -123,6 +128,7 @@ export default function PartnerEarningsPage() {
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("payout_requests", () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
@@ -152,8 +158,13 @@ export default function PartnerEarningsPage() {
     const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
     return age < LOCK_DAYS;
   });
-  const unlockedAmount = unlockedPending.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const canRequestPayout = unlockedPending.length > 0;
+  // Eligibility comes from get_my_payout_preview(): it already excludes rewards
+  // that are attached to a non-rejected payout request and flags open requests,
+  // so a partner cannot submit a duplicate request.
+  const hasOpenRequest = !!payoutPreview?.has_open_request;
+  const unlockedAmount = Number(payoutPreview?.eligible_amount ?? 0);
+  const eligibleCount = Number(payoutPreview?.eligible_count ?? 0);
+  const canRequestPayout = eligibleCount > 0 && !hasOpenRequest;
 
 
 
@@ -208,7 +219,14 @@ export default function PartnerEarningsPage() {
           </Button>
         )}
 
-        {lockedPending.length > 0 && !canRequestPayout && (
+        {hasOpenRequest && (
+          <div className="flex items-center gap-1.5 text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-full px-3 py-1.5">
+            <Hourglass className="h-3.5 w-3.5" />
+            {isAr ? "طلب صرف قيد المراجعة" : "Payout request under review"}
+          </div>
+        )}
+
+        {lockedPending.length > 0 && !canRequestPayout && !hasOpenRequest && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-full px-3 py-1.5">
             <Lock className="h-3.5 w-3.5" />
             {isAr ? `مقفل — ${LOCK_DAYS} يوم قفل` : `Locked — ${LOCK_DAYS}-day hold`}

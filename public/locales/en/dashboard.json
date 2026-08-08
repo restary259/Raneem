@@ -584,7 +584,8 @@
       "partnerDirectTab": "Direct Partner Payouts tab",
       "partnerDirectHint": "— admin-initiated payments. Rewards marked \"Payout Requested\" must be settled in the Payout Requests tab to avoid double payment.",
       "payoutRequestsTab": "Payout Requests tab",
-      "payoutRequestsHint": "— handles formal payout requests submitted by partners from their dashboard (reward status: pending → approved → paid)."
+      "payoutRequestsHint": "— handles formal payout requests submitted by partners from their dashboard (reward status: pending → approved → paid).",
+      "tabPayouts": "Payouts"
     },
     "partnerPayouts": {
       "title": "Partner Payouts",
@@ -1043,7 +1044,11 @@
       "approvalDate": "Approval Date",
       "notes": "Notes",
       "partnerPendingHint": "Partner payout requests",
-      "payError": "Payment could not be completed"
+      "payError": "Payment could not be completed",
+      "tabRequests": "Payout requests",
+      "tabPartnerEarnings": "Partner earnings",
+      "roleAmbassador": "Ambassador",
+      "bulkRejectReason": "Rejected in bulk review"
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -3192,12 +3197,21 @@
       "cancel": "Cancel",
       "requestedAt": "Requested",
       "approvedAt": "Approved",
-      "paidAt": "Paid"
+      "paidAt": "Paid",
+      "emailPreview": "New payout request"
     },
     "section": {
       "direct": "Direct",
       "cases": "Cases",
       "partners": "Partners"
+    },
+    "delete": {
+      "button": "Delete message"
+    },
+    "clearThread": {
+      "button": "Clear thread",
+      "confirm": "Delete all messages in this case thread?",
+      "done": "{{count}} messages deleted"
     }
   }
 }
