@@ -318,6 +318,23 @@ export default function CaseDetailPage() {
                 <span className="hidden sm:inline">{t("case.header.schedule", "Schedule")}</span>
               </Button>
             )}
+            {canManage && caseData.status !== "enrollment_paid" && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5"
+                disabled={!canSubmitToAdmin || submitting}
+                title={
+                  canSubmitToAdmin
+                    ? undefined
+                    : t("case.submit.blocked", "Confirm payment and upload the passport first")
+                }
+                onClick={handleSubmitToAdmin}
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t("case.submit.action", "Submit to admin")}</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -331,6 +348,17 @@ export default function CaseDetailPage() {
           <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
         </div>
       </div>
+
+      {canManage && submission?.review_status === "changes_requested" && (
+        <div className="rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
+          <p className="text-sm font-medium text-amber-700">
+            {t("case.submit.changesRequested", "Admin requested changes")}
+          </p>
+          {submission.review_note && (
+            <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
+          )}
+        </div>
+      )}
 
       {canManage && <CaseAttentionPanel tasks={tasks} onAction={handleTask} />}
 
