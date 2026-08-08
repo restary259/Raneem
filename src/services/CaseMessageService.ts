@@ -157,6 +157,8 @@ export async function listMyCaseThreads(userId: string, limit = 300): Promise<Ca
   );
 
   return caseIds
+    // A thread with no surviving case row is orphaned — never show it.
+    .filter((caseId) => caseMap.has(caseId))
     .map((caseId) => {
       const info = caseMap.get(caseId);
       const lastRead = readMap.get(caseId);
