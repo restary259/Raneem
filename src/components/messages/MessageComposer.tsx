@@ -523,7 +523,7 @@ export default function MessageComposer({
           </DropdownMenu>
 
           {kind === "request" && (
-            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900">
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900 dark:bg-sky-500/20 dark:text-sky-200">
               {t("chat.request.badge")}
             </span>
           )}
