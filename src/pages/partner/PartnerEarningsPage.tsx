@@ -24,8 +24,8 @@ export default function PartnerEarningsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
-  const [showPayoutDialog, setShowPayoutDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
