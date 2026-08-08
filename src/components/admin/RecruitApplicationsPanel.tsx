@@ -169,6 +169,23 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
                   </Button>
                 </>
               )}
+              {r.status === "approved" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy === r.id}
+                  onClick={() => resendInvite(r)}
+                  className="gap-1.5"
+                >
+                  {busy === r.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Mail className="h-3.5 w-3.5" />
+                  )}
+                  {t("admin.recruit.resendInvite", "Resend invite")}
+                </Button>
+              )}
+
             </div>
           </CardContent>
         </Card>
