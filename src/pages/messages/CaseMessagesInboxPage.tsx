@@ -99,6 +99,20 @@ export default function CaseMessagesInboxPage() {
     }
   };
 
+  const [testingEmail, setTestingEmail] = useState(false);
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const to = await sendTestNotificationEmail();
+      toast({ description: t("chat.notify.testEmailSent", { email: to }) });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
+
   const load = useCallback(async () => {
     if (!user?.id) return;
     try {
