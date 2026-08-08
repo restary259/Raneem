@@ -68,6 +68,9 @@ interface MessageComposerProps {
   allowCaseMentions?: boolean;
   /** Called (throttled by the caller) while the user is typing. */
   onTyping?: () => void;
+  /** Partners only: opens the structured payout-request flow from the `+` menu. */
+  onRequestPayout?: () => void;
+
 }
 
 type UploadItem = {
