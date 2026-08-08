@@ -64,11 +64,12 @@ interface NavItem {
 
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
+    { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
+
     { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
     { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
     { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
-    { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.work" },
 
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
     { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
@@ -80,17 +81,19 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.settings", icon: Settings, href: "/admin/settings", group: "nav.group.setup" },
   ],
   team_member: [
-    { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
-    { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
-    { key: "nav.messages", icon: MessageSquare, href: "/team/messages" },
-    { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments" },
+    { key: "nav.messages", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
 
-    { key: "nav.submitNew", icon: UserPlus, href: "/team/submit" },
-    { key: "nav.students", icon: GraduationCap, href: "/team/students" },
-    { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
-    { key: "nav.analytics", icon: BarChart2, href: "/team/analytics" },
-    { key: "nav.spreadsheet", icon: Table, href: "/team/spreadsheet" },
+    { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
+    { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
+    { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
+    { key: "nav.submitNew", icon: UserPlus, href: "/team/submit", group: "nav.group.work" },
+    { key: "nav.students", icon: GraduationCap, href: "/team/students", group: "nav.group.work" },
+
+    { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut", group: "nav.group.setup" },
+    { key: "nav.analytics", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
+    { key: "nav.spreadsheet", icon: Table, href: "/team/spreadsheet", group: "nav.group.setup" },
   ],
+
   social_media_partner: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
     { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
