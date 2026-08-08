@@ -38,7 +38,9 @@ interface CaseMessagesProps {
 export default function CaseMessages({ caseId, allowInternal = false, className }: CaseMessagesProps) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isStaff = role === "admin" || role === "team_member";
+  const caseLinkBase = role === "admin" ? "/admin/cases" : "/team/cases";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -135,6 +137,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           onlineUserIds={online}
           readState={readState}
           mentionables={people}
+          caseLinkBase={isStaff ? caseLinkBase : undefined}
           typing={typing}
           hasOlder={hasOlder}
           loadingOlder={loadingOlder}
@@ -167,6 +170,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
         allowInternal={allowInternal}
         allowRequests={allowInternal}
         mentionables={people}
+        allowCaseMentions={isStaff}
         onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
         onSend={async (body, attachments, opts) => {
           await sendCaseMessage(
