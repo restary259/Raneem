@@ -332,6 +332,14 @@ export default function MessageList({
                       )
                     )}
 
+                    {m.kind === "payout_request" && m.payoutRequestId && (
+                      <PayoutRequestCard
+                        requestId={m.payoutRequestId}
+                        isAdmin={viewerIsAdmin}
+                        caseLinkBase={caseLinkBase}
+                      />
+                    )}
+
                     {m.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {m.attachments.map((att) => (
@@ -339,6 +347,7 @@ export default function MessageList({
                         ))}
                       </div>
                     )}
+
 
                     {m.kind === "request" &&
                       m.requestStatus !== "fulfilled" &&
