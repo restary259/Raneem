@@ -19,6 +19,10 @@
     --accent: 222.2 47.6% 11.2%;
     --accent-foreground: 210 40% 98%;
 
+    /* Brand highlight (CTA + stats) — warm gold, readable on the navy hero */
+    --brand: 41 96% 54%;
+    --brand-foreground: 222.2 47.6% 11.2%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
