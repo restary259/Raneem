@@ -251,12 +251,19 @@ const AdminProgramsPage = () => {
         currency: accomForm.currency,
         description: accomForm.description || null,
         school_id: accomForm.school_id || null,
+        room_type: accomForm.room_type || null,
+        meals: accomForm.meals || null,
+        deposit: accomForm.deposit ? Number(accomForm.deposit) : null,
+        placement_fee: accomForm.placement_fee ? Number(accomForm.placement_fee) : null,
+        distance_note: accomForm.distance_note || null,
+        price_tiers: accomTiers.filter((tier) => tier.price != null),
       };
       if (editAccomId) await db.from("accommodations").update(payload).eq("id", editAccomId);
       else await db.from("accommodations").insert(payload);
       setAccomOpen(false);
       setEditAccomId(null);
-      setAccomForm({ name_ar: "", name_en: "", price: "", currency: "EUR", description: "", school_id: "" });
+      setAccomForm(emptyAccomForm);
+      setAccomTiers([]);
       await fetchAll();
       toast({ description: editAccomId ? t('admin.programs.accomUpdated') : t('admin.programs.accomCreated') });
     } catch (err: any) {
