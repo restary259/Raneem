@@ -44,7 +44,7 @@ describe('deriveCaseTasks', () => {
       ...base,
       status: 'profile_completion',
       lastActivityAt: daysAgo(3),
-      submission: { payment_confirmed: false },
+      submission: { payment_confirmed: false, profile_completed_at: '2026-01-01T00:00:00Z' },
     });
     const payment = tasks[0];
     expect(payment.action).toBe('confirm_payment');
@@ -81,7 +81,7 @@ describe('deriveCaseTasks', () => {
       ...base,
       status: 'profile_completion',
       documents: [],
-      submission: { payment_confirmed: false },
+      submission: { payment_confirmed: false, profile_completed_at: '2026-01-01T00:00:00Z' },
       lastActivityAt: daysAgo(30),
     });
     expect(tasks[0].action).toBe('confirm_payment');
