@@ -87,6 +87,15 @@ const AdminSubmissionsPage = () => {
   const [reAuthPassword, setReAuthPassword] = useState("");
   const [reAuthing, setReAuthing] = useState(false);
 
+  // Review state (approve / request changes)
+  const [showApprove, setShowApprove] = useState(false);
+  const [showChanges, setShowChanges] = useState(false);
+  const [approveEmail, setApproveEmail] = useState("");
+  const [changeNote, setChangeNote] = useState("");
+  const [reviewing, setReviewing] = useState(false);
+
+
+
   const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
     if (ids.length === 0) return [];
     const [subRes, docsRes] = await Promise.all([
