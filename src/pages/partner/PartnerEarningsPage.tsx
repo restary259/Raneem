@@ -315,6 +315,35 @@ export default function PartnerEarningsPage() {
         </Card>
       </div>
 
+      {/* Payout requests — the reference number is what Darb quotes on the transfer */}
+      {myRequests.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              {isAr ? "طلبات الصرف" : "Payout requests"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {myRequests.map((r: any) => (
+                <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-4">
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm" dir="ltr">{r.payout_reference ?? '—'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(r.requested_at).toLocaleDateString("en-US")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">₪{Number(r.amount).toLocaleString("en-US")}</span>
+                    <Badge variant="secondary">{t(`chat.payout.status.${r.status}`, r.status)}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Network override earnings — master partners only, kept apart from referral earnings */}
       {overrideRewards.length > 0 && (
         <Card>
