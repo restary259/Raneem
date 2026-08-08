@@ -80,12 +80,14 @@ export default function CaseDetailPage() {
   const [insuranceLabel, setInsuranceLabel] = useState<string | null>(null);
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("case");
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingStage, setPendingStage] = useState<string | null>(null);
+  const [advancing, setAdvancing] = useState(false);
   const documentsRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = role === "admin" || role === "team_member";
