@@ -55,6 +55,10 @@ interface MessageListProps {
   onLoadOlder?: () => void;
   hasOlder?: boolean;
   loadingOlder?: boolean;
+  /** Label shown instead of an admin's real name on partner/student surfaces. */
+  adminAlias?: string;
+  /** Admins get the payout review actions on payout-request cards. */
+  viewerIsAdmin?: boolean;
 }
 
 export default function MessageList({
@@ -74,7 +78,10 @@ export default function MessageList({
   onLoadOlder,
   hasOlder,
   loadingOlder,
+  adminAlias,
+  viewerIsAdmin = false,
 }: MessageListProps) {
+
   const { t } = useTranslation("dashboard");
   const bottomRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
