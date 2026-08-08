@@ -1211,6 +1211,7 @@ export type Database = {
       }
       insurances: {
         Row: {
+          age_price_tiers: Json
           billing_period: string
           coverage_scope: string | null
           created_at: string
@@ -1231,6 +1232,7 @@ export type Database = {
           waiting_periods: Json
         }
         Insert: {
+          age_price_tiers?: Json
           billing_period?: string
           coverage_scope?: string | null
           created_at?: string
@@ -1251,6 +1253,7 @@ export type Database = {
           waiting_periods?: Json
         }
         Update: {
+          age_price_tiers?: Json
           billing_period?: string
           coverage_scope?: string | null
           created_at?: string
