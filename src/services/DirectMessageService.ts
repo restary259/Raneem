@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { ChatAttachment, ChatMessage } from "@/lib/chatFormat";
 
 export interface DirectMessage {
   id: string;
@@ -8,6 +9,20 @@ export interface DirectMessage {
   author_role: string | null;
   body: string;
   created_at: string;
+  attachments: ChatAttachment[] | null;
+}
+
+export function toChatMessage(m: DirectMessage): ChatMessage {
+  return {
+    id: m.id,
+    authorId: m.author_id,
+    authorName: m.author_name,
+    authorRole: m.author_role,
+    body: m.body,
+    createdAt: m.created_at,
+    attachments: (m.attachments ?? []) as ChatAttachment[],
+    kind: "text",
+  };
 }
 
 export interface DirectThread {
@@ -47,17 +62,23 @@ export async function listDirectMessages(threadId: string): Promise<DirectMessag
     .from("direct_messages")
     .select("*")
     .eq("thread_id", threadId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as DirectMessage[];
 }
 
-export async function sendDirectMessage(threadId: string, body: string): Promise<string> {
+export async function sendDirectMessage(
+  threadId: string,
+  body: string,
+  attachments: ChatAttachment[] = [],
+): Promise<string> {
   const trimmed = body.trim();
-  if (!trimmed) throw new Error("Message body required");
+  if (!trimmed && attachments.length === 0) throw new Error("Message body required");
   const { data, error } = await (supabase as any).rpc("send_direct_message", {
     p_thread_id: threadId,
     p_body: trimmed,
+    p_attachments: attachments,
   });
   if (error) throw error;
   return data as string;
@@ -68,6 +89,19 @@ export async function markDirectThreadRead(threadId: string): Promise<void> {
     p_thread_id: threadId,
   });
   if (error) throw error;
+}
+
+export async function getDirectLastRead(
+  threadId: string,
+  userId: string,
+): Promise<string | null> {
+  const { data } = await (supabase as any)
+    .from("direct_thread_participants")
+    .select("last_read_at")
+    .eq("thread_id", threadId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.last_read_at ?? null;
 }
 
 /** All direct threads the caller takes part in, newest activity first. */
