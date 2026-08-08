@@ -153,20 +153,25 @@ export default function PartnerOverviewPage() {
       label: t("partner.totalApplications"),
       value: total,
       icon: Users,
-      color: "text-blue-600 bg-blue-50",
+      color: "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-500/15",
     },
     {
       label: t("partner.paidCases"),
       value: paid,
       icon: CreditCard,
-      color: "text-emerald-600 bg-emerald-50",
+      color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15",
     },
-    { label: t("partner.enrolled"), value: enrolled, icon: Award, color: "text-teal-600 bg-teal-50" },
+    {
+      label: t("partner.enrolled"),
+      value: enrolled,
+      icon: Award,
+      color: "text-teal-600 bg-teal-50 dark:text-teal-300 dark:bg-teal-500/15",
+    },
     {
       label: t('partner.paidThisMonth', 'Paid This Month'),
       value: `₪${paidThisMonth.toLocaleString('en-US')}`,
       icon: CalendarDays,
-      color: "text-emerald-600 bg-emerald-50",
+      color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15",
     },
     {
       label: t('partner.paidAllTime', 'Paid All Time'),
@@ -178,8 +183,9 @@ export default function PartnerOverviewPage() {
       label: t("partner.perCaseComm"),
       value: `₪${commissionRate.toLocaleString('en-US')}`,
       icon: CheckCircle,
-      color: "text-sky-600 bg-sky-50",
+      color: "text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-500/15",
     },
+
   ];
 
   return (
