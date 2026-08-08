@@ -394,33 +394,45 @@ export type Database = {
       }
       case_messages: {
         Row: {
+          attachments: Json
           author_id: string | null
           author_name: string | null
           author_role: string
           body: string
           case_id: string
           created_at: string
+          deleted_at: string | null
           id: string
+          kind: string
+          request_status: string | null
           visibility: string
         }
         Insert: {
+          attachments?: Json
           author_id?: string | null
           author_name?: string | null
           author_role?: string
           body: string
           case_id: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          kind?: string
+          request_status?: string | null
           visibility?: string
         }
         Update: {
+          attachments?: Json
           author_id?: string | null
           author_name?: string | null
           author_role?: string
           body?: string
           case_id?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          kind?: string
+          request_status?: string | null
           visibility?: string
         }
         Relationships: [
@@ -1007,30 +1019,42 @@ export type Database = {
       }
       direct_messages: {
         Row: {
+          attachments: Json
           author_id: string | null
           author_name: string | null
           author_role: string | null
           body: string
           created_at: string
+          deleted_at: string | null
           id: string
+          kind: string
+          request_status: string | null
           thread_id: string
         }
         Insert: {
+          attachments?: Json
           author_id?: string | null
           author_name?: string | null
           author_role?: string | null
           body: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          kind?: string
+          request_status?: string | null
           thread_id: string
         }
         Update: {
+          attachments?: Json
           author_id?: string | null
           author_name?: string | null
           author_role?: string | null
           body?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          kind?: string
+          request_status?: string | null
           thread_id?: string
         }
         Relationships: [
@@ -1717,6 +1741,30 @@ export type Database = {
           team_commission_type?: string
           team_commission_value?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      message_thread_mutes: {
+        Row: {
+          created_at: string
+          id: string
+          thread_id: string
+          thread_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thread_id: string
+          thread_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thread_id?: string
+          thread_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2986,6 +3034,10 @@ export type Database = {
     }
     Functions: {
       anonymize_user: { Args: { p_user_id: string }; Returns: undefined }
+      can_access_case_thread: {
+        Args: { _case_id: string; _user_id: string }
+        Returns: boolean
+      }
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -3007,6 +3059,10 @@ export type Database = {
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      fulfil_document_request: {
+        Args: { p_attachment: Json; p_message_id: string }
+        Returns: undefined
+      }
       generate_referral_code: { Args: { p_full_name: string }; Returns: string }
       get_auth_failure_spikes: {
         Args: { p_threshold?: number; p_window?: string }
@@ -3225,15 +3281,29 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
-      send_case_message: {
-        Args: { p_body: string; p_case_id: string; p_visibility?: string }
-        Returns: string
-      }
-      send_direct_message: {
-        Args: { p_body: string; p_thread_id: string }
-        Returns: string
-      }
+      send_case_message:
+        | {
+            Args: { p_body: string; p_case_id: string; p_visibility?: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_attachments?: Json
+              p_body: string
+              p_case_id: string
+              p_kind?: string
+              p_visibility?: string
+            }
+            Returns: string
+          }
+      send_direct_message:
+        | { Args: { p_body: string; p_thread_id: string }; Returns: string }
+        | {
+            Args: { p_attachments?: Json; p_body: string; p_thread_id: string }
+            Returns: string
+          }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
+      validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
     }
     Enums: {
       app_role:
