@@ -47,6 +47,10 @@ interface CaseRow {
 /** Stages where the money side of the case is relevant. */
 const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"];
 
+/** Stages where scheduling another appointment still makes sense. */
+const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
+
+
 /** Digits-only international number for WhatsApp deep links. */
 function whatsappNumber(phone: string): string {
   const digits = (phone ?? "").replace(/\D/g, "");
