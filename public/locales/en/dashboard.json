@@ -2364,6 +2364,18 @@
       "blocked": "Confirm payment and upload the passport first",
       "success": "Sent to admin for review",
       "changesRequested": "Admin requested changes"
+    },
+    "program": {
+      "program": "Program",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "duration": "Duration",
+      "monthsCount": "{{count}} months",
+      "accommodation": "Accommodation",
+      "perMonth": "month",
+      "insurance": "Health insurance",
+      "insuranceBreakdown": "{{monthly}}/month × {{months}} months = {{total}}",
+      "empty": "No program, accommodation or insurance selected yet."
     }
   },
   "partner": {
