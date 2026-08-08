@@ -1005,6 +1005,100 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_role: string | null
+          body: string
+          created_at: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_role?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_role?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_thread_participants: {
+        Row: {
+          created_at: string
+          id: string
+          last_read_at: string | null
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_thread_participants_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_threads: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           case_id: string | null
@@ -3053,6 +3147,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_direct_thread_member: {
+        Args: { _thread_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_activity: {
         Args: {
           p_action: string
@@ -3084,6 +3182,10 @@ export type Database = {
       }
       mark_case_messages_read: {
         Args: { p_case_id: string }
+        Returns: undefined
+      }
+      mark_direct_thread_read: {
+        Args: { p_thread_id: string }
         Returns: undefined
       }
       purge_expired_documents: {
@@ -3127,6 +3229,11 @@ export type Database = {
         Args: { p_body: string; p_case_id: string; p_visibility?: string }
         Returns: string
       }
+      send_direct_message: {
+        Args: { p_body: string; p_thread_id: string }
+        Returns: string
+      }
+      start_direct_thread: { Args: { p_other_user: string }; Returns: string }
     }
     Enums: {
       app_role:
