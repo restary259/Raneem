@@ -259,13 +259,16 @@ export default function CaseDetailPage() {
   };
 
 
-  if (loading) {
+  // Only the first load blanks the page. Later refetches keep the tree mounted so
+  // an in-progress student profile draft is never wiped by a background refresh.
+  if (loading && !caseData) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
         {t("case.detail.loading")}
       </div>
     );
   }
+
 
   if (!caseData) {
     return <div className="p-6 text-muted-foreground">{t("case.detail.notFound")}</div>;
