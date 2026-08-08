@@ -332,7 +332,7 @@ export default function MessageComposer({
         </ul>
       )}
 
-      <div className="relative">
+      <div className="relative rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
         {mentionMatches.length > 0 && (
           <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
             {mentionMatches.map((person) => (
