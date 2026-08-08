@@ -197,7 +197,16 @@ const PartnersDirectory: React.FC<Props> = ({ requests, onRefresh }) => {
                         <Badge variant="secondary">{p.open_requests} · {fmt(p.open_request_amount)}</Badge>
                       ) : '—'}
                     </td>
+                    <td className="px-4 py-3">
+                      <MasterPartnerToggle
+                        partnerId={p.partner_id}
+                        partnerName={p.full_name}
+                        isMaster={!!p.is_master_partner}
+                        onChanged={(next) => applyMaster(p.partner_id, next)}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-end"><ChevronRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 inline" /></td>
+
                   </tr>
                 ))}
               </tbody>
