@@ -151,7 +151,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         ],
         rows: filtered.map(r => [
           r.id.slice(0, 8),
-          getName(r.requestor_id),
+          getName(r),
           r.requestor_role,
           (r.linked_student_names || []).join('; '),
           Number(r.amount) || 0,
@@ -248,14 +248,14 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         <div className="flex-1" />
         {selected.size > 0 && (
           <>
-            <Button size="sm" variant="outline" onClick={() => bulkAction('approved')}>{t('admin.payouts.bulkApprove', 'Bulk Approve')} ({selected.size})</Button>
-            <Button size="sm" variant="destructive" onClick={() => bulkAction('rejected')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
+            <Button size="sm" variant="outline" onClick={() => bulkAction('approve')}>{t('admin.payouts.bulkApprove', 'Bulk Approve')} ({selected.size})</Button>
+            <Button size="sm" variant="destructive" onClick={() => bulkAction('reject')}>{t('admin.payouts.bulkReject', 'Bulk Reject')} ({selected.size})</Button>
           </>
         )}
         <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-4 w-4 me-1" />{t('admin.payouts.exportExcel', 'Export Excel')}</Button>
         <Button size="sm" variant="outline" onClick={() => {
           const headers = [t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'), t('admin.payouts.paymentMethodCol')];
-          const pdfRows = filtered.map(r => [getName(r.requestor_id), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString('en-US')} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
+          const pdfRows = filtered.map(r => [getName(r), r.requestor_role, (r.linked_student_names || []).join('; '), `${Number(r.amount).toLocaleString('en-US')} ₪`, String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })), new Date(r.requested_at).toLocaleDateString(locale), r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—']);
           exportPDF({ headers, rows: pdfRows, fileName: `payouts-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Payouts' });
         }}><FileText className="h-4 w-4 me-1" />PDF</Button>
       </div>
@@ -268,8 +268,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{getName(r.requestor_id)}</p>
-                    <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                    <p className="font-semibold">{getName(r)}</p>
+                    <p className="text-xs text-muted-foreground">{getEmail(r)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <RoleBadge role={r.requestor_role} />
@@ -319,8 +319,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-3"><Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleSelect(r.id)} /></td>
                       <td className="px-3 py-3">
-                        <p className="font-medium">{getName(r.requestor_id)}</p>
-                        <p className="text-xs text-muted-foreground">{getEmail(r.requestor_id)}</p>
+                        <p className="font-medium">{getName(r)}</p>
+                        <p className="text-xs text-muted-foreground">{getEmail(r)}</p>
                       </td>
                       <td className="px-3 py-3"><RoleBadge role={r.requestor_role} /></td>
                       <td className="px-3 py-3">
