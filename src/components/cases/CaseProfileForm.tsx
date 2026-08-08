@@ -232,6 +232,19 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     };
   }, [values, persist]);
 
+  // Keep the freshest values/persist reachable from the unmount cleanup below.
+  const latest = useRef({ values, persist });
+  latest.current = { values, persist };
+  // If the form unmounts while a debounced save is still pending (tab switch,
+  // background refetch, navigation), flush the draft instead of losing it.
+  useEffect(
+    () => () => {
+      if (!dirty.current || !timer.current) return;
+      void latest.current.persist(latest.current.values, false).catch(() => {});
+    },
+    [],
+  );
+
   const handleChange = useCallback(
     (name: string, value: string) => {
       dirty.current = true;
