@@ -25,15 +25,8 @@ interface InsuranceInfo {
   description_en: string | null;
 }
 
-const monthsBetween = (start?: string | null, end?: string | null) => {
-  if (!start || !end) return null;
-  const s = new Date(start);
-  const e = new Date(end);
-  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
-  const months =
-    (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + (e.getDate() >= s.getDate() ? 0 : -1);
-  return months > 0 ? months : 1;
-};
+
+
 
 const formatDate = (value?: string | null) =>
   value ? new Date(value).toLocaleDateString("en-US") : "";
