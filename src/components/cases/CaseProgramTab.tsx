@@ -40,7 +40,9 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const [schoolName, setSchoolName] = useState<string | null>(null);
   const [accommodationName, setAccommodationName] = useState<string | null>(null);
   const [insurance, setInsurance] = useState<InsuranceInfo | null>(null);
+  const [studentDob, setStudentDob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchDetails = async () => {
