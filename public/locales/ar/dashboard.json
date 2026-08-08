@@ -3255,7 +3255,9 @@
       "requestedAt": "تاريخ الطلب",
       "approvedAt": "تمت الموافقة",
       "paidAt": "تم الدفع",
-      "emailPreview": "طلب صرف جديد"
+      "emailPreview": "طلب صرف جديد",
+      "copyReference": "نسخ رقم المرجع",
+      "referenceCopied": "تم نسخ رقم المرجع"
     },
     "section": {
       "direct": "محادثات مباشرة",
