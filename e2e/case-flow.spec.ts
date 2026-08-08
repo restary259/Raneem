@@ -46,13 +46,15 @@ test.describe('case view — signed in', () => {
   async function openFirstCase(page: import('@playwright/test').Page) {
     await page.goto('/team/cases');
     await page.waitForLoadState('networkidle');
-    const link = page.locator('a[href*="/cases/"]').first();
-    if ((await link.count()) === 0) {
+    const row = page.locator('.cursor-pointer').first();
+    if ((await row.count()) === 0) {
       test.skip(true, 'no cases available for this account');
     }
-    await link.click();
+    await row.click();
+    await page.waitForURL(/\/cases\/[0-9a-f-]{36}/);
     await page.waitForLoadState('networkidle');
   }
+
 
   test('header, status chip and five tabs render', async ({ page }) => {
     await openFirstCase(page);
