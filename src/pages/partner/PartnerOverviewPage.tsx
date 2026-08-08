@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
+import RateOfferInbox from "@/components/partner/RateOfferInbox";
 
 
 import { useDirection } from "@/hooks/useDirection";
