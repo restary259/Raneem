@@ -510,6 +510,73 @@ const AdminProgramsPage = () => {
                     </div>
                   </div>
                   <div className="space-y-1">
+                    <Label>{t('admin.programs.labelLinkedSchool')}</Label>
+                    <Select
+                      value={progForm.school_id || "none"}
+                      onValueChange={(v) => setProgForm((f) => ({ ...f, school_id: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('admin.programs.noSchoolOption')}</SelectItem>
+                        {schools.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.name_en}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelCefr')}</Label>
+                      <Input
+                        value={progForm.cefr_range}
+                        onChange={(e) => setProgForm((f) => ({ ...f, cefr_range: e.target.value }))}
+                        placeholder="A1-C1"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelHoursWeek')}</Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={progForm.hours_per_week}
+                        onChange={(e) => setProgForm((f) => ({ ...f, hours_per_week: e.target.value }))}
+                        placeholder="15"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelRegistrationFee')}</Label>
+                      <Input
+                        type="number"
+                        value={progForm.registration_fee}
+                        onChange={(e) => setProgForm((f) => ({ ...f, registration_fee: e.target.value }))}
+                        placeholder="60"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelStartRule')}</Label>
+                    <Select
+                      value={progForm.start_rule || "none"}
+                      onValueChange={(v) => setProgForm((f) => ({ ...f, start_rule: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('admin.programs.startRule.none')}</SelectItem>
+                        <SelectItem value="every_monday">{t('admin.programs.startRule.every_monday')}</SelectItem>
+                        <SelectItem value="every_monday_a1_first_monday">
+                          {t('admin.programs.startRule.every_monday_a1_first_monday')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <PriceTiersEditor tiers={progTiers} onChange={setProgTiers} />
+                  <div className="space-y-1">
                     <Label>{t('admin.programs.labelDescription')}</Label>
                     <Input
                       value={progForm.description}
