@@ -38,13 +38,19 @@ None of the above changes commission maths, `record_case_commission`, or referra
 
 ## Implementation plan
 
-### Phase 1 — Payout state machine (single unit: items 1, 7, 8, 11)
-1. **Partner earnings page** reads `get_my_payout_preview()`; button states: `Request payout ₪X` / `Awaiting review` (disabled) / `Locked — N days`. KPI cards split into Locked, Awaiting review, Approved (to be paid), Paid.
-2. **New RPC** `list_payout_requests(p_status text[])` for admin: one row per request with partner name, role, amount, linked case references, status, timestamps.
-3. **Merged admin finance tab**: delete `PartnerPayoutsPanel` and rebuild `PayoutsManagement` as a single "Payouts" view with sub-tabs **Requested / Approved (to pay) / Paid / Rejected**, plus a per-partner "owed" roll-up. Role shown as a badge (Partner / Ambassador / Student).
-4. All admin actions route through `admin_respond_payout_request()` — no direct client writes to `payout_requests`.
-5. Rename the chat review action **Mark paid → Approve**; the "money moved" confirmation lives only in the Approved tab as **Mark transferred**.
-6. KPI recheck: admin financials, partner earnings, team dashboard all derive from the same request/reward statuses; realtime on `payout_requests` + `rewards` so no stale balances.
+### Phase 1 — Partner-first payout architecture (items 1, 7, 8, 11)
+
+Revised per founder direction: the admin surface is **partner-first**, not request-list-first.
+
+1. **Partner earnings page (partner side)** reads `get_my_payout_preview()`; button states: `Request payout ₪X` / `Awaiting review` (disabled) / `Locked — N days`. KPI cards split into Locked, Awaiting review, Approved (to be paid), Paid.
+2. **RPCs**: keep `list_payout_requests()` (already shipped) as the request feed, and add `list_partner_directory()` — one row per partner with name, email, phone, city, referral code, students referred, total earned, paid, locked, available and open-request count/amount.
+3. **Partners directory** (`PartnersDirectory.tsx`) replaces the flat payout table inside Admin → Financials → Payouts: searchable by name/email/city, sortable/filterable by status (has open request / has balance / settled), with a "Pending requests (N)" quick filter and a badge on the tab so admin never has to open a profile to find work.
+4. **Partner profile** (`PartnerProfilePanel.tsx`) opens from the directory: partner info, lifetime earned / paid / locked / available, referred students, payout history, and **that partner's payout requests reviewed in context** (Approve / Reject / Mark transferred).
+5. **Ambassadors excluded** from the directory and the partner payout surface (`requestor_role = 'social_media_partner'` only). Ambassadors and students can still raise payout requests via chat, so their requests land in a secondary **"Other requests"** list on the same page rather than being silently unpayable. Commission rules and rates untouched.
+6. `PartnerPayoutsPanel.tsx` is deleted — its reward-batch UI is replaced by the profile view.
+7. All admin actions route through `admin_respond_payout_request()` — no direct client writes to `payout_requests`.
+8. Rename the chat review action **Mark paid → Approve**; the "money moved" confirmation lives in the profile/Approved state as **Mark transferred**.
+9. Students directory (`AdminStudentsPage`) keeps its own list but gains the same search/filter shell language so the two directories read consistently.
 
 ### Phase 2 — Chat (items 2, 3, 10)
 7. `gap-2` on every `+`-menu item.
