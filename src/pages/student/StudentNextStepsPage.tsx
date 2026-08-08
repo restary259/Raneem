@@ -34,18 +34,38 @@ export default function StudentNextStepsPage() {
   const [caseStatus, setCaseStatus] = useState<string | null>(null);
   const [steps, setSteps] = useState<StepRow[]>([]);
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
+    setLoadError(null);
 
-    const { data: profile } = await (supabase as any)
+    const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
       .select('full_name, passport_number, date_of_birth, emergency_contact_phone, case_id, linked_case_id')
       .eq('id', uid)
       .maybeSingle();
+    if (profileError) {
+      setLoadError(profileError.message);
+      setLoading(false);
+      return;
+    }
 
     setFullName(profile?.full_name ?? '');
-    const caseId: string | null = profile?.case_id ?? profile?.linked_case_id ?? null;
+    const { data: ownCase, error: caseLookupError } = await (supabase as any)
+      .from('cases')
+      .select('id, status')
+      .eq('student_user_id', uid)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (caseLookupError) {
+      setLoadError(caseLookupError.message);
+      setLoading(false);
+      return;
+    }
+    const caseId: string | null = ownCase?.id ?? profile?.case_id ?? profile?.linked_case_id ?? null;
     setActiveCaseId(caseId);
 
     const next: StepRow[] = [];
@@ -98,7 +118,7 @@ export default function StudentNextStepsPage() {
           .maybeSingle(),
       ]);
 
-      setCaseStatus(caseRes?.data?.status ?? null);
+      setCaseStatus(ownCase?.status ?? caseRes?.data?.status ?? null);
 
       const appt = apptRes?.data?.[0];
       if (appt) {
@@ -152,6 +172,14 @@ export default function StudentNextStepsPage() {
   useRealtimeSubscription('appointments', () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || loading) return <DashboardLoading />;
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl p-4 sm:p-6" dir={dir}>
+        <Card><CardContent className="py-10 text-center text-sm text-destructive">{t('student.next.loadError')}</CardContent></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>

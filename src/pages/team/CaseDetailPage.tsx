@@ -10,6 +10,7 @@ import { statusColorClasses } from "@/lib/caseStatus";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { advanceCaseStage } from "@/services/CaseStageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
@@ -18,6 +19,8 @@ import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
 import CaseOverviewPanel from "@/components/cases/CaseOverviewPanel";
 import CaseStageBlock, { type AppointmentRow } from "@/components/cases/CaseStageBlock";
 import CaseFinance from "@/components/cases/CaseFinance";
+import CaseProgramTab from "@/components/cases/CaseProgramTab";
+import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
 import { loadProgrammeCosts, type ProgrammeCostLine } from "@/services/CaseCostingService";
 import { readStudentProfile } from "@/lib/studentProfileFields";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
@@ -239,21 +242,20 @@ export default function CaseDetailPage() {
     if (!caseData || !submission) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("cases")
-        .update({ status: "payment_confirmed" })
-        .eq("id", caseData.id);
+      const { error } = await supabase.rpc("resubmit_case_for_review", {
+        p_case_id: caseData.id,
+      });
       if (error) throw error;
+      toast({ description: t("case.submit.success") });
+      await fetchData();
     } catch (err) {
       toast({
         variant: "destructive",
         description: err instanceof Error ? err.message : String(err),
       });
+    } finally {
       setSubmitting(false);
-      return;
     }
-    setSubmitting(false);
-    await handleSubmitToAdmin();
   };
 
 
@@ -272,6 +274,7 @@ export default function CaseDetailPage() {
   const statusMeta = statuses.find((s) => s.key === caseData.status);
   const Back = isRtl ? ArrowRight : ArrowLeft;
   const showFinance = FINANCE_STAGES.includes(caseData.status);
+  const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
   const contactHref = isMobile
     ? `tel:${caseData.phone_number}`
     : `https://wa.me/${whatsappNumber(caseData.phone_number)}`;
@@ -347,30 +350,63 @@ export default function CaseDetailPage() {
 
       {canManage && <CaseAttentionPanel tasks={tasks} onAction={handleTask} />}
 
-      <CaseOverviewPanel caseData={caseData} />
-
-      <CaseStageBlock
-        caseData={caseData}
-        submission={submission}
-        appointments={appointments}
-        canManage={canManage}
-        onSchedule={() => setSchedulerOpen(true)}
-        onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
-        onAdvance={(to) => setPendingStage(to)}
-        onConfirmPayment={() => setPaymentOpen(true)}
-        onRefresh={fetchData}
-        onSubmitToAdmin={handleSubmitToAdmin}
-        onResubmit={handleResubmit}
-        submitting={submitting}
-
-      />
-
-      {showFinance && (
-        <CaseFinance
-          caseId={caseData.id}
-          canManage={canManage && caseData.status !== "enrollment_paid"}
-          extraLines={costLines}
-        />
+      {showTerminalTabs ? (
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="overview">{t("case.terminal.overview")}</TabsTrigger>
+            <TabsTrigger value="profile">{t("case.terminal.profile")}</TabsTrigger>
+            <TabsTrigger value="finance">{t("case.terminal.finance")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="space-y-3">
+            <div className="rounded-md border bg-card p-4 sm:p-5">
+              <h2 className="text-sm font-semibold">
+                {caseData.status === "submitted"
+                  ? t("case.detail.submittedToAdmin")
+                  : t("case.detail.studentEnrolled")}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {caseData.status === "submitted"
+                  ? t("case.detail.waitingAdminReview")
+                  : t("case.detail.caseComplete")}
+              </p>
+            </div>
+            <CaseOverviewPanel caseData={caseData} />
+            <section className="rounded-md border bg-card">
+              <CaseProgramTab submission={submission} onRefresh={fetchData} />
+            </section>
+          </TabsContent>
+          <TabsContent value="profile">
+            <CaseProfileSummary caseData={caseData} submission={submission} />
+          </TabsContent>
+          <TabsContent value="finance">
+            <CaseFinance
+              caseId={caseData.id}
+              canManage={canManage && caseData.status !== "enrollment_paid"}
+              extraLines={costLines}
+            />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <>
+          <CaseOverviewPanel caseData={caseData} />
+          <CaseStageBlock
+            caseData={caseData}
+            submission={submission}
+            appointments={appointments}
+            canManage={canManage}
+            onSchedule={() => setSchedulerOpen(true)}
+            onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
+            onAdvance={(to) => setPendingStage(to)}
+            onConfirmPayment={() => setPaymentOpen(true)}
+            onRefresh={fetchData}
+            onSubmitToAdmin={handleSubmitToAdmin}
+            onResubmit={handleResubmit}
+            submitting={submitting}
+          />
+          {showFinance && (
+            <CaseFinance caseId={caseData.id} canManage={canManage} extraLines={costLines} />
+          )}
+        </>
       )}
 
 

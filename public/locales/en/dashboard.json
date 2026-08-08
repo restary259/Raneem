@@ -2407,6 +2407,12 @@
       "fixAndResend": "Make the requested change below, save the file, then send it back to admin.",
       "resend": "Send back to admin"
     },
+    "terminal": {
+      "overview": "Overview",
+      "profile": "Student profile",
+      "finance": "Finance summary",
+      "notProvided": "Not provided"
+    },
     "program": {
       "program": "Program",
       "startDate": "Start date",
@@ -2464,9 +2470,9 @@
     },
     "invite": {
       "title": "Create the student account",
-      "body": "Sends the student a login invite using the email on this case.",
+      "body": "Sends the student a secure, single-use account activation link.",
       "linkedTitle": "Student account linked",
-      "linkedBody": "The student can sign in and follow their case.",
+      "linkedBody": "Send a fresh secure link if the student needs to activate or recover access.",
       "action": "Create account & send invite",
       "resend": "Resend invite",
       "sent": "Invite sent to {{email}}",
