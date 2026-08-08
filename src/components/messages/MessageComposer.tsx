@@ -55,6 +55,8 @@ interface MessageComposerProps {
   hint?: string;
   /** People who can be @mentioned in this thread. */
   mentionables?: MentionablePerson[];
+  /** Staff only: allow referencing a case file with `#`. */
+  allowCaseMentions?: boolean;
   /** Called (throttled by the caller) while the user is typing. */
   onTyping?: () => void;
 }
