@@ -2984,7 +2984,10 @@
     "tabDirect": "Direct chats",
     "emptyDirect": "No direct chats yet",
     "noMessagesYet": "No messages yet",
-    "directBlocked": "Direct chats must include an admin."
+    "directBlocked": "Direct chats must include an admin.",
+    "noCaseYet": "Your conversation opens once your case is created.",
+    "partnerSubtitle": "Your direct chats with the Darb team.",
+    "studentSubtitle": "Talk directly with your advisor."
   },
   "chat": {
     "day": {
@@ -3044,6 +3047,26 @@
       "hint": "Muted conversations never notify you, even when these are on.",
       "testEmail": "Send test email",
       "testEmailSent": "Test email sent to {{email}}"
+    },
+    "edit": {
+      "button": "Edit",
+      "cancel": "Cancel",
+      "edited": "edited",
+      "save": "Save"
+    },
+    "loadOlder": "Load older messages",
+    "loadingOlder": "Loading…",
+    "mention": {
+      "button": "Mention someone"
+    },
+    "receipt": {
+      "sent": "Sent",
+      "seenBy": "Seen by {{names}}",
+      "readByAll": "Seen by everyone"
+    },
+    "typing": {
+      "one": "{{name}} is typing…",
+      "many": "Several people are typing…"
     }
   }
 }
