@@ -332,19 +332,48 @@ export default function MessageComposer({
           </ul>
         )}
 
+        {caseMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {caseMatches.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => pickCase(c)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium">{caseMentionToken(c)}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{c.name}</span>
+                  </span>
+                  {c.status && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.status.${c.status}`, c.status)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <Textarea
           ref={textRef}
           value={body}
           onChange={(e) => {
+            const caret = e.target.selectionStart ?? 0;
             setBody(e.target.value);
             setMentionQuery(
-              mentionables.length > 0
-                ? activeMentionQuery(e.target.value, e.target.selectionStart ?? 0)
-                : null,
+              mentionables.length > 0 ? activeMentionQuery(e.target.value, caret) : null,
             );
+            setCaseQuery(allowCaseMentions ? activeCaseQuery(e.target.value, caret) : null);
             if (e.target.value.trim()) onTyping?.();
           }}
-          onBlur={() => window.setTimeout(() => setMentionQuery(null), 150)}
+          onBlur={() =>
+            window.setTimeout(() => {
+              setMentionQuery(null);
+              setCaseQuery(null);
+            }, 150)
+          }
           placeholder={
             kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
@@ -353,8 +382,9 @@ export default function MessageComposer({
           disabled={disabled}
           className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
           onKeyDown={(e) => {
-            if (e.key === "Escape" && mentionQuery !== null) {
+            if (e.key === "Escape" && (mentionQuery !== null || caseQuery !== null)) {
               setMentionQuery(null);
+              setCaseQuery(null);
               return;
             }
             if (e.key === "Tab" && mentionMatches.length > 0) {
@@ -362,11 +392,17 @@ export default function MessageComposer({
               pickMention(mentionMatches[0]);
               return;
             }
+            if (e.key === "Tab" && caseMatches.length > 0) {
+              e.preventDefault();
+              pickCase(caseMatches[0]);
+              return;
+            }
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
               handleSend();
             }
           }}
+        />
         />
       </div>
 
