@@ -951,6 +951,48 @@ const AdminProgramsPage = () => {
                       onChange={(e) => setAccomForm((f) => ({ ...f, description: e.target.value }))}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelRoomType')}</Label>
+                      <Input
+                        value={accomForm.room_type}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, room_type: e.target.value }))}
+                        placeholder="Single / Shared"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelMeals')}</Label>
+                      <Input
+                        value={accomForm.meals}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, meals: e.target.value }))}
+                        placeholder="Breakfast / None"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelDeposit')}</Label>
+                      <Input
+                        type="number"
+                        value={accomForm.deposit}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, deposit: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{t('admin.programs.labelPlacementFee')}</Label>
+                      <Input
+                        type="number"
+                        value={accomForm.placement_fee}
+                        onChange={(e) => setAccomForm((f) => ({ ...f, placement_fee: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelDistanceNote')}</Label>
+                    <Input
+                      value={accomForm.distance_note}
+                      onChange={(e) => setAccomForm((f) => ({ ...f, distance_note: e.target.value }))}
+                    />
+                  </div>
+                  <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
