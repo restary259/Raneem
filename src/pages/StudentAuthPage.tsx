@@ -32,10 +32,23 @@ const StudentAuthPage = () => {
   // Single redirect effect — AuthContext owns all auth state
   useEffect(() => {
     if (!initialized) return;
-    if (!user || !role) return;
+    if (!user) return;
 
     if (mustChangePassword) {
       setShowChangePasswordModal(true);
+      return;
+    }
+
+    if (!role) {
+      // Signed in but no role assigned — never leave the user stuck on the login screen
+      toast({
+        variant: "destructive",
+        title: t("auth.errorTitle"),
+        description: isRTL
+          ? "تم تسجيل الدخول لكن لا توجد صلاحية مرتبطة بحسابك. يرجى التواصل مع الإدارة."
+          : "Signed in, but no role is assigned to your account. Please contact the administrator.",
+      });
+      supabase.auth.signOut();
       return;
     }
 
