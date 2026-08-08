@@ -51,9 +51,9 @@ describe('deriveCaseTasks', () => {
     expect(payment.values?.days).toBe(3);
   });
 
-  it('flags a missing passport document', () => {
+  it('does not ask for a passport upload (collected in profile step)', () => {
     const tasks = deriveCaseTasks({ ...base, documents: [] });
-    expect(tasks.some((t) => t.labelKey === 'case.tasks.documentMissing.passport')).toBe(true);
+    expect(tasks.some((t) => t.action === 'upload_document')).toBe(false);
   });
 
   it('flags silence past the configured threshold', () => {
