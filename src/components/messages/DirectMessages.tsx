@@ -19,7 +19,11 @@ import {
   sendDirectMessage,
   toChatMessage,
 } from "@/services/DirectMessageService";
-import { getThreadReadState, type ThreadReadState } from "@/services/CaseMessageService";
+import {
+  deleteChatMessage,
+  getThreadReadState,
+  type ThreadReadState,
+} from "@/services/CaseMessageService";
 import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import {
+  deleteChatMessage,
   editCaseMessage,
   fulfilDocumentRequest,
   getThreadReadState,
