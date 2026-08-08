@@ -366,7 +366,9 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       <RejectModal open={!!rejectTarget} onOpenChange={o => { if (!o) setRejectTarget(null); }} onConfirm={handleReject} />
       <MarkPaidModal open={!!payTarget} onOpenChange={o => { if (!o) setPayTarget(null); }} onConfirm={handleMarkPaid} amount={payTarget?.amount} />
       <LinkedStudentsModal open={!!studentsModal} onOpenChange={o => { if (!o) setStudentsModal(null); }} studentNames={studentsModal || []} />
-    </div>
+      </TabsContent>
+    </Tabs>
+
   );
 };
 
