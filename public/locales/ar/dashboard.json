@@ -491,7 +491,16 @@
         "schengen": "منطقة شنغن",
         "worldwide": "تغطية عالمية",
         "worldwide_incl_usa_canada": "عالمية شاملة أمريكا وكندا"
-      }
+      },
+      "labelPriceTiers": "شرائح التسعير",
+      "priceTiersHint": "حدّد السعر حسب عدد الأشهر. اترك خانة \"إلى\" فارغة لشريحة مفتوحة.",
+      "noPriceTiers": "لا توجد شرائح — سيتم استخدام السعر الأساسي.",
+      "addTier": "إضافة شريحة",
+      "removeTier": "حذف الشريحة",
+      "labelTierFrom": "من (شهر)",
+      "labelTierTo": "إلى (شهر)",
+      "labelTierPrice": "السعر",
+      "tierOpenEnded": "فما فوق"
     },
     "submissions": {
       "title": "الطلبات المقدمة",

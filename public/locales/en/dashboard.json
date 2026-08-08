@@ -491,7 +491,16 @@
         "schengen": "Schengen area",
         "worldwide": "Worldwide",
         "worldwide_incl_usa_canada": "Worldwide incl. USA/Canada"
-      }
+      },
+      "labelPriceTiers": "Price tiers",
+      "priceTiersHint": "Set the price by number of months. Leave \"to\" empty for an open-ended tier.",
+      "noPriceTiers": "No tiers — the base price will be used.",
+      "addTier": "Add tier",
+      "removeTier": "Remove tier",
+      "labelTierFrom": "From (month)",
+      "labelTierTo": "To (month)",
+      "labelTierPrice": "Price",
+      "tierOpenEnded": "and above"
     },
     "submissions": {
       "title": "Submitted Applications",
