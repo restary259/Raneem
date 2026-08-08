@@ -201,7 +201,24 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   };
 
   return (
-    <div className="space-y-4">
+    <Tabs defaultValue="requests" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="requests" className="gap-2">
+          <Wallet className="h-4 w-4" />
+          {t('admin.payouts.tabRequests', 'Payout requests')}
+        </TabsTrigger>
+        <TabsTrigger value="partners" className="gap-2">
+          <HandCoins className="h-4 w-4" />
+          {t('admin.payouts.tabPartnerEarnings', 'Partner earnings')}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="partners">
+        <PartnerPayoutsPanel />
+      </TabsContent>
+
+      <TabsContent value="requests" className="space-y-4">
+
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card><CardContent className="p-4 flex items-center gap-3">
