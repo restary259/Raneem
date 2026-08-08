@@ -257,7 +257,7 @@ export default function MessageComposer({
   return (
     <div
       className={cn(
-        "space-y-2 border-t bg-card px-3 py-2.5",
+        "space-y-1.5 border-t bg-card px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
         dragging && "bg-primary/5 ring-1 ring-inset ring-primary",
       )}
       onDragOver={(e) => {
@@ -371,7 +371,6 @@ export default function MessageComposer({
         )}
 
         <Textarea
-          ref={textRef}
           value={body}
           onChange={(e) => {
             const caret = e.target.selectionStart ?? 0;
@@ -391,10 +390,19 @@ export default function MessageComposer({
           placeholder={
             kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
-          rows={2}
+          rows={1}
           maxLength={5000}
           disabled={disabled}
-          className="resize-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+          style={{ height: "auto" }}
+          ref={(el) => {
+            textRef.current = el;
+            if (el) {
+              el.style.height = "auto";
+              el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+            }
+          }}
+          /* 16px on mobile keeps iOS Safari from zooming the page on focus. */
+          className="max-h-[140px] min-h-[24px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0 sm:text-sm"
           onKeyDown={(e) => {
             if (e.key === "Escape" && (mentionQuery !== null || caseQuery !== null)) {
               setMentionQuery(null);
@@ -444,7 +452,13 @@ export default function MessageComposer({
                 <Plus className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              sideOffset={8}
+              collisionPadding={12}
+              className="z-50 w-56"
+            >
               <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
                 <Paperclip className="h-4 w-4" />
                 {t("chat.attach.button")}
@@ -547,7 +561,7 @@ export default function MessageComposer({
           onClick={handleSend}
           aria-label={t("case.messages.send")}
           disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-          className="h-9 w-9 shrink-0 rounded-full"
+          className="h-8 w-8 shrink-0 rounded-full"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
