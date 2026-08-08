@@ -306,16 +306,18 @@ export default function CaseMessagesInboxPage() {
                   onCheckedChange={(v) => savePrefs({ notify_email: v })}
                 />
               </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="w-full gap-1"
-                disabled={testingEmail}
-                onClick={handleTestEmail}
-              >
-                <Send className="h-4 w-4" />
-                {t("chat.notify.testEmail")}
-              </Button>
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="w-full gap-1"
+                  disabled={testingEmail}
+                  onClick={handleTestEmail}
+                >
+                  <Send className="h-4 w-4" />
+                  {t("chat.notify.testEmail")}
+                </Button>
+              )}
               <p className="text-xs text-muted-foreground">{t("chat.notify.hint")}</p>
 
             </PopoverContent>
