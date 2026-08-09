@@ -227,7 +227,7 @@ const AdminTeamPage = () => {
                     <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {newCreds.email}</p>
                     <div className="flex items-center justify-between">
                       <p className="text-sm"><span className="font-medium">{t('admin.team.tempPassword', 'Temp Password')}:</span> {newCreds.password}</p>
-                      <Button variant="ghost" size="icon" onClick={() => copyToClipboard(newCreds.password)}>
+                      <Button variant="ghost" size="icon" aria-label={t('admin.team.copyPassword', 'Copy password')} onClick={() => copyToClipboard(newCreds.password)}>
                         {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
@@ -353,6 +353,7 @@ const AdminTeamPage = () => {
                       className="h-8 w-8 text-destructive hover:bg-destructive/10"
                       onClick={() => setDeleteTargetId(m.id)}
                       title={t('admin.team.deleteAccount', 'Delete Account')}
+                      aria-label={t('admin.team.deleteAccount', 'Delete Account')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

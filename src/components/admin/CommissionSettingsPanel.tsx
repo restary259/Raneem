@@ -336,7 +336,7 @@ export default function CommissionSettingsPanel() {
                     <Eye className="h-3 w-3 me-1" />
                     {vis(visibilityKey(ov.show_all_cases))}
                   </Badge>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => deletePartnerOverride(ov.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" aria-label={t('commissionSettings.delete', 'Delete')} onClick={() => deletePartnerOverride(ov.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -460,7 +460,7 @@ export default function CommissionSettingsPanel() {
                   <Badge variant="secondary" className="font-mono shrink-0">
                     ₪{ov.commission_amount.toLocaleString("en-US")} {t("commissionSettings.perStudent")}
                   </Badge>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => deleteTeamOverride(ov.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" aria-label={t('commissionSettings.delete', 'Delete')} onClick={() => deleteTeamOverride(ov.id)}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>

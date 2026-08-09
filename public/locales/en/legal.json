@@ -186,10 +186,68 @@
   },
   "footer": {
     "privacy": "Privacy Policy",
-    "terms": "Terms of Use"
+    "terms": "Terms of Use",
+    "accessibility": "Accessibility"
   },
   "related": {
     "privacy": "See also: Terms of Use",
-    "terms": "See also: Privacy Policy"
+    "terms": "See also: Privacy Policy",
+    "accessibility": "See also: Privacy Policy"
+  },
+  "accessibility": {
+    "seo": {
+      "title": "Accessibility Statement | Darb",
+      "description": "Darb's accessibility statement under Israeli Standard 5568 and WCAG 2.1 level AA."
+    },
+    "hero": {
+      "badge": "Accessibility",
+      "title": "Accessibility Statement",
+      "subtitle": "Our commitment to making the site usable by everyone, including people with disabilities."
+    },
+    "updated": "Last updated: 9 August 2026",
+    "intro": "Darb Study International is committed to making its website and dashboards usable by as many people as possible, including people with disabilities, in the spirit of the Equal Rights for Persons with Disabilities Law (1998) and the accessibility service regulations issued under it.",
+    "sections": [
+      {
+        "id": "standard",
+        "title": "Standard applied",
+        "body": "We work to conform to Israeli Standard 5568, which is based on the WCAG 2.1 guidelines at level AA."
+      },
+      {
+        "id": "measures",
+        "title": "Accessibility measures taken",
+        "items": [
+          "Semantic HTML with a logical heading hierarchy and page landmarks (main / nav / footer).",
+          "Full keyboard operability with a visible focus indicator on every interactive element.",
+          "Accessible names (aria-label) for icon-only buttons and links, and alt text for images.",
+          "Text colour contrast of at least 4.5:1 in both light and dark mode.",
+          "Page zoom up to 200% without loss of content or functionality.",
+          "Form validation and error messages announced to screen readers via aria-live regions.",
+          "Full right-to-left (RTL) support for Arabic and Hebrew.",
+          "Dialogs built on Radix primitives with correct focus trapping and focus return to the trigger.",
+          "Responsive design with touch targets of at least 44x44 pixels on mobile."
+        ]
+      },
+      {
+        "id": "limitations",
+        "title": "Known limitations",
+        "body": "Despite our efforts, some areas are not yet fully accessible:",
+        "items": [
+          "PDFs and documents uploaded by students or issued by third parties may not be fully accessible.",
+          "Video and embedded third-party content (YouTube, Instagram, maps) depends on the accessibility of those platforms.",
+          "Some complex financial tables in the admin dashboard are still difficult to use with a screen reader; improvements are in progress.",
+          "The AI assistant may produce long passages of text that are not broken up with headings."
+        ]
+      },
+      {
+        "id": "alternative",
+        "title": "Alternative access route",
+        "body": "If you have difficulty using any part of the site, we can provide the same service through an alternative channel: by phone, by email, or in person at our office, including completing the application form on your behalf with your consent."
+      },
+      {
+        "id": "contact",
+        "title": "Accessibility coordinator and reporting channel",
+        "body": "To report an accessibility problem or request assistance, email darbsocial27@gmail.com. Please describe the page, the problem, and the assistive technology you use. We aim to respond within 14 business days."
+      }
+    ]
   }
 }

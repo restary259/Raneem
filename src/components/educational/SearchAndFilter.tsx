@@ -93,7 +93,7 @@ const SearchAndFilter = ({
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto md:hidden absolute left-1/2 -translate-x-1/2 top-2" />
                 <h3 className="text-base font-bold text-foreground">{t('educational.filterByCategory')}</h3>
-                <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)} className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)} className="h-8 w-8" aria-label={t('common.close', 'Close')}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

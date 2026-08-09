@@ -32,6 +32,7 @@ export function CopyButton({ value }: { value: string | null | undefined }) {
       className="h-6 w-6 shrink-0"
       onClick={(e) => { e.stopPropagation(); handleCopy(); }}
       title="Copy"
+      aria-label="Copy"
     >
       {copied
         ? <Check className="h-3.5 w-3.5 text-emerald-600" />

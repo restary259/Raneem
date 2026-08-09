@@ -41,7 +41,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
               <Maximize2 className="h-4 w-4" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-white/20 text-white shrink-0">
+          <Button variant="ghost" size="icon" aria-label={t('common.close', 'Close')} onClick={onClose} className="hover:bg-white/20 text-white shrink-0">
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -121,6 +121,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
           <Button
             type="submit"
             size="icon"
+            aria-label={t('chat.send', 'Send')}
             disabled={!input.trim() || isLoading}
             className="bg-orange-500 hover:bg-orange-600 shrink-0"
           >
