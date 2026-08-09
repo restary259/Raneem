@@ -42,7 +42,7 @@ const setLink = (rel: string, href: string) => {
 const SEOHead = ({ title, description, url, image, jsonLd }: SEOHeadProps) => {
   useEffect(() => {
     const pageUrl =
-      url ?? (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '/');
+      url ?? (typeof window !== 'undefined' ? CANONICAL_ORIGIN + window.location.pathname : CANONICAL_ORIGIN);
 
     document.title = title;
     setMeta('name', 'description', description);
