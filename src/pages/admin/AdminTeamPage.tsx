@@ -129,21 +129,30 @@ const AdminTeamPage = () => {
         team_member: settingsRes.data?.team_member_commission_rate ?? 0,
       };
 
-      const enriched = (rolesRes.data || []).map(r => ({
-        id: r.user_id,
-        full_name: profileMap[r.user_id]?.full_name || '–',
-        email: profileMap[r.user_id]?.email || '–',
-        role: r.role,
-        created_at: r.created_at,
-        referral_code:
-          profileMap[r.user_id]?.referral_code_enabled === false
-            ? null
-            : profileMap[r.user_id]?.referral_code ?? null,
-        commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
-        commissionOverridden: overrideMap[r.user_id] !== undefined,
-        is_manager: profileMap[r.user_id]?.is_manager === true,
-        is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
-      }));
+      // A user can hold more than one role row; the directory shows one card per
+      // person, otherwise React sees duplicate keys and the list renders twice.
+      const seen = new Set<string>();
+      const enriched = (rolesRes.data || [])
+        .filter(r => {
+          if (seen.has(r.user_id)) return false;
+          seen.add(r.user_id);
+          return true;
+        })
+        .map(r => ({
+          id: r.user_id,
+          full_name: profileMap[r.user_id]?.full_name || '–',
+          email: profileMap[r.user_id]?.email || '–',
+          role: r.role,
+          created_at: r.created_at,
+          referral_code:
+            profileMap[r.user_id]?.referral_code_enabled === false
+              ? null
+              : profileMap[r.user_id]?.referral_code ?? null,
+          commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
+          commissionOverridden: overrideMap[r.user_id] !== undefined,
+          is_manager: profileMap[r.user_id]?.is_manager === true,
+          is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
+        }));
 
 
       setMembers(enriched);
@@ -301,25 +310,64 @@ const AdminTeamPage = () => {
             </DialogTrigger>
             <DialogContent dir={isRtl ? 'rtl' : 'ltr'} className="max-w-[95vw] sm:max-w-lg w-full">
               <DialogHeader>
-                <DialogTitle>{t('admin.team.createMember', 'Create Team Member')}</DialogTitle>
+                <DialogTitle>
+                  {invitedInfo
+                    ? t('admin.team.inviteSentTitle', 'Invitation sent')
+                    : newCreds
+                      ? t('admin.team.accountCreatedTitle', 'Account created')
+                      : t('admin.team.createMember', 'Create Team Member')}
+                </DialogTitle>
               </DialogHeader>
 
               {invitedInfo ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {invitedInfo.emailed
-                      ? t('admin.team.inviteSentHint', 'An activation email was sent. The link works once and expires in 7 days.')
-                      : t('admin.team.inviteEmailFailed', 'The invitation was created but the email could not be sent — share the link below instead.')}
-                  </p>
-                  <div className="space-y-2 rounded-lg bg-muted p-4">
-                    <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {invitedInfo.email}</p>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate font-mono text-xs">{invitedInfo.url}</p>
-                      <Button variant="ghost" size="icon" aria-label={t('admin.team.copyInviteLink', 'Copy activation link')} onClick={() => copyToClipboard(invitedInfo.url)}>
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                    <CheckCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      {invitedInfo.emailed
+                        ? t('admin.team.inviteSentHint', 'An activation email was sent. The link works once and expires in 7 days.')
+                        : t('admin.team.inviteEmailFailed', 'The invitation was created but the email could not be sent — share the link below instead.')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 rounded-lg bg-muted p-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">{t('admin.team.email', 'Email')}</p>
+                      <p dir="ltr" className="break-all font-mono text-sm text-foreground">{invitedInfo.email}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {t('admin.team.activationLink', 'Activation link')}
+                      </p>
+                      <p
+                        dir="ltr"
+                        className="select-all break-all rounded-md bg-background p-2 text-start font-mono text-xs leading-relaxed text-foreground"
+                      >
+                        {invitedInfo.url}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button
+                        variant="secondary"
+                        className="w-full gap-2 sm:flex-1"
+                        onClick={() => copyToClipboard(invitedInfo.url)}
+                      >
                         {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                        {copied
+                          ? t('admin.team.copied', 'Copied')
+                          : t('admin.team.copyInviteLink', 'Copy activation link')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 sm:w-auto"
+                        onClick={() => window.open(invitedInfo.url, '_blank', 'noopener')}
+                      >
+                        <Link2 className="h-4 w-4" />
+                        {t('admin.team.openLink', 'Open')}
                       </Button>
                     </div>
                   </div>
+
                   <Button className="w-full" onClick={() => { setInvitedInfo(null); setOpen(false); }}>
                     {t('common.done', 'Done')}
                   </Button>
@@ -329,20 +377,32 @@ const AdminTeamPage = () => {
                   <p className="text-sm text-muted-foreground">
                     {t('admin.team.credentialsHint')}
                   </p>
-                  <div className="p-4 rounded-lg bg-muted space-y-2">
-                    <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {newCreds.email}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm"><span className="font-medium">{t('admin.team.tempPassword', 'Temp Password')}:</span> {newCreds.password}</p>
-                      <Button variant="ghost" size="icon" aria-label={t('admin.team.copyPassword', 'Copy password')} onClick={() => copyToClipboard(newCreds.password)}>
-                        {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      </Button>
+                  <div className="space-y-3 rounded-lg bg-muted p-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">{t('admin.team.email', 'Email')}</p>
+                      <p dir="ltr" className="break-all font-mono text-sm text-foreground">{newCreds.email}</p>
                     </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">{t('admin.team.tempPassword', 'Temp Password')}</p>
+                      <p dir="ltr" className="select-all break-all rounded-md bg-background p-2 text-start font-mono text-sm text-foreground">
+                        {newCreds.password}
+                      </p>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      className="w-full gap-2"
+                      onClick={() => copyToClipboard(newCreds.password)}
+                    >
+                      {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      {copied ? t('admin.team.copied', 'Copied') : t('admin.team.copyPassword', 'Copy password')}
+                    </Button>
                   </div>
                   <Button className="w-full" onClick={() => { setNewCreds(null); setOpen(false); }}>
                     {t('common.done', 'Done')}
                   </Button>
                 </div>
               ) : (
+
                 <div className="space-y-4 pt-2">
                   <div className="space-y-1">
                     <Label>{t('admin.team.fullName', 'Full Name')}</Label>

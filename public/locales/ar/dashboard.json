@@ -416,7 +416,12 @@
         "paid": "المدفوع",
         "pending": "قيد الانتظار",
         "lastActivity": "آخر نشاط على ملف"
-      }
+      },
+      "inviteSentTitle": "تم إرسال الدعوة",
+      "accountCreatedTitle": "تم إنشاء الحساب",
+      "activationLink": "رابط التفعيل",
+      "copied": "تم النسخ",
+      "openLink": "فتح"
     },
     "programs": {
       "title": "البرامج والسكن",
@@ -2222,7 +2227,8 @@
     "nextSteps": "الخطوات التالية",
     "network": "شبكتي",
     "performance": "أداء الشبكة",
-    "myData": "بياناتي"
+    "myData": "بياناتي",
+    "account": "حسابي"
   },
   "case": {
     "status": {
@@ -2769,6 +2775,29 @@
     "pipeline": {
       "title": "توزيع مراحل الملفات",
       "empty": "لا توجد ملفات بعد"
+    },
+    "profile": {
+      "title": "حسابي",
+      "subtitle": "معلوماتك الشخصية ورابط الإحالة وكلمة المرور.",
+      "details": "المعلومات الشخصية",
+      "email": "البريد الإلكتروني",
+      "fullName": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "city": "المدينة",
+      "saved": "تم حفظ التغييرات",
+      "nameRequired": "الاسم الكامل مطلوب",
+      "referralLink": "رابط الإحالة الخاص بي",
+      "copy": "نسخ الرابط",
+      "copied": "تم النسخ",
+      "changePassword": "تغيير كلمة المرور",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "passwordHint": "10 أحرف على الأقل مع حرف كبير وصغير ورقم",
+      "updatePassword": "تحديث كلمة المرور",
+      "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+      "passwordMismatch": "كلمتا المرور غير متطابقتين",
+      "weakPassword": "كلمة المرور ضعيفة جداً",
+      "masterBadge": "شريك رئيسي"
     }
   },
   "visa": {

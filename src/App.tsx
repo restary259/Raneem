@@ -91,6 +91,7 @@ const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPa
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
 const PartnerNetworkPage = lazy(() => import("./pages/partner/PartnerNetworkPage"));
 const PartnerPerformancePage = lazy(() => import("./pages/partner/PartnerPerformancePage"));
+const PartnerProfilePage = lazy(() => import("./pages/partner/PartnerProfilePage"));
 
 // Student pages (Phase 5)
 const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
@@ -310,6 +311,7 @@ const App = () => {
               <Route path="earnings" element={<PartnerEarningsPage />} />
               <Route path="network" element={<PartnerNetworkPage />} />
               <Route path="performance" element={<PartnerPerformancePage />} />
+              <Route path="profile" element={<PartnerProfilePage />} />
             </Route>
 
 

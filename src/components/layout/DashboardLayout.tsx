@@ -105,12 +105,14 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
     { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
     { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
+    { key: "nav.account", icon: User, href: "/partner/profile" },
   ],
   ambassador: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
     { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
     { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
     { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
+    { key: "nav.account", icon: User, href: "/partner/profile" },
   ],
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
