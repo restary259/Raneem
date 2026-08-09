@@ -817,18 +817,34 @@
         "moveDown": "Move down"
       },
       "catalog": {
-        "tab": "Service catalog",
         "title": "Service catalog",
-        "hint": "These prices fill in automatically when a service is added to a case. Team members can only pick from this list — they cannot change a price.",
+        "hint": "Prices set here are the only source of truth. Team members select services; they never type a price. Changing a price never changes cases that already selected the service.",
+        "add": "Add service",
+        "edit": "Edit service",
+        "saved": "Saved",
+        "nameRequired": "Arabic and English names are required",
         "nameAr": "Name (Arabic)",
         "nameEn": "Name (English)",
-        "price": "Default price (₪)",
+        "description": "Description",
+        "category": "Category",
+        "pricingModel": "Pricing model",
+        "price": "Price",
+        "currency": "Currency",
+        "sortOrder": "Display order",
+        "school": "Applicable school",
+        "program": "Applicable course",
+        "accommodation": "Applicable accommodation",
+        "appliesToAll": "All",
         "active": "Active",
-        "add": "Add service",
-        "remove": "Delete service",
-        "saved": "Catalog saved",
-        "nameRequired": "Enter both names",
-        "inFullService": "In Full Service"
+        "inFullService": "Included in Full Service",
+        "commissionable": "Commissionable",
+        "allowsQuantity": "Allows quantity",
+        "optional": "Optional",
+        "inactive": "Inactive",
+        "noCommission": "No commission",
+        "courseWeeks": "Course weeks",
+        "courseWeeksHint": "Default language course duration (A1 → C1) used across the app.",
+        "tab": "Services"
       }
     },
     "spreadsheet": {
@@ -3288,7 +3304,30 @@
       "pickFirst": "Choose a service first",
       "saved": "Services updated",
       "pickHint": "Pick the services this student is buying. Prices come from the service catalog.",
-      "fullService": "Full Service (all bundled services)"
+      "fullService": "Full Service (all bundled services)",
+      "categories": {
+        "language_course": "Language Course",
+        "accommodation": "Accommodation",
+        "insurance": "Insurance",
+        "sim_card": "SIM Card",
+        "bank_account": "Bank Account",
+        "university_registration": "University Registration",
+        "translation": "Translation",
+        "notarization": "Notarization",
+        "documents": "Documents",
+        "visa_support": "Visa Support",
+        "transportation": "Transportation",
+        "other": "Other"
+      },
+      "models": {
+        "fixed": "Fixed",
+        "per_week": "Per week",
+        "per_month": "Per month",
+        "per_person": "Per person",
+        "quantity": "Per unit"
+      },
+      "loadError": "Service pricing could not be loaded — saving is disabled until it is available.",
+      "noneApplicable": "No services are configured for the selected school/course."
     },
     "payments": {
       "title": "Payments",
