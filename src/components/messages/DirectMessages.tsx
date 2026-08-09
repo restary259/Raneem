@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,6 +79,11 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
     load();
   }, [load]);
 
+  const loadRef = useRef(load);
+  useEffect(() => {
+    loadRef.current = load;
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel(`direct-messages-${threadId}`)
@@ -90,13 +95,13 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
           table: "direct_messages",
           filter: `thread_id=eq.${threadId}`,
         },
-        () => load(),
+        () => loadRef.current(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [threadId, load]);
+  }, [threadId]);
 
   /** Thread participants double as the mention list. */
   const people: MentionablePerson[] = readState

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useAuth } from "@/contexts/AuthContext";
 import { totalUnreadCaseMessages } from "@/services/CaseMessageService";
 import { totalUnreadDirectMessages } from "@/services/DirectMessageService";
@@ -33,28 +33,19 @@ export function useUnreadCaseMessages(enabled = true): number {
     return () => window.removeEventListener("darb:threads-read", onRead);
   }, [load]);
 
+  const loadRef = useRef(load);
+  useEffect(() => {
+    loadRef.current = load;
+  });
+
   useEffect(() => {
     if (!enabled || !user?.id) return;
-    const channel = supabase
-      .channel("unread-case-messages")
-      .on("postgres_changes", { event: "*", schema: "public", table: "case_messages" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "case_message_reads" }, () =>
-        load(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () =>
-        load(),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "direct_thread_participants" },
-        () => load(),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [enabled, user?.id, load]);
-
+    return subscribeTables(
+      "unread-case-messages",
+      ["case_messages", "case_message_reads", "direct_messages", "direct_thread_participants"],
+      () => loadRef.current(),
+    );
+  }, [enabled, user?.id]);
 
   return count;
 }

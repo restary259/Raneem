@@ -7,17 +7,6 @@ import { Routes, Route, useNavigate, useLocation, Navigate, Outlet } from "react
 import { useTranslation } from "react-i18next";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import WhoWeArePage from "./pages/WhoWeArePage";
-import ServicesPage from "./pages/ServicesPage";
-import LocationsPage from "./pages/LocationsPage";
-import ContactPage from "./pages/ContactPage";
-import EducationalDestinationsPage from "./pages/EducationalDestinationsPage";
-import StudentAuthPage from "./pages/StudentAuthPage";
-import ChatWidget from "./components/chat/ChatWidget";
-import PWAInstaller from "./components/common/PWAInstaller";
-import OfflineIndicator from "./components/common/OfflineIndicator";
-import InAppBrowserBanner from "./components/common/InAppBrowserBanner";
-import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -25,6 +14,21 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import PartnerDashboardLayout from "./components/layout/PartnerDashboardLayout";
+
+// Secondary public pages — lazy so the first mobile paint only ships "/"
+const WhoWeArePage = lazy(() => import("./pages/WhoWeArePage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const LocationsPage = lazy(() => import("./pages/LocationsPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const EducationalDestinationsPage = lazy(() => import("./pages/EducationalDestinationsPage"));
+const StudentAuthPage = lazy(() => import("./pages/StudentAuthPage"));
+
+// Non-critical global widgets — deferred off the critical path
+const ChatWidget = lazy(() => import("./components/chat/ChatWidget"));
+const PWAInstaller = lazy(() => import("./components/common/PWAInstaller"));
+const OfflineIndicator = lazy(() => import("./components/common/OfflineIndicator"));
+const InAppBrowserBanner = lazy(() => import("./components/common/InAppBrowserBanner"));
+const CookieBanner = lazy(() => import("./components/common/CookieBanner"));
 
 // Lazy-loaded public pages
 const PartnershipPage = lazy(() => import("./pages/PartnershipPage"));
@@ -92,11 +96,34 @@ const StudentVisaPage = lazy(() => import("./pages/student/StudentVisaPage"));
 const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
 const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 
+/** Permanent failures (auth/permission/not-found/validation) must never be retried. */
+const isPermanentError = (error: unknown): boolean => {
+  const e = error as { status?: number; code?: string; message?: string } | null;
+  if (!e) return false;
+  if (typeof e.status === "number" && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) return true;
+  const code = String(e.code ?? "");
+  // PostgREST/Postgres permission + constraint classes
+  if (/^(PGRST|22|23|42)/.test(code)) return true;
+  return false;
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60_000,
       gcTime: 10 * 60_000,
+      // Backgrounding/foregrounding on mobile used to trigger refetch storms.
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      // Keep showing the previous page's data while the new query resolves
+      // instead of flashing a loading state on every navigation.
+      placeholderData: (prev: unknown) => prev,
+      networkMode: "offlineFirst",
+      retry: (failureCount, error) => !isPermanentError(error) && failureCount < 3,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    },
+    mutations: {
+      retry: (failureCount, error) => !isPermanentError(error) && failureCount < 1,
     },
   },
 });
@@ -143,6 +170,19 @@ const App = () => {
 
   const dir = i18n.language === "ar" ? "rtl" : "ltr";
 
+  // Mount non-critical floating widgets after the browser is idle so they never
+  // compete with first paint on mobile. Behaviour/appearance is unchanged.
+  const [idleReady, setIdleReady] = React.useState(false);
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setIdleReady(true), { timeout: 2000 });
+      return () => (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(() => setIdleReady(true), 600);
+    return () => window.clearTimeout(t);
+  }, []);
+
   // Hide all distractions on the apply page
   const isApplyPage = location.pathname === "/apply";
 
@@ -158,8 +198,12 @@ const App = () => {
       <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
         <Toaster />
         <Sonner />
-        {!isApplyPage && !isDashboardPath && <OfflineIndicator />}
-        {!isApplyPage && !isDashboardPath && <InAppBrowserBanner />}
+        {!isApplyPage && !isDashboardPath && (
+          <Suspense fallback={null}>
+            <OfflineIndicator />
+            <InAppBrowserBanner />
+          </Suspense>
+        )}
         <Suspense fallback={<div />}>
           <Routes>
             {/* ── Public pages ── */}
@@ -283,9 +327,13 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        {!isApplyPage && !isDashboardPath && <ChatWidget />}
-        {!isApplyPage && !isDashboardPath && <PWAInstaller />}
-        {!isApplyPage && !isDashboardPath && <CookieBanner />}
+        {!isApplyPage && !isDashboardPath && idleReady && (
+          <Suspense fallback={null}>
+            <ChatWidget />
+            <PWAInstaller />
+            <CookieBanner />
+          </Suspense>
+        )}
         {!isDashboardPath && <BottomNav />}
       </div>
     </TooltipProvider>

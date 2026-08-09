@@ -23,7 +23,7 @@ const Header = () => {
                 alt={t('loader.brand')} 
                 className="h-8 md:h-10 w-auto object-contain flex-shrink-0"
                 style={{ minWidth: '2rem' }}
-                fetchPriority="high"
+                {...{ fetchpriority: "high" }}
               />
               <span 
                 className="font-bold text-gray-900 hidden sm:block flex-shrink-0 whitespace-nowrap"

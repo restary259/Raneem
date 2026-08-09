@@ -157,3 +157,28 @@ body {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
 }
+
+/* ── Mobile interaction performance (no visual change) ────────────────────
+   Removes the 300ms tap delay and prevents double-tap zoom on controls only.
+   Scrolling and intentional horizontal scroll areas are untouched. */
+button,
+a,
+[role="button"],
+label,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* iOS Safari auto-zooms any focused control whose font-size is < 16px.
+   Force the computed size to 16px on touch phones only; the rendered size on
+   desktop and the layout everywhere stay exactly as designed. */
+@media (max-width: 767px) and (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
