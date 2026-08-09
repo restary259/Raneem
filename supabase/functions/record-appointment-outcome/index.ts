@@ -25,6 +25,7 @@ serve(async (req) => {
     const userId = userData.user.id;
     const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).in("role", ["admin", "team_member"]);
     if (!roles?.length) {
+      console.warn("outcome: caller has no team role", { userId });
       return new Response(JSON.stringify({ error: "Team member access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const isAdmin = roles.some((r: { role: string }) => r.role === "admin");
@@ -36,6 +37,7 @@ serve(async (req) => {
       new_scheduled_at: z.string().datetime().optional().nullable(),
     }));
     if (!parsed.ok) {
+      console.warn("outcome: invalid body", parsed.error);
       return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const { appointment_id, outcome, outcome_notes, new_scheduled_at } = parsed.data;
@@ -67,18 +69,23 @@ serve(async (req) => {
         owns = caseRow?.assigned_to === userId;
       }
       if (!owns) {
+        console.warn("outcome: not assigned", { userId, appointment_id });
         return new Response(JSON.stringify({ error: "This appointment is not assigned to you" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
 
     // Update appointment outcome
-    await supabaseAdmin.from("appointments").update({
+    const { error: apptUpdateError } = await supabaseAdmin.from("appointments").update({
       outcome,
       outcome_notes: outcome_notes ?? null,
       outcome_recorded_at: new Date().toISOString(),
       outcome_recorded_by: userId,
     }).eq("id", appointment_id);
+    if (apptUpdateError) {
+      console.error("outcome: appointment update failed", apptUpdateError);
+      return new Response(JSON.stringify({ error: apptUpdateError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Update case status based on outcome
     let newCaseStatus: string | null = null;
@@ -91,17 +98,34 @@ serve(async (req) => {
     if (newCaseStatus) {
       const updatePayload: Record<string, unknown> = { status: newCaseStatus };
       if (isNoShow) updatePayload.is_no_show = true;
-      await supabaseAdmin.from("cases").update(updatePayload).eq("id", appt.case_id);
+      const { error: caseUpdateError } = await supabaseAdmin.from("cases").update(updatePayload).eq("id", appt.case_id);
+      if (caseUpdateError) {
+        // The appointment outcome is already saved; report the stage failure
+        // rather than pretending the whole operation succeeded.
+        console.error("outcome: case status update failed", caseUpdateError);
+        return new Response(
+          JSON.stringify({ error: caseUpdateError.message, outcome_saved: true }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // For rescheduled: create new appointment row
     if ((outcome === "rescheduled" || outcome === "delayed") && new_scheduled_at) {
-      const { data: newAppt } = await supabaseAdmin.from("appointments").insert({
+      const { data: newAppt, error: newApptError } = await supabaseAdmin.from("appointments").insert({
         case_id: appt.case_id,
         team_member_id: userId,
         scheduled_at: new_scheduled_at,
         notes: `Rescheduled from ${appt.scheduled_at}`,
       }).select().single();
+
+      if (newApptError) {
+        console.error("outcome: reschedule insert failed", newApptError);
+        return new Response(
+          JSON.stringify({ error: newApptError.message, outcome_saved: true }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
 
       if (newAppt && outcome === "rescheduled") {
         await supabaseAdmin.from("appointments").update({ rescheduled_to: newAppt.id }).eq("id", appointment_id);
@@ -109,8 +133,8 @@ serve(async (req) => {
     }
 
     // Log activity
-    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).single();
-    await supabaseAdmin.rpc("log_activity", {
+    const { data: profile } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+    const { error: logError } = await supabaseAdmin.rpc("log_activity", {
       p_actor_id: userId,
       p_actor_name: profile?.full_name ?? "Team Member",
       p_action: `appointment_${outcome}`,
@@ -118,6 +142,8 @@ serve(async (req) => {
       p_entity_id: appointment_id,
       p_metadata: { case_id: appt.case_id, outcome, new_case_status: newCaseStatus },
     });
+    // Audit logging must never fail the operation itself.
+    if (logError) console.error("outcome: log_activity failed", logError);
 
     return new Response(JSON.stringify({ success: true, outcome, new_case_status: newCaseStatus }), {
       status: 200,
@@ -125,6 +151,6 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("record-appointment-outcome error:", e);
-    return new Response(JSON.stringify({ error: "Server error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Server error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
