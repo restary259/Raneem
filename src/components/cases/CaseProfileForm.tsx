@@ -24,8 +24,10 @@ import {
   PROFILE_FIELD_LABEL_KEYS,
   readStudentProfile,
   toExtraData,
+  COURSE_DURATION_WEEKS,
   type StudentProfileValues,
 } from "@/lib/studentProfileFields";
+import { computeWeeklyCost, formatMoney } from "@/lib/programPricing";
 import { ensureCaseServices } from "@/services/CaseCostingService";
 import { cn } from "@/lib/utils";
 
@@ -139,7 +141,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       (supabase as any).from("schools").select("id,name_en,name_ar").eq("is_active", true).order("name_en"),
       (supabase as any)
         .from("programs")
-        .select("id,name_en,name_ar,school_id,duration_in_months,fixed_start_day_of_month")
+        .select("id,name_en,name_ar,school_id,duration_in_months,fixed_start_day_of_month,price,currency,price_tiers")
         .eq("is_active", true)
         .order("name_en"),
       (supabase as any)
@@ -168,6 +170,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     [accommodations, values.school_id],
   );
   const selectedProgram = programs.find((p) => p.id === values.program_id);
+  // Weekly rate × the fixed 40-week course length — never a stored total.
+  const courseCost = useMemo(
+    () => (selectedProgram ? computeWeeklyCost(selectedProgram as any, COURSE_DURATION_WEEKS) : null),
+    [selectedProgram],
+  );
   const monthOptions = useMemo(() => generateIntakeMonths(24), []);
 
   // Course start follows the programme's fixed start day of the chosen intake.
@@ -556,6 +563,20 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             </Select>
             {invalid("program_id") && (
               <p className="mt-1 text-xs text-destructive">{errText("program_id")}</p>
+            )}
+            {courseCost && courseCost.weeklyRate !== null && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatMoney(courseCost.weeklyRate, courseCost.currency)} /{" "}
+                {t("case.profile.week", { defaultValue: "week" })} ×{" "}
+                {COURSE_DURATION_WEEKS.toLocaleString("en-US")}{" "}
+                {t("case.profile.weeks", { defaultValue: "weeks" })} ={" "}
+                <span className="font-medium text-foreground">
+                  {formatMoney(courseCost.total, courseCost.currency)}
+                </span>{" "}
+                · {t("case.profile.priceEstimate", {
+                  defaultValue: "The school's final invoice may differ.",
+                })}
+              </p>
             )}
           </div>
           <div>

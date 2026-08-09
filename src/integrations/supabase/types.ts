@@ -3225,9 +3225,11 @@ export type Database = {
       service_catalog: {
         Row: {
           category: string
+          code: string | null
           created_at: string
           default_price: number
           id: string
+          in_full_service: boolean
           is_active: boolean
           name_ar: string
           name_en: string
@@ -3236,9 +3238,11 @@ export type Database = {
         }
         Insert: {
           category?: string
+          code?: string | null
           created_at?: string
           default_price?: number
           id?: string
+          in_full_service?: boolean
           is_active?: boolean
           name_ar: string
           name_en: string
@@ -3247,9 +3251,11 @@ export type Database = {
         }
         Update: {
           category?: string
+          code?: string | null
           created_at?: string
           default_price?: number
           id?: string
+          in_full_service?: boolean
           is_active?: boolean
           name_ar?: string
           name_en?: string
@@ -4319,6 +4325,10 @@ export type Database = {
           p_thread_id: string
         }
         Returns: string
+      }
+      set_case_services: {
+        Args: { p_case_id: string; p_service_ids: string[] }
+        Returns: undefined
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       submit_recruit_application: {

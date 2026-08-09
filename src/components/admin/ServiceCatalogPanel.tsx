@@ -36,6 +36,7 @@ export default function ServiceCatalogPanel() {
             name_en: r.name_en,
             default_price: Number(r.default_price || 0),
             is_active: r.is_active,
+            in_full_service: r.in_full_service,
           })
           .eq("id", r.id);
         if (error) throw error;
@@ -95,7 +96,7 @@ export default function ServiceCatalogPanel() {
 
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} className="grid gap-2 sm:grid-cols-[1fr_1fr_130px_auto_auto] items-end rounded-md border p-2.5">
+            <div key={r.id} className="grid gap-2 sm:grid-cols-[1fr_1fr_130px_auto_auto_auto] items-end rounded-md border p-2.5">
               <div className="space-y-1">
                 <Label className="text-xs">{t("admin.settings.catalog.nameAr")}</Label>
                 <Input value={r.name_ar} onChange={(e) => patch(r.id, { name_ar: e.target.value })} />
@@ -120,6 +121,16 @@ export default function ServiceCatalogPanel() {
                 />
                 <span className="text-xs text-muted-foreground">
                   {t("admin.settings.catalog.active")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 pb-2">
+                <Switch
+                  checked={r.in_full_service}
+                  onCheckedChange={(v) => patch(r.id, { in_full_service: v })}
+                  aria-label={t("admin.settings.catalog.inFullService")}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("admin.settings.catalog.inFullService")}
                 </span>
               </div>
               <Button
