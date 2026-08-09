@@ -223,8 +223,12 @@ serve(async (req) => {
           success: true,
           user_id: caseData.student_user_id,
           email: linkedEmail,
-          invited: resent,
-          message: "Student account linked and activation link sent",
+          invited: resent === true,
+          already_invited: resent === "already_sent",
+          message:
+            resent === "already_sent"
+              ? "An activation link was already sent recently — ask the student to check their inbox"
+              : "Student account linked and activation link sent",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
