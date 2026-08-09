@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
-import { useFormDraft } from '@/hooks/useFormDraft';
-import { recordServiceFeePayment } from '@/services/CasePaymentService';
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 
 interface Props {
   caseId: string;
@@ -17,91 +14,50 @@ interface Props {
   onSuccess: () => void;
 }
 
-/** Stage 1: Confirms payment received → moves case to payment_confirmed */
-export default function PaymentConfirmationForm({ caseId, actorId, actorName, onSuccess }: Props) {
+/** Team confirmation for the calculated DARB agency service total. */
+export default function PaymentConfirmationForm({ caseId, onSuccess }: Props) {
   const { toast } = useToast();
-  const { t } = useTranslation('dashboard');
-  const [serviceFee, setServiceFee] = useState('');
-  const [paymentReceived, setPaymentReceived] = useState(false);
+  const { t } = useTranslation("dashboard");
+  const { financials, isLoading, error, refetch } = useCaseFinancials(caseId);
+  const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
-    key: `payment-confirmation:${caseId}`,
-    value: { serviceFee },
-  });
+  useEffect(() => {
+    void refetch();
+  }, [refetch]);
 
-  React.useEffect(() => {
-    if (!restoredDraft) return;
-    const d = restoredDraft as { serviceFee?: string };
-    if (d.serviceFee) setServiceFee(d.serviceFee);
-    acknowledgeRestore();
-    toast({ title: t('common.draft.restoredTitle'), description: t('common.draft.restoredBody') });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restoredDraft]);
-
-  const total = parseFloat(serviceFee) || 0;
+  const total = Number(financials?.service_total ?? 0);
 
   const handleConfirm = async () => {
-    if (!paymentReceived) {
-      toast({ variant: 'destructive', description: t('team.payment.mustConfirm') });
+    if (!confirmed) {
+      toast({
+        variant: "destructive",
+        description: "Please confirm that the DARB agency service fee has been received.",
+      });
       return;
     }
-    if (!serviceFee || parseFloat(serviceFee) <= 0) {
-      toast({ variant: 'destructive', description: t('team.payment.feeRequired') });
+    if (total <= 0) {
+      toast({ variant: "destructive", description: "Select DARB services before confirming payment." });
       return;
     }
+
     setSaving(true);
     try {
-      const now = new Date().toISOString();
-
-      const { error: subErr } = await supabase.from('case_submissions').upsert({
-        case_id: caseId,
-        service_fee: parseFloat(serviceFee),
-        payment_confirmed: true,
-        payment_confirmed_at: now,
-        payment_confirmed_by: actorId,
-      }, { onConflict: 'case_id' });
-      if (subErr) throw subErr;
-
-      // .select() is required: a row-level-security block matches zero rows and
-      // returns no error, so without it a failed status change looks like success.
-      const { data: updatedCase, error: caseErr } = await supabase
-        .from('cases')
-        .update({ status: 'payment_confirmed' })
-        .eq('id', caseId)
-        .select('id')
-        .maybeSingle();
-      if (caseErr) throw caseErr;
-      if (!updatedCase) throw new Error(t('team.payment.statusFailed'));
-
-      // The finance panel is the single source of truth for money on a case, so
-      // the confirmed fee has to land there as a real payment row.
-      await recordServiceFeePayment({
-        caseId,
-        actorId,
-        amount: parseFloat(serviceFee),
-        paidAt: now,
+      const { error: rpcError } = await (supabase as any).rpc("confirm_agency_service_payment", {
+        p_case_id: caseId,
       });
+      if (rpcError) throw rpcError;
 
-
-
-
-
-      await supabase.rpc('log_activity' as any, {
-        p_actor_id: actorId,
-        p_actor_name: actorName,
-        p_action: 'payment_confirmed',
-        p_entity_type: 'case',
-        p_entity_id: caseId,
-        p_metadata: { service_fee: serviceFee },
-      });
-
-      clearDraft();
-      toast({ title: t('team.payment.confirmed') });
+      await refetch();
+      toast({ title: t("team.payment.confirmed", "DARB payment confirmed") });
       onSuccess();
-    } catch (err) {
-      console.error('[PaymentConfirmation]', err);
-      toast({ variant: 'destructive', title: t('common.error'), description: t('common.actionFailed') });
+    } catch (err: any) {
+      console.error("[PaymentConfirmation]", err);
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: err?.message || t("common.actionFailed"),
+      });
     } finally {
       setSaving(false);
     }
@@ -109,32 +65,33 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        {t('team.payment.confirmDesc')}
-      </p>
-      <div className="space-y-1">
-        <Label>{t('team.payment.serviceFeeLabel')}</Label>
-        <Input type="number" min="0" step="100" value={serviceFee} onChange={e => setServiceFee(e.target.value)} placeholder="e.g. 5000" />
+      <div className="rounded-lg border bg-muted/30 p-4">
+        <p className="text-sm font-medium">DARB agency services</p>
+        <p className="mt-1 text-2xl font-bold">{isLoading ? "…" : `${total.toLocaleString("en-US")} ILS`}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          This amount is calculated automatically from the selected DARB services. Team members cannot enter or change
+          the amount here.
+        </p>
       </div>
 
-      {total > 0 && (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border">
-          <span className="text-sm font-medium">{t('team.payment.total')}</span>
-          <span className="text-lg font-bold text-primary">{total.toLocaleString('en-US')} ILS</span>
-        </div>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex items-start gap-3 p-3 rounded-lg border border-border">
-        <Checkbox id="payment_received" checked={paymentReceived} onCheckedChange={v => setPaymentReceived(v === true)} />
-        <Label htmlFor="payment_received" className="cursor-pointer text-sm leading-tight">
-          {t('team.payment.confirmCheckbox', { amount: total.toLocaleString('en-US') })}
-        </Label>
+      <div className="flex items-start gap-3 rounded-lg border p-3">
+        <Checkbox id="darb_payment_received" checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
+        <label htmlFor="darb_payment_received" className="cursor-pointer text-sm leading-tight">
+          I confirm that the DARB agency service fee has been received from the student.
+        </label>
       </div>
 
-      <Button onClick={handleConfirm} disabled={saving || !paymentReceived} className="w-full">
-        {saving
-          ? <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('team.payment.confirming')}</>
-          : t('team.payment.confirmBtn')}
+      <Button onClick={handleConfirm} disabled={saving || isLoading || total <= 0 || !confirmed} className="w-full">
+        {saving ? (
+          <>
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
+            Confirming…
+          </>
+        ) : (
+          "Confirm DARB Payment"
+        )}
       </Button>
     </div>
   );
