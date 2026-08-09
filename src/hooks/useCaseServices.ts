@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 
 export type PricingModel = "fixed" | "per_week" | "per_month" | "per_person" | "quantity";
 
@@ -98,6 +99,7 @@ export function useServiceCatalog() {
 export function useCaseServices(caseId: string | undefined) {
   const [services, setServices] = useState<CaseService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { financials } = useCaseFinancials(caseId);
 
   const refetch = useCallback(async () => {
     if (!caseId) return;
@@ -115,7 +117,7 @@ export function useCaseServices(caseId: string | undefined) {
     refetch();
   }, [refetch]);
 
-  const total = services.reduce((sum, s) => sum + caseServiceTotal(s), 0);
+  const total = Number(financials?.service_total ?? 0);
 
   return { services, total, isLoading, refetch };
 }
