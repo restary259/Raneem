@@ -2678,7 +2678,11 @@
       "other": "Other"
     },
     "profileSaved": "Profile completed",
-    "editProfile": "Edit profile"
+    "editProfile": "Edit profile",
+    "invoice": {
+      "emailSent": "Invoice {{number}} emailed to the student",
+      "emailFailed": "Invoice {{number}} created, but the email could not be sent"
+    }
   },
   "partner": {
     "earningsTitle": "My Earnings",

@@ -2696,7 +2696,11 @@
       "other": "أخرى"
     },
     "profileSaved": "اكتمل ملف الطالب",
-    "editProfile": "تعديل الملف"
+    "editProfile": "تعديل الملف",
+    "invoice": {
+      "emailSent": "تم إرسال الفاتورة {{number}} إلى الطالب",
+      "emailFailed": "تم إنشاء الفاتورة {{number}} لكن تعذّر إرسال البريد"
+    }
   },
   "partner": {
     "earningsTitle": "أرباحي",
