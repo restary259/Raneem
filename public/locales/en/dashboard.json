@@ -843,7 +843,8 @@
         "inactive": "Inactive",
         "noCommission": "No commission",
         "courseWeeks": "Course weeks",
-        "courseWeeksHint": "Default language course duration (A1 → C1) used across the app."
+        "courseWeeksHint": "Default language course duration (A1 → C1) used across the app.",
+        "tab": "Services"
       }
     },
     "spreadsheet": {
