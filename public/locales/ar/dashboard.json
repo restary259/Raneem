@@ -923,7 +923,23 @@
       "financialSection": "الملخص المالي",
       "visaSection": "معلومات التأشيرة",
       "documentsSection": "المستندات",
-      "studentCount": "{{n}} طالب"
+      "studentCount": "{{n}} طالب",
+      "sourceLabel": "المصدر",
+      "sourceCase": "مرتبط بملف",
+      "sourceStandalone": "أنشأه الفريق",
+      "sourceSelf": "تسجيل ذاتي",
+      "fromCase": "من الملف",
+      "openCase": "فتح الملف",
+      "tabs": {
+        "overview": "نظرة عامة",
+        "personal": "المعلومات الشخصية",
+        "education": "التعليم",
+        "program": "البرنامج والسكن",
+        "insurance": "التأمين",
+        "finance": "المالية",
+        "documents": "المستندات",
+        "account": "إجراءات الحساب"
+      }
     },
     "tabs": {
       "spreadsheet": "جدول البيانات",
@@ -1552,7 +1568,14 @@
       "reviewConfirmLabel": "راجعت البيانات وأؤكد صحتها.",
       "confirmSubmit": "تأكيد وإرسال",
       "costSummary": "ملخص التكاليف",
-      "schoolCostsTotal": "إجمالي تكاليف المدرسة"
+      "schoolCostsTotal": "إجمالي تكاليف المدرسة",
+      "educationLevel": "المستوى التعليمي",
+      "educationLevelSelect": "اختر المستوى التعليمي",
+      "passportType": "نوع جواز السفر",
+      "passportTypeSelect": "اختر نوع جواز السفر",
+      "totalsTitle": "الإجمالي",
+      "totalSchool": "إجمالي المدرسة (يورو)",
+      "totalAgency": "رسوم الوكالة (شيكل)"
     },
     "majorsTab": "التخصصات",
     "searchMajors": "ابحث عن تخصص…",
@@ -2604,7 +2627,15 @@
     },
     "stageBlock": {
       "paymentBody": "حصّل المبلغ المتبقي بالأسفل. بعد اكتمال الدفع أرسل الملف إلى الإدارة لإتمام التسجيل."
-    }
+    },
+    "educationLevels": {
+      "bagrut": "بجروت",
+      "bachelor": "بكالوريوس",
+      "master": "ماجستير",
+      "other": "أخرى"
+    },
+    "profileSaved": "اكتمل ملف الطالب",
+    "editProfile": "تعديل الملف"
   },
   "partner": {
     "earningsTitle": "أرباحي",
@@ -3444,5 +3475,14 @@
     },
     "deletionNote": "ملاحظة: قد نحتفظ ببعض السجلات المالية والقانونية للمدة التي يفرضها القانون حتى بعد الحذف.",
     "contact": "للتواصل المباشر بخصوص الخصوصية: darbsocial27@gmail.com"
+  },
+  "onboarding": {
+    "label": "حالة التسجيل",
+    "invited": "تم إرسال الدعوة",
+    "activated": "تم تفعيل الحساب",
+    "profileRequired": "يلزم استكمال الملف",
+    "profileCompleted": "اكتمل الملف",
+    "active": "نشط",
+    "noAccount": "لا يوجد حساب"
   }
 }

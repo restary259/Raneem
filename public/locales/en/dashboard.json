@@ -905,7 +905,23 @@
       "catDocuments": "Documents",
       "catCase": "Case & Submissions",
       "refresh": "Refresh",
-      "studentCount": "{{n}} students"
+      "studentCount": "{{n}} students",
+      "sourceLabel": "Source",
+      "sourceCase": "Case-linked",
+      "sourceStandalone": "Created by staff",
+      "sourceSelf": "Self-registered",
+      "fromCase": "From case",
+      "openCase": "Open case",
+      "tabs": {
+        "overview": "Overview",
+        "personal": "Personal info",
+        "education": "Education",
+        "program": "Program & accommodation",
+        "insurance": "Insurance",
+        "finance": "Finance",
+        "documents": "Documents",
+        "account": "Account actions"
+      }
     },
     "tabs": {
       "spreadsheet": "Spreadsheet",
@@ -1534,7 +1550,14 @@
       "reviewConfirmLabel": "I have reviewed the details and confirm they are correct.",
       "confirmSubmit": "Confirm & submit",
       "costSummary": "Cost summary",
-      "schoolCostsTotal": "School costs total"
+      "schoolCostsTotal": "School costs total",
+      "educationLevel": "Education level",
+      "educationLevelSelect": "Select education level",
+      "passportType": "Passport type",
+      "passportTypeSelect": "Select passport type",
+      "totalsTitle": "Totals",
+      "totalSchool": "School total (EUR)",
+      "totalAgency": "Agency fee (ILS)"
     },
     "majorsTab": "Majors",
     "searchMajors": "Search majors…",
@@ -2586,7 +2609,15 @@
     },
     "stageBlock": {
       "paymentBody": "Collect the remaining balance below. Once the case is fully paid, send it to the admin to finish the enrollment."
-    }
+    },
+    "educationLevels": {
+      "bagrut": "Bagrut",
+      "bachelor": "Bachelor",
+      "master": "Master",
+      "other": "Other"
+    },
+    "profileSaved": "Profile completed",
+    "editProfile": "Edit profile"
   },
   "partner": {
     "earningsTitle": "My Earnings",
@@ -3426,5 +3457,14 @@
     },
     "deletionNote": "Note: we may retain certain financial and legal records for as long as the law requires, even after deletion.",
     "contact": "Direct privacy contact: darbsocial27@gmail.com"
+  },
+  "onboarding": {
+    "label": "Onboarding",
+    "invited": "Invitation sent",
+    "activated": "Account activated",
+    "profileRequired": "Profile setup required",
+    "profileCompleted": "Profile completed",
+    "active": "Active",
+    "noAccount": "No account"
   }
 }
