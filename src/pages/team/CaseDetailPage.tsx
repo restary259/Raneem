@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { statusColorClasses } from "@/lib/caseStatus";
+import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucide-react";
@@ -54,13 +55,7 @@ const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", 
 const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
 
 
-/** Digits-only international number for WhatsApp deep links. */
-function whatsappNumber(phone: string): string {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.startsWith("972")) return digits;
-  if (digits.startsWith("0")) return `972${digits.slice(1)}`;
-  return digits;
-}
+
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -278,10 +273,32 @@ export default function CaseDetailPage() {
   const Back = isRtl ? ArrowRight : ArrowLeft;
   const showFinance = FINANCE_STAGES.includes(caseData.status);
   const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
-  const contactHref = isMobile
-    ? `tel:${caseData.phone_number}`
-    : `https://wa.me/${whatsappNumber(caseData.phone_number)}`;
+  const waHref = whatsappUrl(caseData.phone_number);
+  const phoneUsable = isLinkablePhone(caseData.phone_number);
+  const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : waHref ?? "#";
   const ContactIcon = isMobile ? Phone : MessageCircle;
+
+  /**
+   * The dashboard often runs inside a preview iframe where a plain
+   * `target="_blank"` anchor is silently swallowed by the sandbox. Open the
+   * link programmatically and, when the popup is blocked, fall back to the
+   * current tab so the button always does something visible.
+   */
+  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!phoneUsable) {
+      e.preventDefault();
+      toast({
+        variant: "destructive",
+        description: t("case.header.noPhone", "No valid phone number on this case"),
+      });
+      return;
+    }
+    if (isMobile) return; // tel: links work natively
+    e.preventDefault();
+    const opened = window.open(contactHref, "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = contactHref;
+  };
+
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
@@ -313,6 +330,8 @@ export default function CaseDetailPage() {
             <Button asChild size="sm" variant="outline" className="gap-1.5">
               <a
                 href={contactHref}
+                onClick={handleContactClick}
+                aria-disabled={!phoneUsable}
                 target={isMobile ? undefined : "_blank"}
                 rel={isMobile ? undefined : "noreferrer"}
               >
@@ -322,6 +341,7 @@ export default function CaseDetailPage() {
                 </span>
               </a>
             </Button>
+
             {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />

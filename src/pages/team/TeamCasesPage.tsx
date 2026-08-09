@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Search, Plus, Loader2, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { isLinkablePhone } from '@/lib/phone';
 
 type StatusFilter =
   | 'all'
@@ -126,6 +127,15 @@ export default function TeamCasesPage() {
       toast({ variant: 'destructive', description: isAr ? 'الاسم والهاتف مطلوبان' : 'Name and phone are required' });
       return;
     }
+    if (!isLinkablePhone(newPhone)) {
+      toast({
+        variant: 'destructive',
+        description: isAr
+          ? 'رقم الهاتف غير صالح — أدخل رقمًا مثل 05XXXXXXXX'
+          : 'Invalid phone number — enter a number like 05XXXXXXXX',
+      });
+      return;
+    }
     if (duplicateWarning && !force) return;
 
     setCreating(true);
@@ -134,6 +144,7 @@ export default function TeamCasesPage() {
       const { data: caseData, error: caseErr } = await supabase.from('cases').insert({
         full_name: newName.trim(),
         phone_number: newPhone.trim(),
+
         source: 'manual',
         assigned_to: user!.id,
         status: 'new',
