@@ -266,7 +266,10 @@ export default function TeamAppointmentsPage() {
         .update({ scheduled_at: pendingMove.newDate.toISOString() })
         .eq("id", pendingMove.appt.id);
       if (error) throw error;
-      toast({ title: t("team.appointments.toastRescheduled"), description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a") });
+      toast({
+        title: t("team.appointments.toastRescheduled"),
+        description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a"),
+      });
       setPendingMove(null);
       fetchAppts();
     } catch (err: any) {
@@ -501,7 +504,13 @@ export default function TeamAppointmentsPage() {
       {/* ── HEADER ── */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" aria-label={isAr ? "السابق" : "Previous"} onClick={navigatePrev}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full shrink-0"
+            aria-label={isAr ? "السابق" : "Previous"}
+            onClick={navigatePrev}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <button
@@ -510,7 +519,13 @@ export default function TeamAppointmentsPage() {
           >
             {headerLabel}
           </button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" aria-label={isAr ? "التالي" : "Next"} onClick={navigateNext}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full shrink-0"
+            aria-label={isAr ? "التالي" : "Next"}
+            onClick={navigateNext}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button
@@ -535,11 +550,19 @@ export default function TeamAppointmentsPage() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {v === "day" ? t("team.appointments.viewDay") : v === "week" ? t("team.appointments.viewWeek") : t("team.appointments.viewMonth")}
+                {v === "day"
+                  ? t("team.appointments.viewDay")
+                  : v === "week"
+                    ? t("team.appointments.viewWeek")
+                    : t("team.appointments.viewMonth")}
               </button>
             ))}
           </div>
-          <Button size="sm" className="gap-1.5 rounded-full px-3 sm:px-4 h-8 shadow-sm shrink-0" onClick={() => openNew()}>
+          <Button
+            size="sm"
+            className="gap-1.5 rounded-full px-3 sm:px-4 h-8 shadow-sm shrink-0"
+            onClick={() => openNew()}
+          >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t("team.appointments.newAppointment")}</span>
           </Button>
@@ -585,11 +608,17 @@ export default function TeamAppointmentsPage() {
                   onClick={() => openNew(currentDate, hour)}
                 >
                   <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
-                    {new Date().setHours(hour, 0, 0, 0) && new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
+                    {new Date().setHours(hour, 0, 0, 0) &&
+                      new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
+                        hour: "numeric",
+                        hour12: true,
+                      })}
                   </div>
-                  <div className="p-1.5 cursor-pointer">
+                  <div className="min-w-0 p-1.5 cursor-pointer">
                     {isOver && (
-                      <div className="text-[10px] text-violet-600 font-medium mb-1">{t("team.appointments.dropSchedule")}</div>
+                      <div className="text-[10px] text-violet-600 font-medium mb-1">
+                        {t("team.appointments.dropSchedule")}
+                      </div>
                     )}
                     {slotAppts.map((a) => (
                       <ApptBlock key={a.id} appt={a} />
@@ -620,7 +649,9 @@ export default function TeamAppointmentsPage() {
                     isToday(day) && "bg-violet-50/50",
                   )}
                 >
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{day.toLocaleDateString(calLocale, { weekday: "short" })}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                    {day.toLocaleDateString(calLocale, { weekday: "short" })}
+                  </div>
                   <div
                     className={cn(
                       "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
@@ -644,7 +675,10 @@ export default function TeamAppointmentsPage() {
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
                 <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, { hour: "numeric", hour12: true })}
+                  {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
+                    hour: "numeric",
+                    hour12: true,
+                  })}
                 </div>
                 {weekDays.map((day) => {
                   const slotAppts = getSlot(day, hour);
@@ -653,7 +687,7 @@ export default function TeamAppointmentsPage() {
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "border-r border-border/30 last:border-r-0 p-0.5 relative transition-colors cursor-pointer",
+                        "min-w-0 border-r border-border/30 last:border-r-0 p-0.5 relative transition-colors cursor-pointer",
                         isToday(day) && "bg-violet-50/25",
                         isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
                       )}
@@ -766,7 +800,7 @@ export default function TeamAppointmentsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-md" dir={isAr ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-md" dir={isAr ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
@@ -779,7 +813,9 @@ export default function TeamAppointmentsPage() {
           <div className="space-y-4 py-1">
             {/* Student */}
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelStudent")}</Label>
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("team.appointments.labelStudent")}
+              </Label>
               {!useManualName ? (
                 <div className="flex gap-2">
                   <Select value={newCaseId} onValueChange={setNewCaseId}>
@@ -819,7 +855,13 @@ export default function TeamAppointmentsPage() {
                     onChange={(e) => setManualName(e.target.value)}
                     autoFocus
                   />
-                  <Button variant="ghost" size="icon" type="button" aria-label={isAr ? "إلغاء" : "Cancel"} onClick={() => setUseManualName(false)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    aria-label={isAr ? "إلغاء" : "Cancel"}
+                    onClick={() => setUseManualName(false)}
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -829,7 +871,9 @@ export default function TeamAppointmentsPage() {
             {/* Date & Time */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("team.appointments.labelDate")}</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("team.appointments.labelDate")}
+                </Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -853,7 +897,10 @@ export default function TeamAppointmentsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("team.appointments.labelTime")} <span className="text-muted-foreground/60 normal-case font-normal">{t("team.appointments.labelTimeRange")}</span>
+                  {t("team.appointments.labelTime")}{" "}
+                  <span className="text-muted-foreground/60 normal-case font-normal">
+                    {t("team.appointments.labelTimeRange")}
+                  </span>
                 </Label>
                 <Input
                   type="time"
@@ -936,7 +983,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setSelectedAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-sm" dir={isAr ? "rtl" : "ltr"}>
           {selectedAppt &&
             (() => {
               const s = apptStyle(selectedAppt.outcome);
@@ -1028,7 +1075,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setPendingMove(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-sm" dir={isAr ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle>{t("team.appointments.rescheduleTitle")}</DialogTitle>
           </DialogHeader>
@@ -1041,7 +1088,9 @@ export default function TeamAppointmentsPage() {
                 {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                {t("team.appointments.rescheduleOldDate", { date: format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a") })}
+                {t("team.appointments.rescheduleOldDate", {
+                  date: format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a"),
+                })}
               </p>
             </div>
           )}
@@ -1064,7 +1113,7 @@ export default function TeamAppointmentsPage() {
           if (!v) setDeletingAppt(null);
         }}
       >
-        <DialogContent className="max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-sm" dir={isAr ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle>{t("team.appointments.deleteTitle")}</DialogTitle>
           </DialogHeader>
