@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logDocumentAccess } from "@/lib/documentAccessLog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -588,6 +589,7 @@ export default function AdminStudentsPage() {
 
   const handleDownloadDoc = async (doc: Document) => {
     try {
+      logDocumentAccess(doc.id, "download");
       const urlParts = doc.file_url.split("/student-documents/");
       const storagePath = urlParts[1] ?? doc.file_url;
       const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60);
