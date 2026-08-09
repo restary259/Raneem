@@ -139,9 +139,33 @@ serve(async (req) => {
     }
 
 
+    // Rate-limit duplicate activation mails: if a pending invitation for this
+    // address was created in the last 10 minutes, don't send a second one.
+    const RESEND_WINDOW_MIN = 10;
+    async function recentPendingInvite(email: string) {
+      const since = new Date(Date.now() - RESEND_WINDOW_MIN * 60_000).toISOString();
+      const { data } = await supabaseAdmin
+        .from("user_invitations")
+        .select("created_at")
+        .eq("invited_email", email.toLowerCase())
+        .eq("status", "pending")
+        .is("accepted_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data?.created_at ?? null;
+    }
+
     // Reusable activation mail. Returns true when the message was accepted.
     async function sendInvite(email: string, name: string) {
       try {
+        const alreadySent = await recentPendingInvite(email);
+        if (alreadySent) {
+          console.log("invite: skipped duplicate send", { email, alreadySent });
+          return "already_sent" as const;
+        }
         const activationUrl = await createActivationLink(email);
         const { data: caseRef } = await supabaseAdmin
           .from("cases")
