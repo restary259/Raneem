@@ -126,21 +126,43 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       }],
     });
 
-  const exportPdf = () => {
+  const exportPdf = async () => {
     const headers = [
-      t('admin.payouts.requester'), t('admin.payouts.role'), t('admin.payouts.linkedStudents'),
-      t('admin.payouts.amount'), t('admin.payouts.status'), t('admin.payouts.requestDate'),
-      t('admin.payouts.paymentMethodCol'),
+      t('admin.payouts.requestId', 'Request ID'), t('admin.payouts.requester'), t('admin.payouts.role'),
+      t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'),
+      t('admin.payouts.requestDate'), t('admin.payouts.approvalDate', 'Approval Date'),
+      t('admin.payouts.paymentMethodCol'), t('admin.payouts.notes', 'Notes'),
     ];
+    const dash = '—';
     const pdfRows = requests.map(r => [
-      getName(r), roleLabel(r.requestor_role), (r.linked_student_names || []).join('; '),
-      `${Number(r.amount).toLocaleString('en-US')} ₪`,
+      r.id.slice(0, 8),
+      getName(r) || dash,
+      roleLabel(r.requestor_role),
+      (r.linked_student_names || []).join('; ') || dash,
+      `${(Number(r.amount) || 0).toLocaleString('en-US')} ₪`,
       String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
-      new Date(r.requested_at).toLocaleDateString(locale),
-      r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '—',
+      r.requested_at ? new Date(r.requested_at).toLocaleDateString(locale) : dash,
+      r.approved_at ? new Date(r.approved_at).toLocaleDateString(locale) : dash,
+      r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : dash,
+      r.admin_notes || dash,
     ]);
-    exportPDF({ headers, rows: pdfRows, fileName: `payouts-${new Date().toISOString().slice(0, 10)}`, title: 'Darb Study International — Payouts' });
+    const { rtlFontMissing } = await exportPDF({
+      headers,
+      rows: pdfRows,
+      fileName: `payouts-${new Date().toISOString().slice(0, 10)}`,
+      title: 'Darb Study International — Payouts',
+    });
+    if (rtlFontMissing) {
+      toast({
+        variant: 'destructive',
+        description: t(
+          'admin.payouts.pdfFontWarning',
+          'Arabic/Hebrew names could not be embedded in this PDF. Use the Excel export instead.',
+        ),
+      });
+    }
   };
+
 
   const StatusBadge = ({ status }: { status: string }) => (
     <Badge variant={status === 'paid' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary'}>
