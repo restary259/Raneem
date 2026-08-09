@@ -54,6 +54,7 @@ const RegistrationForm = () => {
       instagramLink: "",
       socialLinks: "",
       whyDarb: "",
+      consent: false as unknown as true,
     },
   });
 
@@ -71,17 +72,37 @@ const RegistrationForm = () => {
         }
       }
 
+      // Consent is recorded alongside the application itself: status, timestamp
+      // and the policy version the applicant actually saw.
+      const payload = {
+        ...values,
+        consent: true,
+        consent_at: new Date().toISOString(),
+        policy_version: POLICY_VERSION,
+      };
+
       // Store first: an application must survive an email delivery failure.
       const { error: insertError } = await (supabase as any)
         .from('contact_submissions')
         .insert({
           form_source: 'partnership',
           data: recruiter
-            ? { ...values, recruited_by_code: refCode, recruited_by_id: recruiter.partner_id, recruited_by_name: recruiter.partner_name }
-            : values,
+            ? { ...payload, recruited_by_code: refCode, recruited_by_id: recruiter.partner_id, recruited_by_name: recruiter.partner_name }
+            : payload,
           status: 'new',
         });
       if (insertError) throw new Error(insertError.message);
+
+      // Append-only consent record (never blocks the submission itself).
+      await recordConsent({
+        sourceForm: 'partnership_form',
+        subjectName: values.name,
+        email: values.email,
+        phone: values.phone,
+        serviceContact: true,
+        marketing: false,
+        locale: i18n.language,
+      });
 
       // Note: no email notification is sent — admins read applications in the admin Inbox.
       return { success: true };
