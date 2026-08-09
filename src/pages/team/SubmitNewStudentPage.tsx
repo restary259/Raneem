@@ -20,6 +20,7 @@ import { generateIntakeMonths } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
+import { isLinkablePhone } from "@/lib/phone";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -328,7 +329,7 @@ export default function SubmitNewStudentPage() {
     }
     if (s === 2) {
       if (!email.trim() || !email.includes("@")) e.email = ss('errorEmail');
-      if (!phone.trim()) e.phone = ss('errorPhone');
+      if (!phone.trim() || !isLinkablePhone(phone)) e.phone = ss('errorPhone');
     }
     if (s === 4) {
       if (!serviceFee || parseFloat(serviceFee) <= 0) e.serviceFee = ss('errorServiceFee');
