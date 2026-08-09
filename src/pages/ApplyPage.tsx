@@ -409,7 +409,7 @@ const ApplyPage: React.FC = () => {
             ))}
           </div>
 
-          <Progress value={progressValue} className="h-1.5 w-full" />
+          <Progress value={progressValue} aria-label={isRtl ? "تقدّم تعبئة الطلب" : "Application progress"} className="h-1.5 w-full" />
 
           {/* Referral attribution stays server-side only — never shown to the applicant. */}
 
@@ -868,7 +868,7 @@ const ApplyPage: React.FC = () => {
             ))}
           </div>
 
-          <p className="text-[11px] text-muted-foreground/60 text-center pb-4">
+          <p className="text-[11px] text-muted-foreground text-center pb-4">
             Darb Study International © {new Date().getFullYear()}
           </p>
         </main>
