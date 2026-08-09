@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Bell, Check } from 'lucide-react';
+import { Bell, Check, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PushNotificationSettings from '@/components/notifications/PushNotificationSettings';
+import { refreshPushSubscription } from '@/lib/webPush';
 
 interface Notification {
   id: string;
