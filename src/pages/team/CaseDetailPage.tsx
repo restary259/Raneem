@@ -14,6 +14,7 @@ import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucid
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { advanceCaseStage } from "@/services/CaseStageService";
+import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
