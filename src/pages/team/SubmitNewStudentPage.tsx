@@ -546,6 +546,21 @@ export default function SubmitNewStudentPage() {
         },
       });
 
+      // The fee was collected here, so it must also land in the case finance
+      // panel — it reads case_services/case_payments, not case_submissions.
+      try {
+        await recordServiceFeePayment({
+          caseId,
+          actorId: user!.id,
+          amount: parseFloat(serviceFee),
+          paidAt: now,
+        });
+      } catch (payErr) {
+        console.error("[SubmitNewStudent] service fee payment", payErr);
+      }
+
+
+
       // Create/link the student account FIRST so uploaded documents can be
       // owned by the student rather than by the uploading team member.
       const {
