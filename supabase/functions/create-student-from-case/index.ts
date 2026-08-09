@@ -1,7 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
-import { z, parseBody, email as emailField, personName, phone as phoneField, uuid } from "../_shared/validate.ts";
+import { z, parseBody, email as emailField, uuid } from "../_shared/validate.ts";
+
+/** Digits, spaces, dashes and parentheses are stripped before validation so
+ *  "05x-xxx xxxx" and "+972 5x ..." are both accepted. */
+function normalisePhone(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const cleaned = input.replace(/[\s()\-.]/g, "");
+  return cleaned.length >= 7 ? cleaned : null;
+}
 import { createInvitation } from "../_shared/invitations.ts";
 
 
@@ -41,7 +49,8 @@ serve(async (req) => {
       .eq("user_id", callerId)
       .in("role", ["admin", "team_member"]);
     if (!roles?.length) {
-      return new Response(JSON.stringify({ error: "Team member access required" }), {
+      console.warn("invite: caller has no staff role", { callerId });
+      return new Response(JSON.stringify({ error: "Team member access required", code: "FORBIDDEN" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -53,17 +62,20 @@ serve(async (req) => {
     const parsed = await parseBody(req, z.object({
       case_id: uuid,
       student_email: emailField,
-      student_full_name: personName,
-      student_phone: phoneField.optional().nullable(),
+      // Arabic/Hebrew names, hyphens and apostrophes must all pass.
+      student_full_name: z.string().trim().min(2).max(100),
+      student_phone: z.string().trim().max(30).optional().nullable(),
       confirm_transfer: z.boolean().optional(),
     }));
     if (!parsed.ok) {
-      return new Response(JSON.stringify({ error: parsed.error }), {
+      console.warn("invite: invalid body", parsed.error);
+      return new Response(JSON.stringify({ error: parsed.error, code: "INVALID_INPUT" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { case_id, student_email, student_full_name, student_phone } = parsed.data;
+    const { case_id, student_email, student_full_name } = parsed.data;
+    const student_phone = normalisePhone(parsed.data.student_phone);
     const body = parsed.data;
 
     if (!case_id || !student_email || !student_full_name) {
@@ -105,7 +117,8 @@ serve(async (req) => {
     // Ownership check: a non-admin team member may only create/link a student
     // account for a case that is assigned to them.
     if (!isAdmin && caseData.assigned_to !== callerId) {
-      return new Response(JSON.stringify({ error: "This case is not assigned to you" }), {
+      console.warn("invite: case not assigned to caller", { callerId, case_id });
+      return new Response(JSON.stringify({ error: "This case is not assigned to you", code: "NOT_ASSIGNED" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -254,7 +267,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: "This student already has an active case",
-            code: "already_linked",
+            code: "ALREADY_LINKED",
             existing_case_id: otherCase.id,
             existing_case_reference: otherCase.case_reference,
           }),
