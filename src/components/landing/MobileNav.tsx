@@ -28,22 +28,22 @@ const MobileNav = () => {
           <div className="flex justify-center mb-3">
             <LanguageSwitcher />
           </div>
-          <Link onClick={close} to="/" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.home')}
           </Link>
-          <Link onClick={close} to="/about" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/about" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.about')}
           </Link>
-          <Link onClick={close} to="/services" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/services" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.services')}
           </Link>
-          <Link onClick={close} to="/educational-programs" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/educational-programs" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.majors')}
           </Link>
-          <Link onClick={close} to="/quiz" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/quiz" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.majorQuizNav')}
           </Link>
-          <Link onClick={close} to="/resources" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/resources" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} py-2`}>
             {t('nav.resources')}
           </Link>
           <Link onClick={close} to="/contact" className={`text-sm font-medium contact-glow transition-colors ${textAlign} py-2`}>
@@ -57,17 +57,17 @@ const MobileNav = () => {
               <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
-              <Link onClick={close} to="/faq" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+              <Link onClick={close} to="/faq" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} block py-2`}>
                 {t('nav.faq')}
               </Link>
-              <Link onClick={close} to="/educational-destinations" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+              <Link onClick={close} to="/educational-destinations" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} block py-2`}>
 
                 {t('nav.educationalDestinations')}
               </Link>
-              <Link onClick={close} to="/partnership" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+              <Link onClick={close} to="/partnership" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} block py-2`}>
                 {t('nav.partnership')}
               </Link>
-              <Link onClick={close} to="/broadcast" className={`text-sm font-medium hover:text-orange-500 transition-colors ${textAlign} block py-2`}>
+              <Link onClick={close} to="/broadcast" className={`text-sm font-medium hover:text-brand transition-colors ${textAlign} block py-2`}>
                 {t('nav.broadcast')}
               </Link>
             </CollapsibleContent>
@@ -76,7 +76,7 @@ const MobileNav = () => {
           <Link
             onClick={close}
             to="/student-auth"
-            className="bg-orange-500 text-white px-3 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors text-center mt-3 text-sm"
+            className="bg-brand text-brand-foreground px-3 py-2 rounded-lg font-medium hover:bg-brand/90 transition-colors text-center mt-3 text-sm"
           >
             {t('nav.studentLogin')}
           </Link>
