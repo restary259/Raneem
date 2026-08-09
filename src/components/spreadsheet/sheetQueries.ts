@@ -97,7 +97,9 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
 
       team_member: staff[s.case?.assigned_to]?.name ?? null,
       partner: staff[s.case?.partner_id]?.name ?? null,
-      school_name: extra.school_name ?? null,
+      // Real relationship — never a free-text fallback.
+      school_id: s.school_id ?? s.school?.id ?? null,
+      school_name: s.school?.name_en ?? s.school?.name_ar ?? null,
       program_name: s.program?.name_en ?? s.program?.name_ar ?? null,
       accommodation_name: s.accommodation?.name_en ?? s.accommodation?.name_ar ?? null,
       insurance_name: s.insurance?.name ?? null,
