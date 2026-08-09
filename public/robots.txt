@@ -1,7 +1,15 @@
 User-agent: *
 Allow: /
+
+# Private / utility routes — not for search indexes
 Disallow: /student-dashboard
+Disallow: /student/
 Disallow: /admin
+Disallow: /team
+Disallow: /partner
 Disallow: /reset-password
+Disallow: /activate
+Disallow: /student-auth
+Disallow: /unsubscribe
 
 Sitemap: https://darb.agency/sitemap.xml
