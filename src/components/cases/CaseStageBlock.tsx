@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import CaseProfileForm from "./CaseProfileForm";
+import CaseProfileSummary from "./CaseProfileSummary";
 import CaseInviteStudent from "./CaseInviteStudent";
 import {
   missingProfileFields,
