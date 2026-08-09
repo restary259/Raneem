@@ -2395,7 +2395,8 @@
       "unassigned": "Unassigned",
       "call": "Call",
       "schedule": "Schedule",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "noPhone": "No valid phone number on this case"
     },
     "tabs": {
       "overview": "Overview",
