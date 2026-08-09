@@ -57,12 +57,15 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
-      if (resp.error) throw new Error(resp.error.message);
+      // Surface the server's own message instead of the opaque
+      // "Edge Function returned a non-2xx status code".
+      if (resp.error) throw new Error(await readFunctionError(resp.error));
+      if ((resp.data as any)?.error) throw new Error((resp.data as any).error);
       toast({ title: t('team.outcome.recorded') });
       onSuccess();
       onClose();
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: 'destructive', description: err?.message ?? String(err) });
     } finally {
       setSaving(false);
     }
