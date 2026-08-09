@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } from 'lucide-react';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck, Mail, Send, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
