@@ -424,10 +424,14 @@ serve(async (req) => {
       success: true,
       user_id: studentId,
       email: student_email,
-      invited: emailSent,
-      message: accountCreated
-        ? "Student account created and activation link sent"
-        : "Existing student account linked and activation link sent",
+      invited: emailSent === true,
+      already_invited: emailSent === "already_sent",
+      message:
+        emailSent === "already_sent"
+          ? "An activation link was already sent recently — ask the student to check their inbox"
+          : accountCreated
+            ? "Student account created and activation link sent"
+            : "Existing student account linked and activation link sent",
     };
 
     return new Response(JSON.stringify(responsePayload), {
