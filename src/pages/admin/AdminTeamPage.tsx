@@ -14,6 +14,7 @@ import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } fro
 import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
+import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
@@ -374,6 +375,16 @@ const AdminTeamPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <TeamMemberDetailSheet
+        memberId={detailMember?.id ?? null}
+        memberName={detailMember?.full_name ?? ''}
+        memberEmail={detailMember?.email ?? ''}
+        role={detailMember?.role ?? 'team_member'}
+        roleLabel={detailMember ? roleLabel(detailMember.role) : ''}
+        commission={detailMember?.commission ?? 0}
+        onOpenChange={(open) => { if (!open) setDetailMember(null); }}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteTargetId} onOpenChange={(v) => { if (!v) setDeleteTargetId(null); }}>
