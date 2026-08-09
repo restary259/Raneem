@@ -557,6 +557,20 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             {invalid("program_id") && (
               <p className="mt-1 text-xs text-destructive">{errText("program_id")}</p>
             )}
+            {courseCost && courseCost.weeklyRate !== null && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatMoney(courseCost.weeklyRate, courseCost.currency)} /{" "}
+                {t("case.profile.week", { defaultValue: "week" })} ×{" "}
+                {COURSE_DURATION_WEEKS.toLocaleString("en-US")}{" "}
+                {t("case.profile.weeks", { defaultValue: "weeks" })} ={" "}
+                <span className="font-medium text-foreground">
+                  {formatMoney(courseCost.total, courseCost.currency)}
+                </span>{" "}
+                · {t("case.profile.priceEstimate", {
+                  defaultValue: "The school's final invoice may differ.",
+                })}
+              </p>
+            )}
           </div>
           <div>
             <Label>{t("case.fields.startMonth")}</Label>
