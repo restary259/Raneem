@@ -42,6 +42,12 @@ interface SubmittedCase {
     program_start_date: string | null;
     program_end_date: string | null;
     payment_confirmed: boolean;
+    program_price: number | null;
+    program_weeks: number | null;
+    program_weekly_price: number | null;
+    accommodation_price: number | null;
+    accommodation_weeks: number | null;
+    accommodation_weekly_price: number | null;
     extra_data: Record<string, unknown> | null;
   } | null;
   documents?: Array<{ id: string; file_name: string; file_url: string; category: string; created_at: string }>;
