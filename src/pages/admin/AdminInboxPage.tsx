@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ContactsManager from "@/components/admin/ContactsManager";
 import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
+import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +45,17 @@ const AdminInboxPage = () => {
   const { toast } = useToast();
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"all" | "partnership" | "contact" | "recruits">("all");
+  const [tab, setTab] = useState<"all" | "partnership" | "contact" | "recruits" | "dataRequests">("all");
   const [search, setSearch] = useState("");
   const [recruitCount, setRecruitCount] = useState(0);
   const [recruitPending, setRecruitPending] = useState(0);
+  const [dataReqCount, setDataReqCount] = useState(0);
+  const [dataReqPending, setDataReqPending] = useState(0);
+
+  const handleDataReqCount = useCallback((total: number, pending: number) => {
+    setDataReqCount(total);
+    setDataReqPending(pending);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,6 +172,14 @@ const AdminInboxPage = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="dataRequests" className="gap-1.5">
+              {tabLabel("admin.inbox.source.dataRequests", "Data requests", dataReqCount)}
+              {dataReqPending > 0 && (
+                <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+                  {dataReqPending}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -188,6 +204,14 @@ const AdminInboxPage = () => {
         {/* Mounted always so the tab badge stays accurate. */}
         <TabsContent value="recruits" forceMount className={tab === "recruits" ? "mt-0" : "hidden"}>
           <RecruitApplicationsPanel search={search} onCount={handleRecruitCount} />
+        </TabsContent>
+
+        <TabsContent
+          value="dataRequests"
+          forceMount
+          className={tab === "dataRequests" ? "mt-0" : "hidden"}
+        >
+          <DataRequestsPanel search={search} onCount={handleDataReqCount} />
         </TabsContent>
       </Tabs>
     </div>
