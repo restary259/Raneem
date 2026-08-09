@@ -162,11 +162,22 @@ const NotificationBell: React.FC = () => {
       <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold text-sm">{t('notifications.title')}</h3>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={markAllRead}>
-              <Check className="h-3 w-3 me-1" />{t('notifications.markAllRead')}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={markAllRead}>
+                <Check className="h-3 w-3 me-1" />{t('notifications.markAllRead')}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              aria-label={t('pushSettings.title')}
+              onClick={() => { setOpen(false); setSettingsOpen(true); }}
+            >
+              <Settings className="h-3.5 w-3.5" />
             </Button>
-          )}
+          </div>
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
@@ -193,6 +204,15 @@ const NotificationBell: React.FC = () => {
           )}
         </ScrollArea>
       </PopoverContent>
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">{t('pushSettings.title')}</DialogTitle>
+          </DialogHeader>
+          {settingsOpen && <PushNotificationSettings />}
+        </DialogContent>
+      </Dialog>
     </Popover>
   );
 };
