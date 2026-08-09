@@ -203,7 +203,19 @@ const NotificationBell: React.FC = () => {
             </div>
           )}
         </ScrollArea>
+        <div className="border-t p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-xs h-8"
+            onClick={() => { setOpen(false); setSettingsOpen(true); }}
+          >
+            <Settings className="h-3.5 w-3.5 me-2" />
+            {t('pushSettings.title')}
+          </Button>
+        </div>
       </PopoverContent>
+
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
