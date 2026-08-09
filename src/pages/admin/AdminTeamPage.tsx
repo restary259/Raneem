@@ -304,7 +304,27 @@ const AdminTeamPage = () => {
                 <DialogTitle>{t('admin.team.createMember', 'Create Team Member')}</DialogTitle>
               </DialogHeader>
 
-              {newCreds ? (
+              {invitedInfo ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {invitedInfo.emailed
+                      ? t('admin.team.inviteSentHint', 'An activation email was sent. The link works once and expires in 7 days.')
+                      : t('admin.team.inviteEmailFailed', 'The invitation was created but the email could not be sent — share the link below instead.')}
+                  </p>
+                  <div className="space-y-2 rounded-lg bg-muted p-4">
+                    <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {invitedInfo.email}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="min-w-0 truncate font-mono text-xs">{invitedInfo.url}</p>
+                      <Button variant="ghost" size="icon" aria-label={t('admin.team.copyInviteLink', 'Copy activation link')} onClick={() => copyToClipboard(invitedInfo.url)}>
+                        {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button className="w-full" onClick={() => { setInvitedInfo(null); setOpen(false); }}>
+                    {t('common.done', 'Done')}
+                  </Button>
+                </div>
+              ) : newCreds ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     {t('admin.team.credentialsHint')}
@@ -343,12 +363,38 @@ const AdminTeamPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label>{t('admin.team.howToCreate', 'How should the account be created?')}</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {([
+                        { key: 'invite', title: t('admin.team.modeInvite', 'Send invitation email'), desc: t('admin.team.modeInviteDesc', 'They receive a branded link and choose their own password.') },
+                        { key: 'manual', title: t('admin.team.modeManual', 'Create manually'), desc: t('admin.team.modeManualDesc', 'You get a temporary password to pass on; they must change it at first sign-in.') },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setMode(opt.key)}
+                          className={`rounded-lg border p-3 text-start transition-colors ${mode === opt.key ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                        >
+                          <span className="block text-sm font-medium text-foreground">{opt.title}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{opt.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <Button
-                    className="w-full"
+                    className="w-full gap-2"
                     onClick={createMember}
                     disabled={creating}
                   >
-                    {creating ? t('admin.team.creating') : t('admin.team.createBtn', 'Create Account')}
+                    {mode === 'invite' ? <Mail className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                    {creating
+                      ? t('admin.team.creating')
+                      : mode === 'invite'
+                        ? t('admin.team.sendInvite', 'Send invitation')
+                        : t('admin.team.createBtn', 'Create Account')}
                   </Button>
                 </div>
               )}
