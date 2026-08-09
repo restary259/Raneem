@@ -2756,6 +2756,29 @@
     "pipeline": {
       "title": "Pipeline breakdown",
       "empty": "No cases yet"
+    },
+    "profile": {
+      "title": "My Account",
+      "subtitle": "Your personal details, referral link and password.",
+      "details": "Personal details",
+      "email": "Email",
+      "fullName": "Full name",
+      "phone": "Phone number",
+      "city": "City",
+      "saved": "Changes saved",
+      "nameRequired": "Full name is required",
+      "referralLink": "My referral link",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "changePassword": "Change password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "passwordHint": "At least 10 characters with upper, lower case and a number",
+      "updatePassword": "Update password",
+      "passwordChanged": "Password changed successfully",
+      "passwordMismatch": "Passwords do not match",
+      "weakPassword": "Password is too weak",
+      "masterBadge": "Master partner"
     }
   },
   "visa": {
