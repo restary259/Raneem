@@ -388,7 +388,8 @@
       "deleteConfirmTitle": "Delete account?",
       "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
       "manager": "Manager",
-      "managerHint": "Managers are reachable by all team members in the internal chat"
+      "managerHint": "Managers are reachable by all team members in the internal chat",
+      "copyPassword": "Copy password"
     },
     "programs": {
       "title": "Programs & Accommodations",
@@ -756,7 +757,9 @@
         "color": "Color",
         "active": "Active",
         "caseCount": "Cases",
-        "saved": "Pipeline stages saved"
+        "saved": "Pipeline stages saved",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
       },
       "catalog": {
         "tab": "Service catalog",
@@ -2125,7 +2128,8 @@
     },
     "nextSteps": "Next Steps",
     "network": "My network",
-    "performance": "Network performance"
+    "performance": "Network performance",
+    "myData": "My data"
   },
   "case": {
     "status": {
@@ -2734,6 +2738,15 @@
       "prepareVisa": "Prepare your visa file",
       "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs.",
       "loadError": "We could not load your case securely. Please refresh or contact your advisor."
+    },
+    "payDisclosure": {
+      "title": "Before you pay — please read",
+      "l1": "Payment is made in person at the Darb office only. No payment is processed on this website, and we will never ask for card details or a transfer through the platform.",
+      "l2": "The service fee covers consultation, file preparation, submission and follow-up. It does not cover official fees (visa, universities, uni-assist, certifications), the blocked account, insurance or accommodation.",
+      "l3": "Admission and visa decisions rest with official bodies independent of Darb; no outcome can be guaranteed.",
+      "l4": "You may cancel in writing at any time; refunds are calculated after deducting work performed and official third-party fees already paid.",
+      "link": "Full service details",
+      "terms": "Terms & conditions"
     }
   },
   "settings": {
@@ -3010,7 +3023,8 @@
       "applyContactDesc": "Only auto-generated leads from the Apply and Contact pages",
       "referral": "Referral cases only",
       "referralDesc": "Only cases that came through their referral link"
-    }
+    },
+    "delete": "Delete"
   },
   "caseTimeline": {
     "title": "Timeline",
@@ -3337,5 +3351,50 @@
   "theme": {
     "dark": "Dark mode",
     "light": "Light mode"
+  },
+  "myData": {
+    "title": "My data & privacy",
+    "subtitle": "See what we hold about you, download a copy, or submit a request about your rights.",
+    "summaryTitle": "What we hold about you",
+    "cat": {
+      "identity": "Identity & contact data",
+      "identityDesc": "Name, email, phone, date of birth, passport number.",
+      "academic": "Academic data",
+      "academicDesc": "Certificates, grades, desired field of study, suggested universities.",
+      "case": "Your application file",
+      "caseDesc": "File stage, appointments, internal notes, visa status.",
+      "documents": "Uploaded documents",
+      "documentsDesc": "Passport, certificates, proof of funds and other files you uploaded.",
+      "usage": "Usage records",
+      "usageDesc": "Login records, in-platform messages, document access logs."
+    },
+    "exportTitle": "Download a copy of my data",
+    "exportDesc": "A JSON file containing your profile, your case file and your document list.",
+    "exportBtn": "Download my data",
+    "exportDone": "Your data copy has been downloaded.",
+    "requestTitle": "Submit a data-rights request",
+    "requestDesc": "You can request access, correction or deletion. We respond within 30 days at the latest.",
+    "type": {
+      "access": "Request access to my data",
+      "correction": "Request a correction",
+      "export": "Request an official copy of my data",
+      "deletion": "Request deletion of my account and data",
+      "objection": "Object to processing of my data"
+    },
+    "messageLabel": "Request details (optional)",
+    "messagePlaceholder": "Tell us exactly what you need…",
+    "submit": "Send request",
+    "submitted": "Your request was sent. We will get back to you shortly.",
+    "error": "Could not send the request, please try again.",
+    "historyTitle": "My previous requests",
+    "empty": "No requests yet.",
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "deletionNote": "Note: we may retain certain financial and legal records for as long as the law requires, even after deletion.",
+    "contact": "Direct privacy contact: darbsocial27@gmail.com"
   }
 }

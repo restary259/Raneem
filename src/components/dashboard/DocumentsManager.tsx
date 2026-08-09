@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { logDocumentAccess } from "@/lib/documentAccessLog";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Upload, File, Download, Trash2, Plus, Search, AlertTriangle } from "lucide-react";
@@ -188,6 +189,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
   // Always uses a signed URL so the private bucket is never hit directly.
   const handleDownload = async (doc: Document) => {
     try {
+      logDocumentAccess(doc.id, "download");
       const storagePath = toStoragePath(doc.file_url);
       const { data: signedData, error } = await supabase.storage
         .from("student-documents")

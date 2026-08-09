@@ -140,6 +140,7 @@ const AIQuizChat = () => {
             <Button
               type="submit"
               size="icon"
+              aria-label={t('chat.send', 'Send')}
               disabled={!input.trim() || isLoading}
               className="bg-orange-500 hover:bg-orange-600 shrink-0"
             >

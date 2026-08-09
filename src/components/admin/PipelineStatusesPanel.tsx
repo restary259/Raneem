@@ -111,12 +111,13 @@ export default function PipelineStatusesPanel() {
                   {t("admin.settings.pipeline.caseCount", "Cases")}:{" "}
                   {(counts[row.key] ?? 0).toLocaleString("en-US")}
                 </span>
-                <Button variant="ghost" size="icon" onClick={() => move(index, -1)} disabled={index === 0}>
+                <Button variant="ghost" size="icon" aria-label={t('admin.settings.pipeline.moveUp', 'Move up')} onClick={() => move(index, -1)} disabled={index === 0}>
                   <ArrowUp className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={t('admin.settings.pipeline.moveDown', 'Move down')}
                   onClick={() => move(index, 1)}
                   disabled={index === rows.length - 1}
                 >

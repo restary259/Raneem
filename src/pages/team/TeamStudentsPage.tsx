@@ -187,7 +187,7 @@ export default function TeamStudentsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={fetchStudents} title={t("common.refresh")}>
+          <Button variant="outline" size="icon" aria-label={t("common.refresh")} onClick={fetchStudents} title={t("common.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
 
@@ -228,7 +228,7 @@ export default function TeamStudentsPage() {
                         <p className="text-xs text-muted-foreground mb-0.5">{t("team.students.tempEmail")}</p>
                         <p className="font-medium">{newCreds.email}</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => copyToClipboard(newCreds.email, "email")}>
+                      <Button variant="ghost" size="icon" aria-label={isRtl ? "نسخ البريد الإلكتروني" : "Copy email"} onClick={() => copyToClipboard(newCreds.email, "email")}>
                         {copied === "email" ? (
                           <CheckCheck className="h-4 w-4 text-green-500" />
                         ) : (
@@ -250,6 +250,7 @@ export default function TeamStudentsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={isRtl ? "نسخ كلمة المرور" : "Copy password"}
                         onClick={() => copyToClipboard(newCreds.password, "password")}
                       >
                         {copied === "password" ? (

@@ -1044,6 +1044,45 @@ export type Database = {
         }
         Relationships: []
       }
+      data_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          message: string | null
+          request_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          message?: string | null
+          request_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          message?: string | null
+          request_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deletion_logs: {
         Row: {
           categories: string[]
@@ -3879,6 +3918,10 @@ export type Database = {
           p_is_internal?: boolean
           p_payload?: Json
         }
+        Returns: undefined
+      }
+      log_document_access: {
+        Args: { _action?: string; _document_id: string }
         Returns: undefined
       }
       log_user_activity: {

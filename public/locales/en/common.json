@@ -89,7 +89,8 @@
     "offlineBanner": "You're offline — showing saved conversations only",
     "errorPrefix": "Sorry, an error occurred:",
     "offlineReply": "You're currently offline. You can review previous conversations or try common questions.",
-    "connectionError": "Failed to connect to AI assistant"
+    "connectionError": "Failed to connect to AI assistant",
+    "send": "Send"
   },
   "quickQuestions": [
     "How do I start applying to German universities?",
@@ -417,5 +418,8 @@
     "revoked": "This invitation was cancelled. Contact the DARB team.",
     "missingToken": "The link is missing an invitation code.",
     "goToLogin": "Go to sign in"
+  },
+  "common": {
+    "close": "Close"
   }
 }

@@ -85,7 +85,7 @@ const BottomNav = () => {
                 aria-hidden="true"
               />
               <span className={`text-xs font-medium leading-tight truncate max-w-[60px] ${
-                active ? 'text-brand' : 'text-muted-foreground'
+                active ? 'text-brand-strong' : 'text-muted-foreground'
               }`}>
                 {item.name}
               </span>

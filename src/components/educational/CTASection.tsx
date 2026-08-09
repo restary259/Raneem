@@ -29,7 +29,7 @@ const CTASection = () => {
           <Button
             size="lg"
             variant="outline"
-            className="min-h-[48px] px-6 md:px-8 text-sm md:text-base bg-background text-foreground border-2 border-brand hover:bg-brand/10 active:bg-brand/20 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="min-h-[48px] px-6 md:px-8 text-sm md:text-base bg-background text-foreground border-2 border-brand hover:bg-brand-strong/10 active:bg-brand-strong/20 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             asChild
           >
             <Link to="/quiz">{t('educational.ctaButton2')}</Link>

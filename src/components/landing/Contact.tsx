@@ -292,10 +292,10 @@ const Contact = () => {
             <div className="bg-background/90 border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
               <h3 className="text-xl font-semibold mb-4 text-center">{t('contact.follow')}</h3>
               <div className="flex justify-center items-center gap-6">
-                <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
-                <a href="https://www.tiktok.com/@darb_studyingrmany" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
-                <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
-                <a href={WHATSAPP_SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
+                <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
+                <a href="https://www.tiktok.com/@darb_studyingrmany" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
+                <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
+                <a href={WHATSAPP_SUPPORT_URL} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
               </div>
             </div>
           </div>

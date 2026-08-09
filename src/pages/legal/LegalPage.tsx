@@ -15,8 +15,8 @@ export interface LegalSection {
 }
 
 interface LegalPageProps {
-  /** Translation key prefix inside the `legal` namespace: "privacy" | "terms" */
-  docKey: 'privacy' | 'terms';
+  /** Translation key prefix inside the `legal` namespace. */
+  docKey: 'privacy' | 'terms' | 'accessibility';
   /** Route of the sibling legal document. */
   relatedTo: string;
 }

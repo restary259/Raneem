@@ -53,6 +53,7 @@ import {
   Calculator,
   Sparkles,
   Crown,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.visa", icon: Globe, href: "/student/visa" },
     { key: "nav.refer", icon: Heart, href: "/student/refer" },
     { key: "nav.contacts", icon: Users, href: "/student/contacts" },
+    { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
   ],
 
 };

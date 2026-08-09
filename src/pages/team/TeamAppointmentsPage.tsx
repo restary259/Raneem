@@ -496,7 +496,7 @@ export default function TeamAppointmentsPage() {
       {/* ── HEADER ── */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" onClick={navigatePrev}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" aria-label={isAr ? "السابق" : "Previous"} onClick={navigatePrev}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <button
@@ -505,7 +505,7 @@ export default function TeamAppointmentsPage() {
           >
             {headerLabel}
           </button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" onClick={navigateNext}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full shrink-0" aria-label={isAr ? "التالي" : "Next"} onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button
@@ -814,7 +814,7 @@ export default function TeamAppointmentsPage() {
                     onChange={(e) => setManualName(e.target.value)}
                     autoFocus
                   />
-                  <Button variant="ghost" size="icon" type="button" onClick={() => setUseManualName(false)}>
+                  <Button variant="ghost" size="icon" type="button" aria-label={isAr ? "إلغاء" : "Cancel"} onClick={() => setUseManualName(false)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>

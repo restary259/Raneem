@@ -70,7 +70,7 @@ const Hero = () => {
           {t('hero.subtitle')}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
-          <Button size="lg" asChild className="w-full sm:w-auto bg-brand text-brand-foreground hover:bg-brand/90 transition-transform duration-300 hover:scale-105">
+          <Button size="lg" asChild className="w-full sm:w-auto bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
@@ -82,7 +82,7 @@ const Hero = () => {
           <div className="container mx-auto grid grid-cols-3 gap-3 sm:gap-8 text-white animate-fade-in animation-delay-500">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-brand drop-shadow-lg">
+                <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-brand-strong drop-shadow-lg">
                   <AnimatedCounter end={stat.value} />+
                 </p>
                 <p className="text-sm text-white/80">{stat.label}</p>

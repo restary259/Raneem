@@ -36,6 +36,10 @@ const Footer = () => {
           <Link to="/terms" className="hover:text-accent transition-colors underline underline-offset-4">
             {tLegal('footer.terms')}
           </Link>
+          <Link to="/accessibility" className="hover:text-accent transition-colors underline underline-offset-4">
+            {tLegal('footer.accessibility')}
+          </Link>
+
         </div>
         <div className="text-center text-sm text-primary-foreground/70">
           {t('footer.copyright', { year })}

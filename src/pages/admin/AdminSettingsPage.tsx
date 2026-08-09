@@ -526,7 +526,7 @@ const AdminSettingsPage = () => {
                       <div className="flex items-center gap-2 ms-4 shrink-0">
                         <span className="text-xs text-muted-foreground">{catLabel(c.category)}</span>
                         <Switch checked={c.is_active} onCheckedChange={() => toggleContact(c.id, c.is_active)} />
-                        <Button variant="ghost" size="icon" onClick={() => deleteContact(c.id)}>
+                        <Button variant="ghost" size="icon" aria-label={isRtl ? "حذف جهة الاتصال" : "Delete contact"} onClick={() => deleteContact(c.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -629,7 +629,7 @@ const AdminSettingsPage = () => {
                       </div>
                       <div className="flex items-center gap-2 ms-4 shrink-0">
                         <Switch checked={f.is_active} onCheckedChange={() => toggleVisaField(f.id, f.is_active)} />
-                        <Button variant="ghost" size="icon" onClick={() => deleteVisaField(f.id)}>
+                        <Button variant="ghost" size="icon" aria-label={isRtl ? "حذف الحقل" : "Delete field"} onClick={() => deleteVisaField(f.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

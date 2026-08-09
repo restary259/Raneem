@@ -81,9 +81,9 @@ const BlogArticlePage: React.FC = () => {
 
         <article className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-3xl">
           <nav aria-label="breadcrumb" className="mb-6 text-sm text-muted-foreground flex flex-wrap gap-2">
-            <Link to="/" className="hover:text-brand">{t('breadcrumb.home')}</Link>
+            <Link to="/" className="hover:text-brand-strong">{t('breadcrumb.home')}</Link>
             <span aria-hidden="true">/</span>
-            <Link to="/blog" className="hover:text-brand">{t('index.title')}</Link>
+            <Link to="/blog" className="hover:text-brand-strong">{t('index.title')}</Link>
           </nav>
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-8">
@@ -106,15 +106,15 @@ const BlogArticlePage: React.FC = () => {
                 <ul className="space-y-2 mb-4">
                   {section.bullets.map((bullet) => (
                     <li key={bullet} className="flex gap-3 text-muted-foreground leading-relaxed">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-brand-strong shrink-0" aria-hidden="true" />
                       <span>{bullet}</span>
                     </li>
                   ))}
                 </ul>
               )}
               {section.note && (
-                <div className="flex gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4 text-sm">
-                  <Info className="h-4 w-4 text-brand shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex gap-3 rounded-lg border border-brand/30 bg-brand-strong/5 p-4 text-sm">
+                  <Info className="h-4 w-4 text-brand-strong shrink-0 mt-0.5" aria-hidden="true" />
                   <p>{section.note}</p>
                 </div>
               )}
@@ -131,7 +131,7 @@ const BlogArticlePage: React.FC = () => {
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-brand hover:underline"
+                    className="inline-flex items-center gap-2 text-sm text-brand-strong hover:underline"
                   >
                     {source.label}
                     <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -164,7 +164,7 @@ const BlogArticlePage: React.FC = () => {
                         {t(`categories.${item.category}`)}
                       </Badge>
                       <h3 className="font-semibold leading-snug">
-                        <Link to={`/blog/${item.slug}`} className="hover:text-brand transition-colors">
+                        <Link to={`/blog/${item.slug}`} className="hover:text-brand-strong transition-colors">
                           {other.title}
                         </Link>
                       </h3>

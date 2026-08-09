@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logDocumentAccess } from "@/lib/documentAccessLog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -588,6 +589,7 @@ export default function AdminStudentsPage() {
 
   const handleDownloadDoc = async (doc: Document) => {
     try {
+      logDocumentAccess(doc.id, "download");
       const urlParts = doc.file_url.split("/student-documents/");
       const storagePath = urlParts[1] ?? doc.file_url;
       const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(storagePath, 60);
@@ -1145,10 +1147,10 @@ export default function AdminStudentsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownloadDoc(doc)} title={isRtl ? "تحميل" : "Download"}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownloadDoc(doc)} title={isRtl ? "تحميل" : "Download"} aria-label={isRtl ? "تحميل" : "Download"}>
                               <Download className="h-3.5 w-3.5 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc)} title={isRtl ? "حذف" : "Delete"}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc)} title={isRtl ? "حذف" : "Delete"} aria-label={isRtl ? "حذف" : "Delete"}>
                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                             </Button>
                           </div>
@@ -1224,7 +1226,7 @@ export default function AdminStudentsPage() {
               <span className="text-muted-foreground text-xs">{isRtl ? "كلمة المرور" : "Password"}</span>
               <div className="flex items-center gap-2">
                 <span className="font-bold">{showResetPw ? resetCreds?.password : "••••••••"}</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowResetPw(!showResetPw)}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={showResetPw ? (isRtl ? "إخفاء كلمة المرور" : "Hide password") : (isRtl ? "إظهار كلمة المرور" : "Show password")} onClick={() => setShowResetPw(!showResetPw)}>
                   {showResetPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
               </div>
