@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface CatalogService {
   id: string;
+  code: string | null;
   name_ar: string;
   name_en: string;
   category: string;
   default_price: number;
   is_active: boolean;
+  /** Part of the "Full Service" bundle — configured by admins in service settings. */
+  in_full_service: boolean;
   sort_order: number;
 }
 
