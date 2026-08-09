@@ -165,7 +165,7 @@ const StudentAuthPage = () => {
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-secondary via-background to-secondary p-4 relative overflow-hidden"
+      className="flex items-center justify-center bg-gradient-to-b from-secondary via-background to-secondary relative overflow-hidden h-[100dvh] md:h-auto md:min-h-screen p-3 md:p-4"
     >
       {/* Background decorative glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
