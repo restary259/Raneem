@@ -96,6 +96,23 @@ const NotificationBell: React.FC = () => {
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
+  // Service-worker bridge: keep the list fresh when a push lands, follow
+  // notification taps, and silently re-register a rotated subscription.
+  useEffect(() => {
+    if (!userId || !('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const type = event.data?.type;
+      if (type === 'PUSH_RECEIVED') fetchNotifications(userId);
+      else if (type === 'NOTIFICATION_CLICK' && event.data.url) navigate(event.data.url);
+      else if (type === 'PUSH_SUBSCRIPTION_CHANGED') refreshPushSubscription(userId);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    refreshPushSubscription(userId);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [userId, fetchNotifications, navigate]);
+
+
+
   /** Optimistic: the badge drops the moment the row is opened, then persists. */
   const markAsRead = async (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
