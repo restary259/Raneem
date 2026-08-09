@@ -56,12 +56,14 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       id, program_start_date, program_end_date, extra_data,
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
-      case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id),
+      student_email, student_phone,
+      case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id, education_level, passport_type),
       program:programs(name_en, name_ar, price),
       accommodation:accommodations(name_en, name_ar, price),
       insurance:insurances(name, price)
     `)
     .is('deleted_at', null);
+
 
   if (scope === 'team' && userId) query = query.eq('case.assigned_to', userId);
 
