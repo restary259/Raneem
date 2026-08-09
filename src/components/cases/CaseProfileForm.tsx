@@ -46,14 +46,18 @@ interface Props {
 }
 
 /* ── Steps ──────────────────────────────────────────────────────────── */
+
 const STEP_KEYS = ["stepStudentInfo", "stepContactDetails", "stepProgram"] as const;
+
 type StepNum = 1 | 2 | 3;
+
 const LAST_STEP: StepNum = 3;
 
 /**
- * A stable, module-level input. Defining this inside the parent's render body
- * would create a new component type on every keystroke, remounting the input
- * and dropping focus — that was the original typing bug.
+ * Stable module-level input.
+ *
+ * Defining this inside the parent's render body would create a new
+ * component type on every render and cause inputs to remount/drop focus.
  */
 const TextField = React.memo(function TextField({
   name,
@@ -77,6 +81,7 @@ const TextField = React.memo(function TextField({
   return (
     <div data-field={name}>
       <Label className={invalid ? "text-destructive" : ""}>{labelText}</Label>
+
       <Input
         name={name}
         className={cn("mt-1", invalid && "border-destructive")}
@@ -86,18 +91,20 @@ const TextField = React.memo(function TextField({
         aria-invalid={invalid || undefined}
         onChange={(e) => onChange(name, e.target.value)}
       />
+
       {invalid && error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>
   );
 });
 
-/** Same step pill/progress bar used on the "Submit New Student" wizard. */
+/** Same step pill/progress bar used on the Submit New Student wizard. */
 const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
   <div className="flex items-center gap-1 mb-6">
     {STEP_KEYS.map((key, i) => {
       const n = (i + 1) as StepNum;
       const done = n < step;
       const current = n === step;
+
       return (
         <React.Fragment key={n}>
           <div
@@ -111,8 +118,10 @@ const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
             )}
           >
             {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{n}</span>}
+
             <span className="hidden sm:inline">{t(`lawyer.submitStudent.${key}`)}</span>
           </div>
+
           {i < STEP_KEYS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
         </React.Fragment>
       );
@@ -124,28 +133,40 @@ const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
 const ReviewRow = ({ label, value, strong }: { label: string; value: React.ReactNode; strong?: boolean }) => (
   <div className={cn("flex items-start justify-between gap-4 py-1.5 text-sm", strong && "font-semibold")}>
     <span className="text-muted-foreground shrink-0">{label}</span>
+
     <span className="text-end break-words">{value}</span>
   </div>
 );
 
 /**
- * The profile completion step. Field-for-field and step-for-step identical to
- * the "+ New student" form (Student Info → Contact Details → Program &
- * Accommodation), prefilled from whatever the case already knows, autosaved
- * as a draft while it is being filled in.
+ * The profile completion step.
+ *
+ * Student profile values are kept in one canonical model and persisted to:
+ *
+ * - case_submissions for submission/program/payment-related values
+ * - cases for case-level identity values
+ * - case_submissions.extra_data for the shared profile representation
  */
 export default function CaseProfileForm({ caseData, submission, onSaved }: Props) {
   const { t, i18n } = useTranslation("dashboard");
+
   const isAr = i18n.language?.startsWith("ar");
+
   const { toast } = useToast();
   const { user } = useAuth();
+
   const ss = (k: string) => t(`lawyer.submitStudent.${k}`);
 
   const [step, setStep] = useState<StepNum>(1);
+
   const [values, setValues] = useState<StudentProfileValues>(() => readStudentProfile(caseData, submission));
+
   const [schools, setSchools] = useState<Option[]>([]);
+
   const [programs, setPrograms] = useState<Option[]>([]);
+
   const [accommodations, setAccommodations] = useState<Option[]>([]);
+
   const [insurances, setInsurances] = useState<
     {
       id: string;
@@ -157,44 +178,75 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       age_price_tiers?: unknown;
     }[]
   >([]);
+
   const [saving, setSaving] = useState(false);
+
   const [errors, setErrors] = useState<string[]>([]);
+
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>((submission?.draft_updated_at as string) ?? null);
+
   const [autosaving, setAutosaving] = useState(false);
+
   /**
-   * The three birth-date dropdowns keep their own state so each one shows the
-   * user's pick immediately, in any order — the ISO value is only composed
-   * once all three parts exist.
+   * Birth-date dropdown state.
    */
   const [dob, setDobState] = useState(() => {
     const parts = (values.date_of_birth || "").split("-");
-    return { year: parts[0] ?? "", month: parts[1] ?? "", day: parts[2] ?? "" };
+
+    return {
+      year: parts[0] ?? "",
+      month: parts[1] ?? "",
+      day: parts[2] ?? "",
+    };
   });
+
   const [dobError, setDobError] = useState<string | null>(null);
 
   useEffect(() => {
     const iso = values.date_of_birth || "";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      return;
+    }
+
     const [y, m, d] = iso.split("-");
+
     setDobState((prev) =>
-      prev.year === y && prev.month === m && prev.day === d ? prev : { year: y, month: m, day: d },
+      prev.year === y && prev.month === m && prev.day === d
+        ? prev
+        : {
+            year: y,
+            month: m,
+            day: d,
+          },
     );
   }, [values.date_of_birth]);
 
-  const set = useCallback((key: string, value: string) => setValues((v) => ({ ...v, [key]: value })), []);
+  const set = useCallback((key: string, value: string) => {
+    setValues((v) => ({
+      ...v,
+      [key]: value,
+    }));
+  }, []);
 
+  /*
+   * Load catalog data.
+   */
   useEffect(() => {
     Promise.all([
       (supabase as any).from("schools").select("id,name_en,name_ar").eq("is_active", true).order("name_en"),
+
       (supabase as any)
         .from("programs")
         .select("id,name_en,name_ar,school_id,duration_in_months,fixed_start_day_of_month,price,currency,price_tiers")
         .eq("is_active", true)
         .order("name_en"),
+
       (supabase as any)
         .from("accommodations")
         .select("id,name_en,name_ar,school_id,price,currency,price_tiers")
         .eq("is_active", true),
+
       (supabase as any)
         .from("insurances")
         .select("id,name,provider,price,currency,billing_period,age_price_tiers")
@@ -209,30 +261,34 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const label = (o: Option) => (isAr ? o.name_ar || o.name_en : o.name_en || o.name_ar);
 
-  // A school must be chosen before anything school-specific can be selected,
-  // so an accommodation from another school is simply not offered.
   const filteredPrograms = useMemo(
     () => (values.school_id ? programs.filter((p) => p.school_id === values.school_id) : []),
     [programs, values.school_id],
   );
+
   const filteredAccoms = useMemo(
     () => (values.school_id ? accommodations.filter((a) => a.school_id === values.school_id) : []),
     [accommodations, values.school_id],
   );
+
   const selectedProgram = programs.find((p) => p.id === values.program_id);
+
   const selectedAccom = accommodations.find((a) => a.id === values.accommodation_id);
+
   const selectedInsurance = insurances.find((i) => i.id === values.insurance_id);
+
   const monthOptions = useMemo(() => generateIntakeMonths(24), []);
 
-  // Weekly rate × the weeks the student picked — never a stored total.
   const programCost = useMemo(
     () => computeWeeklyCost(selectedProgram as any, parseInt(values.program_weeks) || 0),
     [selectedProgram, values.program_weeks],
   );
+
   const accomCost = useMemo(
     () => computeWeeklyCost(selectedAccom as any, parseInt(values.accommodation_weeks) || 0),
     [selectedAccom, values.accommodation_weeks],
   );
+
   const insuranceCost = useMemo(
     () =>
       computeInsuranceCost(
@@ -244,83 +300,180 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     [selectedInsurance, values.date_of_birth, values.course_start, values.course_end],
   );
 
-  // Course start follows the programme's fixed start day of the chosen intake.
+  /*
+   * Programme start follows the programme's fixed start day.
+   */
   useEffect(() => {
-    if (!selectedProgram?.fixed_start_day_of_month || !values.start_month) return;
+    if (!selectedProgram?.fixed_start_day_of_month || !values.start_month) {
+      return;
+    }
+
     const [y, m] = values.start_month.split("-").map(Number);
+
     const d = selectedProgram.fixed_start_day_of_month;
+
     set("course_start", `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
   }, [selectedProgram?.fixed_start_day_of_month, values.start_month, set]);
 
-  // Course end is derived from the number of weeks the student is enrolled for.
+  /*
+   * Course end is derived from the number of weeks.
+   */
   useEffect(() => {
     const end = endDateForWeeks(values.course_start, parseInt(values.program_weeks) || 0);
-    if (end && end !== values.course_end) set("course_end", end);
+
+    if (end && end !== values.course_end) {
+      set("course_end", end);
+    }
   }, [values.course_start, values.program_weeks, values.course_end, set]);
 
-  /** Write the current values as a draft. Never clears stored values. */
+  /*
+   * ----------------------------------------------------------------------
+   * PERSISTENCE
+   * ----------------------------------------------------------------------
+   */
+
   const persist = useCallback(
     async (vals: StudentProfileValues, complete: boolean) => {
       const weeks = parseInt(vals.program_weeks) || 0;
+
       const accomWeeks = parseInt(vals.accommodation_weeks) || 0;
+
       const progCost = computeWeeklyCost(selectedProgram as any, weeks);
+
       const accCost = computeWeeklyCost(selectedAccom as any, accomWeeks);
+
       const payload: Record<string, unknown> = {
         case_id: caseData.id,
+
         program_id: vals.program_id || null,
+
         accommodation_id: vals.accommodation_id || null,
+
         insurance_id: vals.insurance_id || null,
+
         program_start_date: vals.course_start || null,
+
         program_end_date: endDateForWeeks(vals.course_start, weeks) || null,
-        // Weekly rate × weeks — `*_price` columns always hold the TOTAL.
+
         program_weeks: progCost.weeks || null,
+
         program_weekly_price: progCost.weeklyRate,
+
         program_price: progCost.total,
+
         accommodation_weeks: accCost.weeks || null,
+
         accommodation_weekly_price: accCost.weeklyRate,
+
         accommodation_price: accCost.total,
+
         student_email: normalizeEmail(vals.student_email) || null,
+
         student_phone: vals.student_phone?.trim() || null,
+
         extra_data: toExtraData(vals, (submission?.extra_data as Record<string, unknown>) ?? {}),
+
         draft_updated_at: new Date().toISOString(),
       };
-      if (complete) payload.profile_completed_at = new Date().toISOString();
 
-      const { error } = await (supabase as any).from("case_submissions").upsert(payload, { onConflict: "case_id" });
-      if (error) throw error;
+      if (complete) {
+        payload.profile_completed_at = new Date().toISOString();
+      }
+
+      const { error } = await (supabase as any).from("case_submissions").upsert(payload, {
+        onConflict: "case_id",
+      });
+
+      if (error) {
+        throw error;
+      }
+
       return payload.draft_updated_at as string;
     },
     [caseData.id, submission, selectedProgram, selectedAccom],
   );
 
-  // Debounced autosave. Only runs once the user has actually edited something.
+  /*
+   * Dirty state + autosave.
+   */
   const dirty = useRef(false);
-  const timer = useRef<number | null>(null);
-  useEffect(() => {
-    if (!dirty.current) return;
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
-      setAutosaving(true);
-      persist(values, false)
-        .then((at) => setDraftSavedAt(at))
-        .catch(() => {
-          /* transient — the explicit save surfaces real errors */
-        })
-        .finally(() => setAutosaving(false));
-    }, 1200);
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, [values, persist]);
 
-  // Keep the freshest values/persist reachable from the unmount cleanup below.
-  const latest = useRef({ values, persist });
-  latest.current = { values, persist };
-  // If the form unmounts while a debounced save is still pending (tab switch,
-  // background refetch, navigation), flush the draft instead of losing it.
+  const timer = useRef<number | null>(null);
+
+  /*
+   * Whenever a new value changes, schedule a draft save.
+   */
+  useEffect(() => {
+    if (!dirty.current) {
+      return;
+    }
+
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+    }
+
+    timer.current = window.setTimeout(() => {
+      timer.current = null;
+
+      /*
+       * Do not start another autosave while the explicit Save button
+       * is currently persisting the same data.
+       */
+      if (saving) {
+        return;
+      }
+
+      setAutosaving(true);
+
+      persist(values, false)
+        .then((at) => {
+          setDraftSavedAt(at);
+        })
+        .catch(() => {
+          /*
+           * Autosave errors stay silent.
+           * Explicit Save exposes the real error.
+           */
+        })
+        .finally(() => {
+          setAutosaving(false);
+        });
+    }, 1200);
+
+    return () => {
+      if (timer.current !== null) {
+        window.clearTimeout(timer.current);
+      }
+    };
+  }, [values, persist, saving]);
+
+  /*
+   * Keep the freshest values available if the component unmounts.
+   */
+  const latest = useRef({
+    values,
+    persist,
+  });
+
+  latest.current = {
+    values,
+    persist,
+  };
+
+  /*
+   * If the form is unmounted while an autosave is pending,
+   * flush the latest draft.
+   */
   useEffect(
     () => () => {
-      if (!dirty.current || !timer.current) return;
+      if (!dirty.current || timer.current === null) {
+        return;
+      }
+
+      window.clearTimeout(timer.current);
+
+      timer.current = null;
+
       void latest.current.persist(latest.current.values, false).catch(() => {});
     },
     [],
@@ -329,7 +482,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   const handleChange = useCallback(
     (name: string, value: string) => {
       dirty.current = true;
+
       set(name, value);
+
       setErrors((e) => e.filter((f) => f !== name));
     },
     [set],
@@ -337,39 +492,89 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const fieldName = (f: string) => t(PROFILE_FIELD_LABEL_KEYS[f as keyof StudentProfileValues] ?? f);
 
-  /* ── Per-step validation, same shape as the Submit New Student wizard ── */
+  /*
+   * ----------------------------------------------------------------------
+   * VALIDATION
+   * ----------------------------------------------------------------------
+   */
+
   const validateStep = (s: StepNum): string[] => {
     const missing: string[] = [];
+
     if (s === 1) {
-      if (!values.first_name.trim()) missing.push("first_name");
-      if (!values.last_name.trim()) missing.push("last_name");
-      if (!values.date_of_birth.trim()) missing.push("date_of_birth");
+      if (!values.first_name.trim()) {
+        missing.push("first_name");
+      }
+
+      if (!values.last_name.trim()) {
+        missing.push("last_name");
+      }
+
+      if (!values.date_of_birth.trim()) {
+        missing.push("date_of_birth");
+      }
     }
+
     if (s === 2) {
-      const emailOk = missingProfileFields(values).includes("student_email") === false;
-      const phoneOk = missingProfileFields(values).includes("student_phone") === false;
-      if (!emailOk) missing.push("student_email");
-      if (!phoneOk) missing.push("student_phone");
+      const allMissing = missingProfileFields(values);
+
+      if (allMissing.includes("student_email")) {
+        missing.push("student_email");
+      }
+
+      if (allMissing.includes("student_phone")) {
+        missing.push("student_phone");
+      }
     }
+
     if (s === 3) {
-      if (!values.school_id) missing.push("school_id");
-      if (!values.program_id) missing.push("program_id");
-      if (values.program_id && !values.program_weeks.trim()) missing.push("program_weeks");
-      if (!values.accommodation_id) missing.push("accommodation_id");
-      if (values.accommodation_id && !values.accommodation_weeks.trim()) missing.push("accommodation_weeks");
-      if (!values.insurance_id) missing.push("insurance_id");
-      if (!values.course_start.trim()) missing.push("course_start");
+      if (!values.school_id) {
+        missing.push("school_id");
+      }
+
+      if (!values.program_id) {
+        missing.push("program_id");
+      }
+
+      if (values.program_id && !values.program_weeks.trim()) {
+        missing.push("program_weeks");
+      }
+
+      if (!values.accommodation_id) {
+        missing.push("accommodation_id");
+      }
+
+      if (values.accommodation_id && !values.accommodation_weeks.trim()) {
+        missing.push("accommodation_weeks");
+      }
+
+      if (!values.insurance_id) {
+        missing.push("insurance_id");
+      }
+
+      if (!values.course_start.trim()) {
+        missing.push("course_start");
+      }
     }
+
     return missing;
   };
 
   const goNext = () => {
     const missing = validateStep(step);
+
     if (missing.length > 0) {
       setErrors(missing);
+
       const el = document.querySelector(`[data-field="${missing[0]}"]`);
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      el?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
       (el?.querySelector("input, button") as HTMLElement | null)?.focus();
+
       toast({
         variant: "destructive",
         description:
@@ -384,30 +589,52 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 defaultValue: `Please complete: ${fieldName(missing[0])} (+${missing.length - 1} more)`,
               }),
       });
+
       return;
     }
+
     setErrors([]);
+
     setStep((s) => Math.min(s + 1, LAST_STEP) as StepNum);
   };
+
   const goBack = () => {
     setErrors([]);
+
     setStep((s) => Math.max(s - 1, 1) as StepNum);
   };
 
+  /*
+   * ----------------------------------------------------------------------
+   * EXPLICIT SAVE
+   * ----------------------------------------------------------------------
+   */
+
   const handleSave = async () => {
     const missing = missingProfileFields(values) as string[];
+
     if (missing.length > 0) {
       setErrors(missing);
-      // Jump back to whichever step actually owns the first missing field.
+
       const step1Fields = ["first_name", "last_name", "date_of_birth"];
+
       const step2Fields = ["student_email", "student_phone"];
+
       const owningStep: StepNum = step1Fields.includes(missing[0]) ? 1 : step2Fields.includes(missing[0]) ? 2 : 3;
+
       setStep(owningStep);
+
       setTimeout(() => {
         const el = document.querySelector(`[data-field="${missing[0]}"]`);
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        el?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+
         (el?.querySelector("input, button") as HTMLElement | null)?.focus();
       }, 0);
+
       toast({
         variant: "destructive",
         description:
@@ -422,58 +649,130 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 defaultValue: `Please complete: ${fieldName(missing[0])} (+${missing.length - 1} more)`,
               }),
       });
+
       return;
     }
+
+    /*
+     * Cancel any pending autosave before the authoritative save.
+     */
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+
+      timer.current = null;
+    }
+
     setSaving(true);
+
     try {
+      /*
+       * Save the complete profile to case_submissions first.
+       */
       const at = await persist(values, true);
+
       setDraftSavedAt(at);
 
-      // `case_submissions` is the working copy, but the pipeline lists, admin
-      // views and the student's own dashboard read `cases` / `profiles`.
-      // Mirror the shared identity fields so none of them go stale — exactly
-      // what the Submit New Student form writes onto `cases` at creation time.
+      /*
+       * Mirror case-level identity fields.
+       *
+       * These are intentionally stored on cases because the pipeline,
+       * admin views and case-level UI read them from there.
+       */
       const name = fullNameOf(values);
+
       const casePatch: Record<string, unknown> = {
         phone_number: values.student_phone?.trim() || null,
+
         city: values.city?.trim() || null,
+
         education_level: values.education_level || null,
+
         passport_type: values.passport_type || null,
       };
-      if (name && name !== caseData.full_name) casePatch.full_name = name;
-      await supabase.from("cases").update(casePatch).eq("id", caseData.id);
 
-      const studentUserId = (caseData as { student_user_id?: string | null }).student_user_id;
+      if (name && name !== caseData.full_name) {
+        casePatch.full_name = name;
+      }
+
+      const { error: caseError } = await supabase.from("cases").update(casePatch).eq("id", caseData.id);
+
+      if (caseError) {
+        throw caseError;
+      }
+
+      /*
+       * Synchronise the student's profile row where applicable.
+       */
+      const studentUserId = (
+        caseData as {
+          student_user_id?: string | null;
+        }
+      ).student_user_id;
+
       if (studentUserId) {
-        // Best effort: the student's own row is protected by column-level
-        // rules, so a rejection here must not fail the profile save.
         const { error: profileError } = await supabase
           .from("profiles")
           .update({
             full_name: name || undefined,
+
             email: normalizeEmail(values.student_email) || undefined,
+
             phone_number: values.student_phone?.trim() || undefined,
+
             date_of_birth: values.date_of_birth || undefined,
+
             gender: values.gender || undefined,
+
             city: values.city?.trim() || undefined,
+
             emergency_contact_name: values.emergency_contact_name?.trim() || undefined,
+
             emergency_contact_phone: values.emergency_contact_phone?.trim() || undefined,
+
             arrival_date: values.arrival_date || undefined,
+
             intake_month: values.start_month || undefined,
           })
           .eq("id", studentUserId);
-        if (profileError) console.warn("profile sync skipped:", profileError.message);
+
+        /*
+         * Profile synchronization is best-effort because the current
+         * project intentionally protects profile columns with its own
+         * authorization rules.
+         */
+        if (profileError) {
+          console.warn("profile sync skipped:", profileError.message);
+        }
       }
 
+      /*
+       * Audit event.
+       */
       await supabase.rpc("log_case_event", {
         p_case_id: caseData.id,
+
         p_event_type: "profile_updated",
-        p_payload: { by: user?.id ?? null },
+
+        p_payload: {
+          by: user?.id ?? null,
+        },
+
         p_is_internal: true,
       });
 
+      /*
+       * The explicit save is now authoritative.
+       * Do not leave the form dirty.
+       */
       dirty.current = false;
-      toast({ description: t("case.profile.saved") });
+
+      toast({
+        description: t("case.profile.saved"),
+      });
+
+      /*
+       * Refresh the parent data after the successful save.
+       */
       onSaved();
     } catch (err) {
       toast({
@@ -486,8 +785,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   };
 
   const invalid = (f: keyof StudentProfileValues) => errors.includes(f as string);
+
   const errText = (_f: keyof StudentProfileValues) =>
-    t("case.profile.fieldRequired", { defaultValue: "This field is required" });
+    t("case.profile.fieldRequired", {
+      defaultValue: "This field is required",
+    });
 
   const field = (name: keyof StudentProfileValues, labelText: string, type?: string, placeholder?: string) => (
     <TextField
@@ -502,24 +804,44 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     />
   );
 
+  /*
+   * ----------------------------------------------------------------------
+   * DOB
+   * ----------------------------------------------------------------------
+   */
+
   const dobYear = dob.year;
+
   const dobMonth = dob.month;
+
   const dobDay = dob.day;
+
   const dobDays = Array.from(
-    { length: dobMonth ? daysInMonth(parseInt(dobMonth), parseInt(dobYear) || 2000) : 31 },
+    {
+      length: dobMonth ? daysInMonth(parseInt(dobMonth), parseInt(dobYear) || 2000) : 31,
+    },
     (_, i) => String(i + 1).padStart(2, "0"),
   );
+
   const setDob = (part: "year" | "month" | "day", v: string) => {
     setDobState((prev) => {
-      const next = { ...prev, [part]: v };
-      // Clamp the day when the new month/year is shorter (31 Jan → 29/28 Feb).
+      const next = {
+        ...prev,
+        [part]: v,
+      };
+
       if (next.month) {
         const max = daysInMonth(parseInt(next.month), parseInt(next.year) || 2000);
-        if (next.day && parseInt(next.day) > max) next.day = String(max).padStart(2, "0");
+
+        if (next.day && parseInt(next.day) > max) {
+          next.day = String(max).padStart(2, "0");
+        }
       }
+
       if (next.year && next.month && next.day) {
         try {
           handleChange("date_of_birth", normalizeDate(next.day, next.month, next.year));
+
           setDobError(null);
         } catch (err: any) {
           setDobError(err?.message ?? null);
@@ -527,20 +849,36 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       } else {
         setDobError(null);
       }
+
       return next;
     });
   };
+
   const dobAge =
     dobYear && dobMonth && dobDay ? differenceInYears(new Date(), new Date(`${dobYear}-${dobMonth}-${dobDay}`)) : null;
 
+  /*
+   * ----------------------------------------------------------------------
+   * DRAFT STATUS
+   * ----------------------------------------------------------------------
+   */
+
   const savedLabel = draftSavedAt
-    ? new Date(draftSavedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(draftSavedAt).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : null;
 
   const draftStatus = autosaving
-    ? t("case.profile.savingDraft", { defaultValue: "Saving…" })
+    ? t("case.profile.savingDraft", {
+        defaultValue: "Saving…",
+      })
     : savedLabel
-      ? t("case.profile.draftSavedAt", { time: savedLabel, defaultValue: `Draft saved ${savedLabel}` })
+      ? t("case.profile.draftSavedAt", {
+          time: savedLabel,
+          defaultValue: `Draft saved ${savedLabel}`,
+        })
       : "";
 
   return (
@@ -548,25 +886,31 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       <StepBar step={step} t={t} />
 
       {/* ══ STEP 1: Student Info ══ */}
+
       {step === 1 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{ss("studentInfo")}</CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
               {field("first_name", `${ss("firstName")} *`)}
+
               {field("middle_name", ss("middleName"))}
+
               {field("last_name", `${ss("lastName")} *`)}
             </div>
 
             <div data-field="date_of_birth">
               <Label className={invalid("date_of_birth") ? "text-destructive" : ""}>{ss("dateOfBirth")}</Label>
+
               <div className="grid grid-cols-3 gap-2 mt-1">
                 <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
                   <SelectTrigger>
                     <SelectValue placeholder={ss("year")} />
                   </SelectTrigger>
+
                   <SelectContent className="max-h-48">
                     {DOB_YEARS.map((y) => (
                       <SelectItem key={y} value={String(y)}>
@@ -575,10 +919,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     ))}
                   </SelectContent>
                 </Select>
+
                 <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
                   <SelectTrigger>
                     <SelectValue placeholder={ss("month")} />
                   </SelectTrigger>
+
                   <SelectContent>
                     {DOB_MONTHS.map((m) => (
                       <SelectItem key={m.v} value={m.v}>
@@ -587,10 +933,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     ))}
                   </SelectContent>
                 </Select>
+
                 <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
                   <SelectTrigger>
                     <SelectValue placeholder={ss("day")} />
                   </SelectTrigger>
+
                   <SelectContent className="max-h-48">
                     {dobDays.map((d) => (
                       <SelectItem key={d} value={d}>
@@ -600,11 +948,17 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   </SelectContent>
                 </Select>
               </div>
+
               {dobAge !== null && !isNaN(dobAge) && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {ss("ageYears") ? t("lawyer.submitStudent.ageYears", { age: dobAge }) : `${dobAge}`}
+                  {ss("ageYears")
+                    ? t("lawyer.submitStudent.ageYears", {
+                        age: dobAge,
+                      })
+                    : `${dobAge}`}
                 </p>
               )}
+
               {(dobError || invalid("date_of_birth")) && (
                 <p className="mt-1 text-xs text-destructive">{dobError ?? errText("date_of_birth")}</p>
               )}
@@ -613,29 +967,37 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>{t("case.fields.gender")}</Label>
+
                 <Select value={values.gender} onValueChange={(v) => handleChange("gender", v)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder={ss("genderSelect")} />
                   </SelectTrigger>
+
                   <SelectContent>
                     <SelectItem value="male">{ss("genderMale")}</SelectItem>
+
                     <SelectItem value="female">{ss("genderFemale")}</SelectItem>
+
                     <SelectItem value="other">{ss("genderOther")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
               {field("city_of_birth", ss("cityOfBirth"))}
             </div>
 
-            {/* Stored on the case itself so the pipeline and admin views are
-                not left with blank intake fields. */}
+            {/* Education + passport are canonical case fields and are also
+                preserved inside extra_data for the shared profile model. */}
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>{ss("educationLevel")}</Label>
+
                 <Select value={values.education_level} onValueChange={(v) => handleChange("education_level", v)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder={ss("educationLevelSelect")} />
                   </SelectTrigger>
+
                   <SelectContent>
                     {EDUCATION_LEVEL_VALUES.map((v) => (
                       <SelectItem key={v} value={v}>
@@ -645,12 +1007,15 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label>{ss("passportType")}</Label>
+
                 <Select value={values.passport_type} onValueChange={(v) => handleChange("passport_type", v)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder={ss("passportTypeSelect")} />
                   </SelectTrigger>
+
                   <SelectContent>
                     {PASSPORT_TYPE_VALUES.map((v) => (
                       <SelectItem key={v} value={v}>
@@ -664,8 +1029,10 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
             <div className="flex items-center justify-between gap-3 pt-2">
               <p className="text-xs text-muted-foreground">{draftStatus}</p>
+
               <Button onClick={goNext}>
-                {ss("next")} <ChevronRight className="h-4 w-4 ms-1" />
+                {ss("next")}
+                <ChevronRight className="h-4 w-4 ms-1" />
               </Button>
             </div>
           </CardContent>
@@ -673,39 +1040,49 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       )}
 
       {/* ══ STEP 2: Contact Details ══ */}
+
       {step === 2 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{ss("stepContactDetails")}</CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               {field("student_email", `${ss("email")} *`, "email", "student@email.com")}
+
               {field("student_phone", `${ss("phone")} *`, "text", "+972...")}
             </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               {field("emergency_contact_name", ss("emergencyName"))}
+
               {field("emergency_contact_phone", ss("emergencyPhone"), "text", "+972...")}
             </div>
+
             <div>
               <Label>{ss("address")}</Label>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
                 <Input
                   placeholder={ss("street")}
                   value={values.street}
                   onChange={(e) => handleChange("street", e.target.value)}
                 />
+
                 <Input
                   placeholder={ss("houseNo")}
                   value={values.house_no}
                   onChange={(e) => handleChange("house_no", e.target.value)}
                 />
+
                 <Input
                   placeholder={ss("postcode")}
                   value={values.postcode}
                   onChange={(e) => handleChange("postcode", e.target.value)}
                 />
               </div>
+
               <Input
                 className="mt-2"
                 placeholder={ss("city")}
@@ -713,42 +1090,60 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 onChange={(e) => handleChange("city", e.target.value)}
               />
             </div>
+
             <div className="flex items-center justify-between gap-3 pt-2">
               <Button variant="outline" onClick={goBack}>
-                <ChevronLeft className="h-4 w-4 me-1" /> {ss("back")}
+                <ChevronLeft className="h-4 w-4 me-1" />
+                {ss("back")}
               </Button>
+
               <p className="text-xs text-muted-foreground hidden sm:block">{draftStatus}</p>
+
               <Button onClick={goNext}>
-                {ss("next")} <ChevronRight className="h-4 w-4 ms-1" />
+                {ss("next")}
+                <ChevronRight className="h-4 w-4 ms-1" />
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* ══ STEP 3: School → Program → Accommodation → Insurance ══ */}
+      {/* ══ STEP 3 ══ */}
+
       {step === 3 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{ss("stepProgram")}</CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div data-field="school_id">
               <Label className={invalid("school_id") ? "text-destructive" : ""}>{`${ss("school")} *`}</Label>
+
               <Select
                 value={values.school_id}
                 onValueChange={(v) => {
                   dirty.current = true;
+
                   setErrors((e) => e.filter((f) => f !== "school_id"));
+
                   setValues((prev) => ({
                     ...prev,
+
                     school_id: v,
+
                     program_id: "",
+
                     program_weeks: "",
+
                     accommodation_id: "",
+
                     accommodation_weeks: "",
+
                     start_month: "",
+
                     course_start: "",
+
                     course_end: "",
                   }));
                 }}
@@ -756,6 +1151,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 <SelectTrigger className={cn("mt-1", invalid("school_id") && "border-destructive")}>
                   <SelectValue placeholder={ss("selectSchool")} />
                 </SelectTrigger>
+
                 <SelectContent>
                   {schools.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
@@ -764,12 +1160,14 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   ))}
                 </SelectContent>
               </Select>
+
               {invalid("school_id") && <p className="mt-1 text-xs text-destructive">{errText("school_id")}</p>}
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div data-field="program_id">
                 <Label className={invalid("program_id") ? "text-destructive" : ""}>{`${ss("program")} *`}</Label>
+
                 <Select
                   value={values.program_id}
                   disabled={!values.school_id}
@@ -786,6 +1184,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                       }
                     />
                   </SelectTrigger>
+
                   <SelectContent>
                     {filteredPrograms.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
@@ -794,10 +1193,13 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     ))}
                   </SelectContent>
                 </Select>
+
                 {invalid("program_id") && <p className="mt-1 text-xs text-destructive">{errText("program_id")}</p>}
               </div>
+
               <div data-field="program_weeks">
                 <Label className={invalid("program_weeks") ? "text-destructive" : ""}>{ss("programWeeks")}</Label>
+
                 <Input
                   className={cn("mt-1", invalid("program_weeks") && "border-destructive")}
                   type="number"
@@ -808,6 +1210,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   disabled={!values.program_id}
                   placeholder="40"
                 />
+
                 {invalid("program_weeks") && (
                   <p className="mt-1 text-xs text-destructive">{errText("program_weeks")}</p>
                 )}
@@ -820,7 +1223,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   label={ss("weeklyPrice")}
                   value={formatMoney(programCost.weeklyRate, programCost.currency)}
                 />
+
                 <ReviewRow label={ss("weeks")} value={programCost.weeks || "—"} />
+
                 <ReviewRow
                   label={ss("programTotal")}
                   value={formatMoney(programCost.total, programCost.currency)}
@@ -831,10 +1236,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
             <div>
               <Label>{ss("intakeMonth")}</Label>
+
               <Select value={values.start_month} onValueChange={(v) => handleChange("start_month", v)}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder={ss("selectIntakeMonth")} />
                 </SelectTrigger>
+
                 <SelectContent className="max-h-56">
                   {monthOptions.map((m) => (
                     <SelectItem key={m.value} value={m.value}>
@@ -848,6 +1255,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <Label>{ss("arrivalDate")}</Label>
+
                 <Input
                   type="date"
                   className="mt-1"
@@ -855,25 +1263,30 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   onChange={(e) => handleChange("arrival_date", e.target.value)}
                 />
               </div>
+
               <div data-field="course_start">
                 <Label className={invalid("course_start") ? "text-destructive" : ""}>{`${ss("courseStart")} *`}</Label>
+
                 <Input
                   type="date"
                   className={cn("mt-1", invalid("course_start") && "border-destructive")}
                   value={values.course_start}
                   onChange={(e) => handleChange("course_start", e.target.value)}
                 />
+
                 {invalid("course_start") && <p className="mt-1 text-xs text-destructive">{errText("course_start")}</p>}
               </div>
+
               <div>
                 <Label>{ss("courseEnd")}</Label>
+
                 <div
                   className={cn(
                     "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
                     values.course_end ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  {values.course_end ? values.course_end : ss("autoCalc")}
+                  {values.course_end || ss("autoCalc")}
                 </div>
               </div>
             </div>
@@ -886,6 +1299,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     <span className="text-muted-foreground text-xs">({ss("selectSchoolFirst")})</span>
                   )}
                 </Label>
+
                 <Select
                   value={values.accommodation_id}
                   disabled={!values.school_id}
@@ -902,6 +1316,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                       }
                     />
                   </SelectTrigger>
+
                   <SelectContent>
                     {filteredAccoms.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
@@ -910,14 +1325,17 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     ))}
                   </SelectContent>
                 </Select>
+
                 {invalid("accommodation_id") && (
                   <p className="mt-1 text-xs text-destructive">{errText("accommodation_id")}</p>
                 )}
               </div>
+
               <div data-field="accommodation_weeks">
                 <Label className={invalid("accommodation_weeks") ? "text-destructive" : ""}>
                   {ss("accommodationWeeks")}
                 </Label>
+
                 <Input
                   className={cn("mt-1", invalid("accommodation_weeks") && "border-destructive")}
                   type="number"
@@ -928,6 +1346,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   disabled={!values.accommodation_id}
                   placeholder={values.program_weeks || "40"}
                 />
+
                 {invalid("accommodation_weeks") && (
                   <p className="mt-1 text-xs text-destructive">{errText("accommodation_weeks")}</p>
                 )}
@@ -937,7 +1356,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             {selectedAccom && accomCost.weeklyRate !== null && (
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
                 <ReviewRow label={ss("weeklyPrice")} value={formatMoney(accomCost.weeklyRate, accomCost.currency)} />
+
                 <ReviewRow label={ss("weeks")} value={accomCost.weeks || "—"} />
+
                 <ReviewRow
                   label={ss("accommodationTotal")}
                   value={formatMoney(accomCost.total, accomCost.currency)}
@@ -947,13 +1368,15 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             )}
 
             <div data-field="insurance_id">
-              <Label
-                className={invalid("insurance_id") ? "text-destructive" : ""}
-              >{`${t("case.detail.insurance")} *`}</Label>
+              <Label className={invalid("insurance_id") ? "text-destructive" : ""}>
+                {`${t("case.detail.insurance")} *`}
+              </Label>
+
               <Select value={values.insurance_id} onValueChange={(v) => handleChange("insurance_id", v)}>
                 <SelectTrigger className={cn("mt-1", invalid("insurance_id") && "border-destructive")}>
                   <SelectValue placeholder={ss("selectInsurance")} />
                 </SelectTrigger>
+
                 <SelectContent>
                   {insurances.map((i) => (
                     <SelectItem key={i.id} value={i.id}>
@@ -963,12 +1386,18 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   ))}
                 </SelectContent>
               </Select>
+
               {invalid("insurance_id") && <p className="mt-1 text-xs text-destructive">{errText("insurance_id")}</p>}
+
               {selectedInsurance && insuranceCost.total !== null && (
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatMoney(insuranceCost.total, selectedInsurance.currency ?? "EUR")}
+
                   {insuranceCost.months
-                    ? ` · ${insuranceCost.months} × ${formatMoney(insuranceCost.monthly ?? 0, selectedInsurance.currency ?? "EUR")}`
+                    ? ` · ${insuranceCost.months} × ${formatMoney(
+                        insuranceCost.monthly ?? 0,
+                        selectedInsurance.currency ?? "EUR",
+                      )}`
                     : ""}
                 </p>
               )}
@@ -976,9 +1405,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t mt-2">
               <Button variant="outline" onClick={goBack} className="w-full sm:w-auto">
-                <ChevronLeft className="h-4 w-4 me-1" /> {ss("back")}
+                <ChevronLeft className="h-4 w-4 me-1" />
+                {ss("back")}
               </Button>
+
               <p className="text-xs text-muted-foreground text-center sm:text-start">{draftStatus}</p>
+
               <Button onClick={handleSave} disabled={saving} className="gap-1.5 w-full sm:w-auto">
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -987,6 +1419,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 ) : (
                   <Check className="h-4 w-4" />
                 )}
+
                 {t("case.profile.save")}
               </Button>
             </div>
