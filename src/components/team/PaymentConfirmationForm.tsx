@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useFormDraft } from '@/hooks/useFormDraft';
-import { ensureCaseServices } from '@/services/CaseCostingService';
+import { recordServiceFeePayment } from '@/services/CasePaymentService';
 
 interface Props {
   caseId: string;
