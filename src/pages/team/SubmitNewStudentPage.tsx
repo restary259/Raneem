@@ -224,6 +224,10 @@ export default function SubmitNewStudentPage() {
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [cityOfBirth, setCityOfBirth] = useState("");
+  // Intake fields that live on `cases` — the pipeline, Admin Submissions and
+  // Student Management all read them from there, so they must be captured here.
+  const [educationLevel, setEducationLevel] = useState("");
+  const [passportType, setPassportType] = useState("");
 
   // Step 2 — Contact
   const [email, setEmail] = useState("");
