@@ -21,10 +21,10 @@ const Index = () => {
       <main className="flex-grow">
         <Hero />
         <PartnersMarquee />
+        <StudentGallery />
         <AboutCustom />
         <StudentJourney />
         <WhyChooseUs />
-        <StudentGallery />
       </main>
       <Footer />
     </div>
