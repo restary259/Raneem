@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
 import { useDirection } from "@/hooks/useDirection";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +35,7 @@ export default function PartnerNetworkPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const { user } = useAuth();
+  const { isMaster, loading: masterLoading } = useIsMasterPartner();
   const { toast } = useToast();
   const locale = i18n.language === "ar" ? "ar" : "en-US";
 
@@ -100,6 +103,8 @@ export default function PartnerNetworkPage() {
     toast({ title: t("master.announceSent", "Announcement sent"), description: `${data ?? 0}` });
   };
 
+  if (masterLoading) return <DashboardLoading />;
+  if (!isMaster) return <Navigate to="/partner" replace />;
   if (loading) return <DashboardLoading />;
 
   const totalOverride = rows.reduce((s, r) => s + Number(r.override_earned || 0), 0);

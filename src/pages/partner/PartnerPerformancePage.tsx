@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
 import { useDirection } from "@/hooks/useDirection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
@@ -22,6 +24,7 @@ export default function PartnerPerformancePage() {
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
   const { user } = useAuth();
+  const { isMaster, loading: masterLoading } = useIsMasterPartner();
   const [rows, setRows] = useState<NetworkRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +37,8 @@ export default function PartnerPerformancePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  if (masterLoading) return <DashboardLoading />;
+  if (!isMaster) return <Navigate to="/partner" replace />;
   if (loading) return <DashboardLoading />;
 
   const sorted = [...rows].sort((a, b) => Number(b.override_earned) - Number(a.override_earned));
