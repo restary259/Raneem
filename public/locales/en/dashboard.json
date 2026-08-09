@@ -388,7 +388,8 @@
       "deleteConfirmTitle": "Delete account?",
       "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
       "manager": "Manager",
-      "managerHint": "Managers are reachable by all team members in the internal chat"
+      "managerHint": "Managers are reachable by all team members in the internal chat",
+      "copyPassword": "Copy password"
     },
     "programs": {
       "title": "Programs & Accommodations",
@@ -756,7 +757,9 @@
         "color": "Color",
         "active": "Active",
         "caseCount": "Cases",
-        "saved": "Pipeline stages saved"
+        "saved": "Pipeline stages saved",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
       },
       "catalog": {
         "tab": "Service catalog",
@@ -3020,7 +3023,8 @@
       "applyContactDesc": "Only auto-generated leads from the Apply and Contact pages",
       "referral": "Referral cases only",
       "referralDesc": "Only cases that came through their referral link"
-    }
+    },
+    "delete": "Delete"
   },
   "caseTimeline": {
     "title": "Timeline",
