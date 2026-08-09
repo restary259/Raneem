@@ -4326,6 +4326,10 @@ export type Database = {
         }
         Returns: string
       }
+      set_case_services: {
+        Args: { p_case_id: string; p_service_ids: string[] }
+        Returns: undefined
+      }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       submit_recruit_application: {
         Args: {
