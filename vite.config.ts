@@ -32,14 +32,20 @@ export default defineConfig(({ mode }) => ({
           const p = id.split('node_modules/').pop() || '';
           const pkg = p.startsWith('@') ? p.split('/').slice(0, 2).join('/') : p.split('/')[0];
 
-          // Tiny styling helpers are imported by nearly every component. Left
-          // ungrouped, Rollup parked them inside vendor-charts, which forced
-          // the 390 kB chart bundle into the initial preload for one `clsx`.
-          if (['clsx', 'tailwind-merge', 'class-variance-authority'].includes(pkg)) return 'vendor-utils';
+          // Tiny helpers imported by nearly every component. Left ungrouped,
+          // Rollup parked them inside vendor-charts, which forced the 390 kB
+          // chart bundle into the initial preload for one `clsx`.
+          if ([
+            'clsx', 'tailwind-merge', 'class-variance-authority',
+            'react-is', 'prop-types', 'object-assign', 'tslib',
+            'use-sync-external-store', 'warning', 'invariant',
+            'set-cookie-parser', 'cookie', 'turbo-stream',
+          ].includes(pkg)) return 'vendor-utils';
           if (['react', 'react-dom', 'react-router', 'react-router-dom', 'scheduler'].includes(pkg)) return 'vendor-react';
 
           if (pkg === '@supabase' || pkg.startsWith('@supabase/')) return 'vendor-supabase';
-          if (['recharts', 'victory-vendor'].includes(pkg) || pkg.startsWith('d3-')) return 'vendor-charts';
+          if (['recharts', 'victory-vendor', 'react-smooth', 'recharts-scale', 'lodash', 'fast-equals', 'decimal.js-light', 'eventemitter3'].includes(pkg) || pkg.startsWith('d3-') || pkg.startsWith('lodash')) return 'vendor-charts';
+
           if (['i18next', 'react-i18next', 'i18next-http-backend', 'i18next-browser-languagedetector'].includes(pkg)) return 'vendor-i18n';
           if (['react-hook-form', '@hookform/resolvers', 'zod'].includes(pkg)) return 'vendor-forms';
           if (pkg === 'date-fns') return 'vendor-date';
