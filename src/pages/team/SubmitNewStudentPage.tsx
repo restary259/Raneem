@@ -262,7 +262,7 @@ export default function SubmitNewStudentPage() {
 
   /* ─── Draft autosave / recovery (files are never persisted) ────────── */
   const draftValue = {
-    step, firstName, middleName, lastName, dob, gender, cityOfBirth,
+    step, firstName, middleName, lastName, dob, gender, cityOfBirth, educationLevel, passportType,
     email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
     programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
     accommodationId, serviceFee, programWeeks, accommodationWeeks, insuranceId,
@@ -279,6 +279,7 @@ export default function SubmitNewStudentPage() {
     setStep((d.step as StepNum) ?? 1);
     setFirstName(d.firstName ?? ""); setMiddleName(d.middleName ?? ""); setLastName(d.lastName ?? "");
     setDob(d.dob ?? ""); setGender(d.gender ?? ""); setCityOfBirth(d.cityOfBirth ?? "");
+    setEducationLevel(d.educationLevel ?? ""); setPassportType(d.passportType ?? "");
     setEmail(d.email ?? ""); setPhone(d.phone ?? "");
     setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
     setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
