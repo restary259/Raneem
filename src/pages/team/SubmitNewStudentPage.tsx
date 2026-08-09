@@ -490,6 +490,8 @@ export default function SubmitNewStudentPage() {
           full_name: fullName,
           phone_number: cleanPhone,
           city: city || null,
+          education_level: educationLevel || null,
+          passport_type: passportType || null,
           source: "submit_new_student",
           status: "submitted",
           assigned_to: user!.id,
