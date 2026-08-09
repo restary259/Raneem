@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Search, Plus, Loader2, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { isLinkablePhone, normalizePhone } from '@/lib/phone';
 
 type StatusFilter =
   | 'all'
