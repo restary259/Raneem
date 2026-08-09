@@ -36,6 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "darb-agency"
+const FROM_NAME = "Darb Study International"
 const SENDER_DOMAIN = "support.darb.agency"
 const ROOT_DOMAIN = "darb.agency"
 const FROM_DOMAIN = "darb.agency" // Domain shown in From address (may be root or sender subdomain)
@@ -251,7 +252,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       {
         run_id,
         to: payload.data.email,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        from: `${FROM_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: EMAIL_SUBJECTS[emailType] || 'Notification',
         html,

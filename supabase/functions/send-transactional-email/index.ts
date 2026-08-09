@@ -10,6 +10,7 @@ const SITE_NAME = "darb-agency";
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers — never the root domain.
 // The email API looks up this exact domain; a mismatch causes "No email domain record found".
+const FROM_NAME = "Darb Study International"
 const SENDER_DOMAIN = "support.darb.agency";
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // When display_from_root is enabled, this can be the root domain for cleaner branding,
@@ -300,7 +301,7 @@ Deno.serve(async (req) => {
     payload: {
       message_id: messageId,
       to: effectiveRecipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: `${FROM_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject: resolvedSubject,
       html,
