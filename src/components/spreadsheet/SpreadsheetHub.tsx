@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
 import { exportCorporateWorkbook } from '@/utils/export';
@@ -233,9 +234,27 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   );
 
   const allRows = useMemo(() => Object.values(data).flat() as any[], [data]);
+  // Options come from the school catalogue itself, so the filter is complete
+  // even before every sheet has been lazily loaded.
+  const [catalogSchools, setCatalogSchools] = useState<string[]>([]);
+  useEffect(() => {
+    (supabase as any)
+      .from('schools')
+      .select('name_en')
+      .order('name_en')
+      .then(({ data: rows }: any) =>
+        setCatalogSchools((rows ?? []).map((r: any) => r.name_en).filter(Boolean)),
+      );
+  }, []);
   const schoolOptions = useMemo(
-    () => Array.from(new Set(allRows.map(r => r?.school_name ?? r?.school).filter(Boolean))).sort() as string[],
-    [allRows],
+    () =>
+      Array.from(
+        new Set([
+          ...catalogSchools,
+          ...allRows.map(r => r?.school_name ?? r?.school).filter(Boolean),
+        ]),
+      ).sort() as string[],
+    [allRows, catalogSchools],
   );
   const monthOptions = useMemo(
     () =>

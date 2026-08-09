@@ -53,11 +53,12 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
   let query = (supabase as any)
     .from('case_submissions')
     .select(`
-      id, program_start_date, program_end_date, extra_data,
+      id, program_start_date, program_end_date, extra_data, school_id,
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
       student_email, student_phone,
       case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id, education_level, passport_type),
+      school:schools(id, name_en, name_ar),
       program:programs(name_en, name_ar, price),
       accommodation:accommodations(name_en, name_ar, price),
       insurance:insurances(name, price)
@@ -96,7 +97,9 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
 
       team_member: staff[s.case?.assigned_to]?.name ?? null,
       partner: staff[s.case?.partner_id]?.name ?? null,
-      school_name: extra.school_name ?? null,
+      // Real relationship — never a free-text fallback.
+      school_id: s.school_id ?? s.school?.id ?? null,
+      school_name: s.school?.name_en ?? s.school?.name_ar ?? null,
       program_name: s.program?.name_en ?? s.program?.name_ar ?? null,
       accommodation_name: s.accommodation?.name_en ?? s.accommodation?.name_ar ?? null,
       insurance_name: s.insurance?.name ?? null,
@@ -222,7 +225,7 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
 
 export const fetchCatalogSheet = async () => {
   const [programsRes, accRes, insRes, schoolsRes, subsRes] = await Promise.all([
-    (supabase as any).from('programs').select('*'),
+    (supabase as any).from('programs').select('*, school:schools(name_en, city)'),
     (supabase as any).from('accommodations').select('*, school:schools(name_en, city)'),
     (supabase as any).from('insurances').select('*'),
     (supabase as any).from('schools').select('*'),
@@ -240,8 +243,8 @@ export const fetchCatalogSheet = async () => {
     rows.push({
       id: `p-${p.id}`,
       name: p.name_en,
-      school: null,
-      city: null,
+      school: p.school?.name_en ?? null,
+      city: p.school?.city ?? null,
       kind: 'program',
       type: p.type,
       duration: p.duration,

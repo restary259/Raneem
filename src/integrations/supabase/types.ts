@@ -637,6 +637,7 @@ export type Database = {
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
+          school_id: string | null
           service_fee: number
           student_email: string | null
           student_phone: string | null
@@ -675,6 +676,7 @@ export type Database = {
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          school_id?: string | null
           service_fee?: number
           student_email?: string | null
           student_phone?: string | null
@@ -713,6 +715,7 @@ export type Database = {
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          school_id?: string | null
           service_fee?: number
           student_email?: string | null
           student_phone?: string | null
@@ -748,6 +751,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_submissions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -2550,6 +2560,7 @@ export type Database = {
           emergency_contact: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
+          emergency_contacts: Json
           eye_color: string | null
           full_name: string
           gender: string | null
@@ -2604,6 +2615,7 @@ export type Database = {
           emergency_contact?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          emergency_contacts?: Json
           eye_color?: string | null
           full_name?: string
           gender?: string | null
@@ -2658,6 +2670,7 @@ export type Database = {
           emergency_contact?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          emergency_contacts?: Json
           eye_color?: string | null
           full_name?: string
           gender?: string | null

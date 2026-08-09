@@ -505,6 +505,7 @@ export default function SubmitNewStudentPage() {
 
       await (supabase as any).from("case_submissions").insert({
         case_id: caseId,
+        school_id: schoolId || null,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
