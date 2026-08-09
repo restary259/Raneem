@@ -134,15 +134,21 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
           <p className="text-lg font-semibold text-foreground">{programName}</p>
           {schoolName && <p className="text-sm text-muted-foreground mt-1">{schoolName}</p>}
           {submission?.program_price ? (
-            <p className="text-sm text-muted-foreground mt-1">
-              {submission?.program_weeks && submission?.program_weekly_price
-                ? `${submission.program_weeks} × €${Number(submission.program_weekly_price).toLocaleString("en-US")} = `
-                : ""}
-              <span className="font-semibold text-foreground">
-                €{Number(submission.program_price).toLocaleString("en-US")}
-              </span>
-            </p>
+            <>
+              <p className="text-sm text-muted-foreground mt-1">
+                {submission?.program_weeks && submission?.program_weekly_price
+                  ? `${submission.program_weeks} × €${Number(submission.program_weekly_price).toLocaleString("en-US")} = `
+                  : ""}
+                <span className="font-semibold text-foreground">
+                  €{Number(submission.program_price).toLocaleString("en-US")}
+                </span>
+              </p>
+              {!submission?.program_weeks && (
+                <p className="text-xs text-amber-600">{t("case.program.unverifiedTotal")}</p>
+              )}
+            </>
           ) : null}
+
         </div>
       )}
 
