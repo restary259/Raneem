@@ -81,14 +81,14 @@ export async function loadProgrammeCosts({
     submission.program_id
       ? (supabase as any)
           .from("programs")
-          .select("name_ar, name_en, price, currency")
+          .select("name_ar, name_en, price, currency, price_tiers")
           .eq("id", submission.program_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
     submission.accommodation_id
       ? (supabase as any)
           .from("accommodations")
-          .select("name_ar, name_en, price, currency")
+          .select("name_ar, name_en, price, currency, price_tiers")
           .eq("id", submission.accommodation_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
