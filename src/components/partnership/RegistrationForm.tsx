@@ -209,7 +209,35 @@ const RegistrationForm = () => {
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
+
+                <FormField control={form.control} name="consent" render={({ field, fieldState }) => (
+                  <FormItem>
+                    <ConsentBlock
+                      isAr={!!isAr}
+                      collected={formContent.consent.collected}
+                      showMarketing={false}
+                      agreed={field.value === true}
+                      onAgreedChange={(v) => field.onChange(v)}
+                      error={fieldState.error?.message ?? null}
+                      purpose={
+                        <>
+                          {formContent.consent.notice}{' '}
+                          <Link to="/privacy" className="underline font-medium text-foreground">
+                            {formContent.consent.privacyLink}
+                          </Link>{' '}
+                          {formContent.consent.and}{' '}
+                          <Link to="/terms" className="underline font-medium text-foreground">
+                            {formContent.consent.termsLink}
+                          </Link>
+                          . {formContent.consent.withdraw}
+                        </>
+                      }
+                      agreeLabel={formContent.consent.checkbox}
+                    />
+                  </FormItem>
+                )} />
+
+                <Button type="submit" size="lg" variant="accent" className="w-full min-h-[48px]" disabled={isPending}>
                   {isPending ? t('registrationForm.submitting') : formContent.submit}
                 </Button>
               </form>
