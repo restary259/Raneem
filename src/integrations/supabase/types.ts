@@ -3748,6 +3748,21 @@ export type Database = {
         Returns: undefined
       }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      emit_notification: {
+        Args: {
+          _actor_id: string
+          _body_ar: string
+          _body_en: string
+          _case_id?: string
+          _dedupe_key?: string
+          _link?: string
+          _source: string
+          _title_ar: string
+          _title_en: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
