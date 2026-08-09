@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
+import { createInvitation } from "../_shared/invitations.ts";
 
-const APP_URL = "https://darb.agency";
 
 /**
  * Single, retry-safe entry point for approving a partner recruit application.
