@@ -9,7 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RefreshCw, ChevronRight, Download, FileText, User, Lock, ExternalLink, SplitSquareHorizontal, CheckCircle2 } from "lucide-react";
+import {
+  RefreshCw,
+  ChevronRight,
+  Download,
+  FileText,
+  User,
+  Lock,
+  ExternalLink,
+  SplitSquareHorizontal,
+  CheckCircle2,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +27,7 @@ import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
 import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
-
+import CaseFinance from "@/components/cases/CaseFinance";
 
 interface SubmittedCase {
   id: string;
@@ -86,7 +96,13 @@ const AdminSubmissionsPage = () => {
 
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
-  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({ serviceFee: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({
+    serviceFee: 0,
+    partners: [],
+    partnerCommission: 0,
+    teamCommission: 0,
+    platformRevenue: 0,
+  });
 
   // Password gate state
   const [showPasswordGate, setShowPasswordGate] = useState(false);
@@ -96,8 +112,6 @@ const AdminSubmissionsPage = () => {
   // Student account email captured during enrollment confirmation
   const [approveEmail, setApproveEmail] = useState("");
 
-
-
   const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
     if (ids.length === 0) return [];
     const [subRes, docsRes] = await Promise.all([
@@ -105,7 +119,9 @@ const AdminSubmissionsPage = () => {
       supabase.from("documents").select("id, file_name, file_url, category, created_at, case_id").in("case_id", ids),
     ]);
     const subMap: Record<string, any> = {};
-    (subRes.data || []).forEach((s) => { subMap[s.case_id] = s; });
+    (subRes.data || []).forEach((s) => {
+      subMap[s.case_id] = s;
+    });
     const docsMap: Record<string, any[]> = {};
     (docsRes.data || []).forEach((d) => {
       if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
@@ -124,13 +140,17 @@ const AdminSubmissionsPage = () => {
       const [pendingRes, completedRes] = await Promise.all([
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
+          .select(
+            "id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to",
+          )
           .in("status", ["submitted", "payment_confirmed"])
           .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
           .from("cases")
-          .select("id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to")
+          .select(
+            "id, full_name, phone_number, status, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to",
+          )
           .eq("status", "enrollment_paid")
           .is("deleted_at", null)
           .order("created_at", { ascending: false }),
@@ -152,19 +172,31 @@ const AdminSubmissionsPage = () => {
 
       const allEnriched = [...enrichedPending, ...enrichedCompleted];
       const programIds = [...new Set(allEnriched.map((c) => c.submission?.program_id).filter(Boolean) as string[])];
-      const accommodationIds = [...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[])];
+      const accommodationIds = [
+        ...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[]),
+      ];
 
       if (programIds.length > 0) {
-        const { data: progData } = await (supabase as any).from("programs").select("id, name_en, name_ar").in("id", programIds);
+        const { data: progData } = await (supabase as any)
+          .from("programs")
+          .select("id, name_en, name_ar")
+          .in("id", programIds);
         const map: Record<string, string> = {};
-        (progData || []).forEach((p: any) => { map[p.id] = (isAr ? p.name_ar || p.name_en : p.name_en || p.name_ar) ?? ""; });
+        (progData || []).forEach((p: any) => {
+          map[p.id] = (isAr ? p.name_ar || p.name_en : p.name_en || p.name_ar) ?? "";
+        });
         setProgramNames(map);
       }
 
       if (accommodationIds.length > 0) {
-        const { data: accomData } = await (supabase as any).from("accommodations").select("id, name_en, name_ar").in("id", accommodationIds);
+        const { data: accomData } = await (supabase as any)
+          .from("accommodations")
+          .select("id, name_en, name_ar")
+          .in("id", accommodationIds);
         const map: Record<string, string> = {};
-        (accomData || []).forEach((a: any) => { map[a.id] = (isAr ? a.name_ar || a.name_en : a.name_en || a.name_ar) ?? ""; });
+        (accomData || []).forEach((a: any) => {
+          map[a.id] = (isAr ? a.name_ar || a.name_en : a.name_en || a.name_ar) ?? "";
+        });
         setAccommodationNames(map);
       }
     } catch (err: any) {
@@ -175,17 +207,25 @@ const AdminSubmissionsPage = () => {
     }
   }, [toast, enrichCases, isAr, t]);
 
-  useEffect(() => { fetchCases(); }, [fetchCases]);
+  useEffect(() => {
+    fetchCases();
+  }, [fetchCases]);
 
   // Commission preview — mirrors record_case_commission exactly: ONLY the partner
   // linked to this case (partner_id, else referred_by) can earn a commission.
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
-    const fee = c.submission?.service_fee || 0;
+    let fee = 0;
     try {
+      const { data: finance } = await (supabase as any).rpc("get_case_financials", { p_case_id: c.id });
+      fee = Number(finance?.service_total ?? 0);
       const linkedPartnerId = c.partner_id || c.referred_by || null;
 
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
-        (supabase as any).from("platform_settings").select("partner_commission_rate, team_member_commission_rate").limit(1).single(),
+        (supabase as any)
+          .from("platform_settings")
+          .select("partner_commission_rate, team_member_commission_rate")
+          .limit(1)
+          .single(),
         linkedPartnerId
           ? (supabase as any)
               .from("partner_commission_overrides")
@@ -194,7 +234,11 @@ const AdminSubmissionsPage = () => {
               .maybeSingle()
           : Promise.resolve({ data: null }),
         c.assigned_to
-          ? (supabase as any).from("team_member_commission_overrides").select("commission_amount").eq("team_member_id", c.assigned_to).maybeSingle()
+          ? (supabase as any)
+              .from("team_member_commission_overrides")
+              .select("commission_amount")
+              .eq("team_member_id", c.assigned_to)
+              .maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 
@@ -240,7 +284,6 @@ const AdminSubmissionsPage = () => {
     }
   }, []);
 
-
   const openSplitPanel = async () => {
     if (!selected) return;
     setApproveEmail("");
@@ -268,7 +311,9 @@ const AdminSubmissionsPage = () => {
     if (!selected) return;
     setMarking(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // No auto-attribution: partner commission only fires for cases where partner_id is
       // explicitly set. Cases without a partner_id get ₪0 partner commission — this is correct
@@ -278,7 +323,7 @@ const AdminSubmissionsPage = () => {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mark-paid`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ case_id: selected.id, total_payment_ils: splitPreview.serviceFee }),
+        body: JSON.stringify({ case_id: selected.id }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || "Failed");
@@ -286,19 +331,16 @@ const AdminSubmissionsPage = () => {
       // Create the student account at the moment the case becomes real, if it
       // doesn't exist yet (this replaces the old separate "Approve" step).
       if (!selected.student_user_id && approveEmail.trim()) {
-        const accResp = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-            body: JSON.stringify({
-              case_id: selected.id,
-              student_email: approveEmail.trim(),
-              student_full_name: selected.full_name,
-              student_phone: selected.phone_number,
-            }),
-          },
-        );
+        const accResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+          body: JSON.stringify({
+            case_id: selected.id,
+            student_email: approveEmail.trim(),
+            student_full_name: selected.full_name,
+            student_phone: selected.phone_number,
+          }),
+        });
         const accResult = await accResp.json().catch(() => ({}));
         if (!accResp.ok) throw new Error(accResult.error || "Failed to create student account");
       }
@@ -318,15 +360,15 @@ const AdminSubmissionsPage = () => {
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
-      toast({ variant: "destructive", title: t("common.error"), description: err?.message || t("common.actionFailed") });
-
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: err?.message || t("common.actionFailed"),
+      });
     } finally {
       setMarking(false);
     }
   };
-
-
-
 
   const fmt = (ts: string | null) => {
     if (!ts) return "–";
@@ -340,9 +382,7 @@ const AdminSubmissionsPage = () => {
       const marker = "/student-documents/";
       const idx = fileUrl.indexOf(marker);
       const path = idx !== -1 ? fileUrl.slice(idx + marker.length) : fileUrl;
-      const { data, error } = await supabase.storage
-        .from("student-documents")
-        .createSignedUrl(path, 60);
+      const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(path, 60);
       if (error || !data?.signedUrl) throw error ?? new Error("no url");
       window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     } catch (err: any) {
@@ -350,10 +390,7 @@ const AdminSubmissionsPage = () => {
     }
   };
 
-
-
-  const totalFee = (s: SubmittedCase) =>
-    (s.submission?.service_fee || 0).toLocaleString('en-US');
+  const totalFee = (s: SubmittedCase) => (s.submission?.service_fee || 0).toLocaleString("en-US");
 
   return (
     <div className="p-4 sm:p-6 space-y-6 w-full max-w-[1600px] mx-auto">
@@ -382,7 +419,9 @@ const AdminSubmissionsPage = () => {
           }`}
         >
           {t("admin.submissions.tabPending", "Pending Review")}
-          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+          <span
+            className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "pending" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+          >
             {cases.length}
           </span>
         </button>
@@ -395,7 +434,9 @@ const AdminSubmissionsPage = () => {
           }`}
         >
           {t("admin.submissions.tabCompleted", "Completed")}
-          <span className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"}`}>
+          <span
+            className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"}`}
+          >
             {completedCases.length}
           </span>
         </button>
@@ -404,9 +445,7 @@ const AdminSubmissionsPage = () => {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              {t("common.loading")}
-            </div>
+            <div className="p-8 text-center text-muted-foreground text-sm">{t("common.loading")}</div>
           ) : activeTab === "pending" ? (
             cases.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
@@ -438,45 +477,41 @@ const AdminSubmissionsPage = () => {
                 ))}
                 <TablePagination pagination={pendingPagination as any} />
               </div>
-
             )
+          ) : completedCases.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              {t("admin.submissions.emptyCompleted", "No completed cases yet")}
+            </div>
           ) : (
-            completedCases.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                {t("admin.submissions.emptyCompleted", "No completed cases yet")}
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {completedPagination.items.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => setSelected(c)}
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {c.phone_number} · {t("admin.submissions.enrolledOn")}:{" "}
-                        {fmt(c.submission?.enrollment_paid_at || null)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 border hidden sm:flex">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {t("admin.submissions.tabCompleted")}
-                      </Badge>
-                      <div className="text-end">
-                        <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
-                        <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
+            <div className="divide-y divide-border">
+              {completedPagination.items.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => setSelected(c)}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{c.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.phone_number} · {t("admin.submissions.enrolledOn")}:{" "}
+                      {fmt(c.submission?.enrollment_paid_at || null)}
+                    </p>
                   </div>
-                ))}
-                <TablePagination pagination={completedPagination as any} />
-              </div>
-
-            )
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 border hidden sm:flex">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {t("admin.submissions.tabCompleted")}
+                    </Badge>
+                    <div className="text-end">
+                      <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+              ))}
+              <TablePagination pagination={completedPagination as any} />
+            </div>
           )}
         </CardContent>
       </Card>
@@ -493,9 +528,7 @@ const AdminSubmissionsPage = () => {
             <div className="space-y-5">
               {/* Basic Info */}
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {t("admin.submissions.basicInfo")}
-                </h3>
+                <h3 className="text-sm font-semibold text-foreground mb-2">{t("admin.submissions.basicInfo")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
@@ -512,7 +545,10 @@ const AdminSubmissionsPage = () => {
                     const na = t("admin.submissions.notCollected");
                     const cityVal = selected.city || (extra.city as string) || "";
                     const eduVal = selected.education_level || (extra.education_level as string) || "";
-                    const passVal = (selected.passport_type || (extra.passport_type as string) || "").replace(/_/g, " ");
+                    const passVal = (selected.passport_type || (extra.passport_type as string) || "").replace(
+                      /_/g,
+                      " ",
+                    );
                     return (
                       <>
                         <div>
@@ -543,7 +579,9 @@ const AdminSubmissionsPage = () => {
                     <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
                     <div className="flex items-center gap-1">
                       <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
-                      {selected.submission?.submitted_at && <CopyButton value={fmt(selected.submission.submitted_at)} />}
+                      {selected.submission?.submitted_at && (
+                        <CopyButton value={fmt(selected.submission.submitted_at)} />
+                      )}
                     </div>
                   </div>
                   <div>
@@ -567,16 +605,11 @@ const AdminSubmissionsPage = () => {
 
               {/* Payment Details */}
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {t("admin.submissions.paymentDetails")}
-                </h3>
+                <h3 className="text-sm font-semibold text-foreground mb-2">{t("admin.submissions.paymentDetails")}</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{(selected.submission?.service_fee || 0).toLocaleString('en-US')} ILS</p>
-                      <CopyButton value={String(selected.submission?.service_fee || 0)} />
-                    </div>
+                    <span className="text-muted-foreground">DARB service total:</span>
+                    <p className="font-medium">Calculated in the Finance section above.</p>
                   </div>
                   {selected.submission?.program_start_date && (
                     <div>
@@ -632,11 +665,13 @@ const AdminSubmissionsPage = () => {
                         <div>
                           <span className="text-muted-foreground">{t("admin.submissions.accommodation")}:</span>
                           <p className="font-medium">
-                            {accommodationNames?.[selected.submission.accommodation_id] || selected.submission.accommodation_id}
+                            {accommodationNames?.[selected.submission.accommodation_id] ||
+                              selected.submission.accommodation_id}
                           </p>
                           {selected.submission?.accommodation_price ? (
                             <p className="text-xs text-muted-foreground">
-                              {selected.submission?.accommodation_weeks && selected.submission?.accommodation_weekly_price
+                              {selected.submission?.accommodation_weeks &&
+                              selected.submission?.accommodation_weekly_price
                                 ? `${selected.submission.accommodation_weeks} × €${Number(selected.submission.accommodation_weekly_price).toLocaleString("en-US")} = `
                                 : ""}
                               €{Number(selected.submission.accommodation_price).toLocaleString("en-US")}
@@ -645,7 +680,6 @@ const AdminSubmissionsPage = () => {
                         </div>
                       )}
                     </div>
-
                   </div>
                 </>
               )}
@@ -677,6 +711,8 @@ const AdminSubmissionsPage = () => {
                   </div>
                 </>
               )}
+
+              <CaseFinance caseId={selected.id} canManage={false} canConfirm={true} />
 
               <CaseInvoiceBlock caseId={selected.id} />
 
@@ -750,14 +786,18 @@ const AdminSubmissionsPage = () => {
                   </Button>
                 )}
               </div>
-
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Payment Split Panel */}
-      <Dialog open={showSplitPanel} onOpenChange={(v) => { if (!v) setShowSplitPanel(false); }}>
+      <Dialog
+        open={showSplitPanel}
+        onOpenChange={(v) => {
+          if (!v) setShowSplitPanel(false);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -767,12 +807,15 @@ const AdminSubmissionsPage = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t("admin.submissions.paymentSplitDesc", "Review how the service fee will be split before confirming enrollment.")}
+              {t(
+                "admin.submissions.paymentSplitDesc",
+                "Review how the service fee will be split before confirming enrollment.",
+              )}
             </p>
             <div className="space-y-2">
               <div className="flex justify-between p-3 rounded-lg bg-muted border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
-                <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString('en-US')}</span>
+                <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString("en-US")}</span>
               </div>
               {splitPreview.partners.length === 0 && (
                 <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
@@ -782,17 +825,23 @@ const AdminSubmissionsPage = () => {
               )}
               {splitPreview.partners.map((p) => (
                 <div key={p.partnerId} className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner")}: {p.name}</span>
-                  <span className="font-semibold text-orange-600">-₪{p.amount.toLocaleString('en-US')}</span>
+                  <span className="text-muted-foreground">
+                    {t("admin.commission.partner", "Partner")}: {p.name}
+                  </span>
+                  <span className="font-semibold text-orange-600">-₪{p.amount.toLocaleString("en-US")}</span>
                 </div>
               ))}
               <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
-                <span className="font-semibold text-purple-600">-₪{splitPreview.teamCommission.toLocaleString('en-US')}</span>
+                <span className="font-semibold text-purple-600">
+                  -₪{splitPreview.teamCommission.toLocaleString("en-US")}
+                </span>
               </div>
               <div className="flex justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
                 <span className="font-semibold">{t("admin.commission.platformRevenue", "Platform Revenue")}</span>
-                <span className="font-bold text-emerald-700">₪{splitPreview.platformRevenue.toLocaleString('en-US')}</span>
+                <span className="font-bold text-emerald-700">
+                  ₪{splitPreview.platformRevenue.toLocaleString("en-US")}
+                </span>
               </div>
             </div>
             {!selected?.student_user_id && (
@@ -805,13 +854,14 @@ const AdminSubmissionsPage = () => {
                   value={approveEmail}
                   onChange={(e) => setApproveEmail(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {t("admin.submissions.approveCreatesAccount")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("admin.submissions.approveCreatesAccount")}</p>
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              {t("admin.submissions.splitNote", "Commissions are set in Settings → Money Split. Confirm with your password to proceed.")}
+              {t(
+                "admin.submissions.splitNote",
+                "Commissions are set in Settings → Money Split. Confirm with your password to proceed.",
+              )}
             </p>
           </div>
           <DialogFooter>
@@ -819,8 +869,13 @@ const AdminSubmissionsPage = () => {
               {t("admin.submissions.cancel")}
             </Button>
             <Button
-              onClick={() => { setShowSplitPanel(false); setShowPasswordGate(true); }}
-              disabled={marking || (!selected?.student_user_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))}
+              onClick={() => {
+                setShowSplitPanel(false);
+                setShowPasswordGate(true);
+              }}
+              disabled={
+                marking || (!selected?.student_user_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))
+              }
             >
               <Lock className="h-4 w-4 me-1" />
               {t("admin.submissions.confirmEnroll", "Confirm")}
@@ -845,9 +900,7 @@ const AdminSubmissionsPage = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {t("admin.submissions.confirmIdentityDesc")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("admin.submissions.confirmIdentityDesc")}</p>
             <div>
               <Label>{t("admin.submissions.password")}</Label>
               <Input
@@ -877,7 +930,6 @@ const AdminSubmissionsPage = () => {
         </DialogContent>
       </Dialog>
     </div>
-
   );
 };
 
