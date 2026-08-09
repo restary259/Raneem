@@ -214,6 +214,44 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_reminders: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          due_at: string
+          id: string
+          kind: string
+          recipient_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          due_at: string
+          id?: string
+          kind: string
+          recipient_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          due_at?: string
+          id?: string
+          kind?: string
+          recipient_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           case_id: string | null
@@ -2669,6 +2707,8 @@ export type Database = {
           passport_number: string | null
           phone_number: string | null
           previous_legal_name: string | null
+          push_onboarding_state: string
+          push_onboarding_updated_at: string | null
           referral_code: string | null
           referral_code_enabled: boolean
           second_passport_country: string | null
@@ -2724,6 +2764,8 @@ export type Database = {
           passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
+          push_onboarding_state?: string
+          push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
           second_passport_country?: string | null
@@ -2779,6 +2821,8 @@ export type Database = {
           passport_number?: string | null
           phone_number?: string | null
           previous_legal_name?: string | null
+          push_onboarding_state?: string
+          push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
           second_passport_country?: string | null
