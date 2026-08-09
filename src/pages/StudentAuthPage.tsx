@@ -105,7 +105,9 @@ const StudentAuthPage = () => {
       // Change the password first, then clear the temporary-password flag through the
       // security-definer RPC (a direct profiles update is blocked by restrict_profiles_write).
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      // A retry after an already-successful change reports "same password" — that is not a
+      // failure here, the flag below still needs clearing.
+      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
 
       const { error: flagError } = await (supabase as any).rpc("clear_must_change_password");
       if (flagError) throw flagError;

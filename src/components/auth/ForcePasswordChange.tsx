@@ -40,7 +40,9 @@ const ForcePasswordChange: React.FC<Props> = ({ userId, onDone }) => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      // A retry after an already-successful change reports "same password" — that is not a
+      // failure here, the flag below still needs clearing.
+      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
       const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
       if (flagError) throw flagError;
       toast({ description: t('forcePassword.success') });
