@@ -2236,7 +2236,8 @@
     "network": "My network",
     "performance": "Network performance",
     "myData": "My data",
-    "account": "My Account"
+    "account": "My Account",
+    "fees": "Fees"
   },
   "case": {
     "status": {
@@ -3621,7 +3622,12 @@
     "contactPhone": "Phone",
     "save": "Save and continue",
     "saved": "Your details were saved.",
-    "incomplete": "Please fill every field and add two emergency contacts."
+    "incomplete": "Please fill every field and add two emergency contacts.",
+    "step1": "Personal details",
+    "step2": "Travel document",
+    "step3": "Emergency contacts",
+    "next": "Next",
+    "back": "Back"
   },
   "pushSettings": {
     "title": "Device notifications",
@@ -3680,5 +3686,20 @@
     "enable": "Enable notifications",
     "later": "Maybe later",
     "enabled": "Notifications are on for this device."
+  },
+  "studentFees": {
+    "title": "Fees & invoice",
+    "subtitle": "A summary of your agency fees and payments.",
+    "agencyFees": "Agency fees",
+    "paid": "Paid",
+    "pendingReview": "Pending review",
+    "remaining": "Remaining",
+    "schoolCosts": "School costs (estimate)",
+    "payments": "Payments",
+    "invoice": "Invoice",
+    "viewInvoice": "View invoice",
+    "noInvoice": "No invoice has been issued yet.",
+    "noCase": "No case is linked to your account yet.",
+    "noPayments": "No payments yet."
   }
 }
