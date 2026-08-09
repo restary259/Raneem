@@ -170,6 +170,19 @@ const App = () => {
 
   const dir = i18n.language === "ar" ? "rtl" : "ltr";
 
+  // Mount non-critical floating widgets after the browser is idle so they never
+  // compete with first paint on mobile. Behaviour/appearance is unchanged.
+  const [idleReady, setIdleReady] = React.useState(false);
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setIdleReady(true), { timeout: 2000 });
+      return () => (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(() => setIdleReady(true), 600);
+    return () => window.clearTimeout(t);
+  }, []);
+
   // Hide all distractions on the apply page
   const isApplyPage = location.pathname === "/apply";
 
