@@ -403,6 +403,59 @@ const AdminTeamPage = () => {
         </div>
       </div>
 
+      {/* Pending invitations */}
+      {invitations.length > 0 && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="border-b px-4 py-3 text-sm font-medium text-foreground">
+              {t('admin.team.pendingInvites', 'Pending invitations')}
+            </div>
+            <div className="divide-y divide-border">
+              {invitations.map(inv => (
+                <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {inv.invited_name || inv.invited_email}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{inv.invited_email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin.team.inviteExpires', 'Expires')}:{' '}
+                      {new Date(inv.expires_at).toLocaleDateString('en-US')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{roleLabel(inv.intended_role)}</Badge>
+                    <Badge variant="outline">{t('admin.team.invited', 'Invited')}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={busyInvite === inv.id}
+                      onClick={() => resendInvitation(inv)}
+                      title={t('admin.team.resendInvite', 'Resend invitation')}
+                      aria-label={t('admin.team.resendInvite', 'Resend invitation')}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      disabled={busyInvite === inv.id}
+                      onClick={() => revokeInvitation(inv)}
+                      title={t('admin.team.revokeInvite', 'Revoke invitation')}
+                      aria-label={t('admin.team.revokeInvite', 'Revoke invitation')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Members List */}
       <Card>
         <CardContent className="p-0">
