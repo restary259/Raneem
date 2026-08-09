@@ -167,7 +167,33 @@ export default function CaseStageBlock(props: Props) {
               </p>
             </div>
           )}
-          <CaseProfileForm caseData={caseData} submission={submission} onSaved={props.onRefresh} />
+          {/* Once the file is complete the long form collapses into a
+              read-only summary — reopened only on demand. */}
+          {savedComplete && !editingProfile ? (
+            <>
+              <CaseProfileSummary caseData={caseData} submission={submission} />
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                  {t("case.profileSaved")}
+                </p>
+                {canManage && (
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingProfile(true)}>
+                    <Pencil className="h-4 w-4" />
+                    {t("case.editProfile")}
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <CaseProfileForm caseData={caseData} submission={submission} onSaved={props.onRefresh} />
+              {savedComplete && (
+                <Button variant="outline" size="sm" onClick={() => setEditingProfile(false)}>
+                  {t("common.done", { defaultValue: "Done" })}
+                </Button>
+              )}
+            </>
+          )}
           {savedComplete && (
             <CaseInviteStudent
               caseId={caseData.id}
