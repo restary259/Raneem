@@ -112,9 +112,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60_000,
       gcTime: 10 * 60_000,
-      // Mobile背景/foreground cycles used to trigger refetch storms.
+      // Backgrounding/foregrounding on mobile used to trigger refetch storms.
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
       refetchOnReconnect: true,
       // Keep showing the previous page's data while the new query resolves
       // instead of flashing a loading state on every navigation.
