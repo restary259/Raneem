@@ -28,7 +28,7 @@ import { usePayoutActions } from '@/hooks/usePayoutActions';
  */
 const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
+  const { t } = useTranslation('dashboard');
   const { author, locale: exportLocale, rtl } = useExportContext();
   const isMobile = useIsMobile();
   const { respond } = usePayoutActions();
@@ -41,8 +41,6 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
   const [rejectTarget, setRejectTarget] = useState<any>(null);
   const [payTarget, setPayTarget] = useState<any>(null);
   const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
-
-  const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const fetchRequests = useCallback(async () => {
     const { data, error } = await (supabase as any).rpc('list_payout_requests');
@@ -141,8 +139,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       (r.linked_student_names || []).join('; ') || dash,
       `${(Number(r.amount) || 0).toLocaleString('en-US')} ₪`,
       String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
-      r.requested_at ? new Date(r.requested_at).toLocaleDateString(locale) : dash,
-      r.approved_at ? new Date(r.approved_at).toLocaleDateString(locale) : dash,
+      r.requested_at ? new Date(r.requested_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale) : dash,
+      r.approved_at ? new Date(r.approved_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale) : dash,
       r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : dash,
       r.admin_notes || dash,
     ]);
@@ -150,7 +148,9 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       headers,
       rows: pdfRows,
       fileName: `payouts-${new Date().toISOString().slice(0, 10)}`,
-      title: 'Darb Study International — Payouts',
+      title: t('admin.payouts.pdfTitle', 'Darb Study International — Payouts'),
+      locale: exportLocale,
+      rtl,
     });
     if (rtlFontMissing) {
       toast({

@@ -7,7 +7,7 @@ export function toExportColumns(columns: SheetColumn[]): ExportColumn[] {
     header: c.label,
     key: c.key,
     type:
-      c.type === 'enum'
+      c.type === 'enum' && (c.enumGroup ?? 'status') === 'status'
         ? ('status' as const)
         : c.type === 'currency'
           ? ('currency' as const)

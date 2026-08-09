@@ -17,13 +17,13 @@ const CURRENCY_SYMBOL: Record<CurrencyCode, string> = {
   EUR: '€',
 };
 
-/** Accounting-style currency: negatives in red parentheses, zero as an em dash. */
+/** Accounting-style currency: negatives in red parentheses, zero remains explicit. */
 export function currencyFormat(currency: CurrencyCode = 'ILS'): string {
   const s = CURRENCY_SYMBOL[currency] ?? CURRENCY_SYMBOL.ILS;
-  return `"${s}"#,##0.00;[Red]("${s}"#,##0.00);"—"`;
+  return `"${s}"#,##0.00;[Red]("${s}"#,##0.00);"${s}"0.00`;
 }
 
-export const NUMBER_FORMAT = '#,##0;[Red](#,##0);"—"';
+export const NUMBER_FORMAT = '#,##0;[Red](#,##0);0';
 /** Percent values are stored on a 0-100 scale across the app, not 0-1. */
 export const PERCENT_FORMAT = '0.0"%"';
 export const DATE_FORMAT = 'dd/MM/yyyy';
