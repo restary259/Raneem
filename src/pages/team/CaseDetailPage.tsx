@@ -27,13 +27,7 @@ import { readStudentProfile } from "@/lib/studentProfileFields";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import PaymentConfirmationForm from "@/components/team/PaymentConfirmationForm";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface CaseRow {
   id: string;
@@ -53,9 +47,6 @@ const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", 
 
 /** Stages where scheduling another appointment still makes sense. */
 const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
-
-
-
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,11 +81,7 @@ export default function CaseDetailPage() {
     try {
       const [caseRes, apptRes, subRes, docsRes, settingsRes] = await Promise.all([
         supabase.from("cases").select("*").eq("id", id).single(),
-        supabase
-          .from("appointments")
-          .select("*")
-          .eq("case_id", id)
-          .order("scheduled_at", { ascending: false }),
+        supabase.from("appointments").select("*").eq("case_id", id).order("scheduled_at", { ascending: false }),
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
         supabase.from("documents").select("category").eq("case_id", id),
         supabase.from("platform_settings").select("forgotten_contacted_days").maybeSingle(),
@@ -114,23 +101,16 @@ export default function CaseDetailPage() {
         if (row.assigned_to === user?.id) {
           // The staff directory intentionally hides peers from team members,
           // so resolve our own name directly.
-          const { data: me } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user.id)
-            .maybeSingle();
+          const { data: me } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
           setAssigneeName(me?.full_name ?? null);
         } else {
           const { data: staff } = await supabase.rpc("get_staff_directory");
-          const match = (staff as { id: string; full_name: string }[] | null)?.find(
-            (s) => s.id === row.assigned_to,
-          );
+          const match = (staff as { id: string; full_name: string }[] | null)?.find((s) => s.id === row.assigned_to);
           setAssigneeName(match?.full_name ?? null);
         }
       } else {
         setAssigneeName(null);
       }
-
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -188,12 +168,7 @@ export default function CaseDetailPage() {
     }
   };
 
-
-  const canSubmitToAdmin =
-    canManage &&
-    !!submission &&
-    !!submission.payment_confirmed &&
-    caseData?.status === "payment_confirmed";
+  const canSubmitToAdmin = canManage && caseData?.status === "payment_confirmed";
 
   const handleSubmitToAdmin = async () => {
     if (!caseData || !submission || !user) return;
@@ -221,7 +196,6 @@ export default function CaseDetailPage() {
     }
   };
 
-
   /**
    * Admin sent the file back for a change: the case sits in profile_completion
    * again, so put it back through payment_confirmed before resubmitting.
@@ -246,17 +220,13 @@ export default function CaseDetailPage() {
     }
   };
 
-
   // Only the first load blanks the page. Later refetches keep the tree mounted so
   // an in-progress student profile draft is never wiped by a background refresh.
   if (loading && !caseData) {
     return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">
-        {t("case.detail.loading")}
-      </div>
+      <div className="flex h-64 items-center justify-center text-muted-foreground">{t("case.detail.loading")}</div>
     );
   }
-
 
   if (!caseData) {
     return <div className="p-6 text-muted-foreground">{t("case.detail.notFound")}</div>;
@@ -268,7 +238,7 @@ export default function CaseDetailPage() {
   const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
-  const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : waHref ?? "#";
+  const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : (waHref ?? "#");
   const ContactIcon = isMobile ? Phone : MessageCircle;
 
   /**
@@ -292,7 +262,6 @@ export default function CaseDetailPage() {
     if (!opened) window.location.href = contactHref;
   };
 
-
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
       {/* Persistent header */}
@@ -313,9 +282,7 @@ export default function CaseDetailPage() {
               <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 {caseData.case_reference ?? `#${caseData.id.slice(0, 8)}`}
                 {" · "}
-                {assigneeName
-                  ? t("case.header.assignedTo", { name: assigneeName })
-                  : t("case.header.unassigned")}
+                {assigneeName ? t("case.header.assignedTo", { name: assigneeName }) : t("case.header.unassigned")}
               </p>
             </div>
           </div>
@@ -329,9 +296,7 @@ export default function CaseDetailPage() {
                 rel={isMobile ? undefined : "noreferrer"}
               >
                 <ContactIcon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">
-                  {isMobile ? t("case.header.call") : t("case.header.whatsapp")}
-                </span>
+                <span className="hidden sm:inline">{isMobile ? t("case.header.call") : t("case.header.whatsapp")}</span>
               </a>
             </Button>
 
@@ -358,9 +323,7 @@ export default function CaseDetailPage() {
       {canManage && submission?.review_status === "changes_requested" && (
         <div className="rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
           <p className="text-sm font-medium text-amber-700">{t("case.submit.changesRequested")}</p>
-          {submission.review_note && (
-            <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
-          )}
+          {submission.review_note && <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>}
         </div>
       )}
 
@@ -376,14 +339,10 @@ export default function CaseDetailPage() {
           <TabsContent value="overview" className="space-y-3">
             <div className="rounded-md border bg-card p-4 sm:p-5">
               <h2 className="text-sm font-semibold">
-                {caseData.status === "submitted"
-                  ? t("case.detail.submittedToAdmin")
-                  : t("case.detail.studentEnrolled")}
+                {caseData.status === "submitted" ? t("case.detail.submittedToAdmin") : t("case.detail.studentEnrolled")}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {caseData.status === "submitted"
-                  ? t("case.detail.waitingAdminReview")
-                  : t("case.detail.caseComplete")}
+                {caseData.status === "submitted" ? t("case.detail.waitingAdminReview") : t("case.detail.caseComplete")}
               </p>
             </div>
             <CaseOverviewPanel caseData={caseData} />
@@ -397,7 +356,7 @@ export default function CaseDetailPage() {
           <TabsContent value="finance">
             <CaseFinance
               caseId={caseData.id}
-              canManage={role === "admin" && caseData.status !== "enrollment_paid"}
+              canManage={role === "admin" || (role === "team_member" && caseData.status === "profile_completion")}
               canConfirm={role === "admin"}
             />
           </TabsContent>
@@ -422,14 +381,12 @@ export default function CaseDetailPage() {
           {showFinance && (
             <CaseFinance
               caseId={caseData.id}
-              canManage={role === "admin"}
+              canManage={role === "admin" || (role === "team_member" && caseData.status === "profile_completion")}
               canConfirm={role === "admin"}
             />
           )}
         </>
       )}
-
-
 
       {/* Modals */}
       {canManage && user && (
