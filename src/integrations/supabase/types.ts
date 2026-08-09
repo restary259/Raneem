@@ -674,45 +674,60 @@ export type Database = {
         Row: {
           added_by: string | null
           case_id: string
+          catalog_version: number | null
           category: string
+          commissionable: boolean
           created_at: string
           currency: string
           description: string
           discount: number
           id: string
           notes: string | null
+          pricing_model: string
           quantity: number
           service_id: string | null
+          snapshot_at: string
+          unit_label: string | null
           unit_price: number
           updated_at: string
         }
         Insert: {
           added_by?: string | null
           case_id: string
+          catalog_version?: number | null
           category?: string
+          commissionable?: boolean
           created_at?: string
           currency?: string
           description: string
           discount?: number
           id?: string
           notes?: string | null
+          pricing_model?: string
           quantity?: number
           service_id?: string | null
+          snapshot_at?: string
+          unit_label?: string | null
           unit_price?: number
           updated_at?: string
         }
         Update: {
           added_by?: string | null
           case_id?: string
+          catalog_version?: number | null
           category?: string
+          commissionable?: boolean
           created_at?: string
           currency?: string
           description?: string
           discount?: number
           id?: string
           notes?: string | null
+          pricing_model?: string
           quantity?: number
           service_id?: string | null
+          snapshot_at?: string
+          unit_label?: string | null
           unit_price?: number
           updated_at?: string
         }
@@ -2710,6 +2725,7 @@ export type Database = {
       platform_settings: {
         Row: {
           ambassador_commission_rate: number
+          default_course_weeks: number
           forgotten_contacted_days: number
           forgotten_new_case_days: number
           id: string
@@ -2723,6 +2739,7 @@ export type Database = {
         }
         Insert: {
           ambassador_commission_rate?: number
+          default_course_weeks?: number
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
@@ -2736,6 +2753,7 @@ export type Database = {
         }
         Update: {
           ambassador_commission_rate?: number
+          default_course_weeks?: number
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
@@ -3340,45 +3358,103 @@ export type Database = {
       }
       service_catalog: {
         Row: {
+          accommodation_id: string | null
+          allows_quantity: boolean
           category: string
           code: string | null
+          commissionable: boolean
           created_at: string
+          currency: string
           default_price: number
+          default_quantity: number
+          description_ar: string | null
+          description_en: string | null
           id: string
           in_full_service: boolean
           is_active: boolean
+          is_optional: boolean
           name_ar: string
           name_en: string
+          pricing_model: string
+          program_id: string | null
+          school_id: string | null
           sort_order: number
           updated_at: string
+          version: number
         }
         Insert: {
+          accommodation_id?: string | null
+          allows_quantity?: boolean
           category?: string
           code?: string | null
+          commissionable?: boolean
           created_at?: string
+          currency?: string
           default_price?: number
+          default_quantity?: number
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           in_full_service?: boolean
           is_active?: boolean
+          is_optional?: boolean
           name_ar: string
           name_en: string
+          pricing_model?: string
+          program_id?: string | null
+          school_id?: string | null
           sort_order?: number
           updated_at?: string
+          version?: number
         }
         Update: {
+          accommodation_id?: string | null
+          allows_quantity?: boolean
           category?: string
           code?: string | null
+          commissionable?: boolean
           created_at?: string
+          currency?: string
           default_price?: number
+          default_quantity?: number
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           in_full_service?: boolean
           is_active?: boolean
+          is_optional?: boolean
           name_ar?: string
           name_en?: string
+          pricing_model?: string
+          program_id?: string | null
+          school_id?: string | null
           sort_order?: number
           updated_at?: string
+          version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_catalog_accommodation_id_fkey"
+            columns: ["accommodation_id"]
+            isOneToOne: false
+            referencedRelation: "accommodations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_catalog_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_catalog_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -3884,6 +3960,16 @@ export type Database = {
       }
     }
     Functions: {
+      admin_adjust_case_service: {
+        Args: {
+          p_case_service_id: string
+          p_discount: number
+          p_quantity: number
+          p_reason: string
+          p_unit_price: number
+        }
+        Returns: Json
+      }
       admin_deactivate_account: {
         Args: { _reason?: string; _target_id: string }
         Returns: Json
@@ -4460,8 +4546,8 @@ export type Database = {
         Returns: string
       }
       set_case_services: {
-        Args: { p_case_id: string; p_service_ids: string[] }
-        Returns: undefined
+        Args: { p_case_id: string; p_items: Json }
+        Returns: Json
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
