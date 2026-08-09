@@ -774,7 +774,7 @@ export default function AdminStudentsPage() {
         <div className="space-y-2">
           {pagination.items.map((s) => (
             <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow border-border" onClick={() => openStudent(s)}>
-              <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
+              <CardContent className="p-4 hidden md:grid grid-cols-6 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
@@ -783,11 +783,22 @@ export default function AdminStudentsPage() {
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                 <p className="text-xs text-muted-foreground">{s.phone_number || "—"}</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(s.created_at), "dd MMM yyyy")}</p>
+                <div className="min-w-0">
+                  <Badge variant="outline" className="text-[11px]">{sourceLabel(s)}</Badge>
+                  {caseOf(s)?.reference && (
+                    <p className="mt-1 text-[11px] text-muted-foreground truncate">{caseOf(s)?.reference}</p>
+                  )}
+                </div>
+                <div>
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${onboardingStatusTone(statusOf(s))}`}>
+                    {t(onboardingStatusKey(statusOf(s)))}
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {s.created_by ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..." : t("admin.students.selfRegistered")}
                 </p>
               </CardContent>
+
               <CardContent className="p-4 flex md:hidden items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
