@@ -3926,6 +3926,7 @@ export type Database = {
         }[]
       }
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
+      clear_must_change_password: { Args: never; Returns: undefined }
       confirm_case_payment: {
         Args: { p_payment_id: string }
         Returns: undefined

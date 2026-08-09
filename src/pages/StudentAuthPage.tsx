@@ -102,21 +102,19 @@ const StudentAuthPage = () => {
         throw new Error("انتهت جلستك. يرجى تسجيل الدخول مجدداً.");
       }
 
-      // Update profile FIRST so that when updateUser fires the USER_UPDATED event,
-      // AuthContext re-reads must_change_password as false — preventing a race where
-      // the modal would re-open before refreshRole() corrects the state.
-      await supabase.from("profiles").update({ must_change_password: false }).eq("id", sessionData.session.user.id);
-
+      // Change the password first, then clear the temporary-password flag through the
+      // security-definer RPC (a direct profiles update is blocked by restrict_profiles_write).
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        // Roll back the profile flag if the password update itself fails
-        await supabase.from("profiles").update({ must_change_password: true }).eq("id", sessionData.session.user.id);
-        throw error;
-      }
+      // A retry after an already-successful change reports "same password" — that is not a
+      // failure here, the flag below still needs clearing.
+      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
 
+      const { error: flagError } = await (supabase as any).rpc("clear_must_change_password");
+      if (flagError) throw flagError;
+
+      await refreshRole();
       setShowChangePasswordModal(false);
       toast({ title: "تم تغيير كلمة المرور بنجاح" });
-      await refreshRole();
     } catch (err: any) {
       toast({ variant: "destructive", title: "خطأ", description: err.message });
       // If session expired, close modal so user can log in again
