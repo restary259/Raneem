@@ -7,17 +7,6 @@ import { Routes, Route, useNavigate, useLocation, Navigate, Outlet } from "react
 import { useTranslation } from "react-i18next";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import WhoWeArePage from "./pages/WhoWeArePage";
-import ServicesPage from "./pages/ServicesPage";
-import LocationsPage from "./pages/LocationsPage";
-import ContactPage from "./pages/ContactPage";
-import EducationalDestinationsPage from "./pages/EducationalDestinationsPage";
-import StudentAuthPage from "./pages/StudentAuthPage";
-import ChatWidget from "./components/chat/ChatWidget";
-import PWAInstaller from "./components/common/PWAInstaller";
-import OfflineIndicator from "./components/common/OfflineIndicator";
-import InAppBrowserBanner from "./components/common/InAppBrowserBanner";
-import CookieBanner from "./components/common/CookieBanner";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -25,6 +14,21 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import PartnerDashboardLayout from "./components/layout/PartnerDashboardLayout";
+
+// Secondary public pages — lazy so the first mobile paint only ships "/"
+const WhoWeArePage = lazy(() => import("./pages/WhoWeArePage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const LocationsPage = lazy(() => import("./pages/LocationsPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const EducationalDestinationsPage = lazy(() => import("./pages/EducationalDestinationsPage"));
+const StudentAuthPage = lazy(() => import("./pages/StudentAuthPage"));
+
+// Non-critical global widgets — deferred off the critical path
+const ChatWidget = lazy(() => import("./components/chat/ChatWidget"));
+const PWAInstaller = lazy(() => import("./components/common/PWAInstaller"));
+const OfflineIndicator = lazy(() => import("./components/common/OfflineIndicator"));
+const InAppBrowserBanner = lazy(() => import("./components/common/InAppBrowserBanner"));
+const CookieBanner = lazy(() => import("./components/common/CookieBanner"));
 
 // Lazy-loaded public pages
 const PartnershipPage = lazy(() => import("./pages/PartnershipPage"));
