@@ -2,7 +2,7 @@
 import React from 'react';
 
 const Map = () => {
-  const addressQuery = "Tamra Mall, Tamra, 3081100, Israel";
+  const addressQuery = "Tamra Mall, Tamra 3081100";
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addressQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
   return (
