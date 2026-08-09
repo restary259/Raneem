@@ -311,6 +311,7 @@ const App = () => {
               <Route path="earnings" element={<PartnerEarningsPage />} />
               <Route path="network" element={<PartnerNetworkPage />} />
               <Route path="performance" element={<PartnerPerformancePage />} />
+              <Route path="profile" element={<PartnerProfilePage />} />
             </Route>
 
 
