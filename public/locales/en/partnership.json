@@ -79,11 +79,21 @@
       "phoneMin": "Please enter a valid phone number.",
       "contactRequired": "Please select a contact method.",
       "experienceRequired": "Please select your previous experience.",
-      "whyDarbMin": "Please write at least 10 characters."
+      "whyDarbMin": "Please write at least 10 characters.",
+      "consentRequired": "Please review and accept the privacy notice and terms before submitting."
     },
     "toasts": {
       "success": "Your partnership application was sent successfully! ✅ We'll get back to you soon.",
       "error": "An error occurred. Please try again."
+    },
+    "consent": {
+      "collected": "Your name, country/city, email, phone number, social links and professional background.",
+      "notice": "By submitting this form you agree that Darb may process the information above solely to review your agent-network application and contact you about it. We do not use this data for marketing and never sell it. See our",
+      "privacyLink": "Privacy Policy",
+      "and": "and",
+      "termsLink": "Terms of Service",
+      "withdraw": "You can withdraw your consent or request deletion of your data at any time.",
+      "checkbox": "I have read the Privacy Policy and Terms of Service and consent to my data being processed to review my application and contact me about it. *"
     }
   },
   "trustSection": {
