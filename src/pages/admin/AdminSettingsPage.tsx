@@ -127,6 +127,7 @@ const AdminSettingsPage = () => {
   const [contactForm, setContactForm] = useState({
     name_ar: "", name_en: "", role_ar: "", role_en: "",
     phone: "", email: "", link: "", category: "other", display_order: "0",
+    address_ar: "", address_en: "", city: "", source_url: "", verified_today: true,
   });
 
   // ── Visa fields state ──────────────────────────────────────────────
