@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Award, Users, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import campusGeneric from '@/assets/campus-generic.jpg';
 
 interface University {
   name: string;
@@ -19,27 +18,10 @@ interface UniversityCardProps {
   university: University;
 }
 
-/**
- * Cards use a neutral campus photo rather than institution logos: we do not
- * hold usage rights to every university mark, and the previous logo slot
- * rendered as an empty white box.
- */
 const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
   const { t } = useTranslation('common');
   return (
     <Card className="hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-        <img
-          src={campusGeneric}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          decoding="async"
-          width={1280}
-          height={640}
-          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-        />
-      </div>
       <CardContent className="p-6 flex flex-col flex-1">
         <h3 className="text-xl font-bold mb-2 text-foreground">{university.name}</h3>
         <p className="text-muted-foreground flex items-center gap-2 mb-3 text-sm">
