@@ -27,6 +27,9 @@ const Footer = () => {
           <Link to="/faq" className="hover:text-accent transition-colors underline underline-offset-4">
             {t('footer.faq', 'الأسئلة الشائعة عن الدراسة في ألمانيا')}
           </Link>
+          <Link to="/blog" className="hover:text-accent transition-colors underline underline-offset-4">
+            {t('footer.blog', 'مدونة الدراسة في ألمانيا')}
+          </Link>
           <Link to="/privacy" className="hover:text-accent transition-colors underline underline-offset-4">
             {tLegal('footer.privacy')}
           </Link>
