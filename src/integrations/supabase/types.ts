@@ -610,6 +610,8 @@ export type Database = {
         Row: {
           accommodation_id: string | null
           accommodation_price: number
+          accommodation_weekly_price: number | null
+          accommodation_weeks: number | null
           case_id: string
           created_at: string
           deleted_at: string | null
@@ -628,6 +630,8 @@ export type Database = {
           program_id: string | null
           program_price: number
           program_start_date: string | null
+          program_weekly_price: number | null
+          program_weeks: number | null
           remaining_balance: number
           review_note: string | null
           review_status: string
@@ -644,6 +648,8 @@ export type Database = {
         Insert: {
           accommodation_id?: string | null
           accommodation_price?: number
+          accommodation_weekly_price?: number | null
+          accommodation_weeks?: number | null
           case_id: string
           created_at?: string
           deleted_at?: string | null
@@ -662,6 +668,8 @@ export type Database = {
           program_id?: string | null
           program_price?: number
           program_start_date?: string | null
+          program_weekly_price?: number | null
+          program_weeks?: number | null
           remaining_balance?: number
           review_note?: string | null
           review_status?: string
@@ -678,6 +686,8 @@ export type Database = {
         Update: {
           accommodation_id?: string | null
           accommodation_price?: number
+          accommodation_weekly_price?: number | null
+          accommodation_weeks?: number | null
           case_id?: string
           created_at?: string
           deleted_at?: string | null
@@ -696,6 +706,8 @@ export type Database = {
           program_id?: string | null
           program_price?: number
           program_start_date?: string | null
+          program_weekly_price?: number | null
+          program_weeks?: number | null
           remaining_balance?: number
           review_note?: string | null
           review_status?: string
