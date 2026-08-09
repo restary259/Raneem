@@ -158,33 +158,24 @@ export default function PartnerEarningsPage() {
   const earningCases = commissionEligible.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
-  // Reward-based financials
-  const pendingRewards = rewards.filter((r) => r.status === "pending");
-  const approvedRewards = rewards.filter((r) => r.status === "approved");
-  const paidRewards = rewards.filter((r) => r.status === "paid");
+  // ── Authoritative balances: server-side, mutually exclusive buckets ──
+  const items = earnings.items ?? [];
+  const lockedPending = items.filter((i) => i.status === "locked");
+  const availableItems = items.filter((i) => i.status === "available");
+  const requestedItems = items.filter((i) => i.status === "requested");
+  const paidRewardsList = items.filter((i) => i.status === "paid");
 
-  const pendingAmount = pendingRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const approvedAmount = approvedRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const paidAmount = paidRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const totalAmount = pendingAmount + approvedAmount + paidAmount;
+  const pendingAmount = Number(earnings.locked);
+  const approvedAmount = Number(earnings.requested) + Number(earnings.available);
+  const paidAmount = Number(earnings.paid);
+  const totalAmount = Number(earnings.total);
 
-  // Which pending rewards are unlocked (> 20 days old)
   const now = new Date();
-  const unlockedPending = pendingRewards.filter((r: any) => {
-    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return age >= LOCK_DAYS;
-  });
-  const lockedPending = pendingRewards.filter((r: any) => {
-    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return age < LOCK_DAYS;
-  });
-  // Eligibility comes from get_my_payout_preview(): it already excludes rewards
-  // that are attached to a non-rejected payout request and flags open requests,
-  // so a partner cannot submit a duplicate request.
-  const hasOpenRequest = !!payoutPreview?.has_open_request;
-  const unlockedAmount = Number(payoutPreview?.eligible_amount ?? 0);
-  const eligibleCount = Number(payoutPreview?.eligible_count ?? 0);
+  const hasOpenRequest = !!earnings.has_open_request;
+  const unlockedAmount = Number(earnings.available);
+  const eligibleCount = availableItems.length;
   const canRequestPayout = eligibleCount > 0 && !hasOpenRequest;
+
 
 
 
