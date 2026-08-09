@@ -75,6 +75,25 @@ const AdminTeamPage = () => {
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
+  /** Turns an identity collision into a message that explains the conflict. */
+  const conflictMessage = useCallback((result: any) => {
+    if (result?.code !== 'identity_conflict') return null;
+    const existing = result.existing_role
+      ? t(`admin.team.roles.${result.existing_role}`, result.existing_role)
+      : t('admin.team.roles.none', 'no role');
+    return result.deactivated
+      ? t('admin.team.conflictDeactivated', {
+          role: existing,
+          defaultValue:
+            'This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.',
+        })
+      : t('admin.team.conflictActive', {
+          role: existing,
+          defaultValue:
+            'This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.',
+        });
+  }, [t]);
+
   const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
     const { data: { session } } = await supabase.auth.getSession();
     const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-account`, {
@@ -83,9 +102,9 @@ const AdminTeamPage = () => {
       body: JSON.stringify(payload),
     });
     const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error || 'Request failed');
+    if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Request failed');
     return result;
-  }, []);
+  }, [conflictMessage]);
 
   const fetchInvitations = useCallback(async () => {
     const { data } = await (supabase as any)
