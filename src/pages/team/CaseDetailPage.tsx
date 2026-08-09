@@ -14,6 +14,7 @@ import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucid
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { advanceCaseStage } from "@/services/CaseStageService";
+import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
@@ -198,18 +199,17 @@ export default function CaseDetailPage() {
     if (!caseData || !submission || !user) return;
     setSubmitting(true);
     try {
-      const now = new Date().toISOString();
-      const { error: subErr } = await supabase
-        .from("case_submissions")
-        .update({ submitted_at: now, submitted_by: user.id, review_status: "submitted", review_note: null })
-        .eq("id", submission.id);
-      if (subErr) throw subErr;
-      const { error: caseErr } = await supabase
-        .from("cases")
-        .update({ status: "submitted" })
-        .eq("id", caseData.id);
-      if (caseErr) throw caseErr;
+      // One backend call: it re-checks the gate, flips the case to `submitted`
+      // and issues the invoice from the authoritative server-side financials.
+      const invoice = await submitCaseForReview(caseData.id);
       toast({ description: t("case.submit.success") });
+      const emailed = await sendInvoiceEmail(invoice);
+      toast({
+        description: emailed
+          ? t("case.invoice.emailSent", { number: invoice.invoice_number })
+          : t("case.invoice.emailFailed", { number: invoice.invoice_number }),
+        variant: emailed ? undefined : "destructive",
+      });
       await fetchData();
     } catch (err) {
       toast({
@@ -220,6 +220,7 @@ export default function CaseDetailPage() {
       setSubmitting(false);
     }
   };
+
 
   /**
    * Admin sent the file back for a change: the case sits in profile_completion

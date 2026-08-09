@@ -401,6 +401,68 @@ export type Database = {
           },
         ]
       }
+      case_invoices: {
+        Row: {
+          case_id: string
+          case_reference: string | null
+          created_at: string
+          email_error: string | null
+          email_sent_at: string | null
+          email_status: string
+          id: string
+          invoice_number: string
+          issued_at: string
+          issued_by: string | null
+          public_token: string
+          student_email: string | null
+          student_name: string | null
+          totals: Json
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          case_reference?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          issued_by?: string | null
+          public_token?: string
+          student_email?: string | null
+          student_name?: string | null
+          totals?: Json
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          case_reference?: string | null
+          created_at?: string
+          email_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          issued_by?: string | null
+          public_token?: string
+          student_email?: string | null
+          student_name?: string | null
+          totals?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_invoices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_message_reads: {
         Row: {
           case_id: string
@@ -3994,6 +4056,7 @@ export type Database = {
           state: string
         }[]
       }
+      get_invoice_by_token: { Args: { p_token: string }; Returns: Json }
       get_monthly_tax_report: {
         Args: never
         Returns: {
@@ -4146,6 +4209,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
       list_partner_directory: {
         Args: never
         Returns: {
@@ -4235,6 +4299,10 @@ export type Database = {
       }
       mark_direct_thread_read: {
         Args: { p_thread_id: string }
+        Returns: undefined
+      }
+      mark_invoice_email: {
+        Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
       }
       master_announce_to_network: { Args: { p_body: string }; Returns: number }
@@ -4367,6 +4435,7 @@ export type Database = {
         Returns: undefined
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
+      submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
       submit_case_payment: {
         Args: {
           p_amount: number
