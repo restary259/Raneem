@@ -6,46 +6,52 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
 import { formatILS } from "@/lib/money";
 import { useCaseServices } from "@/hooks/useCaseServices";
-import { useCasePayments } from "@/hooks/useCasePayments";
+import { useCaseFinancials, type FinancialSchoolLine } from "@/hooks/useCaseFinancials";
 import CaseServices from "./CaseServices";
 import CasePayments from "./CasePayments";
-
-export interface FinanceExtraLine {
-  label: string;
-  amount: number;
-  currency?: string;
-}
 
 interface Props {
   caseId: string;
   /** Admin or the assigned team member. */
   canManage?: boolean;
-  /** Non-shekel programme costs coming from the application (EUR etc.). */
-  extraLines?: FinanceExtraLine[];
+  /** Admin only — confirm/reject submitted payments. */
+  canConfirm?: boolean;
 }
 
-/**
- * The single financial view of a case: services attached, discounts applied,
- * money received and what is still outstanding. There is no separate invoice.
- */
-const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = [] }) => {
-  const { t } = useTranslation("dashboard");
-  const { services, total: servicesTotal, refetch: refetchServices } = useCaseServices(caseId);
-  const { payments, totalPaid, refetch: refetchPayments } = useCasePayments(caseId);
+const fmtMoney = (amount: number, currency: string) =>
+  currency === "ILS" ? formatILS(amount) : `${amount.toLocaleString("en-US")} ${currency}`;
 
-  const discountTotal = services.reduce((sum, s) => sum + Number(s.discount || 0), 0);
-  const remaining = Math.max(servicesTotal - totalPaid, 0);
-  const extraSubtotals = React.useMemo(
+/**
+ * The single financial view of a case. Every number here comes from the
+ * server-side `get_case_financials` calculation — nothing is re-summed in the
+ * browser, so the UI total and the database can never drift apart.
+ */
+const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = false }) => {
+  const { t, i18n } = useTranslation("dashboard");
+  const isArabic = i18n.language?.startsWith("ar");
+  const { services, refetch: refetchServices } = useCaseServices(caseId);
+  const { financials, refetch: refetchFinancials } = useCaseFinancials(caseId);
+
+  const serviceTotal = financials?.service_total ?? 0;
+  const paid = financials?.total_confirmed ?? 0;
+  const pendingReview = financials?.total_pending_review ?? 0;
+  const remaining = financials?.remaining ?? 0;
+  const schoolCosts = financials?.school_costs ?? [];
+
+  const schoolSubtotals = React.useMemo(
     () =>
-      extraLines.reduce<Record<string, number>>((acc, line) => {
-        const cur = line.currency ?? "EUR";
-        acc[cur] = (acc[cur] ?? 0) + Number(line.amount || 0);
+      schoolCosts.reduce<Record<string, number>>((acc, line) => {
+        acc[line.currency] = (acc[line.currency] ?? 0) + Number(line.total || 0);
         return acc;
       }, {}),
-    [extraLines],
+    [schoolCosts],
   );
+
+  const lineName = (l: FinancialSchoolLine) =>
+    (isArabic ? l.name_ar || l.name_en : l.name_en || l.name_ar) ?? "";
+
   const status: "unpaid" | "partial" | "settled" =
-    servicesTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : totalPaid > 0 ? "partial" : "unpaid";
+    serviceTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : paid > 0 ? "partial" : "unpaid";
   const statusClass =
     status === "settled"
       ? "bg-emerald-100 text-emerald-800"
@@ -57,16 +63,22 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center justify-between gap-2">
+          <CardTitle className="text-base flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
               {t("finance.title")}
             </span>
             <Badge className={statusClass}>{t(`finance.status.${status}`)}</Badge>
           </CardTitle>
+          {financials?.case_reference && (
+            <p className="text-xs text-muted-foreground">
+              {financials.case_reference}
+              {financials.student_name ? ` · ${financials.student_name}` : ""}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Agency money is shekel work tracked against services and payments. */}
+          {/* Agency money — shekels, tracked against services and payments. */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">
               {t("finance.summary.agencyBlock")}
@@ -74,20 +86,26 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-md border p-3">
                 <p className="text-xs text-muted-foreground">{t("finance.summary.services")}</p>
-                <p className="text-sm font-semibold">{formatILS(servicesTotal)}</p>
-              </div>
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">{t("finance.summary.discounts")}</p>
-                <p className="text-sm font-semibold">{formatILS(discountTotal)}</p>
+                <p className="text-sm font-semibold break-words">{formatILS(serviceTotal)}</p>
               </div>
               <div className="rounded-md border p-3">
                 <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
-                <p className="text-sm font-semibold text-emerald-700">{formatILS(totalPaid)}</p>
+                <p className="text-sm font-semibold text-emerald-700 break-words">
+                  {formatILS(paid)}
+                </p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">
+                  {t("finance.summary.pendingReview")}
+                </p>
+                <p className="text-sm font-semibold text-amber-600 break-words">
+                  {formatILS(pendingReview)}
+                </p>
               </div>
               <div className="rounded-md border p-3">
                 <p className="text-xs text-muted-foreground">{t("finance.summary.remaining")}</p>
                 <p
-                  className={`text-sm font-semibold ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}
+                  className={`text-sm font-semibold break-words ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}
                 >
                   {formatILS(remaining)}
                 </p>
@@ -95,36 +113,44 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
             </div>
           </div>
 
-          {/* School-billed costs are in euro and are never mixed into the shekel
-              totals above — they are shown with their own subtotal per currency. */}
-          {extraLines.length > 0 && (
+          {/* School-billed costs are euro and are never summed into the shekel
+              totals above. The course line shows the full weekly × weeks maths. */}
+          {schoolCosts.length > 0 && (
             <div className="space-y-1.5 text-sm rounded-md border p-3">
               <p className="text-xs font-medium text-muted-foreground">
                 {t("finance.summary.schoolBlock")}
               </p>
-              {extraLines.map((line) => (
-                <div key={line.label} className="flex justify-between gap-2 text-muted-foreground">
-                  <span className="truncate flex-1 min-w-0">{line.label}</span>
-                  <span className="font-medium text-foreground shrink-0 whitespace-nowrap">
-                    {line.amount.toLocaleString("en-US")} {line.currency ?? "EUR"}
-                  </span>
+              {schoolCosts.map((line) => (
+                <div key={line.kind} className="space-y-0.5">
+                  <div className="flex flex-wrap justify-between gap-2 text-muted-foreground">
+                    <span className="min-w-0 break-words">
+                      {t(`finance.summary.kind.${line.kind}`)} — {lineName(line)}
+                    </span>
+                    <span className="font-medium text-foreground whitespace-nowrap">
+                      {fmtMoney(line.total, line.currency)}
+                    </span>
+                  </div>
+                  {line.weekly_price ? (
+                    <p className="text-xs text-muted-foreground">
+                      {fmtMoney(line.weekly_price, line.currency)} × {line.weeks}{" "}
+                      {t("finance.summary.weeks")} = {fmtMoney(line.total, line.currency)}
+                    </p>
+                  ) : null}
                 </div>
               ))}
-              {Object.entries(extraSubtotals).map(([currency, amount]) => (
+              {Object.entries(schoolSubtotals).map(([currency, amount]) => (
                 <div
                   key={currency}
                   className="flex justify-between gap-2 border-t pt-1.5 text-sm font-semibold"
                 >
                   <span>{t("finance.summary.subtotal")}</span>
-                  <span className="whitespace-nowrap">
-                    {amount.toLocaleString("en-US")} {currency}
-                  </span>
+                  <span className="whitespace-nowrap">{fmtMoney(amount, currency)}</span>
                 </div>
               ))}
+              <p className="text-xs text-muted-foreground">{t("finance.summary.estimateNote")}</p>
               <p className="text-xs text-muted-foreground">{t("finance.summary.noCrossCurrency")}</p>
             </div>
           )}
-
 
           <Separator />
 
@@ -132,16 +158,20 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
             caseId={caseId}
             services={services}
             canManage={canManage}
-            onChanged={refetchServices}
+            onChanged={() => {
+              refetchServices();
+              refetchFinancials();
+            }}
           />
 
           <Separator />
 
           <CasePayments
             caseId={caseId}
-            payments={payments}
+            payments={financials?.payments ?? []}
             canManage={canManage}
-            onChanged={refetchPayments}
+            canConfirm={canConfirm}
+            onChanged={refetchFinancials}
           />
         </CardContent>
       </Card>
@@ -150,4 +180,3 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
 };
 
 export default CaseFinance;
-

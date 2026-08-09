@@ -1,54 +1,44 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const inserted: any[] = [];
-const existingServices: any[] = [];
+const calls: { fn: string; args: any }[] = [];
 
-vi.mock("@/integrations/supabase/client", () => {
-  const from = (table: string) => {
-    if (table === "case_payments") {
-      return {
-        insert: (row: any) => {
-          inserted.push(row);
-          return Promise.resolve({ error: null });
-        },
-      };
-    }
-    if (table === "case_services") {
-      return {
-        select: () => ({ eq: () => ({ limit: () => Promise.resolve({ data: existingServices, error: null }) }) }),
-        insert: () => Promise.resolve({ error: null }),
-      };
-    }
-    // service_catalog
-    return {
-      select: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }),
-    };
-  };
-  return { supabase: { from } };
-});
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    rpc: (fn: string, args: any) => {
+      calls.push({ fn, args });
+      return Promise.resolve({ data: "pay-1", error: null });
+    },
+  },
+}));
 
 import { recordServiceFeePayment } from "./CasePaymentService";
 
 describe("recordServiceFeePayment", () => {
   beforeEach(() => {
-    inserted.length = 0;
-    existingServices.length = 0;
+    calls.length = 0;
   });
 
-  it("records a paid service-fee payment row", async () => {
-    await recordServiceFeePayment({ caseId: "c1", actorId: "u1", amount: 5000, paidAt: "2026-01-01" });
-    expect(inserted).toHaveLength(1);
-    expect(inserted[0]).toMatchObject({
-      case_id: "c1",
-      payment_type: "service_fee",
+  it("submits the fee through the authoritative RPC", async () => {
+    const id = await recordServiceFeePayment({
+      caseId: "c1",
+      actorId: "u1",
       amount: 5000,
-      paid_status: "paid",
-      recorded_by: "u1",
+      paidAt: "2026-01-01",
     });
+    expect(id).toBe("pay-1");
+    expect(calls).toHaveLength(1);
+    expect(calls[0].fn).toBe("submit_case_payment");
+    expect(calls[0].args).toMatchObject({
+      p_case_id: "c1",
+      p_amount: 5000,
+      p_payment_type: "service_fee",
+    });
+    // A retry with the same case+amount reuses the key, so the server de-dupes.
+    expect(calls[0].args.p_idem_key).toBe("service_fee:c1:5000");
   });
 
   it("ignores non-positive amounts", async () => {
     await recordServiceFeePayment({ caseId: "c1", actorId: "u1", amount: 0 });
-    expect(inserted).toHaveLength(0);
+    expect(calls).toHaveLength(0);
   });
 });

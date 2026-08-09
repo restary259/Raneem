@@ -22,7 +22,6 @@ import CaseStageBlock, { type AppointmentRow } from "@/components/cases/CaseStag
 import CaseFinance from "@/components/cases/CaseFinance";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
-import { loadProgrammeCosts, type ProgrammeCostLine } from "@/services/CaseCostingService";
 import { readStudentProfile } from "@/lib/studentProfileFields";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
@@ -72,7 +71,6 @@ export default function CaseDetailPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [documents, setDocuments] = useState<{ category: string }[]>([]);
   const [assigneeName, setAssigneeName] = useState<string | null>(null);
-  const [costLines, setCostLines] = useState<ProgrammeCostLine[]>([]);
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
 
@@ -132,23 +130,6 @@ export default function CaseDetailPage() {
         setAssigneeName(null);
       }
 
-      if (FINANCE_STAGES.includes(row.status)) {
-        const profile = readStudentProfile(row, subRes.data as any);
-        setCostLines(
-          await loadProgrammeCosts({
-            submission: subRes.data as any,
-            dateOfBirth: profile.date_of_birth || null,
-            isArabic: isRtl,
-            labels: {
-              program: t("case.detail.program"),
-              accommodation: t("case.detail.accommodation"),
-              insurance: t("case.detail.insurance"),
-            },
-          }),
-        );
-      } else {
-        setCostLines([]);
-      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -416,7 +397,7 @@ export default function CaseDetailPage() {
             <CaseFinance
               caseId={caseData.id}
               canManage={role === "admin" && caseData.status !== "enrollment_paid"}
-              extraLines={costLines}
+              canConfirm={role === "admin"}
             />
           </TabsContent>
         </Tabs>
@@ -438,7 +419,11 @@ export default function CaseDetailPage() {
             submitting={submitting}
           />
           {showFinance && (
-            <CaseFinance caseId={caseData.id} canManage={role === "admin"} extraLines={costLines} />
+            <CaseFinance
+              caseId={caseData.id}
+              canManage={role === "admin"}
+              canConfirm={role === "admin"}
+            />
           )}
         </>
       )}

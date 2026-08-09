@@ -3249,7 +3249,15 @@
       "agencyBlock": "Agency fees (ILS)",
       "schoolBlock": "School costs (EUR)",
       "subtotal": "Subtotal",
-      "noCrossCurrency": "ILS and EUR are not summed together."
+      "noCrossCurrency": "ILS and EUR are not summed together.",
+      "pendingReview": "Awaiting admin confirmation",
+      "weeks": "weeks",
+      "estimateNote": "School costs are an estimate based on the published weekly rate; the school's final invoice may differ.",
+      "kind": {
+        "program": "Language course",
+        "accommodation": "Accommodation",
+        "insurance": "Insurance"
+      }
     },
     "services": {
       "title": "Services on this case",
@@ -3285,6 +3293,19 @@
         "paid": "Paid",
         "pending": "Pending",
         "failed": "Failed"
+      },
+      "submitted": "Payment submitted for admin confirmation",
+      "submitHint": "The admin must confirm this payment before it counts as received.",
+      "confirm": "Confirm",
+      "reject": "Reject",
+      "confirmedToast": "Payment confirmed",
+      "rejectedToast": "Payment rejected",
+      "confirmedOn": "Confirmed on {{date}}",
+      "state": {
+        "pending": "Pending",
+        "submitted": "Awaiting confirmation",
+        "confirmed": "Confirmed",
+        "rejected": "Rejected"
       }
     },
     "status": {

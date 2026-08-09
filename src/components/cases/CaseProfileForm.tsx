@@ -28,7 +28,6 @@ import {
   type StudentProfileValues,
 } from "@/lib/studentProfileFields";
 import { computeWeeklyCost, formatMoney } from "@/lib/programPricing";
-import { ensureCaseServices } from "@/services/CaseCostingService";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -323,9 +322,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
           .eq("id", studentUserId);
         if (profileError) console.warn("profile sync skipped:", profileError.message);
       }
-
-      // The finance breakdown is generated from the admin catalog, never typed by hand.
-      await ensureCaseServices(caseData.id, user?.id ?? null);
 
 
       await supabase.rpc("log_case_event", {
