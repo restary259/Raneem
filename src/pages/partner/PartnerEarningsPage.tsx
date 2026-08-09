@@ -149,8 +149,8 @@ export default function PartnerEarningsPage() {
   useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("payout_requests", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("rewards", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
+  useRealtimeSubscription("payout_requests", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
