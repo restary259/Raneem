@@ -1021,6 +1021,7 @@
       "linkedStudents": "Students",
       "linkedStudentsTitle": "Linked Students",
       "paymentMethodCol": "Method",
+      "pdfFontWarning": "Arabic/Hebrew names could not be embedded in this PDF. Use the Excel export instead.",
       "all": "All",
       "allRoles": "All Roles",
       "exportCSV": "Export CSV",

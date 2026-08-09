@@ -1039,6 +1039,7 @@
       "linkedStudents": "الطلاب",
       "linkedStudentsTitle": "الطلاب المرتبطون",
       "paymentMethodCol": "طريقة الدفع",
+      "pdfFontWarning": "تعذّر تضمين الأسماء العربية/العبرية في ملف PDF. يُرجى استخدام تصدير Excel بدلاً من ذلك.",
       "all": "الكل",
       "allRoles": "جميع الأدوار",
       "exportCSV": "تصدير CSV",
