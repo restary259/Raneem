@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { validatePassword } from "@/components/auth/PasswordStrength";
+import { buildReferralUrl } from "@/lib/referral";
 import { User, Lock, Link2, Copy, Check, Crown } from "lucide-react";
 
 interface PartnerProfile {
@@ -105,7 +106,7 @@ export default function PartnerProfilePage() {
   if (loading) return <DashboardLoading />;
 
   const referralUrl = profile?.referral_code
-    ? `${window.location.origin}/apply?ref=${profile.referral_code}`
+    ? buildReferralUrl(profile.referral_code)
     : null;
 
   const copyLink = async () => {
