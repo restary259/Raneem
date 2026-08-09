@@ -79,10 +79,14 @@ serve(async (req) => {
       return json({ error: "The recruiting partner is no longer a master partner" }, 409);
     }
 
+    const masterPartnerId = app.master_partner_id as string;
+    const masterName = (master.full_name as string | null) ?? null;
+
     /**
      * Durable invitation link + branded invite. Never emails a password, and the
      * master-partner attribution lives on the invitation row, not in the URL.
      */
+
     async function sendInvite(targetEmail: string) {
       let activationUrl: string;
       try {
