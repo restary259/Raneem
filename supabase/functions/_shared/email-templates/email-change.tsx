@@ -1,19 +1,13 @@
 /// <reference types="npm:@types/react@18.3.1" />
-
 import * as React from 'npm:react@18.3.1'
-
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
+  EmailButton,
+  EmailCard,
+  EmailFallbackLink,
+  EmailInfoRow,
+  EmailLayout,
+  EmailText,
+} from '../email-ui/components.tsx'
 
 interface EmailChangeEmailProps {
   siteName: string
@@ -22,91 +16,25 @@ interface EmailChangeEmailProps {
   confirmationUrl: string
 }
 
-export const EmailChangeEmail = ({
-  siteName,
-  email,
-  newEmail,
-  confirmationUrl,
-}: EmailChangeEmailProps) => (
-  <Html lang="ar" dir="rtl">
-    <Head />
-    <Preview>تأكيد تغيير بريدك الإلكتروني في {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Img
-          src="https://mzbadxfvxioedzdjxamc.supabase.co/storage/v1/object/public/student-documents/email-logo.png"
-          alt="DARB Agency"
-          width="120"
-          height="auto"
-          style={logo}
-        />
-        <Heading style={h1}>تأكيد تغيير البريد الإلكتروني</Heading>
-        <Text style={text}>
-          طلبت تغيير عنوان بريدك الإلكتروني في {siteName} من{' '}
-          <Link href={`mailto:${email}`} style={link}>
-            {email}
-          </Link>{' '}
-          إلى{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
-        </Text>
-        <Text style={text}>انقر على الزر أدناه لتأكيد هذا التغيير:</Text>
-        <Button style={button} href={confirmationUrl}>
-          تأكيد تغيير البريد
-        </Button>
-        <Text style={footer}>
-          إذا لم تطلب هذا التغيير، يرجى تأمين حسابك فوراً.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+export const EmailChangeEmail = ({ email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
+  <EmailLayout preview="تأكيد تغيير البريد الإلكتروني لحسابك في درب" title="تأكيد تغيير البريد الإلكتروني">
+    <EmailText>مرحباً،</EmailText>
+    <EmailText>
+      تلقينا طلباً لتغيير البريد الإلكتروني المرتبط بحسابك في درب. يرجى تأكيد التغيير من الزر أدناه.
+    </EmailText>
+
+    <EmailCard>
+      <EmailInfoRow label="البريد الحالي" value={email} ltrValue />
+      <EmailInfoRow label="البريد الجديد" value={newEmail} ltrValue />
+    </EmailCard>
+
+    <EmailButton href={confirmationUrl}>تأكيد البريد الجديد</EmailButton>
+    <EmailFallbackLink href={confirmationUrl} />
+
+    <EmailText muted>
+      إذا لم تطلب هذا التغيير، تجاهل هذه الرسالة وتواصل مع فريق درب فوراً.
+    </EmailText>
+  </EmailLayout>
 )
 
 export default EmailChangeEmail
-
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: '"IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", Arial, sans-serif',
-}
-const container = {
-  maxWidth: '520px',
-  margin: '0 auto',
-  padding: '32px 28px',
-  borderRadius: '12px',
-  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
-}
-const logo = { marginBottom: '24px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: 'hsl(222.2, 84%, 4.9%)',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '15px',
-  color: 'hsl(215.4, 16.3%, 46.9%)',
-  lineHeight: '1.6',
-  margin: '0 0 20px',
-}
-const link = { color: 'hsl(222.2, 47.4%, 11.2%)', textDecoration: 'underline' }
-const button = {
-  backgroundColor: 'hsl(222.2, 47.4%, 11.2%)',
-  color: 'hsl(210, 40%, 98%)',
-  fontSize: '15px',
-  fontWeight: 'bold' as const,
-  borderRadius: '0.75rem',
-  padding: '13px 24px',
-  textDecoration: 'none',
-  display: 'block',
-  textAlign: 'center' as const,
-  marginBottom: '24px',
-}
-const footer = {
-  fontSize: '12px',
-  color: 'hsl(215.4, 16.3%, 60%)',
-  margin: '24px 0 0',
-  borderTop: '1px solid hsl(214.3, 31.8%, 91.4%)',
-  paddingTop: '16px',
-}
