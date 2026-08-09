@@ -4,6 +4,7 @@ import Footer from "@/components/landing/Footer";
 import ServicesHero from "@/components/services/ServicesHero";
 import ServicesGrid from "@/components/services/ServicesGrid";
 import ServiceProcess from "@/components/services/ServiceProcess";
+import ServiceDisclosure from "@/components/services/ServiceDisclosure";
 import ConsultationCta from "@/components/services/ConsultationCta";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
@@ -19,6 +20,7 @@ const ServicesPage = () => {
       <main className="flex-grow">
         <ServicesHero />
         <ServicesGrid />
+        <ServiceDisclosure />
         <ServiceProcess />
         <ConsultationCta />
       </main>
