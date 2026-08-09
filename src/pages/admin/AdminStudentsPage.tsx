@@ -262,6 +262,8 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [creatorNames, setCreatorNames] = useState<CreatorInfo>({});
+  const [caseInfo, setCaseInfo] = useState<Record<string, CaseSummary>>({});
+  const [pendingInvites, setPendingInvites] = useState<Set<string>>(new Set());
 
   const [selected, setSelected] = useState<StudentRecord | null>(null);
   const [docs, setDocs] = useState<Document[]>([]);
