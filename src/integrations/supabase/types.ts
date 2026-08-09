@@ -4132,6 +4132,7 @@ export type Database = {
         Args: { p_retention?: string }
         Returns: number
       }
+      push_queue_dispatch: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
