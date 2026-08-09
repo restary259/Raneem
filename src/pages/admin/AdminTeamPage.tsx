@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
 import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
+import DeactivateAccountDialog from '@/components/admin/DeactivateAccountDialog';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
@@ -65,9 +66,8 @@ const AdminTeamPage = () => {
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
   const [invitedInfo, setInvitedInfo] = useState<{ email: string; emailed: boolean; url: string } | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
   const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
-  const [deleting, setDeleting] = useState(false);
   /** 'invite' sends a branded activation email; 'manual' shows a temp password. */
   const [mode, setMode] = useState<'invite' | 'manual'>('invite');
   const [busyInvite, setBusyInvite] = useState<string | null>(null);
@@ -604,9 +604,9 @@ const AdminTeamPage = () => {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteTargetId(m.id)}
-                      title={t('admin.team.deleteAccount', 'Delete Account')}
-                      aria-label={t('admin.team.deleteAccount', 'Delete Account')}
+                      onClick={() => setDeleteTarget(m)}
+                      title={t('admin.team.deactivateAccount', 'Deactivate account')}
+                      aria-label={t('admin.team.deactivateAccount', 'Deactivate account')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -628,27 +628,22 @@ const AdminTeamPage = () => {
         onOpenChange={(open) => { if (!open) setDetailMember(null); }}
       />
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTargetId} onOpenChange={(v) => { if (!v) setDeleteTargetId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('admin.team.deleteConfirmTitle', 'Delete Account?')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('admin.team.deleteConfirmDesc', 'This will remove the account and revoke all access. This action cannot be undone.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteMember}
-              disabled={deleting}
-            >
-              {deleting ? '...' : t('admin.team.confirmDelete', 'Delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Explicit deactivation — never a silent cross-account delete */}
+      <DeactivateAccountDialog
+        target={
+          deleteTarget
+            ? {
+                id: deleteTarget.id,
+                full_name: deleteTarget.full_name,
+                email: deleteTarget.email,
+                roleLabel: roleLabel(deleteTarget.role),
+              }
+            : null
+        }
+        onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}
+        onDone={fetchMembers}
+      />
+
     </div>
   );
 };
