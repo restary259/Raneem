@@ -2735,6 +2735,15 @@
       "prepareVisa": "Prepare your visa file",
       "prepareVisaDetail": "Fill in the visa form fields and upload the required proofs.",
       "loadError": "We could not load your case securely. Please refresh or contact your advisor."
+    },
+    "payDisclosure": {
+      "title": "Before you pay — please read",
+      "l1": "Payment is made in person at the Darb office only. No payment is processed on this website, and we will never ask for card details or a transfer through the platform.",
+      "l2": "The service fee covers consultation, file preparation, submission and follow-up. It does not cover official fees (visa, universities, uni-assist, certifications), the blocked account, insurance or accommodation.",
+      "l3": "Admission and visa decisions rest with official bodies independent of Darb; no outcome can be guaranteed.",
+      "l4": "You may cancel in writing at any time; refunds are calculated after deducting work performed and official third-party fees already paid.",
+      "link": "Full service details",
+      "terms": "Terms & conditions"
     }
   },
   "settings": {
