@@ -2910,7 +2910,12 @@
       "enrolled": "Enrolled",
       "conversion": "Conversion",
       "earned": "Commissions Earned",
-      "paidOut": "Commissions Paid"
+      "paidOut": "Commissions Paid",
+      "email": "Email",
+      "dateOfBirth": "Date of birth",
+      "passportNumber": "Passport number",
+      "passportType": "Passport type",
+      "educationLevel": "Education level"
     },
     "value": {
       "status": {
@@ -3002,7 +3007,13 @@
     "coverRecords": "Records",
     "coverScope": "Scope",
     "scopeTeam": "Assigned to me",
-    "scopeAdmin": "All records"
+    "scopeAdmin": "All records",
+    "schoolPacket": "School packet",
+    "filterSchool": "School",
+    "filterMonth": "Intake month",
+    "allSchools": "All schools",
+    "allMonths": "All months",
+    "clearFilters": "Clear filters"
   },
   "studentCases": {
     "reportTitle": "Student Intake Report",

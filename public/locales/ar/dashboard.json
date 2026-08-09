@@ -2928,7 +2928,12 @@
       "enrolled": "المسجّلون",
       "conversion": "نسبة التحويل",
       "earned": "العمولات المكتسبة",
-      "paidOut": "العمولات المدفوعة"
+      "paidOut": "العمولات المدفوعة",
+      "email": "البريد الإلكتروني",
+      "dateOfBirth": "تاريخ الميلاد",
+      "passportNumber": "رقم الجواز",
+      "passportType": "نوع الجواز",
+      "educationLevel": "المستوى التعليمي"
     },
     "value": {
       "status": {
@@ -3020,7 +3025,13 @@
     "coverRecords": "عدد السجلات",
     "coverScope": "النطاق",
     "scopeTeam": "المسندة إليّ",
-    "scopeAdmin": "كل السجلات"
+    "scopeAdmin": "كل السجلات",
+    "schoolPacket": "ملف المدرسة",
+    "filterSchool": "المدرسة",
+    "filterMonth": "شهر البدء",
+    "allSchools": "كل المدارس",
+    "allMonths": "كل الأشهر",
+    "clearFilters": "مسح الفلاتر"
   },
   "studentCases": {
     "reportTitle": "تقرير ملفات الطلاب",
