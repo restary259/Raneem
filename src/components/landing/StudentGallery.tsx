@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type Student = { name: string; destination: string; image: string };
+type Student = { name: string; destination: string; image: string; focus?: string };
 
 const StudentGallery = () => {
   const { t } = useTranslation('landing');
@@ -53,21 +53,22 @@ const StudentGallery = () => {
       key={index}
       className={
         inCarousel
-          ? "shrink-0 w-[78vw] max-w-[320px] snap-center overflow-hidden rounded-lg shadow-lg"
+          ? "shrink-0 w-[72vw] max-w-[300px] snap-center overflow-hidden rounded-lg shadow-lg"
           : "group overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
       }
     >
-      <div className="relative bg-secondary">
+      <div className="relative aspect-[3/4] bg-secondary">
         <img
           src={student.image}
           alt={student.name ? `${student.name} — Darb student now studying in ${student.destination}` : `Darb student success story in ${student.destination}`}
-          className="w-full h-56 sm:h-64 lg:h-80 object-cover object-top md:group-hover:scale-110 transition-transform duration-500"
+          className="absolute inset-0 h-full w-full object-cover md:group-hover:scale-110 transition-transform duration-500"
+          style={{ objectPosition: student.focus || '50% 40%' }}
           loading={index < 2 ? "eager" : "lazy"}
           fetchPriority={index < 2 ? "high" : "low"}
           decoding="async"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-        <div className="absolute bottom-0 end-0 p-6 text-white text-end">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+        <div className="absolute bottom-0 end-0 p-4 sm:p-6 text-white text-end">
           {student.name ? <p className="text-lg font-semibold">{student.name}</p> : null}
           <p className="text-base font-light">{student.destination}</p>
         </div>

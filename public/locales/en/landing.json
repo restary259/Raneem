@@ -14,39 +14,137 @@
     "title": "Why Choose Darb?",
     "subtitle": "We walk with you every step of the way. Here's how we support you toward an exceptional experience.",
     "reasons": [
-      { "title": "Personal Support & Ongoing Follow-up", "description": "You get a dedicated advisor who accompanies you every step, from choosing your major to settling in your study destination." },
-      { "title": "Fast & Reliable Processes", "description": "Thanks to our direct relationships with universities, we prepare and follow up on your application quickly and efficiently. Admission and visa decisions rest with the official authorities." },
-      { "title": "Highly Experienced Specialists", "description": "Our team consists of experts who have lived the study abroad experience and are ready to share their knowledge with you." },
-      { "title": "Global Network of Accredited Partners", "description": "We open doors to the best universities and educational institutions worldwide through our extensive partner network." },
-      { "title": "Complete Transparency at Every Step", "description": "We believe in full clarity. No hidden fees, and we keep you informed of all details about your application." },
-      { "title": "End-to-End Support from Application to Arrival", "description": "Our services don't end at university admission — they extend to visa assistance, housing, and reception." }
+      {
+        "title": "Personal Support & Ongoing Follow-up",
+        "description": "You get a dedicated advisor who accompanies you every step, from choosing your major to settling in your study destination."
+      },
+      {
+        "title": "Fast & Reliable Processes",
+        "description": "Thanks to our direct relationships with universities, we prepare and follow up on your application quickly and efficiently. Admission and visa decisions rest with the official authorities."
+      },
+      {
+        "title": "Highly Experienced Specialists",
+        "description": "Our team consists of experts who have lived the study abroad experience and are ready to share their knowledge with you."
+      },
+      {
+        "title": "Global Network of Accredited Partners",
+        "description": "We open doors to the best universities and educational institutions worldwide through our extensive partner network."
+      },
+      {
+        "title": "Complete Transparency at Every Step",
+        "description": "We believe in full clarity. No hidden fees, and we keep you informed of all details about your application."
+      },
+      {
+        "title": "End-to-End Support from Application to Arrival",
+        "description": "Our services don't end at university admission — they extend to visa assistance, housing, and reception."
+      }
     ]
   },
   "testimonials": {
     "title": "Success Stories",
     "items": [
-      { "quote": "Thanks to Darb, I was accepted at a prestigious university in Germany without any stress!", "name": "Mohammad Sammar", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=1" },
-      { "quote": "Excellent experience! They helped me every step of the way to reach my dream university. Thank you so much!", "name": "Mohammad Abu Al-Hija", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=4" },
-      { "quote": "The team was very supportive throughout the process. I highly recommend them!", "name": "Yazan Dawahde", "location": "Germany", "avatar": "https://i.pravatar.cc/150?img=2" },
-      { "quote": "Their guidance for the visa application was invaluable. I couldn't have done it without them.", "name": "Youssef", "location": "Jordan", "avatar": "https://i.pravatar.cc/150?img=3" }
+      {
+        "quote": "Thanks to Darb, I was accepted at a prestigious university in Germany without any stress!",
+        "name": "Mohammad Sammar",
+        "location": "Germany",
+        "avatar": "https://i.pravatar.cc/150?img=1"
+      },
+      {
+        "quote": "Excellent experience! They helped me every step of the way to reach my dream university. Thank you so much!",
+        "name": "Mohammad Abu Al-Hija",
+        "location": "Germany",
+        "avatar": "https://i.pravatar.cc/150?img=4"
+      },
+      {
+        "quote": "The team was very supportive throughout the process. I highly recommend them!",
+        "name": "Yazan Dawahde",
+        "location": "Germany",
+        "avatar": "https://i.pravatar.cc/150?img=2"
+      },
+      {
+        "quote": "Their guidance for the visa application was invaluable. I couldn't have done it without them.",
+        "name": "Youssef",
+        "location": "Jordan",
+        "avatar": "https://i.pravatar.cc/150?img=3"
+      }
     ]
   },
   "studentGallery": {
     "title": "Our Students Around the World",
     "subtitle": "See the inspiring success stories of our students at top universities worldwide.",
     "students": [
-      { "name": "Naseem Khatib", "destination": "Germany", "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.webp" },
-      { "name": "Adam Diab", "destination": "Germany", "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.webp" },
-      { "name": "Adam Diab", "destination": "Germany", "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp" },
-      { "name": "Yazan Dawahde", "destination": "Germany", "image": "/lovable-uploads/5ea3a257-c055-46c3-a5ce-85067e67b401.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/e42cefe5-bba2-4e2b-bd5b-fb4da05e4c6b.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/2df2a47a-8c67-4b8a-932b-192562d5472f.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.webp" },
-      { "name": "", "destination": "Germany", "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.webp" }
+      {
+        "name": "Naseem Khatib",
+        "destination": "Germany",
+        "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.webp",
+        "focus": "50% 55%"
+      },
+      {
+        "name": "Adam Diab",
+        "destination": "Germany",
+        "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.webp",
+        "focus": "50% 75%"
+      },
+      {
+        "name": "Adam Diab",
+        "destination": "Germany",
+        "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp",
+        "focus": "50% 40%"
+      },
+      {
+        "name": "Yazan Dawahde",
+        "destination": "Germany",
+        "image": "/lovable-uploads/5ea3a257-c055-46c3-a5ce-85067e67b401.webp",
+        "focus": "50% 80%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp",
+        "focus": "50% 60%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/e42cefe5-bba2-4e2b-bd5b-fb4da05e4c6b.webp",
+        "focus": "50% 60%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.webp",
+        "focus": "50% 65%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp",
+        "focus": "50% 30%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.webp",
+        "focus": "50% 70%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/2df2a47a-8c67-4b8a-932b-192562d5472f.webp",
+        "focus": "50% 55%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.webp",
+        "focus": "50% 50%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.webp",
+        "focus": "50% 75%"
+      }
     ]
   },
   "aboutStats": {
@@ -61,10 +159,22 @@
     "title": "Your Journey to Studying Abroad",
     "subtitle": "We're with you step by step, from the idea to your first day of class.",
     "steps": [
-      { "title": "Consultation & Assessment", "description": "Your journey begins with a free consultation to understand your goals and evaluate your profile." },
-      { "title": "Document Preparation & Applications", "description": "We help you prepare all documents and submit your applications to universities and embassies." },
-      { "title": "Travel Preparation", "description": "After receiving your acceptance and visa, we help you book housing and prepare for travel." },
-      { "title": "Post-Arrival Support", "description": "We welcome you and provide the support you need to settle in and start your studies comfortably." }
+      {
+        "title": "Consultation & Assessment",
+        "description": "Your journey begins with a free consultation to understand your goals and evaluate your profile."
+      },
+      {
+        "title": "Document Preparation & Applications",
+        "description": "We help you prepare all documents and submit your applications to universities and embassies."
+      },
+      {
+        "title": "Travel Preparation",
+        "description": "After receiving your acceptance and visa, we help you book housing and prepare for travel."
+      },
+      {
+        "title": "Post-Arrival Support",
+        "description": "We welcome you and provide the support you need to settle in and start your studies comfortably."
+      }
     ]
   },
   "partnersMarquee": {
