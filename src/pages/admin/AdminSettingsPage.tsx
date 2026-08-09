@@ -504,6 +504,30 @@ const AdminSettingsPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "العنوان (عربي)" : "Address (Arabic)"}</Label>
+                      <Input value={contactForm.address_ar} onChange={(e) => setContactForm((f) => ({ ...f, address_ar: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "العنوان (إنجليزي)" : "Address (English)"}</Label>
+                      <Input value={contactForm.address_en} onChange={(e) => setContactForm((f) => ({ ...f, address_en: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "المدينة" : "City"}</Label>
+                      <Input value={contactForm.city} onChange={(e) => setContactForm((f) => ({ ...f, city: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "رابط المصدر الرسمي" : "Official source URL"}</Label>
+                      <Input value={contactForm.source_url} onChange={(e) => setContactForm((f) => ({ ...f, source_url: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-border p-3">
+                    <Label className="text-sm">{isRtl ? "تم التحقق اليوم" : "Mark verified today"}</Label>
+                    <Switch checked={contactForm.verified_today} onCheckedChange={(v) => setContactForm((f) => ({ ...f, verified_today: v }))} />
+                  </div>
                   <div className="space-y-1">
                     <Label>{t('admin.settings.contactFormOrder')}</Label>
                     <Input type="number" value={contactForm.display_order}
