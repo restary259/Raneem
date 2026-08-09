@@ -24,6 +24,7 @@ import { recordServiceFeePayment } from "@/services/CasePaymentService";
 import { isLinkablePhone } from "@/lib/phone";
 import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+import { EDUCATION_LEVEL_VALUES, PASSPORT_TYPE_VALUES } from "@/lib/intakeOptions";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -685,6 +686,34 @@ export default function SubmitNewStudentPage() {
                 <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
               </div>
             </div>
+
+            {/* Stored on the case itself so the pipeline and admin views are
+                not left with blank intake fields. */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>{ss('educationLevel')}</Label>
+                <Select value={educationLevel} onValueChange={setEducationLevel}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('educationLevelSelect')} /></SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_LEVEL_VALUES.map((v) => (
+                      <SelectItem key={v} value={v}>{t(`case.educationLevels.${v}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{ss('passportType')}</Label>
+                <Select value={passportType} onValueChange={setPassportType}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('passportTypeSelect')} /></SelectTrigger>
+                  <SelectContent>
+                    {PASSPORT_TYPE_VALUES.map((v) => (
+                      <SelectItem key={v} value={v}>{t(`case.passportTypes.${v}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={goNext}>{ss('next')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
             </div>
