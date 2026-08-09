@@ -54,6 +54,7 @@ export default {
 				},
 				brand: {
 					DEFAULT: 'hsl(var(--brand))',
+					strong: 'hsl(var(--brand-strong))',
 					foreground: 'hsl(var(--brand-foreground))'
 				},
 				accent: {

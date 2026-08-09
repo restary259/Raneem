@@ -14,7 +14,7 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     --muted: 221.2 63.6% 97%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 38%;
 
     --accent: 222.2 47.6% 11.2%;
     --accent-foreground: 210 40% 98%;
@@ -22,6 +22,8 @@
     /* Brand highlight (CTA + stats) — DARB orange, matches the Student Login button */
     --brand: 24.6 95% 53.1%;
     --brand-foreground: 0 0% 100%;
+    /* AA-safe orange: >=4.5:1 with white text and on white backgrounds */
+    --brand-strong: 24.6 95% 38%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -68,6 +70,7 @@
     /* Brand highlight stays DARB orange in dark mode */
     --brand: 24.6 95% 56%;
     --brand-foreground: 0 0% 100%;
+    --brand-strong: 24.6 95% 42%;
 
     --destructive: 0 62% 48%;
     --destructive-foreground: 240 10% 98%;
