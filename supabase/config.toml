@@ -67,3 +67,5 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.accept-invitation]
+    verify_jwt = false
