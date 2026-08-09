@@ -331,6 +331,50 @@ export default function AdminStudentsPage() {
         (creatorProfs || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
         setCreatorNames(map);
       }
+
+      // Case reference + profile completion, so a case-linked student can be
+      // recognised (and opened) straight from this list.
+      const caseIds = [
+        ...new Set(profs.map((p) => p.case_id || p.linked_case_id).filter(Boolean) as string[]),
+      ];
+      if (caseIds.length > 0) {
+        const [{ data: caseRows }, { data: subRows }] = await Promise.all([
+          supabase.from("cases").select("id, case_reference, status").in("id", caseIds),
+          (supabase as any)
+            .from("case_submissions")
+            .select("case_id, profile_completed_at")
+            .in("case_id", caseIds),
+        ]);
+        const completed = new Map<string, string | null>(
+          (subRows || []).map((r: any) => [r.case_id, r.profile_completed_at]),
+        );
+        const map: Record<string, CaseSummary> = {};
+        (caseRows || []).forEach((c: any) => {
+          map[c.id] = {
+            id: c.id,
+            reference: c.case_reference,
+            status: c.status,
+            profileCompletedAt: completed.get(c.id) ?? null,
+          };
+        });
+        setCaseInfo(map);
+      } else {
+        setCaseInfo({});
+      }
+
+      // A durable invitation that has not been accepted means the account
+      // exists but the student has never signed in.
+      const emails = profs.map((p) => p.email).filter(Boolean);
+      if (emails.length > 0) {
+        const { data: invites } = await (supabase as any)
+          .from("user_invitations")
+          .select("email, status")
+          .in("email", emails)
+          .eq("status", "pending");
+        setPendingInvites(new Set((invites || []).map((i: any) => (i.email || "").toLowerCase())));
+      } else {
+        setPendingInvites(new Set());
+      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
