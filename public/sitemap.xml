@@ -17,4 +17,9 @@
   <url><loc>https://darb.agency/partners</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb.agency/locations</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://darb.agency/who-we-are</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://darb.agency/blog</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://darb.agency/blog/cost-of-living-germany-students</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://darb.agency/blog/german-language-levels-for-study</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://darb.agency/blog/german-student-visa-steps</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://darb.agency/blog/recognition-of-bagrut-and-anabin</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
 </urlset>

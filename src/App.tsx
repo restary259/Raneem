@@ -20,6 +20,8 @@ const WhoWeArePage = lazy(() => import("./pages/WhoWeArePage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
 const LocationsPage = lazy(() => import("./pages/LocationsPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const BlogIndexPage = lazy(() => import("./pages/blog/BlogIndexPage"));
+const BlogArticlePage = lazy(() => import("./pages/blog/BlogArticlePage"));
 const EducationalDestinationsPage = lazy(() => import("./pages/EducationalDestinationsPage"));
 const StudentAuthPage = lazy(() => import("./pages/StudentAuthPage"));
 
@@ -225,6 +227,8 @@ const App = () => {
             <Route path="/resources/lebenslauf-builder" element={<LebenslaufBuilderPage />} />
             <Route path="/broadcast" element={<BroadcastPage />} />
             <Route path="/faq" element={<FaqPage />} />
+            <Route path="/blog" element={<BlogIndexPage />} />
+            <Route path="/blog/:slug" element={<BlogArticlePage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/quiz" element={<QuizPage />} />
