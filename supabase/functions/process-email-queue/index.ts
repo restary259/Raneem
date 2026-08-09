@@ -41,7 +41,7 @@ function isPermanentFailure(error: unknown): boolean {
     }
   }
 
-  if (status === 400 || status === 401 || status === 404 || status === 422) {
+  if (status === 400 || status === 401 || status === 404 || status === 422 || status === 409) {
     return true;
   }
 
@@ -50,9 +50,16 @@ function isPermanentFailure(error: unknown): boolean {
   return (
     message.includes("missing_unsubscribe") ||
     message.includes("invalid recipient") ||
-    message.includes("invalid email")
+    message.includes("invalid email") ||
+    // The email API rejects a retry that reuses the idempotency key of a run
+    // that already failed. Retrying can never succeed — DLQ it immediately.
+    message.includes("run_failed") ||
+    message.includes("new idempotency key") ||
+    // Some SDK versions surface the status only inside the message string.
+    /Email API error: (400|401|404|409|422)\b/.test(message)
   );
 }
+
 
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
