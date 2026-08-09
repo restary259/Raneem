@@ -329,13 +329,19 @@ export default function SubmitNewStudentPage() {
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
-  // Changing the school invalidates every school-bound selection.
+  // Changing the school invalidates every school-bound selection, including the
+  // durations and derived dates that belonged to the previous school's program.
   useEffect(() => {
     setProgramId("");
     setAccommodationId("");
+    setProgramWeeks("");
     setAccommodationWeeks("");
+    setStartMonth("");
+    setCourseStart("");
+    setCourseEnd("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
+
 
   // Load the school list and the insurance catalogue once.
   useEffect(() => {
