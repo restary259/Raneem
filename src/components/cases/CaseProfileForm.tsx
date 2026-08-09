@@ -139,7 +139,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       (supabase as any).from("schools").select("id,name_en,name_ar").eq("is_active", true).order("name_en"),
       (supabase as any)
         .from("programs")
-        .select("id,name_en,name_ar,school_id,duration_in_months,fixed_start_day_of_month")
+        .select("id,name_en,name_ar,school_id,duration_in_months,fixed_start_day_of_month,price,currency,price_tiers")
         .eq("is_active", true)
         .order("name_en"),
       (supabase as any)
