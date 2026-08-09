@@ -84,9 +84,16 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       id: s.id,
       case_reference: s.case?.case_reference ?? null,
       full_name: s.case?.full_name ?? '—',
-      phone: s.case?.phone_number ?? null,
+      phone: s.case?.phone_number ?? s.student_phone ?? null,
+      // Schools need identity data that only lives on the submission payload.
+      email: s.student_email ?? extra.email ?? null,
+      date_of_birth: extra.date_of_birth ?? extra.dob ?? null,
+      passport_number: extra.passport_number ?? null,
+      passport_type: s.case?.passport_type ?? extra.passport_type ?? null,
+      education_level: s.case?.education_level ?? extra.education_level ?? null,
       city: s.case?.city ?? extra.city ?? null,
       status: s.case?.status ?? null,
+
       team_member: staff[s.case?.assigned_to]?.name ?? null,
       partner: staff[s.case?.partner_id]?.name ?? null,
       school_name: extra.school_name ?? null,
