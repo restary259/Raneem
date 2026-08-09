@@ -36,6 +36,8 @@ const EducationalProgramsPage = lazy(() => import("./pages/EducationalProgramsPa
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const BroadcastPage = lazy(() => import("./pages/BroadcastPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const ActivateAccountPage = lazy(() => import("./pages/ActivateAccountPage"));
+
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const AIAdvisorPage = lazy(() => import("./pages/AIAdvisorPage"));
