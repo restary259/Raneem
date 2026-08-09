@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, MessageSquare, User } from 'lucide-react';
 import CaseMessages from '@/components/cases/CaseMessages';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
+import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
@@ -35,6 +36,7 @@ export default function StudentNextStepsPage() {
   const [steps, setSteps] = useState<StepRow[]>([]);
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showPayDisclosure, setShowPayDisclosure] = useState(false);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
@@ -128,6 +130,7 @@ export default function StudentNextStepsPage() {
       }
 
       const balance = Number(subRes?.data?.remaining_balance ?? 0);
+      setShowPayDisclosure(balance > 0 || ownCase?.status === 'payment');
       if (balance > 0) {
         next.push({
           id: 'balance',
@@ -178,6 +181,7 @@ export default function StudentNextStepsPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
+      {showPayDisclosure && <PaymentDisclosureCard />}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
           {t('student.next.title', 'Your next steps')}
