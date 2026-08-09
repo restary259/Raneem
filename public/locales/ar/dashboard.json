@@ -416,7 +416,12 @@
         "paid": "المدفوع",
         "pending": "قيد الانتظار",
         "lastActivity": "آخر نشاط على ملف"
-      }
+      },
+      "inviteSentTitle": "تم إرسال الدعوة",
+      "accountCreatedTitle": "تم إنشاء الحساب",
+      "activationLink": "رابط التفعيل",
+      "copied": "تم النسخ",
+      "openLink": "فتح"
     },
     "programs": {
       "title": "البرامج والسكن",

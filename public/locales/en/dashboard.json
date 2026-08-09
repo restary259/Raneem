@@ -416,7 +416,12 @@
         "paid": "Paid out",
         "pending": "Pending",
         "lastActivity": "Last case activity"
-      }
+      },
+      "inviteSentTitle": "Invitation sent",
+      "accountCreatedTitle": "Account created",
+      "activationLink": "Activation link",
+      "copied": "Copied",
+      "openLink": "Open"
     },
     "programs": {
       "title": "Programs & Accommodations",
