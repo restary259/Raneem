@@ -96,11 +96,35 @@ const StudentVisaPage = lazy(() => import("./pages/student/StudentVisaPage"));
 const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
 const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 
+/** Permanent failures (auth/permission/not-found/validation) must never be retried. */
+const isPermanentError = (error: unknown): boolean => {
+  const e = error as { status?: number; code?: string; message?: string } | null;
+  if (!e) return false;
+  if (typeof e.status === "number" && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) return true;
+  const code = String(e.code ?? "");
+  // PostgREST/Postgres permission + constraint classes
+  if (/^(PGRST|22|23|42)/.test(code)) return true;
+  return false;
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60_000,
       gcTime: 10 * 60_000,
+      // Mobile背景/foreground cycles used to trigger refetch storms.
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true,
+      // Keep showing the previous page's data while the new query resolves
+      // instead of flashing a loading state on every navigation.
+      placeholderData: (prev: unknown) => prev,
+      networkMode: "offlineFirst",
+      retry: (failureCount, error) => !isPermanentError(error) && failureCount < 3,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    },
+    mutations: {
+      retry: (failureCount, error) => !isPermanentError(error) && failureCount < 1,
     },
   },
 });
