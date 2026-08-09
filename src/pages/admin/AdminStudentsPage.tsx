@@ -53,6 +53,9 @@ interface StudentRecord {
   city: string | null;
   must_change_password: boolean;
   created_by: string | null;
+  case_id: string | null;
+  linked_case_id: string | null;
+
   emergency_contact: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
