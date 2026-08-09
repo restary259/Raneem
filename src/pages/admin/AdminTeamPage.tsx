@@ -52,7 +52,9 @@ const AdminTeamPage = () => {
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
