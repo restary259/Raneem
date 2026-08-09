@@ -113,16 +113,10 @@ export default function CaseInvoiceBlock({ caseId }: { caseId: string }) {
                       : "text-muted-foreground"
                 }
               >
-                {invoice.email_status === "sent"
-                  ? L.sent
-                  : invoice.email_status === "failed"
-                    ? L.failed
-                    : L.pending}
+                {invoice.email_status === "sent" ? L.sent : invoice.email_status === "failed" ? L.failed : L.pending}
               </Badge>
             </div>
-            {invoice.email_error && (
-              <p className="text-xs text-destructive">{invoice.email_error}</p>
-            )}
+            {invoice.email_error && <p className="text-xs text-destructive">{invoice.email_error}</p>}
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
@@ -171,12 +165,7 @@ export default function CaseInvoiceBlock({ caseId }: { caseId: string }) {
                   })
                 }
               >
-                {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Send className="h-3.5 w-3.5" />
-                )}{" "}
-                {L.resend}
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} {L.resend}
               </Button>
             </div>
           </div>
