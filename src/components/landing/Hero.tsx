@@ -2,10 +2,33 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import AnimatedCounter from "./AnimatedCounter";
+
+/**
+ * The background clip sits behind an 85% overlay, so on phones it costs
+ * several MB of mobile data for something almost invisible. Small screens,
+ * data-saver mode and reduced-motion users get the poster image only.
+ */
+const useHeroVideoAllowed = () => {
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const conn = (navigator as any).connection;
+    const saveData = Boolean(conn?.saveData);
+    const slowNetwork = /(^|-)2g$/.test(conn?.effectiveType ?? "");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const bigScreen = window.matchMedia("(min-width: 768px)").matches;
+    setAllowed(bigScreen && !saveData && !slowNetwork && !reducedMotion);
+  }, []);
+
+  return allowed;
+};
 
 const Hero = () => {
   const { t } = useTranslation(['landing', 'common']);
+  const showVideo = useHeroVideoAllowed();
 
   const stats = [
     { value: 16, label: t('hero.stats.satisfiedStudents') },
@@ -15,11 +38,30 @@ const Hero = () => {
 
   return (
     <section className="relative h-[100dvh] min-h-[500px] flex items-center justify-center text-white overflow-hidden">
-      <video autoPlay loop muted playsInline preload="none" poster="/lovable-uploads/hero-poster.webp" className="absolute top-0 left-0 w-full h-full object-cover">
-        <source src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      {showVideo ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="none"
+          poster="/lovable-uploads/hero-poster.webp"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        >
+          <source src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4" type="video/mp4" />
+        </video>
+      ) : (
+        <img
+          src="/lovable-uploads/hero-poster.webp"
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
+      )}
       <div className="absolute inset-0 bg-primary/85" />
+
       <div className="relative z-10 w-full h-full flex flex-col justify-center items-center text-center px-4">
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
           {t('hero.title')}
