@@ -3566,5 +3566,17 @@
       "lastSuccess": "Last delivery",
       "lastError": "Last error"
     }
+  },
+  "pushOnboarding": {
+    "title": "Turn on notifications",
+    "body": {
+      "staff": "Get instant alerts for new cases, appointments, payments and messages — even when the app is closed.",
+      "partner": "Get instant alerts when your students move forward, when a case is paid, and when your rewards are ready.",
+      "student": "Get instant alerts for appointment reminders, document requests and updates on your application."
+    },
+    "installHint": "On iPhone, add DARB to your Home Screen first, then open it from there to enable notifications.",
+    "enable": "Enable notifications",
+    "later": "Maybe later",
+    "enabled": "Notifications are on for this device."
   }
 }
