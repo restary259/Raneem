@@ -554,11 +554,22 @@ const AdminSettingsPage = () => {
                         {(isRtl ? c.role_ar : c.role_en) && (
                           <p className="text-xs text-muted-foreground">{isRtl ? c.role_ar : c.role_en}</p>
                         )}
+                        {(c.city || (isRtl ? c.address_ar : c.address_en)) && (
+                          <p className="text-xs text-muted-foreground">
+                            {[c.city, isRtl ? c.address_ar : c.address_en].filter(Boolean).join(' — ')}
+                          </p>
+                        )}
                         <div className="flex flex-wrap gap-3 mt-1">
-                          {c.phone && (<a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>)}
+                          {c.phone && (<a href={`tel:${c.phone.replace(/\s/g, '')}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>)}
                           {c.email && (<a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Mail className="h-3 w-3" />{c.email}</a>)}
                           {c.link && (<a href={c.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline"><LinkIcon className="h-3 w-3" />Link</a>)}
                         </div>
+                        {c.last_verified_at && (
+                          <p className="text-[11px] text-muted-foreground">
+                            {(isRtl ? "تم التحقق: " : "Verified: ") + new Date(c.last_verified_at).toLocaleDateString('en-US')}
+                            {c.source_url && (<> · <a href={c.source_url} target="_blank" rel="noreferrer" className="underline">{isRtl ? "المصدر" : "source"}</a></>)}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 ms-4 shrink-0">
                         <span className="text-xs text-muted-foreground">{catLabel(c.category)}</span>
