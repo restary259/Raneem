@@ -19,5 +19,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'email-test': emailTest,
   'student-invite': studentInvite,
   'partner-invite': partnerInvite,
+  'appointment-reminder': appointmentReminder,
 }
 
