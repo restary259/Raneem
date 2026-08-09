@@ -78,9 +78,15 @@ const AdminTeamPage = () => {
   /** Turns an identity collision into a message that explains the conflict. */
   const conflictMessage = useCallback((result: any) => {
     if (result?.code !== 'identity_conflict') return null;
-    const existing = result.existing_role
-      ? t(`admin.team.roles.${result.existing_role}`, result.existing_role)
-      : t('admin.team.roles.none', 'no role');
+    const roleKeys: Record<string, string> = {
+      team_member: 'admin.team.teamMemberRole',
+      social_media_partner: 'admin.team.partnerRole',
+      ambassador: 'admin.team.ambassadorRole',
+      admin: 'admin.team.adminRole',
+      student: 'admin.team.studentRole',
+    };
+    const key = roleKeys[result.existing_role as string];
+    const existing = key ? t(key, result.existing_role) : t('admin.team.someRole', 'another');
     return result.deactivated
       ? t('admin.team.conflictDeactivated', {
           role: existing,
