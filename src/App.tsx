@@ -317,7 +317,9 @@ const App = () => {
               path="/student"
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
-                  <DashboardLayout role="student" />
+                  <StudentOnboardingGate>
+                    <DashboardLayout role="student" />
+                  </StudentOnboardingGate>
                 </ProtectedRoute>
               }
             >
