@@ -6,8 +6,8 @@ const article: BlogArticle = {
   publishedAt: '2026-08-09',
   updatedAt: '2026-08-09',
   sources: [
-    { label: 'Goethe-Institut — German exams and levels', url: 'https://www.goethe.de/en/spr/kup.html' },
-    { label: 'TestDaF Institute', url: 'https://www.testdaf.de/en/' },
+    { label: 'Goethe-Institut — German exams and levels', url: 'https://www.goethe.de/en/spr.html' },
+    { label: 'TestDaF Institute', url: 'https://www.testdaf.de/' },
     { label: 'Study in Germany (DAAD / BMBF)', url: 'https://www.study-in-germany.de/en/' },
   ],
   relatedPaths: ['/educational-programs', '/services', '/faq'],

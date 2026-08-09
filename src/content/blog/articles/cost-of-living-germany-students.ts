@@ -9,7 +9,7 @@ const article: BlogArticle = {
     { label: 'Auswärtiges Amt — Federal Foreign Office (visa FAQ)', url: 'https://www.auswaertiges-amt.de/en/visa-service/buergerservice/faq/-/606852' },
     { label: 'Study in Germany (DAAD / BMBF)', url: 'https://www.study-in-germany.de/en/' },
     { label: 'Make it in Germany — official government portal', url: 'https://www.make-it-in-germany.com/en/study-training/studying/financing' },
-    { label: 'Deutsches Studierendenwerk', url: 'https://www.studierendenwerke.de/' },
+    { label: 'Deutsches Studierendenwerk', url: 'https://www.studierendenwerke.de/themen' },
   ],
   relatedPaths: ['/resources/cost-calculator', '/services', '/faq'],
   ar: {
