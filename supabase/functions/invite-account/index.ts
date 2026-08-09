@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 import { createInvitation, InvitationType } from "../_shared/invitations.ts";
+import { identityConflict } from "../_shared/identity.ts";
 
 /**
  * Admin-triggered account invitations.
@@ -92,21 +93,11 @@ serve(async (req) => {
     const role = body.role as Role;
     const cfg = ROLE_MAP[role];
 
-    // Never invite somebody who already holds this role.
-    const { data: existingProfile } = await admin
-      .from("profiles")
-      .select("id")
-      .ilike("email", email)
-      .maybeSingle();
-    if (existingProfile?.id) {
-      const { data: held } = await admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", existingProfile.id)
-        .eq("role", role)
-        .maybeSingle();
-      if (held) return json({ error: "This account already has that role." }, 409);
-    }
+    // One identity = one role. Never invite an email that already belongs to
+    // any account — reusing it would attach a second role to somebody else's
+    // login and make the two accounts inseparable.
+    const conflict = await identityConflict(admin, email, role);
+    if (conflict) return json(conflict.body, conflict.status);
 
     let activationUrl: string;
     try {

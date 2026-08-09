@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
 import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
+import DeactivateAccountDialog from '@/components/admin/DeactivateAccountDialog';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
@@ -65,15 +66,39 @@ const AdminTeamPage = () => {
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
   const [invitedInfo, setInvitedInfo] = useState<{ email: string; emailed: boolean; url: string } | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TeamMember | null>(null);
   const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
-  const [deleting, setDeleting] = useState(false);
   /** 'invite' sends a branded activation email; 'manual' shows a temp password. */
   const [mode, setMode] = useState<'invite' | 'manual'>('invite');
   const [busyInvite, setBusyInvite] = useState<string | null>(null);
 
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
+
+  /** Turns an identity collision into a message that explains the conflict. */
+  const conflictMessage = useCallback((result: any) => {
+    if (result?.code !== 'identity_conflict') return null;
+    const roleKeys: Record<string, string> = {
+      team_member: 'admin.team.teamMemberRole',
+      social_media_partner: 'admin.team.partnerRole',
+      ambassador: 'admin.team.ambassadorRole',
+      admin: 'admin.team.adminRole',
+      student: 'admin.team.studentRole',
+    };
+    const key = roleKeys[result.existing_role as string];
+    const existing = key ? t(key, result.existing_role) : t('admin.team.someRole', 'another');
+    return result.deactivated
+      ? t('admin.team.conflictDeactivated', {
+          role: existing,
+          defaultValue:
+            'This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.',
+        })
+      : t('admin.team.conflictActive', {
+          role: existing,
+          defaultValue:
+            'This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.',
+        });
+  }, [t]);
 
   const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -83,9 +108,9 @@ const AdminTeamPage = () => {
       body: JSON.stringify(payload),
     });
     const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error || 'Request failed');
+    if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Request failed');
     return result;
-  }, []);
+  }, [conflictMessage]);
 
   const fetchInvitations = useCallback(async () => {
     const { data } = await (supabase as any)
@@ -196,7 +221,7 @@ const AdminTeamPage = () => {
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed to create member');
+      if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Failed to create member');
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
@@ -239,32 +264,11 @@ const AdminTeamPage = () => {
     }
   };
 
-  const handleDeleteMember = async () => {
-    if (!deleteTargetId) return;
-    setDeleting(true);
-    try {
-      // Remove role so they can no longer access partner dashboard
-      const { error: roleErr } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', deleteTargetId);
-      if (roleErr) throw roleErr;
+  // Account removal goes through admin_deactivate_account (DeactivateAccountDialog):
+  // it revokes exactly one role, keeps every business record, and never touches
+  // the auth identity or any other account.
 
-      // Soft-delete the profile
-      await (supabase as any)
-        .from('profiles')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', deleteTargetId);
 
-      toast({ description: t('admin.team.accountDeleted', 'Account deleted successfully') });
-      setDeleteTargetId(null);
-      await fetchMembers();
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   const toggleManager = async (memberId: string, next: boolean) => {
     setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: next } : m)));
@@ -604,9 +608,9 @@ const AdminTeamPage = () => {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteTargetId(m.id)}
-                      title={t('admin.team.deleteAccount', 'Delete Account')}
-                      aria-label={t('admin.team.deleteAccount', 'Delete Account')}
+                      onClick={() => setDeleteTarget(m)}
+                      title={t('admin.team.deactivateAccount', 'Deactivate account')}
+                      aria-label={t('admin.team.deactivateAccount', 'Deactivate account')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -628,27 +632,22 @@ const AdminTeamPage = () => {
         onOpenChange={(open) => { if (!open) setDetailMember(null); }}
       />
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTargetId} onOpenChange={(v) => { if (!v) setDeleteTargetId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('admin.team.deleteConfirmTitle', 'Delete Account?')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('admin.team.deleteConfirmDesc', 'This will remove the account and revoke all access. This action cannot be undone.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleDeleteMember}
-              disabled={deleting}
-            >
-              {deleting ? '...' : t('admin.team.confirmDelete', 'Delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Explicit deactivation — never a silent cross-account delete */}
+      <DeactivateAccountDialog
+        target={
+          deleteTarget
+            ? {
+                id: deleteTarget.id,
+                full_name: deleteTarget.full_name,
+                email: deleteTarget.email,
+                roleLabel: roleLabel(deleteTarget.role),
+              }
+            : null
+        }
+        onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}
+        onDone={fetchMembers}
+      />
+
     </div>
   );
 };

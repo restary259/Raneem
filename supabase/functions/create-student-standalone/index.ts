@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { identityConflict, resolveIdentity } from "../_shared/identity.ts";
 import { z, parseBody, email as emailField, personName, uuid } from "../_shared/validate.ts";
 
 
@@ -71,15 +72,14 @@ serve(async (req) => {
     }
 
 
-    // Check if already registered via profiles table (faster than listUsers)
-    const { data: existingProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email")
-      .eq("email", cleanEmail)
-      .maybeSingle();
-
-    if (existingProfile) {
-      return new Response(JSON.stringify({ error: "An account with this email already exists" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // One identity = one role: never reuse or overwrite an email that already
+    // belongs to an account (student, partner, team member or admin).
+    const conflict = await identityConflict(supabaseAdmin, cleanEmail, "student");
+    if (conflict) {
+      return new Response(JSON.stringify(conflict.body), {
+        status: conflict.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Generate secure temporary password: 8 alphanum + symbols

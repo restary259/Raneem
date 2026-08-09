@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { hashToken } from "../_shared/invitations.ts";
+import { resolveIdentity } from "../_shared/identity.ts";
 
 /**
  * Public activation endpoint for durable invitations.
@@ -69,43 +70,38 @@ serve(async (req) => {
       return json({ error: "Email does not match this invitation", code: "email_mismatch" }, 403);
     }
 
-    // ── Create or reuse the auth account (never a duplicate) ──────────────
-    let userId: string | null = null;
-    let created = false;
+    // ── Create the auth account ───────────────────────────────────────────
+    // One identity = one role. An invitation may NEVER take over an email that
+    // already belongs to an account: doing so would reset that person's
+    // password and bolt a second role onto their identity, which then makes
+    // deleting one "account" destroy the other.
+    const existing = await resolveIdentity(admin, email);
+    if (existing.exists) {
+      return json(
+        {
+          error:
+            "This email already belongs to an account. Ask an admin to use a different address.",
+          code: "identity_conflict",
+          existing_role: existing.role,
+          deactivated: existing.deactivated,
+        },
+        409,
+      );
+    }
 
     const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     });
-
-    if (createError) {
-      if (!/already/i.test(createError.message ?? "")) {
-        return json({ error: createError.message, code: "server_error" }, 400);
-      }
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("id")
-        .ilike("email", email)
-        .maybeSingle();
-      userId = profile?.id ?? null;
-      if (!userId) {
-        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-        userId = list?.users?.find((u: { email?: string; id: string }) =>
-          (u.email ?? "").toLowerCase() === email
-        )?.id ?? null;
-      }
-      if (!userId) return json({ error: "Account could not be resolved", code: "server_error" }, 409);
-
-      const { error: pwError } = await admin.auth.admin.updateUserById(userId, {
-        password,
-        email_confirm: true,
-      });
-      if (pwError) return json({ error: pwError.message, code: "server_error" }, 400);
-    } else {
-      userId = createdUser.user.id;
-      created = true;
+    if (createError || !createdUser?.user) {
+      return json(
+        { error: createError?.message ?? "Account could not be created", code: "server_error" },
+        400,
+      );
     }
+    const userId: string = createdUser.user.id;
+    const created = true;
 
     // ── Role (idempotent) ─────────────────────────────────────────────────
     const { error: roleError } = await admin
