@@ -852,7 +852,27 @@ export default function AdminStudentsPage() {
                 </SheetTitle>
               </SheetHeader>
 
+              {/* Where this student came from, and where they are in onboarding. */}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="text-[11px]">{sourceLabel(selected)}</Badge>
+                <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${onboardingStatusTone(statusOf(selected))}`}>
+                  {t(onboardingStatusKey(statusOf(selected)))}
+                </span>
+                {caseOf(selected) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => window.open(`/cases/${caseOf(selected)!.id}`, "_blank", "noopener")}
+                  >
+                    <FileText className="h-3 w-3" />
+                    {caseOf(selected)!.reference || t("admin.students.openCase")}
+                  </Button>
+                )}
+              </div>
+
               <div className="mt-5 space-y-5">
+
                 {/* Profile Info / Edit */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
