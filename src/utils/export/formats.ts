@@ -9,11 +9,12 @@ export type ExportColumnType =
   | 'datetime'
   | 'status';
 
-/** Darb money is shekels only — there is no multi-currency money logic. */
-export type CurrencyCode = 'ILS';
+/** Agency fees are ILS; school-side costs (program/accommodation/insurance) are EUR. */
+export type CurrencyCode = 'ILS' | 'EUR';
 
 const CURRENCY_SYMBOL: Record<CurrencyCode, string> = {
   ILS: '₪',
+  EUR: '€',
 };
 
 /** Accounting-style currency: negatives in red parentheses, zero as an em dash. */
