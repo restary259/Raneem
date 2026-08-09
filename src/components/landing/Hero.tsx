@@ -70,7 +70,7 @@ const Hero = () => {
           {t('hero.subtitle')}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
-          <Button size="lg" asChild variant="accent" className="w-full sm:w-auto transition-transform duration-300 hover:scale-105">
+          <Button size="lg" asChild className="w-full sm:w-auto bg-brand text-brand-foreground hover:bg-brand/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
