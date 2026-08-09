@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Mail, Link as LinkIcon, Users, HelpCircle } from 'lucide-react';
+import { Phone, Mail, Link as LinkIcon, Users, HelpCircle, MapPin, Siren, GraduationCap, Building2, Stamp } from 'lucide-react';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 
 interface Contact {
@@ -17,12 +17,21 @@ interface Contact {
   email?: string;
   link?: string;
   category: string;
+  city?: string | null;
+  address_ar?: string | null;
+  address_en?: string | null;
+  source_url?: string | null;
+  last_verified_at?: string | null;
 }
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   support:     <HelpCircle className="h-5 w-5 text-primary" />,
   team:        <Users className="h-5 w-5 text-primary" />,
   embassy:     <LinkIcon className="h-5 w-5 text-primary" />,
+  emergency:   <Siren className="h-5 w-5 text-destructive" />,
+  language_school: <GraduationCap className="h-5 w-5 text-primary" />,
+  city_office: <Building2 className="h-5 w-5 text-primary" />,
+  immigration: <Stamp className="h-5 w-5 text-primary" />,
   other:       <Phone className="h-5 w-5 text-muted-foreground" />,
 };
 
