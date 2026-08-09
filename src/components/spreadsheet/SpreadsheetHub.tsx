@@ -253,7 +253,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     setExporting(true);
     try {
       const loaded = await Promise.all(
-        sheets.map(async s => ({ def: s, rows: data[s.key] ?? (await s.load()) })),
+        sheets.map(async s => ({ def: s, rows: filterRows(data[s.key] ?? (await s.load())) })),
       );
       const visibleColumns = (def: SheetDef) => def.columns.filter(col => !(col.hidden && scope === 'team'));
 
@@ -298,6 +298,60 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     }
   };
 
+  /** Identity-heavy sheet schools ask for when we forward an application. */
+  const exportSchoolPacket = async () => {
+    setExporting(true);
+    try {
+      const def = sheets.find(s => s.key === 'students')!;
+      const rows = filterRows(data.students ?? (await def.load()));
+      const c = (key: string) => t(`sheets.col.${key}`);
+      const columns: SheetColumn[] = [
+        { key: 'case_reference', label: c('reference') },
+        { key: 'full_name', label: c('name') },
+        { key: 'date_of_birth', label: c('dateOfBirth'), type: 'date' },
+        { key: 'email', label: c('email') },
+        { key: 'phone', label: c('phone') },
+        { key: 'city', label: c('city') },
+        { key: 'passport_number', label: c('passportNumber') },
+        { key: 'passport_type', label: c('passportType') },
+        { key: 'education_level', label: c('educationLevel') },
+        { key: 'school_name', label: c('school') },
+        { key: 'program_name', label: c('program') },
+        { key: 'accommodation_name', label: c('accommodation') },
+        { key: 'insurance_name', label: c('insurance') },
+        { key: 'course_start', label: c('courseStart'), type: 'date' },
+        { key: 'course_end', label: c('courseEnd'), type: 'date' },
+        { key: 'program_price', label: c('programCost'), type: 'currency', currency: 'EUR', total: true },
+        { key: 'accommodation_price', label: c('accommodationCost'), type: 'currency', currency: 'EUR', total: true },
+        { key: 'insurance_price', label: c('insuranceCost'), type: 'currency', currency: 'EUR', total: true },
+        { key: 'total', label: c('totalCost'), type: 'currency', currency: 'EUR', total: true },
+      ];
+      const label = t('sheets.schoolPacket', 'School packet');
+      await exportCorporateWorkbook({
+        fileName: `DARB-school-packet-${new Date().toISOString().slice(0, 10)}`,
+        title: label,
+        subtitle: [schoolFilter !== 'all' ? schoolFilter : null, monthFilter !== 'all' ? monthFilter : null]
+          .filter(Boolean)
+          .join(' · '),
+        author,
+        locale,
+        rtl,
+        sheets: [
+          {
+            name: label,
+            title: label,
+            columns: toExportColumns(columns),
+            rows: toExportRows(rows, columns, translate),
+          },
+        ],
+      });
+    } catch {
+      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-full">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -305,10 +359,59 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
           <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('sheets.subtitle')}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={exportAll} disabled={exporting}>
-          <Download className="h-4 w-4 me-1" />
-          {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {active === 'students' && (
+            <Button variant="outline" size="sm" onClick={exportSchoolPacket} disabled={exporting}>
+              <Download className="h-4 w-4 me-1" />
+              {t('sheets.schoolPacket', 'School packet')}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={exportAll} disabled={exporting}>
+            <Download className="h-4 w-4 me-1" />
+            {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <Select value={schoolFilter} onValueChange={setSchoolFilter}>
+          <SelectTrigger className="h-9 w-[200px]" aria-label={t('sheets.filterSchool', 'School')}>
+            <SelectValue placeholder={t('sheets.filterSchool', 'School')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('sheets.allSchools', 'All schools')}</SelectItem>
+            {schoolOptions.map(s => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="h-9 w-[180px]" aria-label={t('sheets.filterMonth', 'Intake month')}>
+            <SelectValue placeholder={t('sheets.filterMonth', 'Intake month')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('sheets.allMonths', 'All months')}</SelectItem>
+            {monthOptions.map(m => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {filtersActive && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSchoolFilter('all');
+              setMonthFilter('all');
+            }}
+          >
+            {t('sheets.clearFilters', 'Clear filters')}
+          </Button>
+        )}
       </div>
 
       <Tabs value={active} onValueChange={setActive}>
@@ -326,7 +429,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
               title={s.label}
               description={t(`sheets.desc.${s.key}`, '')}
               columns={s.columns.filter(col => !(col.hidden && scope === 'team'))}
-              rows={data[s.key] ?? []}
+              rows={filterRows(data[s.key] ?? [])}
               loading={!!loading[s.key]}
               onRefresh={() => loadSheet(s)}
               fileName={`DARB-${s.key}-${new Date().toISOString().slice(0, 10)}`}
@@ -336,6 +439,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       </Tabs>
     </div>
   );
+
 };
 
 export default SpreadsheetHub;
