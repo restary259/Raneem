@@ -82,6 +82,28 @@ serve(async (req) => {
       return json({ error: 'mode must be "soft" or "hard"' }, 400);
     }
 
+    // Account isolation: this endpoint may only ever act on a student identity.
+    // Passing a partner/team/admin id here would destroy an unrelated account.
+    if (student_id === callerId) {
+      return json({ error: "You cannot delete your own account" }, 400);
+    }
+    const { data: targetRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", student_id);
+    const nonStudent = (targetRoles ?? []).map((r) => r.role).filter((r) => r !== "student");
+    if (nonStudent.length) {
+      return json(
+        {
+          error: "This account is not a student account and cannot be deleted here.",
+          code: "identity_conflict",
+          existing_role: nonStudent[0],
+        },
+        409,
+      );
+    }
+
+
     // Hard delete always requires password re-verification
     if (mode === "hard") {
       if (!password) {
