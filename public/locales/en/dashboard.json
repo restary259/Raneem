@@ -2526,7 +2526,9 @@
       "insurance": "Health insurance",
       "insuranceBreakdown": "{{monthly}}/month × {{months}} months = {{total}}",
       "empty": "No program, accommodation or insurance selected yet.",
-      "ageBand": "Rate based on student age {{age}}"
+      "ageBand": "Rate based on student age {{age}}",
+      "perWeek": "week",
+      "unverifiedTotal": "Duration not recorded — this may be a weekly rate"
     },
     "messages": {
       "title": "Messages",
@@ -3107,7 +3109,11 @@
       "paid": "Paid",
       "remaining": "Remaining",
       "programCosts": "Programme costs",
-      "discounts": "Discounts"
+      "discounts": "Discounts",
+      "agencyBlock": "Agency fees (ILS)",
+      "schoolBlock": "School costs (EUR)",
+      "subtotal": "Subtotal",
+      "noCrossCurrency": "ILS and EUR are not summed together."
     },
     "services": {
       "title": "Services on this case",
