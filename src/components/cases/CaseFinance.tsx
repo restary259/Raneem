@@ -35,6 +35,15 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
 
   const discountTotal = services.reduce((sum, s) => sum + Number(s.discount || 0), 0);
   const remaining = Math.max(servicesTotal - totalPaid, 0);
+  const extraSubtotals = React.useMemo(
+    () =>
+      extraLines.reduce<Record<string, number>>((acc, line) => {
+        const cur = line.currency ?? "EUR";
+        acc[cur] = (acc[cur] ?? 0) + Number(line.amount || 0);
+        return acc;
+      }, {}),
+    [extraLines],
+  );
   const status: "unpaid" | "partial" | "settled" =
     servicesTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : totalPaid > 0 ? "partial" : "unpaid";
   const statusClass =
@@ -57,33 +66,41 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.services")}</p>
-              <p className="text-sm font-semibold">{formatILS(servicesTotal)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.discounts")}</p>
-              <p className="text-sm font-semibold">{formatILS(discountTotal)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
-              <p className="text-sm font-semibold text-emerald-700">{formatILS(totalPaid)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.remaining")}</p>
-              <p
-                className={`text-sm font-semibold ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}
-              >
-                {formatILS(remaining)}
-              </p>
+          {/* Agency money is shekel work tracked against services and payments. */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t("finance.summary.agencyBlock")}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">{t("finance.summary.services")}</p>
+                <p className="text-sm font-semibold">{formatILS(servicesTotal)}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">{t("finance.summary.discounts")}</p>
+                <p className="text-sm font-semibold">{formatILS(discountTotal)}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
+                <p className="text-sm font-semibold text-emerald-700">{formatILS(totalPaid)}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">{t("finance.summary.remaining")}</p>
+                <p
+                  className={`text-sm font-semibold ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}
+                >
+                  {formatILS(remaining)}
+                </p>
+              </div>
             </div>
           </div>
 
+          {/* School-billed costs are in euro and are never mixed into the shekel
+              totals above — they are shown with their own subtotal per currency. */}
           {extraLines.length > 0 && (
-            <div className="space-y-1.5 text-sm">
+            <div className="space-y-1.5 text-sm rounded-md border p-3">
               <p className="text-xs font-medium text-muted-foreground">
-                {t("finance.summary.programCosts")}
+                {t("finance.summary.schoolBlock")}
               </p>
               {extraLines.map((line) => (
                 <div key={line.label} className="flex justify-between gap-2 text-muted-foreground">
@@ -93,8 +110,21 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
                   </span>
                 </div>
               ))}
+              {Object.entries(extraSubtotals).map(([currency, amount]) => (
+                <div
+                  key={currency}
+                  className="flex justify-between gap-2 border-t pt-1.5 text-sm font-semibold"
+                >
+                  <span>{t("finance.summary.subtotal")}</span>
+                  <span className="whitespace-nowrap">
+                    {amount.toLocaleString("en-US")} {currency}
+                  </span>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">{t("finance.summary.noCrossCurrency")}</p>
             </div>
           )}
+
 
           <Separator />
 

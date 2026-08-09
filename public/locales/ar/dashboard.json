@@ -2544,7 +2544,9 @@
       "insurance": "التأمين الصحي",
       "insuranceBreakdown": "{{monthly}} شهريًا × {{months}} شهر = {{total}}",
       "empty": "لم يتم اختيار برنامج أو سكن أو تأمين بعد.",
-      "ageBand": "السعر محسوب حسب عمر الطالب {{age}}"
+      "ageBand": "السعر محسوب حسب عمر الطالب {{age}}",
+      "perWeek": "أسبوعيًا",
+      "unverifiedTotal": "المدة غير مسجلة — قد يكون هذا سعرًا أسبوعيًا"
     },
     "messages": {
       "title": "المراسلات",
@@ -3125,7 +3127,11 @@
       "paid": "مدفوع",
       "remaining": "المتبقي",
       "programCosts": "تكاليف البرنامج",
-      "discounts": "الخصومات"
+      "discounts": "الخصومات",
+      "agencyBlock": "رسوم الوكالة (شيكل)",
+      "schoolBlock": "تكاليف المدرسة (يورو)",
+      "subtotal": "المجموع الفرعي",
+      "noCrossCurrency": "لا يتم جمع الشيكل واليورو معًا."
     },
     "services": {
       "title": "خدمات هذه الحالة",

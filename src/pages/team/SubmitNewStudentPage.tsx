@@ -20,6 +20,7 @@ import { generateIntakeMonths } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
+import { recordServiceFeePayment } from "@/services/CasePaymentService";
 import { isLinkablePhone } from "@/lib/phone";
 import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
@@ -329,13 +330,19 @@ export default function SubmitNewStudentPage() {
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
-  // Changing the school invalidates every school-bound selection.
+  // Changing the school invalidates every school-bound selection, including the
+  // durations and derived dates that belonged to the previous school's program.
   useEffect(() => {
     setProgramId("");
     setAccommodationId("");
+    setProgramWeeks("");
     setAccommodationWeeks("");
+    setStartMonth("");
+    setCourseStart("");
+    setCourseEnd("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
+
 
   // Load the school list and the insurance catalogue once.
   useEffect(() => {
@@ -539,6 +546,21 @@ export default function SubmitNewStudentPage() {
           documents_skipped: skipDocuments,
         },
       });
+
+      // The fee was collected here, so it must also land in the case finance
+      // panel — it reads case_services/case_payments, not case_submissions.
+      try {
+        await recordServiceFeePayment({
+          caseId,
+          actorId: user!.id,
+          amount: parseFloat(serviceFee),
+          paidAt: now,
+        });
+      } catch (payErr) {
+        console.error("[SubmitNewStudent] service fee payment", payErr);
+      }
+
+
 
       // Create/link the student account FIRST so uploaded documents can be
       // owned by the student rather than by the uploading team member.

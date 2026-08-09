@@ -39,8 +39,11 @@ function groupBySchool<T extends { school_id: string | null }>(
     const list = items.filter((i) => i.school_id === school.id);
     if (list.length) groups.push({ key: school.id, label: school.name_en, items: list });
   }
+  // Items without a school are unreachable in Submit New Student (that wizard
+  // queries strictly by school_id), so flag them rather than calling them "Other".
   const ungrouped = items.filter((i) => !i.school_id || !schools.some((s) => s.id === i.school_id));
-  if (ungrouped.length) groups.push({ key: "none", label: "Other", items: ungrouped });
+  if (ungrouped.length)
+    groups.push({ key: "none", label: "⚠ No school assigned — hidden from Submit New Student", items: ungrouped });
   return groups;
 }
 

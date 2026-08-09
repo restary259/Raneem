@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useFormDraft } from '@/hooks/useFormDraft';
-import { ensureCaseServices } from '@/services/CaseCostingService';
+import { recordServiceFeePayment } from '@/services/CasePaymentService';
 
 interface Props {
   caseId: string;
@@ -75,23 +75,14 @@ export default function PaymentConfirmationForm({ caseId, actorId, actorName, on
       if (!updatedCase) throw new Error(t('team.payment.statusFailed'));
 
       // The finance panel is the single source of truth for money on a case, so
-      // the confirmed fee has to land there as a real payment row. Service lines
-      // are created first (idempotent) so the amount has something to settle.
-      try {
-        await ensureCaseServices(caseId, actorId);
-      } catch (svcErr) {
-        console.error('[PaymentConfirmation] services', svcErr);
-      }
-
-      const { error: payErr } = await (supabase as any).from('case_payments').insert({
-        case_id: caseId,
-        payment_type: 'service_fee',
+      // the confirmed fee has to land there as a real payment row.
+      await recordServiceFeePayment({
+        caseId,
+        actorId,
         amount: parseFloat(serviceFee),
-        paid_status: 'paid',
-        paid_date: now,
-        recorded_by: actorId,
+        paidAt: now,
       });
-      if (payErr) throw payErr;
+
 
 
 
