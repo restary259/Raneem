@@ -11,48 +11,36 @@ const StudentGallery = () => {
   const trackRef = useRef<HTMLDivElement>(null);
   const gallery = t('studentGallery', { returnObjects: true }) as { title: string; subtitle: string; students: Student[] };
 
-  // Gentle auto-scroll on mobile, pauses as soon as the user interacts.
+  // Gentle auto-advance on mobile; pauses while (and shortly after) the user swipes.
   useEffect(() => {
     const el = trackRef.current;
     if (!el || !isMobile) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let paused = false;
-    let raf = 0;
-    const pause = () => { paused = true; };
-    const resume = () => { window.setTimeout(() => { paused = false; }, 4000); };
-
+    let pausedUntil = 0;
+    const pause = () => { pausedUntil = Date.now() + 6000; };
     el.addEventListener('pointerdown', pause);
     el.addEventListener('touchstart', pause, { passive: true });
-    el.addEventListener('pointerup', resume);
-    el.addEventListener('touchend', resume, { passive: true });
+    el.addEventListener('wheel', pause, { passive: true });
 
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = now - last;
-      last = now;
-      if (!paused && dt < 100) {
-        // scrollLeft is negative in RTL on modern browsers; direction follows sign.
-        const rtl = getComputedStyle(el).direction === 'rtl';
-        const delta = (dt / 1000) * 24 * (rtl ? -1 : 1);
-        const max = el.scrollWidth - el.clientWidth;
-        const atEnd = rtl ? Math.abs(el.scrollLeft) >= max - 2 : el.scrollLeft >= max - 2;
-        if (atEnd) {
-          el.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          el.scrollBy({ left: delta, behavior: 'auto' });
-        }
+    const id = window.setInterval(() => {
+      if (Date.now() < pausedUntil || document.hidden) return;
+      const rtl = getComputedStyle(el).direction === 'rtl';
+      const max = el.scrollWidth - el.clientWidth;
+      const atEnd = Math.abs(el.scrollLeft) >= max - 4;
+      if (atEnd) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        const slide = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth;
+        el.scrollBy({ left: (slide + 16) * (rtl ? -1 : 1), behavior: 'smooth' });
       }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
+    }, 3500);
 
     return () => {
-      cancelAnimationFrame(raf);
+      window.clearInterval(id);
       el.removeEventListener('pointerdown', pause);
       el.removeEventListener('touchstart', pause);
-      el.removeEventListener('pointerup', resume);
-      el.removeEventListener('touchend', resume);
+      el.removeEventListener('wheel', pause);
     };
   }, [isMobile]);
 
