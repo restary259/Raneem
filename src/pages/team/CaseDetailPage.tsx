@@ -112,11 +112,22 @@ export default function CaseDetailPage() {
       }
 
       if (row.assigned_to) {
-        const { data: staff } = await supabase.rpc("get_staff_directory");
-        const match = (staff as { id: string; full_name: string }[] | null)?.find(
-          (s) => s.id === row.assigned_to,
-        );
-        setAssigneeName(match?.full_name ?? null);
+        if (row.assigned_to === user?.id) {
+          // The staff directory intentionally hides peers from team members,
+          // so resolve our own name directly.
+          const { data: me } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+          setAssigneeName(me?.full_name ?? null);
+        } else {
+          const { data: staff } = await supabase.rpc("get_staff_directory");
+          const match = (staff as { id: string; full_name: string }[] | null)?.find(
+            (s) => s.id === row.assigned_to,
+          );
+          setAssigneeName(match?.full_name ?? null);
+        }
       } else {
         setAssigneeName(null);
       }
