@@ -233,6 +233,8 @@ const App = () => {
             <Route path="/join/:code" element={<JoinPartnerPage />} />
             <Route path="/student-auth" element={<StudentAuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/activate" element={<ActivateAccountPage />} />
+
             <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
             {/* ── Admin Dashboard (/admin/*) ── */}
