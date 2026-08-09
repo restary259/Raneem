@@ -58,19 +58,24 @@ export async function exportXLSX({ headers, rows, fileName, title, summaryRows }
   URL.revokeObjectURL(url);
 }
 
-export async function exportPDF({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
+export interface PdfExportResult {
+  /** True when RTL text was present but no font could render it. */
+  rtlFontMissing: boolean;
+}
+
+export async function exportPDF({
+  headers,
+  rows,
+  fileName,
+  title,
+  summaryRows,
+}: ExportOptions): Promise<PdfExportResult> {
   const doc = new jsPDF({ orientation: rows[0]?.length > 6 ? 'landscape' : 'portrait' });
 
-  // Register Arabic font
-  await registerArabicFont(doc);
-
-  if (title) {
-    doc.setFontSize(16);
-    const displayTitle = title.replace(/Darb Study(?! International)/g, 'Darb Study International');
-    doc.text(displayTitle, 14, 20);
-  }
-
-  const startY = title ? 28 : 14;
+  // Bundled Arabic/Hebrew faces — Helvetica cannot render either script and
+  // silently produces mojibake, so we track what actually registered.
+  const fonts = await registerPdfFonts(doc);
+  await loadTextShaper();
 
   const allRows = [...rows];
   if (summaryRows?.length) {
@@ -78,30 +83,53 @@ export async function exportPDF({ headers, rows, fileName, title, summaryRows }:
     allRows.push(...summaryRows);
   }
 
+  const cells = [...headers, ...allRows.flat()].map(c => String(c ?? ''));
+  const rtlFontMissing = cells.some(
+    c => hasRtl(c) && fontForText(c, fonts, '') === '',
+  );
+
+  const draw = (value: unknown) => shapeForPdf(String(value ?? ''));
+
+  if (title) {
+    const displayTitle = title.replace(/Darb Study(?! International)/g, 'Darb Study International');
+    doc.setFont(fontForText(displayTitle, fonts), 'normal');
+    doc.setFontSize(16);
+    doc.text(draw(displayTitle), 14, 20);
+  }
+
+  const startY = title ? 28 : 14;
+
   autoTable(doc, {
-    head: [headers],
-    body: allRows.map(r => r.map(c => String(c ?? ''))),
+    head: [headers.map(draw)],
+    body: allRows.map(r => r.map(draw)),
     startY,
     styles: {
       fontSize: 8,
       cellPadding: 3,
       lineWidth: 0.1,
       lineColor: [200, 200, 200],
-      font: 'Amiri',
     },
     headStyles: {
       fillColor: [30, 58, 95],
       textColor: 255,
       fontStyle: 'bold',
       fontSize: 9,
-      font: 'Amiri',
     },
     alternateRowStyles: {
       fillColor: [245, 247, 250],
     },
     margin: { top: 10, left: 10, right: 10 },
-    didDrawPage: (data) => {
+    // jsPDF has one font per cell — pick the face that owns the script used.
+    didParseCell: data => {
+      const text = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text ?? '');
+      if (hasRtl(text)) {
+        data.cell.styles.font = fontForText(text, fonts);
+        data.cell.styles.halign = 'right';
+      }
+    },
+    didDrawPage: () => {
       const pageHeight = doc.internal.pageSize.height;
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(150);
       doc.text(
@@ -113,7 +141,9 @@ export async function exportPDF({ headers, rows, fileName, title, summaryRows }:
   });
 
   doc.save(`${fileName}.pdf`);
+  return { rtlFontMissing };
 }
+
 
 export interface WorkbookSheet {
   name: string;
