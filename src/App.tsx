@@ -314,9 +314,13 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        {!isApplyPage && !isDashboardPath && <ChatWidget />}
-        {!isApplyPage && !isDashboardPath && <PWAInstaller />}
-        {!isApplyPage && !isDashboardPath && <CookieBanner />}
+        {!isApplyPage && !isDashboardPath && idleReady && (
+          <Suspense fallback={null}>
+            <ChatWidget />
+            <PWAInstaller />
+            <CookieBanner />
+          </Suspense>
+        )}
         {!isDashboardPath && <BottomNav />}
       </div>
     </TooltipProvider>
