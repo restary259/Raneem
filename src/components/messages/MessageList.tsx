@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
+  ArrowDown,
   Check,
   CheckCheck,
   Clock,
@@ -93,9 +94,63 @@ export default function MessageList({
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLElement | null>(null);
+  const [showJump, setShowJump] = useState(false);
+  const lastId = messages[messages.length - 1]?.id ?? null;
+  const lastAuthor = messages[messages.length - 1]?.authorId ?? null;
+
+  /** The scroll container is an ancestor of this list, not the list itself. */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [messages.length]);
+    let node: HTMLElement | null = rootRef.current?.parentElement ?? null;
+    while (node) {
+      const overflow = getComputedStyle(node).overflowY;
+      if (overflow === "auto" || overflow === "scroll") break;
+      node = node.parentElement;
+    }
+    scrollerRef.current = node;
+  }, []);
+
+  const isNearBottom = () => {
+    const el = scrollerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
+
+  const scrollToBottom = (behavior: ScrollBehavior = "auto") => {
+    bottomRef.current?.scrollIntoView({ block: "end", behavior });
+    setShowJump(false);
+  };
+
+  /* Land on the newest message when the thread opens. */
+  useEffect(() => {
+    scrollToBottom();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* New message: follow it only when the reader is already at the bottom or
+     it is their own message — never yank them out of older history. */
+  useEffect(() => {
+    if (!lastId) return;
+    if (isNearBottom() || (currentUserId && lastAuthor === currentUserId)) {
+      scrollToBottom("smooth");
+    } else {
+      setShowJump(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastId]);
+
+  /* Hide the jump button once the reader scrolls back down themselves. */
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (isNearBottom()) setShowJump(false);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollerRef.current]);
 
   /** Other participants' read markers, newest read first. */
   const readers = useMemo(
@@ -196,7 +251,18 @@ export default function MessageList({
   let renderedDay: string | null = null;
 
   return (
-    <div className={cn("space-y-6 p-4 sm:p-5", className)}>
+    <div ref={rootRef} className={cn("relative space-y-6 p-4 sm:p-5", className)}>
+      {showJump && (
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => scrollToBottom("smooth")}
+          className="sticky top-2 z-20 mx-auto flex h-8 gap-1 rounded-full px-3 text-xs shadow-md"
+        >
+          <ArrowDown className="h-3.5 w-3.5" />
+          {t("chat.jumpToLatest", "أحدث الرسائل")}
+        </Button>
+      )}
       {hasOlder && onLoadOlder && (
         <div className="flex justify-center">
           <Button size="sm" variant="ghost" disabled={loadingOlder} onClick={onLoadOlder}>
