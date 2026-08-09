@@ -550,12 +550,12 @@ export default function AdminStudentsPage() {
       const path = `${selected.id}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("student-documents").upload(path, file, { upsert: false });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(path);
       const displayName = uploadCategory === "other" && customDocName.trim() ? customDocName.trim() : file.name;
       const { error: dbError } = await supabase.from("documents").insert({
         student_id: selected.id,
         file_name: displayName,
-        file_url: urlData.publicUrl,
+        // Private bucket: store the storage path, sign it on read.
+        file_url: path,
         category: uploadCategory,
         file_type: file.type,
         file_size: file.size,

@@ -326,6 +326,25 @@ const AdminSubmissionsPage = () => {
     return format(new Date(ts), "dd/MM/yyyy");
   };
 
+  // The student-documents bucket is private: never link to a public URL,
+  // always mint a short-lived signed URL at click time.
+  const openDocument = async (fileUrl: string) => {
+    try {
+      const marker = "/student-documents/";
+      const idx = fileUrl.indexOf(marker);
+      const path = idx !== -1 ? fileUrl.slice(idx + marker.length) : fileUrl;
+      const { data, error } = await supabase.storage
+        .from("student-documents")
+        .createSignedUrl(path, 60);
+      if (error || !data?.signedUrl) throw error ?? new Error("no url");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err?.message ?? "Download failed" });
+    }
+  };
+
+
+
   const totalFee = (s: SubmittedCase) =>
     (s.submission?.service_fee || 0).toLocaleString('en-US');
 
@@ -478,27 +497,41 @@ const AdminSubmissionsPage = () => {
                       <CopyButton value={selected.phone_number} />
                     </div>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{selected.city || "–"}</p>
-                      {selected.city && <CopyButton value={selected.city} />}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{selected.education_level || "–"}</p>
-                      {selected.education_level && <CopyButton value={selected.education_level} />}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{selected.passport_type?.replace(/_/g, " ") || "–"}</p>
-                      {selected.passport_type && <CopyButton value={selected.passport_type.replace(/_/g, " ")} />}
-                    </div>
-                  </div>
+                  {(() => {
+                    // Manual / submit-new-student cases never collect these
+                    // intake fields; fall back to extra_data, then say so
+                    // explicitly instead of rendering a blank dash.
+                    const extra = (selected.submission?.extra_data ?? {}) as Record<string, unknown>;
+                    const na = t("admin.submissions.notCollected");
+                    const cityVal = selected.city || (extra.city as string) || "";
+                    const eduVal = selected.education_level || (extra.education_level as string) || "";
+                    const passVal = (selected.passport_type || (extra.passport_type as string) || "").replace(/_/g, " ");
+                    return (
+                      <>
+                        <div>
+                          <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
+                          <div className="flex items-center gap-1">
+                            <p className={cityVal ? "font-medium" : "text-muted-foreground italic"}>{cityVal || na}</p>
+                            {cityVal && <CopyButton value={cityVal} />}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
+                          <div className="flex items-center gap-1">
+                            <p className={eduVal ? "font-medium" : "text-muted-foreground italic"}>{eduVal || na}</p>
+                            {eduVal && <CopyButton value={eduVal} />}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
+                          <div className="flex items-center gap-1">
+                            <p className={passVal ? "font-medium" : "text-muted-foreground italic"}>{passVal || na}</p>
+                            {passVal && <CopyButton value={passVal} />}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                   <div>
                     <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
                     <div className="flex items-center gap-1">
@@ -638,11 +671,14 @@ const AdminSubmissionsPage = () => {
                               {doc.category} · {fmt(doc.created_at)}
                             </p>
                           </div>
-                          <a href={doc.file_url} target="_blank" rel="noreferrer">
-                            <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0">
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
-                          </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1 shrink-0"
+                            onClick={() => openDocument(doc.file_url)}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       ))}
                     </div>

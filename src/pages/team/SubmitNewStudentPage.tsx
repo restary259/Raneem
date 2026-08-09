@@ -376,12 +376,35 @@ export default function SubmitNewStudentPage() {
     try {
       const now = new Date().toISOString();
       const age = dob ? differenceInYears(new Date(), new Date(dob)) : null;
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPhone = phone.trim();
+
+      // ── Duplicate guard ───────────────────────────────────────────────
+      // The same person must not silently receive a second case (and with it a
+      // second activation email). Warn on a matching phone or email first.
+      const { data: phoneMatch } = await supabase
+        .from("cases")
+        .select("id, case_reference, full_name")
+        .eq("phone_number", cleanPhone)
+        .limit(1);
+      const { data: emailMatch } = await (supabase as any)
+        .from("case_submissions")
+        .select("case_id")
+        .eq("student_email", cleanEmail)
+        .limit(1);
+      const dupCase = phoneMatch?.[0];
+      if ((dupCase || emailMatch?.[0]) && !window.confirm(ss("duplicateWarning"))) {
+        setSaving(false);
+        if (dupCase) navigate(`/team/cases/${dupCase.id}`);
+        return;
+      }
 
       const { data: newCase, error: caseErr } = await supabase
         .from("cases")
         .insert({
           full_name: fullName,
-          phone_number: phone.trim(),
+          phone_number: cleanPhone,
+          city: city || null,
           source: "submit_new_student",
           status: "submitted",
           assigned_to: user!.id,
@@ -405,6 +428,9 @@ export default function SubmitNewStudentPage() {
         payment_confirmed_by: user!.id,
         submitted_at: now,
         submitted_by: user!.id,
+        // Real columns — the Admin Submissions view reads these, not extra_data.
+        student_email: cleanEmail,
+        student_phone: cleanPhone,
         extra_data: {
           first_name: firstName,
           middle_name: middleName,
@@ -413,8 +439,8 @@ export default function SubmitNewStudentPage() {
           age,
           gender,
           city_of_birth: cityOfBirth,
-          student_email: email.trim(),
-          student_phone: phone.trim(),
+          student_email: cleanEmail,
+          student_phone: cleanPhone,
           emergency_contact_name: emergencyName,
           // ✅ FIX: emergencyPhone now correctly refers to its own state variable
           emergency_contact_phone: emergencyPhone,
@@ -434,24 +460,43 @@ export default function SubmitNewStudentPage() {
         },
       });
 
+      // Create/link the student account FIRST so uploaded documents can be
+      // owned by the student rather than by the uploading team member.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const { data: accountRes } = await supabase.functions.invoke("create-student-from-case", {
+        body: {
+          case_id: caseId,
+          student_email: cleanEmail,
+          student_full_name: fullName,
+          student_phone: cleanPhone,
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      const studentUserId = (accountRes as any)?.user_id as string | undefined;
+
       for (const doc of uploadedFiles) {
         const invalid = validateUploadFile(doc.file);
         if (invalid) {
           toast({ variant: "destructive", description: `${doc.file.name}: ${invalid}` });
           continue;
         }
-        const path = `${caseId}/${doc.category}_${doc.file.name}`;
+        // Path is keyed on the student so the student storage policy
+        // (folder[1] = auth.uid()) lets them read their own files.
+        const folder = studentUserId ?? caseId;
+        const path = `${folder}/${caseId}_${doc.category}_${doc.file.name}`;
         const { data: uploadData } = await supabase.storage
           .from("student-documents")
           .upload(path, doc.file, { upsert: true });
 
         if (uploadData?.path) {
-          const { data: urlData } = supabase.storage.from("student-documents").getPublicUrl(uploadData.path);
           await supabase.from("documents").insert({
-            student_id: user!.id,
+            student_id: studentUserId ?? user!.id,
             case_id: caseId,
             file_name: doc.file.name,
-            file_url: urlData?.publicUrl || "",
+            // Bucket is private: store the bare storage path and sign it on read.
+            file_url: uploadData.path,
             file_type: doc.file.type,
             file_size: doc.file.size,
             category: doc.category,
@@ -460,18 +505,6 @@ export default function SubmitNewStudentPage() {
         }
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      await supabase.functions.invoke("create-student-from-case", {
-        body: {
-          case_id: caseId,
-          student_email: email.trim(),
-          student_full_name: fullName,
-          student_phone: phone.trim(),
-        },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
 
       await supabase.rpc("log_activity" as any, {
         p_actor_id: user!.id,

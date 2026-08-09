@@ -134,10 +134,17 @@ const ActivateAccountPage = () => {
       });
       if (signInError) throw signInError;
 
-      const { data: role } = await supabase.rpc("get_my_role");
+      // Route on the role this invitation was issued for — never on the global
+      // top-priority role, which sends a dual-role user to the wrong dashboard.
+      const invitedRole = (payload?.role as AppRole | undefined) ?? undefined;
+      let role: AppRole | undefined = invitedRole;
+      if (!role) {
+        const { data: fallback } = await supabase.rpc("get_my_role");
+        role = (fallback as AppRole) ?? "student";
+      }
       await refreshRole();
       toast({ title: t("activate.success"), description: t("activate.successDesc") });
-      navigate(ROLE_TO_PATH[(role as AppRole) ?? "student"] ?? "/student/checklist", { replace: true });
+      navigate(ROLE_TO_PATH[role ?? "student"] ?? "/student/checklist", { replace: true });
     } catch (err) {
       toast({
         variant: "destructive",
