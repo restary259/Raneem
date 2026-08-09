@@ -80,7 +80,7 @@ interface VisaField {
   is_active: boolean;
 }
 
-const CATEGORIES = ["emergency", "medical", "legal", "team", "other"];
+const CATEGORIES = ["emergency", "medical", "legal", "team", "language_school", "city_office", "immigration", "other"];
 const FIELD_TYPES = ["text", "date", "select", "boolean"];
 
 // Data categories for selective reset.
