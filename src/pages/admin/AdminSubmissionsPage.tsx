@@ -652,11 +652,14 @@ const AdminSubmissionsPage = () => {
                               {doc.category} · {fmt(doc.created_at)}
                             </p>
                           </div>
-                          <a href={doc.file_url} target="_blank" rel="noreferrer">
-                            <Button size="sm" variant="outline" className="h-8 gap-1 shrink-0">
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
-                          </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1 shrink-0"
+                            onClick={() => openDocument(doc.file_url)}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       ))}
                     </div>
