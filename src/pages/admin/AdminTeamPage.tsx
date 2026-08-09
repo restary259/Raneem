@@ -154,7 +154,7 @@ const AdminTeamPage = () => {
     }
   }, [toast]);
 
-  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+  useEffect(() => { fetchMembers(); fetchInvitations(); }, [fetchMembers, fetchInvitations]);
 
   const createMember = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
@@ -163,6 +163,20 @@ const AdminTeamPage = () => {
     }
     setCreating(true);
     try {
+      if (mode === 'invite') {
+        const result = await callInviteFn({
+          action: 'send',
+          full_name: form.fullName.trim(),
+          email: form.email.trim(),
+          role: form.role,
+        });
+        setInvitedInfo({ email: form.email.trim(), emailed: !!result.emailed, url: result.activationUrl });
+        setForm({ fullName: '', email: '', role: 'team_member' });
+        await fetchInvitations();
+        toast({ description: t('admin.team.invitationSent', 'Invitation sent') });
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
         method: 'POST',
@@ -182,6 +196,37 @@ const AdminTeamPage = () => {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const resendInvitation = async (inv: PendingInvitation) => {
+    setBusyInvite(inv.id);
+    try {
+      await callInviteFn({
+        action: 'send',
+        full_name: inv.invited_name || inv.invited_email.split('@')[0],
+        email: inv.invited_email,
+        role: inv.intended_role,
+      });
+      await fetchInvitations();
+      toast({ description: t('admin.team.invitationSent', 'Invitation sent') });
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setBusyInvite(null);
+    }
+  };
+
+  const revokeInvitation = async (inv: PendingInvitation) => {
+    setBusyInvite(inv.id);
+    try {
+      await callInviteFn({ action: 'revoke', invitation_id: inv.id });
+      await fetchInvitations();
+      toast({ description: t('admin.team.invitationRevoked', 'Invitation revoked') });
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setBusyInvite(null);
     }
   };
 
