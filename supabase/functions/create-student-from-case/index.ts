@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName, phone as phoneField, uuid } from "../_shared/validate.ts";
+import { createInvitation } from "../_shared/invitations.ts";
+
 
 
 serve(async (req) => {
