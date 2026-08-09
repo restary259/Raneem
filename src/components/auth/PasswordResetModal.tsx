@@ -24,8 +24,13 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
     setIsLoading(true);
 
     try {
+      // Pin the return URL to the production domain so a reset started from a
+      // preview host still lands on the real site.
+      const origin = window.location.hostname === "localhost"
+        ? window.location.origin
+        : "https://darb.agency";
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${origin}/reset-password`,
       });
 
       if (error) throw error;
