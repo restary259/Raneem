@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { DashboardService } from '@/services';
-import { useTranslation } from 'react-i18next';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock, Info } from 'lucide-react';
-import PayoutsManagement from '@/components/admin/PayoutsManagement';
+import React, { useEffect, useState, useCallback } from "react";
+import { DashboardService } from "@/services";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock, Info } from "lucide-react";
+import PayoutsManagement from "@/components/admin/PayoutsManagement";
 
 const OverviewTab = () => {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation("dashboard");
   const { toast } = useToast();
 
   const [data, setData] = useState({
@@ -32,53 +32,54 @@ const OverviewTab = () => {
       setData(kpiData);
       setSubmissions(subs);
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const fmt = (n: number) => n.toLocaleString('en-US');
+  const fmt = (n: number) => n.toLocaleString("en-US");
 
   const kpis = [
     {
-      label: t('admin.financials.kpiServiceFees'),
+      label: t("admin.financials.kpiServiceFees"),
       value: `${fmt(data.serviceFees)} ILS`,
       icon: DollarSign,
-      color: 'text-primary bg-primary/10',
+      color: "text-primary bg-primary/10",
     },
     {
-      label: t('admin.financials.kpiAdminNet'),
+      label: t("admin.financials.kpiAdminNet"),
       value: `${fmt(data.platformNetRevenue)} ILS`,
       icon: TrendingUp,
-      color: 'text-green-600 bg-green-600/10',
+      color: "text-green-600 bg-green-600/10",
     },
     {
-      label: t('admin.financials.kpiPartnerPending'),
+      label: t("admin.financials.kpiPartnerPending"),
       value: `${fmt(data.partnerCommissionPending)} ILS`,
       icon: Clock,
-      color: 'text-amber-600 bg-amber-600/10',
+      color: "text-amber-600 bg-amber-600/10",
     },
     {
-      label: t('admin.financials.kpiPartnerPaid'),
+      label: t("admin.financials.kpiPartnerPaid"),
       value: `${fmt(data.partnerCommissionPaid)} ILS`,
       icon: Percent,
-      color: 'text-orange-600 bg-orange-600/10',
+      color: "text-orange-600 bg-orange-600/10",
     },
     {
-      label: t('admin.financials.kpiEnrolledStudents'),
-      value: data.enrolledCount.toLocaleString('en-US'),
+      label: t("admin.financials.kpiEnrolledStudents"),
+      value: data.enrolledCount.toLocaleString("en-US"),
       icon: Users,
-      color: 'text-teal-600 bg-teal-600/10',
+      color: "text-teal-600 bg-teal-600/10",
     },
     {
-      label: t('admin.financials.kpiReferralDiscounts'),
+      label: t("admin.financials.kpiReferralDiscounts"),
       value: `${fmt(data.referralDiscounts)} ILS`,
       icon: Percent,
-      color: 'text-muted-foreground bg-muted',
+      color: "text-muted-foreground bg-muted",
     },
   ];
 
@@ -86,7 +87,7 @@ const OverviewTab = () => {
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t('admin.financials.partnerCommissionRateInfo', { rate: '—' })}
+          {t("admin.financials.partnerCommissionRateInfo", { rate: "—" })}
         </p>
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="h-4 w-4" />
@@ -94,15 +95,13 @@ const OverviewTab = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {kpis.map(kpi => (
+        {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="p-5">
-              <div className={`inline-flex p-2 rounded-lg ${kpi.color.split(' ')[1]} mb-3`}>
-                <kpi.icon className={`h-5 w-5 ${kpi.color.split(' ')[0]}`} />
+              <div className={`inline-flex p-2 rounded-lg ${kpi.color.split(" ")[1]} mb-3`}>
+                <kpi.icon className={`h-5 w-5 ${kpi.color.split(" ")[0]}`} />
               </div>
-              <p className="text-xl font-bold text-foreground truncate min-w-0">
-                {loading ? '–' : kpi.value}
-              </p>
+              <p className="text-xl font-bold text-foreground truncate min-w-0">{loading ? "–" : kpi.value}</p>
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
             </CardContent>
           </Card>
@@ -111,23 +110,21 @@ const OverviewTab = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('admin.financials.recentEnrolled')}</CardTitle>
+          <CardTitle className="text-base">{t("admin.financials.recentEnrolled")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {submissions.length === 0 ? (
-            <p className="p-8 text-center text-sm text-muted-foreground">
-              {t('admin.financials.noData')}
-            </p>
+            <p className="p-8 text-center text-sm text-muted-foreground">{t("admin.financials.noData")}</p>
           ) : (
             <div className="divide-y divide-border">
               {submissions.slice(0, 10).map((s: any) => (
                 <div key={s.case_id} className="flex items-center justify-between p-4">
                   <p className="text-xs text-muted-foreground">
-                    {new Date(s.enrollment_paid_at).toLocaleDateString('en-US')}
+                    {new Date(s.enrollment_paid_at).toLocaleDateString("en-US")}
                   </p>
                   <div className="text-end">
                     <p className="text-sm font-medium text-foreground">
-                      {(s.service_fee || 0).toLocaleString('en-US')} ILS
+                      {(s.service_fee || 0).toLocaleString("en-US")} ILS
                     </p>
                   </div>
                 </div>
@@ -141,23 +138,23 @@ const OverviewTab = () => {
 };
 
 const AdminFinancialsPage = () => {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation("dashboard");
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('admin.financials.title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("admin.financials.title")}</h1>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList className="mb-4">
           <TabsTrigger value="overview" className="gap-2">
             <TrendingUp className="h-4 w-4" />
-            {t('admin.financials.tabOverview')}
+            {t("admin.financials.tabOverview")}
           </TabsTrigger>
           <TabsTrigger value="payouts" className="gap-2">
             <Wallet className="h-4 w-4" />
-            {t('admin.financials.tabPayouts', 'Payouts')}
+            {t("admin.financials.tabPayouts", "Payouts")}
           </TabsTrigger>
         </TabsList>
 
