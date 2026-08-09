@@ -239,32 +239,11 @@ const AdminTeamPage = () => {
     }
   };
 
-  const handleDeleteMember = async () => {
-    if (!deleteTargetId) return;
-    setDeleting(true);
-    try {
-      // Remove role so they can no longer access partner dashboard
-      const { error: roleErr } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', deleteTargetId);
-      if (roleErr) throw roleErr;
+  // Account removal goes through admin_deactivate_account (DeactivateAccountDialog):
+  // it revokes exactly one role, keeps every business record, and never touches
+  // the auth identity or any other account.
 
-      // Soft-delete the profile
-      await (supabase as any)
-        .from('profiles')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', deleteTargetId);
 
-      toast({ description: t('admin.team.accountDeleted', 'Account deleted successfully') });
-      setDeleteTargetId(null);
-      await fetchMembers();
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   const toggleManager = async (memberId: string, next: boolean) => {
     setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: next } : m)));
