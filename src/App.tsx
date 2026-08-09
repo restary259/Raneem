@@ -185,8 +185,12 @@ const App = () => {
       <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
         <Toaster />
         <Sonner />
-        {!isApplyPage && !isDashboardPath && <OfflineIndicator />}
-        {!isApplyPage && !isDashboardPath && <InAppBrowserBanner />}
+        {!isApplyPage && !isDashboardPath && (
+          <Suspense fallback={null}>
+            <OfflineIndicator />
+            <InAppBrowserBanner />
+          </Suspense>
+        )}
         <Suspense fallback={<div />}>
           <Routes>
             {/* ── Public pages ── */}
