@@ -3190,46 +3190,73 @@ export type Database = {
         Row: {
           admin_notes: string | null
           amount: number
+          base_amount: number | null
           case_id: string | null
+          case_reference: string | null
+          commission_reference: string | null
           created_at: string
+          created_by_event: string | null
           currency: string
           id: string
           paid_at: string | null
+          payment_reference: string | null
           payout_requested_at: string | null
+          rate_source: string | null
+          rate_used: number | null
+          recipient_role: string | null
           referral_id: string | null
           reward_type: string
           source_user_id: string | null
           status: string
+          unlock_at: string | null
           user_id: string
         }
         Insert: {
           admin_notes?: string | null
           amount?: number
+          base_amount?: number | null
           case_id?: string | null
+          case_reference?: string | null
+          commission_reference?: string | null
           created_at?: string
+          created_by_event?: string | null
           currency?: string
           id?: string
           paid_at?: string | null
+          payment_reference?: string | null
           payout_requested_at?: string | null
+          rate_source?: string | null
+          rate_used?: number | null
+          recipient_role?: string | null
           referral_id?: string | null
           reward_type?: string
           source_user_id?: string | null
           status?: string
+          unlock_at?: string | null
           user_id: string
         }
         Update: {
           admin_notes?: string | null
           amount?: number
+          base_amount?: number | null
           case_id?: string | null
+          case_reference?: string | null
+          commission_reference?: string | null
           created_at?: string
+          created_by_event?: string | null
           currency?: string
           id?: string
           paid_at?: string | null
+          payment_reference?: string | null
           payout_requested_at?: string | null
+          rate_source?: string | null
+          rate_used?: number | null
+          recipient_role?: string | null
           referral_id?: string | null
           reward_type?: string
           source_user_id?: string | null
           status?: string
+          unlock_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -4102,6 +4129,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_my_earnings_summary: { Args: never; Returns: Json }
       get_my_network: {
         Args: never
         Returns: {
