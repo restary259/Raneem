@@ -95,5 +95,18 @@ export async function createInvitation(
     if (error) throw new Error(error.message);
   }
 
+  // Only one live invitation per recipient and type: revoke every other
+  // pending invitation for this email so an older link can never be used to
+  // activate against a stale case.
+  let stale = admin
+    .from("user_invitations")
+    .update({ status: "revoked" })
+    .eq("status", "pending")
+    .ilike("invited_email", email)
+    .eq("invitation_type", input.invitationType);
+  if (existing?.id) stale = stale.neq("id", existing.id);
+  else stale = stale.neq("token_hash", token_hash);
+  await stale;
+
   return `${APP_URL}/activate?token=${encodeURIComponent(token)}`;
 }
