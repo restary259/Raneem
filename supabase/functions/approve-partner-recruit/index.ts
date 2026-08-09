@@ -95,7 +95,7 @@ serve(async (req) => {
           invitationType: "partner",
           intendedRole: "social_media_partner",
           inviterId: adminId,
-          masterPartnerId: app.master_partner_id,
+          masterPartnerId,
           recruitApplicationId: applicationId,
         });
       } catch (e) {
@@ -118,7 +118,7 @@ serve(async (req) => {
             templateData: {
               partnerName: fullName,
               email: targetEmail,
-              masterName: master.full_name ?? null,
+              masterName,
               activationUrl,
             },
           }),
