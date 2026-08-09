@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEarningsSummary } from '@/hooks/useEarningsSummary';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -29,7 +30,7 @@ export default function TeamAnalyticsPage() {
   const [closedThisMonth, setClosedThisMonth] = useState(0);
   const [todayAppts, setTodayAppts] = useState(0);
   const [commissionPerCase, setCommissionPerCase] = useState<number | null>(null);
-  const [earnedThisMonth, setEarnedThisMonth] = useState(0);
+  const { summary: earnings } = useEarningsSummary(!!user);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -40,7 +41,7 @@ export default function TeamAnalyticsPage() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [casesRes, closedRes, apptRes, overrideRes, rewardsRes] = await Promise.all([
+    const [casesRes, closedRes, apptRes, overrideRes] = await Promise.all([
       supabase.from('cases').select('status').eq('assigned_to', user.id),
       supabase.from('cases').select('id')
         .eq('assigned_to', user.id)
@@ -55,11 +56,6 @@ export default function TeamAnalyticsPage() {
         .select('commission_amount')
         .eq('team_member_id', user.id)
         .maybeSingle(),
-      supabase.from('rewards')
-        .select('amount')
-        .eq('user_id', user.id)
-        .gte('created_at', monthStart)
-        .lte('created_at', monthEnd),
     ]);
 
     const counts: Record<string, number> = {};
@@ -71,8 +67,7 @@ export default function TeamAnalyticsPage() {
     if (overrideRes.data) {
       setCommissionPerCase(overrideRes.data.commission_amount);
     }
-    const monthEarned = (rewardsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount), 0);
-    setEarnedThisMonth(monthEarned);
+
 
     setLoading(false);
   }, [user]);
@@ -142,13 +137,19 @@ export default function TeamAnalyticsPage() {
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.earnedThisMonth')}</span>
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.availableBalance', 'Available')}</span>
             </div>
             <div className="text-3xl font-bold tabular-nums text-emerald-600">
-              ₪{earnedThisMonth.toLocaleString('en-US')}
+              ₪{Number(earnings.available).toLocaleString('en-US')}
+            </div>
+            <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+              {t('lawyer.analytics.lockedBalance', 'Locked')}: ₪{Number(earnings.locked).toLocaleString('en-US')}
+              {' · '}
+              {t('lawyer.analytics.paidBalance', 'Paid')}: ₪{Number(earnings.paid).toLocaleString('en-US')}
             </div>
           </CardContent>
         </Card>
+
       </div>
 
       {/* Cases by status chart */}

@@ -63,26 +63,17 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
-    // Record the commission split FIRST, with the amount the admin actually
-    // entered. Flipping the status fires the auto_split_payment trigger, which
-    // would latch commission_split_done using case_submissions.service_fee and
-    // make this call a silent no-op.
-    const amount = total_payment_ils ? parseInt(String(total_payment_ils), 10) : 0;
-    if (amount > 0) {
-      const { error: commissionError } = await supabaseAdmin.rpc("record_case_commission", {
-        p_case_id: case_id,
-        p_total_payment_ils: amount,
-      });
-      if (commissionError) throw commissionError;
-    }
-
-    // Update case status to enrollment_paid
+    // Commission is created by the database (auto_split_payment ->
+    // record_case_commission) the moment the case reaches enrollment_paid.
+    // The base amount comes from case_submissions.service_fee server-side —
+    // never from a client-supplied number — and the RPC is idempotent.
     const { error: updateError } = await supabaseAdmin
       .from("cases")
       .update({ status: "enrollment_paid", updated_at: now })
       .eq("id", case_id);
 
     if (updateError) throw updateError;
+
 
     // Update case_submission enrollment payment fields
     await supabaseAdmin

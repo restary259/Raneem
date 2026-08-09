@@ -11,6 +11,7 @@ import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useToast } from "@/hooks/use-toast";
+import { useEarningsSummary } from "@/hooks/useEarningsSummary";
 
 // Cases at these statuses generate a partner earning
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
@@ -29,6 +30,7 @@ export default function PartnerEarningsPage() {
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
 
 
+  const { summary: earnings, refetch: refetchEarnings } = useEarningsSummary(true);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -147,8 +149,8 @@ export default function PartnerEarningsPage() {
   useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("payout_requests", () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription("rewards", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
+  useRealtimeSubscription("payout_requests", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
 
   if (!userId || isLoading) return <DashboardLoading />;
 
@@ -158,33 +160,24 @@ export default function PartnerEarningsPage() {
   const earningCases = commissionEligible.filter((c) => PAID_STATUSES.includes(c.status));
   const pipelineCases = cases.filter((c) => !PAID_STATUSES.includes(c.status));
 
-  // Reward-based financials
-  const pendingRewards = rewards.filter((r) => r.status === "pending");
-  const approvedRewards = rewards.filter((r) => r.status === "approved");
-  const paidRewards = rewards.filter((r) => r.status === "paid");
+  // ── Authoritative balances: server-side, mutually exclusive buckets ──
+  const items = earnings.items ?? [];
+  const lockedPending = items.filter((i) => i.status === "locked");
+  const availableItems = items.filter((i) => i.status === "available");
+  const requestedItems = items.filter((i) => i.status === "requested");
+  const paidRewardsList = items.filter((i) => i.status === "paid");
 
-  const pendingAmount = pendingRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const approvedAmount = approvedRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const paidAmount = paidRewards.reduce((s: number, r: any) => s + Number(r.amount), 0);
-  const totalAmount = pendingAmount + approvedAmount + paidAmount;
+  const pendingAmount = Number(earnings.locked);
+  const approvedAmount = Number(earnings.requested) + Number(earnings.available);
+  const paidAmount = Number(earnings.paid);
+  const totalAmount = Number(earnings.total);
 
-  // Which pending rewards are unlocked (> 20 days old)
   const now = new Date();
-  const unlockedPending = pendingRewards.filter((r: any) => {
-    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return age >= LOCK_DAYS;
-  });
-  const lockedPending = pendingRewards.filter((r: any) => {
-    const age = (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return age < LOCK_DAYS;
-  });
-  // Eligibility comes from get_my_payout_preview(): it already excludes rewards
-  // that are attached to a non-rejected payout request and flags open requests,
-  // so a partner cannot submit a duplicate request.
-  const hasOpenRequest = !!payoutPreview?.has_open_request;
-  const unlockedAmount = Number(payoutPreview?.eligible_amount ?? 0);
-  const eligibleCount = Number(payoutPreview?.eligible_count ?? 0);
+  const hasOpenRequest = !!earnings.has_open_request;
+  const unlockedAmount = Number(earnings.available);
+  const eligibleCount = availableItems.length;
   const canRequestPayout = eligibleCount > 0 && !hasOpenRequest;
+
 
 
 
@@ -295,7 +288,7 @@ export default function PartnerEarningsPage() {
               ₪{(pendingAmount + approvedAmount).toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {t("partner.earnings.studentCount", { count: pendingRewards.length + approvedRewards.length })}
+              {t("partner.earnings.studentCount", { count: lockedPending.length + requestedItems.length + availableItems.length })}
             </p>
           </CardContent>
         </Card>
@@ -309,7 +302,7 @@ export default function PartnerEarningsPage() {
               ₪{paidAmount.toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {t("partner.earnings.studentCount", { count: paidRewards.length })}
+              {t("partner.earnings.studentCount", { count: paidRewardsList.length })}
             </p>
           </CardContent>
         </Card>
@@ -457,21 +450,20 @@ export default function PartnerEarningsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {paidRewards.length === 0 ? (
+          {paidRewardsList.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-6">
               {t("partner.noPaymentHistory")}
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {paidRewards.map((r: any) => {
-                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-                const studentName = paidCaseMap[caseId]?.split(" ")[0] ?? "—";
+              {paidRewardsList.map((r) => {
+                const studentName = r.student_name?.split(" ")[0] ?? "—";
                 return (
-                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <div key={r.reward_id} className="flex items-center justify-between gap-3 py-3 text-sm">
                     <div>
                       <p className="font-medium text-foreground">{studentName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString("en-US") : "—"}
+                        {r.commission_reference ?? (r.case_reference ?? "—")}
                       </p>
                     </div>
                     <div className="text-end">
@@ -481,6 +473,7 @@ export default function PartnerEarningsPage() {
                   </div>
                 );
               })}
+
             </div>
           )}
         </CardContent>
