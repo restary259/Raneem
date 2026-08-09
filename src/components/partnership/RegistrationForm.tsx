@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,12 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { POLICY_VERSION, recordConsent } from "@/lib/consent";
 
 import { useDirection } from '@/hooks/useDirection';
 
 const RegistrationForm = () => {
-  const { t } = useTranslation('partnership');
+  const { t, i18n } = useTranslation('partnership');
   const { dir } = useDirection();
+  const isAr = i18n.language?.startsWith('ar');
   const formContent = t('registrationForm', { returnObjects: true }) as any;
   const contactOptions = formContent.contactOptions as Record<string, string>;
 
@@ -34,6 +38,9 @@ const RegistrationForm = () => {
     socialLinks: z.string().optional(),
     previousExperience: z.enum(["yes", "no"], { required_error: t('registrationForm.validation.experienceRequired') }),
     whyDarb: z.string().min(10, { message: t('registrationForm.validation.whyDarbMin') }),
+    consent: z.literal(true, {
+      errorMap: () => ({ message: t('registrationForm.validation.consentRequired') }),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
