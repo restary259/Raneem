@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,15 +22,16 @@ interface Props {
   canManage?: boolean;
 
   /**
-   * Admin only.
-   *
-   * This is retained for the existing payment-history component.
-   * German-side confirmation will be handled separately.
+   * Retained for the existing payment-history component.
+   * German-side confirmation is handled separately.
    */
   canConfirm?: boolean;
 }
 
 interface FinanceConfirmation {
+  id?: string;
+  case_id?: string;
+  finance_type?: string;
   status: "pending" | "proof_submitted" | "confirmed" | "rejected";
   confirmed_by: string | null;
   confirmed_at: string | null;
@@ -39,7 +40,7 @@ interface FinanceConfirmation {
 }
 
 const fmtMoney = (amount: number, currency: string) =>
-  currency === "ILS" ? formatILS(amount) : `${amount.toLocaleString("en-US")} ${currency}`;
+  currency === "ILS" ? formatILS(amount) : `${Number(amount || 0).toLocaleString("en-US")} ${currency}`;
 
 const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = false }) => {
   const { t, i18n } = useTranslation("dashboard");
@@ -57,13 +58,10 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
 
   const [confirmingAgencyFee, setConfirmingAgencyFee] = useState(false);
 
-  const serviceTotal = financials?.service_total ?? 0;
-
-  const paid = financials?.total_confirmed ?? 0;
-
-  const pendingReview = financials?.total_pending_review ?? 0;
-
-  const remaining = financials?.remaining ?? 0;
+  const serviceTotal = Number(financials?.service_total ?? 0);
+  const paid = Number(financials?.total_confirmed ?? 0);
+  const pendingReview = Number(financials?.total_pending_review ?? 0);
+  const remaining = Number(financials?.remaining ?? 0);
 
   const schoolCosts = financials?.school_costs ?? [];
 
@@ -91,25 +89,23 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         : "bg-slate-100 text-slate-800";
 
   /**
-   * Load the new financial confirmation state.
+   * Load the DARB service-fee confirmation.
    *
-   * This is separate from case_payments.
-   *
-   * DARB confirmation:
-   *   case_finance_confirmations
-   *
-   * Payment history:
-   *   case_payments
+   * This is deliberately separate from case_payments.
    */
-  const loadAgencyConfirmation = async () => {
-    if (!caseId) return;
+  const loadAgencyConfirmation = useCallback(async () => {
+    if (!caseId) {
+      setAgencyConfirmation(null);
+      setLoadingConfirmation(false);
+      return;
+    }
 
     setLoadingConfirmation(true);
 
     try {
       const { data, error } = await supabase
         .from("case_finance_confirmations")
-        .select("status, confirmed_by, confirmed_at, proof_reference, proof_note")
+        .select("id, case_id, finance_type, status, confirmed_by, confirmed_at, proof_reference, proof_note")
         .eq("case_id", caseId)
         .eq("finance_type", "agency_service_fee")
         .maybeSingle();
@@ -118,7 +114,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         throw error;
       }
 
-      setAgencyConfirmation(data as FinanceConfirmation | null);
+      setAgencyConfirmation((data as FinanceConfirmation | null) ?? null);
     } catch (error) {
       console.error("Failed to load DARB finance confirmation:", error);
 
@@ -126,22 +122,18 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
     } finally {
       setLoadingConfirmation(false);
     }
-  };
+  }, [caseId]);
 
   useEffect(() => {
-    loadAgencyConfirmation();
-  }, [caseId]);
+    void loadAgencyConfirmation();
+  }, [loadAgencyConfirmation]);
 
   /**
    * Confirm the automatically calculated DARB service fee.
    *
-   * IMPORTANT:
-   *
-   * There is intentionally NO amount parameter.
+   * There is intentionally NO amount input.
    *
    * The database calculates the amount from case_services.
-   *
-   * The Team member cannot change the amount.
    */
   const confirmAgencyFee = async () => {
     if (confirmingAgencyFee || agencyConfirmation?.status === "confirmed") {
@@ -168,8 +160,10 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         throw error;
       }
 
+      const confirmedAmount = Number(data?.amount_ils ?? serviceTotal);
+
       toast({
-        description: `DARB service fee confirmed: ${formatILS(Number(data?.amount_ils ?? serviceTotal))}`,
+        description: `DARB service fee confirmed: ${formatILS(confirmedAmount)}`,
       });
 
       await loadAgencyConfirmation();
@@ -189,198 +183,196 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
   const agencyConfirmed = agencyConfirmation?.status === "confirmed";
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5" />
-              {t("finance.title")}
-            </CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="flex min-w-0 items-center gap-2">
+            <Wallet className="h-5 w-5 shrink-0" />
+            <span>{t("finance.title")}</span>
+          </CardTitle>
 
-            <Badge variant="secondary" className={statusClass}>
-              {t(`finance.status.${status}`)}
-            </Badge>
-          </div>
+          <Badge variant="secondary" className={statusClass}>
+            {t(`finance.status.${status}`)}
+          </Badge>
+        </div>
 
-          {financials?.case_reference && (
-            <p className="text-sm text-muted-foreground">
-              {financials.case_reference}
-              {financials.student_name ? ` · ${financials.student_name}` : ""}
-            </p>
-          )}
-        </CardHeader>
+        {financials?.case_reference && (
+          <p className="text-sm text-muted-foreground">
+            {financials.case_reference}
+            {financials.student_name ? ` · ${financials.student_name}` : ""}
+          </p>
+        )}
+      </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* ================================================== */}
-          {/* DARB / AGENCY FINANCE                             */}
-          {/* ================================================== */}
+      <CardContent className="space-y-4">
+        {/* ================================================== */}
+        {/* DARB / AGENCY FINANCE                             */}
+        {/* ================================================== */}
 
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">{t("finance.summary.agencyBlock")}</p>
+        <div className="space-y-3">
+          <p className="text-sm font-semibold">{t("finance.summary.agencyBlock")}</p>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">{t("finance.summary.services")}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">{t("finance.summary.services")}</p>
 
-                <p className="mt-1 text-lg font-semibold">{formatILS(serviceTotal)}</p>
-              </div>
-
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
-
-                <p className="mt-1 text-lg font-semibold">{formatILS(paid)}</p>
-              </div>
-
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">{t("finance.summary.pendingReview")}</p>
-
-                <p className="mt-1 text-lg font-semibold">{formatILS(pendingReview)}</p>
-              </div>
-
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">{t("finance.summary.remaining")}</p>
-
-                <p
-                  className={`mt-1 text-lg font-semibold ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}
-                >
-                  {formatILS(remaining)}
-                </p>
-              </div>
+              <p className="mt-1 text-lg font-semibold">{formatILS(serviceTotal)}</p>
             </div>
 
-            {/* ================================================== */}
-            {/* DARB CONFIRMATION                                 */}
-            {/* ================================================== */}
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">{t("finance.summary.paid")}</p>
 
-            <div
-              className={`rounded-md border p-4 ${
-                agencyConfirmed ? "border-emerald-200 bg-emerald-50/50" : "bg-muted/30"
-              }`}
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    {agencyConfirmed ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <Clock3 className="h-4 w-4 text-amber-600" />
-                    )}
+              <p className="mt-1 text-lg font-semibold">{formatILS(paid)}</p>
+            </div>
 
-                    <p className="text-sm font-semibold">DARB service fee</p>
-                  </div>
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">{t("finance.summary.pendingReview")}</p>
 
-                  <p className="mt-1 text-sm font-medium">{formatILS(serviceTotal)}</p>
+              <p className="mt-1 text-lg font-semibold">{formatILS(pendingReview)}</p>
+            </div>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {agencyConfirmed
-                      ? "Confirmed by the assigned Team member."
-                      : "Calculated automatically from the selected DARB services. No amount can be entered manually."}
-                  </p>
+            <div className="rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">{t("finance.summary.remaining")}</p>
 
-                  {agencyConfirmed && agencyConfirmation?.confirmed_at && (
-                    <p className="mt-1 text-xs text-emerald-700">
-                      Confirmed {new Date(agencyConfirmation.confirmed_at).toLocaleDateString("en-US")}
-                    </p>
+              <p className={`mt-1 text-lg font-semibold ${remaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                {formatILS(remaining)}
+              </p>
+            </div>
+          </div>
+
+          {/* ================================================== */}
+          {/* DARB CONFIRMATION                                 */}
+          {/* ================================================== */}
+
+          <div
+            className={`rounded-md border p-4 ${
+              agencyConfirmed ? "border-emerald-200 bg-emerald-50/50" : "bg-muted/30"
+            }`}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  {agencyConfirmed ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
                   )}
+
+                  <p className="text-sm font-semibold">DARB service fee</p>
                 </div>
 
-                {canManage && !agencyConfirmed && (
-                  <Button
-                    type="button"
-                    onClick={confirmAgencyFee}
-                    disabled={confirmingAgencyFee || loadingConfirmation || serviceTotal <= 0}
-                    className="shrink-0 gap-2"
-                  >
-                    {confirmingAgencyFee && <Loader2 className="h-4 w-4 animate-spin" />}
+                <p className="mt-1 text-sm font-medium">{formatILS(serviceTotal)}</p>
 
-                    {confirmingAgencyFee ? "Confirming..." : "Confirm DARB Service Fee"}
-                  </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {agencyConfirmed
+                    ? "Confirmed by the assigned Team member."
+                    : "Calculated automatically from the selected DARB services. No amount can be entered manually."}
+                </p>
+
+                {agencyConfirmed && agencyConfirmation?.confirmed_at && (
+                  <p className="mt-1 text-xs text-emerald-700">
+                    Confirmed {new Date(agencyConfirmation.confirmed_at).toLocaleDateString("en-US")}
+                  </p>
                 )}
               </div>
+
+              {canManage && !agencyConfirmed && (
+                <Button
+                  type="button"
+                  onClick={confirmAgencyFee}
+                  disabled={confirmingAgencyFee || loadingConfirmation || serviceTotal <= 0}
+                  className="shrink-0 gap-2"
+                >
+                  {confirmingAgencyFee && <Loader2 className="h-4 w-4 animate-spin" />}
+
+                  {confirmingAgencyFee ? "Confirming..." : "Confirm DARB Service Fee"}
+                </Button>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* ================================================== */}
-          {/* GERMANY / SCHOOL COSTS                            */}
-          {/* ================================================== */}
+        {/* ================================================== */}
+        {/* GERMANY / SCHOOL COSTS                            */}
+        {/* ================================================== */}
 
-          {schoolCosts.length > 0 && (
-            <>
-              <Separator />
+        {schoolCosts.length > 0 && (
+          <>
+            <Separator />
 
-              <div className="space-y-1.5 rounded-md border p-3 text-sm">
-                <p className="text-xs font-medium text-muted-foreground">{t("finance.summary.schoolBlock")}</p>
+            <div className="space-y-1.5 rounded-md border p-3 text-sm">
+              <p className="text-xs font-medium text-muted-foreground">{t("finance.summary.schoolBlock")}</p>
 
-                {schoolCosts.map((line) => (
-                  <div key={line.kind} className="space-y-0.5">
-                    <div className="flex flex-wrap justify-between gap-2 text-muted-foreground">
-                      <span className="min-w-0 break-words">
-                        {t(`finance.summary.kind.${line.kind}`)} — {lineName(line)}
-                      </span>
+              {schoolCosts.map((line) => (
+                <div key={line.kind} className="space-y-0.5">
+                  <div className="flex flex-wrap justify-between gap-2 text-muted-foreground">
+                    <span className="min-w-0 break-words">
+                      {t(`finance.summary.kind.${line.kind}`)} — {lineName(line)}
+                    </span>
 
-                      <span className="whitespace-nowrap font-medium text-foreground">
-                        {fmtMoney(line.total, line.currency)}
-                      </span>
-                    </div>
-
-                    {line.weekly_price ? (
-                      <p className="text-xs text-muted-foreground">
-                        {fmtMoney(line.weekly_price, line.currency)} × {line.weeks} {t("finance.summary.weeks")} ={" "}
-                        {fmtMoney(line.total, line.currency)}
-                      </p>
-                    ) : null}
+                    <span className="whitespace-nowrap font-medium text-foreground">
+                      {fmtMoney(line.total, line.currency)}
+                    </span>
                   </div>
-                ))}
 
-                {Object.entries(schoolSubtotals).map(([currency, amount]) => (
-                  <div key={currency} className="flex justify-between gap-2 border-t pt-1.5 text-sm font-semibold">
-                    <span>{t("finance.summary.subtotal")}</span>
+                  {line.weekly_price ? (
+                    <p className="text-xs text-muted-foreground">
+                      {fmtMoney(line.weekly_price, line.currency)} × {line.weeks} {t("finance.summary.weeks")} ={" "}
+                      {fmtMoney(line.total, line.currency)}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
 
-                    <span className="whitespace-nowrap">{fmtMoney(amount, currency)}</span>
-                  </div>
-                ))}
+              {Object.entries(schoolSubtotals).map(([currency, amount]) => (
+                <div key={currency} className="flex justify-between gap-2 border-t pt-1.5 text-sm font-semibold">
+                  <span>{t("finance.summary.subtotal")}</span>
 
-                <p className="text-xs text-muted-foreground">{t("finance.summary.estimateNote")}</p>
+                  <span className="whitespace-nowrap">{fmtMoney(amount, currency)}</span>
+                </div>
+              ))}
 
-                <p className="text-xs text-muted-foreground">{t("finance.summary.noCrossCurrency")}</p>
-              </div>
-            </>
-          )}
+              <p className="text-xs text-muted-foreground">{t("finance.summary.estimateNote")}</p>
 
-          <Separator />
+              <p className="text-xs text-muted-foreground">{t("finance.summary.noCrossCurrency")}</p>
+            </div>
+          </>
+        )}
 
-          {/* ================================================== */}
-          {/* SERVICES                                           */}
-          {/* ================================================== */}
+        <Separator />
 
-          <CaseServices
-            caseId={caseId}
-            services={services}
-            canManage={canManage}
-            onChanged={() => {
-              refetchServices();
-              refetchFinancials();
-              loadAgencyConfirmation();
-            }}
-          />
+        {/* ================================================== */}
+        {/* SERVICES                                           */}
+        {/* ================================================== */}
 
-          <Separator />
+        <CaseServices
+          caseId={caseId}
+          services={services}
+          canManage={canManage}
+          onChanged={() => {
+            void refetchServices();
+            void refetchFinancials();
+            void loadAgencyConfirmation();
+          }}
+        />
 
-          {/* ================================================== */}
-          {/* PAYMENT HISTORY                                    */}
-          {/* ================================================== */}
+        <Separator />
 
-          <CasePayments
-            caseId={caseId}
-            payments={financials?.payments ?? []}
-            canManage={canManage}
-            canConfirm={canConfirm}
-            onChanged={refetchFinancials}
-          />
-        </CardContent>
-      </Card>
-    </div>
+        {/* ================================================== */}
+        {/* EXISTING PAYMENT HISTORY                          */}
+        {/* ================================================== */}
+
+        <CasePayments
+          caseId={caseId}
+          payments={financials?.payments ?? []}
+          canManage={canManage}
+          canConfirm={canConfirm}
+          onChanged={() => {
+            void refetchFinancials();
+          }}
+        />
+      </CardContent>
+    </Card>
   );
 };
 
