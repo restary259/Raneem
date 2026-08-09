@@ -31,7 +31,7 @@ const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
         <p className="text-sm text-muted-foreground mb-4">{university.description}</p>
         <div className="space-y-3 mt-auto">
           <div className="flex items-center gap-2 text-sm text-foreground">
-            <Award className="h-4 w-4 text-brand shrink-0" aria-hidden="true" />
+            <Award className="h-4 w-4 text-brand-strong shrink-0" aria-hidden="true" />
             <span>{university.ranking}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-foreground">
@@ -51,7 +51,7 @@ const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
               href={university.officialUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-4 hover:text-brand"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-4 hover:text-brand-strong"
             >
               {t('educational.officialSite', { defaultValue: 'الموقع الرسمي' })}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />

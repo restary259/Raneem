@@ -44,7 +44,7 @@ const Header = () => {
             <LanguageSwitcher />
             <Link 
               to="/student-auth" 
-              className="bg-brand text-brand-foreground px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium hover:bg-brand/90 transition-colors text-sm md:text-base whitespace-nowrap flex-shrink-0"
+              className="bg-brand-strong text-brand-foreground px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium hover:bg-brand-strong/90 transition-colors text-sm md:text-base whitespace-nowrap flex-shrink-0"
             >
               {t('nav.studentLogin')}
             </Link>

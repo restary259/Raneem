@@ -60,7 +60,7 @@ const BlogIndexPage: React.FC = () => {
                     {t(`categories.${article.category}`)}
                   </Badge>
                   <h2 className="text-xl font-bold leading-snug">
-                    <Link to={`/blog/${article.slug}`} className="hover:text-brand transition-colors">
+                    <Link to={`/blog/${article.slug}`} className="hover:text-brand-strong transition-colors">
                       {content.title}
                     </Link>
                   </h2>
@@ -73,7 +73,7 @@ const BlogIndexPage: React.FC = () => {
                   </div>
                   <Link
                     to={`/blog/${article.slug}`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-brand"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-brand-strong"
                   >
                     {t('index.readMore')}
                     <Arrow className="h-4 w-4" />

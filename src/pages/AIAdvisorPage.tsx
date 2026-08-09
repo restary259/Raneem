@@ -15,7 +15,7 @@ const AIAdvisorPage = () => {
   const quickQuestions = t('quickQuestions', { returnObjects: true }) as string[];
 
   const CATEGORIES = [
-    { label: t('advisor.categories.admissions'), icon: GraduationCap, color: 'bg-brand/10 text-brand' },
+    { label: t('advisor.categories.admissions'), icon: GraduationCap, color: 'bg-brand-strong/10 text-brand-strong' },
     { label: t('advisor.categories.visa'), icon: FileText, color: 'bg-blue-100 text-blue-600' },
     { label: t('advisor.categories.language'), icon: Globe, color: 'bg-green-100 text-green-600' },
     { label: t('advisor.categories.life'), icon: HomeIcon, color: 'bg-purple-100 text-purple-600' },
@@ -97,14 +97,14 @@ const AIAdvisorPage = () => {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                   {msg.role === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0 mt-1">
-                      <User className="h-4 w-4 text-brand" />
+                    <div className="w-8 h-8 rounded-full bg-brand-strong/10 flex items-center justify-center shrink-0 mt-1">
+                      <User className="h-4 w-4 text-brand-strong" />
                     </div>
                   )}
                   <div
                     className={`max-w-[80%] p-4 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
                       msg.role === 'user'
-                        ? 'bg-brand/5 text-foreground rounded-tr-sm'
+                        ? 'bg-brand-strong/5 text-foreground rounded-tr-sm'
                         : 'bg-secondary text-foreground rounded-tl-sm'
                     }`}
                   >
@@ -143,7 +143,7 @@ const AIAdvisorPage = () => {
               type="submit"
               size="icon"
               disabled={!input.trim() || isLoading}
-              className="bg-brand text-brand-foreground hover:bg-brand/90 shrink-0"
+              className="bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>
