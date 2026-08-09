@@ -4,6 +4,8 @@ import { template as newMessage } from './new-message.tsx'
 import { template as emailTest } from './email-test.tsx'
 import { template as studentInvite } from './student-invite.tsx'
 import { template as partnerInvite } from './partner-invite.tsx'
+import { template as teamInvite } from './team-invite.tsx'
+import { template as ambassadorInvite } from './ambassador-invite.tsx'
 import { template as appointmentReminder } from './appointment-reminder.tsx'
 
 export interface TemplateEntry {
@@ -19,6 +21,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'email-test': emailTest,
   'student-invite': studentInvite,
   'partner-invite': partnerInvite,
+  'team-invite': teamInvite,
+  'ambassador-invite': ambassadorInvite,
   'appointment-reminder': appointmentReminder,
 }
 

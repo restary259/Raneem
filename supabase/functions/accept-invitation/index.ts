@@ -122,6 +122,9 @@ serve(async (req) => {
       email,
       must_change_password: false,
     };
+    // Only seed the name for a brand-new account — never overwrite one the
+    // person already set on an existing profile.
+    if (created && inv.invited_name) profilePatch.full_name = inv.invited_name;
     if (inv.invitation_type === "partner" && inv.master_partner_id) {
       profilePatch.master_partner_id = inv.master_partner_id;
     }

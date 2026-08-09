@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } from 'lucide-react';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck, Mail, Send, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
@@ -36,6 +36,17 @@ interface TeamMember {
   is_master_partner: boolean;
 }
 
+interface PendingInvitation {
+  id: string;
+  invited_email: string;
+  invited_name: string | null;
+  invitation_type: string;
+  intended_role: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+}
+
 /** Roles that get a public referral link of their own. */
 const REFERRING_ROLES = ['social_media_partner', 'ambassador'];
 
@@ -47,17 +58,44 @@ const AdminTeamPage = () => {
   const onlineUsers = useOnlineUsers();
 
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
+  const [invitedInfo, setInvitedInfo] = useState<{ email: string; emailed: boolean; url: string } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+  /** 'invite' sends a branded activation email; 'manual' shows a temp password. */
+  const [mode, setMode] = useState<'invite' | 'manual'>('invite');
+  const [busyInvite, setBusyInvite] = useState<string | null>(null);
 
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
+
+  const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-account`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify(payload),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || 'Request failed');
+    return result;
+  }, []);
+
+  const fetchInvitations = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from('user_invitations')
+      .select('id, invited_email, invited_name, invitation_type, intended_role, status, expires_at, created_at')
+      .eq('status', 'pending')
+      .in('invitation_type', ['team', 'partner', 'ambassador'])
+      .order('created_at', { ascending: false });
+    setInvitations((data || []) as PendingInvitation[]);
+  }, []);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -116,7 +154,7 @@ const AdminTeamPage = () => {
     }
   }, [toast]);
 
-  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+  useEffect(() => { fetchMembers(); fetchInvitations(); }, [fetchMembers, fetchInvitations]);
 
   const createMember = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
@@ -125,6 +163,20 @@ const AdminTeamPage = () => {
     }
     setCreating(true);
     try {
+      if (mode === 'invite') {
+        const result = await callInviteFn({
+          action: 'send',
+          full_name: form.fullName.trim(),
+          email: form.email.trim(),
+          role: form.role,
+        });
+        setInvitedInfo({ email: form.email.trim(), emailed: !!result.emailed, url: result.activationUrl });
+        setForm({ fullName: '', email: '', role: 'team_member' });
+        await fetchInvitations();
+        toast({ description: t('admin.team.invitationSent', 'Invitation sent') });
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
         method: 'POST',
@@ -144,6 +196,37 @@ const AdminTeamPage = () => {
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const resendInvitation = async (inv: PendingInvitation) => {
+    setBusyInvite(inv.id);
+    try {
+      await callInviteFn({
+        action: 'send',
+        full_name: inv.invited_name || inv.invited_email.split('@')[0],
+        email: inv.invited_email,
+        role: inv.intended_role,
+      });
+      await fetchInvitations();
+      toast({ description: t('admin.team.invitationSent', 'Invitation sent') });
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setBusyInvite(null);
+    }
+  };
+
+  const revokeInvitation = async (inv: PendingInvitation) => {
+    setBusyInvite(inv.id);
+    try {
+      await callInviteFn({ action: 'revoke', invitation_id: inv.id });
+      await fetchInvitations();
+      toast({ description: t('admin.team.invitationRevoked', 'Invitation revoked') });
+    } catch (err: any) {
+      toast({ variant: 'destructive', description: err.message });
+    } finally {
+      setBusyInvite(null);
     }
   };
 
@@ -221,7 +304,27 @@ const AdminTeamPage = () => {
                 <DialogTitle>{t('admin.team.createMember', 'Create Team Member')}</DialogTitle>
               </DialogHeader>
 
-              {newCreds ? (
+              {invitedInfo ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {invitedInfo.emailed
+                      ? t('admin.team.inviteSentHint', 'An activation email was sent. The link works once and expires in 7 days.')
+                      : t('admin.team.inviteEmailFailed', 'The invitation was created but the email could not be sent — share the link below instead.')}
+                  </p>
+                  <div className="space-y-2 rounded-lg bg-muted p-4">
+                    <p className="text-sm"><span className="font-medium">{t('admin.team.email', 'Email')}:</span> {invitedInfo.email}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="min-w-0 truncate font-mono text-xs">{invitedInfo.url}</p>
+                      <Button variant="ghost" size="icon" aria-label={t('admin.team.copyInviteLink', 'Copy activation link')} onClick={() => copyToClipboard(invitedInfo.url)}>
+                        {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button className="w-full" onClick={() => { setInvitedInfo(null); setOpen(false); }}>
+                    {t('common.done', 'Done')}
+                  </Button>
+                </div>
+              ) : newCreds ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     {t('admin.team.credentialsHint')}
@@ -260,12 +363,38 @@ const AdminTeamPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label>{t('admin.team.howToCreate', 'How should the account be created?')}</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {([
+                        { key: 'invite', title: t('admin.team.modeInvite', 'Send invitation email'), desc: t('admin.team.modeInviteDesc', 'They receive a branded link and choose their own password.') },
+                        { key: 'manual', title: t('admin.team.modeManual', 'Create manually'), desc: t('admin.team.modeManualDesc', 'You get a temporary password to pass on; they must change it at first sign-in.') },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setMode(opt.key)}
+                          className={`rounded-lg border p-3 text-start transition-colors ${mode === opt.key ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                        >
+                          <span className="block text-sm font-medium text-foreground">{opt.title}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{opt.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <Button
-                    className="w-full"
+                    className="w-full gap-2"
                     onClick={createMember}
                     disabled={creating}
                   >
-                    {creating ? t('admin.team.creating') : t('admin.team.createBtn', 'Create Account')}
+                    {mode === 'invite' ? <Mail className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                    {creating
+                      ? t('admin.team.creating')
+                      : mode === 'invite'
+                        ? t('admin.team.sendInvite', 'Send invitation')
+                        : t('admin.team.createBtn', 'Create Account')}
                   </Button>
                 </div>
               )}
@@ -273,6 +402,59 @@ const AdminTeamPage = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Pending invitations */}
+      {invitations.length > 0 && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="border-b px-4 py-3 text-sm font-medium text-foreground">
+              {t('admin.team.pendingInvites', 'Pending invitations')}
+            </div>
+            <div className="divide-y divide-border">
+              {invitations.map(inv => (
+                <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {inv.invited_name || inv.invited_email}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{inv.invited_email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin.team.inviteExpires', 'Expires')}:{' '}
+                      {new Date(inv.expires_at).toLocaleDateString('en-US')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{roleLabel(inv.intended_role)}</Badge>
+                    <Badge variant="outline">{t('admin.team.invited', 'Invited')}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={busyInvite === inv.id}
+                      onClick={() => resendInvitation(inv)}
+                      title={t('admin.team.resendInvite', 'Resend invitation')}
+                      aria-label={t('admin.team.resendInvite', 'Resend invitation')}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      disabled={busyInvite === inv.id}
+                      onClick={() => revokeInvitation(inv)}
+                      title={t('admin.team.revokeInvite', 'Revoke invitation')}
+                      aria-label={t('admin.team.revokeInvite', 'Revoke invitation')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Members List */}
       <Card>

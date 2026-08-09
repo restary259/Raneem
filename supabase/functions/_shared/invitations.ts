@@ -8,12 +8,14 @@
 
 export const APP_URL = "https://darb.agency";
 
-export type InvitationType = "student" | "partner";
+export type InvitationType = "student" | "partner" | "team" | "ambassador";
 
 export interface CreateInvitationInput {
   invitedEmail: string;
   invitationType: InvitationType;
-  intendedRole: "student" | "social_media_partner";
+  intendedRole: "student" | "social_media_partner" | "team_member" | "ambassador";
+  /** Shown in the account once the invitation is accepted. */
+  invitedName?: string | null;
   inviterId?: string | null;
   masterPartnerId?: string | null;
   caseId?: string | null;
@@ -73,6 +75,7 @@ export async function createInvitation(
 
   const payload = {
     invited_email: email,
+    invited_name: input.invitedName?.trim() || null,
     invitation_type: input.invitationType,
     intended_role: input.intendedRole,
     token_hash,
