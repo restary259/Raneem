@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { unsubscribeFromPush } from '@/lib/webPush';
 
 export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'ambassador' | 'student';
 
@@ -123,6 +124,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    // Release this device's push subscription first — otherwise the endpoint
+    // stays bound to the outgoing account and the phone keeps receiving that
+    // user's notifications until someone signs in again on this device.
+    const currentUserId = state.user?.id;
+    if (currentUserId) {
+      try {
+        await unsubscribeFromPush(currentUserId);
+      } catch {
+        /* never block sign-out on push cleanup */
+      }
+    }
     await supabase.auth.signOut();
   };
 

@@ -1,5 +1,5 @@
 
-const CACHE_VERSION = '4.1.0';
+const CACHE_VERSION = '4.2.0';
 const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
 const AI_CACHE = 'darb-ai-cache';
 const DOCS_CACHE = 'darb-docs-cache';
@@ -185,7 +185,10 @@ async function syncContactForms() {
 // ---------------------------------------------------------------------------
 // Web Push
 // ---------------------------------------------------------------------------
-const NOTIFICATION_ICON = '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png';
+const NOTIFICATION_ICON = '/icons/icon-192.png';
+// Android / Samsung Internet render `badge` as a monochrome mask, so it must be
+// a white-on-transparent silhouette rather than the colour logo. iOS ignores it.
+const NOTIFICATION_BADGE = '/icons/badge-96.png';
 
 function parsePushData(event) {
   if (!event.data) return {};
@@ -206,7 +209,7 @@ self.addEventListener('push', event => {
     await self.registration.showNotification(title, {
       body: data.body || 'تحديث جديد',
       icon: NOTIFICATION_ICON,
-      badge: NOTIFICATION_ICON,
+      badge: NOTIFICATION_BADGE,
       lang: 'ar',
       dir: 'rtl',
       vibrate: [100, 50, 100],

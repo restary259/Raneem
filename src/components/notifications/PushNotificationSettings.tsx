@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BellRing, Loader2, Send, Smartphone } from "lucide-react";
+import { BellRing, Info, Loader2, Send, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -9,10 +9,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import {
+  getPushDiagnostics,
   getPushStatus,
   sendTestPush,
   subscribeToPush,
   unsubscribeFromPush,
+  type PushDiagnostics,
   type PushStatus,
 } from "@/lib/webPush";
 
@@ -47,6 +49,7 @@ const PushNotificationSettings: React.FC = () => {
   const [prefs, setPrefs] = useState<PreferenceRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<PushDiagnostics | null>(null);
 
   const loadPreferences = useCallback(async (uid: string) => {
     const { data } = await (supabase as any)
@@ -73,6 +76,7 @@ const PushNotificationSettings: React.FC = () => {
       setUserId(session.user.id);
       setStatus(await getPushStatus());
       await loadPreferences(session.user.id);
+      setDiagnostics(await getPushDiagnostics());
     })();
   }, [loadPreferences]);
 
@@ -106,6 +110,7 @@ const PushNotificationSettings: React.FC = () => {
         await unsubscribeFromPush(userId);
       }
       setStatus(await getPushStatus());
+      setDiagnostics(await getPushDiagnostics());
     } finally {
       setBusy(false);
     }
@@ -119,10 +124,33 @@ const PushNotificationSettings: React.FC = () => {
       variant: result.ok ? "default" : "destructive",
       description: result.ok ? t("pushSettings.testSent") : t("pushSettings.testFailed"),
     });
+    setDiagnostics(await getPushDiagnostics());
   };
 
   const capability = status?.capability;
   const subscribed = Boolean(status?.subscribed && status.permission === "granted");
+
+  const diagnosticRows: Array<[string, string]> = diagnostics
+    ? [
+        ["capability", diagnostics.capability],
+        ["permission", String(diagnostics.permission)],
+        ["device", `${diagnostics.platform} · ${diagnostics.browser}`],
+        ["installed", diagnostics.standalone ? "yes" : "no"],
+        ["origin", diagnostics.origin],
+        ["worker", diagnostics.swState ? `${diagnostics.swState} (${diagnostics.swScope})` : "none"],
+        ["endpoint", diagnostics.endpointHost ?? "none"],
+        [
+          "stored",
+          diagnostics.storedActive === null
+            ? "none"
+            : diagnostics.storedActive
+              ? "active"
+              : "inactive",
+        ],
+        ["lastSuccess", diagnostics.lastSuccessAt ?? "—"],
+        ["lastError", diagnostics.lastErrorStatus ? String(diagnostics.lastErrorStatus) : "—"],
+      ]
+    : [];
 
   return (
     <div className="space-y-5">
@@ -226,6 +254,26 @@ const PushNotificationSettings: React.FC = () => {
           </div>
         </>
       )}
+
+      <Separator />
+      <details className="group">
+        <summary className="text-xs font-medium text-muted-foreground cursor-pointer list-none flex items-center gap-1">
+          <Info className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("pushSettings.diagnostics.title")}
+        </summary>
+        <dl className="mt-2 space-y-1 text-[11px] text-muted-foreground">
+          {diagnostics ? (
+            diagnosticRows.map(([label, value]) => (
+              <div key={label} className="flex items-start justify-between gap-3">
+                <dt>{t(`pushSettings.diagnostics.${label}`)}</dt>
+                <dd className="font-mono text-foreground/80 break-all text-end">{value}</dd>
+              </div>
+            ))
+          ) : (
+            <p>{t("pushSettings.diagnostics.loading")}</p>
+          )}
+        </dl>
+      </details>
     </div>
   );
 };

@@ -158,6 +158,69 @@ export async function sendTestPush(): Promise<{ ok: boolean; message?: string }>
   return { ok: Boolean(result?.success), message: result?.reason };
 }
 
+export interface PushDiagnostics {
+  capability: PushCapability;
+  permission: NotificationPermission | "unsupported";
+  standalone: boolean;
+  origin: string;
+  swScope: string | null;
+  swState: string | null;
+  endpointHost: string | null;
+  platform: string;
+  browser: string;
+  storedActive: boolean | null;
+  lastSuccessAt: string | null;
+  lastErrorStatus: number | null;
+}
+
+/**
+ * Everything needed to diagnose "push doesn't work on my phone" without a
+ * debugger attached to the device. Read-only; never prompts.
+ */
+export async function getPushDiagnostics(): Promise<PushDiagnostics> {
+  const capability = getPushCapability();
+  const device = describeDevice();
+  const base: PushDiagnostics = {
+    capability,
+    permission: capability === "supported" ? Notification.permission : "unsupported",
+    standalone: isStandalone(),
+    origin: window.location.origin,
+    swScope: null,
+    swState: null,
+    endpointHost: null,
+    platform: device.platform,
+    browser: device.browser,
+    storedActive: null,
+    lastSuccessAt: null,
+    lastErrorStatus: null,
+  };
+
+  const registration = await getRegistration().catch(() => null);
+  if (registration) {
+    base.swScope = registration.scope;
+    const worker = registration.active ?? registration.waiting ?? registration.installing;
+    base.swState = worker?.state ?? null;
+  }
+
+  const subscription = await registration?.pushManager.getSubscription().catch(() => null);
+  if (!subscription) return base;
+
+  base.endpointHost = new URL(subscription.endpoint).host;
+
+  const { data } = await (supabase as any)
+    .from("push_subscriptions")
+    .select("active, last_success_at, last_error_status")
+    .eq("endpoint", subscription.endpoint)
+    .maybeSingle();
+
+  if (data) {
+    base.storedActive = data.active;
+    base.lastSuccessAt = data.last_success_at;
+    base.lastErrorStatus = data.last_error_status;
+  }
+  return base;
+}
+
 /**
  * Re-register silently when the browser rotates an existing subscription.
  * Safe to call on every app load: it never prompts.
