@@ -389,7 +389,18 @@
       "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
       "manager": "Manager",
       "managerHint": "Managers are reachable by all team members in the internal chat",
-      "copyPassword": "Copy password"
+      "copyPassword": "Copy password",
+      "viewDetails": "View performance details",
+      "stats": {
+        "referred": "Referred students",
+        "assigned": "Assigned cases",
+        "enrolled": "Enrolled",
+        "perStudent": "Per enrolled student",
+        "earned": "Total earned",
+        "paid": "Paid out",
+        "pending": "Pending",
+        "lastActivity": "Last case activity"
+      }
     },
     "programs": {
       "title": "Programs & Accommodations",
