@@ -11,6 +11,7 @@ import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useToast } from "@/hooks/use-toast";
+import { useEarningsSummary } from "@/hooks/useEarningsSummary";
 
 // Cases at these statuses generate a partner earning
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
