@@ -15,7 +15,7 @@ const BodySchema = z.object({
 const DEBOUNCE_MS = 10 * 60 * 1000;
 const lastSent = new Map<string, number>();
 
-const APP_URL = "https://darb-agency.lovable.app";
+const APP_URL = "https://darb.agency";
 
 type Admin = ReturnType<typeof createClient>;
 

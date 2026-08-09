@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 
-const APP_URL = "https://darb-agency.lovable.app";
+const APP_URL = "https://darb.agency";
 
 /**
  * Single, retry-safe entry point for approving a partner recruit application.

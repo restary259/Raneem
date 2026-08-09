@@ -63,10 +63,13 @@ export const EmailHeader = ({ dir = 'rtl' as Dir }) => (
 
 export const EmailSocialLinks = () => (
   <Section style={{ textAlign: 'center', padding: '4px 0 12px' }}>
-    {SOCIAL_LINKS.map((s) => (
-      <Link key={s.name} href={s.href} style={socialLink} title={s.name}>
-        <Img src={s.icon} alt={s.name} width={20} height={20} style={socialIcon} />
-      </Link>
+    {SOCIAL_LINKS.map((s, i) => (
+      <React.Fragment key={s.name}>
+        {i > 0 ? <span style={socialSep}>·</span> : null}
+        <Link href={s.href} style={socialLink} title={s.name}>
+          {s.label}
+        </Link>
+      </React.Fragment>
     ))}
   </Section>
 )
@@ -383,9 +386,12 @@ const footerLink = {
 const socialLink = {
   display: 'inline-block',
   margin: '0 6px',
+  color: color.textMuted,
+  fontSize: '12px',
+  textDecoration: 'none',
 }
 
-const socialIcon = {
-  display: 'block',
-  border: '0',
+const socialSep = {
+  color: color.textFaint,
+  fontSize: '12px',
 }

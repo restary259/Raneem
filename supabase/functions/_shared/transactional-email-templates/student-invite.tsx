@@ -54,6 +54,6 @@ export const template = {
     studentName: 'آدم خليل',
     email: 'student@example.com',
     caseReference: 'DARB-1042',
-    activationUrl: 'https://darb-agency.lovable.app/reset-password',
+    activationUrl: 'https://darb.agency/reset-password',
   },
 } satisfies TemplateEntry
