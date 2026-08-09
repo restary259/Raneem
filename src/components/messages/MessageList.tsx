@@ -260,7 +260,7 @@ export default function MessageList({
           className="sticky top-2 z-20 mx-auto flex h-8 gap-1 rounded-full px-3 text-xs shadow-md"
         >
           <ArrowDown className="h-3.5 w-3.5" />
-          {t("chat.jumpToLatest", "أحدث الرسائل")}
+          {t("chat.jumpToLatest")}
         </Button>
       )}
       {hasOlder && onLoadOlder && (
