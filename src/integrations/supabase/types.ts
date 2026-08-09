@@ -1490,48 +1490,66 @@ export type Database = {
       }
       important_contacts: {
         Row: {
+          address_ar: string | null
+          address_en: string | null
           category: string
+          city: string | null
+          country: string
           created_at: string
           display_order: number
           email: string | null
           id: string
           is_active: boolean
+          last_verified_at: string | null
           link: string | null
           name_ar: string
           name_en: string
           phone: string | null
           role_ar: string | null
           role_en: string | null
+          source_url: string | null
           updated_at: string
         }
         Insert: {
+          address_ar?: string | null
+          address_en?: string | null
           category?: string
+          city?: string | null
+          country?: string
           created_at?: string
           display_order?: number
           email?: string | null
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           link?: string | null
           name_ar: string
           name_en: string
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Update: {
+          address_ar?: string | null
+          address_en?: string | null
           category?: string
+          city?: string | null
+          country?: string
           created_at?: string
           display_order?: number
           email?: string | null
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           link?: string | null
           name_ar?: string
           name_en?: string
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          source_url?: string | null
           updated_at?: string
         }
         Relationships: []

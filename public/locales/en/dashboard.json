@@ -2774,8 +2774,18 @@
       "support": "Support",
       "team": "Team",
       "embassy": "Embassy",
-      "other": "Other"
-    }
+      "other": "Other",
+      "emergency": "Emergency",
+      "medical": "Medical",
+      "legal": "Legal",
+      "language_school": "Language Schools",
+      "city_office": "Citizen Services",
+      "immigration": "Immigration Authority"
+    },
+    "officialSite": "Official website",
+    "directions": "Directions",
+    "verifiedOn": "Verified",
+    "source": "source"
   },
   "appointment": {
     "outcome": {

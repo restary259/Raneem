@@ -61,6 +61,11 @@ interface Contact {
   category: string;
   display_order: number;
   is_active: boolean;
+  address_ar?: string | null;
+  address_en?: string | null;
+  city?: string | null;
+  source_url?: string | null;
+  last_verified_at?: string | null;
 }
 
 interface VisaField {
@@ -75,7 +80,7 @@ interface VisaField {
   is_active: boolean;
 }
 
-const CATEGORIES = ["emergency", "medical", "legal", "team", "other"];
+const CATEGORIES = ["emergency", "medical", "legal", "team", "language_school", "city_office", "immigration", "other"];
 const FIELD_TYPES = ["text", "date", "select", "boolean"];
 
 // Data categories for selective reset.
@@ -122,6 +127,7 @@ const AdminSettingsPage = () => {
   const [contactForm, setContactForm] = useState({
     name_ar: "", name_en: "", role_ar: "", role_en: "",
     phone: "", email: "", link: "", category: "other", display_order: "0",
+    address_ar: "", address_en: "", city: "", source_url: "", verified_today: true,
   });
 
   // ── Visa fields state ──────────────────────────────────────────────
@@ -213,9 +219,12 @@ const AdminSettingsPage = () => {
         phone: contactForm.phone || null, email: contactForm.email || null,
         link: contactForm.link || null, category: contactForm.category,
         display_order: Number(contactForm.display_order) || 0,
-      });
+        address_ar: contactForm.address_ar || null, address_en: contactForm.address_en || null,
+        city: contactForm.city || null, source_url: contactForm.source_url || null,
+        last_verified_at: contactForm.verified_today ? new Date().toISOString() : null,
+      } as any);
       if (error) throw error;
-      setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0" });
+      setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0", address_ar: "", address_en: "", city: "", source_url: "", verified_today: true });
       setContactOpen(false);
       await fetchData();
       toast({ description: t('admin.settings.contactCreated', 'Contact created') });
@@ -351,7 +360,11 @@ const AdminSettingsPage = () => {
   const catLabel = (cat: string) => {
     const m: Record<string, { en: string; ar: string }> = {
       emergency: { en: "Emergency", ar: "طوارئ" }, medical: { en: "Medical", ar: "طبي" },
-      legal: { en: "Legal", ar: "قانوني" }, team: { en: "Team", ar: "الفريق" }, other: { en: "Other", ar: "أخرى" },
+      legal: { en: "Legal", ar: "قانوني" }, team: { en: "Team", ar: "الفريق" },
+      language_school: { en: "Language School", ar: "مدرسة لغة" },
+      city_office: { en: "Citizen Services", ar: "خدمات المواطنين" },
+      immigration: { en: "Immigration Authority", ar: "دائرة الهجرة" },
+      other: { en: "Other", ar: "أخرى" },
     };
     return isRtl ? m[cat]?.ar : m[cat]?.en;
   };
@@ -491,6 +504,30 @@ const AdminSettingsPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "العنوان (عربي)" : "Address (Arabic)"}</Label>
+                      <Input value={contactForm.address_ar} onChange={(e) => setContactForm((f) => ({ ...f, address_ar: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "العنوان (إنجليزي)" : "Address (English)"}</Label>
+                      <Input value={contactForm.address_en} onChange={(e) => setContactForm((f) => ({ ...f, address_en: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "المدينة" : "City"}</Label>
+                      <Input value={contactForm.city} onChange={(e) => setContactForm((f) => ({ ...f, city: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>{isRtl ? "رابط المصدر الرسمي" : "Official source URL"}</Label>
+                      <Input value={contactForm.source_url} onChange={(e) => setContactForm((f) => ({ ...f, source_url: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-border p-3">
+                    <Label className="text-sm">{isRtl ? "تم التحقق اليوم" : "Mark verified today"}</Label>
+                    <Switch checked={contactForm.verified_today} onCheckedChange={(v) => setContactForm((f) => ({ ...f, verified_today: v }))} />
+                  </div>
                   <div className="space-y-1">
                     <Label>{t('admin.settings.contactFormOrder')}</Label>
                     <Input type="number" value={contactForm.display_order}
@@ -517,11 +554,22 @@ const AdminSettingsPage = () => {
                         {(isRtl ? c.role_ar : c.role_en) && (
                           <p className="text-xs text-muted-foreground">{isRtl ? c.role_ar : c.role_en}</p>
                         )}
+                        {(c.city || (isRtl ? c.address_ar : c.address_en)) && (
+                          <p className="text-xs text-muted-foreground">
+                            {[c.city, isRtl ? c.address_ar : c.address_en].filter(Boolean).join(' — ')}
+                          </p>
+                        )}
                         <div className="flex flex-wrap gap-3 mt-1">
-                          {c.phone && (<a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>)}
+                          {c.phone && (<a href={`tel:${c.phone.replace(/\s/g, '')}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>)}
                           {c.email && (<a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Mail className="h-3 w-3" />{c.email}</a>)}
                           {c.link && (<a href={c.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline"><LinkIcon className="h-3 w-3" />Link</a>)}
                         </div>
+                        {c.last_verified_at && (
+                          <p className="text-[11px] text-muted-foreground">
+                            {(isRtl ? "تم التحقق: " : "Verified: ") + new Date(c.last_verified_at).toLocaleDateString('en-US')}
+                            {c.source_url && (<> · <a href={c.source_url} target="_blank" rel="noreferrer" className="underline">{isRtl ? "المصدر" : "source"}</a></>)}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 ms-4 shrink-0">
                         <span className="text-xs text-muted-foreground">{catLabel(c.category)}</span>

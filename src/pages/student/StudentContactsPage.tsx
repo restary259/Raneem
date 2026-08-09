@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Mail, Link as LinkIcon, Users, HelpCircle } from 'lucide-react';
+import { Phone, Mail, Link as LinkIcon, Users, HelpCircle, MapPin, Siren, GraduationCap, Building2, Stamp } from 'lucide-react';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 
 interface Contact {
@@ -17,12 +17,21 @@ interface Contact {
   email?: string;
   link?: string;
   category: string;
+  city?: string | null;
+  address_ar?: string | null;
+  address_en?: string | null;
+  source_url?: string | null;
+  last_verified_at?: string | null;
 }
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   support:     <HelpCircle className="h-5 w-5 text-primary" />,
   team:        <Users className="h-5 w-5 text-primary" />,
   embassy:     <LinkIcon className="h-5 w-5 text-primary" />,
+  emergency:   <Siren className="h-5 w-5 text-destructive" />,
+  language_school: <GraduationCap className="h-5 w-5 text-primary" />,
+  city_office: <Building2 className="h-5 w-5 text-primary" />,
+  immigration: <Stamp className="h-5 w-5 text-primary" />,
   other:       <Phone className="h-5 w-5 text-muted-foreground" />,
 };
 
@@ -97,10 +106,20 @@ export default function StudentContactsPage() {
                         {isAr ? contact.role_ar : contact.role_en}
                       </p>
                     )}
+                    {(contact.city || (isAr ? contact.address_ar : contact.address_en)) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {[contact.city, isAr ? contact.address_ar : contact.address_en].filter(Boolean).join(' — ')}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-3 mt-2">
                       {contact.phone && (
-                        <a href={`tel:${contact.phone}`} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                        <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
                           <Phone className="h-3.5 w-3.5" />{contact.phone}
+                        </a>
+                      )}
+                      {contact.link && (
+                        <a href={contact.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                          <LinkIcon className="h-3.5 w-3.5" />{t('contacts.officialSite', 'Official website')}
                         </a>
                       )}
                       {contact.email && (
@@ -108,12 +127,24 @@ export default function StudentContactsPage() {
                           <Mail className="h-3.5 w-3.5" />{contact.email}
                         </a>
                       )}
-                      {contact.link && (
-                        <a href={contact.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                          <LinkIcon className="h-3.5 w-3.5" />{t('contacts.visitLink', 'Visit')}
+                      {contact.address_en && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address_en)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                        >
+                          <MapPin className="h-3.5 w-3.5" />{t('contacts.directions', 'Directions')}
                         </a>
                       )}
                     </div>
+                    {contact.last_verified_at && (
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        {t('contacts.verifiedOn', 'Verified')}: {new Date(contact.last_verified_at).toLocaleDateString('en-US')}
+                        {contact.source_url && (
+                          <> · <a href={contact.source_url} target="_blank" rel="noopener noreferrer" className="underline">{t('contacts.source', 'source')}</a></>
+                        )}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

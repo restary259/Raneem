@@ -2784,16 +2784,26 @@
     "saveSuccess": "تم حفظ معلومات التأشيرة"
   },
   "contacts": {
-    "title": "جهات الاتصال المهمة",
-    "subtitle": "جهات اتصال رئيسية لرحلتك الدراسية",
-    "noContacts": "لا توجد جهات اتصال متاحة بعد.",
+    "title": "جهات اتصال مهمة",
+    "subtitle": "جهات اتصال أساسية لرحلتك الدراسية",
+    "noContacts": "لا توجد جهات اتصال بعد.",
     "visitLink": "زيارة",
     "categories": {
       "support": "الدعم",
       "team": "الفريق",
       "embassy": "السفارة",
-      "other": "أخرى"
-    }
+      "other": "أخرى",
+      "emergency": "الطوارئ",
+      "medical": "طبي",
+      "legal": "قانوني",
+      "language_school": "مدارس اللغة",
+      "city_office": "خدمات المواطنين",
+      "immigration": "دائرة الهجرة"
+    },
+    "officialSite": "الموقع الرسمي",
+    "directions": "الاتجاهات",
+    "verifiedOn": "تم التحقق",
+    "source": "المصدر"
   },
   "appointment": {
     "outcome": {
