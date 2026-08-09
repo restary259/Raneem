@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Receipt,
+  Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   SidebarProvider,
@@ -121,6 +122,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.profile", icon: User, href: "/student/profile" },
     { key: "nav.documents", icon: FileText, href: "/student/documents" },
     { key: "nav.visa", icon: Globe, href: "/student/visa" },
+    { key: "nav.fees", icon: Receipt, href: "/student/fees" },
     { key: "nav.refer", icon: Heart, href: "/student/refer" },
     { key: "nav.contacts", icon: Users, href: "/student/contacts" },
     { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },

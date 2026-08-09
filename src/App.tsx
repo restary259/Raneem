@@ -103,6 +103,7 @@ const StudentVisaPage = lazy(() => import("./pages/student/StudentVisaPage"));
 const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
 const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 const StudentDataPage = lazy(() => import("./pages/student/StudentDataPage"));
+const StudentFeesPage = lazy(() => import("./pages/student/StudentFeesPage"));
 const StudentOnboardingGate = lazy(() => import("./components/student/StudentOnboardingGate"));
 
 /** Permanent failures (auth/permission/not-found/validation) must never be retried. */
@@ -338,6 +339,7 @@ const App = () => {
               <Route path="visa" element={<StudentVisaPage />} />
               <Route path="refer" element={<StudentReferPage />} />
               <Route path="contacts" element={<StudentContactsPage />} />
+              <Route path="fees" element={<StudentFeesPage />} />
               <Route path="my-data" element={<StudentDataPage />} />
             </Route>
 
