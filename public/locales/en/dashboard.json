@@ -3194,7 +3194,11 @@
       "referral": "Referral cases only",
       "referralDesc": "Only cases that came through their referral link"
     },
-    "delete": "Delete"
+    "delete": "Delete",
+    "masterShare": "Master partner share (ILS)",
+    "allocationPreview": "Allocation per enrolled student",
+    "allocationHint": "Recruited partner {{recruited}} ₪ + master partner {{master}} ₪ = {{pool}} ₪ total. The master share is taken out of the partner pool, not added on top.",
+    "masterShareTooHigh": "The master partner share cannot be larger than the partner commission."
   },
   "caseTimeline": {
     "title": "Timeline",
