@@ -61,7 +61,7 @@ const StudentGallery = () => {
         <img
           src={student.image}
           alt={student.name ? `${student.name} — Darb student now studying in ${student.destination}` : `Darb student success story in ${student.destination}`}
-          className="w-full h-56 sm:h-64 lg:h-80 object-contain object-center md:group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-56 sm:h-64 lg:h-80 object-cover object-top md:group-hover:scale-110 transition-transform duration-500"
           loading={index < 2 ? "eager" : "lazy"}
           fetchPriority={index < 2 ? "high" : "low"}
           decoding="async"
