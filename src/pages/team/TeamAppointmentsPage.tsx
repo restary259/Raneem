@@ -739,7 +739,7 @@ export default function TeamAppointmentsPage() {
                       ))}
                       {dayAppts.length > 3 && (
                         <p className="text-[9px] text-muted-foreground text-center font-medium mt-0.5">
-                          {t("team.appointments.moreCount", { n: dayAppts.length - 3 })}
+                          {t("team.appointments.moreCount", { count: dayAppts.length - 3 })}
                         </p>
                       )}
                     </div>

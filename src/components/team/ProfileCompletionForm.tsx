@@ -177,7 +177,7 @@ const BirthdayPicker = ({
         </Select>
       </div>
       {age !== null && (
-        <p className="text-xs text-muted-foreground mt-1">{t("case.profileForm.age", { n: age })}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t("case.profileForm.age", { count: age })}</p>
       )}
     </div>
   );
@@ -688,8 +688,8 @@ export default function ProfileCompletionForm({
                 {programs.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {nameOf(p)}
-                    {p.lessons_per_week ? ` · ${t("case.profileForm.lessonsPerWeek", { n: p.lessons_per_week })}` : ""}
-                    {p.duration_in_months ? ` · ${t("case.profileForm.monthsShort", { n: p.duration_in_months })}` : ""}
+                    {p.lessons_per_week ? ` · ${t("case.profileForm.lessonsPerWeek", { count: p.lessons_per_week })}` : ""}
+                    {p.duration_in_months ? ` · ${t("case.profileForm.monthsShort", { count: p.duration_in_months })}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -697,10 +697,10 @@ export default function ProfileCompletionForm({
             {selectedProgram && (
               <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex flex-wrap gap-3">
                 {selectedProgram.lessons_per_week && (
-                  <span>📚 {t("case.profileForm.lessonsPerWeek", { n: selectedProgram.lessons_per_week })}</span>
+                  <span>📚 {t("case.profileForm.lessonsPerWeek", { count: selectedProgram.lessons_per_week })}</span>
                 )}
                 {selectedProgram.duration_in_months && (
-                  <span>⏱ {t("case.profileForm.monthsLong", { n: selectedProgram.duration_in_months })}</span>
+                  <span>⏱ {t("case.profileForm.monthsLong", { count: selectedProgram.duration_in_months })}</span>
                 )}
                 {selectedProgram.price && (
                   <span>
@@ -742,7 +742,7 @@ export default function ProfileCompletionForm({
               </div>
               {selectedProgram?.duration_in_months && courseEnd && (
                 <p className="text-xs text-emerald-600 mt-1">
-                  ✓ {t("case.profileForm.autoFrom", { n: selectedProgram.duration_in_months })}
+                  ✓ {t("case.profileForm.autoFrom", { count: selectedProgram.duration_in_months })}
                 </p>
               )}
             </div>
@@ -843,7 +843,7 @@ export default function ProfileCompletionForm({
               )}
               {selectedAccom?.price && selectedProgram?.duration_in_months && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t("case.profileForm.costAccommodation", { n: selectedProgram.duration_in_months })}</span>
+                  <span>{t("case.profileForm.costAccommodation", { count: selectedProgram.duration_in_months })}</span>
                   <span className="font-medium text-foreground">
                     {(selectedAccom.price * selectedProgram.duration_in_months).toLocaleString("en-US")}{" "}
                     {selectedAccom.currency}
@@ -852,7 +852,7 @@ export default function ProfileCompletionForm({
               )}
               {selectedIns?.price && selectedProgram?.duration_in_months && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>{t("case.profileForm.costInsurance", { n: selectedProgram.duration_in_months })}</span>
+                  <span>{t("case.profileForm.costInsurance", { count: selectedProgram.duration_in_months })}</span>
                   <span className="font-medium text-foreground">
                     {(selectedIns.price * selectedProgram.duration_in_months).toLocaleString("en-US")}{" "}
                     {selectedIns.currency}

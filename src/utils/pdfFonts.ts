@@ -15,6 +15,7 @@ export const HEBREW_FONT = 'NotoSansHebrew';
 
 const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 const HEBREW_RE = /[\u0590-\u05FF\uFB1D-\uFB4F]/;
+const UNICODE_SYMBOL_RE = /[₪€]/;
 
 export const hasArabic = (text: string) => ARABIC_RE.test(text);
 export const hasHebrew = (text: string) => HEBREW_RE.test(text);
@@ -60,8 +61,9 @@ export async function registerPdfFonts(doc: jsPDF): Promise<FontRegistration> {
 export function fontForText(text: string, fonts: FontRegistration, fallback = 'helvetica'): string {
   if (hasArabic(text) && fonts.arabic) return ARABIC_FONT;
   if (hasHebrew(text) && fonts.hebrew) return HEBREW_FONT;
-  // Arabic text still renders best in the Arabic face even for mixed strings.
-  if (hasHebrew(text) && fonts.hebrew) return HEBREW_FONT;
+  // Helvetica uses WinAnsi in jsPDF and corrupts ₪. The bundled Hebrew face
+  // contains both currency symbols and ASCII digits used in financial cells.
+  if (UNICODE_SYMBOL_RE.test(text) && fonts.hebrew) return HEBREW_FONT;
   return fallback;
 }
 
@@ -94,35 +96,10 @@ export async function loadTextShaper(): Promise<void> {
 }
 
 /**
- * Converts a logical-order string into the visual order jsPDF needs.
- * Safe on pure-Latin input (returned unchanged).
+ * Keeps text in logical Unicode order. Current jsPDF performs Arabic shaping
+ * in its text pipeline; pre-shaping/reversing here caused double bidi handling,
+ * broken punctuation and unreadable mixed Arabic/number cells.
  */
 export function shapeForPdf(text: string): string {
-  if (!text || !hasRtl(text)) return text;
-
-  let shaped = text;
-  if (reshaper?.convertArabic && hasArabic(shaped)) {
-    try {
-      shaped = reshaper.convertArabic(shaped);
-    } catch {
-      /* keep unshaped text rather than dropping the value */
-    }
-  }
-
-  if (bidiEngine) {
-    try {
-      const embeddingLevels = bidiEngine.getEmbeddingLevels(shaped, 'rtl');
-      const flips = bidiEngine.getReorderSegments(shaped, embeddingLevels);
-      const chars = Array.from(shaped);
-      flips.forEach(([start, end]: [number, number]) => {
-        const slice = chars.slice(start, end + 1).reverse();
-        for (let i = 0; i < slice.length; i++) chars[start + i] = slice[i];
-      });
-      return chars.join('');
-    } catch {
-      /* fall through */
-    }
-  }
-
-  return shaped;
+  return text;
 }

@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, Inbox, Search, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
+import { downloadCsv } from "@/utils/csv";
 
 type Submission = {
   id: string;
@@ -17,24 +18,6 @@ type Submission = {
   data: any;
   status: string;
   created_at: string;
-};
-
-const downloadCSV = (rows: any[], fileName = "export.csv") => {
-  if (!rows.length) return;
-  const header = Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
-  const csv = [
-    header.join(","),
-    ...rows.map((row) =>
-      header.map((f) => `"${String(row[f] ?? "").replace(/"/g, '""')}"`).join(",")
-    ),
-  ].join("\r\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  window.URL.revokeObjectURL(url);
 };
 
 const isPartnership = (row: Submission) =>
@@ -105,7 +88,7 @@ const AdminInboxPage = () => {
       toast({ title: t("admin.inbox.exportRecruits", "Switch to a submissions tab to export") });
       return;
     }
-    downloadCSV(
+    downloadCsv(
       visible.map((c) => ({ ...c.data, status: c.status, source: c.form_source, date: c.created_at })),
       `inbox-${tab}.csv`
     );

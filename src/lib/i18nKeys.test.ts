@@ -65,4 +65,16 @@ describe("i18n coverage", () => {
 
     expect(missing).toEqual([]);
   });
+
+  it("does not contain legacy or malformed interpolation placeholders", () => {
+    const invalid: string[] = [];
+    for (const lang of LOCALES) {
+      const dir = path.join(ROOT, "public/locales", lang);
+      for (const file of fs.readdirSync(dir).filter((name) => name.endsWith(".json"))) {
+        const source = fs.readFileSync(path.join(dir, file), "utf8");
+        if (/\{\{n\}\}|\(\([^)]*\)\)/.test(source)) invalid.push(`${lang}/${file}`);
+      }
+    }
+    expect(invalid).toEqual([]);
+  });
 });

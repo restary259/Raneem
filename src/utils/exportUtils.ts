@@ -1,9 +1,8 @@
-import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { LAYOUT } from './export/theme';
 import {
   registerPdfFonts,
-  loadTextShaper,
   shapeForPdf,
   fontForText,
   hasRtl,
@@ -17,50 +16,23 @@ interface ExportOptions {
   title?: string;
   /** Optional summary rows at the bottom (e.g. totals) */
   summaryRows?: (string | number)[][];
-}
-
-export async function exportXLSX({ headers, rows, fileName, title, summaryRows }: ExportOptions) {
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Data');
-
-  if (title) {
-    ws.addRow([title]);
-    ws.addRow([]);
-  }
-
-  const headerRow = ws.addRow(headers);
-  headerRow.font = { bold: true };
-
-  rows.forEach(r => ws.addRow(r));
-
-  if (summaryRows?.length) {
-    ws.addRow([]);
-    summaryRows.forEach(r => ws.addRow(r));
-  }
-
-  // Auto-size columns
-  ws.columns = headers.map((h, i) => {
-    const maxLen = Math.max(
-      h.length,
-      ...rows.map(r => String(r[i] ?? '').length),
-      ...(summaryRows || []).map(r => String(r[i] ?? '').length)
-    );
-    return { width: Math.min(maxLen + 4, 40) };
-  });
-
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${fileName}.xlsx`;
-  a.click();
-  URL.revokeObjectURL(url);
+  locale?: string;
+  rtl?: boolean;
 }
 
 export interface PdfExportResult {
   /** True when RTL text was present but no font could render it. */
   rtlFontMissing: boolean;
+}
+
+export function preparePdfTableData(
+  headers: string[],
+  rows: (string | number)[][],
+  rtl: boolean,
+) {
+  return rtl
+    ? { headers: [...headers].reverse(), rows: rows.map(row => [...row].reverse()) }
+    : { headers, rows };
 }
 
 export async function exportPDF({
@@ -69,14 +41,14 @@ export async function exportPDF({
   fileName,
   title,
   summaryRows,
+  locale = 'en-US',
+  rtl = false,
 }: ExportOptions): Promise<PdfExportResult> {
-  const doc = new jsPDF({ orientation: rows[0]?.length > 6 ? 'landscape' : 'portrait' });
+  const doc = new jsPDF({ orientation: headers.length > LAYOUT.landscapeThreshold ? 'landscape' : 'portrait' });
 
   // Bundled Arabic/Hebrew faces — Helvetica cannot render either script and
   // silently produces mojibake, so we track what actually registered.
   const fonts = await registerPdfFonts(doc);
-  await loadTextShaper();
-
   const allRows = [...rows];
   if (summaryRows?.length) {
     allRows.push(headers.map(() => '')); // separator
@@ -89,19 +61,22 @@ export async function exportPDF({
   );
 
   const draw = (value: unknown) => shapeForPdf(String(value ?? ''));
+  const displayed = preparePdfTableData(headers, allRows, rtl);
 
   if (title) {
-    const displayTitle = title.replace(/Darb Study(?! International)/g, 'Darb Study International');
+    const displayTitle = title;
     doc.setFont(fontForText(displayTitle, fonts), 'normal');
     doc.setFontSize(16);
-    doc.text(draw(displayTitle), 14, 20);
+    doc.text(draw(displayTitle), rtl ? doc.internal.pageSize.width - 14 : 14, 20, {
+      align: rtl ? 'right' : 'left',
+    });
   }
 
   const startY = title ? 28 : 14;
 
   autoTable(doc, {
-    head: [headers.map(draw)],
-    body: allRows.map(r => r.map(draw)),
+    head: [displayed.headers.map(draw)],
+    body: displayed.rows.map(r => r.map(draw)),
     startY,
     styles: {
       fontSize: 8,
@@ -122,18 +97,20 @@ export async function exportPDF({
     // jsPDF has one font per cell — pick the face that owns the script used.
     didParseCell: data => {
       const text = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text ?? '');
+      const selectedFont = fontForText(text, fonts);
+      if (selectedFont !== 'helvetica') data.cell.styles.font = selectedFont;
       if (hasRtl(text)) {
-        data.cell.styles.font = fontForText(text, fonts);
         data.cell.styles.halign = 'right';
       }
     },
     didDrawPage: () => {
       const pageHeight = doc.internal.pageSize.height;
-      doc.setFont('helvetica', 'normal');
+      const footer = `${new Date().toLocaleDateString(locale === 'ar' ? 'en-US' : locale)} — ${doc.getCurrentPageInfo().pageNumber}`;
+      doc.setFont(fontForText(footer, fonts), 'normal');
       doc.setFontSize(7);
       doc.setTextColor(150);
       doc.text(
-        `Generated ${new Date().toLocaleDateString('en-US')} — Page ${doc.getCurrentPageInfo().pageNumber}`,
+        footer,
         14,
         pageHeight - 8
       );
@@ -142,38 +119,4 @@ export async function exportPDF({
 
   doc.save(`${fileName}.pdf`);
   return { rtlFontMissing };
-}
-
-
-export interface WorkbookSheet {
-  name: string;
-  headers: string[];
-  rows: (string | number)[][];
-}
-
-/** Export several sheets into one .xlsx workbook. */
-export async function exportWorkbook(sheets: WorkbookSheet[], fileName: string) {
-  const wb = new ExcelJS.Workbook();
-
-  sheets.forEach(sheet => {
-    // Excel sheet names: max 31 chars, no []:*?/\
-    const safeName = sheet.name.replace(/[\[\]:*?/\\]/g, ' ').slice(0, 31) || 'Sheet';
-    const ws = wb.addWorksheet(safeName);
-    const headerRow = ws.addRow(sheet.headers);
-    headerRow.font = { bold: true };
-    sheet.rows.forEach(r => ws.addRow(r));
-    ws.columns = sheet.headers.map((h, i) => {
-      const maxLen = Math.max(h.length, ...sheet.rows.map(r => String(r[i] ?? '').length));
-      return { width: Math.min(maxLen + 4, 40) };
-    });
-  });
-
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${fileName}.xlsx`;
-  a.click();
-  URL.revokeObjectURL(url);
 }
