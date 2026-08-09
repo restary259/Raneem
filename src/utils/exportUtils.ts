@@ -3,7 +3,6 @@ import autoTable from 'jspdf-autotable';
 import { LAYOUT } from './export/theme';
 import {
   registerPdfFonts,
-  loadTextShaper,
   shapeForPdf,
   fontForText,
   hasRtl,
@@ -40,8 +39,6 @@ export async function exportPDF({
   // Bundled Arabic/Hebrew faces — Helvetica cannot render either script and
   // silently produces mojibake, so we track what actually registered.
   const fonts = await registerPdfFonts(doc);
-  await loadTextShaper();
-
   const allRows = [...rows];
   if (summaryRows?.length) {
     allRows.push(headers.map(() => '')); // separator
