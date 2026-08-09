@@ -3483,12 +3483,22 @@
     "contact": "Direct privacy contact: darbsocial27@gmail.com"
   },
   "onboarding": {
-    "label": "Onboarding",
-    "invited": "Invitation sent",
-    "activated": "Account activated",
-    "profileRequired": "Profile setup required",
-    "profileCompleted": "Profile completed",
-    "active": "Active",
-    "noAccount": "No account"
+    "title": "Complete your profile",
+    "subtitle": "We need these details before your file can move forward. It only takes a minute.",
+    "fullName": "Full name",
+    "phone": "Phone number",
+    "dob": "Date of birth",
+    "nationality": "Nationality",
+    "passportNumber": "Passport number",
+    "passportExpiry": "Passport expiry",
+    "emergencyContacts": "Emergency contacts (at least two)",
+    "addContact": "Add contact",
+    "removeContact": "Remove contact",
+    "contactName": "Name",
+    "contactRelationship": "Relationship",
+    "contactPhone": "Phone",
+    "save": "Save and continue",
+    "saved": "Your details were saved.",
+    "incomplete": "Please fill every field and add two emergency contacts."
   }
 }

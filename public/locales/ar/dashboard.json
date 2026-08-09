@@ -3501,12 +3501,22 @@
     "contact": "للتواصل المباشر بخصوص الخصوصية: darbsocial27@gmail.com"
   },
   "onboarding": {
-    "label": "حالة التسجيل",
-    "invited": "تم إرسال الدعوة",
-    "activated": "تم تفعيل الحساب",
-    "profileRequired": "يلزم استكمال الملف",
-    "profileCompleted": "اكتمل الملف",
-    "active": "نشط",
-    "noAccount": "لا يوجد حساب"
+    "title": "أكمل ملفك الشخصي",
+    "subtitle": "نحتاج هذه المعلومات قبل متابعة ملفك. لن يستغرق الأمر سوى دقيقة.",
+    "fullName": "الاسم الكامل",
+    "phone": "رقم الهاتف",
+    "dob": "تاريخ الميلاد",
+    "nationality": "الجنسية",
+    "passportNumber": "رقم جواز السفر",
+    "passportExpiry": "تاريخ انتهاء الجواز",
+    "emergencyContacts": "جهات اتصال للطوارئ (اثنتان على الأقل)",
+    "addContact": "إضافة جهة اتصال",
+    "removeContact": "حذف جهة الاتصال",
+    "contactName": "الاسم",
+    "contactRelationship": "صلة القرابة",
+    "contactPhone": "الهاتف",
+    "save": "حفظ ومتابعة",
+    "saved": "تم حفظ بياناتك.",
+    "incomplete": "يرجى تعبئة جميع الحقول وإضافة جهتي اتصال للطوارئ."
   }
 }
