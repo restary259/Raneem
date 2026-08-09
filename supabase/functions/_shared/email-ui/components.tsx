@@ -117,6 +117,7 @@ export const EmailLayout = ({
 }: LayoutProps) => (
   <Html lang={lang} dir={dir}>
     <Head>
+      <meta charSet="utf-8" />
       <meta name="color-scheme" content="light" />
       <meta name="supported-color-schemes" content="light" />
     </Head>
