@@ -2209,7 +2209,8 @@
     "nextSteps": "Next Steps",
     "network": "My network",
     "performance": "Network performance",
-    "myData": "My data"
+    "myData": "My data",
+    "account": "My Account"
   },
   "case": {
     "status": {
