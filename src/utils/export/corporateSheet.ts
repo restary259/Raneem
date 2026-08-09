@@ -151,7 +151,10 @@ function renderSheet(
   // ---- Excel table ----------------------------------------------------------
   const headerRowNumber = ws.rowCount + 1;
   const body = sheet.rows.map(r => toCells(r, columns));
-  const hasTotals = columns.some(c => c.total);
+  const isEmpty = body.length === 0;
+  // A totals row over a placeholder (empty) table makes Excel repair the table
+  // and rewrite its SUBTOTAL formulas as #REF!, so totals only exist with data.
+  const hasTotals = !isEmpty && columns.some(c => c.total);
 
   ws.addTable({
     name: sanitizeTableName(sheet.name, index),
@@ -163,7 +166,7 @@ function renderSheet(
       name: c.header || `Column ${i + 1}`,
       filterButton: true,
       totalsRowLabel: !hasTotals ? undefined : i === 0 ? 'Total' : undefined,
-      totalsRowFunction: !c.total
+      totalsRowFunction: !hasTotals || !c.total
         ? undefined
         : c.total === 'sum'
           ? 'sum'
@@ -177,6 +180,13 @@ function renderSheet(
   const firstDataRow = headerRowNumber + 1;
   const lastDataRow = headerRowNumber + Math.max(body.length, 1);
   const totalsRowNumber = hasTotals ? lastDataRow + 1 : null;
+
+  if (isEmpty) {
+    const placeholder = ws.getRow(firstDataRow).getCell(1);
+    placeholder.value = 'No records for the current selection';
+    placeholder.font = { name: FONTS.family, size: FONTS.bodySize, italic: true, color: { argb: COLORS.muted } };
+  }
+
 
   // Header styling
   const header = ws.getRow(headerRowNumber);
