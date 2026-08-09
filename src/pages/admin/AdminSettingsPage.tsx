@@ -360,7 +360,11 @@ const AdminSettingsPage = () => {
   const catLabel = (cat: string) => {
     const m: Record<string, { en: string; ar: string }> = {
       emergency: { en: "Emergency", ar: "طوارئ" }, medical: { en: "Medical", ar: "طبي" },
-      legal: { en: "Legal", ar: "قانوني" }, team: { en: "Team", ar: "الفريق" }, other: { en: "Other", ar: "أخرى" },
+      legal: { en: "Legal", ar: "قانوني" }, team: { en: "Team", ar: "الفريق" },
+      language_school: { en: "Language School", ar: "مدرسة لغة" },
+      city_office: { en: "Citizen Services", ar: "خدمات المواطنين" },
+      immigration: { en: "Immigration Authority", ar: "دائرة الهجرة" },
+      other: { en: "Other", ar: "أخرى" },
     };
     return isRtl ? m[cat]?.ar : m[cat]?.en;
   };
