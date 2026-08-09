@@ -421,7 +421,13 @@
       "accountCreatedTitle": "Account created",
       "activationLink": "Activation link",
       "copied": "Copied",
-      "openLink": "Open"
+      "openLink": "Open",
+      "adminRole": "admin",
+      "studentRole": "student",
+      "someRole": "another",
+      "deactivateAccount": "Deactivate account",
+      "conflictActive": "This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.",
+      "conflictDeactivated": "This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email."
     },
     "programs": {
       "title": "Programs & Accommodations",
