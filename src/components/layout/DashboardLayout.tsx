@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import NotificationBell from "@/components/common/NotificationBell";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import NotificationOnboardingDialog from "@/components/notifications/NotificationOnboardingDialog";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeToggle from "@/components/common/ThemeToggle";
@@ -304,6 +305,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             </TabErrorBoundary>
           </main>
           <MobileBottomNav role={role} />
+          <NotificationOnboardingDialog />
         </div>
       </div>
     </SidebarProvider>
