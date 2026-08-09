@@ -219,9 +219,12 @@ const AdminSettingsPage = () => {
         phone: contactForm.phone || null, email: contactForm.email || null,
         link: contactForm.link || null, category: contactForm.category,
         display_order: Number(contactForm.display_order) || 0,
-      });
+        address_ar: contactForm.address_ar || null, address_en: contactForm.address_en || null,
+        city: contactForm.city || null, source_url: contactForm.source_url || null,
+        last_verified_at: contactForm.verified_today ? new Date().toISOString() : null,
+      } as any);
       if (error) throw error;
-      setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0" });
+      setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0", address_ar: "", address_en: "", city: "", source_url: "", verified_today: true });
       setContactOpen(false);
       await fetchData();
       toast({ description: t('admin.settings.contactCreated', 'Contact created') });
