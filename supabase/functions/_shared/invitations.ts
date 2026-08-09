@@ -75,6 +75,7 @@ export async function createInvitation(
 
   const payload = {
     invited_email: email,
+    invited_name: input.invitedName?.trim() || null,
     invitation_type: input.invitationType,
     intended_role: input.intendedRole,
     token_hash,
