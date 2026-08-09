@@ -330,6 +330,8 @@ export default function CaseDetailPage() {
             <Button asChild size="sm" variant="outline" className="gap-1.5">
               <a
                 href={contactHref}
+                onClick={handleContactClick}
+                aria-disabled={!phoneUsable}
                 target={isMobile ? undefined : "_blank"}
                 rel={isMobile ? undefined : "noreferrer"}
               >
@@ -339,6 +341,7 @@ export default function CaseDetailPage() {
                 </span>
               </a>
             </Button>
+
             {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
