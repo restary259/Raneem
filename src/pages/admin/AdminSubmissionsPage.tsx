@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
+import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
 
 
 interface SubmittedCase {
@@ -676,6 +677,8 @@ const AdminSubmissionsPage = () => {
                   </div>
                 </>
               )}
+
+              <CaseInvoiceBlock caseId={selected.id} />
 
               {/* Documents */}
               {selected.documents && selected.documents.length > 0 && (
