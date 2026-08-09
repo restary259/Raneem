@@ -36,6 +36,7 @@ export default function ServiceCatalogPanel() {
             name_en: r.name_en,
             default_price: Number(r.default_price || 0),
             is_active: r.is_active,
+            in_full_service: r.in_full_service,
           })
           .eq("id", r.id);
         if (error) throw error;
