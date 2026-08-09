@@ -389,5 +389,31 @@
     "comingSoon": "Coming soon: universities for this country",
     "universities": "Universities",
     "keyFacts": "Key Facts:"
+  },
+  "activate": {
+    "title": "You were invited to DARB",
+    "invitedBadge": "You were invited",
+    "partnerIntro": "Your partner application was approved. Choose a password to activate your account.",
+    "studentIntro": "Your DARB file is ready. Choose a password to activate your account and follow your application.",
+    "recruiter": "Master partner",
+    "caseReference": "Case reference",
+    "email": "Invited email",
+    "password": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Activate account",
+    "activating": "Activating...",
+    "checking": "Checking your invitation...",
+    "success": "Your account is active",
+    "successDesc": "Taking you to your dashboard.",
+    "errorTitle": "Could not activate the account",
+    "mismatch": "Passwords do not match",
+    "weakPassword": "Password does not meet the requirements",
+    "emailMismatch": "This email does not match the invitation. Use the address the invitation was sent to.",
+    "invalid": "This invitation link is not valid. Contact the DARB team for a new one.",
+    "expired": "This invitation link has expired. Ask the DARB team to resend it.",
+    "accepted": "This invitation has already been accepted. Please sign in.",
+    "revoked": "This invitation was cancelled. Contact the DARB team.",
+    "missingToken": "The link is missing an invitation code.",
+    "goToLogin": "Go to sign in"
   }
 }
