@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName, phone as phoneField, uuid } from "../_shared/validate.ts";
+import { createInvitation } from "../_shared/invitations.ts";
+
 
 
 serve(async (req) => {
@@ -109,19 +111,18 @@ serve(async (req) => {
 
 
 
-    // Generate a short-lived, single-use password setup link. The application
-    // never emails or stores a reusable plaintext credential.
+    // Durable, re-openable activation link. The invitation row (not the URL)
+    // carries the case link, so attribution survives refreshes and devices.
     async function createActivationLink(email: string) {
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: { redirectTo: "https://darb.agency/reset-password" },
+      return await createInvitation(supabaseAdmin, {
+        invitedEmail: email,
+        invitationType: "student",
+        intendedRole: "student",
+        inviterId: callerId,
+        caseId: case_id,
       });
-      if (error || !data?.properties?.action_link) {
-        throw error ?? new Error("Could not create activation link");
-      }
-      return data.properties.action_link;
     }
+
 
     // Reusable activation mail. Returns true when the message was accepted.
     async function sendInvite(email: string, name: string) {

@@ -3163,6 +3163,60 @@ export type Database = {
           },
         ]
       }
+      user_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          case_id: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          intended_role: Database["public"]["Enums"]["app_role"]
+          invitation_type: string
+          invited_email: string
+          inviter_id: string | null
+          master_partner_id: string | null
+          recruit_application_id: string | null
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          intended_role: Database["public"]["Enums"]["app_role"]
+          invitation_type: string
+          invited_email: string
+          inviter_id?: string | null
+          master_partner_id?: string | null
+          recruit_application_id?: string | null
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          intended_role?: Database["public"]["Enums"]["app_role"]
+          invitation_type?: string
+          invited_email?: string
+          inviter_id?: string | null
+          master_partner_id?: string | null
+          recruit_application_id?: string | null
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -3593,6 +3647,17 @@ export type Database = {
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]
+      }
+      get_invitation_preview: {
+        Args: { p_token: string }
+        Returns: {
+          case_reference: string
+          invitation_type: string
+          invited_email: string
+          masked_email: string
+          recruiter_name: string
+          state: string
+        }[]
       }
       get_monthly_tax_report: {
         Args: never

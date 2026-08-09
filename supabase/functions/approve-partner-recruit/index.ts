@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
+import { createInvitation } from "../_shared/invitations.ts";
 
-const APP_URL = "https://darb.agency";
 
 /**
  * Single, retry-safe entry point for approving a partner recruit application.
@@ -79,18 +79,31 @@ serve(async (req) => {
       return json({ error: "The recruiting partner is no longer a master partner" }, 409);
     }
 
-    /** One-time password-setup link + branded invite. Never emails a password. */
+    const masterPartnerId = app.master_partner_id as string;
+    const masterName = (master.full_name as string | null) ?? null;
+
+    /**
+     * Durable invitation link + branded invite. Never emails a password, and the
+     * master-partner attribution lives on the invitation row, not in the URL.
+     */
+
     async function sendInvite(targetEmail: string) {
-      const { data: link, error: linkError } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email: targetEmail,
-        options: { redirectTo: `${APP_URL}/reset-password` },
-      });
-      if (linkError || !link?.properties?.action_link) {
-        console.error("activation link failed", linkError);
+      let activationUrl: string;
+      try {
+        activationUrl = await createInvitation(admin, {
+          invitedEmail: targetEmail,
+          invitationType: "partner",
+          intendedRole: "social_media_partner",
+          inviterId: adminId,
+          masterPartnerId,
+          recruitApplicationId: applicationId,
+        });
+      } catch (e) {
+        console.error("invitation creation failed", e);
         return false;
       }
       const resp = await fetch(
+
         `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
         {
           method: "POST",
@@ -105,8 +118,8 @@ serve(async (req) => {
             templateData: {
               partnerName: fullName,
               email: targetEmail,
-              masterName: master.full_name ?? null,
-              activationUrl: link.properties.action_link,
+              masterName,
+              activationUrl,
             },
           }),
         },
