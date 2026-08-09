@@ -298,8 +298,7 @@ function renderSheet(
     // Currency/date cells render wider than their raw value (₪1,234,567.00),
     // otherwise Excel shows ####.
     const padding = c.type === 'currency' ? 8 : c.type === 'date' || c.type === 'datetime' ? 6 : 4;
-    const cap = wrapped[i] ? LAYOUT.maxColWidth : LAYOUT.maxColWidth;
-    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + padding, LAYOUT.minColWidth), cap);
+    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + padding, LAYOUT.minColWidth), LAYOUT.maxColWidth);
   });
 
   ws.views = [
