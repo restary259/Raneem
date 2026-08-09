@@ -2,7 +2,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, uuid } from "../_shared/validate.ts";
 
-
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -34,14 +33,32 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
-    const parsed = await parseBody(req, z.object({
-      case_id: uuid,
-      total_payment_ils: z.number().int().min(0).max(1000000).optional(),
-    }));
+    const parsed = await parseBody(
+      req,
+      z.object({
+        case_id: uuid,
+      }),
+    );
     if (!parsed.ok) {
       return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: corsHeaders });
     }
-    const { case_id, total_payment_ils } = parsed.data;
+    const { case_id } = parsed.data;
+
+    // Re-run the authoritative database enrollment gate with the admin's user JWT.
+    // This verifies Germany payments before the case can enter enrollment_paid.
+    const userClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+
+    const { error: gateError } = await userClient.rpc("assert_case_ready_for_enrollment", {
+      p_case_id: case_id,
+    });
+    if (gateError) {
+      return new Response(JSON.stringify({ error: gateError.message }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Fetch current case state
     const { data: caseRow, error: fetchError } = await supabaseAdmin
@@ -74,7 +91,6 @@ Deno.serve(async (req) => {
 
     if (updateError) throw updateError;
 
-
     // Update case_submission enrollment payment fields
     await supabaseAdmin
       .from("case_submissions")
@@ -87,7 +103,6 @@ Deno.serve(async (req) => {
       })
       .eq("case_id", case_id);
 
-
     // Log activity (best-effort — FK on actor_id may not resolve for service-role inserts)
     try {
       await supabaseAdmin.rpc("log_activity", {
@@ -96,9 +111,11 @@ Deno.serve(async (req) => {
         p_action: "case_marked_paid",
         p_entity_type: "cases",
         p_entity_id: case_id,
-        p_metadata: { paid_at: now, total_payment_ils },
+        p_metadata: { paid_at: now },
       });
-    } catch (_) { /* non-fatal */ }
+    } catch (_) {
+      /* non-fatal */
+    }
 
     // Audit log (best-effort)
     try {
@@ -109,7 +126,9 @@ Deno.serve(async (req) => {
         target_table: "cases",
         details: `Admin marked case as enrollment_paid at ${now}`,
       });
-    } catch (_) { /* non-fatal */ }
+    } catch (_) {
+      /* non-fatal */
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
