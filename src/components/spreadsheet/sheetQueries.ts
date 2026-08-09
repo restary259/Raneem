@@ -194,11 +194,15 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
 
   return (data || []).map((r: any) => {
     const notes: string = r.admin_notes ?? '';
-    const kind = notes.startsWith('Partner commission')
-      ? 'partner'
-      : notes.startsWith('Team commission')
-        ? 'team'
-        : 'other';
+    // reward_type is the authoritative classification; notes are free text.
+    const kind =
+      r.reward_type === 'partner' || r.reward_type === 'team' || r.reward_type === 'master_override'
+        ? r.reward_type
+        : notes.startsWith('Partner commission')
+          ? 'partner'
+          : notes.startsWith('Team commission')
+            ? 'team'
+            : 'other';
     const unlock = new Date(new Date(r.created_at).getTime() + LOCK_DAYS * 86400000);
     return {
       id: r.id,
@@ -329,7 +333,7 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
     .is('deleted_at', null);
   if (scope === 'team' && userId) casesQuery = casesQuery.eq('assigned_to', userId);
 
-  let rewardsQuery = (supabase as any).from('rewards').select('user_id, amount, status, admin_notes');
+  let rewardsQuery = (supabase as any).from('rewards').select('user_id, amount, status, admin_notes, reward_type');
   if (scope === 'team' && userId) rewardsQuery = rewardsQuery.eq('user_id', userId);
 
   const [casesRes, rewardsRes] = await Promise.all([casesQuery, rewardsQuery]);
@@ -337,7 +341,7 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
 
   const cases = casesRes.data || [];
   const rewards = (rewardsRes.data || []).filter((r: any) =>
-    (r.admin_notes ?? '').startsWith('Team commission'),
+    r.reward_type ? r.reward_type === 'team' : (r.admin_notes ?? '').startsWith('Team commission'),
   );
 
   const ids = Array.from(
