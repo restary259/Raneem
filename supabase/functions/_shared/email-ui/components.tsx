@@ -386,9 +386,12 @@ const footerLink = {
 const socialLink = {
   display: 'inline-block',
   margin: '0 6px',
+  color: color.textMuted,
+  fontSize: '12px',
+  textDecoration: 'none',
 }
 
-const socialIcon = {
-  display: 'block',
-  border: '0',
+const socialSep = {
+  color: color.textFaint,
+  fontSize: '12px',
 }
