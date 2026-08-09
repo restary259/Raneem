@@ -52,6 +52,7 @@ const JoinPartnerPage = lazy(() => import("./pages/JoinPartnerPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/legal/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/legal/TermsPage"));
+const AccessibilityStatementPage = lazy(() => import("./pages/legal/AccessibilityStatementPage"));
 
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
