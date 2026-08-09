@@ -326,6 +326,25 @@ const AdminSubmissionsPage = () => {
     return format(new Date(ts), "dd/MM/yyyy");
   };
 
+  // The student-documents bucket is private: never link to a public URL,
+  // always mint a short-lived signed URL at click time.
+  const openDocument = async (fileUrl: string) => {
+    try {
+      const marker = "/student-documents/";
+      const idx = fileUrl.indexOf(marker);
+      const path = idx !== -1 ? fileUrl.slice(idx + marker.length) : fileUrl;
+      const { data, error } = await supabase.storage
+        .from("student-documents")
+        .createSignedUrl(path, 60);
+      if (error || !data?.signedUrl) throw error ?? new Error("no url");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err?.message ?? "Download failed" });
+    }
+  };
+
+
+
   const totalFee = (s: SubmittedCase) =>
     (s.submission?.service_fee || 0).toLocaleString('en-US');
 
