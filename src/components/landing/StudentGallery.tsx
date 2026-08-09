@@ -40,7 +40,7 @@ const StudentGallery = () => {
         if (atEnd) {
           el.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          el.scrollLeft += delta;
+          el.scrollBy({ left: delta, behavior: 'auto' });
         }
       }
       raf = requestAnimationFrame(step);
@@ -98,7 +98,7 @@ const StudentGallery = () => {
         {/* Mobile: swipeable carousel */}
         <div
           ref={trackRef}
-          className="mt-8 md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="mt-8 md:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           role="region"
           aria-label={gallery.title}
         >
