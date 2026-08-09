@@ -51,6 +51,8 @@ export async function exportPDF({
   );
 
   const draw = (value: unknown) => shapeForPdf(String(value ?? ''));
+  const displayedHeaders = rtl ? [...headers].reverse() : headers;
+  const displayedRows = rtl ? allRows.map(row => [...row].reverse()) : allRows;
 
   if (title) {
     const displayTitle = title;
@@ -64,8 +66,8 @@ export async function exportPDF({
   const startY = title ? 28 : 14;
 
   autoTable(doc, {
-    head: [headers.map(draw)],
-    body: allRows.map(r => r.map(draw)),
+    head: [displayedHeaders.map(draw)],
+    body: displayedRows.map(r => r.map(draw)),
     startY,
     styles: {
       fontSize: 8,
