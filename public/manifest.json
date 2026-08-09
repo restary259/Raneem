@@ -17,52 +17,28 @@
   ],
   "icons": [
     {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -73,8 +49,9 @@
       "url": "/ai-advisor",
       "icons": [
         {
-          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -85,8 +62,9 @@
       "url": "/services",
       "icons": [
         {
-          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -97,8 +75,9 @@
       "url": "/educational-destinations",
       "icons": [
         {
-          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     },
@@ -109,8 +88,9 @@
       "url": "/contact",
       "icons": [
         {
-          "src": "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }
