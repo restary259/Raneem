@@ -40,7 +40,7 @@ export default function TeamAnalyticsPage() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [casesRes, closedRes, apptRes, overrideRes, rewardsRes] = await Promise.all([
+    const [casesRes, closedRes, apptRes, overrideRes] = await Promise.all([
       supabase.from('cases').select('status').eq('assigned_to', user.id),
       supabase.from('cases').select('id')
         .eq('assigned_to', user.id)
