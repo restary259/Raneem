@@ -55,6 +55,7 @@ serve(async (req) => {
       student_email: emailField,
       student_full_name: personName,
       student_phone: phoneField.optional().nullable(),
+      confirm_transfer: z.boolean().optional(),
     }));
     if (!parsed.ok) {
       return new Response(JSON.stringify({ error: parsed.error }), {
@@ -63,6 +64,7 @@ serve(async (req) => {
       });
     }
     const { case_id, student_email, student_full_name, student_phone } = parsed.data;
+    const body = parsed.data;
 
     if (!case_id || !student_email || !student_full_name) {
       return new Response(JSON.stringify({ error: "case_id, student_email, student_full_name required" }), {
