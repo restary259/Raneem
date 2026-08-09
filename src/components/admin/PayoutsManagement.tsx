@@ -283,7 +283,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-bold text-lg">{Number(r.amount).toLocaleString('en-US')} ₪</span>
-                    <span className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale)}</span>
                   </div>
                   {r.linked_student_names?.length > 0 && (
                     <Button variant="ghost" size="sm" className="text-xs gap-2" onClick={() => setStudentsModal(r.linked_student_names)}>
@@ -328,7 +328,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
                       </td>
                       <td className="px-4 py-3 font-medium">{Number(r.amount).toLocaleString('en-US')} ₪</td>
                       <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(locale)}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.requested_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale)}</td>
                       <td className="px-4 py-3"><ActionButtons req={r} /></td>
                     </tr>
                   ))}

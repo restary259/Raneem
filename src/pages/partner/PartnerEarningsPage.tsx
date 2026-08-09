@@ -281,7 +281,7 @@ export default function PartnerEarningsPage() {
               ₪{totalAmount.toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {t("partner.earnings.studentCount", { n: rewards.length })}
+              {t("partner.earnings.studentCount", { count: rewards.length })}
             </p>
           </CardContent>
         </Card>
@@ -295,7 +295,7 @@ export default function PartnerEarningsPage() {
               ₪{(pendingAmount + approvedAmount).toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {t("partner.earnings.studentCount", { n: pendingRewards.length + approvedRewards.length })}
+              {t("partner.earnings.studentCount", { count: pendingRewards.length + approvedRewards.length })}
             </p>
           </CardContent>
         </Card>
@@ -309,7 +309,7 @@ export default function PartnerEarningsPage() {
               ₪{paidAmount.toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {t("partner.earnings.studentCount", { n: paidRewards.length })}
+              {t("partner.earnings.studentCount", { count: paidRewards.length })}
             </p>
           </CardContent>
         </Card>
