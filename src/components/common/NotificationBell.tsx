@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Bell, Check } from 'lucide-react';
+import { Bell, Check, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PushNotificationSettings from '@/components/notifications/PushNotificationSettings';
+import { refreshPushSubscription } from '@/lib/webPush';
 
 interface Notification {
   id: string;
@@ -36,6 +39,7 @@ const NotificationBell: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async (uid: string) => {
@@ -92,6 +96,23 @@ const NotificationBell: React.FC = () => {
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
+  // Service-worker bridge: keep the list fresh when a push lands, follow
+  // notification taps, and silently re-register a rotated subscription.
+  useEffect(() => {
+    if (!userId || !('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const type = event.data?.type;
+      if (type === 'PUSH_RECEIVED') fetchNotifications(userId);
+      else if (type === 'NOTIFICATION_CLICK' && event.data.url) navigate(event.data.url);
+      else if (type === 'PUSH_SUBSCRIPTION_CHANGED') refreshPushSubscription(userId);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    refreshPushSubscription(userId);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [userId, fetchNotifications, navigate]);
+
+
+
   /** Optimistic: the badge drops the moment the row is opened, then persists. */
   const markAsRead = async (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
@@ -141,11 +162,22 @@ const NotificationBell: React.FC = () => {
       <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold text-sm">{t('notifications.title')}</h3>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={markAllRead}>
-              <Check className="h-3 w-3 me-1" />{t('notifications.markAllRead')}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={markAllRead}>
+                <Check className="h-3 w-3 me-1" />{t('notifications.markAllRead')}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              aria-label={t('pushSettings.title')}
+              onClick={() => { setOpen(false); setSettingsOpen(true); }}
+            >
+              <Settings className="h-3.5 w-3.5" />
             </Button>
-          )}
+          </div>
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
@@ -172,6 +204,15 @@ const NotificationBell: React.FC = () => {
           )}
         </ScrollArea>
       </PopoverContent>
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">{t('pushSettings.title')}</DialogTitle>
+          </DialogHeader>
+          {settingsOpen && <PushNotificationSettings />}
+        </DialogContent>
+      </Dialog>
     </Popover>
   );
 };

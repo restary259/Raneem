@@ -182,29 +182,85 @@ async function syncContactForms() {
   } catch {}
 }
 
-// Push notifications
+// ---------------------------------------------------------------------------
+// Web Push
+// ---------------------------------------------------------------------------
+const NOTIFICATION_ICON = '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png';
+
+function parsePushData(event) {
+  if (!event.data) return {};
+  try {
+    return event.data.json();
+  } catch {
+    // A push service ping without a JSON payload still deserves a notification;
+    // iOS drops the subscription if we show nothing at all.
+    return { body: event.data.text() };
+  }
+}
+
 self.addEventListener('push', event => {
-  if (!event.data) return;
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'درب', {
+  const data = parsePushData(event);
+  const title = data.title || 'درب';
+
+  event.waitUntil((async () => {
+    await self.registration.showNotification(title, {
       body: data.body || 'تحديث جديد',
-      icon: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
-      badge: '/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+      icon: NOTIFICATION_ICON,
+      badge: NOTIFICATION_ICON,
+      lang: 'ar',
+      dir: 'rtl',
       vibrate: [100, 50, 100],
       tag: data.tag || 'darb-notification',
-      data: { url: data.url || '/' },
-      actions: [
-        { action: 'open', title: 'فتح' },
-        { action: 'dismiss', title: 'تجاهل' }
-      ]
-    })
-  );
+      renotify: Boolean(data.tag),
+      requireInteraction: data.priority === 'high',
+      timestamp: Date.now(),
+      data: {
+        url: data.url || '/',
+        notificationId: data.notificationId || null,
+        category: data.category || 'system',
+      },
+    });
+
+    // Let any open tab refresh its bell/badge without waiting for realtime.
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      client.postMessage({ type: 'PUSH_RECEIVED', payload: data });
+    }
+  })());
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  if (event.action !== 'dismiss') {
-    event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
-  }
+  if (event.action === 'dismiss') return;
+
+  const target = event.notification.data?.url || '/';
+
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const scopeOrigin = self.location.origin;
+    const absolute = new URL(target, scopeOrigin).href;
+
+    // Reuse an existing app window (required on iOS standalone, where opening a
+    // second window is not allowed) and navigate it client-side.
+    for (const client of windows) {
+      if (new URL(client.url).origin !== scopeOrigin) continue;
+      await client.focus();
+      client.postMessage({ type: 'NOTIFICATION_CLICK', url: target });
+      if ('navigate' in client && client.url !== absolute) {
+        try { await client.navigate(absolute); } catch { /* SPA handles it via postMessage */ }
+      }
+      return;
+    }
+
+    if (self.clients.openWindow) await self.clients.openWindow(absolute);
+  })());
 });
+
+self.addEventListener('pushsubscriptionchange', event => {
+  // The browser rotated the subscription; tell the app to re-register on next load.
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) client.postMessage({ type: 'PUSH_SUBSCRIPTION_CHANGED' });
+  })());
+});
+

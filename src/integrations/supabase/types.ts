@@ -2007,17 +2007,77 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          cat_appointments: boolean
+          cat_cases: boolean
+          cat_documents: boolean
+          cat_messages: boolean
+          cat_payments: boolean
+          cat_profile: boolean
+          cat_recruitment: boolean
+          cat_system: boolean
+          created_at: string
+          email_enabled: boolean
+          push_enabled: boolean
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cat_appointments?: boolean
+          cat_cases?: boolean
+          cat_documents?: boolean
+          cat_messages?: boolean
+          cat_payments?: boolean
+          cat_profile?: boolean
+          cat_recruitment?: boolean
+          cat_system?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cat_appointments?: boolean
+          cat_cases?: boolean
+          cat_documents?: boolean
+          cat_messages?: boolean
+          cat_payments?: boolean
+          cat_profile?: boolean
+          cat_recruitment?: boolean
+          cat_system?: boolean
+          created_at?: string
+          email_enabled?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
           body_ar: string | null
           body_en: string | null
           case_id: string | null
+          category: string
           created_at: string
+          dedupe_key: string | null
           id: string
           is_read: boolean
           link: string | null
           metadata: Json
+          priority: string
           read: boolean
           source: string
           title: string
@@ -2030,11 +2090,14 @@ export type Database = {
           body_ar?: string | null
           body_en?: string | null
           case_id?: string | null
+          category?: string
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           link?: string | null
           metadata?: Json
+          priority?: string
           read?: boolean
           source?: string
           title: string
@@ -2047,11 +2110,14 @@ export type Database = {
           body_ar?: string | null
           body_en?: string | null
           case_id?: string | null
+          category?: string
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           link?: string | null
           metadata?: Json
+          priority?: string
           read?: boolean
           source?: string
           title?: string
@@ -2805,29 +2871,98 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
+      push_delivery_log: {
         Row: {
-          auth_key: string
+          attempt: number
           created_at: string
-          endpoint: string
+          endpoint_hash: string | null
+          error_reason: string | null
           id: string
-          p256dh: string
+          notification_id: string | null
+          result: string
+          sent_at: string | null
+          status_code: number | null
+          subscription_id: string | null
           user_id: string
         }
         Insert: {
-          auth_key: string
+          attempt?: number
           created_at?: string
-          endpoint: string
+          endpoint_hash?: string | null
+          error_reason?: string | null
           id?: string
-          p256dh: string
+          notification_id?: string | null
+          result: string
+          sent_at?: string | null
+          status_code?: number | null
+          subscription_id?: string | null
           user_id: string
         }
         Update: {
+          attempt?: number
+          created_at?: string
+          endpoint_hash?: string | null
+          error_reason?: string | null
+          id?: string
+          notification_id?: string | null
+          result?: string
+          sent_at?: string | null
+          status_code?: number | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          active: boolean
+          auth_key: string
+          browser: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          last_error_at: string | null
+          last_error_status: number | null
+          last_success_at: string | null
+          p256dh: string
+          platform: string | null
+          revoked_at: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          auth_key: string
+          browser?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_error_at?: string | null
+          last_error_status?: number | null
+          last_success_at?: string | null
+          p256dh: string
+          platform?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
           auth_key?: string
+          browser?: string | null
           created_at?: string
           endpoint?: string
           id?: string
+          last_error_at?: string | null
+          last_error_status?: number | null
+          last_success_at?: string | null
           p256dh?: string
+          platform?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3984,6 +4119,10 @@ export type Database = {
         }
         Returns: number
       }
+      notification_category_for_source: {
+        Args: { _source: string }
+        Returns: string
+      }
       partner_base_pool: { Args: { p_partner_id: string }; Returns: number }
       partner_respond_rate_offer: {
         Args: { p_accept: boolean; p_offer_id: string }
@@ -3993,6 +4132,7 @@ export type Database = {
         Args: { p_retention?: string }
         Returns: number
       }
+      push_queue_dispatch: { Args: never; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
