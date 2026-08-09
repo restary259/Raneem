@@ -1005,6 +1005,8 @@ export default function SubmitNewStudentPage() {
                 <ReviewRow label={ss('email')} value={email || "—"} />
                 <ReviewRow label={ss('phone')} value={phone || "—"} />
                 <ReviewRow label={ss('dateOfBirth')} value={dob || "—"} />
+                <ReviewRow label={ss('educationLevel')} value={educationLevel ? t(`case.educationLevels.${educationLevel}`) : "—"} />
+                <ReviewRow label={ss('passportType')} value={passportType ? t(`case.passportTypes.${passportType}`) : "—"} />
               </section>
 
               <section className="rounded-lg border p-3">
