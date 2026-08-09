@@ -142,6 +142,7 @@ const AIAdvisorPage = () => {
             <Button
               type="submit"
               size="icon"
+              aria-label={t('chat.send', 'Send')}
               disabled={!input.trim() || isLoading}
               className="bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 shrink-0"
             >

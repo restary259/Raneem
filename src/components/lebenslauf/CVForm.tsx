@@ -119,9 +119,9 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-sm">{e.degree || `#${idx + 1}`}</span>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => moveItem('education', idx, -1)}><ArrowUp className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => moveItem('education', idx, 1)}><ArrowDown className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => removeItem('education', e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => moveItem('education', idx, -1)}><ArrowUp className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveItem('education', idx, 1)}><ArrowDown className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('education', e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
                 <Input placeholder={f('degree')} value={e.degree} onChange={ev => updateItem<EducationEntry>('education', e.id, { degree: ev.target.value })} />
@@ -155,9 +155,9 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-sm">{e.title || `#${idx + 1}`}</span>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => moveItem('experience', idx, -1)}><ArrowUp className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => moveItem('experience', idx, 1)}><ArrowDown className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" onClick={() => removeItem('experience', e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move up" onClick={() => moveItem('experience', idx, -1)}><ArrowUp className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Move down" onClick={() => moveItem('experience', idx, 1)}><ArrowDown className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('experience', e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
                 <Input placeholder={f('title')} value={e.title} onChange={ev => updateItem<ExperienceEntry>('experience', e.id, { title: ev.target.value })} />
@@ -206,7 +206,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
                   langs[idx] = { ...langs[idx], exam: e.target.value };
                   updateData({ skills: { ...data.skills, languages: langs } });
                 }} />
-                <Button size="icon" variant="ghost" onClick={() => {
+                <Button size="icon" variant="ghost" aria-label="Remove language" onClick={() => {
                   updateData({ skills: { ...data.skills, languages: data.skills.languages.filter(x => x.id !== l.id) } });
                 }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
@@ -235,7 +235,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
                 <Input className="flex-1" placeholder={f('certName')} value={c.name} onChange={e => updateItem<CertificateEntry>('certificates', c.id, { name: e.target.value })} />
                 <Input className="flex-1" placeholder={f('issuer')} value={c.issuer} onChange={e => updateItem<CertificateEntry>('certificates', c.id, { issuer: e.target.value })} />
                 <Input className="w-28" type="month" value={c.date} onChange={e => updateItem<CertificateEntry>('certificates', c.id, { date: e.target.value })} />
-                <Button size="icon" variant="ghost" onClick={() => removeItem('certificates', c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('certificates', c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={() => addItem<CertificateEntry>('certificates', () => ({ id: uid(), name: '', issuer: '', date: '' }))}>
@@ -251,7 +251,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
             <AccordionContent className="space-y-3 pt-2">
               {data.publications.map((p, idx) => (
                 <div key={p.id} className="border rounded-md p-3 space-y-2">
-                  <div className="flex justify-end"><Button size="icon" variant="ghost" onClick={() => removeItem('publications', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>
+                  <div className="flex justify-end"><Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('publications', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>
                   <Input placeholder={f('pubTitle')} value={p.title} onChange={e => updateItem<PublicationEntry>('publications', p.id, { title: e.target.value })} />
                   <Input placeholder={f('publisher')} value={p.publisher} onChange={e => updateItem<PublicationEntry>('publications', p.id, { publisher: e.target.value })} />
                   <div className="grid grid-cols-2 gap-2">
@@ -275,7 +275,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
               <div key={v.id} className="border rounded-md p-3 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-sm">{v.role || `#${idx + 1}`}</span>
-                  <Button size="icon" variant="ghost" onClick={() => removeItem('volunteer', v.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('volunteer', v.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
                 <Input placeholder={f('organization')} value={v.organization} onChange={e => updateItem<VolunteerEntry>('volunteer', v.id, { organization: e.target.value })} />
                 <Input placeholder={f('role')} value={v.role} onChange={e => updateItem<VolunteerEntry>('volunteer', v.id, { role: e.target.value })} />
@@ -304,7 +304,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData }) 
                 <Input className="flex-1" placeholder={f('refName')} value={r.name} onChange={e => updateItem<ReferenceEntry>('references', r.id, { name: e.target.value })} />
                 <Input className="flex-1" placeholder={f('refPosition')} value={r.position} onChange={e => updateItem<ReferenceEntry>('references', r.id, { position: e.target.value })} />
                 <Input className="flex-1" placeholder={f('refContact')} value={r.contact} onChange={e => updateItem<ReferenceEntry>('references', r.id, { contact: e.target.value })} />
-                <Button size="icon" variant="ghost" onClick={() => removeItem('references', r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <Button size="icon" variant="ghost" aria-label="Remove entry" onClick={() => removeItem('references', r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={() => addItem<ReferenceEntry>('references', () => ({ id: uid(), name: '', position: '', contact: '' }))}>
