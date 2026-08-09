@@ -285,9 +285,11 @@ export default function AdminStudentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
   const PROFILE_SELECT =
-    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, case_id, linked_case_id, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
 
-  // ── FIX 2: Remove over-restrictive filters — show ALL students ──
+  // Every account holding the `student` role belongs here — case-linked,
+  // staff-created and self-registered alike. Filtering any of them out hid
+  // most of the real students from this page.
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
@@ -308,9 +310,9 @@ export default function AdminStudentsPage() {
         .from("profiles")
         .select(PROFILE_SELECT)
         .in("id", userIds)
-        .not("created_by", "is", null)   // Must have been provisioned by someone
-        .is("case_id", null)             // Standalone accounts only (not case-linked)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
+
 
       if (error) throw error;
       const profs = (profileData as StudentRecord[]) ?? [];
