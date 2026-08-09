@@ -275,10 +275,24 @@ serve(async (req) => {
     let studentId: string;
     let accountCreated = false;
 
-    const existingUsersList = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    const existingUser = existingUsersList.data?.users?.find(
-      (u: any) => u.email?.toLowerCase() === student_email.toLowerCase(),
-    );
+    const identity = await resolveIdentity(supabaseAdmin, student_email);
+    // An existing identity may only be reused when it is a student. A partner,
+    // team member or admin email must never be turned into a student account.
+    if (identity.exists && identity.role && identity.role !== "student") {
+      return new Response(
+        JSON.stringify({
+          error: "This email already belongs to another account.",
+          code: "identity_conflict",
+          existing_role: identity.role,
+          deactivated: identity.deactivated,
+        }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const existingUser = identity.exists && identity.userId
+      ? { id: identity.userId }
+      : null;
+
 
     if (existingUser) {
       // Reuse existing auth account — but never silently move a student that is

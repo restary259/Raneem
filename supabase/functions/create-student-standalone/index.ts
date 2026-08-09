@@ -72,15 +72,14 @@ serve(async (req) => {
     }
 
 
-    // Check if already registered via profiles table (faster than listUsers)
-    const { data: existingProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email")
-      .eq("email", cleanEmail)
-      .maybeSingle();
-
-    if (existingProfile) {
-      return new Response(JSON.stringify({ error: "An account with this email already exists" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // One identity = one role: never reuse or overwrite an email that already
+    // belongs to an account (student, partner, team member or admin).
+    const conflict = await identityConflict(supabaseAdmin, cleanEmail, "student");
+    if (conflict) {
+      return new Response(JSON.stringify(conflict.body), {
+        status: conflict.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Generate secure temporary password: 8 alphanum + symbols
