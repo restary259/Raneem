@@ -225,7 +225,7 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
 
 export const fetchCatalogSheet = async () => {
   const [programsRes, accRes, insRes, schoolsRes, subsRes] = await Promise.all([
-    (supabase as any).from('programs').select('*'),
+    (supabase as any).from('programs').select('*, school:schools(name_en, city)'),
     (supabase as any).from('accommodations').select('*, school:schools(name_en, city)'),
     (supabase as any).from('insurances').select('*'),
     (supabase as any).from('schools').select('*'),
