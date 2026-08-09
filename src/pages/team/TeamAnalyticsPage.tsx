@@ -55,11 +55,6 @@ export default function TeamAnalyticsPage() {
         .select('commission_amount')
         .eq('team_member_id', user.id)
         .maybeSingle(),
-      supabase.from('rewards')
-        .select('amount')
-        .eq('user_id', user.id)
-        .gte('created_at', monthStart)
-        .lte('created_at', monthEnd),
     ]);
 
     const counts: Record<string, number> = {};
@@ -71,8 +66,7 @@ export default function TeamAnalyticsPage() {
     if (overrideRes.data) {
       setCommissionPerCase(overrideRes.data.commission_amount);
     }
-    const monthEarned = (rewardsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount), 0);
-    setEarnedThisMonth(monthEarned);
+
 
     setLoading(false);
   }, [user]);
