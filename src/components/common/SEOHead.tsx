@@ -27,12 +27,13 @@ const TWITTER_SITE = '@darb_education';
 /** Force any incoming URL onto the brand domain, keeping only the path. */
 const toCanonical = (value: string) => {
   try {
-    const parsed = new URL(value, CANONICAL_ORIGIN);
-    return CANONICAL_ORIGIN + parsed.pathname.replace(/\/+$/, '') || CANONICAL_ORIGIN + '/';
+    const path = new URL(value, CANONICAL_ORIGIN).pathname.replace(/\/+$/, '');
+    return path ? `${CANONICAL_ORIGIN}${path}` : `${CANONICAL_ORIGIN}/`;
   } catch {
-    return CANONICAL_ORIGIN;
+    return `${CANONICAL_ORIGIN}/`;
   }
 };
+
 
 const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
