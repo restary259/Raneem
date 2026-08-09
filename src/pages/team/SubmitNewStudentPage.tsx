@@ -24,6 +24,7 @@ import { recordServiceFeePayment } from "@/services/CasePaymentService";
 import { isLinkablePhone } from "@/lib/phone";
 import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+import { EDUCATION_LEVEL_VALUES, PASSPORT_TYPE_VALUES } from "@/lib/intakeOptions";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -224,6 +225,10 @@ export default function SubmitNewStudentPage() {
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [cityOfBirth, setCityOfBirth] = useState("");
+  // Intake fields that live on `cases` — the pipeline, Admin Submissions and
+  // Student Management all read them from there, so they must be captured here.
+  const [educationLevel, setEducationLevel] = useState("");
+  const [passportType, setPassportType] = useState("");
 
   // Step 2 — Contact
   const [email, setEmail] = useState("");
@@ -258,7 +263,7 @@ export default function SubmitNewStudentPage() {
 
   /* ─── Draft autosave / recovery (files are never persisted) ────────── */
   const draftValue = {
-    step, firstName, middleName, lastName, dob, gender, cityOfBirth,
+    step, firstName, middleName, lastName, dob, gender, cityOfBirth, educationLevel, passportType,
     email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
     programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
     accommodationId, serviceFee, programWeeks, accommodationWeeks, insuranceId,
@@ -275,6 +280,7 @@ export default function SubmitNewStudentPage() {
     setStep((d.step as StepNum) ?? 1);
     setFirstName(d.firstName ?? ""); setMiddleName(d.middleName ?? ""); setLastName(d.lastName ?? "");
     setDob(d.dob ?? ""); setGender(d.gender ?? ""); setCityOfBirth(d.cityOfBirth ?? "");
+    setEducationLevel(d.educationLevel ?? ""); setPassportType(d.passportType ?? "");
     setEmail(d.email ?? ""); setPhone(d.phone ?? "");
     setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
     setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
@@ -485,6 +491,8 @@ export default function SubmitNewStudentPage() {
           full_name: fullName,
           phone_number: cleanPhone,
           city: city || null,
+          education_level: educationLevel || null,
+          passport_type: passportType || null,
           source: "submit_new_student",
           status: "submitted",
           assigned_to: user!.id,
@@ -678,6 +686,34 @@ export default function SubmitNewStudentPage() {
                 <Input className="mt-1" value={cityOfBirth} onChange={(e) => setCityOfBirth(e.target.value)} />
               </div>
             </div>
+
+            {/* Stored on the case itself so the pipeline and admin views are
+                not left with blank intake fields. */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>{ss('educationLevel')}</Label>
+                <Select value={educationLevel} onValueChange={setEducationLevel}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('educationLevelSelect')} /></SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_LEVEL_VALUES.map((v) => (
+                      <SelectItem key={v} value={v}>{t(`case.educationLevels.${v}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{ss('passportType')}</Label>
+                <Select value={passportType} onValueChange={setPassportType}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('passportTypeSelect')} /></SelectTrigger>
+                  <SelectContent>
+                    {PASSPORT_TYPE_VALUES.map((v) => (
+                      <SelectItem key={v} value={v}>{t(`case.passportTypes.${v}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={goNext}>{ss('next')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
             </div>
@@ -969,6 +1005,8 @@ export default function SubmitNewStudentPage() {
                 <ReviewRow label={ss('email')} value={email || "—"} />
                 <ReviewRow label={ss('phone')} value={phone || "—"} />
                 <ReviewRow label={ss('dateOfBirth')} value={dob || "—"} />
+                <ReviewRow label={ss('educationLevel')} value={educationLevel ? t(`case.educationLevels.${educationLevel}`) : "—"} />
+                <ReviewRow label={ss('passportType')} value={passportType ? t(`case.passportTypes.${passportType}`) : "—"} />
               </section>
 
               <section className="rounded-lg border p-3">

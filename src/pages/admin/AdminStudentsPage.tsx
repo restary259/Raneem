@@ -43,6 +43,11 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateUploadFile } from "@/lib/uploadRules";
+import {
+  deriveOnboardingStatus,
+  onboardingStatusKey,
+  onboardingStatusTone,
+} from "@/lib/onboardingStatus";
 
 interface StudentRecord {
   id: string;
@@ -53,6 +58,9 @@ interface StudentRecord {
   city: string | null;
   must_change_password: boolean;
   created_by: string | null;
+  case_id: string | null;
+  linked_case_id: string | null;
+
   emergency_contact: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
@@ -93,6 +101,15 @@ interface Document {
 interface CreatorInfo {
   [userId: string]: string;
 }
+
+/** Minimal case facts shown next to a case-linked student. */
+interface CaseSummary {
+  id: string;
+  reference: string | null;
+  status: string | null;
+  profileCompletedAt: string | null;
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SelectiveDeleteDialog
@@ -250,6 +267,25 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [creatorNames, setCreatorNames] = useState<CreatorInfo>({});
+  const [caseInfo, setCaseInfo] = useState<Record<string, CaseSummary>>({});
+  const [pendingInvites, setPendingInvites] = useState<Set<string>>(new Set());
+
+  const caseOf = (s: StudentRecord): CaseSummary | null =>
+    caseInfo[(s.case_id || s.linked_case_id) as string] ?? null;
+
+  const sourceLabel = (s: StudentRecord) => {
+    if (s.case_id || s.linked_case_id) return t("admin.students.sourceCase");
+    return s.created_by ? t("admin.students.sourceStandalone") : t("admin.students.sourceSelf");
+  };
+
+  const statusOf = (s: StudentRecord) =>
+    deriveOnboardingStatus({
+      hasAccount: true,
+      invitationPending: pendingInvites.has((s.email || "").toLowerCase()),
+      mustChangePassword: s.must_change_password,
+      profileCompletedAt: caseOf(s)?.profileCompletedAt ?? null,
+      lastActiveAt: s.updated_by_student_at,
+    });
 
   const [selected, setSelected] = useState<StudentRecord | null>(null);
   const [docs, setDocs] = useState<Document[]>([]);
@@ -285,9 +321,11 @@ export default function AdminStudentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
   const PROFILE_SELECT =
-    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, case_id, linked_case_id, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
 
-  // ── FIX 2: Remove over-restrictive filters — show ALL students ──
+  // Every account holding the `student` role belongs here — case-linked,
+  // staff-created and self-registered alike. Filtering any of them out hid
+  // most of the real students from this page.
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
@@ -308,9 +346,9 @@ export default function AdminStudentsPage() {
         .from("profiles")
         .select(PROFILE_SELECT)
         .in("id", userIds)
-        .not("created_by", "is", null)   // Must have been provisioned by someone
-        .is("case_id", null)             // Standalone accounts only (not case-linked)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
+
 
       if (error) throw error;
       const profs = (profileData as StudentRecord[]) ?? [];
@@ -325,6 +363,50 @@ export default function AdminStudentsPage() {
         const map: CreatorInfo = {};
         (creatorProfs || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
         setCreatorNames(map);
+      }
+
+      // Case reference + profile completion, so a case-linked student can be
+      // recognised (and opened) straight from this list.
+      const caseIds = [
+        ...new Set(profs.map((p) => p.case_id || p.linked_case_id).filter(Boolean) as string[]),
+      ];
+      if (caseIds.length > 0) {
+        const [{ data: caseRows }, { data: subRows }] = await Promise.all([
+          supabase.from("cases").select("id, case_reference, status").in("id", caseIds),
+          (supabase as any)
+            .from("case_submissions")
+            .select("case_id, profile_completed_at")
+            .in("case_id", caseIds),
+        ]);
+        const completed = new Map<string, string | null>(
+          (subRows || []).map((r: any) => [r.case_id, r.profile_completed_at]),
+        );
+        const map: Record<string, CaseSummary> = {};
+        (caseRows || []).forEach((c: any) => {
+          map[c.id] = {
+            id: c.id,
+            reference: c.case_reference,
+            status: c.status,
+            profileCompletedAt: completed.get(c.id) ?? null,
+          };
+        });
+        setCaseInfo(map);
+      } else {
+        setCaseInfo({});
+      }
+
+      // A durable invitation that has not been accepted means the account
+      // exists but the student has never signed in.
+      const emails = profs.map((p) => p.email).filter(Boolean);
+      if (emails.length > 0) {
+        const { data: invites } = await (supabase as any)
+          .from("user_invitations")
+          .select("email, status")
+          .in("email", emails)
+          .eq("status", "pending");
+        setPendingInvites(new Set((invites || []).map((i: any) => (i.email || "").toLowerCase())));
+      } else {
+        setPendingInvites(new Set());
       }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -687,13 +769,15 @@ export default function AdminStudentsPage() {
 
       {/* Table header */}
       {!loading && filtered.length > 0 && (
-        <div className="hidden md:grid grid-cols-5 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="hidden md:grid grid-cols-6 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           <span>{t("admin.students.colStudent")}</span>
           <span>{t("admin.students.colEmail")}</span>
           <span>{t("admin.students.colPhone")}</span>
-          <span>{t("admin.students.colCreated")}</span>
+          <span>{t("admin.students.sourceLabel")}</span>
+          <span>{t("onboarding.label")}</span>
           <span>{t("admin.students.colCreatedBy")}</span>
         </div>
+
       )}
 
       {/* List */}
@@ -712,7 +796,7 @@ export default function AdminStudentsPage() {
         <div className="space-y-2">
           {pagination.items.map((s) => (
             <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow border-border" onClick={() => openStudent(s)}>
-              <CardContent className="p-4 hidden md:grid grid-cols-5 items-center gap-4">
+              <CardContent className="p-4 hidden md:grid grid-cols-6 items-center gap-4">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
@@ -721,11 +805,22 @@ export default function AdminStudentsPage() {
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                 <p className="text-xs text-muted-foreground">{s.phone_number || "—"}</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(s.created_at), "dd MMM yyyy")}</p>
+                <div className="min-w-0">
+                  <Badge variant="outline" className="text-[11px]">{sourceLabel(s)}</Badge>
+                  {caseOf(s)?.reference && (
+                    <p className="mt-1 text-[11px] text-muted-foreground truncate">{caseOf(s)?.reference}</p>
+                  )}
+                </div>
+                <div>
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${onboardingStatusTone(statusOf(s))}`}>
+                    {t(onboardingStatusKey(statusOf(s)))}
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {s.created_by ? creatorNames[s.created_by] || s.created_by.slice(0, 8) + "..." : t("admin.students.selfRegistered")}
                 </p>
               </CardContent>
+
               <CardContent className="p-4 flex md:hidden items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -757,7 +852,27 @@ export default function AdminStudentsPage() {
                 </SheetTitle>
               </SheetHeader>
 
+              {/* Where this student came from, and where they are in onboarding. */}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="text-[11px]">{sourceLabel(selected)}</Badge>
+                <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${onboardingStatusTone(statusOf(selected))}`}>
+                  {t(onboardingStatusKey(statusOf(selected)))}
+                </span>
+                {caseOf(selected) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => window.open(`/admin/cases/${caseOf(selected)!.id}`, "_blank", "noopener")}
+                  >
+                    <FileText className="h-3 w-3" />
+                    {caseOf(selected)!.reference || t("admin.students.openCase")}
+                  </Button>
+                )}
+              </div>
+
               <div className="mt-5 space-y-5">
+
                 {/* Profile Info / Edit */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
