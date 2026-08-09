@@ -295,7 +295,11 @@ function renderSheet(
       c.header.length,
       ...body.map(r => displayLength(r[i], c.type)),
     );
-    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + 4, LAYOUT.minColWidth), LAYOUT.maxColWidth);
+    // Currency/date cells render wider than their raw value (₪1,234,567.00),
+    // otherwise Excel shows ####.
+    const padding = c.type === 'currency' ? 8 : c.type === 'date' || c.type === 'datetime' ? 6 : 4;
+    const cap = wrapped[i] ? LAYOUT.maxColWidth : LAYOUT.maxColWidth;
+    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + padding, LAYOUT.minColWidth), cap);
   });
 
   ws.views = [
@@ -306,10 +310,10 @@ function renderSheet(
       showGridLines: false,
     },
   ];
-  ws.autoFilter = {
-    from: { row: headerRowNumber, column: 1 },
-    to: { row: lastDataRow, column: Math.max(columns.length, 1) },
-  };
+  // No sheet-level autoFilter: the table already provides filter buttons over
+  // the same range, and the duplicate makes Excel "repair" the table — which is
+  // what turns the totals SUBTOTAL formulas into #REF!.
+
   // Repeat the header row on every printed page.
   (ws.pageSetup as unknown as { printTitlesRow?: string }).printTitlesRow = `${headerRowNumber}:${headerRowNumber}`;
 }
