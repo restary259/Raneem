@@ -20,6 +20,7 @@ import { generateIntakeMonths } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
+import { recordServiceFeePayment } from "@/services/CasePaymentService";
 import { isLinkablePhone } from "@/lib/phone";
 import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
