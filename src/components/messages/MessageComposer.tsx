@@ -101,6 +101,7 @@ export default function MessageComposer({
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState<"internal" | "shared">("shared");
   const [kind, setKind] = useState<"text" | "request">("text");
@@ -109,6 +110,21 @@ export default function MessageComposer({
   const [dragging, setDragging] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [caseQuery, setCaseQuery] = useState<string | null>(null);
+
+  /* The suggestion lists close on a real click outside the composer, not on
+     blur: the attach menu momentarily steals focus from the textarea, and a
+     blur timer made the popup appear and vanish immediately. */
+  useEffect(() => {
+    if (mentionQuery === null && caseQuery === null) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (target && rootRef.current?.contains(target)) return;
+      setMentionQuery(null);
+      setCaseQuery(null);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [mentionQuery, caseQuery]);
   const [caseMatches, setCaseMatches] = useState<MentionableCase[]>([]);
 
   const mentionMatches = useMemo(() => {
@@ -264,8 +280,9 @@ export default function MessageComposer({
 
   return (
     <div
+      ref={rootRef}
       className={cn(
-        "space-y-2 border-t bg-card px-3 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-3",
+        "space-y-1.5 border-t bg-card px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:space-y-2 sm:px-4 sm:py-3",
         dragging && "bg-primary/5 ring-1 ring-inset ring-primary",
       )}
       onDragOver={(e) => {
@@ -389,12 +406,6 @@ export default function MessageComposer({
             setCaseQuery(allowCaseMentions ? activeCaseQuery(e.target.value, caret) : null);
             if (e.target.value.trim()) onTyping?.();
           }}
-          onBlur={() =>
-            window.setTimeout(() => {
-              setMentionQuery(null);
-              setCaseQuery(null);
-            }, 150)
-          }
           placeholder={
             kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
@@ -459,6 +470,12 @@ export default function MessageComposer({
               sideOffset={8}
               collisionPadding={12}
               className="z-50 w-56"
+              onCloseAutoFocus={(e) => {
+                // Radix returns focus to the trigger, which blurs the textarea
+                // and would hide the mention list we just opened.
+                e.preventDefault();
+                textRef.current?.focus();
+              }}
             >
               <DropdownMenuItem className="gap-2" onSelect={() => fileRef.current?.click()}>
                 <Paperclip className="h-4 w-4" />

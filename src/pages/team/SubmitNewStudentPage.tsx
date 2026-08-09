@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { readFunctionError } from "@/lib/functionError";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -575,7 +576,7 @@ export default function SubmitNewStudentPage() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const { data: accountRes } = await supabase.functions.invoke("create-student-from-case", {
+      const { data: accountRes, error: accountErr } = await supabase.functions.invoke("create-student-from-case", {
         body: {
           case_id: caseId,
           student_email: cleanEmail,
@@ -584,6 +585,13 @@ export default function SubmitNewStudentPage() {
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
+      if (accountErr) {
+        // Never swallow the account-creation failure: the wizard would carry on
+        // and attach documents to the wrong owner.
+        const reason = await readFunctionError(accountErr);
+        console.error("[SubmitNewStudent] create-student-from-case", reason);
+        toast({ variant: "destructive", description: reason });
+      }
       const studentUserId = (accountRes as any)?.user_id as string | undefined;
 
       for (const doc of uploadedFiles) {

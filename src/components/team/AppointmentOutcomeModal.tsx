@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { readFunctionError } from '@/lib/functionError';
 import { useTranslation } from 'react-i18next';
 
 type Outcome = 'completed' | 'delayed' | 'cancelled' | 'rescheduled' | 'no_show';
@@ -57,12 +58,15 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
-      if (resp.error) throw new Error(resp.error.message);
+      // Surface the server's own message instead of the opaque
+      // "Edge Function returned a non-2xx status code".
+      if (resp.error) throw new Error(await readFunctionError(resp.error));
+      if ((resp.data as any)?.error) throw new Error((resp.data as any).error);
       toast({ title: t('team.outcome.recorded') });
       onSuccess();
       onClose();
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: 'destructive', description: err?.message ?? String(err) });
     } finally {
       setSaving(false);
     }
