@@ -24,8 +24,10 @@ import {
   PROFILE_FIELD_LABEL_KEYS,
   readStudentProfile,
   toExtraData,
+  COURSE_DURATION_WEEKS,
   type StudentProfileValues,
 } from "@/lib/studentProfileFields";
+import { computeWeeklyCost, formatMoney } from "@/lib/programPricing";
 import { ensureCaseServices } from "@/services/CaseCostingService";
 import { cn } from "@/lib/utils";
 
