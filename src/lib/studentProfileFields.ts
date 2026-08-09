@@ -123,6 +123,14 @@ export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizeEmail(email));
 }
 
+/** A phone must be 7–15 digits, optionally prefixed with "+" and spacing. */
+export function isValidPhone(phone: string): boolean {
+  const raw = String(phone ?? "").trim();
+  if (!/^\+?[\d\s()-]+$/.test(raw)) return false;
+  const digits = raw.replace(/\D/g, "");
+  return digits.length >= 7 && digits.length <= 15;
+}
+
 const str = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
 
 /** Read the stored profile out of a case row + its submission. */
@@ -188,11 +196,14 @@ export function fullNameOf(values: StudentProfileValues): string {
   return [values.first_name, values.middle_name, values.last_name].filter(Boolean).join(" ").trim();
 }
 
-/** Which required fields are still empty (or, for email, invalid). */
+/** Which required fields are still empty (or, for email/phone, malformed). */
 export function missingProfileFields(values: StudentProfileValues): (keyof StudentProfileValues)[] {
   const missing = REQUIRED_PROFILE_FIELDS.filter((f) => !String(values[f] ?? "").trim());
   if (!missing.includes("student_email") && !isValidEmail(values.student_email)) {
     missing.push("student_email");
+  }
+  if (!missing.includes("student_phone") && !isValidPhone(values.student_phone)) {
+    missing.push("student_phone");
   }
   return missing;
 }
