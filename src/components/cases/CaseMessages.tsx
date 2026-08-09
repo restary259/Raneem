@@ -86,19 +86,24 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
       .catch(() => setPeople([]));
   }, [allowInternal]);
 
+  const loadRef = useRef(load);
+  useEffect(() => {
+    loadRef.current = load;
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel(`case-messages-${caseId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "case_messages", filter: `case_id=eq.${caseId}` },
-        () => load(),
+        () => loadRef.current(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [caseId, load]);
+  }, [caseId]);
 
   const loadOlder = async () => {
     setLoadingOlder(true);
