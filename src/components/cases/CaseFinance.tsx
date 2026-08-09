@@ -35,6 +35,15 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, extraLines = 
 
   const discountTotal = services.reduce((sum, s) => sum + Number(s.discount || 0), 0);
   const remaining = Math.max(servicesTotal - totalPaid, 0);
+  const extraSubtotals = React.useMemo(
+    () =>
+      extraLines.reduce<Record<string, number>>((acc, line) => {
+        const cur = line.currency ?? "EUR";
+        acc[cur] = (acc[cur] ?? 0) + Number(line.amount || 0);
+        return acc;
+      }, {}),
+    [extraLines],
+  );
   const status: "unpaid" | "partial" | "settled" =
     servicesTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : totalPaid > 0 ? "partial" : "unpaid";
   const statusClass =
