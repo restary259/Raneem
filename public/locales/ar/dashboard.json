@@ -2671,7 +2671,10 @@
       "autoEnd": "يُحتسب تلقائياً — 40 أسبوعاً",
       "pickSchoolFirst": "اختر المدرسة أولاً",
       "savingDraft": "جارٍ الحفظ…",
-      "draftSavedAt": "تم حفظ المسودة {{time}}"
+      "draftSavedAt": "تم حفظ المسودة {{time}}",
+      "priceEstimate": "قد تختلف الفاتورة النهائية من المدرسة.",
+      "week": "أسبوع",
+      "weeks": "أسبوعاً"
     },
     "invite": {
       "title": "إنشاء حساب الطالب",

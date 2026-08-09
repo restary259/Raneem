@@ -2653,7 +2653,10 @@
       "autoEnd": "Calculated automatically — 40 weeks",
       "pickSchoolFirst": "Select a school first",
       "savingDraft": "Saving…",
-      "draftSavedAt": "Draft saved {{time}}"
+      "draftSavedAt": "Draft saved {{time}}",
+      "priceEstimate": "The school's final invoice may differ.",
+      "week": "week",
+      "weeks": "weeks"
     },
     "invite": {
       "title": "Create the student account",
