@@ -21,7 +21,7 @@ const CTASection = () => {
         <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
           <Button
             size="lg"
-            className="min-h-[48px] px-6 md:px-8 text-sm md:text-base bg-brand text-brand-foreground hover:bg-brand/90 active:bg-brand/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            className="min-h-[48px] px-6 md:px-8 text-sm md:text-base bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             asChild
           >
             <Link to="/apply">{t('educational.ctaButton1')}</Link>
