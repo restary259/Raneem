@@ -563,7 +563,8 @@
       "studentEmail": "Student email",
       "invalidEmail": "Invalid email address",
       "approveCreatesAccount": "Approving creates a student account and links it to this case.",
-      "approveExistingAccount": "A student account is already linked to this case. Approving only records the review."
+      "approveExistingAccount": "A student account is already linked to this case. Approving only records the review.",
+      "notCollected": "Not collected"
     },
     "financials": {
       "title": "Financial Dashboard",
