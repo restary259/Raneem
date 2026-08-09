@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { hashToken } from "../_shared/invitations.ts";
+import { resolveIdentity } from "../_shared/identity.ts";
 
 /**
  * Public activation endpoint for durable invitations.

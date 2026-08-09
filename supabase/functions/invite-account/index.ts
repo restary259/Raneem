@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 import { createInvitation, InvitationType } from "../_shared/invitations.ts";
+import { identityConflict } from "../_shared/identity.ts";
 
 /**
  * Admin-triggered account invitations.
