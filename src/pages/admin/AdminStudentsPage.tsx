@@ -43,6 +43,11 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateUploadFile } from "@/lib/uploadRules";
+import {
+  deriveOnboardingStatus,
+  onboardingStatusKey,
+  onboardingStatusTone,
+} from "@/lib/onboardingStatus";
 
 interface StudentRecord {
   id: string;
@@ -264,6 +269,23 @@ export default function AdminStudentsPage() {
   const [creatorNames, setCreatorNames] = useState<CreatorInfo>({});
   const [caseInfo, setCaseInfo] = useState<Record<string, CaseSummary>>({});
   const [pendingInvites, setPendingInvites] = useState<Set<string>>(new Set());
+
+  const caseOf = (s: StudentRecord): CaseSummary | null =>
+    caseInfo[(s.case_id || s.linked_case_id) as string] ?? null;
+
+  const sourceLabel = (s: StudentRecord) => {
+    if (s.case_id || s.linked_case_id) return t("admin.students.sourceCase");
+    return s.created_by ? t("admin.students.sourceStandalone") : t("admin.students.sourceSelf");
+  };
+
+  const statusOf = (s: StudentRecord) =>
+    deriveOnboardingStatus({
+      hasAccount: true,
+      invitationPending: pendingInvites.has((s.email || "").toLowerCase()),
+      mustChangePassword: s.must_change_password,
+      profileCompletedAt: caseOf(s)?.profileCompletedAt ?? null,
+      lastActiveAt: s.updated_by_student_at,
+    });
 
   const [selected, setSelected] = useState<StudentRecord | null>(null);
   const [docs, setDocs] = useState<Document[]>([]);
