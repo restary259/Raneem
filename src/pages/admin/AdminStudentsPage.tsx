@@ -747,13 +747,15 @@ export default function AdminStudentsPage() {
 
       {/* Table header */}
       {!loading && filtered.length > 0 && (
-        <div className="hidden md:grid grid-cols-5 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="hidden md:grid grid-cols-6 px-4 py-2.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           <span>{t("admin.students.colStudent")}</span>
           <span>{t("admin.students.colEmail")}</span>
           <span>{t("admin.students.colPhone")}</span>
-          <span>{t("admin.students.colCreated")}</span>
+          <span>{t("admin.students.sourceLabel")}</span>
+          <span>{t("onboarding.label")}</span>
           <span>{t("admin.students.colCreatedBy")}</span>
         </div>
+
       )}
 
       {/* List */}
