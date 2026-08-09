@@ -47,17 +47,44 @@ const AdminTeamPage = () => {
   const onlineUsers = useOnlineUsers();
 
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
+  const [invitedInfo, setInvitedInfo] = useState<{ email: string; emailed: boolean; url: string } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+  /** 'invite' sends a branded activation email; 'manual' shows a temp password. */
+  const [mode, setMode] = useState<'invite' | 'manual'>('invite');
+  const [busyInvite, setBusyInvite] = useState<string | null>(null);
 
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
+
+  const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-account`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify(payload),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || 'Request failed');
+    return result;
+  }, []);
+
+  const fetchInvitations = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from('user_invitations')
+      .select('id, invited_email, invited_name, invitation_type, intended_role, status, expires_at, created_at')
+      .eq('status', 'pending')
+      .in('invitation_type', ['team', 'partner', 'ambassador'])
+      .order('created_at', { ascending: false });
+    setInvitations((data || []) as PendingInvitation[]);
+  }, []);
 
   const fetchMembers = useCallback(async () => {
     try {
