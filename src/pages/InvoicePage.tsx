@@ -1,0 +1,192 @@
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Download, Loader2 } from "lucide-react";
+import type { CaseFinancials } from "@/hooks/useCaseFinancials";
+import { downloadInvoicePdf } from "@/utils/invoicePdf";
+
+interface PublicInvoice {
+  invoice_number: string;
+  case_reference: string | null;
+  student_name: string | null;
+  issued_at: string;
+  totals: CaseFinancials;
+}
+
+const money = (n: number, currency: string) =>
+  `${currency === "EUR" ? "€" : "₪"}${Number(n || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/** Token-gated invoice view. The link in the email points here. */
+export default function InvoicePage() {
+  const { token } = useParams<{ token: string }>();
+  const { i18n } = useTranslation();
+  const isAr = i18n.language === "ar";
+  const [invoice, setInvoice] = useState<PublicInvoice | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!token) return;
+      const { data } = await (supabase as any).rpc("get_invoice_by_token", {
+        p_token: token,
+      });
+      setInvoice((data as PublicInvoice) ?? null);
+      setLoading(false);
+    })();
+  }, [token]);
+
+  const L = isAr
+    ? {
+        title: "فاتورة",
+        student: "الطالب",
+        caseRef: "رقم الملف",
+        date: "التاريخ",
+        agency: "رسوم الوكالة",
+        school: "تكاليف المدرسة (تقديرية)",
+        total: "إجمالي رسوم الوكالة",
+        paid: "المدفوع المؤكد",
+        remaining: "الرصيد المتبقي",
+        download: "تنزيل PDF",
+        notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط.",
+        weeks: "أسبوع",
+      }
+    : {
+        title: "Invoice",
+        student: "Student",
+        caseRef: "Case",
+        date: "Date",
+        agency: "Agency fees",
+        school: "School costs (estimate)",
+        total: "Agency fees total",
+        paid: "Confirmed payments",
+        remaining: "Remaining balance",
+        download: "Download PDF",
+        notFound: "This invoice could not be found.",
+        weeks: "weeks",
+      };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!invoice) {
+    return <div className="p-10 text-center text-muted-foreground">{L.notFound}</div>;
+  }
+
+  const t = invoice.totals;
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadInvoicePdf(
+        {
+          invoiceNumber: invoice.invoice_number,
+          caseReference: invoice.case_reference,
+          studentName: invoice.student_name,
+          issuedAt: invoice.issued_at,
+        },
+        t,
+        isAr,
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <main dir={isAr ? "rtl" : "ltr"} className="mx-auto max-w-3xl p-4 sm:p-8">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold">
+          {L.title} {invoice.invoice_number}
+        </h1>
+        <Button onClick={handleDownload} disabled={downloading} size="sm">
+          {downloading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          <span className="ms-2">{L.download}</span>
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="space-y-5 p-5">
+          <div className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-3">
+            <div>
+              <span className="text-muted-foreground">{L.student}: </span>
+              {invoice.student_name ?? "-"}
+            </div>
+            <div>
+              <span className="text-muted-foreground">{L.caseRef}: </span>
+              {invoice.case_reference ?? "-"}
+            </div>
+            <div>
+              <span className="text-muted-foreground">{L.date}: </span>
+              {new Date(invoice.issued_at).toLocaleDateString("en-US")}
+            </div>
+          </div>
+
+          <section>
+            <h2 className="mb-2 text-sm font-semibold">{L.agency}</h2>
+            <ul className="divide-y rounded-md border text-sm">
+              {(t.services ?? []).map((s) => (
+                <li key={s.id} className="flex justify-between gap-3 px-3 py-2">
+                  <span>{s.description}</span>
+                  <span className="font-medium">{money(s.line_total, s.currency)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {(t.school_costs ?? []).length > 0 && (
+            <section>
+              <h2 className="mb-2 text-sm font-semibold">{L.school}</h2>
+              <ul className="divide-y rounded-md border text-sm">
+                {t.school_costs.map((c, i) => (
+                  <li key={i} className="flex justify-between gap-3 px-3 py-2">
+                    <span>
+                      {(isAr ? c.name_ar : c.name_en) || c.name_ar || c.name_en}
+                      {c.weekly_price && c.weeks ? (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          — {money(c.weekly_price, c.currency)} × {c.weeks} {L.weeks}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="font-medium">{money(c.total, c.currency)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <div className="space-y-1 border-t pt-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.total}</span>
+              <span className="font-semibold">{money(t.service_total, t.currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.paid}</span>
+              <span>{money(t.total_confirmed, t.currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.remaining}</span>
+              <span className="font-semibold">{money(t.remaining, t.currency)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
