@@ -106,10 +106,20 @@ export default function StudentContactsPage() {
                         {isAr ? contact.role_ar : contact.role_en}
                       </p>
                     )}
+                    {(contact.city || (isAr ? contact.address_ar : contact.address_en)) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {[contact.city, isAr ? contact.address_ar : contact.address_en].filter(Boolean).join(' — ')}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-3 mt-2">
                       {contact.phone && (
-                        <a href={`tel:${contact.phone}`} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                        <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
                           <Phone className="h-3.5 w-3.5" />{contact.phone}
+                        </a>
+                      )}
+                      {contact.link && (
+                        <a href={contact.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+                          <LinkIcon className="h-3.5 w-3.5" />{t('contacts.officialSite', 'Official website')}
                         </a>
                       )}
                       {contact.email && (
@@ -117,12 +127,24 @@ export default function StudentContactsPage() {
                           <Mail className="h-3.5 w-3.5" />{contact.email}
                         </a>
                       )}
-                      {contact.link && (
-                        <a href={contact.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                          <LinkIcon className="h-3.5 w-3.5" />{t('contacts.visitLink', 'Visit')}
+                      {contact.address_en && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address_en)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                        >
+                          <MapPin className="h-3.5 w-3.5" />{t('contacts.directions', 'Directions')}
                         </a>
                       )}
                     </div>
+                    {contact.last_verified_at && (
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        {t('contacts.verifiedOn', 'Verified')}: {new Date(contact.last_verified_at).toLocaleDateString('en-US')}
+                        {contact.source_url && (
+                          <> · <a href={contact.source_url} target="_blank" rel="noopener noreferrer" className="underline">{t('contacts.source', 'source')}</a></>
+                        )}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
