@@ -13,6 +13,12 @@ interface SEOHeadProps {
 
 const DEFAULT_TITLE = 'درب | الدراسة في ألمانيا للطلاب العرب';
 
+/**
+ * Canonical/og URLs are always built on the brand domain. Using
+ * window.location.origin would publish preview/sandbox hosts as canonical.
+ */
+const CANONICAL_ORIGIN = 'https://darb.agency';
+
 const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
   if (!el) {
