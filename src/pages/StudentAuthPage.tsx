@@ -190,7 +190,7 @@ const StudentAuthPage = () => {
         {/* Card */}
         <div className="rounded-3xl border border-border bg-card shadow-xl overflow-hidden">
           {/* Brand header */}
-          <div className="px-8 pt-8 pb-6 text-center border-b border-border bg-secondary/40">
+          <div className="px-5 pt-5 pb-4 md:px-8 md:pt-8 md:pb-6 text-center border-b border-border bg-secondary/40">
             <img
               src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
               alt={t("loader.brand", "Darb")}
