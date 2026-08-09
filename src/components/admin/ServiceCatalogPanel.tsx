@@ -122,6 +122,16 @@ export default function ServiceCatalogPanel() {
                   {t("admin.settings.catalog.active")}
                 </span>
               </div>
+              <div className="flex items-center gap-2 pb-2">
+                <Switch
+                  checked={r.in_full_service}
+                  onCheckedChange={(v) => patch(r.id, { in_full_service: v })}
+                  aria-label={t("admin.settings.catalog.inFullService")}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("admin.settings.catalog.inFullService")}
+                </span>
+              </div>
               <Button
                 size="icon"
                 variant="ghost"
