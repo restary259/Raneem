@@ -79,18 +79,27 @@ serve(async (req) => {
       return json({ error: "The recruiting partner is no longer a master partner" }, 409);
     }
 
-    /** One-time password-setup link + branded invite. Never emails a password. */
+    /**
+     * Durable invitation link + branded invite. Never emails a password, and the
+     * master-partner attribution lives on the invitation row, not in the URL.
+     */
     async function sendInvite(targetEmail: string) {
-      const { data: link, error: linkError } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email: targetEmail,
-        options: { redirectTo: `${APP_URL}/reset-password` },
-      });
-      if (linkError || !link?.properties?.action_link) {
-        console.error("activation link failed", linkError);
+      let activationUrl: string;
+      try {
+        activationUrl = await createInvitation(admin, {
+          invitedEmail: targetEmail,
+          invitationType: "partner",
+          intendedRole: "social_media_partner",
+          inviterId: adminId,
+          masterPartnerId: app.master_partner_id,
+          recruitApplicationId: applicationId,
+        });
+      } catch (e) {
+        console.error("invitation creation failed", e);
         return false;
       }
       const resp = await fetch(
+
         `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
         {
           method: "POST",
