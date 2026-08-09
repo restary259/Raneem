@@ -1,0 +1,36 @@
+{
+  "brand": "Darb",
+  "index": {
+    "badge": "Verified guides",
+    "title": "Studying in Germany — Blog",
+    "subtitle": "Practical guides for Arab students in Israel and their parents, based on official German sources.",
+    "metaTitle": "Studying in Germany Blog | Verified Guides for Arab Students — Darb",
+    "metaDescription": "Up-to-date guides on the student visa, Bagrut recognition, German language levels and living costs in Germany, with links to official sources.",
+    "readMore": "Read the guide"
+  },
+  "categories": {
+    "before-arrival": "Before you travel",
+    "university": "University & admission",
+    "money": "Costs & financing",
+    "life": "Life in Germany"
+  },
+  "breadcrumb": {
+    "home": "Home"
+  },
+  "updatedOn": "Information last reviewed:",
+  "moreArticles": "More guides",
+  "sources": {
+    "title": "Official sources",
+    "note": "Everything in this guide is based on official bodies. Requirements and amounts change, so always verify at the source before applying."
+  },
+  "related": {
+    "title": "Useful next steps on Darb",
+    "services": "Our services",
+    "faq": "FAQ",
+    "contact": "Free consultation",
+    "programs": "Study programmes",
+    "costCalculator": "Cost calculator",
+    "bagrutCalculator": "Bagrut calculator",
+    "more": "More"
+  }
+}
