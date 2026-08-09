@@ -215,7 +215,7 @@ const AdminTeamPage = () => {
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(result.error || 'Failed to create member');
+      if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Failed to create member');
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
