@@ -200,14 +200,24 @@ function renderSheet(
   });
 
   // Body styling
+  const WRAP_THRESHOLD = 28;
+  const wrapped = columns.map(
+    (c, i) =>
+      (c.type === undefined || c.type === 'text') &&
+      body.some(r => String(r[i] ?? '').length > WRAP_THRESHOLD),
+  );
+
   for (let r = firstDataRow; r <= lastDataRow; r++) {
     const row = ws.getRow(r);
-    row.height = LAYOUT.bodyRowHeight;
+    // Let Excel auto-fit the height when any cell wraps, otherwise long notes
+    // and student lists are clipped by the fixed row height.
+    const rowWraps = wrapped.some((w, i) => w && String(body[r - firstDataRow]?.[i] ?? '').length > WRAP_THRESHOLD);
+    if (!rowWraps) row.height = LAYOUT.bodyRowHeight;
     const zebra = (r - firstDataRow) % 2 === 1;
     columns.forEach((c, i) => {
       const cell = row.getCell(i + 1);
       cell.font = { name: FONTS.family, size: FONTS.bodySize, color: { argb: COLORS.text } };
-      cell.alignment = { vertical: 'middle', horizontal: alignmentFor(c.type) };
+      cell.alignment = { vertical: 'middle', horizontal: alignmentFor(c.type), wrapText: wrapped[i] };
       cell.border = thinBorder;
       const fmt = numFmtFor(c.type, c.currency);
       if (fmt) cell.numFmt = fmt;
@@ -219,6 +229,7 @@ function renderSheet(
       }
     });
   }
+
 
   // Totals row styling
   if (totalsRowNumber) {
