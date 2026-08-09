@@ -170,6 +170,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     [accommodations, values.school_id],
   );
   const selectedProgram = programs.find((p) => p.id === values.program_id);
+  // Weekly rate × the fixed 40-week course length — never a stored total.
+  const courseCost = useMemo(
+    () => (selectedProgram ? computeWeeklyCost(selectedProgram as any, COURSE_DURATION_WEEKS) : null),
+    [selectedProgram],
+  );
   const monthOptions = useMemo(() => generateIntakeMonths(24), []);
 
   // Course start follows the programme's fixed start day of the chosen intake.
