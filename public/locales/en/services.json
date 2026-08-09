@@ -151,5 +151,58 @@
       "educationRequired": "Education level required",
       "stillInSchoolRequired": "Required"
     }
+  },
+  "serviceDisclosure": {
+    "title": "Exactly what our service covers",
+    "subtitle": "Full transparency before any commitment. Payment is made in person at our office — no payment transaction takes place on this website.",
+    "included": {
+      "title": "Included in the Darb service fee",
+      "items": [
+        "Academic consultation and selection of the right field of study and universities.",
+        "Preparation and review of your application file, and coordination of certificate translation and recognition.",
+        "Submitting applications to universities and following up until a decision is issued.",
+        "Preparing your visa file and getting you ready for the embassy or consulate appointment.",
+        "Arabic-language guidance and support throughout the process via the student dashboard."
+      ]
+    },
+    "excluded": {
+      "title": "Not included in the Darb service fee",
+      "items": [
+        "Official fees: visa application fees, university and uni-assist fees, certification and sworn translation fees.",
+        "The blocked account (Sperrkonto) and the proof-of-funds amount itself.",
+        "Health insurance premiums.",
+        "Accommodation costs, deposits and first month's rent.",
+        "Flights, living costs and transport."
+      ]
+    },
+    "providers": {
+      "title": "Who actually provides each part",
+      "items": [
+        "Darb: consultation, file preparation, submission, follow-up and administrative support. Darb is an intermediary and guide, not a decision-making authority.",
+        "The university / uni-assist: the admission decision, its conditions and its fees — entirely independent of Darb.",
+        "The German embassy or consulate and the foreigners authority: the visa and residence-permit decision — entirely independent of Darb.",
+        "The insurer: the health insurance contract is concluded directly between you and the insurance company, which is responsible for its terms and coverage.",
+        "The accommodation provider: the housing contract is concluded directly between you and the landlord or provider, who is responsible for the deposit and terms."
+      ]
+    },
+    "noGuarantee": {
+      "title": "No guarantee of outcome",
+      "body": "Darb provides professional guidance and file preparation. We cannot guarantee that you will receive university admission, a visa, or accommodation, because those decisions rest solely with independent official bodies. Paying the service fee does not constitute a guarantee of any outcome."
+    },
+    "payment": {
+      "title": "How payment works",
+      "body": "No payment is processed through this website. Fees are agreed, the agreement is signed, and payment is made in person at the Darb office. You receive a written breakdown of the fee and what it covers before you pay."
+    },
+    "cancellation": {
+      "title": "Cancellation and refunds — in plain language",
+      "items": [
+        "You may cancel the agreement at any time with written notice (email is sufficient).",
+        "If you cancel before work on your file has started, you receive a full refund.",
+        "If you cancel after work has started, you are refunded minus the value of the work actually performed and any official third-party fees already paid on your behalf (which are non-refundable).",
+        "A university or visa rejection is not a breach by Darb; refunds in that case follow the rule above.",
+        "Approved refund requests are processed within 14 business days.",
+        "For any cancellation or refund request: darbsocial27@gmail.com."
+      ]
+    }
   }
 }
