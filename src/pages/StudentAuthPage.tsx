@@ -175,7 +175,7 @@ const StudentAuthPage = () => {
 
       <div className="w-full max-w-lg relative z-10">
         {/* Back to website */}
-        <div className="mb-5">
+        <div className="mb-3 md:mb-5">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
