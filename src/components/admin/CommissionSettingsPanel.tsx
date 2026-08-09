@@ -74,7 +74,7 @@ export default function CommissionSettingsPanel() {
   const [newTeamOverride, setNewTeamOverride] = useState({ team_member_id: "", amount: "", notes: "" });
 
   // Global flat defaults (ILS per enrolled student) used when no per-person override exists.
-  const [globals, setGlobals] = useState({ id: "", partner: 500, ambassador: 300, team: 100 });
+  const [globals, setGlobals] = useState({ id: "", partner: 1000, ambassador: 300, team: 100, masterShare: 200 });
   const [savingGlobals, setSavingGlobals] = useState(false);
   // Administrator override gate for granting "all cases" visibility.
   const [gateOpen, setGateOpen] = useState(false);
@@ -92,15 +92,16 @@ export default function CommissionSettingsPanel() {
 
       const { data: settingsRow } = await (supabase as any)
         .from("platform_settings")
-        .select("id,partner_commission_rate,ambassador_commission_rate,team_member_commission_rate")
+        .select("id,partner_commission_rate,ambassador_commission_rate,team_member_commission_rate,master_partner_override_rate")
         .limit(1)
         .maybeSingle();
       if (settingsRow) {
         setGlobals({
           id: settingsRow.id,
-          partner: Number(settingsRow.partner_commission_rate ?? 500),
+          partner: Number(settingsRow.partner_commission_rate ?? 1000),
           ambassador: Number(settingsRow.ambassador_commission_rate ?? 300),
           team: Number(settingsRow.team_member_commission_rate ?? 100),
+          masterShare: Number(settingsRow.master_partner_override_rate ?? 0),
         });
       }
 
@@ -204,6 +205,13 @@ export default function CommissionSettingsPanel() {
 
   const saveGlobals = async () => {
     if (!globals.id) return;
+    if (globals.masterShare > globals.partner) {
+      toast({
+        variant: "destructive",
+        description: t("commissionSettings.masterShareTooHigh"),
+      });
+      return;
+    }
     setSavingGlobals(true);
     try {
       const { error } = await (supabase as any)
@@ -212,6 +220,7 @@ export default function CommissionSettingsPanel() {
           partner_commission_rate: globals.partner,
           ambassador_commission_rate: globals.ambassador,
           team_member_commission_rate: globals.team,
+          master_partner_override_rate: globals.masterShare,
           updated_at: new Date().toISOString(),
         })
         .eq("id", globals.id);
@@ -300,7 +309,47 @@ export default function CommissionSettingsPanel() {
               />
             </div>
           </div>
-          <Button size="sm" onClick={saveGlobals} disabled={savingGlobals || !globals.id}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("commissionSettings.masterShare")}
+              </label>
+              <Input
+                type="number"
+                min={0}
+                max={globals.partner}
+                inputMode="numeric"
+                value={globals.masterShare}
+                onChange={(e) => setGlobals((g) => ({ ...g, masterShare: Number(e.target.value) || 0 }))}
+                aria-invalid={globals.masterShare > globals.partner}
+              />
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("commissionSettings.allocationPreview")}
+              </label>
+              <p
+                className={`text-sm rounded-xl border px-3 py-2 ${
+                  globals.masterShare > globals.partner
+                    ? "border-destructive text-destructive"
+                    : "border-border text-muted-foreground"
+                }`}
+              >
+                {globals.masterShare > globals.partner
+                  ? t("commissionSettings.masterShareTooHigh")
+                  : t("commissionSettings.allocationHint", {
+                      recruited: (globals.partner - globals.masterShare).toLocaleString("en-US"),
+                      master: globals.masterShare.toLocaleString("en-US"),
+                      pool: globals.partner.toLocaleString("en-US"),
+                    })}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={saveGlobals}
+            disabled={savingGlobals || !globals.id || globals.masterShare > globals.partner}
+          >
             {savingGlobals && <Loader2 className="h-3.5 w-3.5 me-2 animate-spin" />}
             {t("commissionSettings.saveDefaults")}
           </Button>
