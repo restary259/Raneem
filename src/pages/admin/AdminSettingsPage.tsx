@@ -61,6 +61,11 @@ interface Contact {
   category: string;
   display_order: number;
   is_active: boolean;
+  address_ar?: string | null;
+  address_en?: string | null;
+  city?: string | null;
+  source_url?: string | null;
+  last_verified_at?: string | null;
 }
 
 interface VisaField {
