@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { subscribeTables } from '@/lib/realtimeRegistry';
 
 /**
  * Subscribe to real-time changes on a Supabase table.
@@ -33,22 +33,10 @@ export function useRealtimeSubscription(
     };
   }, []);
 
-  // Realtime channel
+  // Realtime channel (pooled: one channel per table, shared by all subscribers)
   useEffect(() => {
     if (!enabled) return;
-
-    const channel = supabase
-      .channel(`${tableName}-realtime`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: tableName },
-        () => debouncedUpdate()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeTables(`${tableName}-realtime`, [tableName], debouncedUpdate);
   }, [tableName, debouncedUpdate, enabled]);
 
   // Refetch on window focus (visibilitychange)
