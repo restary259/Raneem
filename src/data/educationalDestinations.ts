@@ -7,7 +7,7 @@ export const universities = {
     {
       name: "Technical University of Munich (TUM)",
       location: "ميونخ، ألمانيا",
-      logoUrl: "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.png",
+      logoUrl: "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp",
       description: "الجامعة التقنية الرائدة في ألمانيا، تتصدر التصنيفات العالمية في العلوم والتكنولوجيا",
       majors: ["هندسة", "علوم حاسوب", "علوم طبيعية", "تكنولوجيا"],
       ranking: "#26 عالمياً (THE 2025)",
@@ -25,7 +25,7 @@ export const universities = {
     {
       name: "Heidelberg University",
       location: "هايدلبرغ، ألمانيا",
-      logoUrl: "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.png",
+      logoUrl: "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.webp",
       description: "أقدم جامعة في ألمانيا (1386)، مشهورة بالبحث في الطب وعلوم الحياة",
       majors: ["طب", "علوم حياة", "علوم طبيعية", "علوم إنسانية"],
       ranking: "#47 عالمياً (THE 2025)",
@@ -52,7 +52,7 @@ export const universities = {
     {
       name: "RWTH Aachen University",
       location: "آخن، ألمانيا",
-      logoUrl: "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.png",
+      logoUrl: "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp",
       description: "الجامعة التقنية الرائدة في غرب ألمانيا، متخصصة في الهندسة والتكنولوجيا",
       majors: ["هندسة ميكانيكية", "هندسة كهربائية", "علوم حاسوب", "هندسة كيميائية"],
       ranking: "#92 عالمياً (THE 2025)",
@@ -199,14 +199,14 @@ export const languageSchools = {
     {
       name: "Alpha Aktiv",
       location: "هايدلبرغ، ألمانيا",
-      logoUrl: "/lovable-uploads/171c7fae-8d36-4d06-a429-e3726c4417b8.png",
+      logoUrl: "/lovable-uploads/171c7fae-8d36-4d06-a429-e3726c4417b8.webp",
       description: "معهد متخصص في تعليم اللغة الألمانية والتأهيل الجامعي",
       programs: ["دورات عامة", "تحضير للامتحانات", "برامج مهنية"]
     },
     {
       name: "GoAcademy",
       location: "دوسلدورف، ألمانيا",
-      logoUrl: "/lovable-uploads/f66f6ad1-4686-44a0-8341-178c0bacebaf.png",
+      logoUrl: "/lovable-uploads/f66f6ad1-4686-44a0-8341-178c0bacebaf.webp",
       description: "معهد لغات حديث يقدم برامج متنوعة",
       programs: ["لغة ألمانية", "لغة إنجليزية", "برامج مهنية"]
     }
