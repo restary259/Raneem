@@ -18,11 +18,13 @@ export function toExportColumns(columns: SheetColumn[]): ExportColumn[] {
               : c.type === 'date'
                 ? ('date' as const)
                 : ('text' as const),
-    currency: 'ILS' as const,
+    // School-side costs are EUR and agency fees are ILS — never force one symbol.
+    currency: c.type === 'currency' ? (c.currency === 'EUR' ? ('EUR' as const) : ('ILS' as const)) : undefined,
     total: c.total ? ('sum' as const) : undefined,
     dataBar: c.total && c.type === 'currency' ? true : undefined,
   }));
 }
+
 
 /**
  * Rows keep their raw values so Excel can format numbers and dates natively;

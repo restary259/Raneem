@@ -151,7 +151,10 @@ function renderSheet(
   // ---- Excel table ----------------------------------------------------------
   const headerRowNumber = ws.rowCount + 1;
   const body = sheet.rows.map(r => toCells(r, columns));
-  const hasTotals = columns.some(c => c.total);
+  const isEmpty = body.length === 0;
+  // A totals row over a placeholder (empty) table makes Excel repair the table
+  // and rewrite its SUBTOTAL formulas as #REF!, so totals only exist with data.
+  const hasTotals = !isEmpty && columns.some(c => c.total);
 
   ws.addTable({
     name: sanitizeTableName(sheet.name, index),
@@ -163,7 +166,7 @@ function renderSheet(
       name: c.header || `Column ${i + 1}`,
       filterButton: true,
       totalsRowLabel: !hasTotals ? undefined : i === 0 ? 'Total' : undefined,
-      totalsRowFunction: !c.total
+      totalsRowFunction: !hasTotals || !c.total
         ? undefined
         : c.total === 'sum'
           ? 'sum'
@@ -178,6 +181,13 @@ function renderSheet(
   const lastDataRow = headerRowNumber + Math.max(body.length, 1);
   const totalsRowNumber = hasTotals ? lastDataRow + 1 : null;
 
+  if (isEmpty) {
+    const placeholder = ws.getRow(firstDataRow).getCell(1);
+    placeholder.value = 'No records for the current selection';
+    placeholder.font = { name: FONTS.family, size: FONTS.bodySize, italic: true, color: { argb: COLORS.muted } };
+  }
+
+
   // Header styling
   const header = ws.getRow(headerRowNumber);
   header.height = LAYOUT.headerRowHeight;
@@ -190,14 +200,24 @@ function renderSheet(
   });
 
   // Body styling
+  const WRAP_THRESHOLD = 28;
+  const wrapped = columns.map(
+    (c, i) =>
+      (c.type === undefined || c.type === 'text') &&
+      body.some(r => String(r[i] ?? '').length > WRAP_THRESHOLD),
+  );
+
   for (let r = firstDataRow; r <= lastDataRow; r++) {
     const row = ws.getRow(r);
-    row.height = LAYOUT.bodyRowHeight;
+    // Let Excel auto-fit the height when any cell wraps, otherwise long notes
+    // and student lists are clipped by the fixed row height.
+    const rowWraps = wrapped.some((w, i) => w && String(body[r - firstDataRow]?.[i] ?? '').length > WRAP_THRESHOLD);
+    if (!rowWraps) row.height = LAYOUT.bodyRowHeight;
     const zebra = (r - firstDataRow) % 2 === 1;
     columns.forEach((c, i) => {
       const cell = row.getCell(i + 1);
       cell.font = { name: FONTS.family, size: FONTS.bodySize, color: { argb: COLORS.text } };
-      cell.alignment = { vertical: 'middle', horizontal: alignmentFor(c.type) };
+      cell.alignment = { vertical: 'middle', horizontal: alignmentFor(c.type), wrapText: wrapped[i] };
       cell.border = thinBorder;
       const fmt = numFmtFor(c.type, c.currency);
       if (fmt) cell.numFmt = fmt;
@@ -209,6 +229,7 @@ function renderSheet(
       }
     });
   }
+
 
   // Totals row styling
   if (totalsRowNumber) {
@@ -274,7 +295,10 @@ function renderSheet(
       c.header.length,
       ...body.map(r => displayLength(r[i], c.type)),
     );
-    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + 4, LAYOUT.minColWidth), LAYOUT.maxColWidth);
+    // Currency/date cells render wider than their raw value (₪1,234,567.00),
+    // otherwise Excel shows ####.
+    const padding = c.type === 'currency' ? 8 : c.type === 'date' || c.type === 'datetime' ? 6 : 4;
+    ws.getColumn(i + 1).width = c.width ?? Math.min(Math.max(longest + padding, LAYOUT.minColWidth), LAYOUT.maxColWidth);
   });
 
   ws.views = [
@@ -285,10 +309,10 @@ function renderSheet(
       showGridLines: false,
     },
   ];
-  ws.autoFilter = {
-    from: { row: headerRowNumber, column: 1 },
-    to: { row: lastDataRow, column: Math.max(columns.length, 1) },
-  };
+  // No sheet-level autoFilter: the table already provides filter buttons over
+  // the same range, and the duplicate makes Excel "repair" the table — which is
+  // what turns the totals SUBTOTAL formulas into #REF!.
+
   // Repeat the header row on every printed page.
   (ws.pageSetup as unknown as { printTitlesRow?: string }).printTitlesRow = `${headerRowNumber}:${headerRowNumber}`;
 }

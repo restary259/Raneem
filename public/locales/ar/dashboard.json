@@ -389,7 +389,18 @@
       "deleteConfirmDesc": "سيتم حذف الحساب وإلغاء جميع صلاحياته. لا يمكن التراجع عن هذا الإجراء.",
       "manager": "مدير",
       "managerHint": "يمكن لجميع أعضاء الفريق مراسلة المدراء في الدردشة الداخلية",
-      "copyPassword": "نسخ كلمة المرور"
+      "copyPassword": "نسخ كلمة المرور",
+      "viewDetails": "عرض تفاصيل الأداء",
+      "stats": {
+        "referred": "الطلاب المُحالون",
+        "assigned": "الملفات المسندة",
+        "enrolled": "مسجّلون",
+        "perStudent": "لكل طالب مسجّل",
+        "earned": "إجمالي الأرباح",
+        "paid": "المدفوع",
+        "pending": "قيد الانتظار",
+        "lastActivity": "آخر نشاط على ملف"
+      }
     },
     "programs": {
       "title": "البرامج والسكن",
@@ -1039,6 +1050,7 @@
       "linkedStudents": "الطلاب",
       "linkedStudentsTitle": "الطلاب المرتبطون",
       "paymentMethodCol": "طريقة الدفع",
+      "pdfFontWarning": "تعذّر تضمين الأسماء العربية/العبرية في ملف PDF. يُرجى استخدام تصدير Excel بدلاً من ذلك.",
       "all": "الكل",
       "allRoles": "جميع الأدوار",
       "exportCSV": "تصدير CSV",
@@ -2927,7 +2939,12 @@
       "enrolled": "المسجّلون",
       "conversion": "نسبة التحويل",
       "earned": "العمولات المكتسبة",
-      "paidOut": "العمولات المدفوعة"
+      "paidOut": "العمولات المدفوعة",
+      "email": "البريد الإلكتروني",
+      "dateOfBirth": "تاريخ الميلاد",
+      "passportNumber": "رقم الجواز",
+      "passportType": "نوع الجواز",
+      "educationLevel": "المستوى التعليمي"
     },
     "value": {
       "status": {
@@ -3019,7 +3036,13 @@
     "coverRecords": "عدد السجلات",
     "coverScope": "النطاق",
     "scopeTeam": "المسندة إليّ",
-    "scopeAdmin": "كل السجلات"
+    "scopeAdmin": "كل السجلات",
+    "schoolPacket": "ملف المدرسة",
+    "filterSchool": "المدرسة",
+    "filterMonth": "شهر البدء",
+    "allSchools": "كل المدارس",
+    "allMonths": "كل الأشهر",
+    "clearFilters": "مسح الفلاتر"
   },
   "studentCases": {
     "reportTitle": "تقرير ملفات الطلاب",

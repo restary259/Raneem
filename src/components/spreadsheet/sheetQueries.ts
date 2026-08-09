@@ -56,12 +56,14 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       id, program_start_date, program_end_date, extra_data,
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
-      case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id),
+      student_email, student_phone,
+      case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id, education_level, passport_type),
       program:programs(name_en, name_ar, price),
       accommodation:accommodations(name_en, name_ar, price),
       insurance:insurances(name, price)
     `)
     .is('deleted_at', null);
+
 
   if (scope === 'team' && userId) query = query.eq('case.assigned_to', userId);
 
@@ -82,9 +84,16 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       id: s.id,
       case_reference: s.case?.case_reference ?? null,
       full_name: s.case?.full_name ?? '—',
-      phone: s.case?.phone_number ?? null,
+      phone: s.case?.phone_number ?? s.student_phone ?? null,
+      // Schools need identity data that only lives on the submission payload.
+      email: s.student_email ?? extra.email ?? null,
+      date_of_birth: extra.date_of_birth ?? extra.dob ?? null,
+      passport_number: extra.passport_number ?? null,
+      passport_type: s.case?.passport_type ?? extra.passport_type ?? null,
+      education_level: s.case?.education_level ?? extra.education_level ?? null,
       city: s.case?.city ?? extra.city ?? null,
       status: s.case?.status ?? null,
+
       team_member: staff[s.case?.assigned_to]?.name ?? null,
       partner: staff[s.case?.partner_id]?.name ?? null,
       school_name: extra.school_name ?? null,
@@ -185,11 +194,15 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
 
   return (data || []).map((r: any) => {
     const notes: string = r.admin_notes ?? '';
-    const kind = notes.startsWith('Partner commission')
-      ? 'partner'
-      : notes.startsWith('Team commission')
-        ? 'team'
-        : 'other';
+    // reward_type is the authoritative classification; notes are free text.
+    const kind =
+      r.reward_type === 'partner' || r.reward_type === 'team' || r.reward_type === 'master_override'
+        ? r.reward_type
+        : notes.startsWith('Partner commission')
+          ? 'partner'
+          : notes.startsWith('Team commission')
+            ? 'team'
+            : 'other';
     const unlock = new Date(new Date(r.created_at).getTime() + LOCK_DAYS * 86400000);
     return {
       id: r.id,
@@ -320,7 +333,7 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
     .is('deleted_at', null);
   if (scope === 'team' && userId) casesQuery = casesQuery.eq('assigned_to', userId);
 
-  let rewardsQuery = (supabase as any).from('rewards').select('user_id, amount, status, admin_notes');
+  let rewardsQuery = (supabase as any).from('rewards').select('user_id, amount, status, admin_notes, reward_type');
   if (scope === 'team' && userId) rewardsQuery = rewardsQuery.eq('user_id', userId);
 
   const [casesRes, rewardsRes] = await Promise.all([casesQuery, rewardsQuery]);
@@ -328,7 +341,7 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
 
   const cases = casesRes.data || [];
   const rewards = (rewardsRes.data || []).filter((r: any) =>
-    (r.admin_notes ?? '').startsWith('Team commission'),
+    r.reward_type ? r.reward_type === 'team' : (r.admin_notes ?? '').startsWith('Team commission'),
   );
 
   const ids = Array.from(

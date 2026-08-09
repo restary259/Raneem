@@ -14,6 +14,7 @@ import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck } fro
 import { Switch } from '@/components/ui/switch';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
+import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
@@ -52,7 +53,9 @@ const AdminTeamPage = () => {
   const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{ email: string; password: string } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [detailMember, setDetailMember] = useState<TeamMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+
 
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
@@ -283,25 +286,33 @@ const AdminTeamPage = () => {
               {members.map(m => (
                 <div key={m.id} className="flex items-start justify-between gap-3 p-4 hover:bg-muted/50 transition-colors flex-wrap">
                   <div className="min-w-0">
-                    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${onlineUsers.has(m.id) ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
-                        title={t(onlineUsers.has(m.id) ? 'chat.presence.online' : 'chat.presence.offline')}
-                      />
-                      {m.full_name}
-                      {onlineUsers.has(m.id) && (
-                        <span className="text-[10px] font-normal text-emerald-600">
-                          {t('chat.presence.online')}
-                        </span>
-                      )}
-                      {m.is_master_partner && (
-                        <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
-                          <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
-                        </Badge>
-                      )}
-                    </p>
+                    <button
+                      type="button"
+                      className="min-w-0 text-start"
+                      onClick={() => setDetailMember(m)}
+                      aria-label={t('admin.team.viewDetails', 'View performance details')}
+                    >
+                      <p className="flex items-center gap-2 text-sm font-medium text-foreground hover:underline">
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${onlineUsers.has(m.id) ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}
+                          title={t(onlineUsers.has(m.id) ? 'chat.presence.online' : 'chat.presence.offline')}
+                        />
+                        {m.full_name}
+                        {onlineUsers.has(m.id) && (
+                          <span className="text-[10px] font-normal text-emerald-600">
+                            {t('chat.presence.online')}
+                          </span>
+                        )}
+                        {m.is_master_partner && (
+                          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+                            <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
+                          </Badge>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{m.email}</p>
+                    </button>
 
-                    <p className="text-xs text-muted-foreground">{m.email}</p>
+
                     {REFERRING_ROLES.includes(m.role) && m.referral_code && (
                       <button
                         type="button"
@@ -364,6 +375,16 @@ const AdminTeamPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <TeamMemberDetailSheet
+        memberId={detailMember?.id ?? null}
+        memberName={detailMember?.full_name ?? ''}
+        memberEmail={detailMember?.email ?? ''}
+        role={detailMember?.role ?? 'team_member'}
+        roleLabel={detailMember ? roleLabel(detailMember.role) : ''}
+        commission={detailMember?.commission ?? 0}
+        onOpenChange={(open) => { if (!open) setDetailMember(null); }}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteTargetId} onOpenChange={(v) => { if (!v) setDeleteTargetId(null); }}>

@@ -1,0 +1,128 @@
+import type jsPDF from 'jspdf';
+
+/**
+ * PDF font handling for non-Latin text.
+ *
+ * The previous implementation fetched Amiri from a hardcoded gstatic URL that
+ * returns 404, swallowed the error, and let jsPDF fall back to Helvetica —
+ * which has no Arabic/Hebrew glyphs and WinAnsi encoding, producing mojibake
+ * ("þáþôþáþ³") on real financial documents. Fonts are now vendored into the
+ * bundle (lazy-loaded chunk) so registration can never silently degrade.
+ */
+
+export const ARABIC_FONT = 'NotoNaskhArabic';
+export const HEBREW_FONT = 'NotoSansHebrew';
+
+const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+const HEBREW_RE = /[\u0590-\u05FF\uFB1D-\uFB4F]/;
+
+export const hasArabic = (text: string) => ARABIC_RE.test(text);
+export const hasHebrew = (text: string) => HEBREW_RE.test(text);
+export const hasRtl = (text: string) => hasArabic(text) || hasHebrew(text);
+
+export interface FontRegistration {
+  arabic: boolean;
+  hebrew: boolean;
+}
+
+/**
+ * Registers the bundled Arabic and Hebrew faces with a jsPDF instance.
+ * Returns which faces are available — callers MUST check the result and warn
+ * the user rather than emitting an unreadable document.
+ */
+export async function registerPdfFonts(doc: jsPDF): Promise<FontRegistration> {
+  const result: FontRegistration = { arabic: false, hebrew: false };
+
+  try {
+    const { NOTO_NASKH_ARABIC_BASE64 } = await import('@/assets/fonts/notoNaskhArabic');
+    doc.addFileToVFS('NotoNaskhArabic-Regular.ttf', NOTO_NASKH_ARABIC_BASE64);
+    doc.addFont('NotoNaskhArabic-Regular.ttf', ARABIC_FONT, 'normal');
+    doc.addFont('NotoNaskhArabic-Regular.ttf', ARABIC_FONT, 'bold');
+    result.arabic = true;
+  } catch (e) {
+    console.error('Failed to register Arabic PDF font', e);
+  }
+
+  try {
+    const { NOTO_SANS_HEBREW_BASE64 } = await import('@/assets/fonts/notoSansHebrew');
+    doc.addFileToVFS('NotoSansHebrew-Regular.ttf', NOTO_SANS_HEBREW_BASE64);
+    doc.addFont('NotoSansHebrew-Regular.ttf', HEBREW_FONT, 'normal');
+    doc.addFont('NotoSansHebrew-Regular.ttf', HEBREW_FONT, 'bold');
+    result.hebrew = true;
+  } catch (e) {
+    console.error('Failed to register Hebrew PDF font', e);
+  }
+
+  return result;
+}
+
+/** Picks the font family that can actually render the given string. */
+export function fontForText(text: string, fonts: FontRegistration, fallback = 'helvetica'): string {
+  if (hasArabic(text) && fonts.arabic) return ARABIC_FONT;
+  if (hasHebrew(text) && fonts.hebrew) return HEBREW_FONT;
+  // Arabic text still renders best in the Arabic face even for mixed strings.
+  if (hasHebrew(text) && fonts.hebrew) return HEBREW_FONT;
+  return fallback;
+}
+
+type Reshaper = { convertArabic: (input: string) => string };
+let reshaper: Reshaper | null = null;
+let bidiEngine: any = null;
+
+/**
+ * Loads the shaping/bidi engines once. jsPDF renders glyphs in logical order
+ * with no shaping, so Arabic must be reshaped into presentation forms and both
+ * scripts must be visually reordered before drawing.
+ */
+export async function loadTextShaper(): Promise<void> {
+  if (!reshaper) {
+    try {
+      const mod: any = await import('arabic-persian-reshaper');
+      reshaper = (mod.ArabicShaper ?? mod.default?.ArabicShaper ?? mod.default ?? mod) as Reshaper;
+    } catch (e) {
+      console.error('Failed to load Arabic reshaper', e);
+    }
+  }
+  if (!bidiEngine) {
+    try {
+      const mod: any = await import('bidi-js');
+      bidiEngine = (mod.default ?? mod)();
+    } catch (e) {
+      console.error('Failed to load bidi engine', e);
+    }
+  }
+}
+
+/**
+ * Converts a logical-order string into the visual order jsPDF needs.
+ * Safe on pure-Latin input (returned unchanged).
+ */
+export function shapeForPdf(text: string): string {
+  if (!text || !hasRtl(text)) return text;
+
+  let shaped = text;
+  if (reshaper?.convertArabic && hasArabic(shaped)) {
+    try {
+      shaped = reshaper.convertArabic(shaped);
+    } catch {
+      /* keep unshaped text rather than dropping the value */
+    }
+  }
+
+  if (bidiEngine) {
+    try {
+      const embeddingLevels = bidiEngine.getEmbeddingLevels(shaped, 'rtl');
+      const flips = bidiEngine.getReorderSegments(shaped, embeddingLevels);
+      const chars = Array.from(shaped);
+      flips.forEach(([start, end]: [number, number]) => {
+        const slice = chars.slice(start, end + 1).reverse();
+        for (let i = 0; i < slice.length; i++) chars[start + i] = slice[i];
+      });
+      return chars.join('');
+    } catch {
+      /* fall through */
+    }
+  }
+
+  return shaped;
+}
