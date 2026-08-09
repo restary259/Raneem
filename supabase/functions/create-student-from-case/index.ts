@@ -408,7 +408,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("create-student-from-case error:", e);
-    return new Response(JSON.stringify({ error: "Server error" }), {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
