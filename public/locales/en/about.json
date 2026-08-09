@@ -1,11 +1,11 @@
 {
   "aboutIntro": {
     "title": "Why Choose Darb Study International?",
-    "subtitle": "With over five years of experience, we at Darb Study International take pride in being official representatives of prestigious universities and educational partners. We achieve a success rate exceeding 95% in securing university admissions and visas, offering our students a guaranteed path to achieving their academic ambitions."
+    "subtitle": "With over five years of experience, we at Darb Study International take pride in being official representatives of prestigious universities and educational partners. We support students through university admission and visa procedures, and accompany them step by step toward their academic ambitions. Admission and visa decisions are made solely by the universities and the relevant authorities."
   },
   "ceoMessage": {
     "title": "Message from the CEO",
-    "quote": "\"Our vision at Darb is to pave the way for every ambitious student to achieve their dream of studying abroad. We don't just offer consultations — we build bridges of trust and support to ensure a successful educational journey and a bright future.\"",
+    "quote": "\"Our vision at Darb is to pave the way for every ambitious student to achieve their dream of studying abroad. We don't just offer consultations — we build bridges of trust and support throughout your educational journey and a bright future.\"",
     "name": "- Ahmad Al-Ali, Founder & CEO",
     "avatarAlt": "CEO"
   },
@@ -58,10 +58,10 @@
       { "icon": "FileText", "title": "Full Transparency", "description": "Our processes are clear and fully transparent, with no hidden fees or unexpected surprises." },
       { "icon": "Globe", "title": "Cultural & Language Support", "description": "We understand cultural and linguistic challenges and provide the support needed to overcome them successfully." },
       { "icon": "Handshake", "title": "Strong Partner Network", "description": "We have a strong network of trusted partners including universities and service providers in our study destinations." },
-      { "icon": "Award", "title": "Ongoing Support", "description": "We accompany you at every step, from travel preparation to ongoing support during your studies to ensure your success." }
+      { "icon": "Award", "title": "Ongoing Support", "description": "We accompany you at every step, from travel preparation to ongoing support during your studies." }
     ],
     "processTitle": "Our Methodology & Quality Assurance",
-    "processDesc": "We follow a transparent and organized process to ensure an exceptional experience and the best results for every student.",
+    "processDesc": "We follow a transparent and organized process to deliver an exceptional experience and strong support for every student.",
     "ctaLine1": "We invite you to start your journey with us with confidence. Your success is our success.",
     "ctaLine2": "Your trusted partner for achieving the dream of higher education."
   }
