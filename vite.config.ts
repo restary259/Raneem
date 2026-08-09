@@ -28,7 +28,12 @@ export default defineConfig(({ mode }) => ({
         // helpers are never hoisted into a heavy vendor chunk and dragged
         // into the initial graph (recharts/pdf used to be preloaded on boot).
         manualChunks(id: string) {
+          // Rollup's CommonJS interop helpers are shared by every CJS package.
+          // Unassigned they land in the largest chunk (vendor-charts), which
+          // then gets preloaded on boot by whoever needs the helper.
+          if (id.includes('commonjsHelpers') || id.includes('commonjs-dynamic-modules')) return 'vendor-utils';
           if (!id.includes('node_modules')) return;
+
           const p = id.split('node_modules/').pop() || '';
           const pkg = p.startsWith('@') ? p.split('/').slice(0, 2).join('/') : p.split('/')[0];
 
