@@ -30,6 +30,7 @@ export default function PartnerEarningsPage() {
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
 
 
+  const { summary: earnings, refetch: refetchEarnings } = useEarningsSummary(true);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
