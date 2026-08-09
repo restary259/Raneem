@@ -243,8 +243,8 @@ export const fetchCatalogSheet = async () => {
     rows.push({
       id: `p-${p.id}`,
       name: p.name_en,
-      school: null,
-      city: null,
+      school: p.school?.name_en ?? null,
+      city: p.school?.city ?? null,
       kind: 'program',
       type: p.type,
       duration: p.duration,
