@@ -284,13 +284,42 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       const at = await persist(values, true);
       setDraftSavedAt(at);
 
+      // `case_submissions` is the working copy, but the pipeline lists, admin
+      // views and the student's own dashboard read `cases` / `profiles`.
+      // Mirror the shared identity fields so none of them go stale.
       const name = fullNameOf(values);
-      if (name && name !== caseData.full_name) {
-        await supabase.from("cases").update({ full_name: name }).eq("id", caseData.id);
+      const casePatch: Record<string, unknown> = {
+        phone_number: values.student_phone?.trim() || null,
+        city: values.city?.trim() || null,
+      };
+      if (name && name !== caseData.full_name) casePatch.full_name = name;
+      await supabase.from("cases").update(casePatch).eq("id", caseData.id);
+
+      const studentUserId = (caseData as { student_user_id?: string | null }).student_user_id;
+      if (studentUserId) {
+        // Best effort: the student's own row is protected by column-level
+        // rules, so a rejection here must not fail the profile save.
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            full_name: name || undefined,
+            email: normalizeEmail(values.student_email) || undefined,
+            phone_number: values.student_phone?.trim() || undefined,
+            date_of_birth: values.date_of_birth || undefined,
+            gender: values.gender || undefined,
+            city: values.city?.trim() || undefined,
+            emergency_contact_name: values.emergency_contact_name?.trim() || undefined,
+            emergency_contact_phone: values.emergency_contact_phone?.trim() || undefined,
+            arrival_date: values.arrival_date || undefined,
+            intake_month: values.start_month || undefined,
+          })
+          .eq("id", studentUserId);
+        if (profileError) console.warn("profile sync skipped:", profileError.message);
       }
 
       // The finance breakdown is generated from the admin catalog, never typed by hand.
       await ensureCaseServices(caseData.id, user?.id ?? null);
+
 
       await supabase.rpc("log_case_event", {
         p_case_id: caseData.id,
