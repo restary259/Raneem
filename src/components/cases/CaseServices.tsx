@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { formatILS } from "@/lib/money";
-import { useServiceCatalog, caseServiceTotal, type CaseService, type CatalogService } from "@/hooks/useCaseServices";
+import { useServiceCatalog, type CaseService, type CatalogService } from "@/hooks/useCaseServices";
+import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 
 interface Props {
   caseId: string;
@@ -45,6 +46,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
   const isArabic = i18n.language?.startsWith("ar");
 
   const { catalog, isLoading: catalogLoading, error: catalogError } = useServiceCatalog();
+  const { financials } = useCaseFinancials(caseId);
 
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Selection[]>([]);
@@ -286,26 +288,9 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
     return Number(service.default_price || 0);
   };
 
-  const lineTotal = (service: CatalogService) => {
-    return priceFor(service) * qtyOf(service.id);
-  };
-
   /**
    * Authoritative saved total shown in Finance.
    */
-  const savedTotal = useMemo(() => services.reduce((sum, service) => sum + caseServiceTotal(service), 0), [services]);
-
-  const selectionTotal = useMemo(
-    () =>
-      selected.reduce((sum, selection) => {
-        const service = selectableCatalog.find((item) => item.id === selection.service_id);
-
-        if (!service) return sum;
-
-        return sum + priceFor(service) * Number(selection.quantity || 1);
-      }, 0),
-    [selected, selectableCatalog, services],
-  );
 
   const selectedKey = useMemo(
     () =>
@@ -384,7 +369,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold">{t("finance.services.title")}</p>
 
-          <span className="text-sm font-semibold">{formatILS(savedTotal)}</span>
+          <span className="text-sm font-semibold">{formatILS(Number(financials?.service_total ?? 0))}</span>
         </div>
 
         {services.length === 0 ? (
@@ -403,7 +388,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
                   </p>
                 </div>
 
-                <span className="shrink-0 text-sm font-medium">{formatILS(caseServiceTotal(service))}</span>
+                <span className="shrink-0 text-sm font-medium">{formatILS(Number(service.unit_price || 0))}</span>
               </div>
             ))}
           </div>
@@ -422,7 +407,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">{t("finance.services.title")}</p>
 
-        <span className="text-sm font-semibold">{formatILS(savedTotal)}</span>
+        <span className="text-sm font-semibold">{formatILS(Number(financials?.service_total ?? 0))}</span>
       </div>
 
       {/* Existing saved services ALWAYS render first. */}
@@ -448,7 +433,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
                 </p>
               </div>
 
-              <span className="shrink-0 text-sm font-semibold">{formatILS(caseServiceTotal(service))}</span>
+              <span className="shrink-0 text-sm font-semibold">{formatILS(Number(service.unit_price || 0))}</span>
             </div>
           ))}
         </div>
@@ -558,7 +543,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
                           />
                         )}
 
-                        <span className="text-sm">{formatILS(checked ? lineTotal(service) : priceFor(service))}</span>
+                        <span className="text-sm">{formatILS(priceFor(service))}</span>
                       </span>
                     </div>
                   );
@@ -568,9 +553,8 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
 
             <div className="flex items-center justify-between gap-3 border-t pt-3">
               <div>
-                <p className="text-sm font-semibold">{t("finance.services.total")}</p>
-
-                <p className="text-xs text-muted-foreground">{formatILS(selectionTotal)}</p>
+                <p className="text-sm font-semibold">{t("finance.services.total", "DARB service total")}</p>
+                <p className="text-xs text-muted-foreground">Calculated by the server after saving.</p>
               </div>
 
               <Button size="sm" onClick={save} disabled={busy || !dirty} className="gap-1">
