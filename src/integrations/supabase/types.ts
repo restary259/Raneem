@@ -3435,6 +3435,7 @@ export type Database = {
           intended_role: Database["public"]["Enums"]["app_role"]
           invitation_type: string
           invited_email: string
+          invited_name: string | null
           inviter_id: string | null
           master_partner_id: string | null
           recruit_application_id: string | null
@@ -3452,6 +3453,7 @@ export type Database = {
           intended_role: Database["public"]["Enums"]["app_role"]
           invitation_type: string
           invited_email: string
+          invited_name?: string | null
           inviter_id?: string | null
           master_partner_id?: string | null
           recruit_application_id?: string | null
@@ -3469,6 +3471,7 @@ export type Database = {
           intended_role?: Database["public"]["Enums"]["app_role"]
           invitation_type?: string
           invited_email?: string
+          invited_name?: string | null
           inviter_id?: string | null
           master_partner_id?: string | null
           recruit_application_id?: string | null
