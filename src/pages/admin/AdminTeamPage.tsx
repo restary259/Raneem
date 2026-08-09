@@ -36,6 +36,17 @@ interface TeamMember {
   is_master_partner: boolean;
 }
 
+interface PendingInvitation {
+  id: string;
+  invited_email: string;
+  invited_name: string | null;
+  invitation_type: string;
+  intended_role: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+}
+
 /** Roles that get a public referral link of their own. */
 const REFERRING_ROLES = ['social_media_partner', 'ambassador'];
 
