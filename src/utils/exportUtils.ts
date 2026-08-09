@@ -1,7 +1,14 @@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { registerArabicFont, processArabicText } from './arabicFontLoader';
+import {
+  registerPdfFonts,
+  loadTextShaper,
+  shapeForPdf,
+  fontForText,
+  hasRtl,
+} from './pdfFonts';
+
 
 interface ExportOptions {
   headers: string[];
