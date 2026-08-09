@@ -19,10 +19,10 @@ const EducationalDestinationsPage = () => {
   return <div className="min-h-screen bg-background" dir={dir}>
       <SEOHead title={t('seo.edDestTitle')} description={t('seo.edDestDesc')} />
       <Header />
-      <section className="py-20 bg-gradient-to-b from-orange-50 to-background">
+      <section className="py-20 bg-gradient-to-b from-brand/5 to-background">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-6 bg-orange-100 text-orange-800">{t('educational.edHeroBadge')}</Badge>
+            <Badge variant="secondary" className="mb-6 bg-brand/10 text-brand">{t('educational.edHeroBadge')}</Badge>
             <h1 className="text-5xl font-bold text-foreground mb-6">{t('educational.edHeroTitle')}</h1>
             <p className="text-xl text-muted-foreground mb-8">{t('educational.edHeroSubtitle')}</p>
           </div>
@@ -31,7 +31,7 @@ const EducationalDestinationsPage = () => {
       <div className="container mx-auto px-4">
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-            <GraduationCap className="h-8 w-8 text-orange-500" />{t('educational.edUniversitiesTitle')}
+            <GraduationCap className="h-8 w-8 text-brand" />{t('educational.edUniversitiesTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {universities.germany.map((uni, index) => <UniversityCard key={index} university={uni} />)}
@@ -39,7 +39,7 @@ const EducationalDestinationsPage = () => {
         </div>
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-            <Building2 className="h-8 w-8 text-orange-500" />{t('educational.edLanguageSchoolsTitle')}
+            <Building2 className="h-8 w-8 text-brand" />{t('educational.edLanguageSchoolsTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {languageSchools.germany.map((school, index) => <LanguageSchoolCard key={index} school={school} />)}
@@ -47,7 +47,7 @@ const EducationalDestinationsPage = () => {
         </div>
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-            <Heart className="h-8 w-8 text-orange-500" />{t('educational.edServicesTitle')}
+            <Heart className="h-8 w-8 text-brand" />{t('educational.edServicesTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {services.germany.map((service, index) => <ServiceCard key={index} service={service} />)}
