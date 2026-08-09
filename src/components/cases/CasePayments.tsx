@@ -7,55 +7,72 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Loader2, Trash2 } from "lucide-react";
+import { Plus, Loader2, Check, X } from "lucide-react";
 import { formatILS } from "@/lib/money";
-import type { CasePayment } from "@/hooks/useCasePayments";
+import type { FinancialPayment, PaymentStatus } from "@/hooks/useCaseFinancials";
 
 interface Props {
   caseId: string;
-  payments: CasePayment[];
+  payments: FinancialPayment[];
+  /** Admin or the assigned team member — may submit a received payment. */
   canManage: boolean;
+  /** Admin only — may confirm or reject a submitted payment. */
+  canConfirm?: boolean;
   onChanged: () => void;
 }
 
 const fmtDate = (v: string | null) => (v ? new Date(v).toLocaleDateString("en-US") : "—");
 
-const CasePayments: React.FC<Props> = ({ caseId, payments, canManage, onChanged }) => {
+const STATUS_CLASS: Record<PaymentStatus, string> = {
+  pending: "bg-slate-100 text-slate-800 border-slate-200",
+  submitted: "bg-amber-100 text-amber-800 border-amber-200",
+  confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  rejected: "bg-red-100 text-red-800 border-red-200",
+};
+
+/**
+ * Payment lifecycle UI. The team submits what it received; only an admin can
+ * confirm it, and the amount that gets stored is decided by the server.
+ */
+const CasePayments: React.FC<Props> = ({
+  caseId,
+  payments,
+  canManage,
+  canConfirm = false,
+  onChanged,
+}) => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState("");
 
   const reset = () => {
     setAmount("");
     setNote("");
-    setDate(new Date().toISOString().slice(0, 10));
     setAdding(false);
   };
 
-  const record = async () => {
+  const submitPayment = async () => {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
       toast({ variant: "destructive", description: t("finance.payments.invalidAmount") });
       return;
     }
+    if (busy) return;
     setBusy(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const { error } = await (supabase as any).from("case_payments").insert({
-        case_id: caseId,
-        payment_type: "service_fee",
-        amount: value,
-        paid_status: "paid",
-        paid_date: new Date(date).toISOString(),
-        note: note.trim() || null,
-        recorded_by: auth?.user?.id ?? null,
+      const { error } = await (supabase as any).rpc("submit_case_payment", {
+        p_case_id: caseId,
+        p_amount: value,
+        p_note: note.trim() || null,
+        // Same key for a repeated click on the same amount → no duplicate row.
+        p_idem_key: `manual:${caseId}:${value}:${note.trim()}`,
+        p_payment_type: "service_fee",
       });
       if (error) throw error;
-      toast({ description: t("finance.payments.recorded") });
+      toast({ description: t("finance.payments.submitted") });
       reset();
       onChanged();
     } catch (e: any) {
@@ -65,11 +82,20 @@ const CasePayments: React.FC<Props> = ({ caseId, payments, canManage, onChanged 
     }
   };
 
-  const remove = async (id: string) => {
+  const resolve = async (id: string, confirm: boolean) => {
+    if (busy) return;
     setBusy(true);
     try {
-      const { error } = await (supabase as any).from("case_payments").delete().eq("id", id);
+      const { error } = await (supabase as any).rpc(
+        confirm ? "confirm_case_payment" : "reject_case_payment",
+        confirm ? { p_payment_id: id } : { p_payment_id: id, p_reason: null },
+      );
       if (error) throw error;
+      toast({
+        description: confirm
+          ? t("finance.payments.confirmedToast")
+          : t("finance.payments.rejectedToast"),
+      });
       onChanged();
     } catch (e: any) {
       toast({ variant: "destructive", description: e?.message });
@@ -95,41 +121,51 @@ const CasePayments: React.FC<Props> = ({ caseId, payments, canManage, onChanged 
       ) : (
         <div className="space-y-2">
           {payments.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between gap-3 rounded-md border p-2.5"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{formatILS(p.amount)}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {fmtDate(p.paid_date)}
-                  {p.note ? ` · ${p.note}` : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge
-                  variant="secondary"
-                  className={
-                    p.paid_status === "paid"
-                      ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                      : ""
-                  }
-                >
-                  {t(`finance.payments.status.${p.paid_status}`, p.paid_status)}
+            <div key={p.id} className="rounded-md border p-2.5 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{formatILS(p.amount)}</p>
+                  <p className="text-xs text-muted-foreground break-words">
+                    {fmtDate(p.submitted_at ?? p.created_at)}
+                    {p.note ? ` · ${p.note}` : ""}
+                  </p>
+                  {p.status === "confirmed" && p.confirmed_at && (
+                    <p className="text-xs text-emerald-700">
+                      {t("finance.payments.confirmedOn", { date: fmtDate(p.confirmed_at) })}
+                    </p>
+                  )}
+                  {p.status === "rejected" && p.rejected_reason && (
+                    <p className="text-xs text-red-700 break-words">{p.rejected_reason}</p>
+                  )}
+                </div>
+                <Badge variant="secondary" className={`shrink-0 ${STATUS_CLASS[p.status]}`}>
+                  {t(`finance.payments.state.${p.status}`, p.status)}
                 </Badge>
-                {canManage && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-destructive"
-                    disabled={busy}
-                    onClick={() => remove(p.id)}
-                    aria-label={t("finance.payments.remove")}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
               </div>
+
+              {canConfirm && (p.status === "submitted" || p.status === "pending") && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    disabled={busy}
+                    onClick={() => resolve(p.id, true)}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    {t("finance.payments.confirm")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    disabled={busy}
+                    onClick={() => resolve(p.id, false)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    {t("finance.payments.reject")}
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -139,27 +175,22 @@ const CasePayments: React.FC<Props> = ({ caseId, payments, canManage, onChanged 
         <>
           <Separator />
           <div className="space-y-3 rounded-md border p-3 bg-muted/30">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">{t("finance.payments.amount")}</Label>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t("finance.payments.date")}</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{t("finance.payments.amount")}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">{t("finance.payments.note")}</Label>
               <Input value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
+            <p className="text-xs text-muted-foreground">{t("finance.payments.submitHint")}</p>
             <div className="flex gap-2">
-              <Button size="sm" onClick={record} disabled={busy} className="gap-1">
+              <Button size="sm" onClick={submitPayment} disabled={busy} className="gap-1">
                 {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t("finance.payments.save")}
               </Button>

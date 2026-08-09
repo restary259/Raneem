@@ -17,42 +17,6 @@ export interface ProgrammeCostLine {
   currency: string;
 }
 
-/**
- * Create the shekel service lines for a case from the admin service catalog.
- * Idempotent: does nothing when the case already has services attached.
- */
-export async function ensureCaseServices(caseId: string, actorId?: string | null): Promise<void> {
-  const { data: existing, error: existingErr } = await (supabase as any)
-    .from("case_services")
-    .select("id")
-    .eq("case_id", caseId)
-    .limit(1);
-  if (existingErr) throw existingErr;
-  if (existing && existing.length > 0) return;
-
-  const { data: catalog, error: catalogErr } = await (supabase as any)
-    .from("service_catalog")
-    .select("id, name_ar, name_en, category, default_price, is_active, sort_order")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-  if (catalogErr) throw catalogErr;
-  if (!catalog?.length) return;
-
-  const rows = catalog.map((s: any) => ({
-    case_id: caseId,
-    service_id: s.id,
-    description: s.name_ar || s.name_en,
-    category: s.category,
-    unit_price: Number(s.default_price ?? 0),
-    quantity: 1,
-    discount: 0,
-    added_by: actorId ?? null,
-  }));
-
-  const { error } = await (supabase as any).from("case_services").insert(rows);
-  if (error) throw error;
-}
-
 interface CostInput {
   submission: Record<string, any> | null;
   dateOfBirth?: string | null;

@@ -496,35 +496,59 @@ export type Database = {
         Row: {
           amount: number
           case_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string
+          currency: string
           id: string
+          idem_key: string | null
           note: string | null
           paid_date: string | null
           paid_status: string
           payment_type: string
           recorded_by: string | null
+          rejected_reason: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
         }
         Insert: {
           amount?: number
           case_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
+          currency?: string
           id?: string
+          idem_key?: string | null
           note?: string | null
           paid_date?: string | null
           paid_status?: string
           payment_type?: string
           recorded_by?: string | null
+          rejected_reason?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
         }
         Update: {
           amount?: number
           case_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
+          currency?: string
           id?: string
+          idem_key?: string | null
           note?: string | null
           paid_date?: string | null
           paid_status?: string
           payment_type?: string
           recorded_by?: string | null
+          rejected_reason?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
         }
         Relationships: []
       }
@@ -590,6 +614,7 @@ export type Database = {
           case_id: string
           category: string
           created_at: string
+          currency: string
           description: string
           discount: number
           id: string
@@ -604,6 +629,7 @@ export type Database = {
           case_id: string
           category?: string
           created_at?: string
+          currency?: string
           description: string
           discount?: number
           id?: string
@@ -618,6 +644,7 @@ export type Database = {
           case_id?: string
           category?: string
           created_at?: string
+          currency?: string
           description?: string
           discount?: number
           id?: string
@@ -3810,6 +3837,10 @@ export type Database = {
         }[]
       }
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
+      confirm_case_payment: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
       confirm_payout_batch: {
         Args: {
           p_notes?: string
@@ -3878,6 +3909,7 @@ export type Database = {
           target: string
         }[]
       }
+      get_case_financials: { Args: { p_case_id: string }; Returns: Json }
       get_document_activity_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
@@ -4257,6 +4289,10 @@ export type Database = {
         Args: { p_code: string; p_session_id: string; p_user_agent: string }
         Returns: undefined
       }
+      reject_case_payment: {
+        Args: { p_payment_id: string; p_reason?: string }
+        Returns: undefined
+      }
       reject_recruit_application: { Args: { p_id: string }; Returns: undefined }
       request_case_changes: {
         Args: { p_case_id: string; p_note: string }
@@ -4331,6 +4367,16 @@ export type Database = {
         Returns: undefined
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
+      submit_case_payment: {
+        Args: {
+          p_amount: number
+          p_case_id: string
+          p_idem_key?: string
+          p_note?: string
+          p_payment_type?: string
+        }
+        Returns: string
+      }
       submit_recruit_application: {
         Args: {
           p_city?: string
