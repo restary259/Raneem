@@ -154,7 +154,7 @@ const App = () => {
 
     registerServiceWorker();
 
-    // SPA Redirect for original Lovable URL
+    // SPA redirect restore (deep link preserved by the 404 fallback)
     const redirectPath = sessionStorage.getItem("redirectPath");
     if (redirectPath) {
       sessionStorage.removeItem("redirectPath");
