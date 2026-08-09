@@ -246,6 +246,8 @@ const App = () => {
             <Route path="/activate" element={<ActivateAccountPage />} />
 
             <Route path="/unsubscribe" element={<UnsubscribePage />} />
+            <Route path="/invoice/:token" element={<InvoicePage />} />
+
 
             {/* ── Admin Dashboard (/admin/*) ── */}
             <Route
