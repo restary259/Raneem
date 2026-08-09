@@ -95,7 +95,7 @@ export default function ServiceCatalogPanel() {
 
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} className="grid gap-2 sm:grid-cols-[1fr_1fr_130px_auto_auto] items-end rounded-md border p-2.5">
+            <div key={r.id} className="grid gap-2 sm:grid-cols-[1fr_1fr_130px_auto_auto_auto] items-end rounded-md border p-2.5">
               <div className="space-y-1">
                 <Label className="text-xs">{t("admin.settings.catalog.nameAr")}</Label>
                 <Input value={r.name_ar} onChange={(e) => patch(r.id, { name_ar: e.target.value })} />
