@@ -4,4 +4,4 @@ Disallow: /student-dashboard
 Disallow: /admin
 Disallow: /reset-password
 
-Sitemap: https://darb-agency.lovable.app/sitemap.xml
+Sitemap: https://darb.agency/sitemap.xml

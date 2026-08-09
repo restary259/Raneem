@@ -53,6 +53,6 @@ export const template = {
     partnerName: 'سامي حسن',
     email: 'partner@example.com',
     masterName: 'ريان درب',
-    activationUrl: 'https://darb-agency.lovable.app/reset-password',
+    activationUrl: 'https://darb.agency/reset-password',
   },
 } satisfies TemplateEntry

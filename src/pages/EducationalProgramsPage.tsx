@@ -85,7 +85,7 @@ const EducationalProgramsPage = () => {
           '@type': 'CollectionPage',
           name: t('seo.edProgTitle'),
           description: t('seo.edProgDesc'),
-          url: 'https://darb-agency.lovable.app/educational-programs',
+          url: 'https://darb.agency/educational-programs',
           inLanguage: lang,
           mainEntity: {
             '@type': 'ItemList',
@@ -100,7 +100,7 @@ const EducationalProgramsPage = () => {
                 provider: {
                   '@type': 'EducationalOrganization',
                   name: 'Darb Study Pathways',
-                  url: 'https://darb-agency.lovable.app',
+                  url: 'https://darb.agency',
                 },
               },
             })),

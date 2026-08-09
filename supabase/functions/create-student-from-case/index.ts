@@ -115,7 +115,7 @@ serve(async (req) => {
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email,
-        options: { redirectTo: "https://darb-agency.lovable.app/reset-password" },
+        options: { redirectTo: "https://darb.agency/reset-password" },
       });
       if (error || !data?.properties?.action_link) {
         throw error ?? new Error("Could not create activation link");

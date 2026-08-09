@@ -20,7 +20,7 @@ export const LOGO_WIDTH = 132
 
 /** Contact — mirrors src/lib/contactConfig.ts */
 export const SUPPORT_WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1'
-export const SUPPORT_PHONE = '050-736-8283'
+export const SUPPORT_PHONE = '0507368283'
 
 /** Socials — mirrors src/components/landing/Footer.tsx */
 export const SOCIAL_LINKS = [

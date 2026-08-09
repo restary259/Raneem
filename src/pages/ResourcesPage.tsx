@@ -82,19 +82,19 @@ const ResourcesPage = () => {
           '@type': 'Article',
           headline: t('seo.resourcesTitle', { ns: 'common' }),
           description: t('seo.resourcesDesc', { ns: 'common' }),
-          mainEntityOfPage: 'https://darb-agency.lovable.app/resources',
+          mainEntityOfPage: 'https://darb.agency/resources',
           datePublished: '2026-02-18',
           author: {
             '@type': 'Organization',
             name: 'Darb Study Pathways',
-            url: 'https://darb-agency.lovable.app',
+            url: 'https://darb.agency',
           },
           publisher: {
             '@type': 'EducationalOrganization',
             name: 'Darb Study Pathways',
             logo: {
               '@type': 'ImageObject',
-              url: 'https://darb-agency.lovable.app/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+              url: 'https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
             },
           },
         }}

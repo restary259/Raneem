@@ -49,6 +49,6 @@ export const template = {
     senderName: 'أحمد',
     threadTitle: 'DARB-1042',
     preview: 'أرسلت لك جواز السفر المطلوب.',
-    link: 'https://darb-agency.lovable.app/team/messages',
+    link: 'https://darb.agency/team/messages',
   },
 } satisfies TemplateEntry
