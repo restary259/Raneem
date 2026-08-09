@@ -199,12 +199,55 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   );
 
   const [active, setActive] = useState(sheets[0].key);
+  const [schoolFilter, setSchoolFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
 
   useEffect(() => {
     const def = sheets.find(s => s.key === active);
     if (def && !data[def.key] && !loading[def.key]) loadSheet(def);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, sheets]);
+
+  /** School / intake filters only make sense on sheets that carry those fields. */
+  const fieldFor = (rows: any[], keys: string[]) =>
+    keys.find(k => rows.some(r => r?.[k] !== undefined)) ?? null;
+
+  const filterRows = useCallback(
+    (rows: any[]) => {
+      if (!rows.length) return rows;
+      const schoolKey = fieldFor(rows, ['school_name', 'school']);
+      const monthKey = fieldFor(rows, ['intake_month', 'month']);
+      return rows.filter(r => {
+        if (schoolFilter !== 'all' && schoolKey && (r[schoolKey] ?? '—') !== schoolFilter) return false;
+        if (monthFilter !== 'all' && monthKey) {
+          const raw = r[monthKey];
+          const month = typeof raw === 'string' ? raw.slice(0, 7) : '';
+          if (month !== monthFilter) return false;
+        }
+        return true;
+      });
+    },
+    [schoolFilter, monthFilter],
+  );
+
+  const allRows = useMemo(() => Object.values(data).flat() as any[], [data]);
+  const schoolOptions = useMemo(
+    () => Array.from(new Set(allRows.map(r => r?.school_name ?? r?.school).filter(Boolean))).sort() as string[],
+    [allRows],
+  );
+  const monthOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          allRows
+            .map(r => (typeof (r?.intake_month ?? r?.month) === 'string' ? String(r.intake_month ?? r.month).slice(0, 7) : null))
+            .filter(Boolean),
+        ),
+      ).sort() as string[],
+    [allRows],
+  );
+  const filtersActive = schoolFilter !== 'all' || monthFilter !== 'all';
+
 
   const exportAll = async () => {
     setExporting(true);
