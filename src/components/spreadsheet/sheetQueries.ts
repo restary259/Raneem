@@ -53,11 +53,12 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
   let query = (supabase as any)
     .from('case_submissions')
     .select(`
-      id, program_start_date, program_end_date, extra_data,
+      id, program_start_date, program_end_date, extra_data, school_id,
       program_price, accommodation_price, insurance_price,
       service_fee, total_paid, remaining_balance, enrollment_paid_at,
       student_email, student_phone,
       case:cases!inner(id, case_reference, full_name, phone_number, city, status, assigned_to, partner_id, education_level, passport_type),
+      school:schools(id, name_en, name_ar),
       program:programs(name_en, name_ar, price),
       accommodation:accommodations(name_en, name_ar, price),
       insurance:insurances(name, price)
