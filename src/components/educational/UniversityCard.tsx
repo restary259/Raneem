@@ -1,40 +1,84 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Award, Users } from 'lucide-react';
+import { MapPin, Award, Users, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import campusGeneric from '@/assets/campus-generic.jpg';
 
 interface University {
   name: string;
   location: string;
-  logoUrl: string;
+  logoUrl?: string;
   description: string;
   majors: string[];
   ranking: string;
   students: string;
+  officialUrl?: string;
 }
 interface UniversityCardProps {
   university: University;
 }
+
+/**
+ * Cards use a neutral campus photo rather than institution logos: we do not
+ * hold usage rights to every university mark, and the previous logo slot
+ * rendered as an empty white box.
+ */
 const UniversityCard: React.FC<UniversityCardProps> = ({ university }) => {
   const { t } = useTranslation('common');
-  return <Card className="hover:shadow-xl transition-all duration-300 group">
-      <CardContent className="p-6">
-        <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border" />
-        <h3 className="text-xl font-bold mb-2">{university.name}</h3>
-        <p className="text-gray-600 flex items-center gap-2 mb-3"><MapPin className="h-4 w-4" />{university.location}</p>
-        <p className="text-sm text-gray-600 mb-4">{university.description}</p>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm"><Award className="h-4 w-4 text-orange-500" /><span>{university.ranking}</span></div>
-          <div className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-blue-500" /><span>{university.students}</span></div>
+  return (
+    <Card className="hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+        <img
+          src={campusGeneric}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          width={1280}
+          height={640}
+          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+      <CardContent className="p-6 flex flex-col flex-1">
+        <h3 className="text-xl font-bold mb-2 text-foreground">{university.name}</h3>
+        <p className="text-muted-foreground flex items-center gap-2 mb-3 text-sm">
+          <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {university.location}
+        </p>
+        <p className="text-sm text-muted-foreground mb-4">{university.description}</p>
+        <div className="space-y-3 mt-auto">
+          <div className="flex items-center gap-2 text-sm text-foreground">
+            <Award className="h-4 w-4 text-brand shrink-0" aria-hidden="true" />
+            <span>{university.ranking}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-foreground">
+            <Users className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+            <span>{university.students}</span>
+          </div>
           <div>
-            <h4 className="font-semibold mb-2">{t('educational.availableMajorsLabel')}</h4>
+            <h4 className="font-semibold mb-2 text-foreground">{t('educational.availableMajorsLabel')}</h4>
             <div className="flex flex-wrap gap-1">
-              {university.majors.map((major, idx) => <Badge key={idx} variant="secondary" className="text-xs">{major}</Badge>)}
+              {university.majors.map((major, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs">{major}</Badge>
+              ))}
             </div>
           </div>
+          {university.officialUrl ? (
+            <a
+              href={university.officialUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            >
+              {t('educational.officialSite', { defaultValue: 'الموقع الرسمي' })}
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="sr-only">{university.name}</span>
+            </a>
+          ) : null}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
 export default UniversityCard;

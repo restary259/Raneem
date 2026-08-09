@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,12 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { POLICY_VERSION, recordConsent } from "@/lib/consent";
 
 import { useDirection } from '@/hooks/useDirection';
 
 const RegistrationForm = () => {
-  const { t } = useTranslation('partnership');
+  const { t, i18n } = useTranslation('partnership');
   const { dir } = useDirection();
+  const isAr = i18n.language?.startsWith('ar');
   const formContent = t('registrationForm', { returnObjects: true }) as any;
   const contactOptions = formContent.contactOptions as Record<string, string>;
 
@@ -34,6 +38,9 @@ const RegistrationForm = () => {
     socialLinks: z.string().optional(),
     previousExperience: z.enum(["yes", "no"], { required_error: t('registrationForm.validation.experienceRequired') }),
     whyDarb: z.string().min(10, { message: t('registrationForm.validation.whyDarbMin') }),
+    consent: z.literal(true, {
+      errorMap: () => ({ message: t('registrationForm.validation.consentRequired') }),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,6 +54,7 @@ const RegistrationForm = () => {
       instagramLink: "",
       socialLinks: "",
       whyDarb: "",
+      consent: false as unknown as true,
     },
   });
 
@@ -64,17 +72,37 @@ const RegistrationForm = () => {
         }
       }
 
+      // Consent is recorded alongside the application itself: status, timestamp
+      // and the policy version the applicant actually saw.
+      const payload = {
+        ...values,
+        consent: true,
+        consent_at: new Date().toISOString(),
+        policy_version: POLICY_VERSION,
+      };
+
       // Store first: an application must survive an email delivery failure.
       const { error: insertError } = await (supabase as any)
         .from('contact_submissions')
         .insert({
           form_source: 'partnership',
           data: recruiter
-            ? { ...values, recruited_by_code: refCode, recruited_by_id: recruiter.partner_id, recruited_by_name: recruiter.partner_name }
-            : values,
+            ? { ...payload, recruited_by_code: refCode, recruited_by_id: recruiter.partner_id, recruited_by_name: recruiter.partner_name }
+            : payload,
           status: 'new',
         });
       if (insertError) throw new Error(insertError.message);
+
+      // Append-only consent record (never blocks the submission itself).
+      await recordConsent({
+        sourceForm: 'partnership_form',
+        subjectName: values.name,
+        email: values.email,
+        phone: values.phone,
+        serviceContact: true,
+        marketing: false,
+        locale: i18n.language,
+      });
 
       // Note: no email notification is sent — admins read applications in the admin Inbox.
       return { success: true };
@@ -181,7 +209,35 @@ const RegistrationForm = () => {
                 <FormField control={form.control} name="whyDarb" render={({ field }) => (
                   <FormItem><FormLabel>{formContent.whyDarb}</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button type="submit" size="lg" variant="accent" className="w-full" disabled={isPending}>
+
+                <FormField control={form.control} name="consent" render={({ field, fieldState }) => (
+                  <FormItem>
+                    <ConsentBlock
+                      isAr={!!isAr}
+                      collected={formContent.consent.collected}
+                      showMarketing={false}
+                      agreed={field.value === true}
+                      onAgreedChange={(v) => field.onChange(v)}
+                      error={fieldState.error?.message ?? null}
+                      purpose={
+                        <>
+                          {formContent.consent.notice}{' '}
+                          <Link to="/privacy" className="underline font-medium text-foreground">
+                            {formContent.consent.privacyLink}
+                          </Link>{' '}
+                          {formContent.consent.and}{' '}
+                          <Link to="/terms" className="underline font-medium text-foreground">
+                            {formContent.consent.termsLink}
+                          </Link>
+                          . {formContent.consent.withdraw}
+                        </>
+                      }
+                      agreeLabel={formContent.consent.checkbox}
+                    />
+                  </FormItem>
+                )} />
+
+                <Button type="submit" size="lg" variant="accent" className="w-full min-h-[48px]" disabled={isPending}>
                   {isPending ? t('registrationForm.submitting') : formContent.submit}
                 </Button>
               </form>
