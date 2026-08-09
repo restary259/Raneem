@@ -97,6 +97,15 @@ interface CreatorInfo {
   [userId: string]: string;
 }
 
+/** Minimal case facts shown next to a case-linked student. */
+interface CaseSummary {
+  id: string;
+  reference: string | null;
+  status: string | null;
+  profileCompletedAt: string | null;
+}
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SelectiveDeleteDialog
 // ─────────────────────────────────────────────────────────────────────────────
