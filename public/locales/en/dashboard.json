@@ -3483,6 +3483,15 @@
     "contact": "Direct privacy contact: darbsocial27@gmail.com"
   },
   "onboarding": {
+    "label": "Onboarding",
+    "noAccount": "No account",
+    "invited": "Invited",
+    "activated": "Activated",
+    "profileRequired": "Profile required",
+    "profileCompleted": "Profile completed",
+    "active": "Active"
+  },
+  "studentOnboarding": {
     "title": "Complete your profile",
     "subtitle": "We need these details before your file can move forward. It only takes a minute.",
     "fullName": "Full name",

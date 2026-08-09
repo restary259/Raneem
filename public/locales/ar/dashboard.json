@@ -3501,6 +3501,15 @@
     "contact": "للتواصل المباشر بخصوص الخصوصية: darbsocial27@gmail.com"
   },
   "onboarding": {
+    "label": "حالة التسجيل",
+    "noAccount": "بدون حساب",
+    "invited": "تمت الدعوة",
+    "activated": "تم التفعيل",
+    "profileRequired": "يلزم استكمال الملف",
+    "profileCompleted": "اكتمل الملف",
+    "active": "نشط"
+  },
+  "studentOnboarding": {
     "title": "أكمل ملفك الشخصي",
     "subtitle": "نحتاج هذه المعلومات قبل متابعة ملفك. لن يستغرق الأمر سوى دقيقة.",
     "fullName": "الاسم الكامل",
