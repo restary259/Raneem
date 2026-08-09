@@ -56,6 +56,35 @@ const StudentAuthPage = () => {
     navigate(path, { replace: true });
   }, [initialized, user, role, mustChangePassword, navigate]);
 
+  // Mobile-only: lock body scroll so the login screen stays a single static viewport.
+  // Applied only on mount and cleaned up on unmount; scoped strictly to this component.
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const applyLock = () => {
+      if (mql.matches) {
+        document.body.style.overflow = "hidden";
+        document.body.style.height = "100dvh";
+      }
+    };
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        document.body.style.overflow = "hidden";
+        document.body.style.height = "100dvh";
+      } else {
+        document.body.style.overflow = "";
+        document.body.style.height = "";
+      }
+    };
+
+    applyLock();
+    mql.addEventListener("change", handleChange);
+    return () => {
+      mql.removeEventListener("change", handleChange);
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+    };
+  }, []);
+
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
       toast({
@@ -136,7 +165,7 @@ const StudentAuthPage = () => {
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-secondary via-background to-secondary p-4 relative overflow-hidden"
+      className="flex items-center justify-center bg-gradient-to-b from-secondary via-background to-secondary relative overflow-hidden h-[100dvh] md:h-auto md:min-h-screen p-3 md:p-4"
     >
       {/* Background decorative glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -146,7 +175,7 @@ const StudentAuthPage = () => {
 
       <div className="w-full max-w-lg relative z-10">
         {/* Back to website */}
-        <div className="mb-5">
+        <div className="mb-3 md:mb-5">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
@@ -161,25 +190,25 @@ const StudentAuthPage = () => {
         {/* Card */}
         <div className="rounded-3xl border border-border bg-card shadow-xl overflow-hidden">
           {/* Brand header */}
-          <div className="px-8 pt-8 pb-6 text-center border-b border-border bg-secondary/40">
+          <div className="px-5 pt-5 pb-4 md:px-8 md:pt-8 md:pb-6 text-center border-b border-border bg-secondary/40">
             <img
               src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
               alt={t("loader.brand", "Darb")}
-              className="h-12 w-auto object-contain mx-auto mb-4"
+              className="h-9 md:h-12 w-auto object-contain mx-auto mb-3 md:mb-4"
             />
-            <h1 className="text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
+            <p className="mt-1 md:mt-1.5 text-sm text-muted-foreground">
               {isRTL
                 ? "سجّل الدخول لمتابعة ملفك ومستنداتك وحالة طلبك"
                 : "Sign in to follow your profile, documents and application status"}
             </p>
           </div>
 
-          <div className="p-8 pt-7">
+          <div className="p-5 pt-5 md:p-8 md:pt-7">
 
 
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4 md:space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-foreground/90 text-sm font-medium">
                 {t("auth.email")}
@@ -236,7 +265,7 @@ const StudentAuthPage = () => {
 
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full h-11 md:h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-1 md:mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
