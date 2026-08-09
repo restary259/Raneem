@@ -136,13 +136,19 @@ export default function TeamAnalyticsPage() {
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.earnedThisMonth')}</span>
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.availableBalance', 'Available')}</span>
             </div>
             <div className="text-3xl font-bold tabular-nums text-emerald-600">
-              ₪{earnedThisMonth.toLocaleString('en-US')}
+              ₪{Number(earnings.available).toLocaleString('en-US')}
+            </div>
+            <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+              {t('lawyer.analytics.lockedBalance', 'Locked')}: ₪{Number(earnings.locked).toLocaleString('en-US')}
+              {' · '}
+              {t('lawyer.analytics.paidBalance', 'Paid')}: ₪{Number(earnings.paid).toLocaleString('en-US')}
             </div>
           </CardContent>
         </Card>
+
       </div>
 
       {/* Cases by status chart */}
