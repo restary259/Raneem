@@ -39,6 +39,7 @@ const NotificationBell: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async (uid: string) => {
