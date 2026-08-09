@@ -611,6 +611,14 @@ const AdminSubmissionsPage = () => {
                           <p className="font-medium">
                             {programNames[selected.submission.program_id] || selected.submission.program_id}
                           </p>
+                          {selected.submission?.program_price ? (
+                            <p className="text-xs text-muted-foreground">
+                              {selected.submission?.program_weeks && selected.submission?.program_weekly_price
+                                ? `${selected.submission.program_weeks} × €${Number(selected.submission.program_weekly_price).toLocaleString("en-US")} = `
+                                : ""}
+                              €{Number(selected.submission.program_price).toLocaleString("en-US")}
+                            </p>
+                          ) : null}
                         </div>
                       )}
                       {selected.submission?.accommodation_id && (
@@ -619,9 +627,18 @@ const AdminSubmissionsPage = () => {
                           <p className="font-medium">
                             {accommodationNames?.[selected.submission.accommodation_id] || selected.submission.accommodation_id}
                           </p>
+                          {selected.submission?.accommodation_price ? (
+                            <p className="text-xs text-muted-foreground">
+                              {selected.submission?.accommodation_weeks && selected.submission?.accommodation_weekly_price
+                                ? `${selected.submission.accommodation_weeks} × €${Number(selected.submission.accommodation_weekly_price).toLocaleString("en-US")} = `
+                                : ""}
+                              €{Number(selected.submission.accommodation_price).toLocaleString("en-US")}
+                            </p>
+                          ) : null}
                         </div>
                       )}
                     </div>
+
                   </div>
                 </>
               )}
