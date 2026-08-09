@@ -1,0 +1,2 @@
+ALTER TABLE public.user_invitations DROP CONSTRAINT IF EXISTS user_invitations_invitation_type_check;
+ALTER TABLE public.user_invitations ADD CONSTRAINT user_invitations_invitation_type_check CHECK (invitation_type = ANY (ARRAY['student'::text, 'partner'::text, 'team'::text, 'ambassador'::text]));
