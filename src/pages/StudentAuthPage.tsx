@@ -194,10 +194,10 @@ const StudentAuthPage = () => {
             <img
               src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
               alt={t("loader.brand", "Darb")}
-              className="h-12 w-auto object-contain mx-auto mb-4"
+              className="h-9 md:h-12 w-auto object-contain mx-auto mb-3 md:mb-4"
             />
-            <h1 className="text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
+            <p className="mt-1 md:mt-1.5 text-sm text-muted-foreground">
               {isRTL
                 ? "سجّل الدخول لمتابعة ملفك ومستنداتك وحالة طلبك"
                 : "Sign in to follow your profile, documents and application status"}
