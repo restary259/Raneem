@@ -819,7 +819,7 @@
       "catalog": {
         "tab": "Service catalog",
         "title": "Service catalog",
-        "hint": "These prices fill in automatically when a service is added to a case. You can still override the price per student.",
+        "hint": "These prices fill in automatically when a service is added to a case. Team members can only pick from this list — they cannot change a price.",
         "nameAr": "Name (Arabic)",
         "nameEn": "Name (English)",
         "price": "Default price (₪)",
@@ -827,7 +827,8 @@
         "add": "Add service",
         "remove": "Delete service",
         "saved": "Catalog saved",
-        "nameRequired": "Enter both names"
+        "nameRequired": "Enter both names",
+        "inFullService": "In Full Service"
       }
     },
     "spreadsheet": {
@@ -3261,7 +3262,10 @@
       "added": "Service added",
       "removed": "Service removed",
       "remove": "Remove service",
-      "pickFirst": "Choose a service first"
+      "pickFirst": "Choose a service first",
+      "saved": "Services updated",
+      "pickHint": "Pick the services this student is buying. Prices come from the service catalog.",
+      "fullService": "Full Service (all bundled services)"
     },
     "payments": {
       "title": "Payments",
