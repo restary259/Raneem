@@ -237,7 +237,28 @@ serve(async (req) => {
     );
 
     if (existingUser) {
-      // Reuse existing auth account — just link it
+      // Reuse existing auth account — but never silently move a student that is
+      // already the owner of another open case: that produces duplicate cases
+      // with inconsistent back-links.
+      const { data: otherCase } = await supabaseAdmin
+        .from("cases")
+        .select("id, case_reference, status")
+        .eq("student_user_id", existingUser.id)
+        .neq("id", case_id)
+        .not("status", "in", "(closed,cancelled,rejected)")
+        .maybeSingle();
+
+      if (otherCase && !body?.confirm_transfer) {
+        return new Response(
+          JSON.stringify({
+            error: "This student already has an active case",
+            code: "already_linked",
+            existing_case_id: otherCase.id,
+            existing_case_reference: otherCase.case_reference,
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       studentId = existingUser.id;
     } else {
       // The random bootstrap credential is never returned or emailed. The
