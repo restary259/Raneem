@@ -109,19 +109,18 @@ serve(async (req) => {
 
 
 
-    // Generate a short-lived, single-use password setup link. The application
-    // never emails or stores a reusable plaintext credential.
+    // Durable, re-openable activation link. The invitation row (not the URL)
+    // carries the case link, so attribution survives refreshes and devices.
     async function createActivationLink(email: string) {
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: { redirectTo: "https://darb.agency/reset-password" },
+      return await createInvitation(supabaseAdmin, {
+        invitedEmail: email,
+        invitationType: "student",
+        intendedRole: "student",
+        inviterId: callerId,
+        caseId: case_id,
       });
-      if (error || !data?.properties?.action_link) {
-        throw error ?? new Error("Could not create activation link");
-      }
-      return data.properties.action_link;
     }
+
 
     // Reusable activation mail. Returns true when the message was accepted.
     async function sendInvite(email: string, name: string) {
