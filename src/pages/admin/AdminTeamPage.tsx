@@ -129,21 +129,30 @@ const AdminTeamPage = () => {
         team_member: settingsRes.data?.team_member_commission_rate ?? 0,
       };
 
-      const enriched = (rolesRes.data || []).map(r => ({
-        id: r.user_id,
-        full_name: profileMap[r.user_id]?.full_name || '–',
-        email: profileMap[r.user_id]?.email || '–',
-        role: r.role,
-        created_at: r.created_at,
-        referral_code:
-          profileMap[r.user_id]?.referral_code_enabled === false
-            ? null
-            : profileMap[r.user_id]?.referral_code ?? null,
-        commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
-        commissionOverridden: overrideMap[r.user_id] !== undefined,
-        is_manager: profileMap[r.user_id]?.is_manager === true,
-        is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
-      }));
+      // A user can hold more than one role row; the directory shows one card per
+      // person, otherwise React sees duplicate keys and the list renders twice.
+      const seen = new Set<string>();
+      const enriched = (rolesRes.data || [])
+        .filter(r => {
+          if (seen.has(r.user_id)) return false;
+          seen.add(r.user_id);
+          return true;
+        })
+        .map(r => ({
+          id: r.user_id,
+          full_name: profileMap[r.user_id]?.full_name || '–',
+          email: profileMap[r.user_id]?.email || '–',
+          role: r.role,
+          created_at: r.created_at,
+          referral_code:
+            profileMap[r.user_id]?.referral_code_enabled === false
+              ? null
+              : profileMap[r.user_id]?.referral_code ?? null,
+          commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
+          commissionOverridden: overrideMap[r.user_id] !== undefined,
+          is_manager: profileMap[r.user_id]?.is_manager === true,
+          is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
+        }));
 
 
       setMembers(enriched);
