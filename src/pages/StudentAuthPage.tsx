@@ -56,6 +56,35 @@ const StudentAuthPage = () => {
     navigate(path, { replace: true });
   }, [initialized, user, role, mustChangePassword, navigate]);
 
+  // Mobile-only: lock body scroll so the login screen stays a single static viewport.
+  // Applied only on mount and cleaned up on unmount; scoped strictly to this component.
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const applyLock = () => {
+      if (mql.matches) {
+        document.body.style.overflow = "hidden";
+        document.body.style.height = "100dvh";
+      }
+    };
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        document.body.style.overflow = "hidden";
+        document.body.style.height = "100dvh";
+      } else {
+        document.body.style.overflow = "";
+        document.body.style.height = "";
+      }
+    };
+
+    applyLock();
+    mql.addEventListener("change", handleChange);
+    return () => {
+      mql.removeEventListener("change", handleChange);
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+    };
+  }, []);
+
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
       toast({
