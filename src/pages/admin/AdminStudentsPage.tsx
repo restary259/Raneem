@@ -863,7 +863,7 @@ export default function AdminStudentsPage() {
                     variant="outline"
                     size="sm"
                     className="h-7 gap-1 text-xs"
-                    onClick={() => window.open(`/cases/${caseOf(selected)!.id}`, "_blank", "noopener")}
+                    onClick={() => window.open(`/admin/cases/${caseOf(selected)!.id}`, "_blank", "noopener")}
                   >
                     <FileText className="h-3 w-3" />
                     {caseOf(selected)!.reference || t("admin.students.openCase")}
