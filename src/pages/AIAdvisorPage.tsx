@@ -15,7 +15,7 @@ const AIAdvisorPage = () => {
   const quickQuestions = t('quickQuestions', { returnObjects: true }) as string[];
 
   const CATEGORIES = [
-    { label: t('advisor.categories.admissions'), icon: GraduationCap, color: 'bg-orange-100 text-orange-600' },
+    { label: t('advisor.categories.admissions'), icon: GraduationCap, color: 'bg-brand/10 text-brand' },
     { label: t('advisor.categories.visa'), icon: FileText, color: 'bg-blue-100 text-blue-600' },
     { label: t('advisor.categories.language'), icon: Globe, color: 'bg-green-100 text-green-600' },
     { label: t('advisor.categories.life'), icon: HomeIcon, color: 'bg-purple-100 text-purple-600' },
@@ -50,7 +50,7 @@ const AIAdvisorPage = () => {
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 md:py-12 space-y-6 md:space-y-8">
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center mx-auto shadow-lg">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand to-brand/70 flex items-center justify-center mx-auto shadow-lg">
                   <Bot className="h-8 w-8 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold text-foreground">{t('advisor.title')}</h1>
@@ -97,14 +97,14 @@ const AIAdvisorPage = () => {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                   {msg.role === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-1">
-                      <User className="h-4 w-4 text-orange-600" />
+                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0 mt-1">
+                      <User className="h-4 w-4 text-brand" />
                     </div>
                   )}
                   <div
                     className={`max-w-[80%] p-4 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
                       msg.role === 'user'
-                        ? 'bg-orange-50 text-foreground rounded-tr-sm'
+                        ? 'bg-brand/5 text-foreground rounded-tr-sm'
                         : 'bg-secondary text-foreground rounded-tl-sm'
                     }`}
                   >
@@ -143,7 +143,7 @@ const AIAdvisorPage = () => {
               type="submit"
               size="icon"
               disabled={!input.trim() || isLoading}
-              className="bg-orange-500 hover:bg-orange-600 shrink-0"
+              className="bg-brand text-brand-foreground hover:bg-brand/90 shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>

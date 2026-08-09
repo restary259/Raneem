@@ -19,9 +19,9 @@
     --accent: 222.2 47.6% 11.2%;
     --accent-foreground: 210 40% 98%;
 
-    /* Brand highlight (CTA + stats) — warm gold, readable on the navy hero */
-    --brand: 41 96% 54%;
-    --brand-foreground: 222.2 47.6% 11.2%;
+    /* Brand highlight (CTA + stats) — DARB orange, matches the Student Login button */
+    --brand: 24.6 95% 53.1%;
+    --brand-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -65,9 +65,9 @@
     --accent: 240 4% 17%;
     --accent-foreground: 240 10% 96%;
 
-    /* Brand highlight stays gold in dark mode */
-    --brand: 41 96% 58%;
-    --brand-foreground: 240 8% 8%;
+    /* Brand highlight stays DARB orange in dark mode */
+    --brand: 24.6 95% 56%;
+    --brand-foreground: 0 0% 100%;
 
     --destructive: 0 62% 48%;
     --destructive-foreground: 240 10% 98%;

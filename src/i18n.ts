@@ -26,6 +26,7 @@ i18n
       'partners',
       'resources',
       'faq',
+      'blog',
       'legal',
       'broadcast',
       'dashboard',

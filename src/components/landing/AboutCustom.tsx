@@ -26,7 +26,7 @@ const AboutCustom = () => {
               className="text-center p-4 sm:p-6 bg-background rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 opacity-0 animate-fade-in"
               style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
             >
-              <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-primary">
+              <p className="text-2xl sm:text-4xl md:text-5xl font-bold text-brand">
                 <AnimatedCounter end={Number(stat.value)} />
                 {stat.suffix}
               </p>
