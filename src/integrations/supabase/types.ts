@@ -4011,13 +4011,13 @@ export type Database = {
       get_effective_partner_split: {
         Args: { p_partner_id: string }
         Returns: {
-          accepted_at: string
           master_partner_id: string
           master_share: number
           offer_id: string
           offer_version: number
           partner_amount: number
           pool_amount: number
+          responded_at: string
         }[]
       }
       get_forgotten_cases: {
