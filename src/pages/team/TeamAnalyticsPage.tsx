@@ -29,7 +29,7 @@ export default function TeamAnalyticsPage() {
   const [closedThisMonth, setClosedThisMonth] = useState(0);
   const [todayAppts, setTodayAppts] = useState(0);
   const [commissionPerCase, setCommissionPerCase] = useState<number | null>(null);
-  const [earnedThisMonth, setEarnedThisMonth] = useState(0);
+  const { summary: earnings } = useEarningsSummary(!!user);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
