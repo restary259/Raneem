@@ -213,7 +213,7 @@ export const EmailFallbackLink = ({ href, dir = 'rtl' as Dir }) => (
       ? 'إذا لم يعمل الزر، انسخ هذا الرابط في المتصفح:'
       : 'If the button does not work, copy this link into your browser:'}
     <br />
-    <Link href={href} style={{ ...footerLink, direction: 'ltr', wordBreak: 'break-all' }}>
+    <Link href={href} style={{ ...footerLink, direction: 'ltr', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
       {href}
     </Link>
   </Text>
