@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Receipt,
-  Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   SidebarProvider,
@@ -56,6 +55,7 @@ import {
   Sparkles,
   Crown,
   ShieldCheck,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
