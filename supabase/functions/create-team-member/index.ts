@@ -95,9 +95,16 @@ serve(async (req) => {
 
     const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
 
-    let userId: string | null = null;
-    let reusedExisting = false;
+    // One identity = one role: refuse any email that already has an account.
+    const conflict = await identityConflict(supabaseAdmin, email, dbRole);
+    if (conflict) {
+      return new Response(JSON.stringify(conflict.body), {
+        status: conflict.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    const reusedExisting = false;
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
@@ -105,53 +112,14 @@ serve(async (req) => {
       user_metadata: { full_name },
     });
 
-    if (createError) {
-      const alreadyExists = /already/i.test(createError.message ?? "");
-      if (!alreadyExists) {
-        return new Response(JSON.stringify({ error: createError.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      // Account already exists — reuse it and just (re)assign the role/profile.
-      const { data: existing } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .ilike("email", email)
-        .maybeSingle();
-      userId = existing?.id ?? null;
-      if (!userId) {
-        // Fall back to scanning auth users when no profile row exists yet.
-        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-        userId = list?.users?.find(
-          (u) => (u.email ?? "").toLowerCase() === email.toLowerCase()
-        )?.id ?? null;
-      }
-      if (!userId) {
-        return new Response(
-          JSON.stringify({ error: "This email is already registered but the account could not be found." }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      reusedExisting = true;
-    } else {
-      userId = newUser.user.id;
+    if (createError || !newUser?.user) {
+      return new Response(
+        JSON.stringify({ error: createError?.message ?? "Account could not be created" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
+    const userId: string = newUser.user.id;
 
-    if (reusedExisting) {
-      const { data: existingRole } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", dbRole)
-        .maybeSingle();
-      if (existingRole) {
-        return new Response(
-          JSON.stringify({ error: `This user already exists and already has the ${dbRole} role.` }),
-          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
 
 
     await supabaseAdmin.from("user_roles").insert({
