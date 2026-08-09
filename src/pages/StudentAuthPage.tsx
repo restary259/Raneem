@@ -265,7 +265,7 @@ const StudentAuthPage = () => {
 
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full h-11 md:h-12 text-base font-semibold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 mt-1 md:mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
