@@ -2677,6 +2677,8 @@ export type Database = {
           created_by: string | null
           criminal_record_details: string | null
           date_of_birth: string | null
+          deactivated_by: string | null
+          deactivated_reason: string | null
           deleted_at: string | null
           email: string
           emergency_contact: string | null
@@ -2734,6 +2736,8 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deactivated_by?: string | null
+          deactivated_reason?: string | null
           deleted_at?: string | null
           email?: string
           emergency_contact?: string | null
@@ -2791,6 +2795,8 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deactivated_by?: string | null
+          deactivated_reason?: string | null
           deleted_at?: string | null
           email?: string
           emergency_contact?: string | null
@@ -3756,6 +3762,17 @@ export type Database = {
       }
     }
     Functions: {
+      admin_deactivate_account: {
+        Args: { _reason?: string; _target_id: string }
+        Returns: Json
+      }
+      admin_reactivate_account: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_id: string
+        }
+        Returns: Json
+      }
       admin_respond_payout_request: {
         Args: {
           p_action: string
@@ -3778,6 +3795,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      check_identity_conflict: { Args: { _email: string }; Returns: Json }
       check_referral_code: {
         Args: { p_code: string }
         Returns: {
