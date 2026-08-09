@@ -25,5 +25,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'team-invite': teamInvite,
   'ambassador-invite': ambassadorInvite,
   'appointment-reminder': appointmentReminder,
+  'case-invoice': caseInvoice,
 }
 
