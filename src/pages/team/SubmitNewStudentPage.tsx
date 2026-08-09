@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { addMonths, format, differenceInYears } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { ArrowLeft, Loader2, Upload, X, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,8 @@ import { generateIntakeMonths } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
 import { isLinkablePhone } from "@/lib/phone";
+import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
+import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 interface Program {
@@ -32,6 +34,8 @@ interface Program {
   lessons_per_week: number | null;
   price: number | null;
   currency: string;
+  price_tiers: unknown;
+  school_id: string | null;
 }
 interface School {
   id: string;
@@ -46,10 +50,21 @@ interface Accommodation {
   price: number | null;
   currency: string;
   school_id: string | null;
+  price_tiers: unknown;
+}
+interface Insurance {
+  id: string;
+  name: string;
+  provider: string | null;
+  price: number | null;
+  currency: string;
+  billing_period: string | null;
+  age_price_tiers: unknown;
 }
 
-const STEP_KEYS = ['stepStudentInfo', 'stepContactDetails', 'stepProgram', 'stepPayment'] as const;
-type StepNum = 1 | 2 | 3 | 4;
+const STEP_KEYS = ['stepStudentInfo', 'stepContactDetails', 'stepProgram', 'stepPayment', 'stepReview'] as const;
+type StepNum = 1 | 2 | 3 | 4 | 5;
+const LAST_STEP: StepNum = 5;
 
 /* ══════════════════════════════════════════════════════════════════════
    MODULE-LEVEL COMPONENTS — defined outside render to keep React
@@ -67,13 +82,8 @@ const FieldWrap = ({ label, error, children }: { label: string; error?: string; 
 /**
  * BirthdayPicker
  * ──────────────────────────────────────────────────────────────────────
- * ✅ FIX: Replaced the broken Popover/Calendar date-picker with three
- *   manual Select dropdowns (Year / Month / Day).  The old Calendar
- *   component had a `pointer-events` issue in the project's CSS that
- *   prevented clicks from registering reliably on mobile and within
- *   modals.  This implementation is simpler, more accessible, and fully
- *   controllable.
- *
+ * Three manual Select dropdowns (Year / Month / Day) instead of a popover
+ * calendar, which had a pointer-events problem inside modals and on mobile.
  * Internally stores the date as "YYYY-MM-DD" via normalizeDate().
  */
 const BirthdayPicker = ({
@@ -134,11 +144,7 @@ const BirthdayPicker = ({
 };
 
 /**
- * SimpleDateField
- * ──────────────────────────────────────────────────────────────────────
- * ✅ FIX: Replaced broken Popover/Calendar usage for arrival date and
- *   course start date with a plain <input type="date">.  This avoids
- *   the pointer-events bug entirely and renders natively on all devices.
+ * SimpleDateField — plain <input type="date">, renders natively everywhere.
  */
 const SimpleDateField = ({
   label,
@@ -183,6 +189,14 @@ const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
   </div>
 );
 
+/** One line of the review screen. */
+const ReviewRow = ({ label, value, strong }: { label: string; value: React.ReactNode; strong?: boolean }) => (
+  <div className={cn("flex items-start justify-between gap-4 py-1.5 text-sm", strong && "font-semibold")}>
+    <span className="text-muted-foreground shrink-0">{label}</span>
+    <span className="text-end break-words">{value}</span>
+  </div>
+);
+
 /* ══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════ */
@@ -198,6 +212,7 @@ export default function SubmitNewStudentPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [insurances, setInsurances] = useState<Insurance[]>([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -205,7 +220,6 @@ export default function SubmitNewStudentPage() {
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
-  // ✅ FIX: dob stored as ISO string (not Date object) to match normalizeDate output
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [cityOfBirth, setCityOfBirth] = useState("");
@@ -214,8 +228,6 @@ export default function SubmitNewStudentPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [emergencyName, setEmergencyName] = useState("");
-  // ✅ FIX: emergencyPhone was previously bound to the wrong state variable (email state).
-  //         It now has its own isolated state.
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [street, setStreet] = useState("");
   const [houseNo, setHouseNo] = useState("");
@@ -223,14 +235,16 @@ export default function SubmitNewStudentPage() {
   const [city, setCity] = useState("");
 
   // Step 3 — Program & Accommodation
-  const [programId, setProgramId] = useState("");
   const [schoolId, setSchoolId] = useState("");
+  const [programId, setProgramId] = useState("");
+  const [programWeeks, setProgramWeeks] = useState("");
   const [startMonth, setStartMonth] = useState("");
-  // ✅ FIX: Replaced Date | undefined with ISO string for SimpleDateField
   const [arrivalDate, setArrivalDate] = useState("");
   const [courseStart, setCourseStart] = useState("");
   const [courseEnd, setCourseEnd] = useState("");
   const [accommodationId, setAccommodationId] = useState("");
+  const [accommodationWeeks, setAccommodationWeeks] = useState("");
+  const [insuranceId, setInsuranceId] = useState("");
 
   // Step 4 — Payment & Documents
   const [serviceFee, setServiceFee] = useState("");
@@ -238,16 +252,19 @@ export default function SubmitNewStudentPage() {
   const [skipDocuments, setSkipDocuments] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; file: File; category: string }[]>([]);
 
+  // Step 5 — Review
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+
   /* ─── Draft autosave / recovery (files are never persisted) ────────── */
   const draftValue = {
     step, firstName, middleName, lastName, dob, gender, cityOfBirth,
     email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
     programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
-    accommodationId, serviceFee,
+    accommodationId, serviceFee, programWeeks, accommodationWeeks, insuranceId,
   };
   const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
     key: 'submit-new-student',
-    version: 1,
+    version: 2,
     value: draftValue,
   });
 
@@ -260,33 +277,50 @@ export default function SubmitNewStudentPage() {
     setEmail(d.email ?? ""); setPhone(d.phone ?? "");
     setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
     setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
-    setProgramId(d.programId ?? ""); setSchoolId(d.schoolId ?? ""); setStartMonth(d.startMonth ?? "");
+    setSchoolId(d.schoolId ?? ""); setProgramId(d.programId ?? ""); setStartMonth(d.startMonth ?? "");
     setArrivalDate(d.arrivalDate ?? ""); setCourseStart(d.courseStart ?? ""); setCourseEnd(d.courseEnd ?? "");
     setAccommodationId(d.accommodationId ?? ""); setServiceFee(d.serviceFee ?? "");
+    setProgramWeeks(d.programWeeks ?? ""); setAccommodationWeeks(d.accommodationWeeks ?? "");
+    setInsuranceId(d.insuranceId ?? "");
     acknowledgeRestore();
     toast({ title: t('common.draft.restoredTitle'), description: t('common.draft.restoredBody') });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoredDraft]);
 
-
+  /* ─── Catalogue selections, always scoped to the chosen school ─────── */
+  const selectedSchool = schools.find((s) => s.id === schoolId);
   const selectedProgram = programs.find((p) => p.id === programId);
-  const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
+  const selectedInsurance = insurances.find((i) => i.id === insuranceId);
   const fullName = [firstName, middleName, lastName].filter(Boolean).join(" ");
-  const total = parseFloat(serviceFee) || 0;
 
-  // ✅ FIX: Generate intake months from current month using utility
+  const nameOf = (r: { name_en?: string | null; name_ar?: string | null } | undefined | null) =>
+    (isAr ? r?.name_ar || r?.name_en : r?.name_en || r?.name_ar) ?? "—";
+
+  const programCost = useMemo(
+    () => computeWeeklyCost(selectedProgram, parseInt(programWeeks) || 0),
+    [selectedProgram, programWeeks],
+  );
+  const accomCost = useMemo(
+    () => computeWeeklyCost(selectedAccom, parseInt(accommodationWeeks) || 0),
+    [selectedAccom, accommodationWeeks],
+  );
+  const insuranceCost = useMemo(
+    () => computeInsuranceCost(selectedInsurance ?? null, ageFromDob(dob), courseStart || null, courseEnd || null),
+    [selectedInsurance, dob, courseStart, courseEnd],
+  );
+  const eurTotal = programCost.total + accomCost.total + (insuranceCost.total ?? 0);
+  const feeTotal = parseFloat(serviceFee) || 0;
+
   const monthOptions = generateIntakeMonths(24);
 
-  // Auto end-date from program duration
+  // Course end is derived from the number of weeks the student is enrolled for.
   useEffect(() => {
-    if (selectedProgram?.duration_in_months && courseStart) {
-      const end = addMonths(new Date(courseStart), selectedProgram.duration_in_months);
-      setCourseEnd(format(end, "yyyy-MM-dd"));
-    }
-  }, [selectedProgram?.duration_in_months, courseStart]);
+    const end = endDateForWeeks(courseStart, parseInt(programWeeks) || 0);
+    if (end) setCourseEnd(end);
+  }, [courseStart, programWeeks]);
 
-  // Auto course start from program fixed start day
+  // Auto course start from the program's fixed monthly start day
   useEffect(() => {
     if (selectedProgram?.fixed_start_day_of_month && startMonth) {
       const [y, m] = startMonth.split("-").map(Number);
@@ -295,30 +329,60 @@ export default function SubmitNewStudentPage() {
     }
   }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
-  // Reset accommodation when school changes
+  // Changing the school invalidates every school-bound selection.
   useEffect(() => {
+    setProgramId("");
     setAccommodationId("");
+    setAccommodationWeeks("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
 
-  // Load programs / schools / accommodations
+  // Load the school list and the insurance catalogue once.
   useEffect(() => {
+    Promise.all([
+      (supabase as any).from("schools").select("id,name_en,name_ar,city").eq("is_active", true).order("name_en"),
+      (supabase as any)
+        .from("insurances")
+        .select("id,name,provider,price,currency,billing_period,age_price_tiers")
+        .eq("is_active", true)
+        .order("name"),
+    ]).then(([{ data: sc }, { data: ins }]) => {
+      setSchools(sc ?? []);
+      setInsurances(ins ?? []);
+    });
+  }, []);
+
+  // Programs and accommodation are queried per school, so the option lists can
+  // never contain another school's catalogue.
+  useEffect(() => {
+    if (!schoolId) {
+      setPrograms([]);
+      setAccommodations([]);
+      return;
+    }
+    let cancelled = false;
     Promise.all([
       (supabase as any)
         .from("programs")
-        .select("id,name_en,name_ar,duration_in_months,fixed_start_day_of_month,lessons_per_week,price,currency")
+        .select("id,name_en,name_ar,duration_in_months,fixed_start_day_of_month,lessons_per_week,price,currency,price_tiers,school_id")
         .eq("is_active", true)
+        .eq("school_id", schoolId)
         .order("name_en"),
-      (supabase as any).from("schools").select("id,name_en,name_ar,city").eq("is_active", true).order("name_en"),
       (supabase as any)
         .from("accommodations")
-        .select("id,name_en,name_ar,price,currency,school_id")
-        .eq("is_active", true),
-    ]).then(([{ data: p }, { data: sc }, { data: a }]) => {
+        .select("id,name_en,name_ar,price,currency,school_id,price_tiers")
+        .eq("is_active", true)
+        .eq("school_id", schoolId)
+        .order("name_en"),
+    ]).then(([{ data: p }, { data: a }]) => {
+      if (cancelled) return;
       setPrograms(p ?? []);
-      setSchools(sc ?? []);
       setAccommodations(a ?? []);
     });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [schoolId]);
 
   /* ── Validation ─────────────────────────────────────────────────────── */
   const validate = (s: StepNum): Record<string, string> => {
@@ -330,6 +394,11 @@ export default function SubmitNewStudentPage() {
     if (s === 2) {
       if (!email.trim() || !email.includes("@")) e.email = ss('errorEmail');
       if (!phone.trim() || !isLinkablePhone(phone)) e.phone = ss('errorPhone');
+    }
+    if (s === 3) {
+      if (!schoolId) e.school = ss('errorSchool');
+      if (programId && (!programWeeks || parseInt(programWeeks) <= 0)) e.programWeeks = ss('errorWeeks');
+      if (accommodationId && (!accommodationWeeks || parseInt(accommodationWeeks) <= 0)) e.accommodationWeeks = ss('errorWeeks');
     }
     if (s === 4) {
       if (!serviceFee || parseFloat(serviceFee) <= 0) e.serviceFee = ss('errorServiceFee');
@@ -349,7 +418,7 @@ export default function SubmitNewStudentPage() {
       return;
     }
     setErrors({});
-    setStep((s) => Math.min(s + 1, 4) as StepNum);
+    setStep((s) => Math.min(s + 1, LAST_STEP) as StepNum);
   };
   const goBack = () => {
     setErrors({});
@@ -367,9 +436,13 @@ export default function SubmitNewStudentPage() {
 
   /* ── Submit ─────────────────────────────────────────────────────────── */
   const handleSubmit = async () => {
-    const errs = validate(4);
+    // The case can only be created from the review step, after an explicit
+    // confirmation — never as a side effect of finishing a form field.
+    if (step !== LAST_STEP || !reviewConfirmed || saving) return;
+    const errs = { ...validate(3), ...validate(4) };
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
+      toast({ variant: "destructive", description: ss('errorRequired') });
       return;
     }
     setSaving(true);
@@ -418,11 +491,18 @@ export default function SubmitNewStudentPage() {
         case_id: caseId,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
+        insurance_id: insuranceId || null,
         program_start_date: courseStart || null,
         program_end_date: courseEnd || null,
         service_fee: parseFloat(serviceFee),
-        program_price: selectedProgram?.price ?? 0,
-        accommodation_price: selectedAccom?.price ?? 0,
+        // Weekly rate × weeks — `*_price` columns always hold the TOTAL.
+        program_weeks: programCost.weeks || null,
+        program_weekly_price: programCost.weeklyRate,
+        program_price: programCost.total,
+        accommodation_weeks: accomCost.weeks || null,
+        accommodation_weekly_price: accomCost.weeklyRate,
+        accommodation_price: accomCost.total,
+        insurance_price: insuranceCost.total ?? 0,
         payment_confirmed: true,
         payment_confirmed_at: now,
         payment_confirmed_by: user!.id,
@@ -442,7 +522,6 @@ export default function SubmitNewStudentPage() {
           student_email: cleanEmail,
           student_phone: cleanPhone,
           emergency_contact_name: emergencyName,
-          // ✅ FIX: emergencyPhone now correctly refers to its own state variable
           emergency_contact_phone: emergencyPhone,
           street,
           house_no: houseNo,
@@ -456,6 +535,7 @@ export default function SubmitNewStudentPage() {
           course_start: courseStart || null,
           course_end: courseEnd || null,
           accommodation_id: accommodationId || null,
+          insurance_id: insuranceId || null,
           documents_skipped: skipDocuments,
         },
       });
@@ -625,50 +705,64 @@ export default function SubmitNewStudentPage() {
         </Card>
       )}
 
-      {/* ══ STEP 3: Program & Accommodation ══ */}
+      {/* ══ STEP 3: School → Program → Accommodation → Insurance ══ */}
       {step === 3 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{ss('stepProgram')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <FieldWrap label={`${ss('school')} *`} error={errors.school}>
+              <Select value={schoolId} onValueChange={setSchoolId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectSchool')} /></SelectTrigger>
+                <SelectContent>
+                  {schools.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {nameOf(s)}{s.city ? ` — ${s.city}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FieldWrap>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>{ss('program')}</Label>
-                <Select value={programId} onValueChange={setProgramId}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectProgram')} /></SelectTrigger>
+                <Select value={programId} onValueChange={setProgramId} disabled={!schoolId}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={!schoolId ? ss('selectSchoolFirst') : programs.length === 0 ? ss('noProgramsForSchool') : ss('selectProgram')} />
+                  </SelectTrigger>
                   <SelectContent>
                     {programs.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {isAr ? (p as any).name_ar : p.name_en}
+                        {nameOf(p)}
                         {p.lessons_per_week ? ` · ${p.lessons_per_week} ${ss('lessonsPerWeek')}` : ""}
-                        {p.duration_in_months ? ` · ${p.duration_in_months}mo` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedProgram && (
-                  <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20 text-xs text-muted-foreground flex flex-wrap gap-2">
-                    {selectedProgram.lessons_per_week && <span>📚 {selectedProgram.lessons_per_week} {ss('lessonsPerWeek')}</span>}
-                    {selectedProgram.duration_in_months && <span>⏱ {selectedProgram.duration_in_months}mo</span>}
-                    {selectedProgram.price && <span>💰 {selectedProgram.price.toLocaleString('en-US')} {selectedProgram.currency}</span>}
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label>{ss('school')}</Label>
-                <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectSchool')} /></SelectTrigger>
-                  <SelectContent>
-                    {schools.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {isAr ? (s as any).name_ar : s.name_en}{s.city ? ` — ${s.city}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              <FieldWrap label={ss('programWeeks')} error={errors.programWeeks}>
+                <Input
+                  className={cn("mt-1", errors.programWeeks && "border-destructive")}
+                  type="number"
+                  min="1"
+                  max="104"
+                  value={programWeeks}
+                  onChange={(e) => setProgramWeeks(e.target.value)}
+                  disabled={!programId}
+                  placeholder="40"
+                />
+              </FieldWrap>
             </div>
+
+            {selectedProgram && programCost.weeklyRate !== null && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
+                <ReviewRow label={ss('weeklyPrice')} value={formatMoney(programCost.weeklyRate, programCost.currency)} />
+                <ReviewRow label={ss('weeks')} value={programCost.weeks || "—"} />
+                <ReviewRow label={ss('programTotal')} value={formatMoney(programCost.total, programCost.currency)} strong />
+              </div>
+            )}
 
             <div>
               <Label>{ss('intakeMonth')}</Label>
@@ -691,24 +785,69 @@ export default function SubmitNewStudentPage() {
               </div>
             </div>
 
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>
+                  {ss('accommodation')}{" "}
+                  {!schoolId && <span className="text-muted-foreground text-xs">({ss('selectSchoolFirst')})</span>}
+                </Label>
+                <Select
+                  value={accommodationId || "__none__"}
+                  onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)}
+                  disabled={!schoolId}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={accommodations.length === 0 ? (schoolId ? ss('noAccomForSchool') : ss('selectSchoolFirst')) : ss('selectAccom')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{ss('noAccom')}</SelectItem>
+                    {accommodations.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>{nameOf(a)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <FieldWrap label={ss('accommodationWeeks')} error={errors.accommodationWeeks}>
+                <Input
+                  className={cn("mt-1", errors.accommodationWeeks && "border-destructive")}
+                  type="number"
+                  min="1"
+                  max="104"
+                  value={accommodationWeeks}
+                  onChange={(e) => setAccommodationWeeks(e.target.value)}
+                  disabled={!accommodationId}
+                  placeholder={programWeeks || "40"}
+                />
+              </FieldWrap>
+            </div>
+
+            {selectedAccom && accomCost.weeklyRate !== null && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
+                <ReviewRow label={ss('weeklyPrice')} value={formatMoney(accomCost.weeklyRate, accomCost.currency)} />
+                <ReviewRow label={ss('weeks')} value={accomCost.weeks || "—"} />
+                <ReviewRow label={ss('accommodationTotal')} value={formatMoney(accomCost.total, accomCost.currency)} strong />
+              </div>
+            )}
+
             <div>
-              <Label>
-                {ss('accommodation')}{" "}
-                {!schoolId && <span className="text-muted-foreground text-xs">({ss('selectAccomFirst')})</span>}
-              </Label>
-              <Select value={accommodationId || "__none__"} onValueChange={(v) => setAccommodationId(v === "__none__" ? "" : v)} disabled={filteredAccoms.length === 0}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={filteredAccoms.length === 0 ? (schoolId ? ss('noAccomForSchool') : ss('selectAccomFirst')) : ss('selectAccom')} />
-                </SelectTrigger>
+              <Label>{ss('insurance')}</Label>
+              <Select value={insuranceId || "__none__"} onValueChange={(v) => setInsuranceId(v === "__none__" ? "" : v)}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={ss('selectInsurance')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">{ss('noAccom')}</SelectItem>
-                  {filteredAccoms.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {isAr ? a.name_ar : a.name_en}{a.price ? ` — ${a.price.toLocaleString('en-US')} ${a.currency}/mo` : ""}
+                  <SelectItem value="__none__">{ss('noInsurance')}</SelectItem>
+                  {insurances.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}{i.provider ? ` — ${i.provider}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {selectedInsurance && insuranceCost.total !== null && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatMoney(insuranceCost.total, selectedInsurance.currency ?? "EUR")}
+                  {insuranceCost.months ? ` · ${insuranceCost.months} × ${formatMoney(insuranceCost.monthly ?? 0, selectedInsurance.currency ?? "EUR")}` : ""}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between">
@@ -730,16 +869,16 @@ export default function SubmitNewStudentPage() {
               <FieldWrap label={`${ss('serviceFee')} *`} error={errors.serviceFee}>
                 <Input className={cn("mt-1", errors.serviceFee && "border-destructive")} type="number" min="0" value={serviceFee} onChange={(e) => setServiceFee(e.target.value)} />
               </FieldWrap>
-              {total > 0 && (
+              {feeTotal > 0 && (
                 <div className="flex justify-between p-3 rounded-lg bg-muted text-sm font-medium">
                   <span>{ss('total')}</span>
-                  <span>{total.toLocaleString('en-US')} ILS</span>
+                  <span>{feeTotal.toLocaleString('en-US')} ILS</span>
                 </div>
               )}
               <div className={cn("flex items-start gap-3 p-3 border rounded-lg", errors.payment && "border-destructive bg-destructive/5")}>
                 <Checkbox id="pr" checked={paymentReceived} onCheckedChange={(v) => { setPaymentReceived(v === true); setErrors((e) => ({ ...e, payment: "" })); }} />
                 <Label htmlFor="pr" className="cursor-pointer text-sm">
-                  {t('lawyer.submitStudent.confirmPayment', { amount: total.toLocaleString('en-US') })}
+                  {t('lawyer.submitStudent.confirmPayment', { amount: feeTotal.toLocaleString('en-US') })}
                 </Label>
               </div>
               {errors.payment && <p className="text-xs text-destructive">{errors.payment}</p>}
@@ -787,8 +926,69 @@ export default function SubmitNewStudentPage() {
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={goBack}><ChevronLeft className="h-4 w-4 me-1" /> {ss('back')}</Button>
-            <Button onClick={handleSubmit} disabled={saving} size="lg">
-              {saving ? (<><Loader2 className="h-4 w-4 me-2 animate-spin" /> {ss('submitting')}</>) : ss('submit')}
+            <Button onClick={goNext}>{ss('reviewCta')} <ChevronRight className="h-4 w-4 ms-1" /></Button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ STEP 5: Review & confirm ══ */}
+      {step === 5 && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{ss('reviewTitle')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">{ss('reviewHint')}</p>
+
+              <section className="rounded-lg border p-3">
+                <h3 className="text-sm font-semibold mb-1">{ss('studentInfo')}</h3>
+                <ReviewRow label={ss('firstName')} value={fullName || "—"} />
+                <ReviewRow label={ss('email')} value={email || "—"} />
+                <ReviewRow label={ss('phone')} value={phone || "—"} />
+                <ReviewRow label={ss('dateOfBirth')} value={dob || "—"} />
+              </section>
+
+              <section className="rounded-lg border p-3">
+                <h3 className="text-sm font-semibold mb-1">{ss('stepProgram')}</h3>
+                <ReviewRow label={ss('school')} value={selectedSchool ? nameOf(selectedSchool) : "—"} />
+                <ReviewRow label={ss('program')} value={selectedProgram ? nameOf(selectedProgram) : "—"} />
+                <ReviewRow
+                  label={ss('programWeeks')}
+                  value={programCost.weeks ? `${programCost.weeks} × ${formatMoney(programCost.weeklyRate ?? 0, programCost.currency)}` : "—"}
+                />
+                <ReviewRow label={ss('courseStart')} value={courseStart || "—"} />
+                <ReviewRow label={ss('courseEnd')} value={courseEnd || "—"} />
+                <ReviewRow label={ss('accommodation')} value={selectedAccom ? nameOf(selectedAccom) : ss('noAccom')} />
+                <ReviewRow
+                  label={ss('accommodationWeeks')}
+                  value={accomCost.weeks ? `${accomCost.weeks} × ${formatMoney(accomCost.weeklyRate ?? 0, accomCost.currency)}` : "—"}
+                />
+                <ReviewRow label={ss('insurance')} value={selectedInsurance ? selectedInsurance.name : ss('noInsurance')} />
+              </section>
+
+              <section className="rounded-lg border p-3">
+                <h3 className="text-sm font-semibold mb-1">{ss('costSummary')}</h3>
+                <ReviewRow label={ss('programTotal')} value={formatMoney(programCost.total, programCost.currency)} />
+                <ReviewRow label={ss('accommodationTotal')} value={formatMoney(accomCost.total, accomCost.currency)} />
+                <ReviewRow label={ss('insurance')} value={formatMoney(insuranceCost.total ?? 0, selectedInsurance?.currency ?? "EUR")} />
+                <ReviewRow label={ss('schoolCostsTotal')} value={formatMoney(eurTotal, programCost.currency)} strong />
+                <ReviewRow label={ss('serviceFee')} value={`${feeTotal.toLocaleString('en-US')} ILS`} strong />
+              </section>
+
+              <div className="flex items-start gap-3 p-3 border rounded-lg">
+                <Checkbox id="reviewOk" checked={reviewConfirmed} onCheckedChange={(v) => setReviewConfirmed(v === true)} />
+                <Label htmlFor="reviewOk" className="cursor-pointer text-sm">{ss('reviewConfirmLabel')}</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2">
+            <Button variant="outline" onClick={goBack} className="w-full sm:w-auto">
+              <ChevronLeft className="h-4 w-4 me-1" /> {ss('back')}
+            </Button>
+            <Button onClick={handleSubmit} disabled={saving || !reviewConfirmed} size="lg" className="w-full sm:w-auto">
+              {saving ? (<><Loader2 className="h-4 w-4 me-2 animate-spin" /> {ss('submitting')}</>) : ss('confirmSubmit')}
             </Button>
           </div>
         </div>

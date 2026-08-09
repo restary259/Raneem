@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+import { computeWeeklyCost } from "@/lib/programPricing";
 
 /**
  * Costing for a case.
@@ -80,14 +81,14 @@ export async function loadProgrammeCosts({
     submission.program_id
       ? (supabase as any)
           .from("programs")
-          .select("name_ar, name_en, price, currency")
+          .select("name_ar, name_en, price, currency, price_tiers")
           .eq("id", submission.program_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
     submission.accommodation_id
       ? (supabase as any)
           .from("accommodations")
-          .select("name_ar, name_en, price, currency")
+          .select("name_ar, name_en, price, currency, price_tiers")
           .eq("id", submission.accommodation_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -98,21 +99,32 @@ export async function loadProgrammeCosts({
 
   const pick = (r: any) => (isArabic ? r?.name_ar || r?.name_en : r?.name_en || r?.name_ar) ?? "";
 
-  if (progRes?.data?.price) {
+  // `*_price` on the submission is the TOTAL (weekly rate × weeks). Only when
+  // it is missing do we fall back to deriving it from the catalogue tiers.
+  const programTotal =
+    submission.program_price != null
+      ? Number(submission.program_price)
+      : computeWeeklyCost(progRes?.data, submission.program_weeks).total;
+  if (progRes?.data && programTotal) {
     lines.push({
       label: `${labels.program} — ${pick(progRes.data)}`,
-      amount: Number(progRes.data.price),
+      amount: programTotal,
       currency: progRes.data.currency ?? "EUR",
     });
   }
 
-  if (accomRes?.data?.price) {
+  const accomTotal =
+    submission.accommodation_price != null
+      ? Number(submission.accommodation_price)
+      : computeWeeklyCost(accomRes?.data, submission.accommodation_weeks).total;
+  if (accomRes?.data && accomTotal) {
     lines.push({
       label: `${labels.accommodation} — ${pick(accomRes.data)}`,
-      amount: Number(accomRes.data.price),
+      amount: accomTotal,
       currency: accomRes.data.currency ?? "EUR",
     });
   }
+
 
   if (insRes?.data) {
     const cost = computeInsuranceCost(

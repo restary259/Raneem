@@ -42,6 +42,12 @@ interface SubmittedCase {
     program_start_date: string | null;
     program_end_date: string | null;
     payment_confirmed: boolean;
+    program_price: number | null;
+    program_weeks: number | null;
+    program_weekly_price: number | null;
+    accommodation_price: number | null;
+    accommodation_weeks: number | null;
+    accommodation_weekly_price: number | null;
     extra_data: Record<string, unknown> | null;
   } | null;
   documents?: Array<{ id: string; file_name: string; file_url: string; category: string; created_at: string }>;
@@ -611,6 +617,14 @@ const AdminSubmissionsPage = () => {
                           <p className="font-medium">
                             {programNames[selected.submission.program_id] || selected.submission.program_id}
                           </p>
+                          {selected.submission?.program_price ? (
+                            <p className="text-xs text-muted-foreground">
+                              {selected.submission?.program_weeks && selected.submission?.program_weekly_price
+                                ? `${selected.submission.program_weeks} × €${Number(selected.submission.program_weekly_price).toLocaleString("en-US")} = `
+                                : ""}
+                              €{Number(selected.submission.program_price).toLocaleString("en-US")}
+                            </p>
+                          ) : null}
                         </div>
                       )}
                       {selected.submission?.accommodation_id && (
@@ -619,9 +633,18 @@ const AdminSubmissionsPage = () => {
                           <p className="font-medium">
                             {accommodationNames?.[selected.submission.accommodation_id] || selected.submission.accommodation_id}
                           </p>
+                          {selected.submission?.accommodation_price ? (
+                            <p className="text-xs text-muted-foreground">
+                              {selected.submission?.accommodation_weeks && selected.submission?.accommodation_weekly_price
+                                ? `${selected.submission.accommodation_weeks} × €${Number(selected.submission.accommodation_weekly_price).toLocaleString("en-US")} = `
+                                : ""}
+                              €{Number(selected.submission.accommodation_price).toLocaleString("en-US")}
+                            </p>
+                          ) : null}
                         </div>
                       )}
                     </div>
+
                   </div>
                 </>
               )}
