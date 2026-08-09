@@ -36,6 +36,9 @@
     <!-- LCP Preloads -->
     <link rel="preload" as="image" href="/lovable-uploads/hero-poster.webp" fetchpriority="high">
 
+    <!-- Canonical (brand domain only — never the preview host) -->
+    <link rel="canonical" href="https://darb.agency/" />
+
     <!-- Open Graph -->
     <meta property="og:title" content="درب | الدراسة في ألمانيا للطلاب العرب" />
     <meta property="og:description" content="درب ترافقك خطوة بخطوة نحو الدراسة في ألمانيا: معادلة البجروت، القبول الجامعي، التأشيرة والسكن، بدعم عربي كامل." />
@@ -43,6 +46,7 @@
     <meta property="og:image" content="https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
     <meta property="og:url" content="https://darb.agency/" />
     <meta property="og:site_name" content="درب التعليمية" />
+    <meta property="og:locale" content="ar_AR" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -50,6 +54,32 @@
     <meta name="twitter:image" content="https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png" />
     <meta name="twitter:title" content="درب | الدراسة في ألمانيا للطلاب العرب" />
     <meta name="twitter:description" content="درب ترافقك خطوة بخطوة نحو الدراسة في ألمانيا: معادلة البجروت، القبول الجامعي، التأشيرة والسكن، بدعم عربي كامل." />
+
+    <!-- Sitewide structured data (brand domain) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://darb.agency/#organization",
+            "name": "درب التعليمية",
+            "alternateName": "Darb Agency",
+            "url": "https://darb.agency/",
+            "logo": "https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://darb.agency/#website",
+            "name": "درب التعليمية",
+            "url": "https://darb.agency/",
+            "inLanguage": "ar",
+            "publisher": { "@id": "https://darb.agency/#organization" }
+          }
+        ]
+      }
+    </script>
+
 
     <!-- Performance Optimizations -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
