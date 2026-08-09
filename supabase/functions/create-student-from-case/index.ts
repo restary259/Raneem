@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { identityConflict, resolveIdentity } from "../_shared/identity.ts";
 import { z, parseBody, email as emailField, uuid } from "../_shared/validate.ts";
 
 /** Digits, spaces, dashes and parentheses are stripped before validation so
