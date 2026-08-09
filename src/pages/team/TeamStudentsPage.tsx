@@ -187,7 +187,7 @@ export default function TeamStudentsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={fetchStudents} title={t("common.refresh")}>
+          <Button variant="outline" size="icon" aria-label={t("common.refresh")} onClick={fetchStudents} title={t("common.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
 

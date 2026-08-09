@@ -37,7 +37,7 @@ const AIChatPopup = ({ onClose }: { onClose: () => void }) => {
         </div>
         <div className="flex items-center gap-1">
           <Link to="/ai-advisor">
-            <Button variant="ghost" size="icon" className="hover:bg-white/20 text-white shrink-0" title={t('chat.openFullPage')}>
+            <Button variant="ghost" size="icon" aria-label={t('chat.openFullPage')} className="hover:bg-white/20 text-white shrink-0" title={t('chat.openFullPage')}>
               <Maximize2 className="h-4 w-4" />
             </Button>
           </Link>
