@@ -4,6 +4,7 @@ import { fontForText, hasRtl, shapeForPdf, ARABIC_FONT, HEBREW_FONT } from '@/ut
 import { buildCorporateWorkbook } from './corporateSheet';
 import { currencyFormat, NUMBER_FORMAT } from './formats';
 import { toExportColumns } from '@/components/spreadsheet/exportMapping';
+import { preparePdfTableData } from '@/utils/exportUtils';
 
 describe('export reliability', () => {
   it('keeps RTL text in logical order and uses Unicode fonts for currency', () => {
@@ -12,6 +13,12 @@ describe('export reliability', () => {
     expect(hasRtl('سليم')).toBe(true);
     expect(fontForText('سليم 1,000 ₪', fonts)).toBe(ARABIC_FONT);
     expect(fontForText('1,000 ₪', fonts)).toBe(HEBREW_FONT);
+  });
+
+  it('places the first report column on the right in RTL PDFs', () => {
+    const displayed = preparePdfTableData(['ID', 'Name', 'Amount'], [['1', 'سليم', 1000]], true);
+    expect(displayed.headers).toEqual(['Amount', 'Name', 'ID']);
+    expect(displayed.rows[0]).toEqual([1000, 'سليم', '1']);
   });
 
   it('renders explicit numeric and currency zeros', () => {

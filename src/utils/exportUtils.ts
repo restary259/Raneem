@@ -25,6 +25,16 @@ export interface PdfExportResult {
   rtlFontMissing: boolean;
 }
 
+export function preparePdfTableData(
+  headers: string[],
+  rows: (string | number)[][],
+  rtl: boolean,
+) {
+  return rtl
+    ? { headers: [...headers].reverse(), rows: rows.map(row => [...row].reverse()) }
+    : { headers, rows };
+}
+
 export async function exportPDF({
   headers,
   rows,
@@ -51,8 +61,7 @@ export async function exportPDF({
   );
 
   const draw = (value: unknown) => shapeForPdf(String(value ?? ''));
-  const displayedHeaders = rtl ? [...headers].reverse() : headers;
-  const displayedRows = rtl ? allRows.map(row => [...row].reverse()) : allRows;
+  const displayed = preparePdfTableData(headers, allRows, rtl);
 
   if (title) {
     const displayTitle = title;
@@ -66,8 +75,8 @@ export async function exportPDF({
   const startY = title ? 28 : 14;
 
   autoTable(doc, {
-    head: [displayedHeaders.map(draw)],
-    body: displayedRows.map(r => r.map(draw)),
+    head: [displayed.headers.map(draw)],
+    body: displayed.rows.map(r => r.map(draw)),
     startY,
     styles: {
       fontSize: 8,
