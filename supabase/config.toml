@@ -69,3 +69,5 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false
   [functions.accept-invitation]
     verify_jwt = false
+  [functions.send-appointment-reminders]
+    verify_jwt = false

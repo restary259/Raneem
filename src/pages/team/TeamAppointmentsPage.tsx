@@ -467,7 +467,7 @@ export default function TeamAppointmentsPage() {
           setSelectedAppt(appt);
         }}
         className={cn(
-          "rounded-lg border select-none transition-all duration-150",
+          "rounded-lg border select-none transition-all duration-150 overflow-hidden",
           s.bg,
           draggingId === appt.id
             ? "opacity-40 scale-95 cursor-grabbing"
@@ -475,15 +475,20 @@ export default function TeamAppointmentsPage() {
           compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
         )}
       >
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-1 min-w-0 w-full">
           <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />
-          <span className="font-semibold truncate">{(appt.case as any)?.full_name ?? "—"}</span>
+          <span
+            className="font-semibold truncate min-w-0 flex-1"
+            title={(appt.case as any)?.full_name ?? (appt as any)?.guest_name ?? undefined}
+          >
+            {(appt.case as any)?.full_name ?? (appt as any)?.guest_name ?? "—"}
+          </span>
         </div>
         {!compact && (
-          <div className="flex items-center gap-1 mt-0.5 opacity-65 pl-2.5">
+          <div className="flex items-center gap-1 mt-0.5 opacity-65 ps-2.5 min-w-0 w-full">
             <Clock className="h-2.5 w-2.5 shrink-0" />
-            <span>{format(parseISO(appt.scheduled_at), "h:mm a")}</span>
-            <span className="opacity-70">· {appt.duration_minutes}m</span>
+            <span className="truncate">{format(parseISO(appt.scheduled_at), "h:mm a")}</span>
+            <span className="opacity-70 shrink-0">· {appt.duration_minutes}m</span>
           </div>
         )}
       </div>
