@@ -133,6 +133,16 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
           <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.program")}</p>
           <p className="text-lg font-semibold text-foreground">{programName}</p>
           {schoolName && <p className="text-sm text-muted-foreground mt-1">{schoolName}</p>}
+          {submission?.program_price ? (
+            <p className="text-sm text-muted-foreground mt-1">
+              {submission?.program_weeks && submission?.program_weekly_price
+                ? `${submission.program_weeks} × €${Number(submission.program_weekly_price).toLocaleString("en-US")} = `
+                : ""}
+              <span className="font-semibold text-foreground">
+                €{Number(submission.program_price).toLocaleString("en-US")}
+              </span>
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -165,11 +175,17 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
           <p className="text-sm font-medium">{accommodationName}</p>
           {submission?.accommodation_price ? (
             <p className="text-sm text-muted-foreground mt-1">
-              €{Number(submission.accommodation_price).toLocaleString("en-US")} / {t("case.program.perMonth")}
+              {submission?.accommodation_weeks && submission?.accommodation_weekly_price
+                ? `${submission.accommodation_weeks} × €${Number(submission.accommodation_weekly_price).toLocaleString("en-US")} = `
+                : ""}
+              <span className="font-semibold text-foreground">
+                €{Number(submission.accommodation_price).toLocaleString("en-US")}
+              </span>
             </p>
           ) : null}
         </div>
       )}
+
 
       {(insurance || submission?.insurance_price) && (
         <div className="border-t pt-4 space-y-2">
