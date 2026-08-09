@@ -204,11 +204,11 @@ const StudentAuthPage = () => {
             </p>
           </div>
 
-          <div className="p-8 pt-7">
+          <div className="p-5 pt-5 md:p-8 md:pt-7">
 
 
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4 md:space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-foreground/90 text-sm font-medium">
                 {t("auth.email")}
