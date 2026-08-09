@@ -41,6 +41,7 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const ActivateAccountPage = lazy(() => import("./pages/ActivateAccountPage"));
 
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
+const InvoicePage = lazy(() => import("./pages/InvoicePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const AIAdvisorPage = lazy(() => import("./pages/AIAdvisorPage"));
 const CostCalculatorPage = lazy(() => import("./pages/CostCalculatorPage"));
