@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { readFunctionError } from "@/lib/functionError";
 
 interface Props {
   caseId: string;
@@ -51,7 +52,7 @@ export default function CaseInviteStudent({
           student_phone: phone ?? null,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await readFunctionError(error));
       if ((data as any)?.error) throw new Error((data as any).error);
       toast({ description: t("case.invite.sent", { email: address }) });
       onDone();
