@@ -115,7 +115,7 @@ serve(async (req) => {
               partnerName: fullName,
               email: targetEmail,
               masterName: master.full_name ?? null,
-              activationUrl: link.properties.action_link,
+              activationUrl,
             },
           }),
         },
