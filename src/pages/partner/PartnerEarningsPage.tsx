@@ -448,21 +448,20 @@ export default function PartnerEarningsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {paidRewards.length === 0 ? (
+          {paidRewardsList.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-6">
               {t("partner.noPaymentHistory")}
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {paidRewards.map((r: any) => {
-                const caseId = r.admin_notes?.replace("Partner commission from case ", "").trim();
-                const studentName = paidCaseMap[caseId]?.split(" ")[0] ?? "—";
+              {paidRewardsList.map((r) => {
+                const studentName = r.student_name?.split(" ")[0] ?? "—";
                 return (
-                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <div key={r.reward_id} className="flex items-center justify-between gap-3 py-3 text-sm">
                     <div>
                       <p className="font-medium text-foreground">{studentName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {r.paid_at ? new Date(r.paid_at).toLocaleDateString("en-US") : "—"}
+                        {r.commission_reference ?? (r.case_reference ?? "—")}
                       </p>
                     </div>
                     <div className="text-end">
@@ -472,6 +471,7 @@ export default function PartnerEarningsPage() {
                   </div>
                 );
               })}
+
             </div>
           )}
         </CardContent>
