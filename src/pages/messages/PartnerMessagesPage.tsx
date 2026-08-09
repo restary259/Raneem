@@ -104,7 +104,7 @@ export default function PartnerMessagesPage() {
   const active = threads.find((thread) => thread.threadId === selected) ?? null;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] min-h-[520px] flex-col gap-4 p-4 md:p-6">
+    <div className="flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col gap-2 p-2 md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
