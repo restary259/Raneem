@@ -4,9 +4,8 @@
 
 Confirmed: the only place the app presents "Tamra, Israel" as DARB's location is the office block on the public site (`officeLocations.city` in `public/locales/{en,ar}/common.json`, rendered by `src/components/landing/OfficeLocations.tsx`). The map query and the street line were already cleaned earlier. Everything else matching "Israel" is legitimate content (Bagrut recognition, visa/embassy FAQ, legal pages, currency wording) and stays untouched.
 
-Change: `city` becomes "Tamra" / "طمرة" (no country). The address line, phone, email and hours stay as-is unless you give new ones.
+Change: `city` becomes "Tamra" / "طمرة" (no country); address, phone, email and hours stay as they are.
 
-Open question below: do you want a different office city/address entirely, or just the country word removed?
 
 ## 2. Hard data reset
 
@@ -30,7 +29,7 @@ Order of work:
 5. Explicitly untouched master tables: `important_contacts`, `schools`, `programs`, `majors`, `major_categories`, `accommodations`, `insurances`, `master_services`, `service_catalog`, `pipeline_statuses`, `eligibility_config`/`thresholds`, `platform_settings`, `permissions`, `role_permissions`, `checklist_items`, `referral_milestones`, `commissions` config, `email_*` tables.
 6. Post-reset audit query printed back to you: surviving accounts + row counts for every master table.
 
-Any rows belonging to the three surviving accounts (Ryan's referral link, Kheir's assignments) that point at deleted demo cases are removed with the case; the accounts, roles and passwords themselves are never modified.
+Ryan's and Kheir's demo cases, leads and appointments are deleted too — their accounts, roles and passwords are never modified.
 
 ## 3. Notification onboarding
 
