@@ -15,7 +15,7 @@ export const SITE_URL = 'https://darb.agency'
  * Email assets are served as static files from the published Darb site over
  * HTTPS (public/email/*). No auth, no signed URLs, no per-send lookup.
  */
-export const LOGO_URL = `${SITE_URL}/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png`
+export const LOGO_URL = `${SITE_URL}/email/darb-logo.png`
 export const LOGO_WIDTH = 132
 
 /** Contact — mirrors src/lib/contactConfig.ts */
