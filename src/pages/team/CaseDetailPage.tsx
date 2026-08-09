@@ -273,10 +273,32 @@ export default function CaseDetailPage() {
   const Back = isRtl ? ArrowRight : ArrowLeft;
   const showFinance = FINANCE_STAGES.includes(caseData.status);
   const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
-  const contactHref = isMobile
-    ? `tel:${caseData.phone_number}`
-    : `https://wa.me/${whatsappNumber(caseData.phone_number)}`;
+  const waHref = whatsappUrl(caseData.phone_number);
+  const phoneUsable = isLinkablePhone(caseData.phone_number);
+  const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : waHref ?? "#";
   const ContactIcon = isMobile ? Phone : MessageCircle;
+
+  /**
+   * The dashboard often runs inside a preview iframe where a plain
+   * `target="_blank"` anchor is silently swallowed by the sandbox. Open the
+   * link programmatically and, when the popup is blocked, fall back to the
+   * current tab so the button always does something visible.
+   */
+  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!phoneUsable) {
+      e.preventDefault();
+      toast({
+        variant: "destructive",
+        description: t("case.header.noPhone", "No valid phone number on this case"),
+      });
+      return;
+    }
+    if (isMobile) return; // tel: links work natively
+    e.preventDefault();
+    const opened = window.open(contactHref, "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = contactHref;
+  };
+
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
