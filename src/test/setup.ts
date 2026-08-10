@@ -1,5 +1,18 @@
 import '@testing-library/jest-dom';
 
+// CI has no .env, so provide placeholders for the Vite env vars that the
+// eagerly-created Supabase client (src/integrations/supabase/client.ts)
+// validates at import time. Tests never hit the network; these values only
+// satisfy createClient's argument checks so modules can load headlessly.
+Object.assign(import.meta.env, {
+  VITE_SUPABASE_URL:
+    import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321',
+  VITE_SUPABASE_PUBLISHABLE_KEY:
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'test-publishable-key',
+  VITE_SUPABASE_PROJECT_ID:
+    import.meta.env.VITE_SUPABASE_PROJECT_ID || 'test-project',
+});
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
