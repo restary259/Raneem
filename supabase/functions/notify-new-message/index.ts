@@ -111,6 +111,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    // The caller must actually belong to the conversation. Without this any
+    // signed-in user could email an arbitrary case's staff/student with
+    // attacker-chosen preview text. Internal service-role callers are exempt.
+    if (!auth.isServiceRole) {
+      if (!senderId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: allowed, error: membershipError } = await admin.rpc(
+        thread_type === "direct" ? "is_direct_thread_member" : "can_access_case_thread",
+        thread_type === "direct"
+          ? { _thread_id: thread_id, _user_id: senderId }
+          : { _case_id: thread_id, _user_id: senderId },
+      );
+      if (membershipError || allowed !== true) {
+        if (membershipError) console.error("[notify-new-message] membership check failed", membershipError.message);
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+
     // Recipients
     let recipientIds: string[] = [];
     let threadTitle = "";
