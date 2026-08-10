@@ -286,7 +286,8 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         </div>
 
 
-        {schoolCosts.length > 0 && (
+        {showGermany && schoolCosts.length > 0 && (
+
           <>
             <Separator />
             <div className="space-y-3 rounded-md border p-4">
