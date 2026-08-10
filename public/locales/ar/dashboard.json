@@ -2647,7 +2647,10 @@
       "empty": "لم يتم اختيار برنامج أو سكن أو تأمين بعد.",
       "ageBand": "السعر محسوب حسب عمر الطالب {{age}}",
       "perWeek": "أسبوعيًا",
-      "unverifiedTotal": "المدة غير مسجلة — قد يكون هذا سعرًا أسبوعيًا"
+      "unverifiedTotal": "المدة غير مسجلة — قد يكون هذا سعرًا أسبوعيًا",
+      "loadError": "تعذّر تحميل بعض التفاصيل. حدّث الصفحة للمحاولة مجددًا.",
+      "overMaxAge": "عمر الطالب {{age}} سنة — أعلى من الحد الأقصى لهذا المنتج ({{max}}).",
+      "outsideTermRange": "مدة البرنامج خارج المدة المسموح بها لهذا المنتج."
     },
     "messages": {
       "title": "المراسلات",
@@ -2720,6 +2723,31 @@
     "invoice": {
       "emailSent": "تم إرسال الفاتورة {{number}} إلى الطالب",
       "emailFailed": "تم إنشاء الفاتورة {{number}} لكن تعذّر إرسال البريد"
+    },
+    "pipeline": {
+      "offPipeline": "{{status}} — خارج المسار القياسي"
+    },
+    "overviewTab": {
+      "passportUploaded": "جواز السفر مرفوع",
+      "passportMissing": "جواز السفر غير مرفوع",
+      "pendingCount_zero": "لا يوجد قيد الانتظار",
+      "pendingCount_one": "موعد واحد قيد الانتظار",
+      "pendingCount_two": "موعدان قيد الانتظار",
+      "pendingCount_few": "{{count}} مواعيد قيد الانتظار",
+      "pendingCount_many": "{{count}} موعدًا قيد الانتظار",
+      "pendingCount_other": "{{count}} موعد قيد الانتظار",
+      "allCompleted": "كل المواعيد مكتملة",
+      "daysAgo_zero": "اليوم",
+      "daysAgo_one": "منذ يوم",
+      "daysAgo_two": "منذ يومين",
+      "daysAgo_few": "منذ {{count}} أيام",
+      "daysAgo_many": "منذ {{count}} يومًا",
+      "daysAgo_other": "منذ {{count}} يوم",
+      "notes": "ملاحظات: {{notes}}",
+      "englishLevel": "مستوى الإنجليزية"
+    },
+    "studentTab": {
+      "academicBackground": "الخلفية الأكاديمية"
     }
   },
   "partner": {

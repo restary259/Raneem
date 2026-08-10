@@ -2629,7 +2629,10 @@
       "empty": "No program, accommodation or insurance selected yet.",
       "ageBand": "Rate based on student age {{age}}",
       "perWeek": "week",
-      "unverifiedTotal": "Duration not recorded — this may be a weekly rate"
+      "unverifiedTotal": "Duration not recorded — this may be a weekly rate",
+      "loadError": "Some details could not be loaded. Refresh to try again.",
+      "overMaxAge": "Student is {{age}} — above this product's maximum age of {{max}}.",
+      "outsideTermRange": "The programme length is outside this product's allowed term."
     },
     "messages": {
       "title": "Messages",
@@ -2702,6 +2705,23 @@
     "invoice": {
       "emailSent": "Invoice {{number}} emailed to the student",
       "emailFailed": "Invoice {{number}} created, but the email could not be sent"
+    },
+    "pipeline": {
+      "offPipeline": "{{status}} — outside the standard pipeline"
+    },
+    "overviewTab": {
+      "passportUploaded": "Passport uploaded",
+      "passportMissing": "Passport missing",
+      "pendingCount_one": "{{count}} pending",
+      "pendingCount_other": "{{count}} pending",
+      "allCompleted": "All completed",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "notes": "Notes: {{notes}}",
+      "englishLevel": "English level"
+    },
+    "studentTab": {
+      "academicBackground": "Academic background"
     }
   },
   "partner": {

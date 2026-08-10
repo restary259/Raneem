@@ -3,35 +3,33 @@ import { useTranslation } from "react-i18next";
 import { CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExternalLink } from "lucide-react";
+import { AlertTriangle, ExternalLink } from "lucide-react";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
-
+import type { Tables } from "@/integrations/supabase/types";
 
 interface CaseProgramTabProps {
-  submission: any;
-  onRefresh: () => void;
+  submission: Tables<"case_submissions"> | null;
+  onRefresh?: () => void;
 }
 
-interface InsuranceInfo {
-  name: string;
-  provider: string | null;
-  currency: string;
-  price: number;
-  coverage_scope: string | null;
-  billing_period: string | null;
-  min_months: number | null;
-  max_months: number | null;
-  max_age: number | null;
-  terms_url: string | null;
-  description_ar: string | null;
-  description_en: string | null;
-}
+type InsuranceRow = Tables<"insurances">;
 
+/** Program and accommodation are always quoted in euros by the schools. */
+const PROGRAM_CURRENCY = "EUR";
 
+const money = (value: number, currency: string) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
 
-
-const formatDate = (value?: string | null) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "";
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US");
+};
 
 export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const { t, i18n } = useTranslation("dashboard");
@@ -39,69 +37,116 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const [programName, setProgramName] = useState<string | null>(null);
   const [schoolName, setSchoolName] = useState<string | null>(null);
   const [accommodationName, setAccommodationName] = useState<string | null>(null);
-  const [insurance, setInsurance] = useState<InsuranceInfo | null>(null);
+  const [insurance, setInsurance] = useState<InsuranceRow | null>(null);
   const [studentDob, setStudentDob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
+  const hasSubmission = submission !== null && submission !== undefined;
+  const programId = submission?.program_id ?? null;
+  const accommodationId = submission?.accommodation_id ?? null;
+  const insuranceId = submission?.insurance_id ?? null;
+  const caseId = submission?.case_id ?? null;
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchDetails = async () => {
-      if (!submission) {
-        setLoading(false);
+      setLoading(true);
+      setLoadFailed(false);
+      setProgramName(null);
+      setSchoolName(null);
+      setAccommodationName(null);
+      setInsurance(null);
+      setStudentDob(null);
+
+      if (!hasSubmission) {
+        if (!cancelled) setLoading(false);
         return;
       }
 
+      let failed = false;
+      /** `maybeSingle()` resolves with an error instead of throwing, so check every response. */
+      const unwrap = <T,>(res: { data: T | null; error: { message: string } | null }, what: string) => {
+        if (res.error) {
+          failed = true;
+          console.error(`Error loading ${what}:`, res.error.message);
+          return null;
+        }
+        return res.data;
+      };
+
       try {
         const [progRes, accomRes, insRes] = await Promise.all([
-          submission.program_id
-            ? supabase.from("programs").select("name_ar, name_en, school_id").eq("id", submission.program_id).maybeSingle()
-            : Promise.resolve({ data: null } as any),
-          submission.accommodation_id
-            ? supabase.from("accommodations").select("name_ar, name_en").eq("id", submission.accommodation_id).maybeSingle()
-            : Promise.resolve({ data: null } as any),
-          submission.insurance_id
-            ? (supabase as any).from("insurances").select("*").eq("id", submission.insurance_id).maybeSingle()
-            : Promise.resolve({ data: null } as any),
+          programId
+            ? supabase.from("programs").select("name_ar, name_en, school_id").eq("id", programId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+          accommodationId
+            ? supabase.from("accommodations").select("name_ar, name_en").eq("id", accommodationId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+          insuranceId
+            ? supabase.from("insurances").select("*").eq("id", insuranceId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
         ]);
 
-        if (progRes.data) {
-          setProgramName((isAr ? progRes.data.name_ar : progRes.data.name_en) ?? progRes.data.name_en);
-          if (progRes.data.school_id) {
+        const program = unwrap(progRes, "program");
+        const accommodation = unwrap(accomRes, "accommodation");
+        const insuranceRow = unwrap(insRes, "insurance");
+
+        if (cancelled) return;
+
+        if (program) {
+          setProgramName((isAr ? program.name_ar : program.name_en) ?? program.name_en);
+          if (program.school_id) {
             const schoolRes = await supabase
               .from("schools")
               .select("name_ar, name_en")
-              .eq("id", progRes.data.school_id)
+              .eq("id", program.school_id)
               .maybeSingle();
-            if (schoolRes.data) {
-              setSchoolName((isAr ? schoolRes.data.name_ar : schoolRes.data.name_en) ?? schoolRes.data.name_en);
-            }
+            const school = unwrap(schoolRes, "school");
+            if (cancelled) return;
+            if (school) setSchoolName((isAr ? school.name_ar : school.name_en) ?? school.name_en);
           }
         }
 
-        if (accomRes.data) {
-          setAccommodationName((isAr ? accomRes.data.name_ar : accomRes.data.name_en) ?? accomRes.data.name_en);
+        if (accommodation) {
+          setAccommodationName((isAr ? accommodation.name_ar : accommodation.name_en) ?? accommodation.name_en);
         }
+        if (insuranceRow) setInsurance(insuranceRow);
 
-        if (insRes.data) setInsurance(insRes.data as InsuranceInfo);
-
-        if (submission.case_id) {
-          const profileRes = await (supabase as any)
+        if (caseId) {
+          // A case can have more than one linked profile, so take the first
+          // rather than letting `maybeSingle()` fail the whole lookup.
+          const profileRes = await supabase
             .from("profiles")
             .select("date_of_birth")
-            .eq("case_id", submission.case_id)
-            .maybeSingle();
-          if (profileRes?.data?.date_of_birth) setStudentDob(profileRes.data.date_of_birth);
+            .eq("case_id", caseId)
+            .not("date_of_birth", "is", null)
+            .limit(1);
+          if (cancelled) return;
+          if (profileRes.error) {
+            failed = true;
+            console.error("Error loading student date of birth:", profileRes.error.message);
+          } else {
+            setStudentDob(profileRes.data?.[0]?.date_of_birth ?? null);
+          }
         }
-
       } catch (err) {
+        failed = true;
         console.error("Error fetching program details:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoadFailed(failed);
+          setLoading(false);
+        }
       }
     };
 
     fetchDetails();
-  }, [submission, isAr]);
+    return () => {
+      cancelled = true;
+    };
+  }, [hasSubmission, programId, accommodationId, insuranceId, caseId, isAr]);
 
   if (loading) {
     return (
@@ -122,12 +167,22 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const insuranceMonthly = cost.monthly;
   const insuranceTotal = cost.total ?? (submission?.insurance_price || null);
   const insuranceCurrency = insurance?.currency ?? "EUR";
-  const symbol = insuranceCurrency === "EUR" ? "€" : "₪";
   const insuranceDescription = insurance ? (isAr ? insurance.description_ar : insurance.description_en) : null;
-
+  const overMaxAge = insurance?.max_age != null && studentAge !== null && studentAge > insurance.max_age;
+  const outsideTermRange =
+    months !== null &&
+    ((insurance?.min_months != null && months < insurance.min_months) ||
+      (insurance?.max_months != null && months > insurance.max_months));
 
   return (
     <CardContent className="space-y-6 pt-6">
+      {loadFailed && (
+        <p className="inline-flex items-center gap-1.5 text-xs text-destructive">
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+          {t("case.program.loadError")}
+        </p>
+      )}
+
       {programName && (
         <div className="border-s-4 border-blue-500 ps-4 py-2">
           <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.program")}</p>
@@ -137,10 +192,10 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
             <>
               <p className="text-sm text-muted-foreground mt-1">
                 {submission?.program_weeks && submission?.program_weekly_price
-                  ? `${submission.program_weeks} × €${Number(submission.program_weekly_price).toLocaleString("en-US")} = `
+                  ? `${submission.program_weeks} × ${money(Number(submission.program_weekly_price), PROGRAM_CURRENCY)} = `
                   : ""}
                 <span className="font-semibold text-foreground">
-                  €{Number(submission.program_price).toLocaleString("en-US")}
+                  {money(Number(submission.program_price), PROGRAM_CURRENCY)}
                 </span>
               </p>
               {!submission?.program_weeks && (
@@ -148,7 +203,6 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
               )}
             </>
           ) : null}
-
         </div>
       )}
 
@@ -183,10 +237,10 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
             <>
               <p className="text-sm text-muted-foreground mt-1">
                 {submission?.accommodation_weeks && submission?.accommodation_weekly_price
-                  ? `${submission.accommodation_weeks} × €${Number(submission.accommodation_weekly_price).toLocaleString("en-US")} = `
+                  ? `${submission.accommodation_weeks} × ${money(Number(submission.accommodation_weekly_price), PROGRAM_CURRENCY)} = `
                   : ""}
                 <span className="font-semibold text-foreground">
-                  €{Number(submission.accommodation_price).toLocaleString("en-US")}
+                  {money(Number(submission.accommodation_price), PROGRAM_CURRENCY)}
                 </span>
               </p>
               {!submission?.accommodation_weeks && (
@@ -194,10 +248,8 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
               )}
             </>
           ) : null}
-
         </div>
       )}
-
 
       {(insurance || submission?.insurance_price) && (
         <div className="border-t pt-4 space-y-2">
@@ -210,20 +262,18 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
             <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${insurance.coverage_scope}`)}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            {insuranceMonthly && months
+            {insuranceMonthly && months && cost.total !== null
               ? t("case.program.insuranceBreakdown", {
-                  monthly: `${symbol}${insuranceMonthly.toLocaleString("en-US")}`,
+                  monthly: money(insuranceMonthly, insuranceCurrency),
                   months,
-                  total: `${symbol}${Number(insuranceTotal ?? 0).toLocaleString("en-US")}`,
+                  total: money(cost.total, insuranceCurrency),
                 })
               : insuranceTotal
-                ? `${symbol}${Number(insuranceTotal).toLocaleString("en-US")}`
+                ? money(Number(insuranceTotal), insuranceCurrency)
                 : t("admin.programs.noPriceSet")}
           </p>
           {cost.tier && studentAge !== null && (
-            <p className="text-xs text-muted-foreground">
-              {t("case.program.ageBand", { age: studentAge })}
-            </p>
+            <p className="text-xs text-muted-foreground">{t("case.program.ageBand", { age: studentAge })}</p>
           )}
 
           {(insurance?.min_months || insurance?.max_months || insurance?.max_age) && (
@@ -232,6 +282,14 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
                 ? t("admin.programs.termRange", { min: insurance.min_months, max: insurance.max_months })
                 : ""}
               {insurance?.max_age ? ` · ${t("admin.programs.maxAgeShort", { age: insurance.max_age })}` : ""}
+            </p>
+          )}
+          {(overMaxAge || outsideTermRange) && (
+            <p className="inline-flex items-center gap-1.5 text-xs text-amber-600">
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              {overMaxAge
+                ? t("case.program.overMaxAge", { age: studentAge, max: insurance?.max_age })
+                : t("case.program.outsideTermRange")}
             </p>
           )}
           {insuranceDescription && (

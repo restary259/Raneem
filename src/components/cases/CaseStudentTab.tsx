@@ -1,149 +1,84 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Pencil, Save, X } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface CaseStudentTabProps {
-  caseData: any;
-  submission: any;
-  onRefresh: () => void;
+  caseData: Tables<"cases">;
+  submission: Tables<"case_submissions"> | null;
 }
 
-export default function CaseStudentTab({
-  caseData,
-  submission,
-  onRefresh,
-}: CaseStudentTabProps) {
+interface Fact {
+  label: string;
+  value: string | null;
+}
+
+const text = (value: unknown): string | null =>
+  value === null || value === undefined || value === "" ? null : String(value);
+
+function FactList({ title, facts }: { title: string; facts: Fact[] }) {
+  const shown = facts.filter((fact) => fact.value !== null);
+  if (shown.length === 0) return null;
+
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      <dl className="space-y-3">
+        {shown.map((fact) => (
+          <div key={fact.label}>
+            <dt className="text-xs text-muted-foreground">{fact.label}</dt>
+            <dd className="text-sm font-medium">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** Read-only summary of who the student is. Editing lives in `CaseProfileForm`. */
+export default function CaseStudentTab({ caseData, submission }: CaseStudentTabProps) {
   const { t } = useTranslation("dashboard");
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const extraData = (submission?.extra_data ?? {}) as Record<string, unknown>;
+  const gender = text(extraData.gender);
 
-  const extraData = submission?.extra_data || {};
+  const personal: Fact[] = [
+    { label: t("case.profileForm.fullName"), value: text(caseData.full_name) },
+    { label: t("case.overview.phone"), value: text(caseData.phone_number) },
+    { label: t("case.extra.student_email"), value: text(extraData.student_email) },
+    { label: t("case.fields.dateOfBirth"), value: text(extraData.date_of_birth) },
+  ];
 
-  const handleEdit = (key: string, value: string) => {
-    setEditingField(key);
-    setEditValue(value);
-  };
+  const academic: Fact[] = [
+    { label: t("case.overview.bagrut"), value: text(caseData.bagrut_score) },
+    { label: t("case.overview.englishUnits"), value: text(caseData.english_units) },
+    { label: t("case.overview.mathUnits"), value: text(caseData.math_units) },
+    {
+      label: t("case.fields.gender"),
+      value: gender ? t(`case.genderValues.${gender}`, { defaultValue: gender }) : null,
+    },
+  ];
 
-  const handleSave = async (key: string) => {
-    // Save logic here
-    setEditingField(null);
-  };
+  const emergencyName = text(extraData.emergency_contact_name);
+  const emergencyPhone = text(extraData.emergency_contact_phone);
 
   return (
     <CardContent className="space-y-6 pt-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <div>
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-3">
-            Personal Information
-          </p>
-          <div className="space-y-3">
-            {caseData.full_name && (
-              <div>
-                <label className="text-xs text-muted-foreground">Name</label>
-                <p className="text-sm font-medium">{caseData.full_name}</p>
-              </div>
-            )}
-            {caseData.phone_number && (
-              <div>
-                <label className="text-xs text-muted-foreground">Phone</label>
-                <p className="text-sm font-medium">{caseData.phone_number}</p>
-              </div>
-            )}
-            {extraData.student_email && (
-              <div>
-                <label className="text-xs text-muted-foreground">Email</label>
-                <p className="text-sm font-medium">{extraData.student_email}</p>
-              </div>
-            )}
-            {extraData.date_of_birth && (
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  Date of Birth
-                </label>
-                <p className="text-sm font-medium">{extraData.date_of_birth}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Academic Information */}
-        <div>
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-3">
-            Academic Background
-          </p>
-          <div className="space-y-3">
-            {caseData.bagrut_score && (
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  Bagrut Score
-                </label>
-                <p className="text-sm font-medium">{caseData.bagrut_score}</p>
-              </div>
-            )}
-            {caseData.english_units && (
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  English Units
-                </label>
-                <p className="text-sm font-medium">{caseData.english_units}</p>
-              </div>
-            )}
-            {caseData.math_units && (
-              <div>
-                <label className="text-xs text-muted-foreground">
-                  Math Units
-                </label>
-                <p className="text-sm font-medium">{caseData.math_units}</p>
-              </div>
-            )}
-            {extraData.gender && (
-              <div>
-                <label className="text-xs text-muted-foreground">Gender</label>
-                <p className="text-sm font-medium">
-                  {String(extraData.gender).toUpperCase()}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <FactList title={t("case.profileForm.headings.personal")} facts={personal} />
+        <FactList title={t("case.studentTab.academicBackground")} facts={academic} />
       </div>
 
-      {/* Emergency Contact */}
-      {extraData.emergency_contact_name && (
+      {(emergencyName || emergencyPhone) && (
         <div className="border-t pt-4">
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-3">
-            Emergency Contact
-          </p>
-          <div className="space-y-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">Name:</span>{" "}
-              <span className="font-medium">{extraData.emergency_contact_name}</span>
-            </p>
-            {extraData.emergency_contact_phone && (
-              <p>
-                <span className="text-muted-foreground">Phone:</span>{" "}
-                <span className="font-medium">
-                  {extraData.emergency_contact_phone}
-                </span>
-              </p>
-            )}
-          </div>
+          <FactList
+            title={t("case.fields.emergencyContact")}
+            facts={[
+              { label: t("case.profileForm.emergencyName"), value: emergencyName },
+              { label: t("case.profileForm.emergencyPhone"), value: emergencyPhone },
+            ]}
+          />
         </div>
       )}
-
-      <div className="flex gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" className="flex-1">
-          Edit Profile
-        </Button>
-        <Button variant="outline" size="sm" className="flex-1">
-          Send Checklist
-        </Button>
-      </div>
     </CardContent>
   );
 }
