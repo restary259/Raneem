@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus, CheckCircle2, Pencil, PhoneCall, Send, Wallet } from "lucide-react";
+import { CalendarPlus, Pencil, PhoneCall, Send, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -312,6 +312,10 @@ export default function CaseStageBlock(props: Props) {
           )}
         </Shell>
 
+        {/* The single submission + student-invite action lives in the Finance
+            tab (it issues the DARB invoice and sends the dashboard invite in
+            one atomic flow). Surface a compact pointer there instead of a
+            duplicate submit button here. */}
         <Shell title={t("case.detail.submittedToAdmin")}>
           <p className="text-sm text-muted-foreground">{t("case.stageBlock.paymentBody")}</p>
           {!profileReady && (
@@ -328,71 +332,15 @@ export default function CaseStageBlock(props: Props) {
           )}
           {canManage && (
             <Button
+              variant="outline"
               className="gap-1.5"
               disabled={props.submitting || !profileReady}
-              onClick={() => setConfirmSubmit(true)}
+              onClick={props.onConfirmPayment}
             >
-              <Send className="h-4 w-4" />
-              {t("case.submit.action")}
+              <Wallet className="h-4 w-4" />
+              {t("case.tasks.action.confirmPayment")}
             </Button>
           )}
-          <Dialog open={confirmSubmit} onOpenChange={setConfirmSubmit}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {t("case.submit.confirmTitle", {
-                    defaultValue: "Send this student file to Admin?",
-                  })}
-                </DialogTitle>
-                <DialogDescription>
-                  {t("case.submit.confirmBody", {
-                    defaultValue:
-                      "The case moves to admin review and the student receives an invitation to set up their account.",
-                  })}
-                </DialogDescription>
-              </DialogHeader>
-              <ul className="space-y-1.5 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  {t("case.submit.checklist.profile", { defaultValue: "Student profile is complete" })}
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  {t("case.submit.checklist.services", { defaultValue: "All DARB services have been provided/collected" })}
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  {t("case.submit.checklist.payment", { defaultValue: "DARB service payment has been received" })}
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  {t("case.submit.checklist.finance", { defaultValue: "Finance summary is complete" })}
-                </li>
-              </ul>
-              <div className="rounded-md border bg-muted/30 p-3 text-sm">
-                <p>
-                  {t("case.submit.germanyNote", {
-                    defaultValue:
-                      "Germany school payments are verified separately by Admin after the student provides payment proof.",
-                  })}
-                </p>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setConfirmSubmit(false)}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  disabled={props.submitting}
-                  onClick={() => {
-                    setConfirmSubmit(false);
-                    props.onSubmitToAdmin();
-                  }}
-                >
-                  {t("case.submit.confirmAction", { defaultValue: "Submit to Admin" })}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </Shell>
       </div>
     );

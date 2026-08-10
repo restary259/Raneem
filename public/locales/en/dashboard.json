@@ -3422,6 +3422,16 @@
       "saved": "Finance confirmed and saved",
       "complete": "Finance confirmed and saved",
       "ackRequired": "Confirm that the DARB agency fee was received."
+    },
+    "invite": {
+      "title": "Create the student account & send invite",
+      "body": "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
+      "recipient": "Recipient",
+      "email": "Email",
+      "phone": "Phone",
+      "account": "Student account",
+      "accountExists": "Already created",
+      "action": "Submit to Admin & send invite"
     }
   },
   "messagesInbox": {

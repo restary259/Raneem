@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,20 @@ interface Props {
   canConfirm?: boolean;
   /** Germany cost + verification blocks are the final step: hidden until then. */
   showGermany?: boolean;
+  /** Current case status — drives the services lock and the invite gate. */
+  caseStatus?: string;
+  /** Student invite fields, surfaced only after the DARB payment is confirmed. */
+  studentEmail?: string;
+  studentFullName?: string;
+  studentPhone?: string | null;
+  studentUserId?: string | null;
+  /**
+   * The single post-payment action: submit the case to Admin, issue + email the
+   * DARB invoice, and send the student dashboard invite. Provided by the page
+   * so the Finance tab owns the whole finance → submission flow in one place.
+   */
+  onSubmitToAdmin?: () => void;
+  submitting?: boolean;
 }
 
 
@@ -42,7 +56,19 @@ const schoolPaymentTypes = ["school_course", "school_accommodation", "school_ins
 
 type SchoolPaymentType = (typeof schoolPaymentTypes)[number];
 
-const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = false, showGermany = true }) => {
+const CaseFinance: React.FC<Props> = ({
+  caseId,
+  canManage = false,
+  canConfirm = false,
+  showGermany = true,
+  caseStatus,
+  studentEmail,
+  studentFullName,
+  studentPhone,
+  studentUserId,
+  onSubmitToAdmin,
+  submitting = false,
+}) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
   const isArabic = i18n.language?.startsWith("ar");
@@ -283,6 +309,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
           caseId={caseId}
           services={services}
           canManage={canManage}
+          caseStatus={caseStatus}
           onChanged={() => {
             void refetchServices();
             void refetchFinancials();
@@ -509,6 +536,59 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
             </li>
           </ul>
         </div>
+
+        {/* ── Create the student account & send invite ────────────────────
+            This block appears ONLY after the DARB payment has been confirmed.
+            It is the single action that moves the case to Admin: it submits the
+            case, issues + emails the DARB invoice, and sends the student their
+            dashboard activation invite. It is not shown before payment is
+            confirmed, and it disappears once the case is already submitted. */}
+        {canManage && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
+          <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-primary" />
+              <p className="text-sm font-semibold">
+                {t("finance.invite.title", "Create the student account & send invite")}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "finance.invite.body",
+                "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
+              )}
+            </p>
+            <div className="rounded-md border bg-background p-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
+                <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
+              </div>
+              {studentEmail && (
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
+                  <span className="font-medium">{studentEmail}</span>
+                </div>
+              )}
+              {studentPhone && (
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
+                  <span className="font-medium">{studentPhone}</span>
+                </div>
+              )}
+              {studentUserId && (
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
+                  <span className="font-medium text-emerald-700">
+                    {t("finance.invite.accountExists", "Already created")}
+                  </span>
+                </div>
+              )}
+            </div>
+            <Button type="button" className="w-full sm:w-auto gap-1.5" disabled={submitting} onClick={onSubmitToAdmin}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {t("finance.invite.action", "Submit to Admin & send invite")}
+            </Button>
+          </div>
+        )}
 
         {/* Single confirmation action. */}
         {canManage && (

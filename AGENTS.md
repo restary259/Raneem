@@ -29,13 +29,29 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - The DARB payment-confirmation card renders ONLY while the fee is unpaid. Once
   confirmed, it disappears and the payment appears exactly once, in Payment History.
 
-### Submit-to-Admin is intentionally separate
-The **Confirm & Save** action saves services and (if the checkbox is ticked) confirms
-the DARB payment via `confirm_agency_service_payment`. It does NOT issue the invoice or
-submit the case to Admin. Submitting to Admin (`submit_case_for_review` + invoice email
-+ student invite) remains a deliberate, server-validated step in `CaseStageBlock` /
-`CaseDetailPage.handleSubmitToAdmin`. This separation is a business rule — do not
-auto-submit from the Finance button.
+### Finance → Submit-to-Admin flow (single place)
+- **Confirm & Save** (bottom of Finance tab) saves services and, when the team
+  ticks the confirmation checkbox, confirms the DARB agency fee via
+  `confirm_agency_service_payment`. It does NOT submit the case or send invites.
+- `confirm_agency_service_payment` (migration `20260810150000_confirm_payment_flips_status.sql`)
+  is idempotent and does THREE things atomically: marks the
+  `case_finance_confirmations` `service_fee` row confirmed, sets the legacy
+  `case_submissions.payment_confirmed = true` (required by the
+  `payment_confirmed -> submitted` transition trigger and `submit_case_for_review`),
+  and advances the case `profile_completion -> payment_confirmed`. Without the
+  legacy flag flip the case can never be submitted (the trigger blocks it).
+- AFTER payment is confirmed, a **"Create the student account & send invite"**
+  block renders inside the Finance tab (only at `payment_confirmed` status). Its
+  single button calls `CaseDetailPage.handleSubmitToAdmin`, which runs
+  `submit_case_for_review` (issues the DARB invoice) + `sendInvoiceEmail` +
+  `create-student-from-case` (student dashboard invite). This is the ONE place
+  the team submits to Admin; `CaseStageBlock` no longer has a duplicate submit
+  dialog/`CaseInviteStudent` inline — it only points back to the Finance tab.
+- Services are server-locked once the case is past `profile_completion`
+  (`submitted`/`payment_confirmed`/`enrollment_paid`/`enrolled`). `CaseServices`
+  accepts a `caseStatus` prop, renders read-only, and makes `save()` a no-op when
+  locked so the single Confirm & Save button never hits the locked
+  `set_case_services` RPC.
 
 ## Authoritative data flow (never trust the client for money)
 - Totals come from the `get_case_financials` RPC (server-side). The frontend never

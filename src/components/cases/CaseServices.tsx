@@ -22,6 +22,13 @@ interface Props {
   services: CaseService[];
   canManage: boolean;
   onChanged: () => void;
+  /**
+   * Current case status. Once the case has moved past the editable finance stage
+   * (submitted/payment_confirmed/enrollment_paid/enrolled), services are frozen
+   * server-side; the UI reflects that by rendering read-only and making save()
+   * a no-op so the single "Confirm & Save" button never hits the locked RPC.
+   */
+  caseStatus?: string;
 }
 
 /**
@@ -58,7 +65,8 @@ interface CaseContext {
  * 4. Prices for saved services come from the frozen case_services snapshot.
  * 5. New services use the current admin catalog price.
  */
-const CaseServices = forwardRef<CaseServicesHandle, Props>(({ caseId, services, canManage, onChanged }, ref) => {
+const CaseServices = forwardRef<CaseServicesHandle, Props>(
+  ({ caseId, services, canManage, onChanged, caseStatus }, ref) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
 
@@ -66,6 +74,18 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(({ caseId, services, 
 
   const { catalog, isLoading: catalogLoading, error: catalogError } = useServiceCatalog();
   const { financials } = useCaseFinancials(caseId);
+
+  /**
+   * Services are server-locked once the case has been submitted (the
+   * `set_case_services` RPC rejects writes for submitted/payment_confirmed/
+   * enrollment_paid/enrolled cases). Collapse to the read-only view and make
+   * save() a no-op so the single "Confirm & Save" button never hits the locked
+   * RPC and surfaces a "fields are controlled" error.
+   */
+  const servicesLocked =
+    canManage &&
+    ["submitted", "payment_confirmed", "enrollment_paid", "enrolled"].includes(caseStatus ?? "");
+  const effectiveCanManage = canManage && !servicesLocked;
 
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Selection[]>([]);
@@ -370,6 +390,9 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(({ caseId, services, 
 
   const save = async (): Promise<boolean> => {
     if (busy) return false;
+    // Services are frozen server-side once the case has been submitted; never
+    // call the locked set_case_services RPC from here.
+    if (servicesLocked) return true;
     if (!dirty) return true;
 
     setBusy(true);
@@ -426,7 +449,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(({ caseId, services, 
    * This intentionally does NOT depend on catalog/context.
    * Existing case_services are the source of truth for the case.
    */
-  if (!canManage) {
+  if (!effectiveCanManage) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">

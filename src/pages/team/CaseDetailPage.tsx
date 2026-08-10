@@ -181,6 +181,19 @@ export default function CaseDetailPage() {
 
   const canSubmitToAdmin = canManage && caseData?.status === "payment_confirmed";
 
+  // Student contact details surfaced inside the Finance tab's invite block.
+  const studentInvite = useMemo(() => {
+    if (!caseData || !submission) {
+      return { email: "", fullName: "", phone: "" as string | null };
+    }
+    const values = readStudentProfile(caseData as any, submission);
+    return {
+      email: (values.student_email || "").trim(),
+      fullName: caseData.full_name,
+      phone: values.student_phone ?? null,
+    };
+  }, [caseData, submission]);
+
   const handleSubmitToAdmin = async () => {
     if (!caseData || !submission || !user) return;
     setSubmitting(true);
@@ -399,6 +412,13 @@ export default function CaseDetailPage() {
                 canManage={role === "admin" || role === "team_member"}
                 canConfirm={role === "admin"}
                 showGermany
+                caseStatus={caseData.status}
+                studentEmail={studentInvite.email}
+                studentFullName={studentInvite.fullName}
+                studentPhone={studentInvite.phone}
+                studentUserId={caseData.student_user_id ?? null}
+                onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
+                submitting={submitting}
               />
             </div>
           </TabsContent>
@@ -428,6 +448,13 @@ export default function CaseDetailPage() {
               canManage={role === "admin" || role === "team_member"}
               canConfirm={role === "admin"}
               showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
+              caseStatus={caseData.status}
+              studentEmail={studentInvite.email}
+              studentFullName={studentInvite.fullName}
+              studentPhone={studentInvite.phone}
+              studentUserId={caseData.student_user_id ?? null}
+              onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
+              submitting={submitting}
             />
             </div>
           )}
