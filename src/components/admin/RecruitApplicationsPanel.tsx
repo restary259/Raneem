@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { readFunctionError } from "@/lib/functionError";
 import { Loader2, Mail, UserPlus } from "lucide-react";
 
 interface AppRow {
@@ -68,10 +69,11 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
     });
     setBusy(null);
     if (error || !(data as any)?.success) {
+      const message = (data as any)?.error || (await readFunctionError(error));
       toast({
         variant: "destructive",
         title: t("common.actionFailed", "Action failed"),
-        description: (data as any)?.error || error?.message || "Failed",
+        description: message,
       });
       load();
       return;
@@ -96,7 +98,7 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
       toast({
         variant: "destructive",
         title: t("common.actionFailed", "Action failed"),
-        description: (data as any)?.error || error?.message || "Failed",
+        description: (data as any)?.error || (await readFunctionError(error)),
       });
       return;
     }
