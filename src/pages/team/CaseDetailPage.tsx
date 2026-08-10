@@ -356,10 +356,12 @@ export default function CaseDetailPage() {
           <TabsContent value="finance">
             <CaseFinance
               caseId={caseData.id}
-              canManage={role === "admin" || (role === "team_member" && caseData.status === "profile_completion")}
+              canManage={role === "admin" || role === "team_member"}
               canConfirm={role === "admin"}
+              showGermany
             />
           </TabsContent>
+
         </Tabs>
       ) : (
         <>
