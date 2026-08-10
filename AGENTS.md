@@ -71,3 +71,20 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   keys live under `finance.*`. Components pass inline English fallbacks via
   `t("key", "fallback")`, so missing keys still render. When adding keys, update both
   `en` and `ar`.
+- A vitest guard (`src/lib/i18nKeys.test.ts`) fails the suite if any `t("a.b")` key
+  used in source is missing from BOTH locale dictionaries of the component's namespace.
+  Always add new keys to `en` and `ar` together.
+- Student Fees keys live under `studentFees.*`; student status labels under
+  `student.status.*` (not `partner.status.*`, which leaks partner wording).
+
+## Student dashboard emergency-contact single source of truth
+- Canonical fields: `emergency_contacts` (jsonb array of `{name,relationship,phone}`)
+  plus mirror columns `emergency_contact_name` / `emergency_contact_phone` (legacy
+  single column `emergency_contact` is kept in sync for older readers).
+- `StudentOnboardingGate` writes all three. `StudentProfile` (student-facing) also
+  writes all three (name + phone inputs → array + mirrors), so filling the contact on
+  the Profile page satisfies the Next Steps completeness check
+  (`emergency_contact_phone`). `StudentNextStepsPage` reads `emergency_contact_phone`.
+- Admin (`AdminStudentsPage`) and team (`ProfileCompletionForm`, `SubmitNewStudentPage`)
+  read/write the same mirror columns, so keep them populated.
+
