@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { User, RefreshCw, UserPlus, Copy, CheckCheck, Loader2, Mail, Search } from "lucide-react";
+import { User, RefreshCw, UserPlus, Loader2, Mail, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
@@ -37,9 +37,10 @@ export default function TeamStudentsPage() {
   const [newCreds, setNewCreds] = useState<{
     full_name: string;
     email: string;
-    password: string;
+    invited: boolean;
+    alreadyInvited: boolean;
+    invitationFailed: boolean;
   } | null>(null);
-  const [copied, setCopied] = useState<"email" | "password" | null>(null);
 
   /* ── Form fields ─────────────────────────────────────────────────── */
   const [form, setForm] = useState({
@@ -132,8 +133,11 @@ export default function TeamStudentsPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      const { data, error } = await supabase.functions.invoke("create-student-standalone", {
-        body: { email: email.trim().toLowerCase(), full_name: fullName },
+      // Use the durable invitation flow. It creates the student account,
+      // stores a revocable activation invitation, and rate-limits duplicate
+      // emails instead of exposing a temporary password to staff.
+      const { data, error } = await supabase.functions.invoke("create-student-from-case", {
+        body: { student_email: email.trim().toLowerCase(), student_full_name: fullName },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
@@ -143,7 +147,9 @@ export default function TeamStudentsPage() {
       setNewCreds({
         full_name: fullName,
         email: data.email,
-        password: data.temp_password,
+        invited: data.invited === true,
+        alreadyInvited: data.already_invited === true,
+        invitationFailed: data.invitation_failed === true,
       });
 
       resetForm();
@@ -157,12 +163,6 @@ export default function TeamStudentsPage() {
     } finally {
       setCreating(false);
     }
-  };
-
-  const copyToClipboard = async (text: string, field: "email" | "password") => {
-    await navigator.clipboard.writeText(text);
-    setCopied(field);
-    setTimeout(() => setCopied(null), 2000);
   };
 
   /* ── Filtered list ───────────────────────────────────────────────── */
@@ -212,6 +212,9 @@ export default function TeamStudentsPage() {
             <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-md">
               <DialogHeader>
                 <DialogTitle>{t("team.students.createAccount", "Create Student Account")}</DialogTitle>
+                <DialogDescription>
+                  {t("team.students.inviteDescription", "Create a student account and send a secure activation link by email.")}
+                </DialogDescription>
               </DialogHeader>
 
               {/* ── Success / credentials view ─────────────────────── */}
@@ -221,50 +224,19 @@ export default function TeamStudentsPage() {
                     {t("team.students.createdFor", { name: newCreds.full_name })}
                   </p>
 
-                  <div className="rounded-lg bg-muted p-4 space-y-3 text-sm">
-                    {/* Email row */}
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">{t("team.students.tempEmail")}</p>
-                        <p className="font-medium">{newCreds.email}</p>
-                      </div>
-                      <Button variant="ghost" size="icon" aria-label={isRtl ? "نسخ البريد الإلكتروني" : "Copy email"} onClick={() => copyToClipboard(newCreds.email, "email")}>
-                        {copied === "email" ? (
-                          <CheckCheck className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-
-                    <div className="border-t border-border" />
-
-                    {/* Password row */}
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">
-                          {t("team.students.tempPassword")}
-                        </p>
-                        <p className="font-mono font-semibold tracking-wide">{newCreds.password}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={isRtl ? "نسخ كلمة المرور" : "Copy password"}
-                        onClick={() => copyToClipboard(newCreds.password, "password")}
-                      >
-                        {copied === "password" ? (
-                          <CheckCheck className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                  <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
+                    <p className="text-xs text-muted-foreground">{t("team.students.tempEmail")}</p>
+                    <p className="font-medium">{newCreds.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {newCreds.invited
+                        ? t("team.students.inviteSent", "A secure activation link was sent to this email.")
+                        : newCreds.alreadyInvited
+                          ? t("team.students.inviteAlreadySent", "An activation link was sent recently. Ask the student to check their inbox.")
+                          : newCreds.invitationFailed
+                            ? t("team.students.inviteFailed", "The account was created, but the invitation email could not be sent. Retry from the linked case.")
+                            : t("team.students.invitePending", "The student can activate their account using the email invitation.")}
+                    </p>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    {t("team.students.changePasswordHint")}
-                  </p>
 
                   <Button
                     className="w-full"
