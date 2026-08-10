@@ -28,6 +28,7 @@ import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
 import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
 import CaseFinance from "@/components/cases/CaseFinance";
+import { identityConflictMessage } from "@/lib/identityConflict";
 
 interface SubmittedCase {
   id: string;
@@ -342,7 +343,17 @@ const AdminSubmissionsPage = () => {
           }),
         });
         const accResult = await accResp.json().catch(() => ({}));
-        if (!accResp.ok) throw new Error(accResult.error || "Failed to create student account");
+        if (!accResp.ok) {
+          // The case is already marked paid above. A student-account conflict
+          // (email belongs to a partner/admin) must not roll back enrollment,
+          // but it must be surfaced clearly instead of the raw server string.
+          const conflict = identityConflictMessage(accResult, t);
+          toast({
+            variant: "destructive",
+            description:
+              conflict ?? accResult?.error ?? t("admin.submissions.studentAccountFailed", "Failed to create student account."),
+          });
+        }
       }
 
       await supabase.rpc("log_user_activity" as any, {

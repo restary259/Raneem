@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { readFunctionError } from "./functionError";
+import { readFunctionError, readFunctionErrorBody } from "./functionError";
 
 function httpError(body: string, status = 403): FunctionsHttpError {
   return new FunctionsHttpError(new Response(body, { status }));
@@ -36,5 +36,33 @@ describe("readFunctionError", () => {
     expect(await readFunctionError(new Error("boom"))).toBe("boom");
     expect(await readFunctionError("just a string")).toBe("just a string");
     expect(await readFunctionError(null)).toBe("null");
+  });
+});
+
+describe("readFunctionErrorBody", () => {
+  it("returns the parsed body so callers can route on structured codes", async () => {
+    const body = await readFunctionErrorBody(
+      httpError(
+        JSON.stringify({
+          error: "This email already belongs to another account.",
+          code: "identity_conflict",
+          existing_role: "social_media_partner",
+          deactivated: false,
+        }),
+        409,
+      ),
+    );
+    expect(body?.code).toBe("identity_conflict");
+    expect(body?.existing_role).toBe("social_media_partner");
+    expect(body?.deactivated).toBe(false);
+  });
+
+  it("returns null for a non-JSON body", async () => {
+    expect(await readFunctionErrorBody(httpError("upstream timeout"))).toBeNull();
+  });
+
+  it("returns null for a non-http error", async () => {
+    expect(await readFunctionErrorBody(new Error("boom"))).toBeNull();
+    expect(await readFunctionErrorBody(null)).toBeNull();
   });
 });

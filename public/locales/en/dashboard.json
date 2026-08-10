@@ -604,6 +604,7 @@
       "totalFees": "Total fees",
       "incorrectPassword": "Incorrect password",
       "enrolledSuccess": "Marked as enrolled",
+      "studentAccountFailed": "Failed to create the student account. The case was still marked enrolled — use a different email or create the account from the case later.",
       "tabPending": "Pending Review",
       "tabCompleted": "Completed",
       "enrolledOn": "Enrolled On",

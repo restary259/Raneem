@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { readFunctionError } from "@/lib/functionError";
+import { readFunctionError, readFunctionErrorBody } from "@/lib/functionError";
+import { identityConflictMessage } from "@/lib/identityConflict";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -672,11 +673,16 @@ export default function SubmitNewStudentPage() {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (accountErr) {
-        // Never swallow the account-creation failure: the wizard would carry on
-        // and attach documents to the wrong owner.
-        const reason = await readFunctionError(accountErr);
+        // The student account is the anchor for documents and the case link.
+        // Continuing past this failure would attach documents to the wrong
+        // owner and then navigate to a case detail page with no student
+        // linked — which renders as a blank screen. Abort the wizard and
+        // surface the structured conflict message when the email collides.
+        const body = await readFunctionErrorBody(accountErr);
+        const conflict = identityConflictMessage(body as any, t);
+        const reason = conflict ?? (await readFunctionError(accountErr));
         console.error("[SubmitNewStudent] create-student-from-case", reason);
-        toast({ variant: "destructive", description: reason });
+        throw new Error(reason);
       }
       const studentUserId = (accountRes as any)?.user_id as string | undefined;
 

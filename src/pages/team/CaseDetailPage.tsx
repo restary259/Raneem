@@ -24,6 +24,8 @@ import CaseFinance from "@/components/cases/CaseFinance";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
 import { readStudentProfile } from "@/lib/studentProfileFields";
+import { readFunctionErrorBody } from "@/lib/functionError";
+import { identityConflictMessage } from "@/lib/identityConflict";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import PaymentConfirmationForm from "@/components/team/PaymentConfirmationForm";
@@ -200,9 +202,12 @@ export default function CaseDetailPage() {
           },
         });
         if (inviteError) {
+          const body = await readFunctionErrorBody(inviteError);
+          const conflict = identityConflictMessage(body as any, t);
           toast({
             variant: "destructive",
-            description: t("case.invite.failed", "Could not send the student dashboard invitation."),
+            description:
+              conflict ?? t("case.invite.failed", "Could not send the student dashboard invitation."),
           });
         } else {
           toast({ description: t("case.invite.sent", { email: studentEmail }) });
