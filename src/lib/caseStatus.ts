@@ -27,6 +27,44 @@ export function resolveStatus(raw: string): CaseStatus {
   return CaseStatus.NEW;
 }
 
+/** Statuses that end the case lifecycle and are excluded from "active" counts */
+export const TERMINAL_STATUSES: readonly CaseStatus[] = [
+  CaseStatus.ENROLLMENT_PAID,
+  CaseStatus.FORGOTTEN,
+  CaseStatus.CANCELLED,
+];
+
+/** Statuses considered "active" in the pipeline (non-terminal) */
+export const ACTIVE_STATUSES: readonly CaseStatus[] = [
+  CaseStatus.NEW,
+  CaseStatus.CONTACTED,
+  CaseStatus.APPT_SCHEDULED,
+  CaseStatus.PROFILE_COMPLETION,
+  CaseStatus.PAYMENT_CONFIRMED,
+  CaseStatus.SUBMITTED,
+];
+
+export function isTerminalStatus(status: string): boolean {
+  return TERMINAL_STATUSES.includes(resolveStatus(status));
+}
+
+export function isActiveStatus(status: string): boolean {
+  return !isTerminalStatus(status);
+}
+
+/** Canonical en/ar labels — the single source for status wording */
+export const CASE_STATUS_LABELS: Record<CaseStatus, { en: string; ar: string }> = {
+  [CaseStatus.NEW]:                { en: 'New',                ar: 'جديد' },
+  [CaseStatus.CONTACTED]:          { en: 'Contacted',          ar: 'تم التواصل' },
+  [CaseStatus.APPT_SCHEDULED]:     { en: 'Appointment',        ar: 'موعد محدد' },
+  [CaseStatus.PROFILE_COMPLETION]: { en: 'Profile',            ar: 'استكمال الملف' },
+  [CaseStatus.PAYMENT_CONFIRMED]:  { en: 'Payment',            ar: 'تأكيد الدفع' },
+  [CaseStatus.SUBMITTED]:          { en: 'Submitted',          ar: 'تم التقديم' },
+  [CaseStatus.ENROLLMENT_PAID]:    { en: 'Enrolled',           ar: 'مسجل' },
+  [CaseStatus.FORGOTTEN]:          { en: 'Forgotten',          ar: 'منسي' },
+  [CaseStatus.CANCELLED]:          { en: 'Cancelled',          ar: 'ملغي' },
+};
+
 /** Get the 0-based position of a status in the pipeline */
 export function statusIndex(status: string): number {
   const resolved = resolveStatus(status);

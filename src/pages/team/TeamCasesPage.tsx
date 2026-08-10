@@ -13,17 +13,14 @@ import { Search, Plus, Loader2, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { isLinkablePhone } from '@/lib/phone';
+import {
+  ACTIVE_STATUSES,
+  CaseStatus,
+  CASE_STATUS_LABELS,
+  STATUS_COLORS,
+} from '@/lib/caseStatus';
 
-type StatusFilter =
-  | 'all'
-  | 'new'
-  | 'contacted'
-  | 'appointment_scheduled'
-  | 'profile_completion'
-  | 'payment_confirmed'
-  | 'submitted'
-  | 'enrollment_paid'
-  | 'forgotten';
+type StatusFilter = 'all' | CaseStatus;
 
 interface Case {
   id: string;
@@ -36,28 +33,12 @@ interface Case {
   created_at: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800 border-blue-200',
-  contacted: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  appointment_scheduled: 'bg-purple-100 text-purple-800 border-purple-200',
-  profile_completion: 'bg-orange-100 text-orange-800 border-orange-200',
-  payment_confirmed: 'bg-amber-100 text-amber-800 border-amber-200',
-  submitted: 'bg-teal-100 text-teal-800 border-teal-200',
-  enrollment_paid: 'bg-green-100 text-green-800 border-green-200',
-  forgotten: 'bg-red-100 text-red-800 border-red-200',
-};
-
-// 'new' is included — cases start at new
+// Canonical filter list: 'all' + every active stage + terminal states.
 const STATUS_FILTERS: StatusFilter[] = [
   'all',
-  'new',
-  'contacted',
-  'appointment_scheduled',
-  'profile_completion',
-  'payment_confirmed',
-  'submitted',
-  'enrollment_paid',
-  'forgotten',
+  ...ACTIVE_STATUSES,
+  CaseStatus.FORGOTTEN,
+  CaseStatus.CANCELLED,
 ];
 
 export default function TeamCasesPage() {
@@ -175,18 +156,9 @@ export default function TeamCasesPage() {
   };
 
   const statusLabel = (s: string) => {
-    const map: Record<string, { ar: string; en: string }> = {
-      all:                   { ar: 'الكل',              en: 'All' },
-      new:                   { ar: 'جديد',              en: 'New' },
-      contacted:             { ar: 'تم التواصل',         en: 'Contacted' },
-      appointment_scheduled: { ar: 'موعد محدد',          en: 'Appointment' },
-      profile_completion:    { ar: 'استكمال الملف',      en: 'Profile' },
-      payment_confirmed:     { ar: 'تأكيد الدفع',        en: 'Payment' },
-      submitted:             { ar: 'تم التقديم',         en: 'Submitted' },
-      enrollment_paid:       { ar: 'مسجل',              en: 'Enrolled' },
-      forgotten:             { ar: 'منسي',              en: 'Forgotten' },
-    };
-    return isAr ? (map[s]?.ar ?? s) : (map[s]?.en ?? s.replace(/_/g, ' '));
+    if (s === 'all') return isAr ? 'الكل' : 'All';
+    const label = CASE_STATUS_LABELS[s as CaseStatus];
+    return label ? (isAr ? label.ar : label.en) : s.replace(/_/g, ' ');
   };
 
   return (

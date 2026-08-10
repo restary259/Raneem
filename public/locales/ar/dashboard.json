@@ -306,7 +306,9 @@
       "queueAuth": "محاولات وصول مرفوضة (24 ساعة)",
       "queueAuthEmpty": "لا توجد محاولات مرفوضة",
       "viewAll": "عرض الكل",
-      "open": "فتح"
+      "open": "فتح",
+      "activityLoadError": "تعذر تحميل النشاط الأخير",
+      "queueLoadError": "تعذر التحميل"
     },
     "pipeline": {
       "title": "خط أنابيب الطلبات",

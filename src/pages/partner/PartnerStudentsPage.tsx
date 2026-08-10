@@ -9,28 +9,7 @@ import { Users, Search } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-
-const STATUS_COLORS: Record<string, string> = {
-  new: "bg-muted text-muted-foreground",
-  contacted: "bg-blue-100 text-blue-800",
-  appointment_scheduled: "bg-purple-100 text-purple-800",
-  profile_completion: "bg-yellow-100 text-yellow-800",
-  payment_confirmed: "bg-amber-100 text-amber-800",
-  submitted: "bg-cyan-100 text-cyan-800",
-  enrollment_paid: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
-
-const FRIENDLY_LABELS: Record<string, { en: string; ar: string }> = {
-  new: { en: "New", ar: "جديد" },
-  contacted: { en: "Contacted", ar: "تم التواصل" },
-  appointment_scheduled: { en: "Appointment Scheduled", ar: "موعد محدد" },
-  profile_completion: { en: "Profile Complete", ar: "ملف مكتمل" },
-  payment_confirmed: { en: "Payment Received", ar: "تم الدفع" },
-  submitted: { en: "Submitted for Enrollment", ar: "مقدم للتسجيل" },
-  enrollment_paid: { en: "Enrolled", ar: "مسجل ✅" },
-  cancelled: { en: "Cancelled", ar: "ملغي" },
-};
+import { STATUS_COLORS } from "@/lib/caseStatus";
 
 export default function PartnerStudentsPage() {
   const [cases, setCases] = useState<any[]>([]);

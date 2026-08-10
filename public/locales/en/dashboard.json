@@ -306,7 +306,9 @@
       "queueAuth": "Authorization failures (24h)",
       "queueAuthEmpty": "No authorization failures",
       "viewAll": "View all",
-      "open": "Open"
+      "open": "Open",
+      "activityLoadError": "Unable to load recent activity",
+      "queueLoadError": "Unable to load"
     },
     "pipeline": {
       "title": "Application Pipeline",

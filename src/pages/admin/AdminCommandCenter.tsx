@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
-import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useNavigate } from 'react-router-dom';
+import { isActiveStatus } from '@/lib/caseStatus';
+import { isSlaBreached } from '@/lib/slaPolicy';
 
 interface CaseCounts {
   total: number;
@@ -23,7 +24,6 @@ interface ActivityEntry {
   action: string;
   entity_type: string;
   created_at: string;
-  metadata: any;
 }
 
 interface QueueRow {
@@ -35,7 +35,6 @@ interface QueueRow {
 
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
-  const { toast } = useToast();
   const navigate = useNavigate();
   const isRtl = i18n.language === 'ar';
 
@@ -46,12 +45,28 @@ const AdminCommandCenter = () => {
   const [outstanding, setOutstanding] = useState<QueueRow[]>([]);
   const [authFailures, setAuthFailures] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // Distinguish "failed to load" from "genuinely empty" so a DB error never
+  // renders as an empty queue or a zeroed KPI.
+  const [countsError, setCountsError] = useState(false);
+  const [activityError, setActivityError] = useState(false);
+  const [queueErrors, setQueueErrors] = useState<Record<string, boolean>>({});
 
   const fetchData = useCallback(async () => {
+    setCountsError(false);
+    setActivityError(false);
+    setQueueErrors({});
     // Use Promise.allSettled so a single query failure doesn't blank the whole page
     const [casesResult, activityResult, forgottenResult] = await Promise.allSettled([
-      supabase.from('cases').select('status, last_activity_at, created_at'),
-      supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(10),
+      supabase
+        .from('cases')
+        .select('status, last_activity_at, created_at')
+        .is('deleted_at', null)
+        .eq('archived', false),
+      supabase
+        .from('activity_log')
+        .select('id, actor_name, action, entity_type, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10),
       supabase.rpc('get_forgotten_cases'),
     ]);
 
@@ -70,29 +85,25 @@ const AdminCommandCenter = () => {
         ? forgottenResult.value.data ?? []
         : [];
 
-    if (casesResult.status === 'rejected') {
-      toast({ variant: 'destructive', description: String(casesResult.reason) });
-    }
+    const failed = (r: PromiseSettledResult<{ error: unknown }>): string | null =>
+      r.status === 'rejected'
+        ? String(r.reason)
+        : r.value.error
+          ? String(r.value.error)
+          : null;
 
-    // SLA breach detection — guard against invalid dates
-    const slaBreaches = cases.filter((c: any) => {
-      try {
-        const days = Math.floor((Date.now() - new Date(c.last_activity_at).getTime()) / 86400000);
-        return (
-          (c.status === 'new' && days >= 3) ||
-          (c.status === 'contacted' && days >= 5) ||
-          (c.status === 'appointment_scheduled' && days >= 14) ||
-          (c.status === 'profile_completion' && days >= 7)
-        );
-      } catch {
-        return false;
-      }
-    });
+    setCountsError(failed(casesResult) !== null || failed(forgottenResult) !== null);
+    setActivityError(failed(activityResult) !== null);
+
+    // SLA breach detection — central policy, not page-local thresholds
+    const slaBreaches = cases.filter((c) =>
+      isSlaBreached(c.status, c.last_activity_at)
+    );
 
     setCounts({
-      total: cases.filter((c: any) => !['enrollment_paid', 'forgotten'].includes(c.status)).length || 0,
-      submitted: cases.filter((c: any) => c.status === 'submitted').length || 0,
-      enrollment_paid: cases.filter((c: any) => c.status === 'enrollment_paid').length || 0,
+      total: cases.filter((c) => isActiveStatus(c.status)).length || 0,
+      submitted: cases.filter((c) => c.status === 'submitted').length || 0,
+      enrollment_paid: cases.filter((c) => c.status === 'enrollment_paid').length || 0,
       forgotten: forgottenData.length || 0,
       sla_breaches: slaBreaches.length || 0,
     });
@@ -135,6 +146,12 @@ const AdminCommandCenter = () => {
     const val = <T,>(r: PromiseSettledResult<{ data: T[] | null; error: unknown }>): T[] =>
       r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : [];
 
+    const markQueueError = (key: string, r: PromiseSettledResult<{ error: unknown }>) => {
+      if (r.status === 'rejected' || r.value.error) {
+        setQueueErrors((prev) => ({ ...prev, [key]: true }));
+      }
+    };
+
     const shortDate = (iso: string) =>
       new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -146,6 +163,7 @@ const AdminCommandCenter = () => {
         href: '/admin/submissions',
       })),
     );
+    markQueueError('review', reviewRes);
     setUnassigned(
       val<any>(unassignedRes).map((c) => ({
         id: c.id,
@@ -154,6 +172,7 @@ const AdminCommandCenter = () => {
         href: `/admin/cases/${c.id}`,
       })),
     );
+    markQueueError('unassigned', unassignedRes);
     setOutstanding(
       val<any>(balanceRes).map((s) => ({
         id: s.id,
@@ -162,6 +181,7 @@ const AdminCommandCenter = () => {
         href: `/admin/cases/${s.case_id}`,
       })),
     );
+    markQueueError('payments', balanceRes);
     setAuthFailures(
       val<any>(failRes).map((f) => ({
         id: f.id,
@@ -170,9 +190,10 @@ const AdminCommandCenter = () => {
         href: '/admin/settings',
       })),
     );
+    markQueueError('auth', failRes);
 
     setLoading(false);
-  }, [toast]);
+  }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useRealtimeSubscription('cases', fetchData, true);
@@ -317,7 +338,7 @@ const AdminCommandCenter = () => {
               {loading ? (
                 <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" />
               ) : (
-                <p className="text-3xl font-bold text-foreground">{kpi.value ?? 0}</p>
+                <p className="text-3xl font-bold text-foreground">{countsError ? '—' : kpi.value ?? 0}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
             </CardContent>
@@ -334,7 +355,11 @@ const AdminCommandCenter = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {activity.length === 0 ? (
+          {activityError ? (
+            <p className="text-sm text-destructive text-center py-8">
+              {t('admin.commandCenter.activityLoadError', 'Unable to load recent activity')}
+            </p>
+          ) : activity.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               {t('admin.commandCenter.noActivity', 'No recent activity')}
             </p>
@@ -375,7 +400,13 @@ const AdminCommandCenter = () => {
             </CardHeader>
             <CardContent>
               {q.rows.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">{q.empty}</p>
+                queueErrors[q.key] ? (
+                  <p className="text-sm text-destructive text-center py-6">
+                    {t('admin.commandCenter.queueLoadError', 'Unable to load')}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-6">{q.empty}</p>
+                )
               ) : (
                 <div className="divide-y">
                   {q.rows.map((row) => (
