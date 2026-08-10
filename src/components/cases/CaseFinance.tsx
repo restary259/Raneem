@@ -18,7 +18,10 @@ interface Props {
   caseId: string;
   canManage?: boolean;
   canConfirm?: boolean;
+  /** Germany cost + verification blocks are the final step: hidden until then. */
+  showGermany?: boolean;
 }
+
 
 interface ProofRow {
   id: string;
