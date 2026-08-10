@@ -40,7 +40,7 @@ const schoolPaymentTypes = ["school_course", "school_accommodation", "school_ins
 
 type SchoolPaymentType = (typeof schoolPaymentTypes)[number];
 
-const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = false }) => {
+const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = false, showGermany = true }) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
   const isArabic = i18n.language?.startsWith("ar");
@@ -50,6 +50,9 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
   const [proofs, setProofs] = useState<ProofRow[]>([]);
   const [proofBusyId, setProofBusyId] = useState<string | null>(null);
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
+  const [agencyAck, setAgencyAck] = useState(false);
+  const [confirmingAgency, setConfirmingAgency] = useState(false);
+
 
   const serviceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
