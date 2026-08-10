@@ -1,15 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { CaseFinancials } from "@/hooks/useCaseFinancials";
 
 /**
- * Case invoices.
+ * DARB agency-service invoice.
  *
- * The invoice is issued by the backend (`submit_case_for_review` →
- * `issue_case_invoice`) from `get_case_financials`, so the numbers on the
- * document are a server-side snapshot: the frontend never re-adds prices and a
- * later catalog change can never rewrite an issued invoice.
+ * The backend (`submit_case_for_review` → `issue_case_invoice`) creates the
+ * invoice from the frozen case_services snapshot. Germany school costs are
+ * estimates and are intentionally excluded from this invoice.
  */
-
 export interface CaseInvoice {
   id: string;
   case_id: string;
@@ -18,7 +15,21 @@ export interface CaseInvoice {
   case_reference: string | null;
   student_name: string | null;
   student_email: string | null;
-  totals: CaseFinancials;
+  totals: {
+    currency: "ILS";
+    services: Array<{
+      id: string;
+      description: string;
+      category: string;
+      quantity: number;
+      unit_price: number;
+      discount: number;
+      currency: string;
+      line_total: number;
+    }>;
+    service_total: number;
+    payment_type: "agency_service";
+  };
   issued_at: string;
   email_status: "pending" | "sent" | "failed";
   email_error: string | null;
@@ -28,7 +39,7 @@ export interface CaseInvoice {
 export const invoiceUrl = (token: string) =>
   `${window.location.origin}/invoice/${token}`;
 
-/** Submits the case to the admin and returns the invoice issued for it. */
+/** Submits the case to Admin and returns the DARB-only invoice. */
 export async function submitCaseForReview(caseId: string): Promise<CaseInvoice> {
   const { data, error } = await (supabase as any).rpc("submit_case_for_review", {
     p_case_id: caseId,
@@ -37,7 +48,7 @@ export async function submitCaseForReview(caseId: string): Promise<CaseInvoice> 
   return data as CaseInvoice;
 }
 
-/** Re-issues the invoice for a case (admin or the assigned team member). */
+/** Re-issues the DARB-only invoice for a case. */
 export async function issueCaseInvoice(caseId: string): Promise<CaseInvoice> {
   const { data, error } = await (supabase as any).rpc("issue_case_invoice", {
     p_case_id: caseId,
@@ -57,15 +68,15 @@ export async function getCaseInvoice(caseId: string): Promise<CaseInvoice | null
 }
 
 /**
- * Sends the invoice to the student. Delivery is best-effort: a failure is
- * recorded on the invoice so an admin can see it and resend, and never rolls
- * back the submission itself.
+ * Sends only the DARB agency-service invoice. Germany payment verification is
+ * a separate Admin workflow and is never included in this email's amounts.
  */
 export async function sendInvoiceEmail(invoice: CaseInvoice): Promise<boolean> {
   if (!invoice.student_email) {
     await markInvoiceEmail(invoice.id, "failed", "no student email on file");
     return false;
   }
+
   try {
     const { error } = await supabase.functions.invoke("send-transactional-email", {
       body: {
@@ -78,8 +89,7 @@ export async function sendInvoiceEmail(invoice: CaseInvoice): Promise<boolean> {
           invoiceNumber: invoice.invoice_number,
           issuedAt: new Date(invoice.issued_at).toLocaleDateString("en-US"),
           serviceTotal: Number(invoice.totals?.service_total ?? 0).toLocaleString("en-US"),
-          totalConfirmed: Number(invoice.totals?.total_confirmed ?? 0).toLocaleString("en-US"),
-          remaining: Number(invoice.totals?.remaining ?? 0).toLocaleString("en-US"),
+          currency: "ILS",
           link: invoiceUrl(invoice.public_token),
         },
       },

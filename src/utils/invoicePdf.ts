@@ -1,13 +1,20 @@
 import { exportPDF } from "@/utils/exportUtils";
-import type { CaseFinancials } from "@/hooks/useCaseFinancials";
 
-/**
- * Invoice PDF.
- *
- * Reuses the shared export pipeline so the vendored Arabic/Hebrew faces are
- * registered — Helvetica cannot render either script and would silently emit
- * mojibake on a financial document.
- */
+export interface DarbInvoiceTotals {
+  currency: "ILS";
+  services: Array<{
+    id: string;
+    description: string;
+    category: string;
+    quantity: number;
+    unit_price: number;
+    discount: number;
+    currency: string;
+    line_total: number;
+  }>;
+  service_total: number;
+  payment_type: "agency_service";
+}
 
 interface InvoiceMeta {
   invoiceNumber: string;
@@ -22,9 +29,10 @@ const money = (n: number, currency: string) =>
     maximumFractionDigits: 2,
   })}`;
 
+/** PDF representation of the DARB agency-service invoice only. */
 export async function downloadInvoicePdf(
   meta: InvoiceMeta,
-  totals: CaseFinancials,
+  totals: DarbInvoiceTotals,
   isAr: boolean,
 ) {
   const L = isAr
@@ -32,34 +40,24 @@ export async function downloadInvoicePdf(
         item: "البند",
         details: "التفاصيل",
         amount: "المبلغ",
-        agency: "رسوم الوكالة",
-        school: "تكاليف المدرسة (تقديرية)",
-        servicesTotal: "إجمالي رسوم الوكالة",
-        paid: "المدفوع المؤكد",
-        remaining: "الرصيد المتبقي",
+        agency: "خدمات دارب",
+        servicesTotal: "إجمالي خدمات دارب",
         student: "الطالب",
         caseRef: "رقم الملف",
         date: "التاريخ",
-        weeks: "أسبوع",
       }
     : {
         item: "Item",
         details: "Details",
         amount: "Amount",
-        agency: "Agency fees",
-        school: "School costs (estimate)",
-        servicesTotal: "Agency fees total",
-        paid: "Confirmed payments",
-        remaining: "Remaining balance",
+        agency: "DARB agency services",
+        servicesTotal: "DARB services total",
         student: "Student",
         caseRef: "Case",
         date: "Date",
-        weeks: "weeks",
       };
 
-  const rows: (string | number)[][] = [];
-
-  rows.push([L.agency, "", ""]);
+  const rows: (string | number)[][] = [[L.agency, "", ""]];
   for (const s of totals.services ?? []) {
     rows.push([
       s.description,
@@ -67,24 +65,6 @@ export async function downloadInvoicePdf(
       money(s.line_total, s.currency),
     ]);
   }
-
-  if ((totals.school_costs ?? []).length) {
-    rows.push([L.school, "", ""]);
-    for (const c of totals.school_costs) {
-      const name = (isAr ? c.name_ar : c.name_en) || c.name_ar || c.name_en || "";
-      const detail =
-        c.weekly_price && c.weeks
-          ? `${money(c.weekly_price, c.currency)} × ${c.weeks} ${L.weeks}`
-          : "";
-      rows.push([name, detail, money(c.total, c.currency)]);
-    }
-  }
-
-  const summaryRows: (string | number)[][] = [
-    [L.servicesTotal, "", money(totals.service_total, totals.currency)],
-    [L.paid, "", money(totals.total_confirmed, totals.currency)],
-    [L.remaining, "", money(totals.remaining, totals.currency)],
-  ];
 
   const header = [
     `${L.caseRef}: ${meta.caseReference ?? "-"}`,
@@ -95,7 +75,7 @@ export async function downloadInvoicePdf(
   return exportPDF({
     headers: [L.item, L.details, L.amount],
     rows: [[header, "", ""], ...rows],
-    summaryRows,
+    summaryRows: [[L.servicesTotal, "", money(totals.service_total, "ILS")]],
     fileName: `${meta.invoiceNumber}.pdf`,
     title: `${meta.invoiceNumber}`,
     rtl: isAr,
