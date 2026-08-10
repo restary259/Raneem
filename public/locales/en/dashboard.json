@@ -2695,7 +2695,8 @@
       "action": "Create account & send invite",
       "resend": "Resend invite",
       "sent": "Invite sent to {{email}}",
-      "invalidEmail": "Enter a valid email address"
+      "invalidEmail": "Enter a valid email address",
+      "failed": "Could not send the student dashboard invitation."
     },
     "stageBlock": {
       "paymentBody": "Collect the remaining balance below. Once the case is fully paid, send it to the admin to finish the enrollment."
@@ -3384,6 +3385,16 @@
       "unpaid": "Unpaid",
       "partial": "Partially paid",
       "settled": "Settled"
+    },
+    "agency": {
+      "title": "DARB service payment",
+      "confirmedBy": "Confirmed by Team/Admin",
+      "autoCalculated": "Calculated automatically from selected DARB services. No amount can be entered manually.",
+      "ack": "I confirm the DARB agency service fee has been received from the student.",
+      "confirmAction": "Confirm DARB Payment",
+      "confirmed": "DARB service payment confirmed",
+      "confirmFailed": "Unable to confirm the DARB payment.",
+      "needServices": "Select DARB services before confirming the payment."
     }
   },
   "messagesInbox": {
