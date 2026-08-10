@@ -13,6 +13,7 @@ import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDateTime } from '@/utils/dateUtils';
+import { formatILS } from '@/lib/money';
 import { CaseStatus } from '@/lib/caseStatus';
 
 interface StepRow {
@@ -136,7 +137,7 @@ export default function StudentNextStepsPage() {
           id: 'balance',
           icon: CreditCard,
           title: t('student.next.outstandingBalance', 'Outstanding balance'),
-          detail: `₪${balance.toLocaleString('en-US')}`,
+          detail: formatILS(balance),
           href: '/student/checklist',
           tone: 'text-destructive',
         });
@@ -195,7 +196,7 @@ export default function StudentNextStepsPage() {
           </CardTitle>
           {caseStatus && (
             <Badge variant="outline">
-              {t(`partner.status.${caseStatus}`, { defaultValue: caseStatus })}
+              {t(`student.status.${caseStatus}`, { defaultValue: caseStatus })}
             </Badge>
           )}
         </CardHeader>

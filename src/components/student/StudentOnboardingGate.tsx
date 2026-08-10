@@ -172,6 +172,9 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!ok) return;
     setProfile(candidate);
     toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
+    // Re-read the authoritative profile so the gate re-evaluates completeness
+    // against the persisted server state and closes into the dashboard.
+    await load();
   };
 
   if (loading) {
