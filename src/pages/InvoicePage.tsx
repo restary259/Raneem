@@ -89,9 +89,28 @@ export default function InvoicePage() {
               ))}
             </ul>
           </section>
-          <div className="flex justify-between border-t pt-3 text-sm font-semibold">
-            <span>{L.total}</span>
-            <span>{money(t.service_total, "ILS")}</span>
+
+          {/*
+            Germany school costs (language course, accommodation, insurance) are
+            excluded from the student-facing invoice.  They are paid directly to
+            the German providers and verified separately by the Admin after the
+            student uploads proof of payment.  The full financials snapshot
+            remains in the database totals column for the admin audit trail.
+          */}
+
+          <div className="space-y-1 border-t pt-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.total}</span>
+              <span className="font-semibold">{money(t.service_total, t.currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.paid}</span>
+              <span>{money(t.total_confirmed, t.currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{L.remaining}</span>
+              <span className="font-semibold">{money(t.remaining, t.currency)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>

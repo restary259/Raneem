@@ -2608,9 +2608,16 @@
       "changesRequested": "Admin requested changes",
       "confirmTitle": "Send this student file to Admin?",
       "confirmBody": "The case moves to admin review and the file is locked for editing.",
-      "confirmAction": "Confirm & send",
+      "confirmAction": "Submit to Admin",
       "fixAndResend": "Make the requested change below, save the file, then send it back to admin.",
-      "resend": "Send back to admin"
+      "resend": "Send back to admin",
+      "checklist": {
+        "profile": "Student profile is complete",
+        "services": "All DARB services have been provided/collected",
+        "payment": "DARB service payment has been received",
+        "finance": "Finance summary is complete"
+      },
+      "germanyNote": "Germany school payments are verified separately by Admin after the student provides payment proof."
     },
     "terminal": {
       "overview": "Overview",
@@ -3287,7 +3294,16 @@
         "program": "Language course",
         "accommodation": "Accommodation",
         "insurance": "Insurance"
-      }
+      },
+      "submissionBlock": "Submission Status",
+      "submissionHint": "All items must be checked before submitting to Admin.",
+      "checklist": {
+        "profile": "Student profile complete",
+        "germany": "Germany costs calculated",
+        "services": "DARB services selected",
+        "agencyPayment": "Agency payment confirmed"
+      },
+      "germanyPending": "Germany payments are verified by Admin after the student uploads proof."
     },
     "services": {
       "title": "Services on this case",

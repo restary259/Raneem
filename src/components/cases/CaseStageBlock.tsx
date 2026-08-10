@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus, Pencil, PhoneCall, Send, Wallet } from "lucide-react";
+import { CalendarPlus, CheckCircle2, Pencil, PhoneCall, Send, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -351,6 +351,32 @@ export default function CaseStageBlock(props: Props) {
                   })}
                 </DialogDescription>
               </DialogHeader>
+              <ul className="space-y-1.5 text-sm">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {t("case.submit.checklist.profile", { defaultValue: "Student profile is complete" })}
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {t("case.submit.checklist.services", { defaultValue: "All DARB services have been provided/collected" })}
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {t("case.submit.checklist.payment", { defaultValue: "DARB service payment has been received" })}
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {t("case.submit.checklist.finance", { defaultValue: "Finance summary is complete" })}
+                </li>
+              </ul>
+              <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                <p>
+                  {t("case.submit.germanyNote", {
+                    defaultValue:
+                      "Germany school payments are verified separately by Admin after the student provides payment proof.",
+                  })}
+                </p>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setConfirmSubmit(false)}>
                   {t("common.cancel")}
@@ -362,7 +388,7 @@ export default function CaseStageBlock(props: Props) {
                     props.onSubmitToAdmin();
                   }}
                 >
-                  {t("case.submit.confirmAction", { defaultValue: "Confirm & send" })}
+                  {t("case.submit.confirmAction", { defaultValue: "Submit to Admin" })}
                 </Button>
               </div>
             </DialogContent>

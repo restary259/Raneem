@@ -66,6 +66,15 @@ export async function downloadInvoicePdf(
     ]);
   }
 
+  // Germany school costs are excluded from the student invoice. They are paid
+  // directly to German providers and verified separately by Admin.
+
+  const summaryRows: (string | number)[][] = [
+    [L.servicesTotal, "", money(totals.service_total, totals.currency)],
+    [L.paid, "", money(totals.total_confirmed, totals.currency)],
+    [L.remaining, "", money(totals.remaining, totals.currency)],
+  ];
+
   const header = [
     `${L.caseRef}: ${meta.caseReference ?? "-"}`,
     `${L.student}: ${meta.studentName ?? "-"}`,
@@ -75,7 +84,7 @@ export async function downloadInvoicePdf(
   return exportPDF({
     headers: [L.item, L.details, L.amount],
     rows: [[header, "", ""], ...rows],
-    summaryRows: [[L.servicesTotal, "", money(totals.service_total, "ILS")]],
+    summaryRows,
     fileName: `${meta.invoiceNumber}.pdf`,
     title: `${meta.invoiceNumber}`,
     rtl: isAr,

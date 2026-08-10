@@ -341,6 +341,62 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         )}
 
         <Separator />
+
+        {/* ── Submission readiness checklist ───────────────────────────
+            Shows the team member whether the case is ready to submit to
+            Admin. The actual submit button and server-side gate live in
+            CaseStageBlock; this block is informational only. */}
+        <div className="space-y-3 rounded-md border p-4">
+          <div>
+            <p className="text-sm font-semibold">{t("finance.summary.submissionBlock", "Submission Status")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("finance.summary.submissionHint", "All items must be checked before submitting to Admin.")}
+            </p>
+          </div>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-center gap-2">
+              {financials?.status && financials.status !== "new" && financials.status !== "contacted" && financials.status !== "appointment_scheduled" ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Clock3 className="h-4 w-4 text-amber-600" />
+              )}
+              <span>{t("finance.summary.checklist.profile", "Student profile complete")}</span>
+            </li>
+            {schoolCosts.length > 0 && (
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span>{t("finance.summary.checklist.germany", "Germany costs calculated")}</span>
+              </li>
+            )}
+            <li className="flex items-center gap-2">
+              {services.length > 0 ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Clock3 className="h-4 w-4 text-amber-600" />
+              )}
+              <span>{t("finance.summary.checklist.services", "DARB services selected")}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              {agencyConfirmed ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Clock3 className="h-4 w-4 text-amber-600" />
+              )}
+              <span>{t("finance.summary.checklist.agencyPayment", "Agency payment confirmed")}</span>
+            </li>
+          </ul>
+          {schoolPaymentTypes.some((type) => {
+            const proof = getLatestProof(type);
+            const payment = getPaymentForType(type);
+            return payment?.status === "confirmed" || proof?.status === "approved";
+          }) && (
+            <p className="text-xs text-muted-foreground border-t pt-2">
+              {t("finance.summary.germanyPending", "Germany payments are verified by Admin after the student uploads proof.")}
+            </p>
+          )}
+        </div>
+
+        <Separator />
         <CaseServices
           caseId={caseId}
           services={services}
