@@ -1,10 +1,24 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from "vitest";
+import { webcrypto } from "node:crypto";
 import { ChatMessage, OFFLINE_FAQ, clearChatHistory, loadChatHistory, saveChatHistory } from "./chatCache";
 
-const KEY = "darb-ai-chat-history";
+// jsdom does not implement crypto.subtle, so provide a real AES-GCM
+// implementation (Node's WebCrypto) for the duration of these tests.
+beforeAll(() => {
+  vi.stubGlobal("crypto", webcrypto);
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
+});
+
+const KEY_V2 = "darb-ai-chat-history-v2";
+const LEGACY_KEY = "darb-ai-chat-history";
+const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 afterEach(() => {
@@ -14,41 +28,144 @@ afterEach(() => {
 const message = (i: number): ChatMessage => ({ role: "user", content: `m${i}` });
 
 describe("saveChatHistory / loadChatHistory", () => {
-  it("round-trips a conversation", () => {
+  it("round-trips a conversation", async () => {
     const history: ChatMessage[] = [message(1), { role: "assistant", content: "hello" }];
-    saveChatHistory(history);
-    expect(loadChatHistory()).toEqual(history);
+    await saveChatHistory(history);
+    expect(await loadChatHistory()).toEqual(history);
   });
 
-  it("keeps only the 50 most recent messages", () => {
-    saveChatHistory(Array.from({ length: 60 }, (_, i) => message(i)));
-    const stored = loadChatHistory();
+  it("keeps only the 50 most recent messages", async () => {
+    await saveChatHistory(Array.from({ length: 60 }, (_, i) => message(i)));
+    const stored = await loadChatHistory();
     expect(stored).toHaveLength(50);
     expect(stored[0].content).toBe("m10");
     expect(stored[49].content).toBe("m59");
   });
 
-  it("returns an empty history when nothing is stored or the entry is corrupt", () => {
-    expect(loadChatHistory()).toEqual([]);
-    localStorage.setItem(KEY, "not json");
-    expect(loadChatHistory()).toEqual([]);
+  it("returns an empty history when nothing is stored", async () => {
+    expect(await loadChatHistory()).toEqual([]);
   });
 
-  it("never throws when storage rejects the write", () => {
+  it("returns an empty history when the entry is corrupt", async () => {
+    localStorage.setItem(KEY_V2, "not json");
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("returns an empty history for an unsupported payload version", async () => {
+    localStorage.setItem(KEY_V2, JSON.stringify({ v: 1, data: "plaintext" }));
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("never throws when storage rejects the write", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("quota exceeded");
     });
-    expect(() => saveChatHistory([message(1)])).not.toThrow();
+    await expect(saveChatHistory([message(1)])).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalled();
+  });
+
+  it("stores only ciphertext — the plaintext conversation never hits localStorage", async () => {
+    await saveChatHistory([message(1), { role: "assistant", content: "secret answer" }]);
+    const raw = localStorage.getItem(KEY_V2);
+    expect(raw).not.toBeNull();
+    expect(raw).not.toContain("secret answer");
+    expect(raw).not.toContain('"role"');
+    expect(raw).not.toContain('"content"');
+    const payload = JSON.parse(raw!);
+    expect(payload.v).toBe(2);
+    expect(payload.iv).toBeTruthy();
+    expect(payload.data).toBeTruthy();
+    expect(payload.savedAt).toEqual(expect.any(Number));
+  });
+
+  it("uses a fresh IV so identical conversations encrypt differently", async () => {
+    await saveChatHistory([message(1)]);
+    const first = localStorage.getItem(KEY_V2);
+    await saveChatHistory([message(1)]);
+    const second = localStorage.getItem(KEY_V2);
+    expect(first).not.toEqual(second);
+  });
+
+  it("cannot decrypt once the session key is gone (new tab), keeping the blob for TTL cleanup", async () => {
+    await saveChatHistory([message(1)]);
+    expect(await loadChatHistory()).toEqual([message(1)]);
+    sessionStorage.clear();
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).not.toBeNull();
+  });
+
+  it("removes a tampered blob when the session key is present", async () => {
+    await saveChatHistory([message(1)]);
+    const stored = JSON.parse(localStorage.getItem(KEY_V2)!);
+    const mid = Math.floor(stored.data.length / 2);
+    stored.data =
+      stored.data.slice(0, mid) +
+      (stored.data[mid] === 'A' ? 'B' : 'A') +
+      stored.data.slice(mid + 1);
+    localStorage.setItem(KEY_V2, JSON.stringify(stored));
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("removes a payload with a malformed savedAt", async () => {
+    localStorage.setItem(
+      KEY_V2,
+      JSON.stringify({ v: 2, iv: 'x', data: 'x', savedAt: 'yesterday' }),
+    );
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("cleans up an expired blob even without a session key", async () => {
+    const now = Date.now();
+    const spy = vi.spyOn(Date, "now").mockReturnValue(now);
+    await saveChatHistory([message(1)]);
+    sessionStorage.clear();
+    spy.mockReturnValue(now + TTL_MS + 1);
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+    spy.mockRestore();
+  });
+
+  it("purges the legacy plaintext key on access", async () => {
+    localStorage.setItem(LEGACY_KEY, JSON.stringify([message(1)]));
+    await saveChatHistory([message(2)]);
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+  });
+
+  it("expires the history after the TTL and removes the ciphertext", async () => {
+    const now = Date.now();
+    const spy = vi.spyOn(Date, "now").mockReturnValue(now);
+    await saveChatHistory([message(1)]);
+    expect(await loadChatHistory()).toEqual([message(1)]);
+    spy.mockReturnValue(now + TTL_MS + 1);
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+    spy.mockRestore();
+  });
+
+  it("does not expire history within the TTL", async () => {
+    const now = Date.now();
+    const spy = vi.spyOn(Date, "now").mockReturnValue(now);
+    await saveChatHistory([message(1)]);
+    spy.mockReturnValue(now + TTL_MS - 1);
+    expect(await loadChatHistory()).toEqual([message(1)]);
+    spy.mockRestore();
   });
 });
 
 describe("clearChatHistory", () => {
-  it("removes the stored conversation", () => {
-    saveChatHistory([message(1)]);
+  it("removes the stored conversation and the session key", async () => {
+    await saveChatHistory([message(1)]);
+    expect(await loadChatHistory()).toEqual([message(1)]);
     clearChatHistory();
-    expect(loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+    expect(sessionStorage.getItem("darb-ai-chat-key")).toBeNull();
+    expect(await loadChatHistory()).toEqual([]);
   });
 });
 
