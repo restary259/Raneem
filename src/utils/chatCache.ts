@@ -1,4 +1,3 @@
-
 // AI conversation persistence — encrypted at rest, session-scoped, expiring.
 //
 // Chat history may contain personal details, so the payload is AES-GCM
@@ -40,7 +39,9 @@ const fromBase64 = (str: string): Uint8Array =>
 
 const purgeLegacy = (): void => {
   try {
-    localStorage.removeItem(LEGACY_CHAT_HISTORY_KEY);
+    if (localStorage.getItem(LEGACY_CHAT_HISTORY_KEY) !== null) {
+      localStorage.removeItem(LEGACY_CHAT_HISTORY_KEY);
+    }
   } catch {
     // ignore
   }
@@ -101,8 +102,6 @@ export const saveChatHistory = async (messages: ChatMessage[]): Promise<void> =>
 export const loadChatHistory = async (): Promise<ChatMessage[]> => {
   purgeLegacy();
   try {
-    const key = await getKey();
-    if (!key) return [];
     const stored = localStorage.getItem(CHAT_HISTORY_KEY);
     if (!stored) return [];
 
@@ -113,30 +112,47 @@ export const loadChatHistory = async (): Promise<ChatMessage[]> => {
       localStorage.removeItem(CHAT_HISTORY_KEY);
       return [];
     }
-    if (!payload || payload.v !== 2) {
+    if (!payload || payload.v !== 2 || typeof payload.savedAt !== 'number') {
       localStorage.removeItem(CHAT_HISTORY_KEY);
       return [];
     }
     // Expired history is removed rather than returned — nothing sensitive lingers.
+    // Checked before the key so TTL cleanup also works across sessions.
     if (Date.now() - payload.savedAt > CHAT_HISTORY_TTL_MS) {
       localStorage.removeItem(CHAT_HISTORY_KEY);
       return [];
     }
 
-    const plain = await subtle().decrypt(
-      { name: 'AES-GCM', iv: fromBase64(payload.iv).buffer },
-      key,
-      fromBase64(payload.data).buffer,
-    );
-    const parsed = JSON.parse(new TextDecoder().decode(plain));
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    // Tampered blob, wrong key, or malformed payload — drop it and start empty.
+    // Did this session already hold the key before this load? If not, this is a
+    // fresh tab and the blob belongs to another session's key.
+    const hadSessionKey = sessionStorage.getItem(CHAT_KEY_SESSION_KEY) !== null;
+    const key = await getKey();
+    if (!key) return []; // crypto unavailable → never decrypt, never plaintext
+
     try {
-      localStorage.removeItem(CHAT_HISTORY_KEY);
+      const plain = await subtle().decrypt(
+        { name: 'AES-GCM', iv: fromBase64(payload.iv).buffer },
+        key,
+        fromBase64(payload.data).buffer,
+      );
+      const parsed = JSON.parse(new TextDecoder().decode(plain));
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
-      // ignore
+      // Same-session failure means the blob is corrupt/tampered — drop it.
+      // Fresh-tab failure means the key simply isn't ours — keep the (encrypted,
+      // unreadable) blob so another session's history is never destroyed; the
+      // TTL check above cleans it up once it expires.
+      if (hadSessionKey) {
+        try {
+          localStorage.removeItem(CHAT_HISTORY_KEY);
+        } catch {
+          // ignore
+        }
+      }
+      return [];
     }
+  } catch {
+    // Storage unavailable or a non-payload blob — nothing we can do.
     return [];
   }
 };

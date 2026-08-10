@@ -26,9 +26,9 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
   }, [persistHistory]);
 
   useEffect(() => {
-    if (persistHistory && messages.length > 0) {
-      void saveChatHistory(messages);
-    }
+    if (!persistHistory || messages.length === 0) return;
+    const id = setTimeout(() => void saveChatHistory(messages), 500);
+    return () => clearTimeout(id);
   }, [messages, persistHistory]);
 
   useEffect(() => {

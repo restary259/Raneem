@@ -89,11 +89,45 @@ describe("saveChatHistory / loadChatHistory", () => {
     expect(first).not.toEqual(second);
   });
 
-  it("cannot decrypt once the session key is gone (tab closed)", async () => {
+  it("cannot decrypt once the session key is gone (new tab), keeping the blob for TTL cleanup", async () => {
     await saveChatHistory([message(1)]);
     expect(await loadChatHistory()).toEqual([message(1)]);
     sessionStorage.clear();
     expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).not.toBeNull();
+  });
+
+  it("removes a tampered blob when the session key is present", async () => {
+    await saveChatHistory([message(1)]);
+    const stored = JSON.parse(localStorage.getItem(KEY_V2)!);
+    const mid = Math.floor(stored.data.length / 2);
+    stored.data =
+      stored.data.slice(0, mid) +
+      (stored.data[mid] === 'A' ? 'B' : 'A') +
+      stored.data.slice(mid + 1);
+    localStorage.setItem(KEY_V2, JSON.stringify(stored));
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("removes a payload with a malformed savedAt", async () => {
+    localStorage.setItem(
+      KEY_V2,
+      JSON.stringify({ v: 2, iv: 'x', data: 'x', savedAt: 'yesterday' }),
+    );
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+  });
+
+  it("cleans up an expired blob even without a session key", async () => {
+    const now = Date.now();
+    const spy = vi.spyOn(Date, "now").mockReturnValue(now);
+    await saveChatHistory([message(1)]);
+    sessionStorage.clear();
+    spy.mockReturnValue(now + TTL_MS + 1);
+    expect(await loadChatHistory()).toEqual([]);
+    expect(localStorage.getItem(KEY_V2)).toBeNull();
+    spy.mockRestore();
   });
 
   it("purges the legacy plaintext key on access", async () => {
