@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { friendlyAuthError } from '@/lib/authError';
 import { Loader2, Mail } from 'lucide-react';
 
 interface PasswordResetModalProps {
@@ -44,7 +45,7 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
       toast({
         variant: "destructive",
         title: "خطأ",
-        description: error.message,
+        description: friendlyAuthError(error),
       });
     } finally {
       setIsLoading(false);

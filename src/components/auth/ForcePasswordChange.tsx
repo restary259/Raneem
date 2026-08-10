@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
+import { friendlyAuthError } from '@/lib/authError';
 import { useToast } from '@/hooks/use-toast';
 
 interface Props {
@@ -48,7 +49,7 @@ const ForcePasswordChange: React.FC<Props> = ({ userId, onDone }) => {
       toast({ description: t('forcePassword.success') });
       onDone();
     } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+      toast({ variant: 'destructive', description: friendlyAuthError(err) });
     } finally {
       setLoading(false);
     }

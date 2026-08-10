@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
+import { friendlyAuthError } from '@/lib/authError';
 import { useAuth, ROLE_TO_PATH, type AppRole } from '@/contexts/AuthContext';
 
 const ResetPasswordPage = () => {
@@ -84,7 +85,7 @@ const ResetPasswordPage = () => {
       const destinationRole = (currentRole as AppRole | null) ?? role;
       navigate(destinationRole ? ROLE_TO_PATH[destinationRole] : '/student/checklist', { replace: true });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: t('resetPassword.error'), description: err.message });
+      toast({ variant: 'destructive', title: t('resetPassword.error'), description: friendlyAuthError(err) });
     } finally {
       setIsLoading(false);
     }
