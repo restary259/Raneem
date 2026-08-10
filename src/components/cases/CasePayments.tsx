@@ -1,5 +1,5 @@
 ```tsx
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,68 +28,36 @@ const STATUS_CLASS: Record<PaymentStatus, string> = {
   rejected: "bg-red-100 text-red-800 border-red-200",
 };
 
-/**
- * Payment types are intentionally kept separate.
- *
- * agency_service:
- *   DARB service fee.
- *
- * school_course:
- *   Germany language course.
- *
- * school_accommodation:
- *   Germany accommodation.
- *
- * school_insurance:
- *   Germany insurance.
- *
- * IMPORTANT:
- * This component only displays/resolves payment records.
- * It does NOT allow users to manually change payment amounts.
- *
- * DARB service pricing must be determined upstream from the
- * Admin-controlled service catalogue.
- */
-const paymentLabel = (type: string) => {
-  switch (type) {
-    case "agency_service":
-      return "DARB agency services";
-
-    case "school_course":
-      return "Germany · Language course";
-
-    case "school_accommodation":
-      return "Germany · Accommodation";
-
-    case "school_insurance":
-      return "Germany · Insurance";
-
-    default:
-      return type.split("_").join(" ");
-  }
+const PAYMENT_LABELS: Record<string, string> = {
+  agency_service: "DARB agency services",
+  school_course: "Germany · Language course",
+  school_accommodation: "Germany · Accommodation",
+  school_insurance: "Germany · Insurance",
 };
 
-const paymentDescription = (type: string) => {
-  switch (type) {
-    case "agency_service":
-      return "Calculated from the DARB services selected for this case.";
+const PAYMENT_DESCRIPTIONS: Record<string, string> = {
+  agency_service:
+    "Calculated from the DARB services selected for this case.",
+  school_course:
+    "Germany programme / language-school payment.",
+  school_accommodation:
+    "Germany accommodation payment.",
+  school_insurance:
+    "Germany insurance payment.",
+};
 
-    case "school_course":
-      return "Germany programme / language-school payment.";
+const paymentLabel = (type: string): string => {
+  return (
+    PAYMENT_LABELS[type] ??
+    type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+  );
+};
 
-    case "school_accommodation":
-      return "Germany accommodation payment.";
-
-    case "school_insurance":
-      return "Germany insurance payment.";
-
-    default:
-      return null;
-  }
+const paymentDescription = (type: string): string | null => {
+  return PAYMENT_DESCRIPTIONS[type] ?? null;
 };
 
 const CasePayments: React.FC<Props> = ({
-  caseId,
   payments,
   canManage,
   canConfirm = false,
@@ -98,95 +66,121 @@ const CasePayments: React.FC<Props> = ({
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
 
-  const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   /**
-   * Resolve a submitted/pending payment.
+   * Resolve a payment using the server-side RPC.
    *
-   * The actual financial validation happens server-side inside the RPC.
-   * No amount is accepted from the client here.
+   * No payment amount is accepted from the client.
+   * The RPC is responsible for authorization and financial validation.
    */
-  const resolve = async (id: string, confirm: boolean) => {
-    if (busyId || !canManage) return;
+  const resolve = useCallback(
+    async (paymentId: string, confirm: boolean) => {
+      if (busyId || !canManage || !canConfirm) {
+        return;
+      }
 
-    setBusyId(id);
+      setBusyId(paymentId);
 
-    try {
-      const { error } = await (supabase as any).rpc(
-        confirm
+      try {
+        const rpcName = confirm
           ? "confirm_case_payment"
-          : "reject_case_payment",
-        confirm
+          : "reject_case_payment";
+
+        const rpcArgs = confirm
           ? {
-              p_payment_id: id,
+              p_payment_id: paymentId,
             }
           : {
-              p_payment_id: id,
+              p_payment_id: paymentId,
               p_reason: null,
-            },
-      );
+            };
 
-      if (error) throw error;
+        const { error } = await (supabase as any).rpc(
+          rpcName,
+          rpcArgs,
+        );
 
-      toast({
-        description: confirm
-          ? t(
-              "finance.payments.confirmedToast",
-              "Payment confirmed.",
-            )
-          : t(
-              "finance.payments.rejectedToast",
-              "Payment rejected.",
-            ),
-      });
+        if (error) {
+          throw error;
+        }
 
-      onChanged();
-    } catch (error: any) {
-      console.error(
-        "Failed to resolve payment:",
-        error,
-      );
+        toast({
+          description: confirm
+            ? t(
+                "finance.payments.confirmedToast",
+                "Payment confirmed.",
+              )
+            : t(
+                "finance.payments.rejectedToast",
+                "Payment rejected.",
+              ),
+        });
 
-      toast({
-        variant: "destructive",
-        description:
-          error?.message ||
-          t(
-            "finance.payments.updateFailed",
-            "Unable to update payment.",
-          ),
-      });
-    } finally {
-      setBusyId(null);
-    }
-  };
+        onChanged();
+      } catch (error: unknown) {
+        console.error(
+          "CasePayments: failed to resolve payment",
+          error,
+        );
 
-  /**
-   * Display a payment amount.
-   *
-   * DARB agency services are always represented in ILS.
-   * Germany payments retain their original currency.
-   */
-  const renderAmount = (payment: FinancialPayment) => {
-    const amount = Number(payment.amount || 0);
+        const message =
+          error instanceof Error
+            ? error.message
+            : typeof error === "object" &&
+                error !== null &&
+                "message" in error &&
+                typeof (error as { message?: unknown }).message ===
+                  "string"
+              ? String((error as { message: string }).message)
+              : t(
+                  "finance.payments.updateFailed",
+                  "Unable to update payment.",
+                );
 
-    if (payment.currency === "ILS") {
+        toast({
+          variant: "destructive",
+          description: message,
+        });
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [busyId, canManage, canConfirm, onChanged, t, toast],
+  );
+
+  const renderAmount = (payment: FinancialPayment): string => {
+    const amount = Number(payment.amount ?? 0);
+    const currency = payment.currency ?? "ILS";
+
+    if (currency === "ILS") {
       return formatILS(amount);
     }
 
-    return `${amount.toLocaleString("en-US")} ${payment.currency}`;
+    return `${amount.toLocaleString("en-US")} ${currency}`;
   };
 
-  /**
-   * Keep DARB service payment visually distinct from Germany payments.
-   */
-  const isDarbPayment = (payment: FinancialPayment) =>
-    payment.payment_type === "agency_service";
+  const isDarbPayment = (
+    payment: FinancialPayment,
+  ): boolean => {
+    return payment.payment_type === "agency_service";
+  };
+
+  const isGermanyPayment = (
+    payment: FinancialPayment,
+  ): boolean => {
+    return (
+      payment.payment_type === "school_course" ||
+      payment.payment_type === "school_accommodation" ||
+      payment.payment_type === "school_insurance"
+    );
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold">
             {t(
               "finance.payments.title",
@@ -197,7 +191,7 @@ const CasePayments: React.FC<Props> = ({
           <p className="mt-1 text-xs text-muted-foreground">
             {t(
               "finance.payments.description",
-              "All payment amounts are generated from the case financial records and cannot be manually changed here.",
+              "Payment amounts are generated from the case financial records and cannot be manually changed here.",
             )}
           </p>
         </div>
@@ -210,6 +204,7 @@ const CasePayments: React.FC<Props> = ({
         </Badge>
       </div>
 
+      {/* Empty state */}
       {payments.length === 0 ? (
         <div className="rounded-md border border-dashed p-4">
           <p className="text-sm text-muted-foreground">
@@ -220,35 +215,44 @@ const CasePayments: React.FC<Props> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {payments.map((payment) => {
             const isBusy = busyId === payment.id;
+            const isDarb = isDarbPayment(payment);
+            const isGermany = isGermanyPayment(payment);
 
-            /**
-             * Germany payment confirmation is Admin-only.
+            /*
+             * Only Admin may resolve Germany payments.
              *
-             * DARB agency payment is handled according to the existing
-             * payment workflow and remains server-side validated.
+             * DARB service payments are intentionally NOT manually
+             * confirmed/rejected from this component. Their status
+             * comes from the DARB financial workflow.
              */
-            const adminResolvable =
+            const canResolveThisPayment =
+              canManage &&
               canConfirm &&
-              payment.payment_type !== "agency_service" &&
+              isGermany &&
               (payment.status === "submitted" ||
                 payment.status === "pending");
 
-            const isDarb = isDarbPayment(payment);
+            const statusClass =
+              STATUS_CLASS[payment.status] ??
+              "bg-slate-100 text-slate-800 border-slate-200";
 
             return (
               <div
                 key={payment.id}
-                className={`space-y-3 rounded-md border p-3 ${
+                className={[
+                  "space-y-3 rounded-md border p-3",
                   isDarb
                     ? "border-primary/20 bg-primary/[0.02]"
-                    : "bg-card"
-                }`}
+                    : "bg-card",
+                ].join(" ")}
               >
+                {/* Payment information */}
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
+                  <div className="min-w-0 space-y-1.5">
+                    {/* Payment type */}
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-medium">
                         {paymentLabel(
@@ -267,12 +271,26 @@ const CasePayments: React.FC<Props> = ({
                           )}
                         </Badge>
                       )}
+
+                      {isGermany && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px]"
+                        >
+                          {t(
+                            "finance.payments.germany",
+                            "Germany",
+                          )}
+                        </Badge>
+                      )}
                     </div>
 
+                    {/* Amount */}
                     <p className="text-sm font-semibold">
                       {renderAmount(payment)}
                     </p>
 
+                    {/* Description */}
                     {paymentDescription(
                       payment.payment_type,
                     ) && (
@@ -283,6 +301,7 @@ const CasePayments: React.FC<Props> = ({
                       </p>
                     )}
 
+                    {/* Date / note */}
                     <p className="break-words text-xs text-muted-foreground">
                       {formatDateNumeric(
                         payment.submitted_at ??
@@ -295,6 +314,7 @@ const CasePayments: React.FC<Props> = ({
                         : ""}
                     </p>
 
+                    {/* Confirmed */}
                     {payment.status ===
                       "confirmed" &&
                       payment.confirmed_at && (
@@ -310,22 +330,25 @@ const CasePayments: React.FC<Props> = ({
                         </p>
                       )}
 
+                    {/* Rejected */}
                     {payment.status ===
                       "rejected" &&
                       payment.rejected_reason && (
                         <p className="break-words text-xs text-red-700">
+                          {t(
+                            "finance.payments.rejectedReason",
+                            "Reason",
+                          )}
+                          :{" "}
                           {payment.rejected_reason}
                         </p>
                       )}
                   </div>
 
+                  {/* Status */}
                   <Badge
                     variant="secondary"
-                    className={`shrink-0 ${
-                      STATUS_CLASS[
-                        payment.status
-                      ]
-                    }`}
+                    className={`shrink-0 border ${statusClass}`}
                   >
                     {t(
                       `finance.payments.state.${payment.status}`,
@@ -334,14 +357,16 @@ const CasePayments: React.FC<Props> = ({
                   </Badge>
                 </div>
 
-                {adminResolvable && (
-                  <div className="flex flex-wrap gap-2 border-t pt-2">
+                {/* Admin actions */}
+                {canResolveThisPayment && (
+                  <div className="flex flex-wrap gap-2 border-t pt-3">
                     <Button
+                      type="button"
                       size="sm"
                       className="gap-1"
                       disabled={isBusy}
                       onClick={() =>
-                        resolve(
+                        void resolve(
                           payment.id,
                           true,
                         )
@@ -349,19 +374,25 @@ const CasePayments: React.FC<Props> = ({
                     >
                       <Check className="h-3.5 w-3.5" />
 
-                      {t(
-                        "finance.payments.confirm",
-                        "Confirm",
-                      )}
+                      {isBusy
+                        ? t(
+                            "finance.payments.processing",
+                            "Processing...",
+                          )
+                        : t(
+                            "finance.payments.confirm",
+                            "Confirm",
+                          )}
                     </Button>
 
                     <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       className="gap-1"
                       disabled={isBusy}
                       onClick={() =>
-                        resolve(
+                        void resolve(
                           payment.id,
                           false,
                         )
@@ -377,6 +408,7 @@ const CasePayments: React.FC<Props> = ({
                   </div>
                 )}
 
+                {/* DARB information */}
                 {isDarb &&
                   payment.status ===
                     "confirmed" && (
@@ -387,12 +419,24 @@ const CasePayments: React.FC<Props> = ({
                       )}
                     </p>
                   )}
+
+                {isDarb &&
+                  payment.status !==
+                    "confirmed" && (
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "finance.payments.darbCalculated",
+                        "DARB service pricing is calculated from the services selected for this case and the Admin-controlled service catalogue.",
+                      )}
+                    </p>
+                  )}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* Business rules */}
       <div className="rounded-md border border-dashed p-3">
         <p className="text-xs text-muted-foreground">
           {t(
