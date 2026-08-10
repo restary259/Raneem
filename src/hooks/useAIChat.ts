@@ -15,15 +15,19 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (persistHistory) {
-      const saved = loadChatHistory();
-      if (saved.length > 0) setMessages(saved);
-    }
+    if (!persistHistory) return;
+    let cancelled = false;
+    loadChatHistory().then((saved) => {
+      if (!cancelled && saved.length > 0) setMessages(saved);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [persistHistory]);
 
   useEffect(() => {
     if (persistHistory && messages.length > 0) {
-      saveChatHistory(messages);
+      void saveChatHistory(messages);
     }
   }, [messages, persistHistory]);
 
