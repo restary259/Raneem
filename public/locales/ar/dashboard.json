@@ -202,6 +202,9 @@
     "germanAddress": "العنوان في ألمانيا",
     "germanAddressPlaceholder": "الشارع، المدينة، الرمز البريدي",
     "emergencyContact": "جهة اتصال للطوارئ",
+    "emergencyContactName": "اسم جهة الاتصال للطوارئ",
+    "emergencyContactNamePlaceholder": "الاسم الكامل",
+    "emergencyContactPhone": "هاتف جهة الاتصال للطوارئ",
     "dangerZone": "منطقة الخطر",
     "deleteAccount": "حذف الحساب نهائياً",
     "deleteAccountTitle": "حذف الحساب نهائياً",
@@ -2932,6 +2935,17 @@
     "checklist": {
       "title": "قائمة المتطلبات"
     },
+    "status": {
+      "new": "جديد",
+      "contacted": "تم التواصل",
+      "appointment_scheduled": "موعد محدد",
+      "profile_completion": "استكمال الملف",
+      "payment_confirmed": "تم تأكيد الدفع",
+      "submitted": "تم التقديم",
+      "enrollment_paid": "مسجّل",
+      "forgotten": "غير نشط",
+      "cancelled": "ملغى"
+    },
     "next": {
       "title": "خطواتك التالية",
       "subtitle": "كل ما يحتاج إلى انتباهك الآن.",
@@ -3835,6 +3849,24 @@
     "viewInvoice": "عرض الفاتورة",
     "noInvoice": "لم تصدر فاتورة بعد.",
     "noCase": "لا يوجد ملف مرتبط بحسابك بعد.",
-    "noPayments": "لا توجد دفعات بعد."
+    "noPayments": "لا توجد دفعات بعد.",
+    "agencyServices": "خدمات وكالة دارب · شيكل",
+    "serviceTotal": "إجمالي الخدمات",
+    "confirmed": "مؤكد",
+    "pending": "قيد الانتظار",
+    "schoolCostsTitle": "تكاليف ألمانيا / المدرسة · يورو",
+    "schoolCostsEstimate": "هذه تكاليف تقديرية للمدرسة. قد تختلف الفواتير النهائية للمدرسة.",
+    "paymentConfirmedByAdmin": "تم تأكيد الدفع من قبل الإدارة",
+    "proofRejected": "تم رفض إثبات الدفع",
+    "proofRejectedFallback": "يرجى رفع إثبات بديل.",
+    "uploadReplacement": "رفع بديل",
+    "proofSubmitted": "تم رفع الإثبات — بانتظار تأكيد الإدارة",
+    "uploadProof": "رفع إثبات الدفع",
+    "paymentStatus": {
+      "confirmed": "مؤكد",
+      "submitted": "قيد الانتظار",
+      "pending": "قيد الانتظار",
+      "rejected": "مرفوض"
+    }
   }
 }

@@ -202,6 +202,9 @@
     "germanAddress": "Address in Germany",
     "germanAddressPlaceholder": "Street, city, postcode",
     "emergencyContact": "Emergency contact",
+    "emergencyContactName": "Emergency contact name",
+    "emergencyContactNamePlaceholder": "Full name",
+    "emergencyContactPhone": "Emergency contact phone",
     "dangerZone": "Danger zone",
     "deleteAccount": "Delete account permanently",
     "deleteAccountTitle": "Delete account permanently",
@@ -2914,6 +2917,17 @@
     "checklist": {
       "title": "Your Checklist"
     },
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "appointment_scheduled": "Appointment scheduled",
+      "profile_completion": "Completing profile",
+      "payment_confirmed": "Payment confirmed",
+      "submitted": "Submitted",
+      "enrollment_paid": "Enrolled",
+      "forgotten": "Inactive",
+      "cancelled": "Cancelled"
+    },
     "next": {
       "title": "Your next steps",
       "subtitle": "Everything that needs your attention right now.",
@@ -3817,6 +3831,24 @@
     "viewInvoice": "View invoice",
     "noInvoice": "No invoice has been issued yet.",
     "noCase": "No case is linked to your account yet.",
-    "noPayments": "No payments yet."
+    "noPayments": "No payments yet.",
+    "agencyServices": "DARB agency services · ILS",
+    "serviceTotal": "Service total",
+    "confirmed": "Confirmed",
+    "pending": "Pending",
+    "schoolCostsTitle": "Germany / School costs · EUR",
+    "schoolCostsEstimate": "These are estimated school costs. Final school invoices may differ.",
+    "paymentConfirmedByAdmin": "Payment confirmed by Admin",
+    "proofRejected": "Payment proof rejected",
+    "proofRejectedFallback": "Please upload a replacement proof.",
+    "uploadReplacement": "Upload replacement",
+    "proofSubmitted": "Proof submitted — awaiting Admin verification",
+    "uploadProof": "Upload payment proof",
+    "paymentStatus": {
+      "confirmed": "Confirmed",
+      "submitted": "Pending",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
   }
 }
