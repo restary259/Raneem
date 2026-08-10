@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { createInvitation } from "../_shared/invitations.ts";
 
@@ -61,7 +62,7 @@ serve(async (req) => {
       .select("id, full_name, email, status, master_partner_id, created_user_id")
       .eq("id", applicationId)
       .maybeSingle();
-    if (appError) return json({ error: appError.message }, 500);
+    if (appError) return json({ error: serverError(appError, "Failed to load application") }, 500);
     if (!app) return json({ error: "Application not found" }, 404);
 
     const email = String(app.email ?? "").trim().toLowerCase();
@@ -198,7 +199,7 @@ serve(async (req) => {
       const { error: roleError } = await admin
         .from("user_roles")
         .insert({ user_id: userId, role: "social_media_partner" });
-      if (roleError) return json({ error: roleError.message }, 500);
+      if (roleError) return json({ error: serverError(roleError, "Failed to assign role") }, 500);
     }
 
     // Only the columns this flow owns — no blanket profile reset.
@@ -210,7 +211,7 @@ serve(async (req) => {
     };
     if (isNewAccount) profilePatch.must_change_password = true;
     const { error: profileError } = await admin.from("profiles").upsert(profilePatch);
-    if (profileError) return json({ error: profileError.message }, 500);
+    if (profileError) return json({ error: serverError(profileError, "Failed to create profile") }, 500);
 
     // ---- Flip the application ---------------------------------------------
     const { error: statusError } = await admin
@@ -222,7 +223,7 @@ serve(async (req) => {
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", applicationId);
-    if (statusError) return json({ error: statusError.message }, 500);
+    if (statusError) return json({ error: serverError(statusError, "Failed to approve application") }, 500);
 
     const emailed = await sendInvite(email);
 

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { serverErrorResponse } from "../_shared/errors.ts";
 import { z, parseBody, uuid, shortText, longText } from "../_shared/validate.ts";
 
 
@@ -150,7 +151,6 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("record-appointment-outcome error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Server error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return serverErrorResponse(e, corsHeaders, "Failed to record appointment outcome");
   }
 });

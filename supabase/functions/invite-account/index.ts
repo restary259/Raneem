@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { serverError } from "../_shared/errors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 import { createInvitation, InvitationType } from "../_shared/invitations.ts";
 import { identityConflict } from "../_shared/identity.ts";
@@ -75,7 +76,7 @@ serve(async (req) => {
         .update({ status: "revoked" })
         .eq("id", body.invitation_id)
         .eq("status", "pending");
-      if (error) return json({ error: error.message }, 500);
+      if (error) return json({ error: serverError(error, "Failed to send invitation") }, 500);
       await admin.from("admin_audit_log").insert({
         admin_id: adminId,
         action: "revoke_invitation",
