@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { sendWebPush, type PushSubscriptionRecord } from "../_shared/webpush.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 /**
  * Drains the `push_notifications` pgmq queue and delivers Web Push messages.
@@ -222,6 +223,20 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // The queue holds notifications for every user, so only the cron caller
+  // (service role) may drain it. A gateway-verified JWT is not enough: the
+  // project's anon key is itself a valid JWT and is public.
+  const auth = await requireAuth(req);
+  if (!auth.ok || !auth.isServiceRole) {
+    return new Response(
+      JSON.stringify({ error: auth.ok ? "Forbidden" : auth.error }),
+      {
+        status: auth.ok ? 403 : auth.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  }
 
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     console.error("push-dispatch: VAPID keys are not configured");

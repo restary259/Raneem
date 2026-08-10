@@ -3,6 +3,7 @@ import { renderAsync } from "npm:@react-email/components@0.0.22";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { TEMPLATES } from "../_shared/transactional-email-templates/registry.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -26,14 +27,25 @@ function generateToken(): string {
     .join("");
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: verify_jwt = true only proves the caller holds *some* valid JWT,
+// and the project's anon key is one — it is shipped in the browser bundle.
+// Sending mail from our own domain to an arbitrary recipient therefore has to
+// be gated in-function: the service role (other functions, cron) or a staff
+// user JWT.
+const ALLOWED_ROLES = ["admin", "team_member"];
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = await requireAuth(req, ALLOWED_ROLES);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");

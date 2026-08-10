@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { requireAuth } from "../_shared/auth.ts";
 
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -14,6 +15,11 @@ serve(async (req) => {
     });
 
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Only the cron caller (service role) or an admin may fan out reminders:
+  // this endpoint writes notifications and sends mail for other users.
+  const auth = await requireAuth(req, ["admin"]);
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",

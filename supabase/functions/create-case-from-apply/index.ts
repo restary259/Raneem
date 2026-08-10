@@ -15,6 +15,53 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_REFERRAL_DISCOUNT = 500;
+
+// The apply form is public, so the endpoint is rate limited per IP: every call
+// writes a case (and a lead) with the service role.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;
+const RATE_WINDOW = 60 * 60 * 1000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
+type Caller = { userId: string | null; isStaff: boolean };
+
+/** Resolves the caller from the bearer token, if the request carries a user JWT. */
+async function resolveCaller(
+  req: Request,
+  admin: ReturnType<typeof createClient>,
+): Promise<Caller> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
+  if (!token) return { userId: null, isStaff: false };
+
+  const { data: userData } = await admin.auth.getUser(token);
+  const userId = userData?.user?.id ?? null;
+  if (!userId) return { userId: null, isStaff: false };
+
+  const { data: staffRole } = await admin
+    .from("user_roles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .in("role", ["admin", "team_member"])
+    .maybeSingle();
+
+  return { userId, isStaff: !!staffRole };
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -24,6 +71,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(ip)) {
+      return new Response(JSON.stringify({ error: "Too many submissions. Please try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body = await req.json();
 
@@ -40,7 +95,6 @@ Deno.serve(async (req) => {
       source = "apply_page",
       partner_id,
       ref_code,
-      actor_id,
       actor_name,
       // Referral fields
       referrer_user_id,
@@ -161,13 +215,27 @@ Deno.serve(async (req) => {
     }
 
     // ── Referral attribution ──────────────────────────────────────
-    // Attribution is ALWAYS resolved server-side. A raw `referrer_user_id` or
-    // `partner_id` in the request body is never trusted: a public visitor could
-    // otherwise name an arbitrary account and have it paid a commission later.
+    // Attribution is resolved server-side: a raw `referrer_user_id` or
+    // `partner_id` in the request body is never trusted on its own, because a
+    // public visitor could otherwise name an arbitrary account and have it paid
+    // a commission later.
+    const caller = await resolveCaller(req, supabaseAdmin);
+
     let validatedPartnerId: string | null = null;
-    let validatedReferrerId: string | null = null;
+    // A student referral is only credited to the signed-in referrer themselves
+    // (or to whoever staff names), never to an id chosen by an anonymous caller.
+    let validatedReferrerId: string | null =
+      typeof referrer_user_id === "string" && UUID.test(referrer_user_id) &&
+        (caller.isStaff || referrer_user_id === caller.userId)
+        ? referrer_user_id
+        : null;
     let attributionMethod: string | null = null;
 
+    // A discount only exists for a validated referral, and never above the cap.
+    const requestedDiscount = Number(referral_discount ?? 0);
+    const cleanReferralDiscount = validatedReferrerId && Number.isFinite(requestedDiscount)
+      ? Math.min(Math.max(requestedDiscount, 0), MAX_REFERRAL_DISCOUNT)
+      : 0;
 
     if (ref_code && typeof ref_code === "string" && /^[a-zA-Z0-9-]{3,40}$/.test(ref_code.trim())) {
       const { data: resolvedId } = await supabaseAdmin.rpc("resolve_referral_code", {
@@ -195,27 +263,7 @@ Deno.serve(async (req) => {
     // A public applicant can never credit a partner by editing the request body —
     // attribution then comes solely from the server-resolved referral code.
     if (!validatedPartnerId && partner_id) {
-      const authHeader = req.headers.get("Authorization") ?? "";
-      const token = authHeader.toLowerCase().startsWith("bearer ")
-        ? authHeader.slice(7).trim()
-        : "";
-      let callerIsStaff = false;
-
-      if (token) {
-        const { data: userData } = await supabaseAdmin.auth.getUser(token);
-        const callerId = userData?.user?.id;
-        if (callerId) {
-          const { data: callerRole } = await supabaseAdmin
-            .from("user_roles")
-            .select("user_id")
-            .eq("user_id", callerId)
-            .in("role", ["admin", "team_member"])
-            .maybeSingle();
-          callerIsStaff = !!callerRole;
-        }
-      }
-
-      if (callerIsStaff) {
+      if (caller.isStaff) {
         const { data: partnerRole } = await supabaseAdmin
           .from("user_roles")
           .select("user_id")
@@ -241,7 +289,7 @@ Deno.serve(async (req) => {
         partner_id: validatedPartnerId,
         referred_by: validatedReferrerId,
         source_attribution_method: attributionMethod,
-        referral_discount: referral_discount ? Number(referral_discount) : 0,
+        referral_discount: cleanReferralDiscount,
         status: "new",
         // Extended fields
         city: city ? stripHtml(String(city)).slice(0, 100) : null,
@@ -279,16 +327,22 @@ Deno.serve(async (req) => {
     }
 
 
-    // Link referral record back to the new case
-    if (referral_id && newCase?.id) {
-      await supabaseAdmin.from("referrals").update({ referred_case_id: newCase.id }).eq("id", referral_id);
+    // Link referral record back to the new case — only a referral that belongs
+    // to the validated referrer, so a caller cannot re-point someone else's row.
+    if (referral_id && typeof referral_id === "string" && UUID.test(referral_id) && validatedReferrerId && newCase?.id) {
+      await supabaseAdmin
+        .from("referrals")
+        .update({ referred_case_id: newCase.id })
+        .eq("id", referral_id)
+        .eq("referrer_user_id", validatedReferrerId);
     }
 
-    // Log activity
-    if (actor_id && actor_name) {
+    // Log activity. The actor is the verified caller: a body-supplied actor
+    // would let anyone forge activity entries.
+    if (caller.userId && actor_name) {
       await supabaseAdmin.rpc("log_activity", {
-        p_actor_id: actor_id,
-        p_actor_name: actor_name,
+        p_actor_id: caller.userId,
+        p_actor_name: stripHtml(String(actor_name)).slice(0, 100),
         p_action: "case_created_from_apply",
         p_entity_type: "cases",
         p_entity_id: newCase.id,
@@ -299,9 +353,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ case_id: newCase.id, ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("create-case-from-apply error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "Failed to create case" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
