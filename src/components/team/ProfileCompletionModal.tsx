@@ -134,11 +134,20 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       if (error) {
         toast({ variant: 'destructive', title: t('common.error'), description: error.message });
       } else {
-        await (supabase as any).rpc('log_user_activity', { p_action: 'profile_completed', p_target_id: profileCase.id, p_target_table: 'cases' });
+        const { error: logError } = await (supabase as any).rpc('log_user_activity', {
+          p_action: 'profile_completed',
+          p_target_id: profileCase.id,
+          p_target_table: 'cases',
+        });
+        if (logError) console.error('[ProfileCompletionModal] activity log failed:', logError);
         toast({ title: t('lawyer.fileCompleted') });
         onClose();
         onCompleted('profile_completion');
-        try { await refetch(); } catch {}
+        try {
+          await refetch();
+        } catch (err) {
+          console.error('[ProfileCompletionModal] refetch after completion failed:', err);
+        }
       }
     } catch (err: any) {
       if (err?.name !== 'AbortError') {

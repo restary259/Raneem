@@ -17,13 +17,18 @@ export const useSessionTimeout = () => {
           await caches.delete(name);
         }
       }
-    } catch {}
+    } catch (err) {
+      // Cache eviction is best-effort — sign-out must still happen.
+      console.warn('[sessionTimeout] failed to clear AI caches:', err);
+    }
     await supabase.auth.signOut();
   }, []);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(logout, TIMEOUT_MS);
+    timerRef.current = setTimeout(() => {
+      logout().catch((err) => console.error('[sessionTimeout] logout failed:', err));
+    }, TIMEOUT_MS);
   }, [logout]);
 
   useEffect(() => {
@@ -32,11 +37,15 @@ export const useSessionTimeout = () => {
       if (!session) return;
 
       // Only activate timeout for admin users
-      const { data: roles } = await (supabase as any)
+      const { data: roles, error: rolesError } = await (supabase as any)
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .eq('role', 'admin');
+      if (rolesError) {
+        console.error('[sessionTimeout] admin role lookup failed:', rolesError);
+        return;
+      }
 
       const isAdmin = roles && roles.length > 0;
       if (!isAdmin) return; // Non-admin users get permanent sessions
@@ -58,12 +67,14 @@ export const useSessionTimeout = () => {
         if (timerRef.current) clearTimeout(timerRef.current);
       } else if (event === 'SIGNED_IN') {
         // Re-check on sign in (will only start timer if admin)
-        checkAndStart();
+        checkAndStart().catch((err) => console.error('[sessionTimeout] restart failed:', err));
       }
     });
 
     return () => {
-      cleanup.then(fn => fn?.());
+      cleanup
+        .then(fn => fn?.())
+        .catch((err) => console.error('[sessionTimeout] start failed:', err));
       subscription.unsubscribe();
     };
   }, [resetTimer]);

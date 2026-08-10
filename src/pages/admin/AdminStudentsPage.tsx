@@ -660,8 +660,16 @@ export default function AdminStudentsPage() {
     if (!confirm(isRtl ? "هل أنت متأكد من حذف هذا المستند؟" : "Delete this document?")) return;
     try {
       const urlParts = doc.file_url.split("/student-documents/");
-      if (urlParts[1]) await supabase.storage.from("student-documents").remove([urlParts[1]]);
-      await (supabase as any).from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", doc.id);
+      if (urlParts[1]) {
+        const { error: storageError } = await supabase.storage.from("student-documents").remove([urlParts[1]]);
+        // An orphaned object must not block the soft delete, but it must be traceable.
+        if (storageError) console.warn("[AdminStudents] storage delete failed:", storageError);
+      }
+      const { error: softDeleteError } = await (supabase as any)
+        .from("documents")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", doc.id);
+      if (softDeleteError) throw softDeleteError;
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
       toast({ description: t("admin.students.docDeleted") });
     } catch (err: any) {

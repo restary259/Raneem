@@ -42,22 +42,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchRole = async (userId: string): Promise<AppRole | null> => {
     try {
       const { data, error } = await supabase.rpc('get_my_role');
-      if (error || !data) return null;
+      if (error) {
+        console.error('[auth] role lookup failed:', error);
+        return null;
+      }
+      if (!data) return null;
       return data as AppRole;
-    } catch {
+    } catch (err) {
+      console.error('[auth] role lookup threw:', err);
       return null;
     }
   };
 
   const fetchMustChangePassword = async (userId: string): Promise<boolean> => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('must_change_password')
         .eq('id', userId)
         .maybeSingle();
+      if (error) console.error('[auth] must_change_password lookup failed:', error);
       return data?.must_change_password ?? false;
-    } catch {
+    } catch (err) {
+      console.error('[auth] must_change_password lookup threw:', err);
       return false;
     }
   };
@@ -115,6 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         safetyTimer.current = null;
       }
       initializeAuth(session);
+    }).catch((err) => {
+      console.error('[auth] initial getSession failed:', err);
+      setState(prev => ({ ...prev, initialized: true }));
     });
 
     return () => {
@@ -131,8 +141,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (currentUserId) {
       try {
         await unsubscribeFromPush(currentUserId);
-      } catch {
+      } catch (err) {
         /* never block sign-out on push cleanup */
+        console.warn('[auth] push unsubscribe failed during sign-out:', err);
       }
     }
     await supabase.auth.signOut();

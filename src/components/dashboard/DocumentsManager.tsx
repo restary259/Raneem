@@ -173,15 +173,19 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     }
   };
 
-  const logDocumentAccess = async (action: string, docName: string) => {
+  const logUserActivity = async (action: string, docName: string) => {
     try {
-      await (supabase as any).rpc("log_user_activity", {
+      const { error } = await (supabase as any).rpc("log_user_activity", {
         p_action: `document_${action}`,
         p_target_id: userId,
         p_target_table: "documents",
         p_details: `${action} document: ${docName}`,
       });
-    } catch {}
+      if (error) throw error;
+    } catch (err) {
+      // Auditing must never break the document flow, but it must be visible.
+      console.warn("[DocumentsManager] activity log failed:", err);
+    }
   };
 
   // FIX: Unified download handler that works for both admin-uploaded docs
@@ -201,7 +205,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
       if (!response.ok) throw new Error("Failed to fetch file");
       const blob = await response.blob();
 
-      logDocumentAccess("download", doc.file_name);
+      void logUserActivity("download", doc.file_name);
 
       const blobUrl = URL.createObjectURL(blob);
       const a = window.document.createElement("a");
@@ -221,7 +225,9 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     if (!confirm(t("documents.deleteConfirm"))) return;
     try {
       const storagePath = toStoragePath(doc.file_url);
-      await supabase.storage.from("student-documents").remove([storagePath]);
+      const { error: storageError } = await supabase.storage.from("student-documents").remove([storagePath]);
+      // An orphaned object must not block the row deletion, but it must be traceable.
+      if (storageError) console.warn("[DocumentsManager] storage delete failed:", storageError);
       const { error } = await (supabase as any).from("documents").delete().eq("id", doc.id);
       if (error) throw error;
       toast({ title: t("documents.deleteSuccess"), description: t("documents.deleteSuccessDesc") });

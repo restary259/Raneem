@@ -33,7 +33,8 @@ export function claimIdempotencyKey(key: string): boolean {
     if (stored.length > MAX_STORED_KEYS) stored.splice(0, stored.length - MAX_STORED_KEYS);
     localStorage.setItem(IDEMPOTENCY_STORE_KEY, JSON.stringify(stored));
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('[conflictPrevention] idempotency store unavailable:', err);
     return true; // On error, allow action
   }
 }
