@@ -435,22 +435,7 @@ const CasePayments: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Business rules */}
-      <div className="rounded-md border border-dashed p-3">
-        <p className="text-xs text-muted-foreground">
-          {t(
-            "finance.payments.businessRule",
-            "DARB service fees are calculated from the services selected for the case and priced by the Admin-controlled service catalogue. Team members cannot manually change the DARB service price.",
-          )}
-        </p>
-
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t(
-            "finance.payments.germanyRule",
-            "Germany course, accommodation, and insurance payments are handled separately and verified by Admin after proof is submitted.",
-          )}
-        </p>
-      </div>
+      {/* Business rules live once, as consolidated notes in CaseFinance. */}
     </div>
   );
 };

@@ -1,12 +1,18 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Loader2, Save } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Lock } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatILS } from "@/lib/money";
 import { useServiceCatalog, type CaseService, type CatalogService } from "@/hooks/useCaseServices";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
@@ -17,6 +23,19 @@ interface Props {
   canManage: boolean;
   onChanged: () => void;
 }
+
+/**
+ * Imperative handle exposed to the parent (CaseFinance) so the single
+ * "Confirm & Save" button can save the service selection and read its state
+ * without duplicating the catalog/selection logic.
+ */
+export interface CaseServicesHandle {
+  save: () => Promise<boolean>;
+  isDirty: () => boolean;
+  selectedCount: () => number;
+}
+
+type PackageMode = "full_service" | "custom" | "";
 
 interface Selection {
   service_id: string;
@@ -39,7 +58,7 @@ interface CaseContext {
  * 4. Prices for saved services come from the frozen case_services snapshot.
  * 5. New services use the current admin catalog price.
  */
-const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged }) => {
+const CaseServices = forwardRef<CaseServicesHandle, Props>(({ caseId, services, canManage, onChanged }, ref) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
 
@@ -52,6 +71,8 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
   const [selected, setSelected] = useState<Selection[]>([]);
   const [context, setContext] = useState<CaseContext | null>(null);
   const [contextLoading, setContextLoading] = useState(true);
+  /** "full_service" | "custom" — drives the single service-package selector. */
+  const [packageMode, setPackageMode] = useState<PackageMode>("");
 
   /**
    * Load case context.
@@ -251,8 +272,6 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
     [selectableCatalog],
   );
 
-  const fullServiceOn = fullServiceItems.length > 0 && fullServiceItems.every((service) => isSelected(service.id));
-
   const toggleFullService = (checked: boolean) => {
     setSelected((previous) => {
       if (checked) {
@@ -304,6 +323,37 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
   const dirty = selectedKey !== existingKey;
 
   /**
+   * The Full Service bundle = every catalog item flagged in_full_service.
+   * Used by the single service-package selector to lock the list.
+   */
+  const fullServiceIds = useMemo(
+    () => new Set(fullServiceItems.map((service) => service.id)),
+    [fullServiceItems],
+  );
+
+  /**
+   * The selection matches the Full Service bundle exactly when every bundle
+   * item is selected and nothing outside the bundle is.
+   */
+  const isFullServiceSelection = useMemo(() => {
+    if (selected.length === 0 || fullServiceIds.size === 0) return false;
+    const allBundle = fullServiceItems.every((service) =>
+      selected.some((item) => item.service_id === service.id),
+    );
+    const onlyBundle = selected.every((item) => fullServiceIds.has(item.service_id));
+    return allBundle && onlyBundle;
+  }, [selected, fullServiceItems, fullServiceIds]);
+
+  const applyPackageMode = (mode: PackageMode) => {
+    setPackageMode(mode);
+    if (mode === "full_service") {
+      toggleFullService(true);
+    }
+    // "custom" keeps the current selection; the per-service checkboxes
+    // become editable so the Team can adjust individual services.
+  };
+
+  /**
    * Group selectable services by category.
    */
   const grouped = useMemo(() => {
@@ -318,8 +368,9 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
     return Array.from(map.entries());
   }, [selectableCatalog]);
 
-  const save = async () => {
-    if (busy) return;
+  const save = async (): Promise<boolean> => {
+    if (busy) return false;
+    if (!dirty) return true;
 
     setBusy(true);
 
@@ -338,6 +389,7 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
       });
 
       onChanged();
+      return true;
     } catch (error: any) {
       console.error("Failed to save case services:", error);
 
@@ -345,10 +397,21 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
         variant: "destructive",
         description: error?.message || t("finance.services.loadError"),
       });
+      return false;
     } finally {
       setBusy(false);
     }
   };
+
+  /**
+   * Let the parent's single "Confirm & Save" button drive saving and read
+   * the selection state without lifting the whole catalog/selection model.
+   */
+  useImperativeHandle(ref, () => ({
+    save,
+    isDirty: () => dirty,
+    selectedCount: () => selected.length,
+  }));
 
   const categoryLabel = (key: string) =>
     t(`finance.services.categories.${key}`, {
@@ -401,173 +464,165 @@ const CaseServices: React.FC<Props> = ({ caseId, services, canManage, onChanged 
    * ============================================================
    * MANAGE VIEW
    * ============================================================
+   *
+   * One service-selection mechanism: a single dropdown choosing between
+   * "Full Service" (locked, auto-populated bundle) and "Custom Services"
+   * (editable per-service checkboxes). There is no separate Save button
+   * here — the parent's "Confirm & Save" persists the selection.
    */
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">{t("finance.services.title")}</p>
-
         <span className="text-sm font-semibold">{formatILS(Number(financials?.service_total ?? 0))}</span>
       </div>
 
-      {/* Existing saved services ALWAYS render first. */}
-      {services.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground">
-            {t("finance.services.selected", {
-              defaultValue: "Selected services",
-            })}
-          </p>
-
-          {services.map((service) => (
-            <div key={service.id} className="flex items-center justify-between gap-3 rounded-md border bg-muted/20 p-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  {service.description || service.category || t("finance.services.unknown")}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  {Number(service.quantity || 1) > 1 ? `× ${Number(service.quantity)}` : ""}
-
-                  {service.currency ? ` · ${service.currency}` : ""}
-                </p>
-              </div>
-
-              <span className="shrink-0 text-sm font-semibold">{formatILS(Number(service.unit_price || 0))}</span>
-            </div>
-          ))}
-        </div>
+      {catalogError && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{catalogError}</AlertDescription>
+        </Alert>
       )}
 
-      <div className="border-t pt-4">
-        <p className="mb-3 text-xs text-muted-foreground">{t("finance.services.pickHint")}</p>
+      {catalogLoading || contextLoading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {t("common.loading")}
+        </div>
+      ) : selectableCatalog.length === 0 ? (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{t("finance.services.noneApplicable")}</AlertDescription>
+        </Alert>
+      ) : (
+        <div className="space-y-4">
+          {/* Service package selector — the single entry point. */}
+          {fullServiceItems.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                {t("finance.services.packageLabel", "Service package")}
+              </label>
+              <Select
+                value={packageMode || (isFullServiceSelection ? "full_service" : selected.length > 0 ? "custom" : "")}
+                onValueChange={(value) => applyPackageMode(value as PackageMode)}
+                disabled={busy}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t("finance.services.packagePlaceholder", "Choose a service package")}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full_service">
+                    {t("finance.services.fullService", "Full Service")}
+                  </SelectItem>
+                  <SelectItem value="custom">
+                    {t("finance.services.customServices", "Custom Services")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-        {catalogError && (
-          <Alert variant="destructive" className="mb-3">
-            <AlertTriangle className="h-4 w-4" />
-
-            <AlertDescription>{catalogError}</AlertDescription>
-          </Alert>
-        )}
-
-        {catalogLoading || contextLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-
-            {t("common.loading")}
-          </div>
-        ) : selectableCatalog.length === 0 ? (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-
-            <AlertDescription>{t("finance.services.noneApplicable")}</AlertDescription>
-          </Alert>
-        ) : (
-          <div className="space-y-3">
-            {fullServiceItems.length > 0 && (
-              <div className="space-y-2 rounded-md border border-primary/40 bg-primary/5 p-3">
-                <label className="flex cursor-pointer items-center justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Checkbox
-                      checked={fullServiceOn}
-                      onCheckedChange={(value) => toggleFullService(value === true)}
-                      disabled={busy}
-                    />
-
-                    <span className="truncate text-sm font-semibold">{t("finance.services.fullService")}</span>
-                  </span>
-
-                  <span className="shrink-0 text-xs font-medium">
-                    {formatILS(fullServiceItems.reduce((sum, service) => sum + priceFor(service), 0))}
-                  </span>
-                </label>
-
-                <ul className="space-y-0.5 ps-6">
-                  {fullServiceItems.map((service) => (
-                    <li key={service.id} className="text-xs text-muted-foreground">
-                      ✓ {label(service)}
-                    </li>
-                  ))}
-                </ul>
+          {/* Full Service: locked, auto-populated list. */}
+          {fullServiceItems.length > 0 && isFullServiceSelection && packageMode === "full_service" && (
+            <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2 text-sm font-semibold">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t("finance.services.fullService", "Full Service")}
+                </span>
+                <span className="shrink-0 text-xs font-medium">
+                  {formatILS(fullServiceItems.reduce((sum, service) => sum + priceFor(service), 0))}
+                </span>
               </div>
-            )}
+              <ul className="space-y-0.5">
+                {fullServiceItems.map((service) => (
+                  <li key={service.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                      <span className="truncate">{label(service)}</span>
+                    </span>
+                    <span className="shrink-0">{formatILS(priceFor(service))}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-muted-foreground">
+                {t(
+                  "finance.services.fullServiceLocked",
+                  "Full Service includes every bundled service. Switch to Custom Services to adjust individual items.",
+                )}
+              </p>
+            </div>
+          )}
 
-            {grouped.map(([category, items]) => (
-              <div key={category} className="space-y-1.5">
-                <p className="text-xs font-semibold text-muted-foreground">{categoryLabel(category)}</p>
-
-                {items.map((service) => {
-                  const checked = isSelected(service.id);
-
-                  const saved = savedServiceIds.has(service.id);
-
-                  return (
-                    <div key={service.id} className="flex items-center justify-between gap-3 rounded-md border p-2.5">
-                      <label className="flex min-w-0 cursor-pointer items-center gap-2">
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(value) => toggle(service, value === true)}
+          {/* Custom Services: editable per-service checkboxes. */}
+          {packageMode === "custom" && grouped.map(([category, items]) => (
+            <div key={category} className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground">{categoryLabel(category)}</p>
+              {items.map((service) => {
+                const checked = isSelected(service.id);
+                const saved = savedServiceIds.has(service.id);
+                return (
+                  <div key={service.id} className="flex items-center justify-between gap-3 rounded-md border p-2.5">
+                    <label className="flex min-w-0 cursor-pointer items-center gap-2">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(value) => toggle(service, value === true)}
+                        disabled={busy}
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm">{label(service)}</span>
+                        {service.pricing_model !== "fixed" && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {t(`finance.services.models.${service.pricing_model}`, { defaultValue: service.pricing_model })}
+                          </span>
+                        )}
+                        {saved && (
+                          <span className="block text-[10px] text-muted-foreground">
+                            {t("finance.services.savedPrice", { defaultValue: "Saved price" })}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {checked && service.allows_quantity && (
+                        <Input
+                          type="number"
+                          min={1}
+                          value={qtyOf(service.id)}
+                          onChange={(event) => setQty(service.id, Number(event.target.value))}
+                          className="h-8 w-16 text-sm"
                           disabled={busy}
                         />
-
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm">{label(service)}</span>
-
-                          {service.pricing_model !== "fixed" && (
-                            <span className="text-[11px] text-muted-foreground">
-                              {t(`finance.services.models.${service.pricing_model}`, {
-                                defaultValue: service.pricing_model,
-                              })}
-                            </span>
-                          )}
-
-                          {saved && (
-                            <span className="block text-[10px] text-muted-foreground">
-                              {t("finance.services.savedPrice", {
-                                defaultValue: "Saved price",
-                              })}
-                            </span>
-                          )}
-                        </span>
-                      </label>
-
-                      <span className="flex shrink-0 items-center gap-2">
-                        {checked && service.allows_quantity && (
-                          <Input
-                            type="number"
-                            min={1}
-                            value={qtyOf(service.id)}
-                            onChange={(event) => setQty(service.id, Number(event.target.value))}
-                            className="h-8 w-16 text-sm"
-                            disabled={busy}
-                          />
-                        )}
-
-                        <span className="text-sm">{formatILS(priceFor(service))}</span>
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between gap-3 border-t pt-3">
-              <div>
-                <p className="text-sm font-semibold">{t("finance.services.total", "DARB service total")}</p>
-                <p className="text-xs text-muted-foreground">Calculated by the server after saving.</p>
-              </div>
-
-              <Button size="sm" onClick={save} disabled={busy || !dirty} className="gap-1">
-                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-
-                {t("common.save")}
-              </Button>
+                      )}
+                      <span className="text-sm">{formatILS(priceFor(service))}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+          ))}
+
+          {/* Selection summary + authoritative total. */}
+          <div className="flex items-center justify-between gap-3 border-t pt-3">
+            <div>
+              <p className="text-sm font-semibold">{t("finance.services.total", "Services total")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("finance.services.selectedCount", { count: selected.length, defaultValue: `Selected services: ${selected.length}` })}
+              </p>
+            </div>
+            <span className="text-sm font-semibold">
+              {formatILS(selected.reduce((sum, item) => {
+                const service = selectableCatalog.find((s) => s.id === item.service_id);
+                return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
+              }, 0))}
+            </span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-};
+});
 
 export default CaseServices;

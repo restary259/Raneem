@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { CheckCircle2, Clock3, Loader2, Wallet, ExternalLink, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCaseServices } from "@/hooks/useCaseServices";
 import { useCaseFinancials, type FinancialSchoolLine, type FinancialPayment } from "@/hooks/useCaseFinancials";
-import CaseServices from "./CaseServices";
+import CaseServices, { type CaseServicesHandle } from "./CaseServices";
 import CasePayments from "./CasePayments";
 import { formatDateTime } from "@/utils/dateUtils";
 
@@ -54,6 +54,9 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
   const [agencyAck, setAgencyAck] = useState(false);
   const [confirmingAgency, setConfirmingAgency] = useState(false);
+
+  /** Imperative handle to CaseServices so the single button can save services. */
+  const servicesRef = useRef<CaseServicesHandle>(null);
 
 
   const serviceTotal = Number(financials?.service_total ?? 0);
@@ -157,6 +160,66 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
         ? "bg-amber-100 text-amber-800"
         : "bg-slate-100 text-slate-800";
 
+  /**
+   * The single finance action.
+   *
+   * 1. Persist the selected DARB services (server snapshots the prices and
+   *    computes the authoritative total).
+   * 2. If the team has ticked the payment-confirmation checkbox and the
+   *    payment has not already been confirmed, confirm the DARB agency fee
+   *    via the server RPC.
+   *
+   * No invoice is issued and no case status changes here — submitting the
+   * case to Admin remains a deliberate, separately gated step (it sends the
+   * invoice and the student invite). This keeps the financial confirmation
+   * and the submission decoupled, as the business rules require.
+   */
+  const handleConfirmAndSave = async () => {
+    if (confirmingAgency) return;
+
+    setConfirmingAgency(true);
+    try {
+      // 1. Save services first so the server total is current.
+      const saved = servicesRef.current ? await servicesRef.current.save() : true;
+      if (!saved) return;
+
+      // 2. Confirm the DARB agency payment if the checkbox is set and not yet done.
+      if (!agencyConfirmed && agencyAck && canManage) {
+        const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
+          p_case_id: caseId,
+        });
+        if (error) throw error;
+        toast({
+          description: `${t("finance.agency.confirmed", "DARB service payment confirmed")}: ${formatILS(serviceTotal)}`,
+        });
+        setAgencyAck(false);
+      } else {
+        toast({ description: t("finance.confirmAndSave.saved", "Finance confirmed and saved") });
+      }
+
+      await Promise.all([refetchServices(), refetchFinancials(), loadProofs()]);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        description: error?.message || t("finance.agency.confirmFailed", "Unable to confirm the DARB payment."),
+      });
+    } finally {
+      setConfirmingAgency(false);
+    }
+  };
+
+  /**
+   * Readiness for the single button.
+   *
+   * The button is enabled once services are selected and (if unpaid) the
+   * payment-confirmation checkbox is ticked. When everything is already
+   * confirmed, the button shows a success state instead.
+   */
+  const servicesSelected = services.length > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
+  const financeComplete = agencyConfirmed && serviceTotal > 0;
+  const canConfirmNow = canManage && serviceTotal > 0 && (!agencyConfirmed ? agencyAck : true);
+  const buttonDisabled = confirmingAgency || !servicesSelected || !canConfirmNow;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-2">
@@ -199,91 +262,73 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
             </div>
           </div>
 
-          <div
-            className={`rounded-md border p-4 ${agencyConfirmed ? "border-emerald-200 bg-emerald-50/50" : "bg-muted/30"}`}
-          >
-            <div className="flex flex-col gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  {agencyConfirmed ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
-                  )}
-                  <p className="text-sm font-semibold">
-                    {t("finance.agency.title", "DARB service payment")}
-                  </p>
-                </div>
-                <p className="mt-1 text-sm font-medium">{formatILS(serviceTotal)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {agencyConfirmed
-                    ? `${t("finance.agency.confirmedBy", "Confirmed by Team/Admin")} · ${formatDateTime(agencyPayment?.confirmed_at ?? null, "—")}`
-                    : t(
-                        "finance.agency.autoCalculated",
-                        "Calculated automatically from selected DARB services. No amount can be entered manually.",
-                      )}
-                </p>
-              </div>
-
-              {!agencyConfirmed && canManage && (
-                <div className="space-y-3">
-                  <label
-                    htmlFor="darb-agency-ack"
-                    className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
-                  >
-                    <Checkbox
-                      id="darb-agency-ack"
-                      checked={agencyAck}
-                      onCheckedChange={(v) => setAgencyAck(v === true)}
-                      className="mt-0.5"
-                    />
-                    <span className="leading-tight">
-                      {t(
-                        "finance.agency.ack",
-                        "I confirm the DARB agency service fee has been received from the student.",
-                      )}
-                    </span>
-                  </label>
-                  <Button
-                    type="button"
-                    className="w-full sm:w-auto"
-                    disabled={serviceTotal <= 0 || !agencyAck || confirmingAgency}
-                    onClick={async () => {
-                      setConfirmingAgency(true);
-                      try {
-                        const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
-                          p_case_id: caseId,
-                        });
-                        if (error) throw error;
-                        toast({
-                          description: `${t("finance.agency.confirmed", "DARB service payment confirmed")}: ${formatILS(serviceTotal)}`,
-                        });
-                        setAgencyAck(false);
-                        await refetchFinancials();
-                      } catch (error: any) {
-                        toast({
-                          variant: "destructive",
-                          description:
-                            error?.message || t("finance.agency.confirmFailed", "Unable to confirm the DARB payment."),
-                        });
-                      } finally {
-                        setConfirmingAgency(false);
-                      }
-                    }}
-                  >
-                    {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                    {t("finance.agency.confirmAction", "Confirm DARB Payment")}
-                  </Button>
-                  {serviceTotal <= 0 && (
-                    <p className="text-xs text-amber-700">
-                      {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
-                    </p>
-                  )}
-                </div>
+          {/* Consolidated informational note — replaces the several repeated
+              explanations that used to live across the services/payments blocks. */}
+          <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "finance.notes.priceControl",
+                "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",
               )}
-            </div>
+            </p>
           </div>
         </div>
+
+        <Separator />
+
+        {/* DARB SERVICES — single service-package selector. */}
+        <CaseServices
+          ref={servicesRef}
+          caseId={caseId}
+          services={services}
+          canManage={canManage}
+          onChanged={() => {
+            void refetchServices();
+            void refetchFinancials();
+            void loadProofs();
+          }}
+        />
+
+        <Separator />
+
+        {/* PAYMENT — the confirmation card exists ONLY while the DARB fee is
+            unpaid. Once confirmed it is removed entirely and the payment
+            appears exactly once, inside Payment History, so it is never shown
+            twice. */}
+        {!agencyConfirmed && canManage && (
+          <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold">{t("finance.agency.title", "DARB service payment")}</p>
+              <Badge className="bg-red-100 text-red-800">
+                {t("finance.status.unpaid", "Unpaid")}
+              </Badge>
+            </div>
+            <p className="text-lg font-semibold">{formatILS(serviceTotal)}</p>
+            <label
+              htmlFor="darb-agency-ack"
+              className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
+            >
+              <Checkbox
+                id="darb-agency-ack"
+                checked={agencyAck}
+                onCheckedChange={(v) => setAgencyAck(v === true)}
+                className="mt-0.5"
+              />
+              <span className="leading-tight">
+                {t(
+                  "finance.agency.ack",
+                  "I confirm the DARB agency service fee has been received from the student.",
+                )}
+              </span>
+            </label>
+            {serviceTotal <= 0 && (
+              <p className="text-xs text-amber-700">
+                {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
+              </p>
+            )}
+          </div>
+        )}
 
 
         {showGermany && schoolCosts.length > 0 && (
@@ -391,6 +436,35 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
 
         <Separator />
 
+        {/* PAYMENT HISTORY — the single place payment records live. When the
+            DARB fee is confirmed it appears here (and only here); the
+            confirmation card above is removed so the payment is never shown
+            twice. */}
+        <CasePayments
+          caseId={caseId}
+          payments={payments}
+          canManage={canManage}
+          canConfirm={canConfirm}
+          onChanged={() => void refetchFinancials()}
+        />
+
+        <Separator />
+
+        {/* Consolidated note for third-party (Germany) payments. */}
+        {schoolCosts.length > 0 && (
+          <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "finance.notes.thirdParty",
+                "Language course, accommodation, and insurance payments are handled separately and verified by Admin.",
+              )}
+            </p>
+          </div>
+        )}
+
+        <Separator />
+
         {/* ── Submission readiness checklist ───────────────────────────
             Shows the team member whether the case is ready to submit to
             Admin. The actual submit button and server-side gate live in
@@ -431,39 +505,42 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
               ) : (
                 <Clock3 className="h-4 w-4 text-amber-600" />
               )}
-              <span>{t("finance.summary.checklist.agencyPayment", "Agency payment confirmed")}</span>
+              <span>{t("finance.summary.checklist.agencyPayment", "DARB payment confirmed")}</span>
             </li>
           </ul>
-          {schoolPaymentTypes.some((type) => {
-            const proof = getLatestProof(type);
-            const payment = getPaymentForType(type);
-            return payment?.status === "confirmed" || proof?.status === "approved";
-          }) && (
-            <p className="text-xs text-muted-foreground border-t pt-2">
-              {t("finance.summary.germanyPending", "Germany payments are verified by Admin after the student uploads proof.")}
-            </p>
-          )}
         </div>
 
-        <Separator />
-        <CaseServices
-          caseId={caseId}
-          services={services}
-          canManage={canManage}
-          onChanged={() => {
-            void refetchServices();
-            void refetchFinancials();
-            void loadProofs();
-          }}
-        />
-        <Separator />
-        <CasePayments
-          caseId={caseId}
-          payments={payments}
-          canManage={canManage}
-          canConfirm={canConfirm}
-          onChanged={() => void refetchFinancials()}
-        />
+        {/* Single confirmation action. */}
+        {canManage && (
+          <div className="space-y-2">
+            {financeComplete ? (
+              <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm font-medium text-emerald-700">
+                <CheckCircle2 className="h-4 w-4" />
+                {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
+              </div>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  className="w-full sm:w-auto"
+                  disabled={buttonDisabled}
+                  onClick={handleConfirmAndSave}
+                >
+                  {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  {t("finance.confirmAndSave.action", "Confirm & Save")}
+                </Button>
+                {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "finance.confirmAndSave.ackRequired",
+                      "Confirm that the DARB agency fee was received.",
+                    )}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

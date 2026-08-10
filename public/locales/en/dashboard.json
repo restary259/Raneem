@@ -3350,7 +3350,12 @@
         "quantity": "Per unit"
       },
       "loadError": "Service pricing could not be loaded — saving is disabled until it is available.",
-      "noneApplicable": "No services are configured for the selected school/course."
+      "noneApplicable": "No services are configured for the selected school/course.",
+      "packageLabel": "Service package",
+      "packagePlaceholder": "Choose a service package",
+      "customServices": "Custom Services",
+      "fullServiceLocked": "Full Service includes every bundled service. Switch to Custom Services to adjust individual items.",
+      "selectedCount": "Selected services: {{count}}"
     },
     "payments": {
       "title": "Payments",
@@ -3407,6 +3412,16 @@
       "confirmed": "DARB service payment confirmed",
       "confirmFailed": "Unable to confirm the DARB payment.",
       "needServices": "Select DARB services before confirming the payment."
+    },
+    "notes": {
+      "priceControl": "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",
+      "thirdParty": "Language course, accommodation, and insurance payments are handled separately and verified by Admin."
+    },
+    "confirmAndSave": {
+      "action": "Confirm & Save",
+      "saved": "Finance confirmed and saved",
+      "complete": "Finance confirmed and saved",
+      "ackRequired": "Confirm that the DARB agency fee was received."
     }
   },
   "messagesInbox": {
