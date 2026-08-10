@@ -13,6 +13,10 @@ export interface DarbInvoiceTotals {
     line_total: number;
   }>;
   service_total: number;
+  /** Confirmed agency-service payments only (ILS). */
+  total_confirmed: number;
+  /** Outstanding agency-service balance (ILS). */
+  remaining: number;
   payment_type: "agency_service";
 }
 
