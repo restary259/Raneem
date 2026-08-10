@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,6 @@ import { readFunctionErrorBody } from "@/lib/functionError";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
-import PaymentConfirmationForm from "@/components/team/PaymentConfirmationForm";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface CaseRow {
@@ -70,10 +69,20 @@ export default function CaseDetailPage() {
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
-  const [paymentOpen, setPaymentOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
+
+  /** Scrolls the Finance section into view (the single place to confirm the
+      DARB payment now that the duplicate confirmation modal is gone). */
+  const financeRef = useRef<HTMLElement>(null);
+  const focusFinance = () => {
+    const el = financeRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-2", "ring-primary/40");
+    window.setTimeout(() => el.classList.remove("ring-2", "ring-primary/40"), 1800);
+  };
 
   const canManage = role === "admin" || role === "team_member";
 
@@ -139,7 +148,7 @@ export default function CaseDetailPage() {
   const handleTask = (task: CaseTask) => {
     switch (task.action) {
       case "confirm_payment":
-        setPaymentOpen(true);
+        focusFinance();
         break;
       case "schedule_appointment":
         setSchedulerOpen(true);
@@ -384,12 +393,14 @@ export default function CaseDetailPage() {
             <CaseProfileSummary caseData={caseData} submission={submission} />
           </TabsContent>
           <TabsContent value="finance">
-            <CaseFinance
-              caseId={caseData.id}
-              canManage={role === "admin" || role === "team_member"}
-              canConfirm={role === "admin"}
-              showGermany
-            />
+            <div ref={financeRef} className="rounded-xl transition-shadow">
+              <CaseFinance
+                caseId={caseData.id}
+                canManage={role === "admin" || role === "team_member"}
+                canConfirm={role === "admin"}
+                showGermany
+              />
+            </div>
           </TabsContent>
 
         </Tabs>
@@ -404,19 +415,21 @@ export default function CaseDetailPage() {
             onSchedule={() => setSchedulerOpen(true)}
             onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
             onAdvance={(to) => setPendingStage(to)}
-            onConfirmPayment={() => setPaymentOpen(true)}
+            onConfirmPayment={focusFinance}
             onRefresh={fetchData}
             onSubmitToAdmin={handleSubmitToAdmin}
             onResubmit={handleResubmit}
             submitting={submitting}
           />
           {showFinance && (
+            <div ref={financeRef} className="rounded-xl transition-shadow">
             <CaseFinance
               caseId={caseData.id}
               canManage={role === "admin" || role === "team_member"}
               canConfirm={role === "admin"}
               showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
             />
+            </div>
           )}
 
         </>
@@ -451,25 +464,12 @@ export default function CaseDetailPage() {
         />
       )}
 
-      {canManage && user && (
-        <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("case.tasks.action.confirmPayment")}</DialogTitle>
-              <DialogDescription>{t("case.tasks.confirmPaymentDesc")}</DialogDescription>
-            </DialogHeader>
-            <PaymentConfirmationForm
-              caseId={caseData.id}
-              actorId={user.id}
-              actorName={user.email ?? ""}
-              onSuccess={() => {
-                setPaymentOpen(false);
-                void fetchData();
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      {/*
+        The DARB payment is now confirmed in the Finance section's single
+        "Confirm & Save" action. The duplicate confirmation modal has been
+        removed; the attention-panel / stage-block "confirm payment" buttons
+        scroll to the Finance section instead.
+      */}
 
       <Dialog open={!!pendingStage} onOpenChange={(open) => !open && setPendingStage(null)}>
         <DialogContent>
