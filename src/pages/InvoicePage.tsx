@@ -42,8 +42,8 @@ export default function InvoicePage() {
   }, [token]);
 
   const L = isAr
-    ? { title: "فاتورة خدمات دارب", student: "الطالب", caseRef: "رقم الملف", date: "التاريخ", agency: "خدمات دارب", total: "إجمالي خدمات دارب", download: "تنزيل PDF", notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط." }
-    : { title: "DARB Service Invoice", student: "Student", caseRef: "Case", date: "Date", agency: "DARB agency services", total: "DARB services total", download: "Download PDF", notFound: "This invoice could not be found." };
+    ? { title: "فاتورة خدمات دارب", student: "الطالب", caseRef: "رقم الملف", date: "التاريخ", agency: "خدمات دارب", total: "إجمالي خدمات دارب", paid: "المدفوع المؤكد", remaining: "الرصيد المتبقي", download: "تنزيل PDF", notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط." }
+    : { title: "DARB Service Invoice", student: "Student", caseRef: "Case", date: "Date", agency: "DARB agency services", total: "DARB services total", paid: "Confirmed payments", remaining: "Remaining balance", download: "Download PDF", notFound: "This invoice could not be found." };
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (!invoice) return <div className="p-10 text-center text-muted-foreground">{L.notFound}</div>;
@@ -105,11 +105,11 @@ export default function InvoicePage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{L.paid}</span>
-              <span>{money(t.total_confirmed, t.currency)}</span>
+              <span>{money(Number(t.total_confirmed ?? 0), t.currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{L.remaining}</span>
-              <span className="font-semibold">{money(t.remaining, t.currency)}</span>
+              <span className="font-semibold">{money(Number(t.remaining ?? Math.max(Number(t.service_total || 0) - Number(t.total_confirmed ?? 0), 0)), t.currency)}</span>
             </div>
           </div>
         </CardContent>

@@ -1,4 +1,6 @@
-# DARB — Finance, Submission & Invoice UI/UX Close-out
+# DARB — Finance, Submission & Invoice UI/UX Close-out scan git hub changes 
+
+&nbsp;
 
 Scope: Finance tab, team submission flow, DARB invoice, admin finance/submissions surfaces. The backend architecture from `agent/finance-workflow-alignment` stays as-is; this plan corrects the UI to match it and closes the remaining gaps.
 
@@ -56,4 +58,4 @@ Add the new keys under `case.finance.*` and `case.submit.*` in `public/locales/e
 
 ## Out of scope
 
-No changes to `set_case_services`, `get_case_financials`, `submit_case_for_review`, `confirm_agency_service_payment`, `review_case_payment_proof`, commission/reward timing, or any area outside the finance workflow.
+No changes to `set_case_services`, `get_case_financials`, `submit_case_for_review`, `confirm_agency_service_payment`, `review_case_payment_proof`, commission/reward timing, or any area outside the finance workflow.      scan all manuall changes made at git hub side and make sure they were done correctly 

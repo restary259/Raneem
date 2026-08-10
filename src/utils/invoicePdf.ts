@@ -13,6 +13,10 @@ export interface DarbInvoiceTotals {
     line_total: number;
   }>;
   service_total: number;
+  /** Confirmed agency-service payments only (ILS). */
+  total_confirmed?: number;
+  /** Outstanding agency-service balance (ILS). */
+  remaining?: number;
   payment_type: "agency_service";
 }
 
@@ -42,6 +46,8 @@ export async function downloadInvoicePdf(
         amount: "المبلغ",
         agency: "خدمات دارب",
         servicesTotal: "إجمالي خدمات دارب",
+        paid: "المدفوع المؤكد",
+        remaining: "الرصيد المتبقي",
         student: "الطالب",
         caseRef: "رقم الملف",
         date: "التاريخ",
@@ -52,6 +58,8 @@ export async function downloadInvoicePdf(
         amount: "Amount",
         agency: "DARB agency services",
         servicesTotal: "DARB services total",
+        paid: "Confirmed payments",
+        remaining: "Remaining balance",
         student: "Student",
         caseRef: "Case",
         date: "Date",
@@ -71,8 +79,8 @@ export async function downloadInvoicePdf(
 
   const summaryRows: (string | number)[][] = [
     [L.servicesTotal, "", money(totals.service_total, totals.currency)],
-    [L.paid, "", money(totals.total_confirmed, totals.currency)],
-    [L.remaining, "", money(totals.remaining, totals.currency)],
+    [L.paid, "", money(Number(totals.total_confirmed ?? 0), totals.currency)],
+    [L.remaining, "", money(Number(totals.remaining ?? Math.max(Number(totals.service_total || 0) - Number(totals.total_confirmed ?? 0), 0)), totals.currency)],
   ];
 
   const header = [
