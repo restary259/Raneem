@@ -185,6 +185,30 @@ export default function CaseDetailPage() {
           : t("case.invoice.emailFailed", { number: invoice.invoice_number }),
         variant: emailed ? undefined : "destructive",
       });
+
+      // Second mail: the student's dashboard activation link. Sent to the same
+      // address as the invoice; the backend skips duplicate invites itself.
+      const profileValues = readStudentProfile(caseData as any, submission);
+      const studentEmail = (invoice.student_email || profileValues.student_email || "").trim();
+      if (studentEmail) {
+        const { error: inviteError } = await supabase.functions.invoke("create-student-from-case", {
+          body: {
+            case_id: caseData.id,
+            student_email: studentEmail,
+            student_full_name: caseData.full_name,
+            student_phone: profileValues.student_phone ?? null,
+          },
+        });
+        if (inviteError) {
+          toast({
+            variant: "destructive",
+            description: t("case.invite.failed", "Could not send the student dashboard invitation."),
+          });
+        } else {
+          toast({ description: t("case.invite.sent", { email: studentEmail }) });
+        }
+      }
+
       await fetchData();
     } catch (err) {
       toast({
@@ -195,6 +219,7 @@ export default function CaseDetailPage() {
       setSubmitting(false);
     }
   };
+
 
   /**
    * Admin sent the file back for a change: the case sits in profile_completion
