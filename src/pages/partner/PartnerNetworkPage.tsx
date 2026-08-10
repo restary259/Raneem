@@ -96,7 +96,7 @@ export default function PartnerNetworkPage() {
     const { data, error } = await (supabase as any).rpc("master_announce_to_network", { p_body: body });
     setSending(false);
     if (error) {
-      toast({ variant: "destructive", title: t("common.actionFailed"), description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       return;
     }
     setAnnouncement("");

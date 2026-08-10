@@ -71,8 +71,8 @@ export default function TeamCasesPage() {
         .order('last_activity_at', { ascending: false });
       if (error) throw error;
       setCases((data as Case[]) ?? []);
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch {
+      toast({ variant: 'destructive', description: isAr ? 'تعذر تحميل الملفات، حاول مرة أخرى' : 'Failed to load cases, please try again' });
     } finally {
       setLoading(false);
     }
@@ -141,8 +141,8 @@ export default function TeamCasesPage() {
       toast({ title: isAr ? 'تم إنشاء الملف' : 'Case created' });
       resetNewModal();
       navigate(`/team/cases/${(caseData as Case).id}`);
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch {
+      toast({ variant: 'destructive', description: isAr ? 'تعذر إنشاء الملف، حاول مرة أخرى' : 'Failed to create the case, please try again' });
     } finally {
       setCreating(false);
     }

@@ -108,7 +108,7 @@ const AdminTeamPage = () => {
       body: JSON.stringify(payload),
     });
     const result = await resp.json();
-    if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Request failed');
+    if (!resp.ok) throw new Error(conflictMessage(result) || 'Request failed');
     return result;
   }, [conflictMessage]);
 
@@ -181,8 +181,8 @@ const AdminTeamPage = () => {
 
 
       setMembers(enriched);
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch {
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: t('common.actionFailed', 'Something went wrong. Please try again or contact support.') });
     } finally {
       setLoading(false);
     }
@@ -221,7 +221,7 @@ const AdminTeamPage = () => {
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
       const result = await resp.json();
-      if (!resp.ok) throw new Error(conflictMessage(result) || result.error || 'Failed to create member');
+      if (!resp.ok) throw new Error(conflictMessage(result) || 'Failed to create member');
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
@@ -245,6 +245,8 @@ const AdminTeamPage = () => {
       await fetchInvitations();
       toast({ description: t('admin.team.invitationSent', 'Invitation sent') });
     } catch (err: any) {
+      // The throw site already localized identity-conflict explanations and
+      // falls back to a generic message, so this is never a raw server error.
       toast({ variant: 'destructive', description: err.message });
     } finally {
       setBusyInvite(null);
@@ -257,8 +259,8 @@ const AdminTeamPage = () => {
       await callInviteFn({ action: 'revoke', invitation_id: inv.id });
       await fetchInvitations();
       toast({ description: t('admin.team.invitationRevoked', 'Invitation revoked') });
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch {
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: t('common.actionFailed', 'Something went wrong. Please try again or contact support.') });
     } finally {
       setBusyInvite(null);
     }
@@ -278,7 +280,7 @@ const AdminTeamPage = () => {
       .eq('id', memberId);
     if (error) {
       setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: !next } : m)));
-      toast({ variant: 'destructive', description: error.message });
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: t('common.actionFailed', 'Something went wrong. Please try again or contact support.') });
     }
   };
 

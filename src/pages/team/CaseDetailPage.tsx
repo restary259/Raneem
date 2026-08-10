@@ -122,8 +122,8 @@ export default function CaseDetailPage() {
       } else {
         setAssigneeName(null);
       }
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setLoading(false);
     }
@@ -169,11 +169,8 @@ export default function CaseDetailPage() {
       toast({ description: t("case.stage.moved") });
       setPendingStage(null);
       await fetchData();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        description: err instanceof Error ? err.message : String(err),
-      });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setAdvancing(false);
     }
@@ -237,11 +234,8 @@ export default function CaseDetailPage() {
       }
 
       await fetchData();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        description: err instanceof Error ? err.message : String(err),
-      });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setSubmitting(false);
     }
@@ -262,11 +256,8 @@ export default function CaseDetailPage() {
       if (error) throw error;
       toast({ description: t("case.submit.success") });
       await fetchData();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        description: err instanceof Error ? err.message : String(err),
-      });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setSubmitting(false);
     }
