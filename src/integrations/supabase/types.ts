@@ -401,6 +401,53 @@ export type Database = {
           },
         ]
       }
+      case_finance_confirmations: {
+        Row: {
+          case_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          finance_type: string
+          id: string
+          proof_note: string | null
+          proof_reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          finance_type: string
+          id?: string
+          proof_note?: string | null
+          proof_reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          finance_type?: string
+          id?: string
+          proof_note?: string | null
+          proof_reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_finance_confirmations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_invoices: {
         Row: {
           case_id: string
@@ -550,6 +597,66 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_payment_proofs: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_path: string
+          id: string
+          payment_id: string
+          payment_type: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_path: string
+          id?: string
+          payment_id: string
+          payment_type: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_path?: string
+          id?: string
+          payment_id?: string
+          payment_type?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_payment_proofs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_payment_proofs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "case_payments"
             referencedColumns: ["id"]
           },
         ]
@@ -3995,6 +4102,10 @@ export type Database = {
         Args: { p_id: string; p_user_id: string }
         Returns: undefined
       }
+      assert_case_ready_for_enrollment: {
+        Args: { p_case_id: string }
+        Returns: Json
+      }
       can_access_case_thread: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
@@ -4013,9 +4124,23 @@ export type Database = {
       }
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       clear_must_change_password: { Args: never; Returns: undefined }
+      confirm_agency_service_fee: { Args: { p_case_id: string }; Returns: Json }
+      confirm_agency_service_payment: {
+        Args: { p_case_id: string }
+        Returns: Json
+      }
       confirm_case_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
+      }
+      confirm_german_finance_item: {
+        Args: {
+          p_case_id: string
+          p_finance_type: string
+          p_note?: string
+          p_proof_reference?: string
+        }
+        Returns: Json
       }
       confirm_payout_batch: {
         Args: {
@@ -4063,6 +4188,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_case_finance_confirmations: {
+        Args: { p_case_id: string }
+        Returns: undefined
+      }
       ensure_master_recruit_link: {
         Args: never
         Returns: {
@@ -4084,6 +4213,10 @@ export type Database = {
           source: string
           target: string
         }[]
+      }
+      get_case_darb_service_total: {
+        Args: { p_case_id: string }
+        Returns: number
       }
       get_case_financials: { Args: { p_case_id: string }; Returns: Json }
       get_document_activity_spikes: {
@@ -4516,6 +4649,19 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
+      review_case_payment_proof:
+        | {
+            Args: { p_action: string; p_proof_id: string; p_reason?: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_approved: boolean
+              p_proof_id: string
+              p_rejection_reason?: string
+            }
+            Returns: Json
+          }
       search_cases_for_mention: {
         Args: { p_query: string }
         Returns: {
@@ -4561,6 +4707,20 @@ export type Database = {
         }
         Returns: string
       }
+      submit_case_payment_proof:
+        | {
+            Args: {
+              p_case_id: string
+              p_file_path: string
+              p_note?: string
+              p_payment_type: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { p_file_path: string; p_note?: string; p_payment_id: string }
+            Returns: string
+          }
       submit_recruit_application: {
         Args: {
           p_city?: string
@@ -4572,6 +4732,10 @@ export type Database = {
           p_social_link?: string
         }
         Returns: string
+      }
+      sync_case_school_payments: {
+        Args: { p_case_id: string }
+        Returns: undefined
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
     }
