@@ -20,7 +20,11 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
   const { t } = useTranslation('dashboard');
 
   const updateStatus = async (id: string, status: string) => {
-    await (supabase as any).from('contact_submissions').update({ status }).eq('id', id);
+    const { error } = await (supabase as any).from('contact_submissions').update({ status }).eq('id', id);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.error'), description: error.message });
+      return;
+    }
     toast({ title: t('admin.contacts.statusUpdated') }); onRefresh();
   };
 

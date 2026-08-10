@@ -234,15 +234,18 @@ export default function CommissionSettingsPanel() {
     }
   };
 
-  const deletePartnerOverride = async (id: string) => {
-    await (supabase as any).from("partner_commission_overrides").delete().eq("id", id);
+  const deleteOverride = async (table: string, id: string) => {
+    const { error } = await (supabase as any).from(table).delete().eq("id", id);
+    if (error) {
+      toast({ variant: "destructive", description: error.message });
+      return;
+    }
     fetchData();
   };
 
-  const deleteTeamOverride = async (id: string) => {
-    await (supabase as any).from("team_member_commission_overrides").delete().eq("id", id);
-    fetchData();
-  };
+  const deletePartnerOverride = (id: string) => deleteOverride("partner_commission_overrides", id);
+
+  const deleteTeamOverride = (id: string) => deleteOverride("team_member_commission_overrides", id);
 
   if (loading) {
     return (

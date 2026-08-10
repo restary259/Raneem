@@ -206,6 +206,9 @@ const AdminProgramsPage = () => {
         db.from("accommodations").select("*").order("name_en"),
         db.from("insurances").select("*").order("tier"),
       ])) as any[];
+      const failed = results.find((r) => r.error);
+      // Without this an RLS/network failure renders as "no records exist".
+      if (failed) throw failed.error;
       setPrograms((results[0].data ?? []) as Program[]);
       setSchools((results[1].data ?? []) as School[]);
       setAccommodations((results[2].data ?? []) as Accommodation[]);
@@ -246,8 +249,10 @@ const AdminProgramsPage = () => {
         registration_fee: progForm.registration_fee ? Number(progForm.registration_fee) : null,
         price_tiers: progTiers.filter((tier) => tier.price != null),
       };
-      if (editProgId) await db.from("programs").update(payload).eq("id", editProgId);
-      else await db.from("programs").insert(payload);
+      const { error } = editProgId
+        ? await db.from("programs").update(payload).eq("id", editProgId)
+        : await db.from("programs").insert(payload);
+      if (error) throw error;
       setProgOpen(false);
       setEditProgId(null);
       setProgForm(emptyProgForm);
@@ -274,8 +279,10 @@ const AdminProgramsPage = () => {
         city: schoolForm.city || null,
         country: schoolForm.country,
       };
-      if (editSchoolId) await db.from("schools").update(payload).eq("id", editSchoolId);
-      else await db.from("schools").insert(payload);
+      const { error } = editSchoolId
+        ? await db.from("schools").update(payload).eq("id", editSchoolId)
+        : await db.from("schools").insert(payload);
+      if (error) throw error;
       setSchoolOpen(false);
       setEditSchoolId(null);
       setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany" });
@@ -309,8 +316,10 @@ const AdminProgramsPage = () => {
         distance_note: accomForm.distance_note || null,
         price_tiers: accomTiers.filter((tier) => tier.price != null),
       };
-      if (editAccomId) await db.from("accommodations").update(payload).eq("id", editAccomId);
-      else await db.from("accommodations").insert(payload);
+      const { error } = editAccomId
+        ? await db.from("accommodations").update(payload).eq("id", editAccomId)
+        : await db.from("accommodations").insert(payload);
+      if (error) throw error;
       setAccomOpen(false);
       setEditAccomId(null);
       setAccomForm(emptyAccomForm);
@@ -347,8 +356,10 @@ const AdminProgramsPage = () => {
         description_en: insForm.description_en || null,
         age_price_tiers: insRates.filter((r) => r.price != null),
       };
-      if (editInsId) await db.from("insurances").update(payload).eq("id", editInsId);
-      else await db.from("insurances").insert(payload);
+      const { error } = editInsId
+        ? await db.from("insurances").update(payload).eq("id", editInsId)
+        : await db.from("insurances").insert(payload);
+      if (error) throw error;
       setInsOpen(false);
       setEditInsId(null);
       setInsForm(emptyInsForm);
@@ -364,7 +375,11 @@ const AdminProgramsPage = () => {
   };
 
   const toggleActive = async (table: string, id: string, current: boolean) => {
-    await db.from(table).update({ is_active: !current }).eq("id", id);
+    const { error } = await db.from(table).update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ variant: "destructive", description: error.message });
+      return;
+    }
     fetchAll();
   };
 

@@ -66,9 +66,12 @@ export const CaseService = {
 
   /** Hard delete plus the child rows that have no cascade. Admin-only via RLS. */
   async remove(caseId: string): Promise<void> {
-    await db.from('documents').delete().eq('case_id', caseId);
-    await db.from('appointments').delete().eq('case_id', caseId);
-    await db.from('case_submissions').delete().eq('case_id', caseId);
+    // A failed child delete makes the parent delete fail on the FK anyway, so
+    // report the real cause instead of the downstream constraint violation.
+    for (const table of ['documents', 'appointments', 'case_submissions']) {
+      const { error } = await db.from(table).delete().eq('case_id', caseId);
+      if (error) throw error;
+    }
     const { error } = await db.from('cases').delete().eq('id', caseId);
     if (error) throw error;
   },

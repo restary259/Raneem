@@ -111,13 +111,19 @@ export default function TeamCasesPage() {
     if (!phone.trim() || phone.length < 7) return;
     setCheckingDuplicate(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('cases')
         .select('id, full_name, status')
         .eq('phone_number', phone.trim())
         .maybeSingle();
+      if (error) throw error;
       setDuplicateWarning(data ? { id: data.id, name: data.full_name, status: data.status } : null);
-    } catch { /* silent */ } finally {
+    } catch (err) {
+      // A failed check is not proof there is no duplicate — drop the stale
+      // warning but make the failure visible instead of pretending it passed.
+      console.error('[TeamCases] duplicate phone check failed:', err);
+      setDuplicateWarning(null);
+    } finally {
       setCheckingDuplicate(false);
     }
   };

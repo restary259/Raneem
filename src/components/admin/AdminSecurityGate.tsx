@@ -125,11 +125,18 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
         }
         throw error;
       }
-      await supabase.from('profiles').update({ must_change_password: false } as any).eq('id', userId);
+      // If this flag is not cleared the user is forced through the gate again
+      // on every login, so the failure must surface instead of being dropped.
+      const { error: flagError } = await supabase
+        .from('profiles')
+        .update({ must_change_password: false } as any)
+        .eq('id', userId);
+      if (flagError) throw flagError;
       toast({ title: '✅ Password updated' });
 
       // After password change, check if TOTP is enrolled
-      const { data: mfaData } = await supabase.auth.mfa.listFactors();
+      const { data: mfaData, error: mfaError } = await supabase.auth.mfa.listFactors();
+      if (mfaError) throw mfaError;
       const verified = (mfaData?.totp ?? []).find(f => f.status === 'verified');
       if (!verified) {
         await startEnrollment();

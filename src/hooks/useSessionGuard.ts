@@ -42,7 +42,12 @@ export const useSessionGuard = () => {
     if (autoKickTimerRef.current) clearTimeout(autoKickTimerRef.current);
     setKicked(false);
     localStorage.removeItem(SESSION_NONCE_KEY);
-    try { await supabase.auth.signOut(); } catch {}
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // Local state is already cleared — still send the user to the login page.
+      console.error('[sessionGuard] sign-out failed:', err);
+    }
     navigate('/student-auth', { replace: true });
   }, [navigate]);
 

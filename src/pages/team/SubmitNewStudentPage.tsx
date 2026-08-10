@@ -430,11 +430,22 @@ export default function SubmitNewStudentPage() {
         .select("id,name,provider,price,currency,billing_period,age_price_tiers")
         .eq("is_active", true)
         .order("name"),
-    ]).then(([{ data: sc }, { data: ins }]) => {
-      setSchools(sc ?? []);
-      setInsurances(ins ?? []);
-    });
-  }, []);
+    ])
+      .then(([{ data: sc, error: scErr }, { data: ins, error: insErr }]) => {
+        // An empty dropdown caused by a failed query is indistinguishable from
+        // an empty catalogue, so surface the failure instead.
+        if (scErr || insErr) {
+          console.error("[SubmitNewStudent] catalogue load failed:", scErr ?? insErr);
+          toast({ variant: "destructive", description: (scErr ?? insErr)!.message });
+        }
+        setSchools(sc ?? []);
+        setInsurances(ins ?? []);
+      })
+      .catch((err) => {
+        console.error("[SubmitNewStudent] catalogue load threw:", err);
+        toast({ variant: "destructive", description: err?.message ?? String(err) });
+      });
+  }, [toast]);
 
   // Programs and accommodation are queried per school, so the option lists can
   // never contain another school's catalogue.
@@ -460,15 +471,25 @@ export default function SubmitNewStudentPage() {
         .eq("is_active", true)
         .eq("school_id", schoolId)
         .order("name_en"),
-    ]).then(([{ data: p }, { data: a }]) => {
-      if (cancelled) return;
-      setPrograms(p ?? []);
-      setAccommodations(a ?? []);
-    });
+    ])
+      .then(([{ data: p, error: pErr }, { data: a, error: aErr }]) => {
+        if (cancelled) return;
+        if (pErr || aErr) {
+          console.error("[SubmitNewStudent] school catalogue load failed:", pErr ?? aErr);
+          toast({ variant: "destructive", description: (pErr ?? aErr)!.message });
+        }
+        setPrograms(p ?? []);
+        setAccommodations(a ?? []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("[SubmitNewStudent] school catalogue load threw:", err);
+        toast({ variant: "destructive", description: err?.message ?? String(err) });
+      });
     return () => {
       cancelled = true;
     };
-  }, [schoolId]);
+  }, [schoolId, toast]);
 
   /* ── Validation ─────────────────────────────────────────────────────── */
   const validate = (s: StepNum): Record<string, string> => {
@@ -541,16 +562,20 @@ export default function SubmitNewStudentPage() {
       // ── Duplicate guard ───────────────────────────────────────────────
       // The same person must not silently receive a second case (and with it a
       // second activation email). Warn on a matching phone or email first.
-      const { data: phoneMatch } = await supabase
+      const { data: phoneMatch, error: phoneErr } = await supabase
         .from("cases")
         .select("id, case_reference, full_name")
         .eq("phone_number", cleanPhone)
         .limit(1);
-      const { data: emailMatch } = await (supabase as any)
+      if (phoneErr) throw phoneErr;
+      const { data: emailMatch, error: emailErr } = await (supabase as any)
         .from("case_submissions")
         .select("case_id")
         .eq("student_email", cleanEmail)
         .limit(1);
+      // A failed duplicate lookup is not a clean bill of health: aborting here
+      // is safer than sending a second activation email to the same student.
+      if (emailErr) throw emailErr;
       const dupCase = phoneMatch?.[0];
       if ((dupCase || emailMatch?.[0]) && !window.confirm(ss("duplicateWarning"))) {
         setSaving(false);
@@ -575,7 +600,7 @@ export default function SubmitNewStudentPage() {
       if (caseErr) throw caseErr;
       const caseId = (newCase as any).id;
 
-      await (supabase as any).from("case_submissions").insert({
+      const { error: submissionErr } = await (supabase as any).from("case_submissions").insert({
         case_id: caseId,
         school_id: schoolId || null,
         program_id: programId || null,
@@ -628,6 +653,9 @@ export default function SubmitNewStudentPage() {
           documents_skipped: skipDocuments,
         },
       });
+      // Without the submission row the case carries no program, pricing or
+      // contact details, so this must not be reported as a success.
+      if (submissionErr) throw submissionErr;
 
       // Create/link the student account FIRST so uploaded documents can be
       // owned by the student rather than by the uploading team member.
@@ -662,26 +690,36 @@ export default function SubmitNewStudentPage() {
         // (folder[1] = auth.uid()) lets them read their own files.
         const folder = studentUserId ?? caseId;
         const path = `${folder}/${caseId}_${doc.category}_${doc.file.name}`;
-        const { data: uploadData } = await supabase.storage
+        const { data: uploadData, error: uploadErr } = await supabase.storage
           .from("student-documents")
           .upload(path, doc.file, { upsert: true });
 
-        if (uploadData?.path) {
-          await supabase.from("documents").insert({
-            student_id: studentUserId ?? user!.id,
-            case_id: caseId,
-            file_name: doc.file.name,
-            // Bucket is private: store the bare storage path and sign it on read.
-            file_url: uploadData.path,
-            file_type: doc.file.type,
-            file_size: doc.file.size,
-            category: doc.category,
-            uploaded_by: user!.id,
-          });
+        if (uploadErr || !uploadData?.path) {
+          const reason = uploadErr?.message ?? "upload returned no path";
+          console.error("[SubmitNewStudent] document upload failed", doc.file.name, uploadErr);
+          toast({ variant: "destructive", description: `${doc.file.name}: ${reason}` });
+          continue;
+        }
+
+        const { error: docInsertErr } = await supabase.from("documents").insert({
+          student_id: studentUserId ?? user!.id,
+          case_id: caseId,
+          file_name: doc.file.name,
+          // Bucket is private: store the bare storage path and sign it on read.
+          file_url: uploadData.path,
+          file_type: doc.file.type,
+          file_size: doc.file.size,
+          category: doc.category,
+          uploaded_by: user!.id,
+        });
+        if (docInsertErr) {
+          // The object is in storage but invisible to the case — say so.
+          console.error("[SubmitNewStudent] document row insert failed", doc.file.name, docInsertErr);
+          toast({ variant: "destructive", description: `${doc.file.name}: ${docInsertErr.message}` });
         }
       }
 
-      await supabase.rpc("log_activity" as any, {
+      const { error: activityErr } = await supabase.rpc("log_activity" as any, {
         p_actor_id: user!.id,
         p_actor_name: "Team Member",
         p_action: "student_submitted_direct",
@@ -689,6 +727,7 @@ export default function SubmitNewStudentPage() {
         p_entity_id: caseId,
         p_metadata: { full_name: fullName, email },
       });
+      if (activityErr) console.error("[SubmitNewStudent] activity log failed:", activityErr);
 
       clearDraft();
       toast({ title: ss("successTitle") });
