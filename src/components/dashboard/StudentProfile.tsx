@@ -28,20 +28,49 @@ interface StudentProfileProps {
 }
 
 interface ExtendedProfile extends Profile {
-  emergency_contact?: string;
+  emergency_contact?: string; // legacy single-line mirror (kept in sync for older readers)
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contacts?: { name: string; relationship: string; phone: string }[];
   date_of_birth?: string;
   home_address?: string; // stored in profiles.country
   german_address?: string; // stored in profiles.german_address (add column via migration)
 }
 
+/** Resolve the canonical emergency-contact fields from a raw profile row. */
+const seedEmergency = (raw: any) => {
+  const rawContacts = raw?.emergency_contacts;
+  const contacts: { name: string; relationship: string; phone: string }[] = Array.isArray(rawContacts)
+    ? rawContacts.map((c: any) => ({
+        name: c?.name ?? "",
+        relationship: c?.relationship ?? "",
+        phone: c?.phone ?? "",
+      }))
+    : [];
+  const first = contacts[0] ?? {
+    name: raw?.emergency_contact_name ?? "",
+    relationship: "",
+    phone: raw?.emergency_contact_phone ?? raw?.emergency_contact ?? "",
+  };
+  return {
+    emergency_contact_name: first.name,
+    emergency_contact_phone: first.phone,
+    emergency_contacts: contacts.length ? contacts : [first],
+    emergency_contact: first.phone,
+  };
+};
+
+const fromProfile = (profile: any): ExtendedProfile => ({
+  ...profile,
+  home_address: profile?.country ?? "",
+  german_address: profile?.german_address ?? "",
+  date_of_birth: profile?.date_of_birth ?? "",
+  ...seedEmergency(profile),
+} as ExtendedProfile);
+
 const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<ExtendedProfile>({
-    ...profile,
-    home_address: (profile as any).country ?? "",
-    german_address: (profile as any).german_address ?? "",
-    date_of_birth: (profile as any).date_of_birth ?? "",
-  } as ExtendedProfile);
+  const [editedProfile, setEditedProfile] = useState<ExtendedProfile>(() => fromProfile(profile));
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -56,6 +85,17 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
   const handleSave = async () => {
     setIsLoading(true);
     try {
+      // Build the canonical emergency_contacts array from the edited name/phone,
+      // preserving any additional contacts the student added during onboarding.
+      const existingContacts = Array.isArray(editedProfile.emergency_contacts)
+        ? editedProfile.emergency_contacts
+        : [];
+      const name = (editedProfile.emergency_contact_name ?? "").trim();
+      const phone = (editedProfile.emergency_contact_phone ?? "").trim();
+      const rebuilt = name || phone
+        ? [{ name, relationship: existingContacts[0]?.relationship ?? "", phone }, ...existingContacts.slice(1)]
+        : existingContacts;
+
       const { error } = await (supabase as any)
         .from("profiles")
         .update({
@@ -64,7 +104,10 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
           country: editedProfile.home_address, // home address
           german_address: (editedProfile as any).german_address, // German address column
           date_of_birth: editedProfile.date_of_birth,
-          emergency_contact: editedProfile.emergency_contact,
+          emergency_contacts: rebuilt,
+          emergency_contact_name: name || null,
+          emergency_contact_phone: phone || null,
+          emergency_contact: phone, // legacy mirror kept in sync
           arrival_date: editedProfile.arrival_date,
           gender: editedProfile.gender,
           intake_month: editedProfile.intake_month,
@@ -202,10 +245,18 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                   placeholder={t("profile.germanAddressPlaceholder", "Street, City, Postcode")}
                 />
               </Field>
-              <Field label={t("profile.emergencyContact", "Emergency Contact")}>
+              <Field label={t("profile.emergencyContactName", "Emergency Contact Name")}>
                 <Input
-                  value={(editedProfile as any).emergency_contact || ""}
-                  onChange={set("emergency_contact")}
+                  value={(editedProfile as any).emergency_contact_name || ""}
+                  onChange={set("emergency_contact_name")}
+                  disabled={!isEditing}
+                  placeholder={t("profile.emergencyContactNamePlaceholder", "Full name")}
+                />
+              </Field>
+              <Field label={t("profile.emergencyContactPhone", "Emergency Contact Phone")}>
+                <Input
+                  value={(editedProfile as any).emergency_contact_phone || ""}
+                  onChange={set("emergency_contact_phone")}
                   disabled={!isEditing}
                   placeholder="+972..."
                 />
@@ -282,7 +333,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setEditedProfile({ ...profile } as ExtendedProfile);
+                    setEditedProfile(fromProfile(profile));
                     setIsEditing(false);
                   }}
                   disabled={isLoading}
