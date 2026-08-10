@@ -437,14 +437,14 @@ export default function SubmitNewStudentPage() {
         // an empty catalogue, so surface the failure instead.
         if (scErr || insErr) {
           console.error("[SubmitNewStudent] catalogue load failed:", scErr ?? insErr);
-          toast({ variant: "destructive", description: (scErr ?? insErr)!.message });
+          toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
         }
         setSchools(sc ?? []);
         setInsurances(ins ?? []);
       })
       .catch((err) => {
         console.error("[SubmitNewStudent] catalogue load threw:", err);
-        toast({ variant: "destructive", description: err?.message ?? String(err) });
+        toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       });
   }, [toast]);
 
@@ -477,7 +477,7 @@ export default function SubmitNewStudentPage() {
         if (cancelled) return;
         if (pErr || aErr) {
           console.error("[SubmitNewStudent] school catalogue load failed:", pErr ?? aErr);
-          toast({ variant: "destructive", description: (pErr ?? aErr)!.message });
+          toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
         }
         setPrograms(p ?? []);
         setAccommodations(a ?? []);
@@ -485,7 +485,7 @@ export default function SubmitNewStudentPage() {
       .catch((err) => {
         if (cancelled) return;
         console.error("[SubmitNewStudent] school catalogue load threw:", err);
-        toast({ variant: "destructive", description: err?.message ?? String(err) });
+        toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       });
     return () => {
       cancelled = true;
@@ -701,9 +701,8 @@ export default function SubmitNewStudentPage() {
           .upload(path, doc.file, { upsert: true });
 
         if (uploadErr || !uploadData?.path) {
-          const reason = uploadErr?.message ?? "upload returned no path";
           console.error("[SubmitNewStudent] document upload failed", doc.file.name, uploadErr);
-          toast({ variant: "destructive", description: `${doc.file.name}: ${reason}` });
+          toast({ variant: "destructive", description: `${doc.file.name}: ${t("common.actionFailed")}` });
           continue;
         }
 
@@ -721,7 +720,7 @@ export default function SubmitNewStudentPage() {
         if (docInsertErr) {
           // The object is in storage but invisible to the case — say so.
           console.error("[SubmitNewStudent] document row insert failed", doc.file.name, docInsertErr);
-          toast({ variant: "destructive", description: `${doc.file.name}: ${docInsertErr.message}` });
+          toast({ variant: "destructive", description: `${doc.file.name}: ${t("common.actionFailed")}` });
         }
       }
 
@@ -738,8 +737,8 @@ export default function SubmitNewStudentPage() {
       clearDraft();
       toast({ title: ss("successTitle") });
       navigate(`/team/cases/${caseId}`);
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
       setSaving(false);
     }

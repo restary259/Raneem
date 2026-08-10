@@ -28,8 +28,8 @@ export default function TeamStudentProfilePage() {
       ]);
       setSubmission(subRes.data);
       setProfile(profRes.data);
-    } catch (err: any) {
-      toast({ variant: 'destructive', description: err.message });
+    } catch {
+      toast({ variant: 'destructive', description: 'Something went wrong while loading the profile. Please try again.' });
     } finally {
       setLoading(false);
     }

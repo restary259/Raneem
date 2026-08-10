@@ -75,7 +75,7 @@ export default function PartnerProfilePage() {
       .eq("id", user.id);
     setSaving(false);
     if (error) {
-      toast({ variant: "destructive", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       return;
     }
     toast({ description: t("partner.profile.saved") });
@@ -95,7 +95,7 @@ export default function PartnerProfilePage() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPw(false);
     if (error) {
-      toast({ variant: "destructive", description: error.message });
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       return;
     }
     setNewPassword("");
