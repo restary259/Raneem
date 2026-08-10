@@ -383,10 +383,12 @@ export default function CaseDetailPage() {
           {showFinance && (
             <CaseFinance
               caseId={caseData.id}
-              canManage={role === "admin" || (role === "team_member" && caseData.status === "profile_completion")}
+              canManage={role === "admin" || role === "team_member"}
               canConfirm={role === "admin"}
+              showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
             />
           )}
+
         </>
       )}
 
