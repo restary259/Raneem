@@ -6,6 +6,31 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+/**
+ * Display formatters. Dashboards always render dates in the `en-US` locale so
+ * digits stay ASCII in both Arabic (RTL) and English.
+ */
+const DISPLAY_LOCALE = "en-US";
+
+/** `10/08/2026` style numeric date. */
+export function formatDateNumeric<F = string>(value: string | null | undefined, fallback: F): string | F {
+  return value ? new Date(value).toLocaleDateString(DISPLAY_LOCALE) : fallback;
+}
+
+/** `Aug 10, 2026`. */
+export function formatDateMedium<F = string>(value: string | null | undefined, fallback: F): string | F {
+  return value
+    ? new Date(value).toLocaleDateString(DISPLAY_LOCALE, { year: "numeric", month: "short", day: "numeric" })
+    : fallback;
+}
+
+/** `Aug 10, 2026, 5:23 AM`. */
+export function formatDateTime<F = string>(value: string | null | undefined, fallback: F): string | F {
+  return value
+    ? new Date(value).toLocaleString(DISPLAY_LOCALE, { dateStyle: "medium", timeStyle: "short" })
+    : fallback;
+}
+
 export const DOB_MONTHS = [
   { v: "01", l: "January" },
   { v: "02", l: "February" },

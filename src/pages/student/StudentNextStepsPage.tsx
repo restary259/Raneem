@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuthedUserId } from '@/hooks/useAuthedUserId';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { formatDateTime } from '@/utils/dateUtils';
 
 interface StepRow {
   id: string;
@@ -21,15 +23,12 @@ interface StepRow {
   tone: string;
 }
 
-const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 export default function StudentNextStepsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation('dashboard');
   const { dir } = useDirection();
 
-  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
   const [caseStatus, setCaseStatus] = useState<string | null>(null);
@@ -123,7 +122,7 @@ export default function StudentNextStepsPage() {
           id: 'appointment',
           icon: CalendarDays,
           title: t('student.next.upcomingAppointment', 'Upcoming appointment'),
-          detail: fmtDateTime(appt.scheduled_at),
+          detail: formatDateTime(appt.scheduled_at, ''),
           href: '/student/checklist',
           tone: 'text-primary',
         });
@@ -158,13 +157,7 @@ export default function StudentNextStepsPage() {
     setLoading(false);
   }, [t]);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
-      setUserId(session.user.id);
-      load(session.user.id);
-    });
-  }, [navigate, load]);
+  const userId = useAuthedUserId(load);
 
   useRealtimeSubscription('documents', () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription('appointments', () => { if (userId) load(userId); }, !!userId);

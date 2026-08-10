@@ -5,13 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock3, Loader2, Wallet, ExternalLink, XCircle } from "lucide-react";
-import { formatILS } from "@/lib/money";
+import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCaseServices } from "@/hooks/useCaseServices";
 import { useCaseFinancials, type FinancialSchoolLine, type FinancialPayment } from "@/hooks/useCaseFinancials";
 import CaseServices from "./CaseServices";
 import CasePayments from "./CasePayments";
+import { formatDateTime } from "@/utils/dateUtils";
 
 interface Props {
   caseId: string;
@@ -31,15 +32,6 @@ interface ProofRow {
   reviewed_at: string | null;
 }
 
-const fmtMoney = (amount: number, currency: string) =>
-  currency === "ILS"
-    ? formatILS(amount)
-    : new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(
-        Number(amount || 0),
-      );
-
-const fmtDate = (value: string | null) =>
-  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
 
 const schoolPaymentTypes = ["school_course", "school_accommodation", "school_insurance"] as const;
 
@@ -215,7 +207,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
                 <p className="mt-1 text-sm font-medium">{formatILS(serviceTotal)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {agencyConfirmed
-                    ? `Confirmed by ${agencyPayment?.confirmed_by ? "Team/Admin" : "Team"} · ${fmtDate(agencyPayment?.confirmed_at ?? null)}`
+                    ? `Confirmed by ${agencyPayment?.confirmed_by ? "Team/Admin" : "Team"} · ${formatDateTime(agencyPayment?.confirmed_at ?? null, "—")}`
                     : "Calculated automatically from selected DARB services. No amount can be entered manually."}
                 </p>
               </div>
@@ -262,11 +254,11 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
                 <div key={line.kind} className="rounded-md border p-3">
                   <div className="flex flex-wrap justify-between gap-2">
                     <span className="font-medium">{lineName(line)}</span>
-                    <span className="font-semibold">{fmtMoney(line.total, line.currency)}</span>
+                    <span className="font-semibold">{formatCurrencyAmount(line.total, line.currency)}</span>
                   </div>
                   {line.weekly_price ? (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {fmtMoney(line.weekly_price, line.currency)} × {line.weeks} weeks
+                      {formatCurrencyAmount(line.weekly_price, line.currency)} × {line.weeks} weeks
                     </p>
                   ) : null}
                 </div>
@@ -274,7 +266,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
               {Object.entries(schoolSubtotals).map(([currency, amount]) => (
                 <div key={currency} className="flex justify-between border-t pt-3 font-semibold">
                   <span>Estimated total</span>
-                  <span>{fmtMoney(Number(amount), currency)}</span>
+                  <span>{formatCurrencyAmount(Number(amount), currency)}</span>
                 </div>
               ))}
             </div>
@@ -296,7 +288,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-medium">{typeLabel(type)}</span>
                       <span className="text-sm font-semibold">
-                        {payment ? fmtMoney(payment.amount, payment.currency) : "—"}
+                        {payment ? formatCurrencyAmount(payment.amount, payment.currency) : "—"}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -310,7 +302,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
                         <Badge variant="secondary">Awaiting student proof</Badge>
                       )}
                       {proof?.uploaded_at && (
-                        <span className="text-muted-foreground">{fmtDate(proof.uploaded_at)}</span>
+                        <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
                       )}
                     </div>
                     {proof?.rejection_reason && <p className="text-xs text-red-700">{proof.rejection_reason}</p>}

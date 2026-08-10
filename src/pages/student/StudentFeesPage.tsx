@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { formatCurrencyAmount } from "@/lib/money";
 
 interface ServiceLine {
   id: string;
@@ -50,9 +51,6 @@ interface Financials {
   total_pending_review: number;
   remaining: number;
 }
-
-const money = (amount: number, currency: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount ?? 0);
 
 const typeForKind = (kind: SchoolCost["kind"]) =>
   kind === "program" ? "school_course" : kind === "accommodation" ? "school_accommodation" : "school_insurance";
@@ -150,7 +148,7 @@ const StudentFeesPage = () => {
   const stat = (label: string, value: number) => (
     <div className="rounded-lg border border-border p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{money(value, "ILS")}</p>
+      <p className="text-lg font-semibold">{formatCurrencyAmount(value, "ILS")}</p>
     </div>
   );
 
@@ -183,7 +181,7 @@ const StudentFeesPage = () => {
               {fin.services.map((s) => (
                 <li key={s.id} className="flex items-center justify-between gap-3 p-3 text-sm">
                   <span>{s.description}</span>
-                  <span className="font-medium">{money(s.line_total, s.currency || "ILS")}</span>
+                  <span className="font-medium">{formatCurrencyAmount(s.line_total, s.currency || "ILS")}</span>
                 </li>
               ))}
             </ul>
@@ -209,7 +207,7 @@ const StudentFeesPage = () => {
                 <div key={c.kind} className="rounded-lg border p-4 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{(isRtl ? c.name_ar : c.name_en) || c.name_en || c.name_ar}</span>
-                    <span className="font-semibold">{money(c.total, c.currency || "EUR")}</span>
+                    <span className="font-semibold">{formatCurrencyAmount(c.total, c.currency || "EUR")}</span>
                   </div>
                   {payment?.status === "confirmed" || proof?.status === "approved" ? (
                     <div className="flex items-center gap-2 text-sm text-emerald-700">
@@ -287,7 +285,7 @@ const StudentFeesPage = () => {
                   <span className="text-muted-foreground">{new Date(p.created_at).toLocaleDateString("en-US")}</span>
                   <span className="flex items-center gap-2">
                     <Badge variant="secondary">{p.status}</Badge>
-                    <span className="font-medium">{money(p.amount, p.currency || "ILS")}</span>
+                    <span className="font-medium">{formatCurrencyAmount(p.amount, p.currency || "ILS")}</span>
                   </span>
                 </li>
               ))}

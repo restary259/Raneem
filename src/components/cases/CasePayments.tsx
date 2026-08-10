@@ -7,6 +7,7 @@ import { formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { FinancialPayment, PaymentStatus } from "@/hooks/useCaseFinancials";
+import { formatDateNumeric } from "@/utils/dateUtils";
 
 interface Props {
   caseId: string;
@@ -16,7 +17,6 @@ interface Props {
   onChanged: () => void;
 }
 
-const fmtDate = (value: string | null) => (value ? new Date(value).toLocaleDateString("en-US") : "—");
 
 const STATUS_CLASS: Record<PaymentStatus, string> = {
   pending: "bg-slate-100 text-slate-800 border-slate-200",
@@ -97,11 +97,11 @@ const CasePayments: React.FC<Props> = ({ payments, canConfirm = false, onChanged
                         : `${Number(payment.amount || 0).toLocaleString("en-US")} ${payment.currency}`}
                     </p>
                     <p className="break-words text-xs text-muted-foreground">
-                      {fmtDate(payment.submitted_at ?? payment.created_at)}
+                      {formatDateNumeric(payment.submitted_at ?? payment.created_at, "—")}
                       {payment.note ? ` · ${payment.note}` : ""}
                     </p>
                     {payment.status === "confirmed" && payment.confirmed_at && (
-                      <p className="text-xs text-emerald-700">Confirmed {fmtDate(payment.confirmed_at)}</p>
+                      <p className="text-xs text-emerald-700">Confirmed {formatDateNumeric(payment.confirmed_at, "—")}</p>
                     )}
                     {payment.status === "rejected" && payment.rejected_reason && (
                       <p className="break-words text-xs text-red-700">{payment.rejected_reason}</p>

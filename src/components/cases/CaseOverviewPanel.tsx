@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { formatDateMedium } from "@/utils/dateUtils";
 
 interface Props {
   caseData: Record<string, any>;
@@ -36,8 +37,6 @@ export default function CaseOverviewPanel({ caseData }: Props) {
       });
   }, [caseData.partner_id, caseData.referred_by]);
 
-  const fmtDate = (iso?: string | null) =>
-    iso ? new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : null;
 
   const rows: { label: string; value: string | null }[] = [
     { label: t("case.overview.phone"), value: caseData.phone_number ?? null },
@@ -63,7 +62,7 @@ export default function CaseOverviewPanel({ caseData }: Props) {
     },
     { label: t("case.overview.partner"), value: partnerName },
     { label: t("case.overview.referredBy"), value: referrerName },
-    { label: t("case.overview.createdAt"), value: fmtDate(caseData.created_at) },
+    { label: t("case.overview.createdAt"), value: formatDateMedium(caseData.created_at, null) },
   ];
 
   const notSet = t("case.overview.notSet");

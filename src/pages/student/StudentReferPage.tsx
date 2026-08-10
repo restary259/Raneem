@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useAuthedUserId } from '@/hooks/useAuthedUserId';
 import ReferralForm from '@/components/dashboard/ReferralForm';
 import ReferralTracker from '@/components/dashboard/ReferralTracker';
 import ReferralLinkCard from '@/components/dashboard/ReferralLinkCard';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 
 export default function StudentReferPage() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
-      setUserId(session.user.id);
-    });
-  }, [navigate]);
+  const userId = useAuthedUserId();
 
   if (!userId) return <DashboardLoading />;
 

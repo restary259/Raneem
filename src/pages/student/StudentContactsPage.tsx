@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useAuthedUserId } from '@/hooks/useAuthedUserId';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,10 +36,8 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function StudentContactsPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
 
@@ -53,13 +51,7 @@ export default function StudentContactsPage() {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
-      setUserId(session.user.id);
-      load();
-    });
-  }, [navigate, load]);
+  const userId = useAuthedUserId(() => load());
 
   if (!userId || isLoading) return <DashboardLoading />;
 

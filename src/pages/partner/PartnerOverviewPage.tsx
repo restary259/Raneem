@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,13 +36,11 @@ const startOfCurrentMonth = () => {
 };
 
 export default function PartnerOverviewPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [paidRewards, setPaidRewards] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(500);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
@@ -115,16 +113,7 @@ export default function PartnerOverviewPage() {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        navigate("/student-auth");
-        return;
-      }
-      setUserId(session.user.id);
-      load(session.user.id);
-    });
-  }, [navigate, load]);
+  const userId = useAuthedUserId(load);
 
   useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,12 +33,10 @@ const FRIENDLY_LABELS: Record<string, { en: string; ar: string }> = {
 };
 
 export default function PartnerStudentsPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
@@ -87,16 +85,7 @@ export default function PartnerStudentsPage() {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        navigate("/student-auth");
-        return;
-      }
-      setUserId(session.user.id);
-      load(session.user.id);
-    });
-  }, [navigate, load]);
+  const userId = useAuthedUserId(load);
 
   // Real-time: refetch when cases or partner overrides change
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
