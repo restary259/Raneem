@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-/* ג”€ג”€ג”€ Types ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+/* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
   id: string;
   full_name: string;
@@ -18,20 +18,20 @@ interface StudentRecord {
   created_at: string;
 }
 
-/* ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•
+/* ═══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
-ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג• */
+═══════════════════════════════════════════════════════════════════════ */
 export default function TeamStudentsPage() {
   const { toast } = useToast();
   const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
 
-  /* ג”€ג”€ Student list ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Student list ────────────────────────────────────────────────── */
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  /* ג”€ג”€ Dialog ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Dialog ──────────────────────────────────────────────────────── */
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newCreds, setNewCreds] = useState<{
@@ -42,7 +42,7 @@ export default function TeamStudentsPage() {
     invitationFailed: boolean;
   } | null>(null);
 
-  /* ג”€ג”€ Form fields ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Form fields ─────────────────────────────────────────────────── */
   const [form, setForm] = useState({
     firstName: "",
     fatherName: "",
@@ -55,7 +55,7 @@ export default function TeamStudentsPage() {
 
   const resetForm = () => setForm({ firstName: "", fatherName: "", familyName: "", email: "" });
 
-  /* ג”€ג”€ Fetch students ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Fetch students ──────────────────────────────────────────────── */
   const fetchStudents = useCallback(async () => {
     setListLoading(true);
     try {
@@ -68,7 +68,7 @@ export default function TeamStudentsPage() {
         .eq("role", "student");
 
       if (roleErr) {
-        // RLS may block team members ג€” show a generic message to avoid leaking internals.
+        // RLS may block team members — show a generic message to avoid leaking internals.
         console.error("user_roles RLS error:", roleErr.message, roleErr.details);
         toast({ variant: "destructive", description: t("common.error") });
         return;
@@ -105,7 +105,7 @@ export default function TeamStudentsPage() {
     fetchStudents();
   }, [fetchStudents]);
 
-  /* ג”€ג”€ Create account ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Create account ──────────────────────────────────────────────── */
   const handleCreate = async () => {
     const { firstName, fatherName, familyName, email } = form;
 
@@ -133,9 +133,9 @@ export default function TeamStudentsPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // Use the current, durable invitation flow. It creates the student
-      // account, stores a revocable activation invitation, and rate-limits
-      // duplicate emails instead of exposing a temporary password to staff.
+      // Use the durable invitation flow. It creates the student account,
+      // stores a revocable activation invitation, and rate-limits duplicate
+      // emails instead of exposing a temporary password to staff.
       const { data, error } = await supabase.functions.invoke("create-student-from-case", {
         body: { student_email: email.trim().toLowerCase(), student_full_name: fullName },
         headers: { Authorization: `Bearer ${session?.access_token}` },
@@ -165,19 +165,19 @@ export default function TeamStudentsPage() {
     }
   };
 
-  /* ג”€ג”€ Filtered list ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  /* ── Filtered list ───────────────────────────────────────────────── */
   const filtered = students.filter((s) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q);
   });
 
-  /* ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  /* ─────────────────────────────────────────────────────────────────
      RENDER
-  ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+  ─────────────────────────────────────────────────────────────────── */
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-5xl mx-auto">
-      {/* ג”€ג”€ Header ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */}
+      {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-foreground">{t("team.students.title", "Student Accounts")}</h1>
@@ -191,7 +191,7 @@ export default function TeamStudentsPage() {
             <RefreshCw className="h-4 w-4" />
           </Button>
 
-          {/* ג”€ג”€ Create dialog ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */}
+          {/* ── Create dialog ───────────────────────────────────────── */}
           <Dialog
             open={open}
             onOpenChange={(v) => {
@@ -217,7 +217,7 @@ export default function TeamStudentsPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              {/* ג”€ג”€ Success / credentials view ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */}
+              {/* ── Success / credentials view ─────────────────────── */}
               {newCreds ? (
                 <div className="space-y-4 pt-1">
                   <p className="text-sm text-muted-foreground">
@@ -249,7 +249,7 @@ export default function TeamStudentsPage() {
                   </Button>
                 </div>
               ) : (
-                /* ג”€ג”€ Creation form ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */
+                /* ── Creation form ──────────────────────────────────── */
                 <div className="space-y-4 pt-1">
                   {/* Three-part name */}
                   <div className="space-y-3">
@@ -263,7 +263,7 @@ export default function TeamStudentsPage() {
                         id="firstName"
                         value={form.firstName}
                         onChange={setField("firstName")}
-                        placeholder={isRtl ? "…״«״§„: …״­…״¯" : "e.g. Ahmad"}
+                        placeholder={isRtl ? "مثال: محمد" : "e.g. Ahmad"}
                         autoFocus
                       />
                     </div>
@@ -274,7 +274,7 @@ export default function TeamStudentsPage() {
                         id="fatherName"
                         value={form.fatherName}
                         onChange={setField("fatherName")}
-                        placeholder={isRtl ? "…״«״§„: ״¹„" : "e.g. Khalid"}
+                        placeholder={isRtl ? "مثال: علي" : "e.g. Khalid"}
                       />
                     </div>
 
@@ -284,7 +284,7 @@ export default function TeamStudentsPage() {
                         id="familyName"
                         value={form.familyName}
                         onChange={setField("familyName")}
-                        placeholder={isRtl ? "…״«״§„: ״§„†״¬״§״±" : "e.g. Hassan"}
+                        placeholder={isRtl ? "مثال: النجار" : "e.g. Hassan"}
                       />
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export default function TeamStudentsPage() {
         </div>
       </div>
 
-      {/* ג”€ג”€ Search bar ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */}
+      {/* ── Search bar ─────────────────────────────────────────────── */}
       <div className="relative max-w-sm">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
@@ -341,7 +341,7 @@ export default function TeamStudentsPage() {
         />
       </div>
 
-      {/* ג”€ג”€ Student list ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ */}
+      {/* ── Student list ───────────────────────────────────────────── */}
       {listLoading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin me-2" />
@@ -372,7 +372,7 @@ export default function TeamStudentsPage() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{s.full_name || "ג€”"}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{s.full_name || "—"}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                       <Mail className="h-3 w-3 shrink-0" />
                       {s.email}
@@ -392,4 +392,3 @@ export default function TeamStudentsPage() {
     </div>
   );
 }
-
