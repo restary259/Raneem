@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
+import { formatDateNumeric } from "@/utils/dateUtils";
 
 
 interface CaseProgramTabProps {
@@ -30,8 +31,6 @@ interface InsuranceInfo {
 
 
 
-const formatDate = (value?: string | null) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "";
 
 export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const { t, i18n } = useTranslation("dashboard");
@@ -156,12 +155,12 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <p className="text-xs text-muted-foreground font-semibold">{t("case.program.startDate")}</p>
-            <p className="text-sm font-medium">{formatDate(submission.program_start_date)}</p>
+            <p className="text-sm font-medium">{formatDateNumeric(submission.program_start_date, "")}</p>
           </div>
           {submission?.program_end_date && (
             <div>
               <p className="text-xs text-muted-foreground font-semibold">{t("case.program.endDate")}</p>
-              <p className="text-sm font-medium">{formatDate(submission.program_end_date)}</p>
+              <p className="text-sm font-medium">{formatDateNumeric(submission.program_end_date, "")}</p>
             </div>
           )}
           {months && (

@@ -19,6 +19,7 @@ import {
   readStudentProfile,
   type StudentProfileValues,
 } from "@/lib/studentProfileFields";
+import { formatDateTime } from "@/utils/dateUtils";
 
 export interface AppointmentRow {
   id: string;
@@ -45,14 +46,6 @@ interface Props {
   submitting: boolean;
 }
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 
 /** Renders only the working surface for the stage the case is actually in. */
 export default function CaseStageBlock(props: Props) {
@@ -110,7 +103,7 @@ export default function CaseStageBlock(props: Props) {
             {appointments.map((appt) => (
               <div key={appt.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{fmtDate(appt.scheduled_at)}</p>
+                  <p className="text-sm font-medium">{formatDateTime(appt.scheduled_at, "")}</p>
                   <p className="text-xs text-muted-foreground">
                     {appt.outcome
                       ? t(`team.outcome.${appt.outcome}`, appt.outcome)

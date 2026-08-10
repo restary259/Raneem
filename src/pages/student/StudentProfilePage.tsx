@@ -1,16 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthedUserId } from '@/hooks/useAuthedUserId';
 import StudentProfile from '@/components/dashboard/StudentProfile';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import { Profile, VisaStatus } from '@/types/profile';
 
 export default function StudentProfilePage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation('dashboard');
 
@@ -23,13 +21,7 @@ export default function StudentProfilePage() {
     }
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { navigate('/student-auth'); return; }
-      setUserId(session.user.id);
-      fetchProfile(session.user.id);
-    });
-  }, [navigate, fetchProfile]);
+  const userId = useAuthedUserId(fetchProfile);
 
   if (!userId || !profile) return <DashboardLoading />;
 
