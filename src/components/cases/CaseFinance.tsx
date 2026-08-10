@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { CheckCircle2, Clock3, Loader2, Wallet, ExternalLink, XCircle } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
