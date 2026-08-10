@@ -247,6 +247,7 @@
     "note": "Tell us briefly about your audience (optional)",
     "consent": "I agree to Darb's privacy policy and to being contacted about this application.",
     "submit": "Send application",
+    "submitError": "Something went wrong sending your application. Please try again.",
     "doneTitle": "Application received",
     "doneBody": "Our team will review it and contact you with your account details.",
     "invalidTitle": "This recruit link is not valid",
