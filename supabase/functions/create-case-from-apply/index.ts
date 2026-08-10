@@ -215,8 +215,10 @@ Deno.serve(async (req) => {
     }
 
     // ── Referral attribution ──────────────────────────────────────
-    // A referral code from the public link is resolved server-side, so a
-    // visitor can never credit an arbitrary user by editing the request.
+    // Attribution is resolved server-side: a raw `referrer_user_id` or
+    // `partner_id` in the request body is never trusted on its own, because a
+    // public visitor could otherwise name an arbitrary account and have it paid
+    // a commission later.
     const caller = await resolveCaller(req, supabaseAdmin);
 
     let validatedPartnerId: string | null = null;

@@ -6,39 +6,33 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: (fn: string, args: any) => {
       calls.push({ fn, args });
-      return Promise.resolve({ data: "pay-1", error: null });
+      return Promise.resolve({ data: { payment_id: "pay-1", amount_ils: 5000 }, error: null });
     },
   },
 }));
 
-import { recordServiceFeePayment } from "./CasePaymentService";
+import { confirmAgencyServicePayment, recordServiceFeePayment } from "./CasePaymentService";
 
-describe("recordServiceFeePayment", () => {
+describe("confirmAgencyServicePayment", () => {
   beforeEach(() => {
     calls.length = 0;
   });
 
-  it("submits the fee through the authoritative RPC", async () => {
-    const id = await recordServiceFeePayment({
-      caseId: "c1",
-      actorId: "u1",
-      amount: 5000,
-      paidAt: "2026-01-01",
-    });
-    expect(id).toBe("pay-1");
+  it("confirms the fee through the authoritative RPC", async () => {
+    const result = await confirmAgencyServicePayment("c1");
+    expect(result).toEqual({ paymentId: "pay-1", amountIls: 5000 });
     expect(calls).toHaveLength(1);
-    expect(calls[0].fn).toBe("submit_case_payment");
-    expect(calls[0].args).toMatchObject({
-      p_case_id: "c1",
-      p_amount: 5000,
-      p_payment_type: "service_fee",
-    });
-    // A retry with the same case+amount reuses the key, so the server de-dupes.
-    expect(calls[0].args.p_idem_key).toBe("service_fee:c1:5000");
+    expect(calls[0].fn).toBe("confirm_agency_service_payment");
+    expect(calls[0].args).toMatchObject({ p_case_id: "c1" });
   });
 
-  it("ignores non-positive amounts", async () => {
-    await recordServiceFeePayment({ caseId: "c1", actorId: "u1", amount: 0 });
+  it("never accepts a client-supplied amount", async () => {
+    await confirmAgencyServicePayment("c1");
+    expect(Object.keys(calls[0].args)).toEqual(["p_case_id"]);
+  });
+
+  it("rejects a missing case id", async () => {
+    await expect(recordServiceFeePayment({ caseId: "" })).rejects.toThrow();
     expect(calls).toHaveLength(0);
   });
 });
