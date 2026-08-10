@@ -56,6 +56,8 @@ export interface CaseFinancials {
   case_reference: string | null;
   student_name: string | null;
   status: string | null;
+  /** Selected school (from case_submissions) — part of the submission gate. */
+  school_id: string | null;
   currency: string;
   services: FinancialServiceLine[];
   service_total: number;

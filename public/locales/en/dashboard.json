@@ -1293,6 +1293,19 @@
       "resendInvite": "Resend invite",
       "inviteSent": "Activation email sent to {{email}}",
       "inviteFailed": "Account created, but the activation email failed. Use “Resend invite”."
+    },
+    "invoiceBlock": {
+      "title": "DARB Service Invoice",
+      "none": "The DARB service invoice is issued automatically when Team submits the case.",
+      "resend": "Resend email",
+      "view": "View",
+      "pdf": "PDF",
+      "sent": "Emailed",
+      "failed": "Email failed",
+      "pending": "Email pending",
+      "scopeNote": "DARB services only · ILS. Germany school costs are estimated separately in Finance.",
+      "issue": "Issue invoice",
+      "issueDisabledHint": "The invoice is issued automatically when the case is submitted to Admin."
     }
   },
   "influencer": {
@@ -2612,7 +2625,7 @@
     },
     "submit": {
       "action": "Submit to admin",
-      "blocked": "Confirm the payment first",
+      "blocked": "The case cannot be submitted yet.",
       "success": "Sent to admin for review",
       "changesRequested": "Admin requested changes",
       "confirmTitle": "Send this student file to Admin?",
@@ -2626,7 +2639,15 @@
         "payment": "DARB service payment has been received",
         "finance": "Finance summary is complete"
       },
-      "germanyNote": "Germany school payments are verified separately by Admin after the student provides payment proof."
+      "germanyNote": "Germany school payments are verified separately by Admin after the student provides payment proof.",
+      "blockedReasons": {
+        "notReady": "The case is not ready for submission.",
+        "missingFile": "The student file is missing.",
+        "profileIncomplete": "The student profile must be complete first.",
+        "schoolCourseRequired": "School, course and start date are required.",
+        "noServices": "Select at least one DARB service before submitting.",
+        "paymentNotConfirmed": "The DARB service payment must be confirmed by the assigned team member."
+      }
     },
     "terminal": {
       "overview": "Overview",
@@ -3322,7 +3343,13 @@
         "profile": "Student profile complete",
         "germany": "Germany costs calculated",
         "services": "DARB services selected",
-        "agencyPayment": "Agency payment confirmed"
+        "agencyPayment": "Agency payment confirmed",
+        "school": "School selected",
+        "course": "Course calculated",
+        "accommodation": "Accommodation calculated",
+        "insurance": "Insurance calculated",
+        "germanyPayment": "Germany payment — pending admin verification",
+        "germanyVerified": "Germany payments verified by Admin"
       },
       "germanyPending": "Germany payments are verified by Admin after the student uploads proof."
     },
@@ -3415,6 +3442,18 @@
         "submitted": "Awaiting confirmation",
         "confirmed": "Confirmed",
         "rejected": "Rejected"
+      },
+      "labels": {
+        "agency_service": "DARB agency services",
+        "school_course": "Germany · Language course",
+        "school_accommodation": "Germany · Accommodation",
+        "school_insurance": "Germany · Insurance"
+      },
+      "descriptions": {
+        "agency_service": "Calculated from the DARB services selected for this case.",
+        "school_course": "Germany programme / language-school payment.",
+        "school_accommodation": "Germany accommodation payment.",
+        "school_insurance": "Germany insurance payment."
       }
     },
     "status": {
@@ -3451,6 +3490,32 @@
       "account": "Student account",
       "accountExists": "Already created",
       "action": "Submit to Admin & send invite"
+    },
+    "proof": {
+      "linkError": "Unable to create a proof link.",
+      "openFailed": "Unable to open payment proof.",
+      "confirmedToast": "Germany payment confirmed.",
+      "rejectedToast": "Payment proof rejected.",
+      "reviewFailed": "Unable to review payment proof.",
+      "rejectTitle": "Reject payment proof",
+      "rejectBody": "Reason for rejecting this payment proof:",
+      "rejectPlaceholder": "Add a reason (optional)…",
+      "rejectAction": "Reject"
+    },
+    "school": {
+      "estimateNote": "Estimated school costs. Final school invoices may differ. No ILS/EUR mixing.",
+      "estimatedTotal": "Estimated total"
+    },
+    "verification": {
+      "title": "Germany Payment Verification",
+      "hint": "Students upload proof. Only Admin can confirm or reject it.",
+      "confirmed": "Confirmed",
+      "rejected": "Proof rejected",
+      "submitted": "Proof submitted",
+      "awaiting": "Awaiting student proof",
+      "view": "View proof",
+      "confirmAction": "Confirm payment",
+      "rejectAction": "Reject proof"
     }
   },
   "messagesInbox": {

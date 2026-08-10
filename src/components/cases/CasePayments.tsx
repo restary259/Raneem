@@ -27,33 +27,18 @@ const STATUS_CLASS: Record<PaymentStatus, string> = {
   rejected: "bg-red-100 text-red-800 border-red-200",
 };
 
-const PAYMENT_LABELS: Record<string, string> = {
-  agency_service: "DARB agency services",
-  school_course: "Germany · Language course",
-  school_accommodation: "Germany · Accommodation",
-  school_insurance: "Germany · Insurance",
-};
+type TranslateFn = (key: string, fallback?: string) => string;
 
-const PAYMENT_DESCRIPTIONS: Record<string, string> = {
-  agency_service:
-    "Calculated from the DARB services selected for this case.",
-  school_course:
-    "Germany programme / language-school payment.",
-  school_accommodation:
-    "Germany accommodation payment.",
-  school_insurance:
-    "Germany insurance payment.",
-};
-
-const paymentLabel = (type: string): string => {
-  return (
-    PAYMENT_LABELS[type] ??
-    type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+const paymentLabel = (type: string, t: TranslateFn): string => {
+  return t(
+    `finance.payments.labels.${type}`,
+    type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
   );
 };
 
-const paymentDescription = (type: string): string | null => {
-  return PAYMENT_DESCRIPTIONS[type] ?? null;
+const paymentDescription = (type: string, t: TranslateFn): string | null => {
+  const description = t(`finance.payments.descriptions.${type}`, "");
+  return description || null;
 };
 
 const CasePayments: React.FC<Props> = ({
@@ -256,6 +241,7 @@ const CasePayments: React.FC<Props> = ({
                       <p className="text-sm font-medium">
                         {paymentLabel(
                           payment.payment_type,
+                          t,
                         )}
                       </p>
 
@@ -292,10 +278,12 @@ const CasePayments: React.FC<Props> = ({
                     {/* Description */}
                     {paymentDescription(
                       payment.payment_type,
+                      t,
                     ) && (
                       <p className="text-xs text-muted-foreground">
                         {paymentDescription(
                           payment.payment_type,
+                          t,
                         )}
                       </p>
                     )}

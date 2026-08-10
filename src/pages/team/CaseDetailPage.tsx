@@ -26,6 +26,7 @@ import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
 import { readStudentProfile } from "@/lib/studentProfileFields";
 import { readFunctionErrorBody } from "@/lib/functionError";
 import { identityConflictMessage } from "@/lib/identityConflict";
+import { submitBlockedMessage } from "@/lib/submitError";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -234,8 +235,13 @@ export default function CaseDetailPage() {
       }
 
       await fetchData();
-    } catch {
-      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+    } catch (error) {
+      const blocked = submitBlockedMessage(error, t);
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: blocked ?? t("common.actionFailed"),
+      });
     } finally {
       setSubmitting(false);
     }

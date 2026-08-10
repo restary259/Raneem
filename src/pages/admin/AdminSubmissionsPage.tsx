@@ -725,7 +725,7 @@ const AdminSubmissionsPage = () => {
 
               <CaseFinance caseId={selected.id} canManage={false} canConfirm={true} />
 
-              <CaseInvoiceBlock caseId={selected.id} />
+              <CaseInvoiceBlock caseId={selected.id} caseStatus={selected.status} />
 
               {/* Documents */}
               {selected.documents && selected.documents.length > 0 && (
