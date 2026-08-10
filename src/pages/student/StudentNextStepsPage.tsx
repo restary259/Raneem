@@ -13,6 +13,7 @@ import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDateTime } from '@/utils/dateUtils';
+import { CaseStatus } from '@/lib/caseStatus';
 
 interface StepRow {
   id: string;
@@ -129,7 +130,7 @@ export default function StudentNextStepsPage() {
       }
 
       const balance = Number(subRes?.data?.remaining_balance ?? 0);
-      setShowPayDisclosure(balance > 0 || ownCase?.status === 'payment');
+      setShowPayDisclosure(balance > 0 || ownCase?.status === CaseStatus.PAYMENT_CONFIRMED);
       if (balance > 0) {
         next.push({
           id: 'balance',
@@ -141,7 +142,7 @@ export default function StudentNextStepsPage() {
         });
       }
 
-      if (ownCase?.status === 'submitted' || ownCase?.status === 'enrollment_paid') {
+      if (ownCase?.status === CaseStatus.SUBMITTED || ownCase?.status === CaseStatus.ENROLLMENT_PAID) {
         next.push({
           id: 'visa',
           icon: Globe,
