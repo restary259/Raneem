@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { hashToken } from "../_shared/invitations.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
@@ -54,7 +55,7 @@ serve(async (req) => {
       .select("*")
       .eq("token_hash", token_hash)
       .maybeSingle();
-    if (invError) return json({ error: invError.message, code: "server_error" }, 500);
+    if (invError) return json({ error: serverError(invError, "Failed to load invitation"), code: "server_error" }, 500);
     if (!inv) return json({ error: "Invitation not found", code: "invalid" }, 404);
 
     if (inv.status === "accepted") {
@@ -110,7 +111,7 @@ serve(async (req) => {
         { user_id: userId, role: inv.intended_role },
         { onConflict: "user_id,role", ignoreDuplicates: true },
       );
-    if (roleError) return json({ error: roleError.message, code: "server_error" }, 500);
+    if (roleError) return json({ error: serverError(roleError, "Failed to assign role"), code: "server_error" }, 500);
 
     // ── Profile: only the columns this flow owns ──────────────────────────
     const profilePatch: Record<string, unknown> = {
@@ -128,7 +129,7 @@ serve(async (req) => {
       profilePatch.case_id = inv.case_id;
     }
     const { error: profileError } = await admin.from("profiles").upsert(profilePatch);
-    if (profileError) return json({ error: profileError.message, code: "server_error" }, 500);
+    if (profileError) return json({ error: serverError(profileError, "Failed to create profile"), code: "server_error" }, 500);
 
     // ── Link the originating case to this exact user ──────────────────────
     if (inv.invitation_type === "student" && inv.case_id) {
@@ -149,7 +150,7 @@ serve(async (req) => {
       })
       .eq("id", inv.id)
       .eq("status", "pending");
-    if (closeError) return json({ error: closeError.message, code: "server_error" }, 500);
+    if (closeError) return json({ error: serverError(closeError, "Failed to close invitation"), code: "server_error" }, 500);
 
     if (inv.recruit_application_id) {
       await admin

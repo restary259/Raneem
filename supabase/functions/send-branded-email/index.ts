@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAuth } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { serverErrorResponse } from "../_shared/errors.ts";
 
 
 Deno.serve(async (req) => {
@@ -83,10 +84,6 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("send-branded-email error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message, success: false }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return serverErrorResponse(err, corsHeaders, "Failed to send branded email");
   }
 });
