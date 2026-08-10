@@ -20,7 +20,7 @@ const LOCK_DAYS = 20;
 
 export default function PartnerEarningsPage() {
   const [cases, setCases] = useState<any[]>([]);
-  const [commissionRate, setCommissionRate] = useState<number>(500);
+  const [commissionRate, setCommissionRate] = useState<number>(0);
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
@@ -52,8 +52,8 @@ export default function PartnerEarningsPage() {
     ]);
 
     const globalRate = roleRes?.data === "ambassador"
-      ? (settingsRes.data?.ambassador_commission_rate ?? 300)
-      : (settingsRes.data?.partner_commission_rate ?? 500);
+      ? Number(settingsRes.data?.ambassador_commission_rate ?? 0)
+      : Number(settingsRes.data?.partner_commission_rate ?? 0);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes.data;
     setCommissionRate(Number(override?.commission_amount ?? globalRate));

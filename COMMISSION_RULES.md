@@ -59,7 +59,7 @@ A reward cannot be included in a payout request until 20 days after it was
 created (`request_payout` enforces this). Admins can release early through
 `admin-early-release`.
 
-## 8. Master partner network override (additive layer)
+## 8. Master partner network override (carve-out from the partner pool)
 
 Base rates in sections 1–7 are unchanged. On top of them:
 
@@ -68,17 +68,24 @@ Base rates in sections 1–7 are unchanged. On top of them:
   referral code, referral history and payout history all carry over untouched.
 - Partners recruited by a master partner carry `profiles.master_partner_id`.
 - When a case pays out and the referring partner has a master partner, that
-  master partner earns an extra flat amount, taken **only out of Darb's margin**
-  — never out of the partner's or the team member's commission:
+  master partner earns a share. **This share is carved out of the same partner
+  pool — it is never an extra payment on top, and never comes out of the team
+  member's commission or Darb's margin.**
 
 ```
-master_override = platform_settings.master_partner_override_rate  (admin-set, default ₪200)
-platform_revenue_ils = max(0, service_fee − team_commission − partner_commission − master_override)
+master_share = master_partner_override_rate   (admin-set, default ₪200)
+partner_amount = partner_pool − master_share
+platform_revenue_ils = max(0, service_fee − team_commission − partner_pool)
 ```
 
-- The override is recorded as a reward with `rewards.reward_type = 'master_override'`
-  and `rewards.source_user_id` = the referring partner, so it is never confused
-  with the base ₪1000 referral reward in payouts or reporting.
+- The pool itself (`partner_commission_rate`, default ₪1000) is unchanged by
+  the master share — only the split of the pool between the recruited partner
+  and their master changes. Darb's margin is therefore unaffected by the
+  master override.
+- The override is recorded as a reward with `rewards.reward_type =
+  'master_override'` (default) or `'network_split'` (when a negotiated offer
+  applies) and `rewards.source_user_id` = the referring partner, so it is never
+  confused with the base referral reward in payouts or reporting.
 - The override applies only to cases referred by partners inside that master
   partner's own network — never company-wide.
 
@@ -102,15 +109,21 @@ between the recruited partner and his master partner.
 - On payout, the accepted offer splits the pool:
   `rewards.reward_type = 'referral'` → partner (`partner_amount`),
   `rewards.reward_type = 'network_split'` → master partner (`master_amount`).
-- The ₪200 `master_override` from section 8 is **separate and unconditional**:
-  it stacks on top of any negotiated split and still comes out of Darb's margin.
+- When no negotiated offer exists, the default master share (section 8,
+  `master_partner_override_rate`, default ₪200) is carved from the pool
+  instead. A negotiated offer and the default carve-out are mutually exclusive:
+  if an accepted offer exists it governs the whole pool split; otherwise the
+  default carve-out applies. There is no "stacking" — the master's total share
+  always comes out of the partner pool, never from Darb's margin.
 
-Worked example (service fee ₪5000, negotiated ₪700):
+Worked example (service fee ₪5000, pool ₪1000):
 
-| Payee | Default | Negotiated ₪700 |
+| Payee | Default (no offer) | Negotiated ₪700 offer |
 |---|---|---|
-| Partner (`referral`) | ₪1000 | ₪700 |
-| Master (`network_split`) | ₪0 | ₪300 |
-| Master (`master_override`) | ₪200 | ₪200 |
-| **Darb total payout** | **₪1200** | **₪1200** |
-| `platform_revenue_ils` | ₪3800 | ₪3800 |
+| Partner (`referral`) | ₪800 | ₪700 |
+| Master (`master_override` or `network_split`) | ₪200 | ₪300 |
+| **Total pool paid out** | **₪1000** | **₪1000** |
+| `platform_revenue_ils` | ₪4000 | ₪4000 |
+
+In both columns the whole ₪1000 pool is paid out and Darb's margin
+(₪4000) is identical — only the split between partner and master changes.

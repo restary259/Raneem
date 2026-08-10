@@ -3303,6 +3303,9 @@
       "remove": "Remove service",
       "pickFirst": "Choose a service first",
       "saved": "Services updated",
+      "savedPrice": "Saved price",
+      "selected": "Selected services",
+      "unknown": "Unknown service",
       "pickHint": "Pick the services this student is buying. Prices come from the service catalog.",
       "fullService": "Full Service (all bundled services)",
       "categories": {
