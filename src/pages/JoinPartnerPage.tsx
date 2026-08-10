@@ -65,7 +65,7 @@ export default function JoinPartnerPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(t("join.submitError", "Something went wrong sending your application. Please try again."));
       return;
     }
     setDone(true);
