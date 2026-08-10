@@ -43,8 +43,8 @@ export default function InvoicePage() {
   }, [token]);
 
   const L = isAr
-    ? { title: "فاتورة خدمات دارب", student: "الطالب", caseRef: "رقم الملف", date: "التاريخ", agency: "خدمات دارب", total: "إجمالي خدمات دارب", paid: "المدفوع المؤكد", remaining: "الرصيد المتبقي", download: "تنزيل PDF", notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط." }
-    : { title: "DARB Service Invoice", student: "Student", caseRef: "Case", date: "Date", agency: "DARB agency services", total: "DARB services total", paid: "Confirmed payments", remaining: "Remaining balance", download: "Download PDF", notFound: "This invoice could not be found." };
+    ? { title: "فاتورة خدمات دارب", student: "الطالب", caseRef: "رقم الملف", date: "التاريخ", agency: "خدمات دارب", total: "إجمالي خدمات دارب", paid: "المدفوع المؤكد", remaining: "الرصيد المتبقي", download: "تنزيل PDF", notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط.", germanyNote: "تُدفع تكاليف المدرسة في ألمانيا (دورة اللغة والسكن والتأمين) بشكل منفصل وتتحقق منها الإدارة." }
+    : { title: "DARB Service Invoice", student: "Student", caseRef: "Case", date: "Date", agency: "DARB agency services", total: "DARB services total", paid: "Confirmed payments", remaining: "Remaining balance", download: "Download PDF", notFound: "This invoice could not be found.", germanyNote: "Germany school costs (language course, accommodation, insurance) are billed separately and verified by Admin." };
 
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (!invoice) return <div className="p-10 text-center text-muted-foreground">{L.notFound}</div>;
@@ -98,6 +98,7 @@ export default function InvoicePage() {
             student uploads proof of payment.  The full financials snapshot
             remains in the database totals column for the admin audit trail.
           */}
+          <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">{L.germanyNote}</p>
 
           <div className="space-y-1 border-t pt-3 text-sm">
             <div className="flex justify-between">

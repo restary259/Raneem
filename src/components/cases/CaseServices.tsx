@@ -44,6 +44,24 @@ export interface CaseServicesHandle {
 
 type PackageMode = "full_service" | "custom" | "";
 
+/**
+ * Resolves the effective package mode for rendering.
+ *
+ * Before the user explicitly picks a mode (`packageMode` is empty), derive it
+ * from the saved selection so the correct view (full-service list or custom
+ * checkboxes) renders immediately on load instead of waiting for the user to
+ * re-pick a mode.
+ */
+export function resolvePackageMode(
+  packageMode: PackageMode,
+  isFullServiceSelection: boolean,
+  selectedCount: number,
+): PackageMode {
+  if (packageMode) return packageMode;
+  if (isFullServiceSelection) return "full_service";
+  return selectedCount > 0 ? "custom" : "";
+}
+
 interface Selection {
   service_id: string;
   quantity: number;
@@ -364,6 +382,18 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
     return allBundle && onlyBundle;
   }, [selected, fullServiceItems, fullServiceIds]);
 
+  /**
+   * The effective package mode. Before the user explicitly picks a mode, derive
+   * it from the saved selection so the matching view (full-service list or
+   * custom checkboxes) renders immediately on load instead of waiting for the
+   * user to re-pick a mode.
+   */
+  const effectivePackageMode: PackageMode = resolvePackageMode(
+    packageMode,
+    isFullServiceSelection,
+    selected.length,
+  );
+
   const applyPackageMode = (mode: PackageMode) => {
     setPackageMode(mode);
     if (mode === "full_service") {
@@ -526,7 +556,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
                 {t("finance.services.packageLabel", "Service package")}
               </label>
               <Select
-                value={packageMode || (isFullServiceSelection ? "full_service" : selected.length > 0 ? "custom" : "")}
+                value={effectivePackageMode}
                 onValueChange={(value) => applyPackageMode(value as PackageMode)}
                 disabled={busy}
               >
@@ -548,7 +578,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
           )}
 
           {/* Full Service: locked, auto-populated list. */}
-          {fullServiceItems.length > 0 && isFullServiceSelection && packageMode === "full_service" && (
+          {fullServiceItems.length > 0 && effectivePackageMode === "full_service" && (
             <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2 text-sm font-semibold">
@@ -580,7 +610,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
           )}
 
           {/* Custom Services: editable per-service checkboxes. */}
-          {packageMode === "custom" && grouped.map(([category, items]) => (
+          {effectivePackageMode === "custom" && grouped.map(([category, items]) => (
             <div key={category} className="space-y-1.5">
               <p className="text-xs font-semibold text-muted-foreground">{categoryLabel(category)}</p>
               {items.map((service) => {

@@ -5,6 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
@@ -81,6 +89,10 @@ const CaseFinance: React.FC<Props> = ({
   const [agencyAck, setAgencyAck] = useState(false);
   const [confirmingAgency, setConfirmingAgency] = useState(false);
 
+  /** Proof currently being rejected via the dedicated dialog (no window.prompt). */
+  const [rejectTarget, setRejectTarget] = useState<ProofRow | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   /** Imperative handle to CaseServices so the single button can save services. */
   const servicesRef = useRef<CaseServicesHandle>(null);
 
@@ -131,6 +143,25 @@ const CaseFinance: React.FC<Props> = ({
 
   const getLatestProof = (type: SchoolPaymentType) => proofs.find((p) => p.payment_type === type);
 
+  /** Readiness checks for the submission checklist (informational only — the
+      server-side gate in submit_case_for_review stays authoritative). */
+  const profileComplete =
+    !!financials?.status &&
+    financials.status !== "new" &&
+    financials.status !== "contacted" &&
+    financials.status !== "appointment_scheduled";
+  const schoolSelected = !!financials?.school_id;
+  const hasSchoolKind = (kind: string) => schoolCosts.some((line) => line.kind === kind);
+  const germanyKinds = new Set(schoolCosts.map((line) => line.kind));
+  const germanyVerified = schoolPaymentTypes.every((type) => {
+    const kindOf =
+      type === "school_course" ? "program" : type === "school_accommodation" ? "accommodation" : "insurance";
+    if (!germanyKinds.has(kindOf)) return true;
+    const proof = getLatestProof(type);
+    const payment = getPaymentForType(type);
+    return proof?.status === "approved" || payment?.status === "confirmed";
+  });
+
   const typeLabel = (type: SchoolPaymentType) => {
     if (type === "school_course") return t("finance.summary.kind.program", "Language Course");
     if (type === "school_accommodation") return t("finance.summary.kind.accommodation", "Accommodation");
@@ -145,32 +176,38 @@ const CaseFinance: React.FC<Props> = ({
     try {
       const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(proof.file_path, 300);
       if (error) throw error;
-      if (!data?.signedUrl) throw new Error("Unable to create a proof link.");
+      if (!data?.signedUrl) throw new Error(t("finance.proof.linkError", "Unable to create a proof link."));
       setProofUrls((prev) => ({ ...prev, [proof.id]: data.signedUrl }));
       window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     } catch (error: any) {
-      toast({ variant: "destructive", description: error?.message || "Unable to open payment proof." });
+      toast({
+        variant: "destructive",
+        description: error?.message || t("finance.proof.openFailed", "Unable to open payment proof."),
+      });
     }
   };
 
-  const reviewProof = async (proof: ProofRow, approved: boolean) => {
+  const reviewProof = async (proof: ProofRow, approved: boolean, rejectionReason?: string | null) => {
     if (proofBusyId) return;
     setProofBusyId(proof.id);
     try {
-      const reason = approved
-        ? null
-        : window.prompt("Reason for rejecting this payment proof:") || "Payment proof rejected by Admin.";
-      if (!approved && !reason) return;
       const { error } = await (supabase as any).rpc("review_case_payment_proof", {
         p_proof_id: proof.id,
         p_approved: approved,
-        p_rejection_reason: reason,
+        p_rejection_reason: approved ? null : (rejectionReason || null),
       });
       if (error) throw error;
-      toast({ description: approved ? "Germany payment confirmed." : "Payment proof rejected." });
+      toast({
+        description: approved
+          ? t("finance.proof.confirmedToast", "Germany payment confirmed.")
+          : t("finance.proof.rejectedToast", "Payment proof rejected."),
+      });
       await Promise.all([loadProofs(), refetchFinancials()]);
     } catch (error: any) {
-      toast({ variant: "destructive", description: error?.message || "Unable to review payment proof." });
+      toast({
+        variant: "destructive",
+        description: error?.message || t("finance.proof.reviewFailed", "Unable to review payment proof."),
+      });
     } finally {
       setProofBusyId(null);
     }
@@ -368,7 +405,10 @@ const CaseFinance: React.FC<Props> = ({
                   {t("finance.summary.schoolBlock", "Germany / School Costs · EUR")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Estimated school costs. Final school invoices may differ. No ILS/EUR mixing.
+                  {t(
+                    "finance.school.estimateNote",
+                    "Estimated school costs. Final school invoices may differ. No ILS/EUR mixing.",
+                  )}
                 </p>
               </div>
               {schoolCosts.map((line) => (
@@ -379,14 +419,15 @@ const CaseFinance: React.FC<Props> = ({
                   </div>
                   {line.weekly_price ? (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {formatCurrencyAmount(line.weekly_price, line.currency)} × {line.weeks} weeks
+                      {formatCurrencyAmount(line.weekly_price, line.currency)} × {line.weeks}{" "}
+                      {t("finance.summary.weeks", "weeks")}
                     </p>
                   ) : null}
                 </div>
               ))}
               {Object.entries(schoolSubtotals).map(([currency, amount]) => (
                 <div key={currency} className="flex justify-between border-t pt-3 font-semibold">
-                  <span>Estimated total</span>
+                  <span>{t("finance.school.estimatedTotal", "Estimated total")}</span>
                   <span>{formatCurrencyAmount(Number(amount), currency)}</span>
                 </div>
               ))}
@@ -395,9 +436,11 @@ const CaseFinance: React.FC<Props> = ({
             <Separator />
             <div className="space-y-3 rounded-md border p-4">
               <div>
-                <p className="text-sm font-semibold">Germany Payment Verification</p>
+                <p className="text-sm font-semibold">
+                  {t("finance.verification.title", "Germany Payment Verification")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Students upload proof. Only Admin can confirm or reject it.
+                  {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
                 </p>
               </div>
               {schoolPaymentTypes.map((type) => {
@@ -414,13 +457,21 @@ const CaseFinance: React.FC<Props> = ({
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       {payment?.status === "confirmed" || proof?.status === "approved" ? (
-                        <Badge className="bg-emerald-100 text-emerald-800">Confirmed</Badge>
+                        <Badge className="bg-emerald-100 text-emerald-800">
+                          {t("finance.verification.confirmed", "Confirmed")}
+                        </Badge>
                       ) : proof?.status === "rejected" ? (
-                        <Badge className="bg-red-100 text-red-800">Proof rejected</Badge>
+                        <Badge className="bg-red-100 text-red-800">
+                          {t("finance.verification.rejected", "Proof rejected")}
+                        </Badge>
                       ) : proof?.status === "pending" || payment?.status === "submitted" ? (
-                        <Badge className="bg-amber-100 text-amber-800">Proof submitted</Badge>
+                        <Badge className="bg-amber-100 text-amber-800">
+                          {t("finance.verification.submitted", "Proof submitted")}
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary">Awaiting student proof</Badge>
+                        <Badge variant="secondary">
+                          {t("finance.verification.awaiting", "Awaiting student proof")}
+                        </Badge>
                       )}
                       {proof?.uploaded_at && (
                         <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
@@ -430,7 +481,7 @@ const CaseFinance: React.FC<Props> = ({
                     {proof && (
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" className="gap-1" onClick={() => openProof(proof)}>
-                          <ExternalLink className="h-3.5 w-3.5" /> View proof
+                          <ExternalLink className="h-3.5 w-3.5" /> {t("finance.verification.view", "View proof")}
                         </Button>
                         {canConfirm && proof.status === "pending" && (
                           <>
@@ -440,15 +491,18 @@ const CaseFinance: React.FC<Props> = ({
                               ) : (
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                               )}{" "}
-                              Confirm payment
+                              {t("finance.verification.confirmAction", "Confirm payment")}
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
                               disabled={busy}
-                              onClick={() => reviewProof(proof, false)}
+                              onClick={() => {
+                                setRejectReason("");
+                                setRejectTarget(proof);
+                              }}
                             >
-                              <XCircle className="h-3.5 w-3.5" /> Reject proof
+                              <XCircle className="h-3.5 w-3.5" /> {t("finance.verification.rejectAction", "Reject proof")}
                             </Button>
                           </>
                         )}
@@ -505,18 +559,48 @@ const CaseFinance: React.FC<Props> = ({
           </div>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2">
-              {financials?.status && financials.status !== "new" && financials.status !== "contacted" && financials.status !== "appointment_scheduled" ? (
+              {profileComplete ? (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               ) : (
                 <Clock3 className="h-4 w-4 text-amber-600" />
               )}
               <span>{t("finance.summary.checklist.profile", "Student profile complete")}</span>
             </li>
-            {schoolCosts.length > 0 && (
-              <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2">
+              {schoolSelected ? (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span>{t("finance.summary.checklist.germany", "Germany costs calculated")}</span>
-              </li>
+              ) : (
+                <Clock3 className="h-4 w-4 text-amber-600" />
+              )}
+              <span>{t("finance.summary.checklist.school", "School selected")}</span>
+            </li>
+            {schoolCosts.length > 0 && (
+              <>
+                <li className="flex items-center gap-2">
+                  {hasSchoolKind("program") ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.course", "Course calculated")}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  {hasSchoolKind("accommodation") ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.accommodation", "Accommodation calculated")}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  {hasSchoolKind("insurance") ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.insurance", "Insurance calculated")}</span>
+                </li>
+              </>
             )}
             <li className="flex items-center gap-2">
               {services.length > 0 ? (
@@ -535,6 +619,20 @@ const CaseFinance: React.FC<Props> = ({
               <span>{t("finance.summary.checklist.agencyPayment", "DARB payment confirmed")}</span>
             </li>
           </ul>
+          {schoolCosts.length > 0 && (
+            <p className="flex items-center gap-2 text-sm">
+              {germanyVerified ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Clock3 className="h-4 w-4 text-amber-600" />
+              )}
+              <span>
+                {germanyVerified
+                  ? t("finance.summary.checklist.germanyVerified", "Germany payments verified by Admin")
+                  : t("finance.summary.checklist.germanyPayment", "Germany payment — pending admin verification")}
+              </span>
+            </p>
+          )}
         </div>
 
         {/* ── Create the student account & send invite ────────────────────
@@ -622,6 +720,49 @@ const CaseFinance: React.FC<Props> = ({
           </div>
         )}
       </CardContent>
+
+      {/* Reject-proof dialog (replaces the old window.prompt for reject reasons). */}
+      <Dialog
+        open={!!rejectTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectTarget(null);
+            setRejectReason("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("finance.proof.rejectTitle", "Reject payment proof")}</DialogTitle>
+            <DialogDescription>
+              {t("finance.proof.rejectBody", "Reason for rejecting this payment proof:")}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            placeholder={t("finance.proof.rejectPlaceholder", "Add a reason (optional)…")}
+            rows={3}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={proofBusyId !== null}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={proofBusyId !== null}
+              onClick={async () => {
+                if (!rejectTarget) return;
+                await reviewProof(rejectTarget, false, rejectReason.trim() || null);
+                setRejectTarget(null);
+                setRejectReason("");
+              }}
+            >
+              {t("finance.proof.rejectAction", "Reject")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
