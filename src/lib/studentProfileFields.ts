@@ -132,17 +132,18 @@ export const COURSE_DURATION_WEEKS = 40;
 
 /**
  * The only course-end calculation in the system: start + 40 weeks.
- * Returns "" when the start date is missing or unparseable.
+ * Date-only arithmetic — parsed and returned in UTC so the calendar day never
+ * shifts with the viewer's timezone. Returns "" when the start date is missing
+ * or unparseable.
  */
 export function courseEndFrom(courseStart: string): string {
   if (!courseStart) return "";
 
-  const start = new Date(`${courseStart}T00:00:00`);
+  const start = new Date(`${courseStart}T00:00:00Z`);
 
   if (Number.isNaN(start.getTime())) return "";
 
-  const end = new Date(start.getTime());
-  end.setDate(end.getDate() + COURSE_DURATION_WEEKS * 7);
+  const end = new Date(start.getTime() + COURSE_DURATION_WEEKS * 7 * 24 * 60 * 60 * 1000);
 
   return end.toISOString().slice(0, 10);
 }

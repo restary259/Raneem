@@ -1,24 +1,7 @@
 import { exportPDF } from "@/utils/exportUtils";
+import { selectInvoiceTotals, type DarbInvoiceTotals } from "@/utils/invoiceTotals";
 
-export interface DarbInvoiceTotals {
-  currency: "ILS";
-  services: Array<{
-    id: string;
-    description: string;
-    category: string;
-    quantity: number;
-    unit_price: number;
-    discount: number;
-    currency: string;
-    line_total: number;
-  }>;
-  service_total: number;
-  /** Confirmed agency-service payments only (ILS). */
-  total_confirmed?: number;
-  /** Outstanding agency-service balance (ILS). */
-  remaining?: number;
-  payment_type: "agency_service";
-}
+export type { DarbInvoiceTotals } from "@/utils/invoiceTotals";
 
 interface InvoiceMeta {
   invoiceNumber: string;
@@ -77,10 +60,12 @@ export async function downloadInvoicePdf(
   // Germany school costs are excluded from the student invoice. They are paid
   // directly to German providers and verified separately by Admin.
 
+  const normalized = selectInvoiceTotals(totals);
+
   const summaryRows: (string | number)[][] = [
-    [L.servicesTotal, "", money(totals.service_total, totals.currency)],
-    [L.paid, "", money(Number(totals.total_confirmed ?? 0), totals.currency)],
-    [L.remaining, "", money(Number(totals.remaining ?? Math.max(Number(totals.service_total || 0) - Number(totals.total_confirmed ?? 0), 0)), totals.currency)],
+    [L.servicesTotal, "", money(normalized.service_total, normalized.currency)],
+    [L.paid, "", money(normalized.total_confirmed, normalized.currency)],
+    [L.remaining, "", money(normalized.remaining, normalized.currency)],
   ];
 
   const header = [

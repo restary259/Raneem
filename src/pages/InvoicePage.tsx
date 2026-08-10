@@ -5,14 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Loader2 } from "lucide-react";
-import { downloadInvoicePdf, type DarbInvoiceTotals } from "@/utils/invoicePdf";
+import { downloadInvoicePdf } from "@/utils/invoicePdf";
+import { selectInvoiceTotals } from "@/utils/invoiceTotals";
 
 interface PublicInvoice {
   invoice_number: string;
   case_reference: string | null;
   student_name: string | null;
   issued_at: string;
-  totals: DarbInvoiceTotals;
+  totals: unknown;
 }
 
 const money = (n: number, currency: string) =>
@@ -48,7 +49,7 @@ export default function InvoicePage() {
   if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   if (!invoice) return <div className="p-10 text-center text-muted-foreground">{L.notFound}</div>;
 
-  const t = invoice.totals;
+  const t = selectInvoiceTotals(invoice.totals);
   const handleDownload = async () => {
     setDownloading(true);
     try {
@@ -105,11 +106,11 @@ export default function InvoicePage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{L.paid}</span>
-              <span>{money(Number(t.total_confirmed ?? 0), t.currency)}</span>
+              <span>{money(t.total_confirmed, t.currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{L.remaining}</span>
-              <span className="font-semibold">{money(Number(t.remaining ?? Math.max(Number(t.service_total || 0) - Number(t.total_confirmed ?? 0), 0)), t.currency)}</span>
+              <span className="font-semibold">{money(t.remaining, t.currency)}</span>
             </div>
           </div>
         </CardContent>
