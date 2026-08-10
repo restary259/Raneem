@@ -1,5 +1,5 @@
 
-const CACHE_VERSION = '4.2.0';
+const CACHE_VERSION = '4.2.1';
 const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
 const AI_CACHE = 'darb-ai-cache';
 const DOCS_CACHE = 'darb-docs-cache';
@@ -130,26 +130,30 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static assets (images, JS, CSS, fonts) -> cache-first
-  if (/\.(png|jpg|jpeg|svg|gif|webp|js|css|woff2?|eot|ttf|otf)$/.test(url.pathname)) {
+  // JS/CSS -> stale-while-revalidate so a deploy with new hashed bundles is
+  // fetched instead of serving stale JS forever (which causes "Failed to
+  // fetch dynamically imported module" on every page after an update).
+  if (/\.(js|css|woff2?|eot|ttf|otf)$/.test(url.pathname)) {
+    staleWhileRevalidate(event, STATIC_CACHE);
+    return;
+  }
+
+  // Images -> cache-first with offline SVG fallback
+  if (/\.(png|jpg|jpeg|svg|gif|webp)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(resp => {
           if (resp.ok && resp.type === 'basic') {
-            const clone = resp.clone();
-            caches.open(STATIC_CACHE).then(c => c.put(request, clone));
+            caches.open(STATIC_CACHE).then(c => c.put(request, resp.clone()));
           }
           return resp;
-        }).catch(() => {
-          if (/\.(png|jpg|jpeg|svg|gif|webp)$/.test(url.pathname)) {
-            return new Response(
-              '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">غير متاح</text></svg>',
-              { headers: { 'Content-Type': 'image/svg+xml' } }
-            );
-          }
-          return new Response('غير متاح', { status: 503 });
-        });
+        }).catch(() =>
+          new Response(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">غير متاح</text></svg>',
+            { headers: { 'Content-Type': 'image/svg+xml' } }
+          )
+        );
       })
     );
     return;
