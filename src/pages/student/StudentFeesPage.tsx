@@ -152,6 +152,11 @@ const StudentFeesPage = () => {
     </div>
   );
 
+  const paymentStatusLabel = (status: string) =>
+    t(`studentFees.paymentStatus.${status}`, {
+      defaultValue: t(`studentFees.paymentStatus.pending`, "Pending"),
+    });
+
   const latestProof = (type: string) => proofs.find((p) => p.payment_type === type);
 
   return (
@@ -166,15 +171,15 @@ const StudentFeesPage = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Receipt className="h-4 w-4" /> DARB agency services · ILS
+            <Receipt className="h-4 w-4" /> {t("studentFees.agencyServices", "DARB agency services · ILS")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
-            {stat("Service total", fin.service_total)}
-            {stat("Confirmed", fin.total_confirmed)}
-            {stat("Pending", fin.total_pending_review)}
-            {stat("Remaining", fin.remaining)}
+            {stat(t("studentFees.serviceTotal", "Service total"), fin.service_total)}
+            {stat(t("studentFees.confirmed", "Confirmed"), fin.total_confirmed)}
+            {stat(t("studentFees.pending", "Pending"), fin.total_pending_review)}
+            {stat(t("studentFees.remaining", "Remaining"), fin.remaining)}
           </div>
           {fin.services?.length > 0 && (
             <ul className="divide-y divide-border rounded-lg border border-border">
@@ -192,11 +197,14 @@ const StudentFeesPage = () => {
       {fin.school_costs?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Germany / School costs · EUR</CardTitle>
+            <CardTitle className="text-base">{t("studentFees.schoolCostsTitle", "Germany / School costs · EUR")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              These are estimated school costs. Final school invoices may differ.
+              {t(
+                "studentFees.schoolCostsEstimate",
+                "These are estimated school costs. Final school invoices may differ.",
+              )}
             </p>
             {fin.school_costs.map((c) => {
               const type = typeForKind(c.kind);
@@ -211,15 +219,15 @@ const StudentFeesPage = () => {
                   </div>
                   {payment?.status === "confirmed" || proof?.status === "approved" ? (
                     <div className="flex items-center gap-2 text-sm text-emerald-700">
-                      <CheckCircle2 className="h-4 w-4" /> Payment confirmed by Admin
+                      <CheckCircle2 className="h-4 w-4" /> {t("studentFees.paymentConfirmedByAdmin", "Payment confirmed by Admin")}
                     </div>
                   ) : proof?.status === "rejected" ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm text-red-700">
-                        <XCircle className="h-4 w-4" /> Payment proof rejected
+                        <XCircle className="h-4 w-4" /> {t("studentFees.proofRejected", "Payment proof rejected")}
                       </div>
                       <p className="text-xs text-red-700">
-                        {proof.rejection_reason || "Please upload a replacement proof."}
+                        {proof.rejection_reason || t("studentFees.proofRejectedFallback", "Please upload a replacement proof.")}
                       </p>
                       <label className="inline-flex">
                         <input
@@ -233,14 +241,14 @@ const StudentFeesPage = () => {
                         />
                         <Button asChild size="sm" variant="outline">
                           <span>
-                            <Upload className="me-2 h-4 w-4" /> Upload replacement
+                            <Upload className="me-2 h-4 w-4" /> {t("studentFees.uploadReplacement", "Upload replacement")}
                           </span>
                         </Button>
                       </label>
                     </div>
                   ) : proof?.status === "pending" || payment?.status === "submitted" ? (
                     <div className="flex items-center gap-2 text-sm text-amber-700">
-                      <Clock3 className="h-4 w-4" /> Proof submitted — awaiting Admin verification
+                      <Clock3 className="h-4 w-4" /> {t("studentFees.proofSubmitted", "Proof submitted — awaiting Admin verification")}
                     </div>
                   ) : (
                     <label className="inline-flex">
@@ -261,7 +269,7 @@ const StudentFeesPage = () => {
                           ) : (
                             <Upload className="me-2 h-4 w-4" />
                           )}{" "}
-                          Upload payment proof
+                          {t("studentFees.uploadProof", "Upload payment proof")}
                         </span>
                       </Button>
                     </label>
@@ -282,9 +290,9 @@ const StudentFeesPage = () => {
             <ul className="divide-y divide-border rounded-lg border border-border">
               {fin.payments.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                  <span className="text-muted-foreground">{new Date(p.created_at).toLocaleDateString("en-US")}</span>
+                  <span className="text-muted-foreground">{new Date(p.created_at).toLocaleDateString(isRtl ? "ar" : "en-US")}</span>
                   <span className="flex items-center gap-2">
-                    <Badge variant="secondary">{p.status}</Badge>
+                    <Badge variant="secondary">{paymentStatusLabel(p.status)}</Badge>
                     <span className="font-medium">{formatCurrencyAmount(p.amount, p.currency || "ILS")}</span>
                   </span>
                 </li>
