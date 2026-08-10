@@ -200,7 +200,7 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
           <div
             className={`rounded-md border p-4 ${agencyConfirmed ? "border-emerald-200 bg-emerald-50/50" : "bg-muted/30"}`}
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   {agencyConfirmed ? (
@@ -208,41 +208,81 @@ const CaseFinance: React.FC<Props> = ({ caseId, canManage = false, canConfirm = 
                   ) : (
                     <Clock3 className="h-4 w-4 text-amber-600" />
                   )}
-                  <p className="text-sm font-semibold">DARB service payment</p>
+                  <p className="text-sm font-semibold">
+                    {t("finance.agency.title", "DARB service payment")}
+                  </p>
                 </div>
                 <p className="mt-1 text-sm font-medium">{formatILS(serviceTotal)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {agencyConfirmed
-                    ? `Confirmed by ${agencyPayment?.confirmed_by ? "Team/Admin" : "Team"} · ${formatDateTime(agencyPayment?.confirmed_at ?? null, "—")}`
-                    : "Calculated automatically from selected DARB services. No amount can be entered manually."}
+                    ? `${t("finance.agency.confirmedBy", "Confirmed by Team/Admin")} · ${formatDateTime(agencyPayment?.confirmed_at ?? null, "—")}`
+                    : t(
+                        "finance.agency.autoCalculated",
+                        "Calculated automatically from selected DARB services. No amount can be entered manually.",
+                      )}
                 </p>
               </div>
+
               {!agencyConfirmed && canManage && (
-                <Button
-                  type="button"
-                  disabled={serviceTotal <= 0}
-                  onClick={async () => {
-                    try {
-                      const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
-                        p_case_id: caseId,
-                      });
-                      if (error) throw error;
-                      toast({ description: `DARB service payment confirmed: ${formatILS(serviceTotal)}` });
-                      await refetchFinancials();
-                    } catch (error: any) {
-                      toast({
-                        variant: "destructive",
-                        description: error?.message || "Unable to confirm the DARB payment.",
-                      });
-                    }
-                  }}
-                >
-                  Confirm DARB Payment
-                </Button>
+                <div className="space-y-3">
+                  <label
+                    htmlFor="darb-agency-ack"
+                    className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
+                  >
+                    <Checkbox
+                      id="darb-agency-ack"
+                      checked={agencyAck}
+                      onCheckedChange={(v) => setAgencyAck(v === true)}
+                      className="mt-0.5"
+                    />
+                    <span className="leading-tight">
+                      {t(
+                        "finance.agency.ack",
+                        "I confirm the DARB agency service fee has been received from the student.",
+                      )}
+                    </span>
+                  </label>
+                  <Button
+                    type="button"
+                    className="w-full sm:w-auto"
+                    disabled={serviceTotal <= 0 || !agencyAck || confirmingAgency}
+                    onClick={async () => {
+                      setConfirmingAgency(true);
+                      try {
+                        const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
+                          p_case_id: caseId,
+                        });
+                        if (error) throw error;
+                        toast({
+                          description: `${t("finance.agency.confirmed", "DARB service payment confirmed")}: ${formatILS(serviceTotal)}`,
+                        });
+                        setAgencyAck(false);
+                        await refetchFinancials();
+                      } catch (error: any) {
+                        toast({
+                          variant: "destructive",
+                          description:
+                            error?.message || t("finance.agency.confirmFailed", "Unable to confirm the DARB payment."),
+                        });
+                      } finally {
+                        setConfirmingAgency(false);
+                      }
+                    }}
+                  >
+                    {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                    {t("finance.agency.confirmAction", "Confirm DARB Payment")}
+                  </Button>
+                  {serviceTotal <= 0 && (
+                    <p className="text-xs text-amber-700">
+                      {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
+
 
         {schoolCosts.length > 0 && (
           <>
