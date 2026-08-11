@@ -1954,6 +1954,7 @@
       "errNoName": "Please enter a student name",
       "errWorkHours": "Appointments must be between 8 am and 8 pm.",
       "errDropWorkHours": "Appointments can only be scheduled between 8 am and 8 pm.",
+      "errOverlap": "This time overlaps {{name}}'s appointment. Choose another slot.",
       "dayAbbrevSun": "Sun",
       "dayAbbrevMon": "Mon",
       "dayAbbrevTue": "Tue",

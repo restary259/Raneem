@@ -204,6 +204,33 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
   }, [fetchMyCases]);
 
+  /* ══ CONFLICT PRE-CHECK ══════════════════════════════════════════════
+   * The DB trigger trg_appointment_no_overlap is the authority; this query
+   * only gives the user a clear message instead of a generic server error.
+   */
+  const findOverlap = useCallback(
+    async (start: Date, durationMinutes: number, ignoreId?: string | null) => {
+      if (!user) return null;
+      const end = new Date(start.getTime() + durationMinutes * 60000);
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, scheduled_at, duration_minutes, case:cases(full_name)")
+        .eq("team_member_id", user.id)
+        .neq("outcome", "cancelled")
+        .neq("outcome", "no_show")
+        .lt("scheduled_at", end.toISOString());
+      if (error) return null;
+      return (
+        (data as any[] ?? []).find(
+          (a) =>
+            a.id !== ignoreId &&
+            new Date(a.scheduled_at).getTime() + (a.duration_minutes || 60) * 60000 > start.getTime(),
+        ) ?? null
+      );
+    },
+    [user],
+  );
+
   /* ══ DRAG & DROP ═════════════════════════════════════════════════════ */
   // Called from ApptBlock's onDragStart
   const handleDragStart = (e: React.DragEvent, apptId: string) => {
@@ -261,6 +288,17 @@ export default function TeamAppointmentsPage() {
     if (!pendingMove) return;
     setConfirmingMove(true);
     try {
+      const overlap = await findOverlap(pendingMove.newDate, pendingMove.appt.duration_minutes, pendingMove.appt.id);
+      if (overlap) {
+        toast({
+          variant: "destructive",
+          description: t("team.appointments.errOverlap", {
+            name: overlap.case?.full_name ?? "",
+            defaultValue: "This time overlaps {{name}}'s appointment. Choose another slot.",
+          }),
+        });
+        return;
+      }
       const { error } = await supabase
         .from("appointments")
         .update({ scheduled_at: pendingMove.newDate.toISOString() })
@@ -336,6 +374,18 @@ export default function TeamAppointmentsPage() {
       const [h, m] = newTime.split(":").map(Number);
       const dt = new Date(newDate);
       dt.setHours(h, m, 0, 0);
+
+      const overlap = await findOverlap(dt, parseInt(newDuration), editingAppt?.id);
+      if (overlap) {
+        toast({
+          variant: "destructive",
+          description: t("team.appointments.errOverlap", {
+            name: overlap.case?.full_name ?? "",
+            defaultValue: "This time overlaps {{name}}'s appointment. Choose another slot.",
+          }),
+        });
+        return;
+      }
 
       if (editingAppt) {
         const { error } = await supabase
