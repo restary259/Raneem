@@ -22,9 +22,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import {
@@ -110,6 +117,8 @@ export default function MessageComposer({
   const [dragging, setDragging] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [caseQuery, setCaseQuery] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   /* The suggestion lists close on a real click outside the composer, not on
      blur: the attach menu momentarily steals focus from the textarea, and a
