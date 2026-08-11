@@ -4584,6 +4584,20 @@ export type Database = {
         Args: { p_accept: boolean; p_offer_id: string }
         Returns: undefined
       }
+      profile_privileged_unchanged: {
+        Args: {
+          _commission_amount: number
+          _deleted_at: string
+          _iban_confirmed_at: string
+          _id: string
+          _is_manager: boolean
+          _is_master_partner: boolean
+          _master_partner_id: string
+          _referral_code: string
+          _referral_code_enabled: boolean
+        }
+        Returns: boolean
+      }
       purge_expired_documents: {
         Args: { p_retention?: string }
         Returns: number
