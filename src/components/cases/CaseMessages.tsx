@@ -159,7 +159,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
       )}
       <div
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto bg-muted/20",
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-muted/20",
           !className && "max-h-[460px]",
         )}
       >
