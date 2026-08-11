@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { formatCurrencyAmount } from "@/lib/money";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 interface ServiceLine {
   id: string;
