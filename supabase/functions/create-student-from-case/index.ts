@@ -329,15 +329,15 @@ serve(async (req) => {
         );
       }
 
-      // Manual mode: reset the linked account's password and return a
-      // one-time temp password instead of emailing an activation link.
+      // Manual mode: reset the linked account's password and return it to
+      // staff instead of emailing an activation link.
       if (manual) {
         const tempPassword = generateTempPassword();
         const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(caseData.student_user_id, {
           password: tempPassword,
         });
         if (pwError) {
-          console.error("create-student-from-case: password reset failed", pwError);
+          console.error("create-student-from-case: manual password reset failed", pwError);
           return jsonResponse(
             { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
             500,
@@ -355,7 +355,7 @@ serve(async (req) => {
             temp_password: tempPassword,
             account_created: false,
             case_linked: true,
-            message: "Existing student account linked and a temporary password issued",
+            message: "Student account linked and a temporary password was generated",
           },
           200,
           corsHeaders,
@@ -438,8 +438,8 @@ serve(async (req) => {
     // ── Existing student account ─────────────────────────────────────────
     let studentId: string;
     let accountCreated = false;
-    // Only populated in manual mode; returned once to staff.
-    let tempPassword: string | null = null;
+    // Holds the temp password when mode === "manual".
+    let manualTempPassword: string | null = null;
 
     if (existingUser) {
       if (case_id) {
@@ -467,15 +467,15 @@ serve(async (req) => {
 
       studentId = existingUser.id;
 
-      // Manual mode on an existing student: reset their password so staff can
-      // hand over fresh credentials. Invite mode leaves the account untouched.
+      // Manual mode on an existing account: reset the password so staff can
+      // hand over fresh credentials.
       if (manual) {
-        tempPassword = generateTempPassword();
+        manualTempPassword = generateTempPassword();
         const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(studentId, {
-          password: tempPassword,
+          password: manualTempPassword,
         });
         if (pwError) {
-          console.error("create-student-from-case: password reset failed", pwError);
+          console.error("create-student-from-case: manual password reset failed", pwError);
           return jsonResponse(
             { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
             500,
@@ -484,15 +484,15 @@ serve(async (req) => {
         }
       }
     } else {
-      // Invite mode: the bootstrap credential is never returned or emailed —
-      // the student chooses their password through the activation link.
-      // Manual mode: the generated password IS returned to staff once.
-      const password = manual ? generateTempPassword() : generateTempPassword();
-      if (manual) tempPassword = password;
+      // For "manual" mode the generated password is returned to staff.
+      // For "invite" mode the bootstrap credential is never returned or
+      // emailed — the student chooses their password via the activation link.
+      const bootstrapPassword = generateTempPassword();
+      if (manual) manualTempPassword = bootstrapPassword;
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: student_email,
-        password,
+        password: bootstrapPassword,
         email_confirm: true,
         user_metadata: {
           full_name: student_full_name,
@@ -611,7 +611,7 @@ serve(async (req) => {
       console.warn("create-student-from-case: audit log failed", error);
     }
 
-    // ── Manual mode: return the temp password, skip the invitation email ──
+    // ── Manual mode: return the temporary password (no email sent) ─────────
     if (manual) {
       return jsonResponse(
         {
@@ -619,7 +619,7 @@ serve(async (req) => {
           user_id: studentId,
           email: student_email,
           mode: "manual",
-          temp_password: tempPassword,
+          temp_password: manualTempPassword,
           account_created: accountCreated,
           case_linked: !!case_id,
           message: accountCreated
