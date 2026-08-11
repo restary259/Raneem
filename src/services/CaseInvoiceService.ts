@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { selectInvoiceTotals } from "@/utils/invoiceTotals";
 
 /**
  * DARB agency-service invoice.
@@ -8,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * estimates and are intentionally excluded from this invoice.
  */
 export interface CaseInvoice {
+
   id: string;
   case_id: string;
   invoice_number: string;
