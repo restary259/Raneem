@@ -6,7 +6,9 @@ import {
   ArrowRight,
   Bell,
   BellOff,
+  FolderOpen,
   Loader2,
+
   MessageSquare,
   Plus,
   Search,
