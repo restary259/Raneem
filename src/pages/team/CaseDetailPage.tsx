@@ -352,7 +352,6 @@ export default function CaseDetailPage() {
   const financeReadyToConfirm =
     !!financeReadiness &&
     financeReadiness.servicesSelected &&
-    financeReadiness.serviceTotal > 0 &&
     (financeReadiness.agencyConfirmed || financeReadiness.agencyAck);
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
