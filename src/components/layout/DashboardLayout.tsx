@@ -58,6 +58,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -229,6 +230,9 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
 
 
+  /** A mobile conversation owns the whole screen; hide the tab bar under it. */
+  const chatFullscreen = useChatFullscreenActive();
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -303,12 +307,12 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-auto pb-16 md:pb-0">
+          <main className={cn("flex-1 overflow-auto md:pb-0", chatFullscreen ? "pb-0" : "pb-16")}>
             <TabErrorBoundary>
               <Outlet />
             </TabErrorBoundary>
           </main>
-          <MobileBottomNav role={role} />
+          {!chatFullscreen && <MobileBottomNav role={role} />}
           <NotificationOnboardingDialog />
         </div>
       </div>

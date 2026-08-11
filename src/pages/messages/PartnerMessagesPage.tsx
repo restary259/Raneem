@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import DirectMessages from "@/components/messages/DirectMessages";
 import { chatDisplayName } from "@/lib/chatIdentity";
 import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
@@ -23,6 +25,7 @@ export default function PartnerMessagesPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const online = useOnlineUsers();
+  const isMobile = useIsMobile();
 
   const [threads, setThreads] = useState<DirectThread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +79,13 @@ export default function PartnerMessagesPage() {
     otherUserId: thread.otherUserId,
   }));
 
+  useChatFullscreen(!!isMobile && !!selected);
+
   const active = threads.find((thread) => thread.threadId === selected) ?? null;
 
   return (
     <div className="flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col gap-2 p-2 md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={cn("flex-wrap items-center justify-between gap-3 md:flex", selected ? "hidden" : "flex")}>
         <div>
           <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("messagesInbox.partnerSubtitle")}</p>
@@ -119,7 +124,14 @@ export default function PartnerMessagesPage() {
           </div>
         </Card>
 
-        <Card className={cn("min-h-0 flex-col overflow-hidden md:flex", selected ? "flex" : "hidden")}>
+        <Card
+          className={cn(
+            "min-h-0 flex-col overflow-hidden md:flex md:rounded-lg md:border",
+            selected
+              ? "flex max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none"
+              : "hidden",
+          )}
+        >
           {active ? (
             <>
               <div className="flex items-center justify-between gap-2 border-b p-3">
