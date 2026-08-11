@@ -6,6 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CaseMessages from "@/components/cases/CaseMessages";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 
 /** The student's single conversation with their advisor. */
 export default function StudentMessagesPage() {
@@ -14,6 +17,8 @@ export default function StudentMessagesPage() {
   const { toast } = useToast();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  useChatFullscreen(!!isMobile && !!caseId);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -28,7 +33,14 @@ export default function StudentMessagesPage() {
   }, [user?.id, toast]);
 
   return (
-    <div className="flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col gap-2 p-2 md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6">
+    <div
+      className={cn(
+        "flex min-h-0 flex-col gap-2 p-2 md:static md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6",
+        caseId
+          ? "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:bg-background"
+          : "h-[calc(100dvh-7.5rem)]",
+      )}
+    >
       <div>
         <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("messagesInbox.studentSubtitle")}</p>

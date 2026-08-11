@@ -349,6 +349,20 @@ export default function MessageComposer({
           },
         ]
       : []),
+    ...(allowInternal && isMobile
+      ? [
+          {
+            key: "visibility",
+            label:
+              visibility === "internal"
+                ? t("case.messages.shared")
+                : t("case.messages.internal"),
+            icon: visibility === "internal" ? Users : Lock,
+            tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200",
+            run: () => setVisibility((v) => (v === "internal" ? "shared" : "internal")),
+          },
+        ]
+      : []),
     ...(onRequestPayout
       ? [
           {
@@ -434,99 +448,10 @@ export default function MessageComposer({
         </ul>
       )}
 
-      <div className="relative rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
-        {mentionMatches.length > 0 && (
-          <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
-            {mentionMatches.map((person) => (
-              <li key={person.id}>
-                <button
-                  type="button"
-                  onClick={() => pickMention(person)}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
-                >
-                  <span className="truncate">{person.name}</span>
-                  {person.role && (
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {t(`case.messages.role.${person.role}`, person.role)}
-                    </span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {caseMatches.length > 0 && (
-          <ul className="absolute bottom-full z-30 mb-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
-            {caseMatches.map((c) => (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => pickCase(c)}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
-                >
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-medium">{caseMentionToken(c)}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">{c.name}</span>
-                  </span>
-                  {c.status && (
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {t(`case.status.${c.status}`, c.status)}
-                    </span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <Textarea
-          value={body}
-          onChange={(e) => {
-            const caret = e.target.selectionStart ?? 0;
-            setBody(e.target.value);
-            setMentionQuery(
-              mentionables.length > 0 ? activeMentionQuery(e.target.value, caret) : null,
-            );
-            setCaseQuery(allowCaseMentions ? activeCaseQuery(e.target.value, caret) : null);
-            if (e.target.value.trim()) onTyping?.();
-          }}
-          placeholder={
-            kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
-          }
-          rows={1}
-          maxLength={5000}
-          disabled={disabled}
-          ref={textRef}
-          /* 16px on mobile keeps iOS Safari from zooming the page on focus. */
-          className="max-h-[140px] min-h-[24px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0 sm:text-sm"
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && (mentionQuery !== null || caseQuery !== null)) {
-              setMentionQuery(null);
-              setCaseQuery(null);
-              return;
-            }
-            if (e.key === "Tab" && mentionMatches.length > 0) {
-              e.preventDefault();
-              pickMention(mentionMatches[0]);
-              return;
-            }
-            if (e.key === "Tab" && caseMatches.length > 0) {
-              e.preventDefault();
-              pickCase(caseMatches[0]);
-              return;
-            }
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-        />
-      </div>
-
-
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
+      {/* One WhatsApp-style row. `dir="ltr"` pins `+` to the left and send to the
+          right in every language; the textarea keeps `dir="auto"` for Arabic. */}
+      <div dir="ltr" className="flex items-end gap-1.5">
+        <div className="flex shrink-0 items-center gap-1 pb-1">
           <input
             ref={fileRef}
             type="file"
@@ -636,7 +561,7 @@ export default function MessageComposer({
           )}
 
           {allowInternal && (
-            <div className="flex items-center rounded-full border p-0.5">
+            <div className="hidden items-center rounded-full border p-0.5 sm:flex">
               <button
                 type="button"
                 onClick={() => setVisibility("shared")}
@@ -667,19 +592,111 @@ export default function MessageComposer({
           )}
         </div>
 
+
+        <div className="relative min-w-0 flex-1 rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
+        {mentionMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {mentionMatches.map((person) => (
+              <li key={person.id}>
+                <button
+                  type="button"
+                  onClick={() => pickMention(person)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="truncate">{person.name}</span>
+                  {person.role && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.messages.role.${person.role}`, person.role)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {caseMatches.length > 0 && (
+          <ul className="absolute bottom-full z-30 mb-2 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
+            {caseMatches.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => pickCase(c)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-accent"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium">{caseMentionToken(c)}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{c.name}</span>
+                  </span>
+                  {c.status && (
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {t(`case.status.${c.status}`, c.status)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Textarea
+          value={body}
+          onChange={(e) => {
+            const caret = e.target.selectionStart ?? 0;
+            setBody(e.target.value);
+            setMentionQuery(
+              mentionables.length > 0 ? activeMentionQuery(e.target.value, caret) : null,
+            );
+            setCaseQuery(allowCaseMentions ? activeCaseQuery(e.target.value, caret) : null);
+            if (e.target.value.trim()) onTyping?.();
+          }}
+          placeholder={
+            kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
+          }
+          rows={1}
+          dir="auto"
+          maxLength={5000}
+          disabled={disabled}
+          ref={textRef}
+          /* 16px on mobile keeps iOS Safari from zooming the page on focus. */
+          className="max-h-[140px] min-h-[24px] resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0 sm:text-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && (mentionQuery !== null || caseQuery !== null)) {
+              setMentionQuery(null);
+              setCaseQuery(null);
+              return;
+            }
+            if (e.key === "Tab" && mentionMatches.length > 0) {
+              e.preventDefault();
+              pickMention(mentionMatches[0]);
+              return;
+            }
+            if (e.key === "Tab" && caseMatches.length > 0) {
+              e.preventDefault();
+              pickCase(caseMatches[0]);
+              return;
+            }
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+        />
+      </div>
+
         <Button
           size="icon"
           onClick={handleSend}
           aria-label={t("case.messages.send")}
           disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-          className="h-8 w-8 shrink-0 rounded-full"
+          className="mb-0.5 h-9 w-9 shrink-0 rounded-full sm:h-8 sm:w-8"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>
 
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="hidden text-[11px] text-muted-foreground sm:block">
         {hint ??
           (allowInternal
             ? visibility === "internal"

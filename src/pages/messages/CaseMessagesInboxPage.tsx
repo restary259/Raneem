@@ -24,6 +24,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
 import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
@@ -51,6 +53,9 @@ import {
   type DirectThread,
 } from "@/services/DirectMessageService";
 
+const FS_CHAT =
+  "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none";
+
 type Filter = "all" | "cases" | "direct" | "partners" | "unread";
 
 export default function CaseMessagesInboxPage() {
@@ -72,7 +77,9 @@ export default function CaseMessagesInboxPage() {
 
   const [staffOpen, setStaffOpen] = useState(false);
   const online = useOnlineUsers();
+  const isMobile = useIsMobile();
   const [prefs, setPrefs] = useState<NotificationPrefs>({ notify_in_app: true, notify_email: true });
+  useChatFullscreen(!!isMobile && !!selected);
   const isRtl = document.documentElement.dir === "rtl";
   const BackIcon = isRtl ? ArrowRight : ArrowLeft;
 
@@ -398,7 +405,7 @@ export default function CaseMessagesInboxPage() {
         <Card
           className={cn(
             "min-h-0 flex-col overflow-hidden md:flex md:rounded-lg md:border",
-            selected ? "flex rounded-none border-0 shadow-none" : "hidden",
+            selected ? `flex ${FS_CHAT}` : "hidden",
           )}
         >
           {activeCase || activeDirect ? (
