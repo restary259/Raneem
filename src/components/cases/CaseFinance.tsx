@@ -343,8 +343,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
    */
   const servicesSelected = services.length > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
   const financeComplete = agencyConfirmed && serviceTotal > 0;
-  const canConfirmNow = canManage && serviceTotal > 0 && (!agencyConfirmed ? agencyAck : true);
-  const buttonDisabled = confirmingAgency || !servicesSelected || !canConfirmNow;
+  // A new selection has no server total until the single Confirm & Save action
+  // persists it. The RPC then calculates and validates the amount authoritatively.
+  const canConfirmNow = canManage && servicesSelected && (!agencyConfirmed ? agencyAck : true);
+  const buttonDisabled = confirmingAgency || !canConfirmNow;
 
   /** Live readiness snapshot for the page's top action bar. */
   const readiness = useMemo<CaseFinanceReadiness>(

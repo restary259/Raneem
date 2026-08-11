@@ -352,7 +352,6 @@ export default function CaseDetailPage() {
   const financeReadyToConfirm =
     !!financeReadiness &&
     financeReadiness.servicesSelected &&
-    financeReadiness.serviceTotal > 0 &&
     (financeReadiness.agencyConfirmed || financeReadiness.agencyAck);
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
@@ -545,11 +544,8 @@ export default function CaseDetailPage() {
                   return (
                     <Button
                       className="gap-1.5"
-                      disabled={financeReadiness?.confirming}
-                      onClick={() => {
-                        if (financeReadyToConfirm) void handleConfirmAndSave();
-                        else gotoFinance();
-                      }}
+                      disabled={!financeReadyToConfirm}
+                      onClick={() => void handleConfirmAndSave()}
                     >
                       {financeReadiness?.confirming ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
