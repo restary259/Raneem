@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { formatCurrencyAmount } from "@/lib/money";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 interface ServiceLine {
   id: string;
@@ -108,7 +109,12 @@ const StudentFeesPage = () => {
       const userId = sessionData.session?.user.id;
       if (!userId) throw new Error("You must be signed in.");
 
-      // Validate proof file: images + PDF, max 10 MB
+      // Shared upload rules (size + extension + MIME), narrowed to proof formats.
+      const baseError = validateUploadFile(file);
+      if (baseError) {
+        window.alert(baseError);
+        return;
+      }
       const MAX_PROOF_SIZE = 10 * 1024 * 1024;
       const ALLOWED_PROOF_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
       const ALLOWED_PROOF_EXTS = ["jpg", "jpeg", "png", "webp", "pdf"];
@@ -126,6 +132,8 @@ const StudentFeesPage = () => {
         return;
       }
 
+      // Path must start with the signed-in user's id so the storage policy
+      // (foldername[1] = auth.uid()) scopes the object to this student only.
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${userId}/${fin.case_id}_payment-proof_${paymentType}_${Date.now()}_${safeName}`;
       const { data: uploaded, error: uploadError } = await supabase.storage

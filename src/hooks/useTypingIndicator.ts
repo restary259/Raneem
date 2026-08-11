@@ -26,9 +26,12 @@ export function useTypingIndicator(threadType: "case" | "direct", threadId: stri
     seenRef.current = new Map();
     setTyping([]);
 
+    // Private channel: realtime.messages RLS restricts this topic to members
+    // of the case/direct thread, so typing metadata never leaks to outsiders.
     const channel = supabase.channel(`typing:${threadType}:${threadId}`, {
-      config: { broadcast: { self: false } },
+      config: { broadcast: { self: false }, private: true },
     });
+
 
     channel
       .on("broadcast", { event: "typing" }, ({ payload }) => {
