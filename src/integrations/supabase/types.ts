@@ -4114,6 +4114,10 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      chat_sender_label: {
+        Args: { _lang?: string; _sender: string; _viewer: string }
+        Returns: string
+      }
       check_identity_conflict: { Args: { _email: string }; Returns: Json }
       check_referral_code: {
         Args: { p_code: string }
