@@ -38,8 +38,14 @@ export interface CaseInvoice {
   email_sent_at: string | null;
 }
 
-export const invoiceUrl = (token: string) =>
-  `${window.location.origin}/invoice/${token}`;
+/**
+ * Invoice links live in emails, so they must always point at production —
+ * never at whatever origin the staff member happened to send from (preview
+ * URLs are not reachable by students).
+ */
+const INVOICE_SITE_URL = "https://darb.agency";
+
+export const invoiceUrl = (token: string) => `${INVOICE_SITE_URL}/invoice/${token}`;
 
 /** Submits the case to Admin and returns the DARB-only invoice. */
 export async function submitCaseForReview(caseId: string): Promise<CaseInvoice> {

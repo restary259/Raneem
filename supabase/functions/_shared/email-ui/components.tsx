@@ -117,69 +117,113 @@ export const EmailLayout = ({
   preview,
   title,
   children,
-}: LayoutProps) => (
-  <Html lang={lang} dir={dir}>
-    <Head>
-      <meta charSet="utf-8" />
-      <meta name="color-scheme" content="light" />
-      <meta name="supported-color-schemes" content="light" />
-    </Head>
-    <Preview>{preview}</Preview>
-    <Body style={{ ...bodyStyle, textAlign: isRtl(dir) ? 'right' : 'left' }}>
-      <Container style={container}>
-        <EmailHeader dir={dir} />
-        <Section style={contentSection}>
-          <Heading as="h1" style={h1}>
-            {title}
-          </Heading>
-          {children}
-        </Section>
-        <EmailFooter dir={dir} />
-      </Container>
-    </Body>
-  </Html>
-)
+}: LayoutProps) => {
+  const align = isRtl(dir) ? ('right' as const) : ('left' as const)
+  return (
+    /* Gmail strips <html>/<body> attributes, so `dir` must also be repeated on
+       the visible block elements below — otherwise Arabic renders LTR. */
+    <Html lang={lang} dir={dir}>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
+      </Head>
+      <Preview>{preview}</Preview>
+      <Body style={{ ...bodyStyle, textAlign: align }} dir={dir}>
+        <Container style={{ ...container, textAlign: align }} dir={dir}>
+          <EmailHeader dir={dir} />
+          <Section style={{ ...contentSection, textAlign: align }} dir={dir}>
+            <Heading as="h1" style={{ ...h1, textAlign: align }} dir={dir}>
+              {title}
+            </Heading>
+            {children}
+          </Section>
+          <EmailFooter dir={dir} />
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 /* ----------------------------------------------------------------- content */
 
 export const EmailText = ({
   children,
   muted = false,
+  dir = 'rtl' as Dir,
 }: {
   children: React.ReactNode
   muted?: boolean
-}) => <Text style={muted ? textMuted : text}>{children}</Text>
+  dir?: Dir
+}) => (
+  <Text
+    style={{ ...(muted ? textMuted : text), textAlign: isRtl(dir) ? 'right' : 'left' }}
+    dir={dir}
+  >
+    {children}
+  </Text>
+)
 
-export const EmailButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <Section style={{ padding: '8px 0 4px' }}>
+export const EmailButton = ({
+  href,
+  children,
+  dir = 'rtl' as Dir,
+}: {
+  href: string
+  children: React.ReactNode
+  dir?: Dir
+}) => (
+  <Section style={{ padding: '8px 0 4px', textAlign: isRtl(dir) ? 'right' : 'left' }} dir={dir}>
     <Button href={href} style={button}>
       {children}
     </Button>
   </Section>
 )
 
-export const EmailCard = ({ children }: { children: React.ReactNode }) => (
-  <Section style={card}>{children}</Section>
+export const EmailCard = ({
+  children,
+  dir = 'rtl' as Dir,
+}: {
+  children: React.ReactNode
+  dir?: Dir
+}) => (
+  <Section style={{ ...card, textAlign: isRtl(dir) ? 'right' : 'left' }} dir={dir}>
+    {children}
+  </Section>
 )
 
 export const EmailInfoRow = ({
   label,
   value,
   ltrValue = false,
+  dir = 'rtl' as Dir,
 }: {
   label: string
   value: React.ReactNode
   ltrValue?: boolean
-}) => (
-  <Row style={{ marginBottom: '10px' }}>
-    <Column>
-      <Text style={infoLabel}>{label}</Text>
-      <Text style={ltrValue ? { ...infoValue, direction: 'ltr' as const } : infoValue}>
-        {value}
-      </Text>
-    </Column>
-  </Row>
-)
+  dir?: Dir
+}) => {
+  const align = isRtl(dir) ? ('right' as const) : ('left' as const)
+  return (
+    <Row style={{ marginBottom: '10px' }} dir={dir}>
+      <Column>
+        <Text style={{ ...infoLabel, textAlign: align }} dir={dir}>
+          {label}
+        </Text>
+        <Text
+          style={
+            ltrValue
+              ? { ...infoValue, direction: 'ltr' as const, textAlign: align }
+              : { ...infoValue, textAlign: align }
+          }
+          dir={ltrValue ? 'ltr' : dir}
+        >
+          {value}
+        </Text>
+      </Column>
+    </Row>
+  )
+}
 
 type Tone = 'neutral' | 'success' | 'warning' | 'danger'
 
@@ -211,7 +255,8 @@ export const EmailStatusBadge = ({
 
 /** Fallback link shown under a CTA, so the email works when buttons are stripped. */
 export const EmailFallbackLink = ({ href, dir = 'rtl' as Dir }) => (
-  <Text style={fallback}>
+  <Text style={{ ...fallback, textAlign: isRtl(dir) ? 'right' : 'left' }} dir={dir}>
+
     {isRtl(dir)
       ? 'إذا لم يعمل الزر، انسخ هذا الرابط في المتصفح:'
       : 'If the button does not work, copy this link into your browser:'}
