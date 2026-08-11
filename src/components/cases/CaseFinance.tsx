@@ -1,4 +1,3 @@
-
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send, Receipt } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
@@ -75,7 +68,6 @@ export interface CaseFinanceHandle {
   getReadiness: () => CaseFinanceReadiness;
 }
 
-
 interface ProofRow {
   id: string;
   case_id: string;
@@ -87,7 +79,6 @@ interface ProofRow {
   rejection_reason: string | null;
   reviewed_at: string | null;
 }
-
 
 const schoolPaymentTypes = ["school_course", "school_accommodation", "school_insurance"] as const;
 
@@ -134,7 +125,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   /** Imperative handle to CaseServices so the single button can save services. */
   const servicesRef = useRef<CaseServicesHandle>(null);
-
 
   const serviceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
@@ -272,7 +262,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       const { error } = await (supabase as any).rpc("review_case_payment_proof", {
         p_proof_id: proof.id,
         p_approved: approved,
-        p_rejection_reason: approved ? null : (rejectionReason || null),
+        p_rejection_reason: approved ? null : rejectionReason || null,
       });
       if (error) throw error;
       toast({
@@ -587,52 +577,61 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
             </div>
 
             {/* ── Submit to Admin & send invite — only at payment_confirmed. ── */}
-            {canManage && !delegateActionsToTopBar && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
-              <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-semibold">
-                    {t("finance.invite.title", "Create the student account & send invite")}
-                  </p>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    "finance.invite.body",
-                    "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
-                  )}
-                </p>
-                <div className="rounded-md border bg-background p-3 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
-                    <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
+            {canManage &&
+              !delegateActionsToTopBar &&
+              agencyConfirmed &&
+              caseStatus === "payment_confirmed" &&
+              onSubmitToAdmin && (
+                <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold">
+                      {t("finance.invite.title", "Create the student account & send invite")}
+                    </p>
                   </div>
-                  {studentEmail && (
-                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
-                      <span className="font-medium">{studentEmail}</span>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "finance.invite.body",
+                      "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
+                    )}
+                  </p>
+                  <div className="rounded-md border bg-background p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
+                      <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
                     </div>
-                  )}
-                  {studentPhone && (
-                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
-                      <span className="font-medium">{studentPhone}</span>
-                    </div>
-                  )}
-                  {studentUserId && (
-                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
-                      <span className="font-medium text-emerald-700">
-                        {t("finance.invite.accountExists", "Already created")}
-                      </span>
-                    </div>
-                  )}
+                    {studentEmail && (
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
+                        <span className="font-medium">{studentEmail}</span>
+                      </div>
+                    )}
+                    {studentPhone && (
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
+                        <span className="font-medium">{studentPhone}</span>
+                      </div>
+                    )}
+                    {studentUserId && (
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
+                        <span className="font-medium text-emerald-700">
+                          {t("finance.invite.accountExists", "Already created")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    className="w-full sm:w-auto gap-1.5"
+                    disabled={submitting}
+                    onClick={onSubmitToAdmin}
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {t("finance.invite.action", "Submit to Admin & send invite")}
+                  </Button>
                 </div>
-                <Button type="button" className="w-full sm:w-auto gap-1.5" disabled={submitting} onClick={onSubmitToAdmin}>
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  {t("finance.invite.action", "Submit to Admin & send invite")}
-                </Button>
-              </div>
-            )}
+              )}
 
             {/* Single confirmation action — delegated to the page's top bar in the tabbed layout. */}
             {canManage && !delegateActionsToTopBar && (
@@ -655,10 +654,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                     </Button>
                     {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        {t(
-                          "finance.confirmAndSave.ackRequired",
-                          "Confirm that the DARB agency fee was received.",
-                        )}
+                        {t("finance.confirmAndSave.ackRequired", "Confirm that the DARB agency fee was received.")}
                       </p>
                     )}
                   </>
@@ -732,3 +728,224 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
+                  </p>
+                </div>
+                {schoolPaymentTypes.map((type) => {
+                  const proof = getLatestProof(type);
+                  const payment = getPaymentForType(type);
+                  const busy = proofBusyId === proof?.id;
+                  return (
+                    <div key={type} className="rounded-md border p-3 space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{typeLabel(type)}</span>
+                        <span className="text-sm font-semibold">
+                          {payment ? formatCurrencyAmount(payment.amount, payment.currency) : "—"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        {payment?.status === "confirmed" || proof?.status === "approved" ? (
+                          <Badge className="bg-emerald-100 text-emerald-800">
+                            {t("finance.verification.confirmed", "Confirmed")}
+                          </Badge>
+                        ) : proof?.status === "rejected" ? (
+                          <Badge className="bg-red-100 text-red-800">
+                            {t("finance.verification.rejected", "Proof rejected")}
+                          </Badge>
+                        ) : proof?.status === "pending" || payment?.status === "submitted" ? (
+                          <Badge className="bg-amber-100 text-amber-800">
+                            {t("finance.verification.submitted", "Proof submitted")}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {t("finance.verification.awaiting", "Awaiting student proof")}
+                          </Badge>
+                        )}
+                        {proof?.uploaded_at && (
+                          <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
+                        )}
+                      </div>
+                      {proof?.rejection_reason && <p className="text-xs text-red-700">{proof.rejection_reason}</p>}
+                      {proof && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" variant="outline" className="gap-1" onClick={() => openProof(proof)}>
+                            <ExternalLink className="h-3.5 w-3.5" /> {t("finance.verification.view", "View proof")}
+                          </Button>
+                          {canConfirm && proof.status === "pending" && (
+                            <>
+                              <Button size="sm" disabled={busy} onClick={() => reviewProof(proof, true)}>
+                                {busy ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                )}{" "}
+                                {t("finance.verification.confirmAction", "Confirm payment")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={busy}
+                                onClick={() => {
+                                  setRejectReason("");
+                                  setRejectTarget(proof);
+                                }}
+                              >
+                                <XCircle className="h-3.5 w-3.5" />{" "}
+                                {t("finance.verification.rejectAction", "Reject proof")}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Payment history — the single place payment records live. */}
+            <CasePayments
+              caseId={caseId}
+              payments={payments}
+              canManage={canManage}
+              canConfirm={canConfirm}
+              onChanged={() => void refetchFinancials()}
+            />
+
+            {schoolCosts.length > 0 && (
+              <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "finance.notes.thirdParty",
+                    "Language course, accommodation, and insurance payments are handled separately and verified by Admin.",
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* ── Manual send-invoice box (prefilled with the student email). ── */}
+            <div className="space-y-3 rounded-md border p-4">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">{t("finance.invoice.title", "DARB invoice")}</p>
+                {invoice && (
+                  <Badge
+                    className={
+                      invoice.email_status === "sent"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : invoice.email_status === "failed"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-amber-100 text-amber-800"
+                    }
+                  >
+                    {t(`finance.invoice.email.${invoice.email_status}`, invoice.email_status)}
+                  </Badge>
+                )}
+              </div>
+
+              {invoice ? (
+                <>
+                  <div className="rounded-md border bg-background p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.invoice.number", "Invoice #")}</span>
+                      <span className="font-medium">{invoice.invoice_number}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.summary.services", "Service total")}</span>
+                      <span className="font-medium">{formatILS(Number(invoice.totals?.service_total ?? 0))}</span>
+                    </div>
+                    <a
+                      className="mt-2 inline-flex items-center gap-1 text-xs text-primary underline"
+                      href={invoiceUrl(invoice.public_token)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> {t("finance.invoice.view", "View invoice")}
+                    </a>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invoice-email" className="text-xs">
+                      {t("finance.invoice.emailLabel", "Send to")}
+                    </Label>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                      <Input
+                        id="invoice-email"
+                        type="email"
+                        className="flex-1"
+                        value={invoiceEmail}
+                        onChange={(e) => setInvoiceEmail(e.target.value)}
+                        placeholder="student@email.com"
+                      />
+                      <Button
+                        type="button"
+                        className="gap-1.5"
+                        disabled={invoiceBusy || !invoiceEmail.trim()}
+                        onClick={handleSendInvoice}
+                      >
+                        {invoiceBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {t("finance.invoice.send", "Send invoice")}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "finance.invoice.notIssued",
+                    "The invoice is issued automatically when the case is submitted to Admin.",
+                  )}
+                </p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+
+      {/* Reject-proof dialog (replaces the old window.prompt for reject reasons). */}
+      <Dialog
+        open={!!rejectTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectTarget(null);
+            setRejectReason("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("finance.proof.rejectTitle", "Reject payment proof")}</DialogTitle>
+            <DialogDescription>
+              {t("finance.proof.rejectBody", "Reason for rejecting this payment proof:")}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            placeholder={t("finance.proof.rejectPlaceholder", "Add a reason (optional)…")}
+            rows={3}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={proofBusyId !== null}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={proofBusyId !== null}
+              onClick={async () => {
+                if (!rejectTarget) return;
+                await reviewProof(rejectTarget, false, rejectReason.trim() || null);
+                setRejectTarget(null);
+                setRejectReason("");
+              }}
+            >
+              {t("finance.proof.rejectAction", "Reject")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+});
+
+export default CaseFinance;
