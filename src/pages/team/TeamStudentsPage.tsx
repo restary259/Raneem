@@ -3,6 +3,7 @@ import { User, RefreshCw, UserPlus, Loader2, Mail, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ interface StudentRecord {
 export default function TeamStudentsPage() {
   const { toast } = useToast();
   const { t, i18n } = useTranslation("dashboard");
+  const navigate = useNavigate();
   const isRtl = i18n.language === "ar";
 
   /* ── Student list ────────────────────────────────────────────────── */
@@ -364,7 +366,19 @@ export default function TeamStudentsPage() {
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {filtered.map((s) => (
-                <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors">
+                <div
+                  key={s.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/team/students/${s.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/team/students/${s.id}`);
+                    }
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
+                >
                   {/* Avatar */}
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
