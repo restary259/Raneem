@@ -295,6 +295,8 @@ serve(async (req) => {
     }
 
     // ── Resets an existing account's password for the manual path ────────
+    // C2: this overwrites a LIVE student password. It must only ever run for
+    // accounts this function created moments ago, or by an admin.
     async function resetManualPassword(userId: string) {
       const pwd = generateTempPassword();
       const { error: pwErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -306,6 +308,20 @@ serve(async (req) => {
       }
       // Force a password change at first sign-in.
       await supabaseAdmin.from("profiles").upsert({ id: userId, must_change_password: true });
+
+      // Security event: record who minted a working credential for the account.
+      try {
+        await supabaseAdmin.from("admin_audit_log").insert({
+          admin_id: callerId,
+          action: "student_manual_password_issued",
+          target_table: "auth.users",
+          target_id: userId,
+          details: `Manual password issued for ${student_email} (mode: ${mode}) by ${isAdmin ? "admin" : "team member"}`,
+        });
+      } catch (error) {
+        console.warn("create-student-from-case: password audit log failed", error);
+      }
+
       return pwd;
     }
 
@@ -341,7 +357,19 @@ serve(async (req) => {
       }
 
       // Manual path: reset the linked account's password and return it.
+      // A live student account must not be handed to a non-admin caller.
       if (mode === "manual") {
+        if (!isAdmin) {
+          return jsonResponse(
+            {
+              error:
+                "This student already has an account. Resetting its password is restricted to admins — use the invitation mode instead.",
+              code: "PASSWORD_RESET_FORBIDDEN",
+            },
+            403,
+            corsHeaders,
+          );
+        }
         tempPassword = await resetManualPassword(caseData.student_user_id);
         if (!tempPassword) {
           return jsonResponse(
@@ -368,6 +396,11 @@ serve(async (req) => {
 
       const resent = await sendInvite(linkedEmail, student_full_name);
 
+      // H1: the one-time activation link is returned to staff only when the
+      // email failed (so it can be passed on manually) and only to admins.
+      const linkedActivationUrl =
+        resent === false && isAdmin ? capturedActivationUrl : null;
+
       return jsonResponse(
         {
           success: true,
@@ -377,7 +410,7 @@ serve(async (req) => {
           invited: resent === true,
           already_invited: resent === "already_sent",
           invitation_failed: resent === false,
-          activation_url: capturedActivationUrl,
+          activation_url: linkedActivationUrl,
           message:
             resent === "already_sent"
               ? "An activation link was already sent recently — ask the student to check their inbox"
@@ -393,6 +426,7 @@ serve(async (req) => {
     // ── Fetch case submission (only when a case is attached) ────────────
     let intakeMonth: string | null = null;
     let universityName: string | null = null;
+    let programStartDate: string | null = null;
 
     if (case_id) {
       const { data: submission } = await supabaseAdmin
@@ -402,6 +436,7 @@ serve(async (req) => {
         .maybeSingle();
 
       if (submission?.program_start_date) {
+        programStartDate = submission.program_start_date;
         intakeMonth = submission.program_start_date.substring(0, 7);
       } else if (caseData?.intake_notes) {
         const match = caseData.intake_notes.match(/\d{4}-\d{2}/);
@@ -410,14 +445,12 @@ serve(async (req) => {
 
       if (submission?.program_id) {
         const { data: programme } = await supabaseAdmin
-          .from("master_services")
-          .select("school_name, name")
+          .from("programs")
+          .select("name_ar, name_en")
           .eq("id", submission.program_id)
           .maybeSingle();
-        universityName = programme?.school_name ?? programme?.name ?? null;
+        universityName = programme?.name_en ?? programme?.name_ar ?? null;
       }
-
-      var submissionRef = submission;
     }
 
     // ── Resolve identity ──────────────────────────────────────────────────
@@ -447,7 +480,7 @@ serve(async (req) => {
       if (case_id) {
         const { data: otherCase } = await supabaseAdmin
           .from("cases")
-          .select("id, case_reference, status")
+          .select("id, case_reference, status, assigned_to")
           .eq("student_user_id", existingUser.id)
           .neq("id", case_id)
           .not("status", "in", "(closed,cancelled,rejected)")
@@ -465,12 +498,43 @@ serve(async (req) => {
             corsHeaders,
           );
         }
+
+        // H4: only an admin, or a team member assigned to the student's
+        // current case, may move the student between active cases.
+        if (otherCase && body?.confirm_transfer && !isAdmin && otherCase.assigned_to !== callerId) {
+          console.warn("create-student-from-case: case transfer denied", {
+            callerId,
+            case_id,
+            otherCaseId: otherCase.id,
+            otherCaseAssignedTo: otherCase.assigned_to,
+          });
+          return jsonResponse(
+            {
+              error: "This student is assigned to a case you do not own. Only an admin can transfer them.",
+              code: "TRANSFER_FORBIDDEN",
+            },
+            403,
+            corsHeaders,
+          );
+        }
       }
 
       studentId = existingUser.id;
 
       // Manual path: reset the existing account's password and return it.
+      // A live student account must not be handed to a non-admin caller.
       if (mode === "manual") {
+        if (!isAdmin) {
+          return jsonResponse(
+            {
+              error:
+                "This email already belongs to a student account. Resetting its password is restricted to admins — use the invitation mode instead.",
+              code: "PASSWORD_RESET_FORBIDDEN",
+            },
+            403,
+            corsHeaders,
+          );
+        }
         tempPassword = await resetManualPassword(studentId);
         if (!tempPassword) {
           return jsonResponse(
@@ -481,9 +545,10 @@ serve(async (req) => {
         }
       }
     } else {
-      // Manual path returns the password to staff; invite path discards a
-      // bootstrap credential (the student chooses their own via the link).
-      const password = mode === "manual" ? generateTempPassword() : generateTempPassword();
+      // A bootstrap credential is always minted for auth; in invite mode it is
+      // discarded (the student picks their own via the activation link), while
+      // manual mode hands it to staff. M3: was `mode === "manual" ? X : X`.
+      const password = generateTempPassword();
       if (mode === "manual") tempPassword = password;
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -535,11 +600,7 @@ serve(async (req) => {
     if (caseData?.city) profileUpsert.city = caseData.city;
     if (intakeMonth) profileUpsert.intake_month = intakeMonth;
     if (universityName) profileUpsert.university_name = universityName;
-    // deno-lint-ignore no-explicit-any
-    if ((submissionRef as any)?.program_start_date) {
-      // deno-lint-ignore no-explicit-any
-      profileUpsert.arrival_date = (submissionRef as any).program_start_date;
-    }
+    if (programStartDate) profileUpsert.arrival_date = programStartDate;
     if (caseData?.passport_type) profileUpsert.nationality = caseData.passport_type;
 
     const noteParts: string[] = [];
@@ -597,8 +658,7 @@ serve(async (req) => {
             city: !!caseData?.city,
             intake_month: !!intakeMonth,
             university: !!universityName,
-            // deno-lint-ignore no-explicit-any
-            arrival_date: !!(submissionRef as any)?.program_start_date,
+            arrival_date: !!programStartDate,
             phone: !!phone,
           },
         },
@@ -633,6 +693,10 @@ serve(async (req) => {
     // IMPORTANT: the student account/case link has already succeeded.
     // A failed invitation email must NOT turn the whole operation into a
     // failed student creation.
+    //
+    // H1: the one-time activation link is returned to staff only when the
+    // email failed (so it can be passed on manually) and only to admins.
+    const inviteActivationUrl = emailSent === false && isAdmin ? capturedActivationUrl : null;
     const responsePayload: Record<string, unknown> = {
       success: true,
       user_id: studentId,
@@ -643,7 +707,7 @@ serve(async (req) => {
       invitation_failed: emailSent === false,
       account_created: accountCreated,
       case_linked: !!case_id,
-      activation_url: capturedActivationUrl,
+      activation_url: inviteActivationUrl,
       message:
         emailSent === "already_sent"
           ? "An activation link was already sent recently — ask the student to check their inbox"
