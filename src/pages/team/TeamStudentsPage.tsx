@@ -9,7 +9,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
@@ -19,8 +26,8 @@ interface StudentRecord {
   created_at: string;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
+/* ═══════════════════════════════════════════════════════════════════════  
+   MAIN COMPONENT  
 ═══════════════════════════════════════════════════════════════════════ */
 export default function TeamStudentsPage() {
   const { toast } = useToast();
@@ -43,6 +50,9 @@ export default function TeamStudentsPage() {
     alreadyInvited: boolean;
     invitationFailed: boolean;
   } | null>(null);
+
+  /** 'invite' sends a branded activation email; 'manual' will show a temp password (wired in a later step). */
+  const [mode, setMode] = useState<"invite" | "manual">("invite");
 
   /* ── Form fields ─────────────────────────────────────────────────── */
   const [form, setForm] = useState({
@@ -135,6 +145,9 @@ export default function TeamStudentsPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
+      // NOTE: Step 2 is UI/architecture only. Both modes currently route through
+      // the invite flow. The `manual` temp-password path is wired in a later step.
+      //
       // Use the durable invitation flow. It creates the student account,
       // stores a revocable activation invitation, and rate-limits duplicate
       // emails instead of exposing a temporary password to staff.
@@ -174,8 +187,8 @@ export default function TeamStudentsPage() {
     return (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q);
   });
 
-  /* ─────────────────────────────────────────────────────────────────
-     RENDER
+  /* ─────────────────────────────────────────────────────────────────  
+     RENDER  
   ─────────────────────────────────────────────────────────────────── */
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-5xl mx-auto">
@@ -189,7 +202,13 @@ export default function TeamStudentsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" aria-label={t("common.refresh")} onClick={fetchStudents} title={t("common.refresh")}>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={t("common.refresh")}
+            onClick={fetchStudents}
+            title={t("common.refresh")}
+          >
             <RefreshCw className="h-4 w-4" />
           </Button>
 
@@ -201,6 +220,7 @@ export default function TeamStudentsPage() {
               if (!v) {
                 resetForm();
                 setNewCreds(null);
+                setMode("invite");
               }
             }}
           >
@@ -215,7 +235,10 @@ export default function TeamStudentsPage() {
               <DialogHeader>
                 <DialogTitle>{t("team.students.createAccount", "Create Student Account")}</DialogTitle>
                 <DialogDescription>
-                  {t("team.students.inviteDescription", "Create a student account and send a secure activation link by email.")}
+                  {t(
+                    "team.students.inviteDescription",
+                    "Create a student account and send a secure activation link by email.",
+                  )}
                 </DialogDescription>
               </DialogHeader>
 
@@ -233,10 +256,19 @@ export default function TeamStudentsPage() {
                       {newCreds.invited
                         ? t("team.students.inviteSent", "A secure activation link was sent to this email.")
                         : newCreds.alreadyInvited
-                          ? t("team.students.inviteAlreadySent", "An activation link was sent recently. Ask the student to check their inbox.")
+                          ? t(
+                              "team.students.inviteAlreadySent",
+                              "An activation link was sent recently. Ask the student to check their inbox.",
+                            )
                           : newCreds.invitationFailed
-                            ? t("team.students.inviteFailed", "The account was created, but the invitation email could not be sent. Retry from the linked case.")
-                            : t("team.students.invitePending", "The student can activate their account using the email invitation.")}
+                            ? t(
+                                "team.students.inviteFailed",
+                                "The account was created, but the invitation email could not be sent. Retry from the linked case.",
+                              )
+                            : t(
+                                "team.students.invitePending",
+                                "The student can activate their account using the email invitation.",
+                              )}
                     </p>
                   </div>
 
@@ -315,14 +347,61 @@ export default function TeamStudentsPage() {
                     />
                   </div>
 
-                  <Button className="w-full" onClick={handleCreate} disabled={creating}>
+                  {/* How should the account be created? */}
+                  <div className="space-y-2">
+                    <Label>{t("team.students.howToCreate", "How should the account be created?")}</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {(
+                        [
+                          {
+                            key: "invite",
+                            title: t("team.students.modeInvite", "Send invitation email"),
+                            desc: t(
+                              "team.students.modeInviteDesc",
+                              "They receive a branded link and choose their own password.",
+                            ),
+                          },
+                          {
+                            key: "manual",
+                            title: t("team.students.modeManual", "Create manually"),
+                            desc: t(
+                              "team.students.modeManualDesc",
+                              "You get a temporary password to pass on; they must change it at first sign-in.",
+                            ),
+                          },
+                        ] as const
+                      ).map((opt) => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setMode(opt.key)}
+                          className={`rounded-lg border p-3 text-start transition-colors ${
+                            mode === opt.key ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className="block text-sm font-medium text-foreground">{opt.title}</span>
+                          <span className="mt-1 block text-xs text-muted-foreground">{opt.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button className="w-full gap-2" onClick={handleCreate} disabled={creating}>
                     {creating ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin me-2" />
                         {t("team.students.creating")}
                       </>
+                    ) : mode === "invite" ? (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        {t("team.students.sendInvite", "Send invitation")}
+                      </>
                     ) : (
-                      t("team.students.createAccount", "Create Account")
+                      <>
+                        <UserPlus className="h-4 w-4" />
+                        {t("team.students.createAccount", "Create Account")}
+                      </>
                     )}
                   </Button>
                 </div>
@@ -353,9 +432,7 @@ export default function TeamStudentsPage() {
         <div className="border-2 border-dashed border-border rounded-2xl p-12 text-center">
           <User className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-foreground">
-            {search
-              ? t("team.students.noResults")
-              : t("team.students.noStudents", "No student accounts yet")}
+            {search ? t("team.students.noResults") : t("team.students.noStudents", "No student accounts yet")}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
             {!search && t("team.students.noStudentsHint", "Create a student account to get started.")}
