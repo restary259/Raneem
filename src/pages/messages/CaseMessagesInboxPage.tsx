@@ -253,8 +253,19 @@ export default function CaseMessagesInboxPage() {
   ];
 
   return (
-    <div className="flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col gap-2 p-2 md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div
+      className={cn(
+        "flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6",
+        /* On mobile an open conversation takes the whole surface, WhatsApp-style. */
+        selected ? "gap-0 p-0" : "gap-2 p-2",
+      )}
+    >
+      <div
+        className={cn(
+          "flex-wrap items-center justify-between gap-3 md:flex",
+          selected ? "hidden" : "flex",
+        )}
+      >
         <div>
           <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("messagesInbox.subtitle")}</p>
@@ -384,18 +395,18 @@ export default function CaseMessagesInboxPage() {
 
         <Card
           className={cn(
-            "min-h-0 flex-col overflow-hidden md:flex",
-            selected ? "flex" : "hidden",
+            "min-h-0 flex-col overflow-hidden md:flex md:rounded-lg md:border",
+            selected ? "flex rounded-none border-0 shadow-none" : "hidden",
           )}
         >
           {activeCase || activeDirect ? (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
-                <div className="flex min-w-0 items-center gap-2">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card p-2 md:p-3">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="md:hidden"
+                    className="shrink-0 md:hidden"
                     aria-label={t("chat.back")}
                     onClick={() => setSelected(null)}
                   >
@@ -423,18 +434,28 @@ export default function CaseMessagesInboxPage() {
                   </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" className="gap-1" onClick={toggleMute}>
+                <div className="flex shrink-0 items-center gap-1 md:gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 px-2 md:px-3"
+                    onClick={toggleMute}
+                    aria-label={isMuted ? t("chat.unmute") : t("chat.mute")}
+                  >
                     {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                    {isMuted ? t("chat.unmute") : t("chat.mute")}
+                    <span className="hidden md:inline">
+                      {isMuted ? t("chat.unmute") : t("chat.mute")}
+                    </span>
                   </Button>
                   {activeCase && (
                     <Button
                       size="sm"
                       variant="outline"
+                      className="px-2 md:px-3"
                       onClick={() => navigate(`${basePath}/cases/${activeCase.caseId}`)}
                     >
-                      {t("messagesInbox.openCase")}
+                      <FolderOpen className="h-4 w-4 md:hidden" />
+                      <span className="hidden md:inline">{t("messagesInbox.openCase")}</span>
                     </Button>
                   )}
                 </div>
