@@ -13,6 +13,11 @@ import FieldGroup from "@/components/common/FieldGroup";
 import ConsentBlock from "@/components/common/ConsentBlock";
 import { recordConsent } from "@/lib/consent";
 
+// Applicant data is PII — never print it to a production browser console.
+const isDev = Boolean(import.meta.env.DEV);
+const debug = (...args: unknown[]) => { if (isDev) console.log(...args); };
+const debugError = (...args: unknown[]) => { if (isDev) console.error(...args); };
+
 
 const PASSPORT_TYPES = [
   { value: "israeli_blue", label: "جواز أزرق (إسرائيلي)", labelEn: "Israeli Blue Passport" },
@@ -224,7 +229,7 @@ const ApplyPage: React.FC = () => {
         passport_type: passportType || null,
         degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
       };
-      console.log("[ApplyPage] ▶ Sending payload:", JSON.stringify(payload));
+      debug("[ApplyPage] ▶ Sending payload:", JSON.stringify(payload));
 
       const caseResp = await fetch(caseUrl, {
         method: "POST",
@@ -232,15 +237,15 @@ const ApplyPage: React.FC = () => {
         body: JSON.stringify(payload),
       });
       const caseResult = await caseResp.json();
-      console.log("[ApplyPage] ◀ Response status:", caseResp.status, "body:", JSON.stringify(caseResult));
+      debug("[ApplyPage] ◀ Response status:", caseResp.status, "body:", JSON.stringify(caseResult));
       if (!caseResp.ok && caseResp.status !== 409) {
-        console.error("[ApplyPage] Case creation failed:", caseResult);
+        debugError("[ApplyPage] Case creation failed:", caseResult);
         throw new Error(caseResult.error || "Failed to create case");
       }
       if (caseResp.status === 409) {
-        console.log("[ApplyPage] Duplicate phone — case already exists");
+        debug("[ApplyPage] Duplicate phone — case already exists");
       } else {
-        console.log("[ApplyPage] Main case created:", caseResult.case_id);
+        debug("[ApplyPage] Main case created:", caseResult.case_id);
       }
 
       // The matching lead row is written by the same server call, so there is
@@ -274,14 +279,14 @@ const ApplyPage: React.FC = () => {
             });
             const compCaseResult = await compCaseResp.json();
             if (compCaseResp.status === 409) {
-              console.log("[ApplyPage] Companion duplicate — case exists:", c.phone.trim());
+              debug("[ApplyPage] Companion duplicate — case exists:", c.phone.trim());
             } else if (!compCaseResp.ok) {
-              console.error("[ApplyPage] Companion case failed:", compCaseResult.error);
+              debugError("[ApplyPage] Companion case failed:", compCaseResult.error);
             } else {
-              console.log("[ApplyPage] Companion case created:", compCaseResult.case_id);
+              debug("[ApplyPage] Companion case created:", compCaseResult.case_id);
             }
           } catch (compCaseErr: any) {
-            console.error("[ApplyPage] Companion case error:", compCaseErr.message);
+            debugError("[ApplyPage] Companion case error:", compCaseErr.message);
           }
 
           // The lead row is created by the same server call as the case.
@@ -291,7 +296,7 @@ const ApplyPage: React.FC = () => {
 
       setSubmitted(true);
     } catch (err: any) {
-      console.error("[ApplyPage] Submission failed:", err);
+      debugError("[ApplyPage] Submission failed:", err);
       toast({
         title: t("apply.error", "حدث خطأ، حاول مرة أخرى"),
         description: err?.message || "",
