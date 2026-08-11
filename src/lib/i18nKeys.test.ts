@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { PROFILE_FIELD_LABEL_KEYS } from "./studentProfileFields";
 
 /**
  * Guards against untranslated UI: every t('key') used in the source must exist
@@ -64,6 +65,15 @@ describe("i18n coverage", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+
+  it("has every profile-summary label key in the dashboard dictionaries", () => {
+    for (const lang of LOCALES) {
+      const dashboard = loadDicts(lang).dashboard;
+      for (const key of Object.values(PROFILE_FIELD_LABEL_KEYS)) {
+        expect(hasKey(dashboard, key), `${lang}: ${key}`).toBe(true);
+      }
+    }
   });
 
   it("does not contain legacy or malformed interpolation placeholders", () => {
