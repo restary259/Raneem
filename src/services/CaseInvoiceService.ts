@@ -69,36 +69,62 @@ export async function getCaseInvoice(caseId: string): Promise<CaseInvoice | null
   return (data as CaseInvoice) ?? null;
 }
 
+const money = (n: number) =>
+  Number(n || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+/**
+ * Maps the frozen invoice snapshot into the props the branded email template
+ * renders. Every number comes from `selectInvoiceTotals` — the same derivation
+ * the invoice page and the PDF use — so the three surfaces can never disagree.
+ * Fields with no data (no discount, nothing paid) are omitted rather than
+ * fabricated.
+ */
+export function buildInvoiceEmailData(invoice: CaseInvoice) {
+  const t = selectInvoiceTotals(invoice.totals);
+
+  return {
+    studentName: invoice.student_name,
+    caseReference: invoice.case_reference,
+    invoiceNumber: invoice.invoice_number,
+    issuedAt: new Date(invoice.issued_at).toLocaleDateString("en-US"),
+    currency: "ILS",
+    services: t.services.map((s) => ({
+      description: s.description,
+      quantity: s.quantity,
+      unitPrice: money(s.unit_price),
+      amount: money(s.line_total),
+    })),
+    subtotal: money(t.subtotal),
+    discount: t.discount_total > 0 ? money(t.discount_total) : null,
+    serviceTotal: money(t.service_total),
+    totalConfirmed: t.total_confirmed > 0 ? money(t.total_confirmed) : null,
+    remaining: money(t.remaining),
+    schoolCosts: t.school_costs.map((l) => ({
+      label: l.name_en || l.name_ar || l.kind,
+      amount: money(l.total),
+      currency: l.currency || "EUR",
+    })),
+    link: invoiceUrl(invoice.public_token),
+  };
+}
+
 /**
  * Sends only the DARB agency-service invoice. Germany payment verification is
  * a separate Admin workflow and is never included in this email's amounts.
+ *
+ * The invoice is re-issued first (idempotent — same number, same public token)
+ * so the Paid / Remaining figures always reflect the currently confirmed
+ * payments instead of a stale snapshot. The recipient is never taken from the
+ * caller: it is whatever the server froze on the invoice row, and the edge
+ * function re-validates it.
  */
 export async function sendInvoiceEmail(invoice: CaseInvoice): Promise<boolean> {
-  if (!invoice.student_email) {
-    await markInvoiceEmail(invoice.id, "failed", "no student email on file");
-    return false;
-  }
-
+  let fresh = invoice;
   try {
-    const { error } = await supabase.functions.invoke("send-transactional-email", {
-      body: {
-        templateName: "case-invoice",
-        recipientEmail: invoice.student_email,
-        idempotencyKey: `case-invoice-${invoice.invoice_number}`,
-        templateData: {
-          studentName: invoice.student_name,
-          caseReference: invoice.case_reference,
-          invoiceNumber: invoice.invoice_number,
-          issuedAt: new Date(invoice.issued_at).toLocaleDateString("en-US"),
-          serviceTotal: Number(invoice.totals?.service_total ?? 0).toLocaleString("en-US"),
-          currency: "ILS",
-          link: invoiceUrl(invoice.public_token),
-        },
-      },
-    });
-    if (error) throw error;
-    await markInvoiceEmail(invoice.id, "sent");
-    return true;
+    fresh = await issueCaseInvoice(invoice.case_id);
   } catch (err) {
     await markInvoiceEmail(
       invoice.id,
@@ -107,7 +133,40 @@ export async function sendInvoiceEmail(invoice: CaseInvoice): Promise<boolean> {
     );
     return false;
   }
+
+  if (!fresh.student_email) {
+    await markInvoiceEmail(fresh.id, "failed", "no student email on file");
+    return false;
+  }
+
+  const data = buildInvoiceEmailData(fresh);
+  if (data.services.length === 0) {
+    await markInvoiceEmail(fresh.id, "failed", "no invoiceable services on this case");
+    return false;
+  }
+
+  try {
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "case-invoice",
+        recipientEmail: fresh.student_email,
+        idempotencyKey: `case-invoice-${fresh.invoice_number}-${fresh.issued_at}`,
+        templateData: data,
+      },
+    });
+    if (error) throw error;
+    await markInvoiceEmail(fresh.id, "sent");
+    return true;
+  } catch (err) {
+    await markInvoiceEmail(
+      fresh.id,
+      "failed",
+      err instanceof Error ? err.message : String(err),
+    );
+    return false;
+  }
 }
+
 
 export async function markInvoiceEmail(
   invoiceId: string,
