@@ -117,7 +117,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   /** DARB invoice + manual-send state for the Invoice tab. */
   const [invoice, setInvoice] = useState<CaseInvoice | null>(null);
   const [invoiceBusy, setInvoiceBusy] = useState(false);
-  const [invoiceEmail, setInvoiceEmail] = useState(studentEmail ?? "");
 
   /** Proof currently being rejected via the dedicated dialog (no window.prompt). */
   const [rejectTarget, setRejectTarget] = useState<ProofRow | null>(null);
@@ -179,19 +178,14 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     };
   }, [caseId, caseStatus]);
 
-  /** Keep the send box prefilled with the latest known student email. */
-  useEffect(() => {
-    if (studentEmail) setInvoiceEmail(studentEmail);
-  }, [studentEmail]);
+
+
 
   const handleSendInvoice = async () => {
     if (!invoice || invoiceBusy) return;
     setInvoiceBusy(true);
     try {
-      const ok = await sendInvoiceEmail({
-        ...invoice,
-        student_email: invoiceEmail.trim() || invoice.student_email,
-      });
+      const ok = await sendInvoiceEmail(invoice);
       const fresh = await getCaseInvoice(caseId);
       setInvoice(fresh);
       toast({
@@ -865,22 +859,17 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="invoice-email" className="text-xs">
-                      {t("finance.invoice.emailLabel", "Send to")}
-                    </Label>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                      <Input
-                        id="invoice-email"
-                        type="email"
-                        className="flex-1"
-                        value={invoiceEmail}
-                        onChange={(e) => setInvoiceEmail(e.target.value)}
-                        placeholder="student@email.com"
-                      />
+                    <Label className="text-xs">{t("finance.invoice.emailLabel", "Send to")}</Label>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      {/* Recipient is locked to the student email frozen on the
+                          invoice; the edge function re-validates it server-side. */}
+                      <p className="flex-1 truncate rounded-md border bg-muted/40 px-3 py-2 text-sm" dir="ltr">
+                        {invoice.student_email ?? "—"}
+                      </p>
                       <Button
                         type="button"
                         className="gap-1.5"
-                        disabled={invoiceBusy || !invoiceEmail.trim()}
+                        disabled={invoiceBusy || !invoice.student_email}
                         onClick={handleSendInvoice}
                       >
                         {invoiceBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -888,6 +877,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                       </Button>
                     </div>
                   </div>
+
                 </>
               ) : (
                 <p className="text-xs text-muted-foreground">

@@ -21,14 +21,31 @@ export interface DarbInvoiceServiceLine {
   line_total: number;
 }
 
+export interface DarbInvoiceSchoolLine {
+  kind: string;
+  name_ar: string | null;
+  name_en: string | null;
+  weekly_price: number | null;
+  weeks: number | null;
+  total: number;
+  currency: string;
+  estimate?: boolean;
+}
+
 export interface DarbInvoiceTotals {
   currency: "ILS";
   services: DarbInvoiceServiceLine[];
+  /** Sum of unit_price × quantity before discounts (ILS). */
+  subtotal: number;
+  /** Sum of the per-line discounts (ILS), never negative. */
+  discount_total: number;
   service_total: number;
   /** Confirmed agency-service payments only (ILS). */
   total_confirmed: number;
   /** Outstanding agency-service balance (ILS), never negative. */
   remaining: number;
+  /** Germany school/accommodation/insurance estimates — separate currency. */
+  school_costs: DarbInvoiceSchoolLine[];
   payment_type: "agency_service";
 }
 
@@ -40,9 +57,13 @@ const toFiniteNumber = (value: unknown, fallback: number): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 /**
  * Normalizes a raw totals snapshot into the shape every renderer relies on.
  *
+ * - `subtotal` / `discount_total` are derived from the frozen service lines,
+ *   so they always reconcile with `service_total` (subtotal − discounts).
  * - `total_confirmed` comes from the snapshot when present; legacy snapshots
  *   that predate the fix have no payment data to derive it from, so they fall
  *   back to 0 (nothing shown as confirmed).
@@ -52,17 +73,42 @@ const toFiniteNumber = (value: unknown, fallback: number): number => {
 export function selectInvoiceTotals(raw: unknown): DarbInvoiceTotals {
   const data = (raw && typeof raw === "object" ? raw : {}) as RawInvoiceTotals;
 
-  const service_total = toFiniteNumber(data.service_total, 0);
+  const services = Array.isArray(data.services)
+    ? (data.services as DarbInvoiceServiceLine[])
+    : [];
+
+  const subtotal = round2(
+    services.reduce(
+      (sum, s) => sum + toFiniteNumber(s.unit_price, 0) * toFiniteNumber(s.quantity, 0),
+      0,
+    ),
+  );
+  const discount_total = round2(
+    Math.max(
+      services.reduce((sum, s) => sum + toFiniteNumber(s.discount, 0), 0),
+      0,
+    ),
+  );
+
+  const service_total = toFiniteNumber(data.service_total, round2(subtotal - discount_total));
   const total_confirmed = toFiniteNumber(data.total_confirmed, 0);
+
+  const school_costs = Array.isArray(data.school_costs)
+    ? (data.school_costs as DarbInvoiceSchoolLine[]).filter(
+        (l) => toFiniteNumber(l?.total, 0) > 0,
+      )
+    : [];
 
   return {
     currency: "ILS",
-    services: Array.isArray(data.services)
-      ? (data.services as DarbInvoiceServiceLine[])
-      : [],
+    services,
+    subtotal,
+    discount_total,
     service_total,
     total_confirmed,
-    remaining: Math.max(service_total - total_confirmed, 0),
+    remaining: Math.max(round2(service_total - total_confirmed), 0),
+    school_costs,
     payment_type: "agency_service",
   };
 }
+
