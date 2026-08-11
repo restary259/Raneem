@@ -4737,6 +4737,10 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
+      team_can_view_student_role: {
+        Args: { _student_user_id: string }
+        Returns: boolean
+      }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
     }
     Enums: {
