@@ -4,12 +4,7 @@
  * no queries, no side effects — so it can be unit tested directly.
  */
 
-export type CaseTaskAction =
-  | "confirm_payment"
-  | "upload_document"
-  | "schedule_appointment"
-  | "record_outcome"
-  | "add_note";
+export type CaseTaskAction = "upload_document" | "schedule_appointment" | "record_outcome" | "add_note";
 
 export interface CaseTask {
   id: string;
@@ -49,9 +44,6 @@ export const REQUIRED_DOCUMENT_CATEGORIES: readonly string[] = [];
 /** Stages where an appointment is expected to exist. */
 const STAGES_EXPECTING_APPOINTMENT = ["contacted", "appointment_scheduled"];
 
-/** Stages where the service payment should already be confirmed. */
-const STAGES_EXPECTING_PAYMENT = ["payment_confirmed", "submitted", "enrollment_paid"];
-
 const DAY_MS = 86_400_000;
 
 function daysSince(iso: string | null | undefined, now: number): number {
@@ -64,27 +56,7 @@ export function deriveCaseTasks(input: CaseTaskInput): CaseTask[] {
   const tasks: CaseTask[] = [];
   const terminal = input.status === "cancelled" || input.status === "enrollment_paid";
 
-  // 1. Payment confirmation outstanding on a stage that expects it.
-  const paymentConfirmed = !!input.submission?.payment_confirmed;
-  // Payment only becomes a task once the student file is saved as complete —
-  // it is a separate step that follows the profile, never part of it.
-  const profileComplete = !!input.submission?.profile_completed_at;
-  const paymentDue =
-    !paymentConfirmed &&
-    profileComplete &&
-    (STAGES_EXPECTING_PAYMENT.includes(input.status) || input.status === "profile_completion");
-  if (paymentDue) {
-    const overdue = daysSince(input.lastActivityAt, now);
-    tasks.push({
-      id: "payment",
-      labelKey: overdue > 0 ? "case.tasks.paymentOverdue" : "case.tasks.paymentPending",
-      values: { days: overdue },
-      action: "confirm_payment",
-      priority: 1,
-    });
-  }
-
-  // 2. Appointment past its slot with no outcome recorded.
+  // 1. Appointment past its slot with no outcome recorded.
   const staleAppt = input.appointments
     .filter((a) => !a.outcome && new Date(a.scheduled_at).getTime() < now)
     .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
@@ -104,7 +76,7 @@ export function deriveCaseTasks(input: CaseTaskInput): CaseTask[] {
     });
   }
 
-  // 3. No appointment at all while the stage expects one.
+  // 2. No appointment at all while the stage expects one.
   if (!terminal && STAGES_EXPECTING_APPOINTMENT.includes(input.status) && input.appointments.length === 0) {
     tasks.push({
       id: "appointment",
@@ -114,7 +86,7 @@ export function deriveCaseTasks(input: CaseTaskInput): CaseTask[] {
     });
   }
 
-  // 4. Required documents still missing.
+  // 3. Required documents still missing.
   if (!terminal) {
     const present = new Set(input.documents.map((d) => d.category));
     for (const category of REQUIRED_DOCUMENT_CATEGORIES) {
@@ -129,7 +101,7 @@ export function deriveCaseTasks(input: CaseTaskInput): CaseTask[] {
     }
   }
 
-  // 5. Nothing logged for longer than the configured threshold.
+  // 4. Nothing logged for longer than the configured threshold.
   const silentDays = daysSince(input.lastActivityAt, now);
   if (!terminal && input.forgottenDays > 0 && silentDays >= input.forgottenDays) {
     tasks.push({
