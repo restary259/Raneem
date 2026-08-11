@@ -88,3 +88,55 @@ describe("selectInvoiceTotals", () => {
     expect(totals.services).toEqual([]);
   });
 });
+
+describe("selectInvoiceTotals — invoice email fields", () => {
+  const line = (over: Partial<typeof service>) => ({ ...service, ...over });
+
+  it("derives subtotal and discount_total from the frozen service lines", () => {
+    const totals = selectInvoiceTotals({
+      services: [
+        line({ id: "a", unit_price: 2000, quantity: 1, discount: 0, line_total: 2000 }),
+        line({ id: "b", unit_price: 175, quantity: 2, discount: 500, line_total: -150 }),
+      ],
+      service_total: 2850,
+      total_confirmed: 1000,
+    });
+    expect(totals.subtotal).toBe(2350);
+    expect(totals.discount_total).toBe(500);
+    expect(totals.service_total).toBe(2850);
+    expect(totals.remaining).toBe(1850);
+  });
+
+  it("falls back to subtotal minus discounts when no service_total is stored", () => {
+    const totals = selectInvoiceTotals({
+      services: [line({ unit_price: 3000, quantity: 1, discount: 500 })],
+    });
+    expect(totals.service_total).toBe(2500);
+    expect(totals.remaining).toBe(2500);
+  });
+
+  it("uses the case price snapshot, never a later catalog price", () => {
+    const totals = selectInvoiceTotals({
+      services: [line({ unit_price: 2000, quantity: 1, line_total: 2000 })],
+      service_total: 2000,
+    });
+    // catalog may now be 2500 — the snapshot stays authoritative
+    expect(totals.services[0].unit_price).toBe(2000);
+    expect(totals.service_total).toBe(2000);
+  });
+
+  it("keeps EUR school costs out of the ILS totals and drops empty lines", () => {
+    const totals = selectInvoiceTotals({
+      services: [line({})],
+      service_total: 5000,
+      total_confirmed: 5000,
+      school_costs: [
+        { kind: "program", name_en: "Course", name_ar: null, weekly_price: 210, weeks: 20, total: 4200, currency: "EUR" },
+        { kind: "insurance", name_en: "Ins", name_ar: null, weekly_price: null, weeks: null, total: 0, currency: "EUR" },
+      ],
+    });
+    expect(totals.school_costs).toHaveLength(1);
+    expect(totals.service_total).toBe(5000);
+    expect(totals.currency).toBe("ILS");
+  });
+});

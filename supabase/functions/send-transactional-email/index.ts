@@ -125,6 +125,41 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Financial mail is recipient-locked server-side: an invoice may only ever be
+  // delivered to the student email frozen on the invoice row, so a tampered
+  // client cannot mail one student's financials to an arbitrary address.
+  if (templateName === "case-invoice") {
+    const invoiceNumber = String(templateData.invoiceNumber ?? "");
+    if (!invoiceNumber) {
+      return new Response(JSON.stringify({ error: "invoiceNumber is required for case-invoice" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const guard = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: invoiceRow, error: invoiceError } = await guard
+      .from("case_invoices")
+      .select("student_email")
+      .eq("invoice_number", invoiceNumber)
+      .maybeSingle();
+
+    if (invoiceError || !invoiceRow?.student_email) {
+      return new Response(JSON.stringify({ error: "Invoice recipient could not be verified" }), {
+        status: invoiceError ? 500 : 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (invoiceRow.student_email.toLowerCase() !== effectiveRecipient.toLowerCase()) {
+      console.error("Invoice recipient mismatch — refusing to send", { invoiceNumber });
+      return new Response(
+        JSON.stringify({ error: "Recipient does not match the invoice's student email" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+  }
+
+
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
