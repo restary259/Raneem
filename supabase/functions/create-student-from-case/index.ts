@@ -26,6 +26,19 @@ function jsonResponse(payload: Record<string, unknown>, status: number, corsHead
   });
 }
 
+/**
+ * Generates a readable temporary password for the "manual" creation mode.
+ * The suffix guarantees Supabase's complexity requirements are always met.
+ */
+function generateTempPassword(): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  return (
+    Array.from(crypto.getRandomValues(new Uint8Array(9)))
+      .map((byte) => alphabet[byte % alphabet.length])
+      .join("") + "Aa1!"
+  );
+}
+
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
 
@@ -93,6 +106,13 @@ serve(async (req) => {
     // case_id is optional: a student can be invited with a case attached
     // (the common path, which pre-fills the account from the case data) or
     // on its own — the account is simply not linked to any case yet.
+    //
+    // mode:
+    //   "invite"  → send a branded activation email; the student chooses a
+    //               password. No password is ever returned to staff.
+    //   "manual"  → mint a one-time temporary password returned to staff to
+    //               pass on. must_change_password forces a reset at first
+    //               sign-in. No activation email is sent.
     const parsed = await parseBody(
       req,
       z.object({
@@ -101,6 +121,7 @@ serve(async (req) => {
         student_full_name: z.string().trim().min(2).max(100),
         student_phone: z.string().trim().max(30).optional().nullable(),
         confirm_transfer: z.boolean().optional(),
+        mode: z.enum(["invite", "manual"]).optional().default("invite"),
       }),
     );
 
@@ -114,6 +135,8 @@ serve(async (req) => {
     const student_email = body.student_email;
     const student_full_name = body.student_full_name;
     const student_phone = normalisePhone(body.student_phone);
+    const mode = body.mode ?? "invite";
+    const manual = mode === "manual";
 
     if (!student_email || !student_full_name) {
       return jsonResponse(
@@ -152,10 +175,10 @@ serve(async (req) => {
       const { data: fetchedCase, error: caseErr } = await supabaseAdmin
         .from("cases")
         .select(
-          `id, student_user_id, full_name, phone_number, city,
-           education_level, passport_type, degree_interest,
-           intake_notes, bagrut_score, english_units, math_units,
-           english_level, source, partner_id, assigned_to,
+          `id, student_user_id, full_name, phone_number, city,  
+           education_level, passport_type, degree_interest,  
+           intake_notes, bagrut_score, english_units, math_units,  
+           english_level, source, partner_id, assigned_to,  
            created_at`,
         )
         .eq("id", case_id)
@@ -191,6 +214,10 @@ serve(async (req) => {
       });
     }
 
+    // Captures the most recent activation link so the API can return it to
+    // staff (used by the "copy activation link" success card in the UI).
+    let capturedActivationUrl: string | null = null;
+
     // ── Rate-limit duplicate activation mails ────────────────────────────
     const RESEND_WINDOW_MIN = 10;
 
@@ -214,21 +241,7 @@ serve(async (req) => {
       }
       return data?.created_at ?? null;
     }
-// Captures the most recent activation link so the API can return it to  
-    // staff (used by the "copy activation link" success card in the UI).  
-    let capturedActivationUrl: string | null = null;  
-  
-    // ── Send invitation ───────────────────────────────────────────────────  
-    async function sendInvite(email: string, name: string) {  
-      try {  
-        const alreadySent = await recentPendingInvite(email);  
-        if (alreadySent) {  
-          console.log("create-student-from-case: skipped duplicate invite", { email, alreadySent });  
-          return "already_sent" as const;  
-        }  
-  
-        const activationUrl = await createActivationLink(email);  
-        capturedActivationUrl = activationUrl;
+
     // ── Send invitation ───────────────────────────────────────────────────
     async function sendInvite(email: string, name: string) {
       try {
@@ -239,6 +252,7 @@ serve(async (req) => {
         }
 
         const activationUrl = await createActivationLink(email);
+        capturedActivationUrl = activationUrl;
 
         let caseReference: string | null = null;
         if (case_id) {
@@ -305,28 +319,45 @@ serve(async (req) => {
           { user_id: caseData.student_user_id, role: "student" },
           { onConflict: "user_id,role", ignoreDuplicates: true },
         );
-      return jsonResponse(  
-        {  
-          success: true,  
-          user_id: caseData.student_user_id,  
-          email: linkedEmail,  
-          invited: resent === true,  
-          already_invited: resent === "already_sent",  
-          invitation_failed: resent === false,  
-          activation_url: capturedActivationUrl,  
-          message:  
-            resent === "already_sent"  
-              ? "An activation link was already sent recently — ask the student to check their inbox"  
-              : resent === true  
-                ? "Student account linked and activation link sent"  
-                : "Student account linked, but the activation email could not be sent. The invitation can be retried.",  
-        },
 
       if (linkedRoleError) {
         console.error("create-student-from-case: failed to restore student role", linkedRoleError);
         return jsonResponse(
           { error: "Unable to assign student role", code: "ROLE_ASSIGNMENT_FAILED" },
           500,
+          corsHeaders,
+        );
+      }
+
+      // Manual mode: reset the linked account's password and return a
+      // one-time temp password instead of emailing an activation link.
+      if (manual) {
+        const tempPassword = generateTempPassword();
+        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(caseData.student_user_id, {
+          password: tempPassword,
+        });
+        if (pwError) {
+          console.error("create-student-from-case: password reset failed", pwError);
+          return jsonResponse(
+            { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
+            500,
+            corsHeaders,
+          );
+        }
+        await supabaseAdmin.from("profiles").update({ must_change_password: true }).eq("id", caseData.student_user_id);
+
+        return jsonResponse(
+          {
+            success: true,
+            user_id: caseData.student_user_id,
+            email: linkedEmail,
+            mode: "manual",
+            temp_password: tempPassword,
+            account_created: false,
+            case_linked: true,
+            message: "Existing student account linked and a temporary password issued",
+          },
+          200,
           corsHeaders,
         );
       }
@@ -338,9 +369,11 @@ serve(async (req) => {
           success: true,
           user_id: caseData.student_user_id,
           email: linkedEmail,
+          mode: "invite",
           invited: resent === true,
           already_invited: resent === "already_sent",
           invitation_failed: resent === false,
+          activation_url: capturedActivationUrl,
           message:
             resent === "already_sent"
               ? "An activation link was already sent recently — ask the student to check their inbox"
@@ -405,6 +438,8 @@ serve(async (req) => {
     // ── Existing student account ─────────────────────────────────────────
     let studentId: string;
     let accountCreated = false;
+    // Only populated in manual mode; returned once to staff.
+    let tempPassword: string | null = null;
 
     if (existingUser) {
       if (case_id) {
@@ -431,18 +466,33 @@ serve(async (req) => {
       }
 
       studentId = existingUser.id;
+
+      // Manual mode on an existing student: reset their password so staff can
+      // hand over fresh credentials. Invite mode leaves the account untouched.
+      if (manual) {
+        tempPassword = generateTempPassword();
+        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(studentId, {
+          password: tempPassword,
+        });
+        if (pwError) {
+          console.error("create-student-from-case: password reset failed", pwError);
+          return jsonResponse(
+            { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
+            500,
+            corsHeaders,
+          );
+        }
+      }
     } else {
-      // The bootstrap credential is never returned or emailed.
-      // The student chooses their password through the activation link.
-      const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-      const bootstrapPassword =
-        Array.from(crypto.getRandomValues(new Uint8Array(9)))
-          .map((byte) => alphabet[byte % alphabet.length])
-          .join("") + "Aa1!";
+      // Invite mode: the bootstrap credential is never returned or emailed —
+      // the student chooses their password through the activation link.
+      // Manual mode: the generated password IS returned to staff once.
+      const password = manual ? generateTempPassword() : generateTempPassword();
+      if (manual) tempPassword = password;
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: student_email,
-        password: bootstrapPassword,
+        password,
         email_confirm: true,
         user_metadata: {
           full_name: student_full_name,
@@ -532,27 +582,7 @@ serve(async (req) => {
       .select("full_name")
       .eq("id", callerId)
       .single();
-const responsePayload: Record<string, unknown> = {  
-      success: true,  
-      user_id: studentId,  
-      email: student_email,  
-      invited: emailSent === true,  
-      already_invited: emailSent === "already_sent",  
-      invitation_failed: emailSent === false,  
-      activation_url: capturedActivationUrl,  
-      account_created: accountCreated,  
-      case_linked: !!case_id,  
-      message:  
-        emailSent === "already_sent"  
-          ? "An activation link was already sent recently — ask the student to check their inbox"  
-          : emailSent === true  
-            ? accountCreated  
-              ? "Student account created and activation link sent"  
-              : "Existing student account linked and activation link sent"  
-            : accountCreated  
-              ? "Student account created successfully, but the activation email could not be sent. The invitation can be retried."  
-              : "Student account linked successfully, but the activation email could not be sent. The invitation can be retried.",  
-    };
+
     try {
       await supabaseAdmin.rpc("log_activity", {
         p_actor_id: callerId,
@@ -565,7 +595,8 @@ const responsePayload: Record<string, unknown> = {
           student_full_name,
           student_id: studentId,
           case_id,
-          activation_link_issued: true,
+          mode,
+          activation_link_issued: !manual,
           data_exported: {
             city: !!caseData?.city,
             intake_month: !!intakeMonth,
@@ -580,6 +611,26 @@ const responsePayload: Record<string, unknown> = {
       console.warn("create-student-from-case: audit log failed", error);
     }
 
+    // ── Manual mode: return the temp password, skip the invitation email ──
+    if (manual) {
+      return jsonResponse(
+        {
+          success: true,
+          user_id: studentId,
+          email: student_email,
+          mode: "manual",
+          temp_password: tempPassword,
+          account_created: accountCreated,
+          case_linked: !!case_id,
+          message: accountCreated
+            ? "Student account created with a temporary password"
+            : "Existing student account updated with a temporary password",
+        },
+        200,
+        corsHeaders,
+      );
+    }
+
     // ── Invitation email ───────────────────────────────────────────────────
     const emailSent = await sendInvite(student_email, student_full_name);
 
@@ -590,9 +641,11 @@ const responsePayload: Record<string, unknown> = {
       success: true,
       user_id: studentId,
       email: student_email,
+      mode: "invite",
       invited: emailSent === true,
       already_invited: emailSent === "already_sent",
       invitation_failed: emailSent === false,
+      activation_url: capturedActivationUrl,
       account_created: accountCreated,
       case_linked: !!case_id,
       message:
