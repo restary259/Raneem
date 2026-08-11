@@ -398,7 +398,8 @@ serve(async (req) => {
 
       // H1: the one-time activation link is returned to staff only when the
       // email failed (so it can be passed on manually) and only to admins.
-      const linkedActivationUrl = resent === false && isAdmin ? capturedActivationUrl : null;
+      const linkedActivationUrl =
+        resent === false && isAdmin ? capturedActivationUrl : null;
 
       return jsonResponse(
         {

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { User, RefreshCw, UserPlus, Loader2, Mail, Search, Copy, CheckCheck, Send, Link2 } from "lucide-react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { User, RefreshCw, UserPlus, Loader2, Mail, Search, Copy, CheckCheck, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,7 @@ interface PendingInvitation {
   status: string;
   expires_at: string;
   created_at: string;
+  case_id: string | null;
 }
 
 interface LinkedCase {
@@ -66,7 +67,8 @@ export default function TeamStudentsPage() {
   /* ── Dialog ──────────────────────────────────────────────────────── */
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  /** Which copy button was last pressed ("password" | "link" | null). */
+  const [copied, setCopied] = useState<"password" | "link" | null>(null);
   const [newCreds, setNewCreds] = useState<{
     full_name: string;
     email: string;
@@ -104,10 +106,26 @@ export default function TeamStudentsPage() {
     setSelectedCaseId(null);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async (text: string, target: "password" | "link") => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const el = document.createElement("textarea");
+        el.value = text;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setCopied(target);
+    } catch (err) {
+      console.error("copyToClipboard failed:", err);
+      return;
+    }
+    setTimeout(() => setCopied(null), 2000);
   };
 
   /* ── Fetch students ──────────────────────────────────────────────── */
@@ -153,15 +171,24 @@ export default function TeamStudentsPage() {
   }, [toast]);
 
   /* ── Fetch pending student invitations ───────────────────────────── */
+  const [invitesError, setInvitesError] = useState<string | null>(null);
+
   const fetchInvitations = useCallback(async () => {
-    const { data } = await (supabase as any)
+    setInvitesError(null);
+    const { data, error } = await (supabase as any)
       .from("user_invitations")
-      .select("id, invited_email, invited_name, status, expires_at, created_at")
+      .select("id, invited_email, invited_name, status, expires_at, created_at, case_id")
       .eq("status", "pending")
       .eq("invitation_type", "student")
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("fetchInvitations error:", error.message, error.details);
+      setInvitesError(error.message ?? t("common.error"));
+      setInvitations([]);
+      return;
+    }
     setInvitations((data || []) as PendingInvitation[]);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchStudents();
@@ -169,20 +196,28 @@ export default function TeamStudentsPage() {
   }, [fetchStudents, fetchInvitations]);
 
   /* ── Find the case(s) already associated with this email ─────────── */
+  const [casesError, setCasesError] = useState<string | null>(null);
+  /** Monotonic sequence so an outdated (slow) lookup can't win the race. */
+  const lookupSeq = useRef(0);
+
   const lookupCasesForEmail = useCallback(async (rawEmail: string) => {
     const email = rawEmail.trim().toLowerCase();
+    const seq = ++lookupSeq.current;
     if (!email.includes("@")) {
       setLinkedCases([]);
       setSelectedCaseId(null);
+      setCasesError(null);
       return;
     }
     setCasesLoading(true);
+    setCasesError(null);
     try {
       // cases carry no email — case_submissions.student_email is the link.
-      const { data: subs } = await (supabase as any)
+      const { data: subs, error: subsError } = await (supabase as any)
         .from("case_submissions")
         .select("case_id, program_id")
         .eq("student_email", email);
+      if (subsError) throw subsError;
 
       const caseIds = [...new Set((subs || []).map((s: any) => s.case_id).filter(Boolean))] as string[];
       if (caseIds.length === 0) {
@@ -195,17 +230,25 @@ export default function TeamStudentsPage() {
       const programIds = [...new Set((subs || []).map((s: any) => s.program_id).filter(Boolean))] as string[];
       let programNames = new Map<string, string | null>();
       if (programIds.length > 0) {
-        const { data: programRows } = await (supabase as any)
-          .from("master_services")
-          .select("id, school_name, name")
+        // H3: programs carry the real programme names (name_en/name_ar).
+        const { data: programRows, error: programError } = await (supabase as any)
+          .from("programs")
+          .select("id, name_en, name_ar")
           .in("id", programIds);
-        programNames = new Map((programRows || []).map((p: any) => [p.id, p.school_name ?? p.name ?? null]));
+        if (programError) throw programError;
+        programNames = new Map(
+          (programRows || []).map((p: any) => [p.id, p.name_en ?? p.name_ar ?? null]),
+        );
       }
       (subs || []).forEach((s: any) => {
         if (s.case_id) programByCase.set(s.case_id, s.program_id ? (programNames.get(s.program_id) ?? null) : null);
       });
 
-      const { data: caseRows } = await supabase.from("cases").select("id, case_reference, status").in("id", caseIds);
+      const { data: caseRows, error: casesError } = await supabase
+        .from("cases")
+        .select("id, case_reference, status")
+        .in("id", caseIds);
+      if (casesError) throw casesError;
 
       const cases: LinkedCase[] = (caseRows || []).map((c: any) => ({
         id: c.id,
@@ -214,17 +257,21 @@ export default function TeamStudentsPage() {
         program: programByCase.get(c.id) ?? null,
       }));
 
+      // Only apply the result if no newer lookup started while we were away.
+      if (seq !== lookupSeq.current) return;
       setLinkedCases(cases);
       // Default-select when exactly one case is found.
       setSelectedCaseId(cases.length === 1 ? cases[0].id : null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("lookupCasesForEmail error:", err);
+      if (seq !== lookupSeq.current) return;
       setLinkedCases([]);
       setSelectedCaseId(null);
+      setCasesError(err?.message ?? t("common.error"));
     } finally {
-      setCasesLoading(false);
+      if (seq === lookupSeq.current) setCasesLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Debounced lookup whenever the email changes.
   useEffect(() => {
@@ -325,6 +372,8 @@ export default function TeamStudentsPage() {
           student_email: inv.invited_email.trim().toLowerCase(),
           student_full_name: inv.invited_name || inv.invited_email.split("@")[0],
           mode: "invite",
+          // Keep the original case context so the resend targets the same case.
+          ...(inv.case_id ? { case_id: inv.case_id } : {}),
         },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
@@ -390,10 +439,17 @@ export default function TeamStudentsPage() {
             open={open}
             onOpenChange={(v) => {
               setOpen(v);
+              if (v) {
+                // M2: never show a previous result while reopening.
+                setNewCreds(null);
+                setCopied(null);
+                lookupSeq.current++;
+              }
               if (!v) {
                 resetForm();
                 setNewCreds(null);
                 setMode("invite");
+                setCopied(null);
               }
             }}
           >
@@ -450,10 +506,10 @@ export default function TeamStudentsPage() {
                         <Button
                           variant="secondary"
                           className="w-full gap-2"
-                          onClick={() => copyToClipboard(newCreds.tempPassword!)}
+                          onClick={() => copyToClipboard(newCreds.tempPassword!, "password")}
                         >
-                          {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                          {copied
+                          {copied === "password" ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                          {copied === "password"
                             ? t("team.students.copied", "Copied")
                             : t("team.students.copyPassword", "Copy password")}
                         </Button>
@@ -515,30 +571,20 @@ export default function TeamStudentsPage() {
                               {newCreds.activationUrl}
                             </p>
                           </div>
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <Button
-                              variant="secondary"
-                              className="w-full gap-2 sm:flex-1"
-                              onClick={() => copyToClipboard(newCreds.activationUrl!)}
-                            >
-                              {copied ? (
-                                <CheckCheck className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                              {copied
-                                ? t("team.students.copied", "Copied")
-                                : t("team.students.copyInviteLink", "Copy activation link")}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full gap-2 sm:w-auto"
-                              onClick={() => window.open(newCreds.activationUrl!, "_blank", "noopener")}
-                            >
-                              <Link2 className="h-4 w-4" />
-                              {t("team.students.openLink", "Open")}
-                            </Button>
-                          </div>
+                          <Button
+                            variant="secondary"
+                            className="w-full gap-2"
+                            onClick={() => copyToClipboard(newCreds.activationUrl!, "link")}
+                          >
+                            {copied === "link" ? (
+                              <CheckCheck className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                            {copied === "link"
+                              ? t("team.students.copied", "Copied")
+                              : t("team.students.copyInviteLink", "Copy activation link")}
+                          </Button>
                         </>
                       )}
                     </div>
@@ -627,6 +673,10 @@ export default function TeamStudentsPage() {
                         <Loader2 className="h-4 w-4 animate-spin" />
                         {t("team.students.checkingCases", "Checking for linked cases…")}
                       </div>
+                    ) : casesError ? (
+                      <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                        {t("team.students.lookupFailed", "Could not look up linked cases.")} {casesError}
+                      </p>
                     ) : !form.email.includes("@") ? (
                       <p className="text-xs text-muted-foreground">
                         {t("team.students.enterEmailForCases", "Enter the student's email to see linked cases.")}
@@ -751,6 +801,11 @@ export default function TeamStudentsPage() {
       </div>
 
       {/* ── Pending invitations ────────────────────────────────────── */}
+      {invitesError && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {t("team.students.invitesLoadFailed", "Could not load pending invitations.")} {invitesError}
+        </p>
+      )}
       {invitations.length > 0 && (
         <Card>
           <CardContent className="p-0">
