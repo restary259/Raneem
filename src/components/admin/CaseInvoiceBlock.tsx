@@ -7,6 +7,7 @@ import { Download, ExternalLink, Loader2, Receipt, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getCaseInvoice, invoiceUrl, issueCaseInvoice, sendInvoiceEmail, type CaseInvoice } from "@/services/CaseInvoiceService";
 import { downloadInvoicePdf } from "@/utils/invoicePdf";
+import { selectInvoiceTotals } from "@/utils/invoiceTotals";
 
 /** Invoice summary inside Admin review. Invoices are created by Team submission. */
 export default function CaseInvoiceBlock({ caseId, caseStatus }: { caseId: string; caseStatus?: string }) {
@@ -110,7 +111,7 @@ export default function CaseInvoiceBlock({ caseId, caseStatus }: { caseId: strin
               <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => window.open(invoiceUrl(invoice.public_token), "_blank")}>
                 <ExternalLink className="h-3.5 w-3.5" /> {L.view}
               </Button>
-              <Button size="sm" variant="outline" className="h-8 gap-1" disabled={busy} onClick={() => run(() => downloadInvoicePdf({ invoiceNumber: invoice.invoice_number, caseReference: invoice.case_reference, studentName: invoice.student_name, issuedAt: invoice.issued_at }, invoice.totals, isAr).then(() => undefined))}>
+              <Button size="sm" variant="outline" className="h-8 gap-1" disabled={busy} onClick={() => run(() => downloadInvoicePdf({ invoiceNumber: invoice.invoice_number, caseReference: invoice.case_reference, studentName: invoice.student_name, issuedAt: invoice.issued_at }, selectInvoiceTotals(invoice.totals), isAr).then(() => undefined))}>
                 <Download className="h-3.5 w-3.5" /> {L.pdf}
               </Button>
               <Button size="sm" variant="outline" className="h-8 gap-1" disabled={busy} onClick={() => run(async () => {

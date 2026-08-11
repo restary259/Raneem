@@ -76,7 +76,7 @@ export default function CaseDetailPage() {
 
   /** Scrolls the Finance section into view (the single place to confirm the
       DARB payment now that the duplicate confirmation modal is gone). */
-  const financeRef = useRef<HTMLElement>(null);
+  const financeRef = useRef<HTMLDivElement>(null);
   const focusFinance = () => {
     const el = financeRef.current;
     if (!el) return;
