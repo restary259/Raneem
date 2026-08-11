@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -99,15 +98,7 @@ const TextField = React.memo(function TextField({
 });
 
 /** Same step pill/progress bar used on the Submit New Student wizard. */
-const StepBar = ({
-  step,
-  t,
-  remaining,
-}: {
-  step: StepNum;
-  t: TFunction;
-  remaining?: Record<number, number>;
-}) => (
+const StepBar = ({ step, t, remaining }: { step: StepNum; t: TFunction; remaining?: Record<number, number> }) => (
   <div className="flex items-center gap-1 mb-4">
     {STEP_KEYS.map((key, i) => {
       const n = (i + 1) as StepNum;
@@ -1389,4 +1380,58 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 <Select value={values.insurance_id} onValueChange={(v) => handleChange("insurance_id", v)}>
                   <SelectTrigger className={cn("mt-0.5 h-9", invalid("insurance_id") && "border-destructive")}>
                     <SelectValue placeholder={ss("selectInsurance")} />
-                  </SelectTrigger>
+                  </SelectTrigger>{" "}
+                  <SelectContent>
+                    {insurances.map((i) => (
+                      <SelectItem key={i.id} value={i.id}>
+                        {i.name}
+                        {i.provider ? ` — ${i.provider}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {invalid("insurance_id") && (
+                  <p className="mt-0.5 text-xs text-destructive">{errText("insurance_id")}</p>
+                )}
+
+                {selectedInsurance && insuranceCost.total !== null && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatMoney(insuranceCost.total, selectedInsurance.currency ?? "EUR")}
+                    {insuranceCost.months
+                      ? ` · ${insuranceCost.months} × ${formatMoney(
+                          insuranceCost.monthly ?? 0,
+                          selectedInsurance.currency ?? "EUR",
+                        )}`
+                      : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t mt-2">
+              <Button variant="outline" onClick={goBack} className="w-full sm:w-auto">
+                <ChevronLeft className="h-4 w-4 me-1" />
+                {ss("back")}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center sm:text-start">{draftStatus}</p>
+
+              <Button onClick={handleSave} disabled={saving} className="gap-1.5 w-full sm:w-auto">
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : errors.length === 0 && !autosaving ? (
+                  <Save className="h-4 w-4" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+
+                {t("case.profile.save")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
