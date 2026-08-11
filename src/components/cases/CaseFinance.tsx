@@ -1,3 +1,4 @@
+
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +7,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send } from "lucide-react";
+import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send, Receipt } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCaseServices } from "@/hooks/useCaseServices";
 import { useCaseFinancials, type FinancialSchoolLine, type FinancialPayment } from "@/hooks/useCaseFinancials";
+import { getCaseInvoice, sendInvoiceEmail, invoiceUrl, type CaseInvoice } from "@/services/CaseInvoiceService";
 import CaseServices, { type CaseServicesHandle } from "./CaseServices";
-import CaseInviteStudent from "./CaseInviteStudent";
 import CasePayments from "./CasePayments";
 import { formatDateTime } from "@/utils/dateUtils";
 
@@ -65,6 +75,7 @@ export interface CaseFinanceHandle {
   getReadiness: () => CaseFinanceReadiness;
 }
 
+
 interface ProofRow {
   id: string;
   case_id: string;
@@ -76,6 +87,7 @@ interface ProofRow {
   rejection_reason: string | null;
   reviewed_at: string | null;
 }
+
 
 const schoolPaymentTypes = ["school_course", "school_accommodation", "school_insurance"] as const;
 
@@ -111,12 +123,18 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const [agencyAck, setAgencyAck] = useState(false);
   const [confirmingAgency, setConfirmingAgency] = useState(false);
 
+  /** DARB invoice + manual-send state for the Invoice tab. */
+  const [invoice, setInvoice] = useState<CaseInvoice | null>(null);
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
+  const [invoiceEmail, setInvoiceEmail] = useState(studentEmail ?? "");
+
   /** Proof currently being rejected via the dedicated dialog (no window.prompt). */
   const [rejectTarget, setRejectTarget] = useState<ProofRow | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   /** Imperative handle to CaseServices so the single button can save services. */
   const servicesRef = useRef<CaseServicesHandle>(null);
+
 
   const serviceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
@@ -157,6 +175,45 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   useEffect(() => {
     void loadProofs();
   }, [loadProofs]);
+
+  /** Load the DARB invoice (issued on submit-to-admin) for the Invoice tab. */
+  useEffect(() => {
+    let active = true;
+    getCaseInvoice(caseId)
+      .then((inv) => {
+        if (active) setInvoice(inv);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [caseId, caseStatus]);
+
+  /** Keep the send box prefilled with the latest known student email. */
+  useEffect(() => {
+    if (studentEmail) setInvoiceEmail(studentEmail);
+  }, [studentEmail]);
+
+  const handleSendInvoice = async () => {
+    if (!invoice || invoiceBusy) return;
+    setInvoiceBusy(true);
+    try {
+      const ok = await sendInvoiceEmail({
+        ...invoice,
+        student_email: invoiceEmail.trim() || invoice.student_email,
+      });
+      const fresh = await getCaseInvoice(caseId);
+      setInvoice(fresh);
+      toast({
+        variant: ok ? undefined : "destructive",
+        description: ok
+          ? t("finance.invoice.sent", "Invoice emailed to the student.")
+          : t("finance.invoice.failed", "Could not send the invoice."),
+      });
+    } finally {
+      setInvoiceBusy(false);
+    }
+  };
 
   const getPaymentForType = (type: SchoolPaymentType) =>
     payments.find((p) => p.payment_type === type && p.status === "confirmed") ??
@@ -215,7 +272,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       const { error } = await (supabase as any).rpc("review_case_payment_proof", {
         p_proof_id: proof.id,
         p_approved: approved,
-        p_rejection_reason: approved ? null : rejectionReason || null,
+        p_rejection_reason: approved ? null : (rejectionReason || null),
       });
       if (error) throw error;
       toast({
@@ -348,486 +405,330 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
         )}
       </CardHeader>
 
-      <CardContent className="space-y-5">
-        <div className="space-y-3">
-          <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.services", "Service total")}</p>
-              <p className="mt-1 text-lg font-semibold">{formatILS(serviceTotal)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.paid", "Paid")}</p>
-              <p className="mt-1 text-lg font-semibold">{formatILS(paid)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.pendingReview", "Pending")}</p>
-              <p className="mt-1 text-lg font-semibold">{formatILS(pendingReview)}</p>
-            </div>
-            <div className="rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">{t("finance.summary.remaining", "Remaining")}</p>
-              <p className="mt-1 text-lg font-semibold">{formatILS(remaining)}</p>
-            </div>
-          </div>
+      <CardContent>
+        <Tabs defaultValue="summary" className="w-full">
+          <TabsList className="mb-4 grid w-full grid-cols-2">
+            <TabsTrigger value="summary">{t("finance.tabs.summary", "Summary")}</TabsTrigger>
+            <TabsTrigger value="invoice">{t("finance.tabs.invoice", "Invoice")}</TabsTrigger>
+          </TabsList>
 
-          {/* Consolidated informational note — replaces the several repeated
-              explanations that used to live across the services/payments blocks. */}
-          <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "finance.notes.priceControl",
-                "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",
-              )}
-            </p>
-          </div>
-        </div>
+          {/* ══ SUMMARY TAB — DARB services only (ILS). No Germany costs. ══ */}
+          <TabsContent value="summary" className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-md border p-3">
+                  <p className="text-xs text-muted-foreground">{t("finance.summary.services", "Service total")}</p>
+                  <p className="mt-1 text-lg font-semibold">{formatILS(serviceTotal)}</p>
+                </div>
+                <div className="rounded-md border p-3">
+                  <p className="text-xs text-muted-foreground">{t("finance.summary.paid", "Paid")}</p>
+                  <p className="mt-1 text-lg font-semibold">{formatILS(paid)}</p>
+                </div>
+                <div className="rounded-md border p-3">
+                  <p className="text-xs text-muted-foreground">{t("finance.summary.pendingReview", "Pending")}</p>
+                  <p className="mt-1 text-lg font-semibold">{formatILS(pendingReview)}</p>
+                </div>
+                <div className="rounded-md border p-3">
+                  <p className="text-xs text-muted-foreground">{t("finance.summary.remaining", "Remaining")}</p>
+                  <p className="mt-1 text-lg font-semibold">{formatILS(remaining)}</p>
+                </div>
+              </div>
 
-        <Separator />
-
-        {/* DARB SERVICES — single service-package selector. */}
-        <CaseServices
-          ref={servicesRef}
-          caseId={caseId}
-          services={services}
-          canManage={canManage}
-          caseStatus={caseStatus}
-          onChanged={() => {
-            void refetchServices();
-            void refetchFinancials();
-            void loadProofs();
-          }}
-        />
-
-        <Separator />
-
-        {/* PAYMENT — the confirmation card exists ONLY while the DARB fee is
-            unpaid. Once confirmed it is removed entirely and the payment
-            appears exactly once, inside Payment History, so it is never shown
-            twice. */}
-        {!agencyConfirmed && canManage && (
-          <div className="space-y-3 rounded-md border bg-muted/30 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold">{t("finance.agency.title", "DARB service payment")}</p>
-              <Badge className="bg-red-100 text-red-800">{t("finance.status.unpaid", "Unpaid")}</Badge>
-            </div>
-            <p className="text-lg font-semibold">{formatILS(serviceTotal)}</p>
-            <label
-              htmlFor="darb-agency-ack"
-              className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
-            >
-              <Checkbox
-                id="darb-agency-ack"
-                checked={agencyAck}
-                onCheckedChange={(v) => setAgencyAck(v === true)}
-                className="mt-0.5"
-              />
-              <span className="leading-tight">
-                {t("finance.agency.ack", "I confirm the DARB agency service fee has been received from the student.")}
-              </span>
-            </label>
-            {serviceTotal <= 0 && (
-              <p className="text-xs text-amber-700">
-                {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
-              </p>
-            )}
-          </div>
-        )}
-
-        {showGermany && schoolCosts.length > 0 && (
-          <>
-            <Separator />
-            <div className="space-y-3 rounded-md border p-4">
-              <div>
-                <p className="text-sm font-semibold">
-                  {t("finance.summary.schoolBlock", "Germany / School Costs · EUR")}
-                </p>
+              <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">
                   {t(
-                    "finance.school.estimateNote",
-                    "Estimated school costs. Final school invoices may differ. No ILS/EUR mixing.",
+                    "finance.notes.priceControl",
+                    "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",
                   )}
                 </p>
               </div>
-              {schoolCosts.map((line) => (
-                <div key={line.kind} className="rounded-md border p-3">
-                  <div className="flex flex-wrap justify-between gap-2">
-                    <span className="font-medium">{lineName(line)}</span>
-                    <span className="font-semibold">{formatCurrencyAmount(line.total, line.currency)}</span>
-                  </div>
-                  {line.weekly_price ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {formatCurrencyAmount(line.weekly_price, line.currency)} × {line.weeks}{" "}
-                      {t("finance.summary.weeks", "weeks")}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-              {Object.entries(schoolSubtotals).map(([currency, amount]) => (
-                <div key={currency} className="flex justify-between border-t pt-3 font-semibold">
-                  <span>{t("finance.school.estimatedTotal", "Estimated total")}</span>
-                  <span>{formatCurrencyAmount(Number(amount), currency)}</span>
-                </div>
-              ))}
             </div>
 
             <Separator />
+
+            {/* DARB SERVICES — single service-package selector. */}
+            <CaseServices
+              ref={servicesRef}
+              caseId={caseId}
+              services={services}
+              canManage={canManage}
+              caseStatus={caseStatus}
+              onChanged={() => {
+                void refetchServices();
+                void refetchFinancials();
+                void loadProofs();
+              }}
+            />
+
+            {/* PAYMENT — the confirmation card exists ONLY while the DARB fee is unpaid. */}
+            {!agencyConfirmed && canManage && (
+              <>
+                <Separator />
+                <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold">{t("finance.agency.title", "DARB service payment")}</p>
+                    <Badge className="bg-red-100 text-red-800">{t("finance.status.unpaid", "Unpaid")}</Badge>
+                  </div>
+                  <p className="text-lg font-semibold">{formatILS(serviceTotal)}</p>
+                  <label
+                    htmlFor="darb-agency-ack"
+                    className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
+                  >
+                    <Checkbox
+                      id="darb-agency-ack"
+                      checked={agencyAck}
+                      onCheckedChange={(v) => setAgencyAck(v === true)}
+                      className="mt-0.5"
+                    />
+                    <span className="leading-tight">
+                      {t(
+                        "finance.agency.ack",
+                        "I confirm the DARB agency service fee has been received from the student.",
+                      )}
+                    </span>
+                  </label>
+                  {serviceTotal <= 0 && (
+                    <p className="text-xs text-amber-700">
+                      {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            <Separator />
+
+            {/* ── Submission readiness checklist (informational only). ── */}
             <div className="space-y-3 rounded-md border p-4">
               <div>
-                <p className="text-sm font-semibold">
-                  {t("finance.verification.title", "Germany Payment Verification")}
-                </p>
+                <p className="text-sm font-semibold">{t("finance.summary.submissionBlock", "Submission Status")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
+                  {t("finance.summary.submissionHint", "All items must be checked before submitting to Admin.")}
                 </p>
               </div>
-              {schoolPaymentTypes.map((type) => {
-                const proof = getLatestProof(type);
-                const payment = getPaymentForType(type);
-                const busy = proofBusyId === proof?.id;
-                return (
-                  <div key={type} className="rounded-md border p-3 space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-medium">{typeLabel(type)}</span>
-                      <span className="text-sm font-semibold">
-                        {payment ? formatCurrencyAmount(payment.amount, payment.currency) : "—"}
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  {profileComplete ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.profile", "Student profile complete")}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  {schoolSelected ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.school", "School selected")}</span>
+                </li>
+                {schoolCosts.length > 0 && (
+                  <>
+                    <li className="flex items-center gap-2">
+                      {hasSchoolKind("program") ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Clock3 className="h-4 w-4 text-amber-600" />
+                      )}
+                      <span>{t("finance.summary.checklist.course", "Course calculated")}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {hasSchoolKind("accommodation") ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Clock3 className="h-4 w-4 text-amber-600" />
+                      )}
+                      <span>{t("finance.summary.checklist.accommodation", "Accommodation calculated")}</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {hasSchoolKind("insurance") ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Clock3 className="h-4 w-4 text-amber-600" />
+                      )}
+                      <span>{t("finance.summary.checklist.insurance", "Insurance calculated")}</span>
+                    </li>
+                  </>
+                )}
+                <li className="flex items-center gap-2">
+                  {services.length > 0 ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.services", "DARB services selected")}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  {agencyConfirmed ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>{t("finance.summary.checklist.agencyPayment", "DARB payment confirmed")}</span>
+                </li>
+              </ul>
+              {schoolCosts.length > 0 && (
+                <p className="flex items-center gap-2 text-sm">
+                  {germanyVerified ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                  )}
+                  <span>
+                    {germanyVerified
+                      ? t("finance.summary.checklist.germanyVerified", "Germany payments verified by Admin")
+                      : t("finance.summary.checklist.germanyPayment", "Germany payment — pending admin verification")}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* ── Submit to Admin & send invite — only at payment_confirmed. ── */}
+            {canManage && !delegateActionsToTopBar && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
+              <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold">
+                    {t("finance.invite.title", "Create the student account & send invite")}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "finance.invite.body",
+                    "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
+                  )}
+                </p>
+                <div className="rounded-md border bg-background p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
+                    <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
+                  </div>
+                  {studentEmail && (
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
+                      <span className="font-medium">{studentEmail}</span>
+                    </div>
+                  )}
+                  {studentPhone && (
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
+                      <span className="font-medium">{studentPhone}</span>
+                    </div>
+                  )}
+                  {studentUserId && (
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
+                      <span className="font-medium text-emerald-700">
+                        {t("finance.invite.accountExists", "Already created")}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      {payment?.status === "confirmed" || proof?.status === "approved" ? (
-                        <Badge className="bg-emerald-100 text-emerald-800">
-                          {t("finance.verification.confirmed", "Confirmed")}
-                        </Badge>
-                      ) : proof?.status === "rejected" ? (
-                        <Badge className="bg-red-100 text-red-800">
-                          {t("finance.verification.rejected", "Proof rejected")}
-                        </Badge>
-                      ) : proof?.status === "pending" || payment?.status === "submitted" ? (
-                        <Badge className="bg-amber-100 text-amber-800">
-                          {t("finance.verification.submitted", "Proof submitted")}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          {t("finance.verification.awaiting", "Awaiting student proof")}
-                        </Badge>
-                      )}
-                      {proof?.uploaded_at && (
-                        <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
-                      )}
-                    </div>
-                    {proof?.rejection_reason && <p className="text-xs text-red-700">{proof.rejection_reason}</p>}
-                    {proof && (
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" className="gap-1" onClick={() => openProof(proof)}>
-                          <ExternalLink className="h-3.5 w-3.5" /> {t("finance.verification.view", "View proof")}
-                        </Button>
-                        {canConfirm && proof.status === "pending" && (
-                          <>
-                            <Button size="sm" disabled={busy} onClick={() => reviewProof(proof, true)}>
-                              {busy ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                              )}{" "}
-                              {t("finance.verification.confirmAction", "Confirm payment")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => {
-                                setRejectReason("");
-                                setRejectTarget(proof);
-                              }}
-                            >
-                              <XCircle className="h-3.5 w-3.5" />{" "}
-                              {t("finance.verification.rejectAction", "Reject proof")}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        <Separator />
-
-        {/* PAYMENT HISTORY — the single place payment records live. When the
-            DARB fee is confirmed it appears here (and only here); the
-            confirmation card above is removed so the payment is never shown
-            twice. */}
-        <CasePayments
-          caseId={caseId}
-          payments={payments}
-          canManage={canManage}
-          canConfirm={canConfirm}
-          onChanged={() => void refetchFinancials()}
-        />
-
-        <Separator />
-
-        {/* Consolidated note for third-party (Germany) payments. */}
-        {schoolCosts.length > 0 && (
-          <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "finance.notes.thirdParty",
-                "Language course, accommodation, and insurance payments are handled separately and verified by Admin.",
-              )}
-            </p>
-          </div>
-        )}
-
-        <Separator />
-
-        {/* ── Submission readiness checklist ───────────────────────────
-            Shows the team member whether the case is ready to submit to
-            Admin. The actual submit button and server-side gate live in
-            CaseStageBlock; this block is informational only. */}
-        <div className="space-y-3 rounded-md border p-4">
-          <div>
-            <p className="text-sm font-semibold">{t("finance.summary.submissionBlock", "Submission Status")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("finance.summary.submissionHint", "All items must be checked before submitting to Admin.")}
-            </p>
-          </div>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-center gap-2">
-              {profileComplete ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              ) : (
-                <Clock3 className="h-4 w-4 text-amber-600" />
-              )}
-              <span>{t("finance.summary.checklist.profile", "Student profile complete")}</span>
-            </li>
-            <li className="flex items-center gap-2">
-              {schoolSelected ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              ) : (
-                <Clock3 className="h-4 w-4 text-amber-600" />
-              )}
-              <span>{t("finance.summary.checklist.school", "School selected")}</span>
-            </li>
-            {schoolCosts.length > 0 && (
-              <>
-                <li className="flex items-center gap-2">
-                  {hasSchoolKind("program") ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
                   )}
-                  <span>{t("finance.summary.checklist.course", "Course calculated")}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  {hasSchoolKind("accommodation") ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span>{t("finance.summary.checklist.accommodation", "Accommodation calculated")}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  {hasSchoolKind("insurance") ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span>{t("finance.summary.checklist.insurance", "Insurance calculated")}</span>
-                </li>
-              </>
-            )}
-            <li className="flex items-center gap-2">
-              {services.length > 0 ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              ) : (
-                <Clock3 className="h-4 w-4 text-amber-600" />
-              )}
-              <span>{t("finance.summary.checklist.services", "DARB services selected")}</span>
-            </li>
-            <li className="flex items-center gap-2">
-              {agencyConfirmed ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              ) : (
-                <Clock3 className="h-4 w-4 text-amber-600" />
-              )}
-              <span>{t("finance.summary.checklist.agencyPayment", "DARB payment confirmed")}</span>
-            </li>
-          </ul>
-          {schoolCosts.length > 0 && (
-            <p className="flex items-center gap-2 text-sm">
-              {germanyVerified ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              ) : (
-                <Clock3 className="h-4 w-4 text-amber-600" />
-              )}
-              <span>
-                {germanyVerified
-                  ? t("finance.summary.checklist.germanyVerified", "Germany payments verified by Admin")
-                  : t("finance.summary.checklist.germanyPayment", "Germany payment — pending admin verification")}
-              </span>
-            </p>
-          )}
-        </div>
-
-        {/* ── Create the student account & send invite ────────────────────
-            This block appears ONLY after the DARB payment has been confirmed.
-            It is the single action that moves the case to Admin: it submits the
-            case, issues + emails the DARB invoice, and sends the student their
-            dashboard activation invite. It is not shown before payment is
-            confirmed, and it disappears once the case is already submitted. */}
-        {canManage &&
-          !delegateActionsToTopBar &&
-          agencyConfirmed &&
-          caseStatus === "payment_confirmed" &&
-          onSubmitToAdmin && (
-            <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold">
-                  {t("finance.invite.title", "Create the student account & send invite")}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "finance.invite.body",
-                  "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
-                )}
-              </p>
-              <div className="rounded-md border bg-background p-3 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
-                  <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
                 </div>
-                {studentEmail && (
-                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
-                    <span className="font-medium">{studentEmail}</span>
-                  </div>
-                )}
-                {studentPhone && (
-                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
-                    <span className="font-medium">{studentPhone}</span>
-                  </div>
-                )}
-                {studentUserId && (
-                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
-                    <span className="font-medium text-emerald-700">
-                      {t("finance.invite.accountExists", "Already created")}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <Button
-                type="button"
-                className="w-full sm:w-auto gap-1.5"
-                disabled={submitting}
-                onClick={onSubmitToAdmin}
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {t("finance.invite.action", "Submit to Admin & send invite")}
-              </Button>
-            </div>
-          )}
-        {/* ── Resend / recover the student activation link ────────────────  
-            The automatic invite is sent once during submit-to-admin. This  
-            manual surface appears only AFTER the case is submitted and a  
-            student account exists, so "Resend" always has a real invite to  
-            resend (it was misplaced in the profile tab before). */}
-        {canManage && caseStatus === "submitted" && studentUserId && (
-          <CaseInviteStudent
-            caseId={caseId}
-            fullName={studentFullName ?? ""}
-            phone={studentPhone ?? null}
-            email={studentEmail ?? ""}
-            studentUserId={studentUserId}
-            onDone={() => {
-              void refetchFinancials();
-            }}
-          />
-        )}
-
-        {/* Single confirmation action — delegated to the page's top bar in the
-            tabbed layout (profile_completion / payment_confirmed). */}
-        {canManage && !delegateActionsToTopBar && (
-          <div className="space-y-2">
-            {financeComplete ? (
-              <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm font-medium text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" />
-                {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
-              </div>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  className="w-full sm:w-auto"
-                  disabled={buttonDisabled}
-                  onClick={handleConfirmAndSave}
-                >
-                  {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                  {t("finance.confirmAndSave.action", "Confirm & Save")}
+                <Button type="button" className="w-full sm:w-auto gap-1.5" disabled={submitting} onClick={onSubmitToAdmin}>
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {t("finance.invite.action", "Submit to Admin & send invite")}
                 </Button>
-                {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("finance.confirmAndSave.ackRequired", "Confirm that the DARB agency fee was received.")}
-                  </p>
-                )}
-              </>
+              </div>
             )}
-          </div>
-        )}
-      </CardContent>
 
-      {/* Reject-proof dialog (replaces the old window.prompt for reject reasons). */}
-      <Dialog
-        open={!!rejectTarget}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRejectTarget(null);
-            setRejectReason("");
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("finance.proof.rejectTitle", "Reject payment proof")}</DialogTitle>
-            <DialogDescription>
-              {t("finance.proof.rejectBody", "Reason for rejecting this payment proof:")}
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            value={rejectReason}
-            onChange={(event) => setRejectReason(event.target.value)}
-            placeholder={t("finance.proof.rejectPlaceholder", "Add a reason (optional)…")}
-            rows={3}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setRejectTarget(null)} disabled={proofBusyId !== null}>
-              {t("common.cancel", "Cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={proofBusyId !== null}
-              onClick={async () => {
-                if (!rejectTarget) return;
-                await reviewProof(rejectTarget, false, rejectReason.trim() || null);
-                setRejectTarget(null);
-                setRejectReason("");
-              }}
-            >
-              {t("finance.proof.rejectAction", "Reject")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
-  );
-});
+            {/* Single confirmation action — delegated to the page's top bar in the tabbed layout. */}
+            {canManage && !delegateActionsToTopBar && (
+              <div className="space-y-2">
+                {financeComplete ? (
+                  <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm font-medium text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      className="w-full sm:w-auto"
+                      disabled={buttonDisabled}
+                      onClick={handleConfirmAndSave}
+                    >
+                      {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                      {t("finance.confirmAndSave.action", "Confirm & Save")}
+                    </Button>
+                    {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          "finance.confirmAndSave.ackRequired",
+                          "Confirm that the DARB agency fee was received.",
+                        )}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </TabsContent>
 
-export default CaseFinance;
+          {/* ══ INVOICE TAB — full breakdown (DARB ILS + Germany EUR) + send box. ══ */}
+          <TabsContent value="invoice" className="space-y-5">
+            {/* DARB services (ILS). */}
+            <div className="space-y-2 rounded-md border p-4">
+              <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t("finance.summary.services", "Service total")}</span>
+                <span className="font-semibold">{formatILS(serviceTotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t("finance.summary.paid", "Paid")}</span>
+                <span className="font-semibold">{formatILS(paid)}</span>
+              </div>
+              <div className="flex items-center justify-between border-t pt-2 text-sm font-semibold">
+                <span>{t("finance.summary.remaining", "Remaining")}</span>
+                <span>{formatILS(remaining)}</span>
+              </div>
+            </div>
+
+            {/* Germany / School costs (EUR) — estimates, never mixed with ILS. */}
+            {schoolCosts.length > 0 && (
+              <div className="space-y-3 rounded-md border p-4">
+                <div>
+                  <p className="text-sm font-semibold">
+                    {t("finance.summary.schoolBlock", "Germany / School Costs · EUR")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "finance.school.estimateNote",
+                      "Estimated school costs. Final school invoices may differ. No ILS/EUR mixing.",
+                    )}
+                  </p>
+                </div>
+                {schoolCosts.map((line) => (
+                  <div key={line.kind} className="rounded-md border p-3">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <span className="font-medium">{lineName(line)}</span>
+                      <span className="font-semibold">{formatCurrencyAmount(line.total, line.currency)}</span>
+                    </div>
+                    {line.weekly_price ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatCurrencyAmount(line.weekly_price, line.currency)} × {line.weeks}{" "}
+                        {t("finance.summary.weeks", "weeks")}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+                {Object.entries(schoolSubtotals).map(([currency, amount]) => (
+                  <div key={currency} className="flex justify-between border-t pt-3 font-semibold">
+                    <span>{t("finance.school.estimatedTotal", "Estimated total")}</span>
+                    <span>{formatCurrencyAmount(Number(amount), currency)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Germany payment verification (Admin confirms proofs). */}
+            {showGermany && schoolCosts.length > 0 && (
+              <div className="space-y-3 rounded-md border p-4">
+                <div>
+                  <p className="text-sm font-semibold">
+                    {t("finance.verification.title", "Germany Payment Verification")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
