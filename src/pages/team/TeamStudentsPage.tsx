@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { User, RefreshCw, UserPlus, Loader2, Mail, Search } from "lucide-react";
+import { User, RefreshCw, UserPlus, Loader2, Mail, Search, Copy, CheckCheck, Send, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,12 +18,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { identityConflictMessage } from "@/lib/identityConflict";
+import { readFunctionErrorBody, readFunctionError } from "@/lib/functionError";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
   id: string;
   full_name: string;
   email: string;
+  created_at: string;
+}
+
+interface PendingInvitation {
+  id: string;
+  invited_email: string;
+  invited_name: string | null;
+  status: string;
+  expires_at: string;
   created_at: string;
 }
 
@@ -40,15 +52,21 @@ export default function TeamStudentsPage() {
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  /* ── Pending student invitations ─────────────────────────────────── */
+  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
+  const [busyInvite, setBusyInvite] = useState<string | null>(null);
+
   /* ── Dialog ──────────────────────────────────────────────────────── */
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [newCreds, setNewCreds] = useState<{
     full_name: string;
     email: string;
     invited: boolean;
     alreadyInvited: boolean;
     invitationFailed: boolean;
+    activationUrl: string | null;
   } | null>(null);
 
   /** 'invite' sends a branded activation email; 'manual' will show a temp password (wired in a later step). */
@@ -67,20 +85,22 @@ export default function TeamStudentsPage() {
 
   const resetForm = () => setForm({ firstName: "", fatherName: "", familyName: "", email: "" });
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   /* ── Fetch students ──────────────────────────────────────────────── */
   const fetchStudents = useCallback(async () => {
     setListLoading(true);
     try {
-      // Team members may have restricted access to user_roles.
-      // We query profiles directly filtering by role via RPC or join.
-      // Fallback: query profiles where created_by is a team member
       const { data: roleData, error: roleErr } = await supabase
         .from("user_roles")
         .select("user_id")
         .eq("role", "student");
 
       if (roleErr) {
-        // RLS may block team members — show a generic message to avoid leaking internals.
         console.error("user_roles RLS error:", roleErr.message, roleErr.details);
         toast({ variant: "destructive", description: t("common.error") });
         return;
@@ -113,27 +133,33 @@ export default function TeamStudentsPage() {
     }
   }, [toast]);
 
+  /* ── Fetch pending student invitations ───────────────────────────── */
+  const fetchInvitations = useCallback(async () => {
+    const { data } = await (supabase as any)
+      .from("user_invitations")
+      .select("id, invited_email, invited_name, status, expires_at, created_at")
+      .eq("status", "pending")
+      .eq("invitation_type", "student")
+      .order("created_at", { ascending: false });
+    setInvitations((data || []) as PendingInvitation[]);
+  }, []);
+
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents]);
+    fetchInvitations();
+  }, [fetchStudents, fetchInvitations]);
 
   /* ── Create account ──────────────────────────────────────────────── */
   const handleCreate = async () => {
     const { firstName, fatherName, familyName, email } = form;
 
     if (!firstName.trim() || !fatherName.trim() || !familyName.trim()) {
-      toast({
-        variant: "destructive",
-        description: t("team.students.namePartsRequired"),
-      });
+      toast({ variant: "destructive", description: t("team.students.namePartsRequired") });
       return;
     }
 
     if (!email.includes("@")) {
-      toast({
-        variant: "destructive",
-        description: t("team.students.invalidEmail"),
-      });
+      toast({ variant: "destructive", description: t("team.students.invalidEmail") });
       return;
     }
 
@@ -145,18 +171,20 @@ export default function TeamStudentsPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // NOTE: Step 2 is UI/architecture only. Both modes currently route through
-      // the invite flow. The `manual` temp-password path is wired in a later step.
-      //
-      // Use the durable invitation flow. It creates the student account,
-      // stores a revocable activation invitation, and rate-limits duplicate
-      // emails instead of exposing a temporary password to staff.
+      // NOTE: Step 3 finalizes the invite path. Both modes still route through
+      // the invite flow here; the `manual` temp-password path is wired in Step 4.
       const { data, error } = await supabase.functions.invoke("create-student-from-case", {
         body: { student_email: email.trim().toLowerCase(), student_full_name: fullName },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Surface identity-conflict wording ("one identity = one role") like the
+        // Admin Team flow, instead of a generic error.
+        const body = await readFunctionErrorBody(error);
+        const conflict = identityConflictMessage(body as any, t);
+        throw new Error(conflict ?? (await readFunctionError(error)));
+      }
       if (!data?.success) throw new Error(data?.error || "Creation failed");
 
       setNewCreds({
@@ -165,18 +193,53 @@ export default function TeamStudentsPage() {
         invited: data.invited === true,
         alreadyInvited: data.already_invited === true,
         invitationFailed: data.invitation_failed === true,
+        activationUrl: data.activation_url ?? null,
       });
 
       resetForm();
-      await fetchStudents();
-      toast({
-        description: t("team.students.createdSuccess"),
-      });
+      await Promise.all([fetchStudents(), fetchInvitations()]);
+      toast({ description: t("team.students.createdSuccess") });
     } catch (err: any) {
       console.error("handleCreate error:", err);
-      toast({ variant: "destructive", description: t("common.error") });
+      toast({ variant: "destructive", description: err?.message || t("common.error") });
     } finally {
       setCreating(false);
+    }
+  };
+
+  /* ── Resend a pending invitation ─────────────────────────────────── */
+  const resendInvitation = async (inv: PendingInvitation) => {
+    setBusyInvite(inv.id);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("create-student-from-case", {
+        body: {
+          student_email: inv.invited_email.trim().toLowerCase(),
+          student_full_name: inv.invited_name || inv.invited_email.split("@")[0],
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) {
+        const body = await readFunctionErrorBody(error);
+        const conflict = identityConflictMessage(body as any, t);
+        throw new Error(conflict ?? (await readFunctionError(error)));
+      }
+      if (!data?.success) throw new Error(data?.error || "Resend failed");
+      await fetchInvitations();
+      toast({
+        description: data.already_invited
+          ? t(
+              "team.students.inviteAlreadySent",
+              "An activation link was sent recently. Ask the student to check their inbox.",
+            )
+          : t("team.students.invitationSent", "Invitation sent"),
+      });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err?.message || t("common.error") });
+    } finally {
+      setBusyInvite(null);
     }
   };
 
@@ -206,7 +269,10 @@ export default function TeamStudentsPage() {
             variant="outline"
             size="icon"
             aria-label={t("common.refresh")}
-            onClick={fetchStudents}
+            onClick={() => {
+              fetchStudents();
+              fetchInvitations();
+            }}
             title={t("common.refresh")}
           >
             <RefreshCw className="h-4 w-4" />
@@ -242,19 +308,17 @@ export default function TeamStudentsPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              {/* ── Success / credentials view ─────────────────────── */}
+              {/* ── Invite success view ─────────────────────────────── */}
               {newCreds ? (
                 <div className="space-y-4 pt-1">
-                  <p className="text-sm text-muted-foreground">
-                    {t("team.students.createdFor", { name: newCreds.full_name })}
-                  </p>
-
-                  <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
-                    <p className="text-xs text-muted-foreground">{t("team.students.tempEmail")}</p>
-                    <p className="font-medium">{newCreds.email}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                    <CheckCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <p className="text-sm text-muted-foreground">
                       {newCreds.invited
-                        ? t("team.students.inviteSent", "A secure activation link was sent to this email.")
+                        ? t(
+                            "team.students.inviteSentHint",
+                            "An activation email was sent. The link works once and expires in 7 days.",
+                          )
                         : newCreds.alreadyInvited
                           ? t(
                               "team.students.inviteAlreadySent",
@@ -262,14 +326,61 @@ export default function TeamStudentsPage() {
                             )
                           : newCreds.invitationFailed
                             ? t(
-                                "team.students.inviteFailed",
-                                "The account was created, but the invitation email could not be sent. Retry from the linked case.",
+                                "team.students.inviteEmailFailed",
+                                "The invitation was created but the email could not be sent — share the link below instead.",
                               )
                             : t(
                                 "team.students.invitePending",
                                 "The student can activate their account using the email invitation.",
                               )}
                     </p>
+                  </div>
+
+                  <div className="space-y-3 rounded-lg bg-muted p-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {t("team.students.emailAddress", "Email")}
+                      </p>
+                      <p dir="ltr" className="break-all font-mono text-sm text-foreground">
+                        {newCreds.email}
+                      </p>
+                    </div>
+
+                    {newCreds.activationUrl && (
+                      <>
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {t("team.students.activationLink", "Activation link")}
+                          </p>
+                          <p
+                            dir="ltr"
+                            className="select-all break-all rounded-md bg-background p-2 text-start font-mono text-xs leading-relaxed text-foreground"
+                          >
+                            {newCreds.activationUrl}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button
+                            variant="secondary"
+                            className="w-full gap-2 sm:flex-1"
+                            onClick={() => copyToClipboard(newCreds.activationUrl!)}
+                          >
+                            {copied ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                            {copied
+                              ? t("team.students.copied", "Copied")
+                              : t("team.students.copyInviteLink", "Copy activation link")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full gap-2 sm:w-auto"
+                            onClick={() => window.open(newCreds.activationUrl!, "_blank", "noopener")}
+                          >
+                            <Link2 className="h-4 w-4" />
+                            {t("team.students.openLink", "Open")}
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <Button
@@ -421,6 +532,47 @@ export default function TeamStudentsPage() {
           className="ps-9"
         />
       </div>
+
+      {/* ── Pending invitations ────────────────────────────────────── */}
+      {invitations.length > 0 && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="border-b px-4 py-3 text-sm font-medium text-foreground">
+              {t("team.students.pendingInvites", "Pending invitations")}
+            </div>
+            <div className="divide-y divide-border">
+              {invitations.map((inv) => (
+                <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {inv.invited_name || inv.invited_email}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{inv.invited_email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("team.students.inviteExpires", "Expires")}:{" "}
+                      {new Date(inv.expires_at).toLocaleDateString("en-US")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{t("team.students.invited", "Invited")}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={busyInvite === inv.id}
+                      onClick={() => resendInvitation(inv)}
+                      title={t("team.students.resendInvite", "Resend invitation")}
+                      aria-label={t("team.students.resendInvite", "Resend invitation")}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Student list ───────────────────────────────────────────── */}
       {listLoading ? (
