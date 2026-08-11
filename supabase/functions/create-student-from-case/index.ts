@@ -214,7 +214,21 @@ serve(async (req) => {
       }
       return data?.created_at ?? null;
     }
-
+// Captures the most recent activation link so the API can return it to  
+    // staff (used by the "copy activation link" success card in the UI).  
+    let capturedActivationUrl: string | null = null;  
+  
+    // ── Send invitation ───────────────────────────────────────────────────  
+    async function sendInvite(email: string, name: string) {  
+      try {  
+        const alreadySent = await recentPendingInvite(email);  
+        if (alreadySent) {  
+          console.log("create-student-from-case: skipped duplicate invite", { email, alreadySent });  
+          return "already_sent" as const;  
+        }  
+  
+        const activationUrl = await createActivationLink(email);  
+        capturedActivationUrl = activationUrl;
     // ── Send invitation ───────────────────────────────────────────────────
     async function sendInvite(email: string, name: string) {
       try {
