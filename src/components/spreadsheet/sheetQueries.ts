@@ -147,10 +147,10 @@ export const fetchPaymentsSheet = async () => {
     `)
     .in('case.id', caseIds)
     .is('deleted_at', null);
-  const subByCase = new Map((subs || []).map((s: any) => [s.case?.id, s]));
+  const subByCase = new Map<string, any>((subs || []).map((s: any) => [s.case?.id, s]));
 
   return (payments || []).map((p: any) => {
-    const s = subByCase.get(p.case_id);
+    const s: any = subByCase.get(p.case_id);
     const fee = fees[p.case_id] ?? 0;
     const paid = Number(p.amount ?? 0);
     return {
