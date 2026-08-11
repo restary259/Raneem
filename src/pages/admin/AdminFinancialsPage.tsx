@@ -20,6 +20,7 @@ const OverviewTab = () => {
     platformNetRevenue: 0,
     enrolledCount: 0,
     referralDiscounts: 0,
+    partnerCommissionRate: 0,
   });
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ const OverviewTab = () => {
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t("admin.financials.partnerCommissionRateInfo", { rate: "—" })}
+          {t("admin.financials.partnerCommissionRateInfo", { rate: data.partnerCommissionRate.toLocaleString("en-US") })}
         </p>
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="h-4 w-4" />

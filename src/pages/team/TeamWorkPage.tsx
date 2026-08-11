@@ -57,7 +57,9 @@ export default function TeamWorkPage() {
   const [loading, setLoading] = useState(true);
   const [todayAppts, setTodayAppts] = useState<ApptRow[]>([]);
   const [overdueAppts, setOverdueAppts] = useState<ApptRow[]>([]);
+  const [overdueCount, setOverdueCount] = useState(0);
   const [returned, setReturned] = useState<ReturnedRow[]>([]);
+  const [returnedCount, setReturnedCount] = useState(0);
   const [staleCases, setStaleCases] = useState<CaseRow[]>([]);
   const [totalCases, setTotalCases] = useState(0);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export default function TeamWorkPage() {
       dayEnd.setHours(23, 59, 59, 999);
       const staleBefore = new Date(Date.now() - STALE_DAYS * DAY_MS).toISOString();
 
-      const [todayRes, overdueRes, casesRes, staleRes] = await Promise.all([
+      const [todayRes, overdueRes, overdueCountRes, casesRes, staleRes] = await Promise.all([
         supabase
           .from("appointments")
           .select("id, case_id, scheduled_at, duration_minutes, outcome, notes, case:cases(full_name)")
@@ -88,6 +90,13 @@ export default function TeamWorkPage() {
           .is("outcome", null)
           .order("scheduled_at", { ascending: false })
           .limit(10),
+        // Accurate count for the KPI — the display list above is capped at 10.
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("team_member_id", user.id)
+          .lt("scheduled_at", dayStart.toISOString())
+          .is("outcome", null),
         supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
@@ -108,25 +117,37 @@ export default function TeamWorkPage() {
 
       if (todayRes.error) throw todayRes.error;
       if (overdueRes.error) throw overdueRes.error;
+      if (overdueCountRes.error) throw overdueCountRes.error;
       if (casesRes.error) throw casesRes.error;
       if (staleRes.error) throw staleRes.error;
 
       setTodayAppts((todayRes.data as unknown as ApptRow[]) ?? []);
       setOverdueAppts((overdueRes.data as unknown as ApptRow[]) ?? []);
+      setOverdueCount(overdueCountRes.count ?? 0);
       setTotalCases(casesRes.count ?? 0);
       setStaleCases((staleRes.data as CaseRow[]) ?? []);
 
       const caseIds = ((staleRes.data as CaseRow[]) ?? []).map((c) => c.id);
       // Returned submissions are scoped by RLS to the cases assigned to this member.
-      const returnedRes = await supabase
-        .from("case_submissions")
-        .select("id, case_id, review_note, reviewed_at, case:cases(full_name, case_reference)")
-        .eq("review_status", "changes_requested")
-        .is("deleted_at", null)
-        .order("reviewed_at", { ascending: false })
-        .limit(10);
+      const [returnedRes, returnedCountRes] = await Promise.all([
+        supabase
+          .from("case_submissions")
+          .select("id, case_id, review_note, reviewed_at, case:cases(full_name, case_reference)")
+          .eq("review_status", "changes_requested")
+          .is("deleted_at", null)
+          .order("reviewed_at", { ascending: false })
+          .limit(10),
+        // Accurate count for the KPI — the display list above is capped at 10.
+        supabase
+          .from("case_submissions")
+          .select("id", { count: "exact", head: true })
+          .eq("review_status", "changes_requested")
+          .is("deleted_at", null),
+      ]);
       if (returnedRes.error) throw returnedRes.error;
+      if (returnedCountRes.error) throw returnedCountRes.error;
       setReturned((returnedRes.data as unknown as ReturnedRow[]) ?? []);
+      setReturnedCount(returnedCountRes.count ?? 0);
       void caseIds;
     } catch (err) {
       console.error("TeamWorkPage fetchData error:", err);
@@ -155,13 +176,13 @@ export default function TeamWorkPage() {
     {
       icon: AlertTriangle,
       label: t("team.work.statOutcomes", "Outcomes to record"),
-      value: overdueAppts.length,
+      value: overdueCount,
       tone: "text-destructive",
     },
     {
       icon: RotateCcw,
       label: t("team.work.statReturned", "Returned by admin"),
-      value: returned.length,
+      value: returnedCount,
       tone: "text-amber-600",
     },
     {

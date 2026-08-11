@@ -88,3 +88,31 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - Admin (`AdminStudentsPage`) and team (`ProfileCompletionForm`, `SubmitNewStudentPage`)
   read/write the same mirror columns, so keep them populated.
 
+## Dashboard / spreadsheet audit conventions
+- **Service fee is authoritative from `case_services`** (sum of
+  `unit_price * quantity - discount`), never the `case_submissions.service_fee`
+  column (frequently 0). Both the Students and Payments spreadsheet sheets use
+  `serviceFeeByCase()` from `sheetQueries.ts` so totals reconcile. When adding a
+  new money column anywhere, source it from `case_services` / `get_case_financials`,
+  not the submission row.
+- **Partner commission is a flat ILS amount**, not a percentage
+  (see `COMMISSION_RULES.md`). `platform_settings.partner_commission_rate` is the
+  global default; per-partner overrides live in `partner_commission_overrides`.
+  `DashboardService.financialOverview()` returns `partnerCommissionRate` so the
+  Admin Financials overview renders the real rate.
+- **KPIs that mirror a capped display list must use a separate `count:'exact', head:true`
+  query**, not the list's `.length` (which is capped by `limit()`). `TeamWorkPage`
+  does this for overdue-appointments and returned-submissions counts.
+- **"Closed" = `enrollment_paid`** (the only terminal success status in
+  `TERMINAL_STATUSES` from `lib/caseStatus.ts`). `submitted` is still active
+  (awaiting admin review) and must not be counted as closed.
+- **SLA thresholds are centralized in `lib/slaPolicy.ts` (`SLA_DAYS`)**.
+  `AdminPipelinePage` imports `SLA_DAYS` instead of hardcoding 3/5/14/7 so the
+  board never drifts from `AdminCommandCenter` / `isSlaBreached()`.
+- **Analytics must exclude archived cases** (`.eq('archived', false)`) to match
+  the Pipeline board / Command Center universe.
+- **Export scope**: SpreadsheetHub exports the filtered+searched rows (matches the
+  visible table). `AdminInboxPage` CSV exports the `visible` (filtered) set.
+  `PayoutsManagement` XLSX/PDF exports ALL payout requests (a complete report,
+  not the filtered "Other requests" tab) — this is intentional.
+

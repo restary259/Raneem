@@ -9,7 +9,8 @@
  * generic failure only when the error is not a known blocker.
  */
 
-type TranslateFn = (key: string, fallback?: string) => string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TranslateFn = (key: any, fallback?: any) => any;
 
 const BLOCKERS: Array<{ match: RegExp; key: string }> = [
   {

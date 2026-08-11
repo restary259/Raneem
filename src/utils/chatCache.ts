@@ -56,7 +56,7 @@ const getKey = async (): Promise<CryptoKey | null> => {
     if (stored) {
       return await s.importKey(
         'raw',
-        fromBase64(stored).buffer,
+        fromBase64(stored).buffer as ArrayBuffer,
         { name: 'AES-GCM' },
         false,
         ['encrypt', 'decrypt'],
@@ -131,9 +131,9 @@ export const loadChatHistory = async (): Promise<ChatMessage[]> => {
 
     try {
       const plain = await subtle().decrypt(
-        { name: 'AES-GCM', iv: fromBase64(payload.iv).buffer },
+        { name: 'AES-GCM', iv: fromBase64(payload.iv).buffer as ArrayBuffer },
         key,
-        fromBase64(payload.data).buffer,
+        fromBase64(payload.data).buffer as ArrayBuffer,
       );
       const parsed = JSON.parse(new TextDecoder().decode(plain));
       return Array.isArray(parsed) ? parsed : [];

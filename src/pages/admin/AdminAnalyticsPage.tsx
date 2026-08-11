@@ -21,7 +21,12 @@ const AdminAnalyticsPage = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from('cases').select('status, source, created_at, last_activity_at');
+      // Exclude archived cases so analytics reflect the active pipeline,
+      // matching the universe shown on the Pipeline board and Command Center.
+      const { data, error } = await supabase
+        .from('cases')
+        .select('status, source, created_at, last_activity_at')
+        .eq('archived', false);
       if (error) throw error;
       setCases(data || []);
     } catch (err: any) {
