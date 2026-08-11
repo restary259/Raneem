@@ -527,93 +527,98 @@ export default function MessageComposer({
             onChange={(e) => e.target.files && addFiles(e.target.files)}
           />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {isMobile ? (
+            <>
               <Button
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 rounded-full border text-muted-foreground"
+                className="h-9 w-9 rounded-full border text-muted-foreground"
                 disabled={disabled}
                 aria-label={t("chat.actions.menu")}
+                onClick={() => setSheetOpen(true)}
               >
                 <Plus className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              side="top"
-              align="start"
-              sideOffset={8}
-              collisionPadding={12}
-              className="z-50 w-56"
-              onCloseAutoFocus={(e) => {
-                // Radix returns focus to the trigger, which blurs the textarea
-                // and would hide the mention list we just opened.
-                e.preventDefault();
-                textRef.current?.focus();
-              }}
-            >
-              <DropdownMenuItem className="gap-2" onSelect={() => fileRef.current?.click()}>
-                <Paperclip className="h-4 w-4" />
-                {t("chat.attach.button")}
-              </DropdownMenuItem>
 
-              {mentionables.length > 0 && (
-                <DropdownMenuItem
-                  className="gap-2"
-                  onSelect={() => {
-                    const el = textRef.current;
-                    const caret = el?.selectionStart ?? body.length;
-                    setBody(`${body.slice(0, caret)}@${body.slice(caret)}`);
-                    setMentionQuery("");
-                    requestAnimationFrame(() => {
-                      el?.focus();
-                      el?.setSelectionRange(caret + 1, caret + 1);
-                    });
-                  }}
+              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                <SheetContent
+                  side="bottom"
+                  className="rounded-t-2xl pb-[max(1.25rem,env(safe-area-inset-bottom))]"
                 >
-                  <AtSign className="h-4 w-4" />
-                  {t("chat.mention.button")}
-                </DropdownMenuItem>
-              )}
-
-              {allowCaseMentions && (
-                <DropdownMenuItem
-                  className="gap-2"
-                  onSelect={() => {
-                    const el = textRef.current;
-                    const caret = el?.selectionStart ?? body.length;
-                    setBody(`${body.slice(0, caret)}#${body.slice(caret)}`);
-                    setCaseQuery("");
-                    requestAnimationFrame(() => {
-                      el?.focus();
-                      el?.setSelectionRange(caret + 1, caret + 1);
-                    });
-                  }}
+                  <SheetHeader className="text-start">
+                    <SheetTitle className="text-base">{t("chat.actions.menu")}</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 grid grid-cols-4 gap-3">
+                    {actions.map((action) => (
+                      <button
+                        key={action.key}
+                        type="button"
+                        onClick={() => {
+                          setSheetOpen(false);
+                          // Let the sheet close before focusing the textarea.
+                          requestAnimationFrame(() => action.run());
+                        }}
+                        className="flex flex-col items-center gap-1.5"
+                      >
+                        <span
+                          className={cn(
+                            "flex h-14 w-14 items-center justify-center rounded-full",
+                            action.tone,
+                          )}
+                        >
+                          <action.icon className="h-6 w-6" />
+                        </span>
+                        <span className="text-[11px] leading-tight text-muted-foreground">
+                          {action.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-full border text-muted-foreground"
+                  disabled={disabled}
+                  aria-label={t("chat.actions.menu")}
                 >
-                  <Hash className="h-4 w-4" />
-                  {t("chat.caseMention.button")}
-                </DropdownMenuItem>
-              )}
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                collisionPadding={12}
+                className="z-50 w-56"
+                onCloseAutoFocus={(e) => {
+                  // Radix returns focus to the trigger, which blurs the textarea
+                  // and would hide the mention list we just opened.
+                  e.preventDefault();
+                  textRef.current?.focus();
+                }}
+              >
+                {actions.map((action) => (
+                  <DropdownMenuItem
+                    key={action.key}
+                    className="gap-2"
+                    onSelect={() => action.run()}
+                  >
+                    <action.icon className="h-4 w-4" />
+                    {action.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-              {allowRequests && (
-                <DropdownMenuItem
-                  className="gap-2"
-                  onSelect={() => setKind((k) => (k === "request" ? "text" : "request"))}
-                >
-                  <FileUp className="h-4 w-4" />
-                  {t("chat.request.button")}
-                </DropdownMenuItem>
-              )}
-
-              {onRequestPayout && (
-                <DropdownMenuItem className="gap-2" onSelect={() => onRequestPayout()}>
-                  <Banknote className="h-4 w-4" />
-                  {t("chat.payout.request")}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {kind === "request" && (
             <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-900 dark:bg-sky-500/20 dark:text-sky-200">
