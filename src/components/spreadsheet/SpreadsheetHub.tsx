@@ -77,7 +77,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     const payments: SheetDef = {
       key: 'payments',
       label: t('sheets.tab.payments'),
-      load: () => fetchPaymentsSheet(opts),
+      load: () => fetchPaymentsSheet(),
       columns: [
         { key: 'case_reference', label: c('reference') },
         { key: 'paid_date', label: c('paidDate'), type: 'date' },

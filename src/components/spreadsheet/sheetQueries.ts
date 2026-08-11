@@ -118,39 +118,56 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
 
 /* ---------------------------------- Payments --------------------------------- */
 
-export const fetchPaymentsSheet = async ({ scope, userId }: SheetScope) => {
+export const fetchPaymentsSheet = async () => {
   const staff = await staffNameMap();
 
-  let query = (supabase as any)
-    .from('case_submissions')
-    .select(`
-      id, service_fee, program_price, accommodation_price, insurance_price,
-      total_paid, remaining_balance, enrollment_paid_at, enrollment_paid_by,
-      payment_confirmed_at, payment_confirmed_by,
-      case:cases!inner(id, case_reference, full_name, assigned_to, status)
-    `)
-    .is('deleted_at', null)
-    .not('enrollment_paid_at', 'is', null);
-
-  if (scope === 'team' && userId) query = query.eq('case.assigned_to', userId);
-
-  const { data, error } = await query;
+  // Authoritative DARB (ILS) payments from case_payments — the same source
+  // get_case_financials uses. The legacy case_submissions money columns
+  // (service_fee/total_paid/remaining_balance) are no longer maintained and
+  // must not drive exports. RLS scopes team members to their own cases, so no
+  // client-side filter is needed here.
+  const { data: payments, error } = await (supabase as any)
+    .from('case_payments')
+    .select('case_id, amount, confirmed_at, confirmed_by')
+    .eq('payment_type', 'agency_service')
+    .eq('status', 'confirmed')
+    .order('confirmed_at', { ascending: false });
   throwIf(error);
 
-  return (data || []).map((s: any) => ({
-    id: s.id,
-    case_reference: s.case?.case_reference ?? null,
-    paid_date: s.enrollment_paid_at,
-    student: s.case?.full_name ?? '—',
-    service_fee: s.service_fee ?? 0,
-    program_price: s.program_price ?? 0,
-    accommodation_price: s.accommodation_price ?? 0,
-    insurance_price: s.insurance_price ?? 0,
-    total_paid: s.total_paid ?? 0,
-    remaining_balance: s.remaining_balance ?? 0,
-    confirmed_by: staff[s.enrollment_paid_by ?? s.payment_confirmed_by]?.name ?? null,
-    status: s.case?.status ?? null,
-  }));
+  if (!payments || payments.length === 0) return [];
+
+  const caseIds = Array.from(new Set(payments.map((p: any) => p.case_id))) as string[];
+  const fees = await serviceFeeByCase(caseIds);
+
+  const { data: subs } = await (supabase as any)
+    .from('case_submissions')
+    .select(`
+      id, program_price, accommodation_price, insurance_price,
+      case:cases!inner(id, case_reference, full_name, status)
+    `)
+    .in('case.id', caseIds)
+    .is('deleted_at', null);
+  const subByCase = new Map((subs || []).map((s: any) => [s.case?.id, s]));
+
+  return (payments || []).map((p: any) => {
+    const s = subByCase.get(p.case_id);
+    const fee = fees[p.case_id] ?? 0;
+    const paid = Number(p.amount ?? 0);
+    return {
+      id: p.case_id,
+      case_reference: s?.case?.case_reference ?? null,
+      paid_date: p.confirmed_at,
+      student: s?.case?.full_name ?? '—',
+      service_fee: fee,
+      program_price: s?.program_price ?? 0,
+      accommodation_price: s?.accommodation_price ?? 0,
+      insurance_price: s?.insurance_price ?? 0,
+      total_paid: paid,
+      remaining_balance: Math.max(fee - paid, 0),
+      confirmed_by: staff[p.confirmed_by]?.name ?? null,
+      status: s?.case?.status ?? null,
+    };
+  });
 };
 
 /* ---------------------------------- Payouts ---------------------------------- */
