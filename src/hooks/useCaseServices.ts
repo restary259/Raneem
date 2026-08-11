@@ -75,18 +75,25 @@ export function useServiceCatalog() {
 
   const refetch = useCallback(async () => {
     setIsLoading(true);
-    const { data, error: err } = await (supabase as any)
-      .from("service_catalog")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (err) {
-      setError(err.message);
-      setCatalog([]);
-    } else {
-      setError(null);
-      setCatalog((data ?? []) as CatalogService[]);
+    try {
+      const { data, error: err } = await (supabase as any)
+        .from("service_catalog")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (err) {
+        console.error("useServiceCatalog: catalog load failed", err);
+        setError("Unable to load the service catalogue.");
+        setCatalog([]);
+      } else {
+        setError(null);
+        setCatalog((data ?? []) as CatalogService[]);
+      }
+    } catch (err) {
+      console.error("useServiceCatalog: failed to load catalog", err);
+      setError("Unable to load the service catalogue.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -104,13 +111,18 @@ export function useCaseServices(caseId: string | undefined) {
   const refetch = useCallback(async () => {
     if (!caseId) return;
     setIsLoading(true);
-    const { data } = await (supabase as any)
-      .from("case_services")
-      .select("*")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true });
-    setServices((data ?? []) as CaseService[]);
-    setIsLoading(false);
+    try {
+      const { data } = await (supabase as any)
+        .from("case_services")
+        .select("*")
+        .eq("case_id", caseId)
+        .order("created_at", { ascending: true });
+      setServices((data ?? []) as CaseService[]);
+    } catch (err) {
+      console.error("useCaseServices: failed to load services", err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [caseId]);
 
   useEffect(() => {

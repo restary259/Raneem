@@ -448,7 +448,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
 
       toast({
         variant: "destructive",
-        description: error?.message || t("finance.services.loadError"),
+        description: t("common.actionFailed"),
       });
       return false;
     } finally {

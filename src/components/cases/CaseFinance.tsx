@@ -292,9 +292,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
       await Promise.all([refetchServices(), refetchFinancials(), loadProofs()]);
     } catch (error: any) {
+      console.error("Failed to confirm the DARB agency payment:", error);
       toast({
         variant: "destructive",
-        description: error?.message || t("finance.agency.confirmFailed", "Unable to confirm the DARB payment."),
+        description: t("finance.agency.confirmFailed", "Unable to confirm the DARB payment."),
       });
     } finally {
       setConfirmingAgency(false);
