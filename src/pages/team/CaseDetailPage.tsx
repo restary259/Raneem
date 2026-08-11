@@ -12,13 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { advanceCaseStage } from "@/services/CaseStageService";
 import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
@@ -197,9 +191,6 @@ export default function CaseDetailPage() {
 
   const handleTask = (task: CaseTask) => {
     switch (task.action) {
-      case "confirm_payment":
-        gotoFinance();
-        break;
       case "schedule_appointment":
         setSchedulerOpen(true);
         break;
@@ -275,8 +266,7 @@ export default function CaseDetailPage() {
           const conflict = identityConflictMessage(body as any, t);
           toast({
             variant: "destructive",
-            description:
-              conflict ?? t("case.invite.failed", "Could not send the student dashboard invitation."),
+            description: conflict ?? t("case.invite.failed", "Could not send the student dashboard invitation."),
           });
         } else {
           toast({ description: t("case.invite.sent", { email: studentEmail }) });
@@ -295,7 +285,6 @@ export default function CaseDetailPage() {
       setSubmitting(false);
     }
   };
-
 
   /**
    * Admin sent the file back for a change: the case sits in profile_completion
@@ -499,7 +488,6 @@ export default function CaseDetailPage() {
               />
             </div>
           </TabsContent>
-
         </Tabs>
       ) : showTabbedWorkflow ? (
         <>
@@ -629,7 +617,9 @@ export default function CaseDetailPage() {
                 caseId={caseData.id}
                 canManage={role === "admin" || role === "team_member"}
                 canConfirm={role === "admin"}
-                showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
+                showGermany={
+                  role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"
+                }
                 caseStatus={caseData.status}
                 studentEmail={studentInvite.email}
                 studentFullName={studentInvite.fullName}
