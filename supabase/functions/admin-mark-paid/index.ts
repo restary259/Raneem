@@ -479,6 +479,83 @@ Deno.serve(async (req) => {
 
     /*
      * ------------------------------------------------------------
+     * ENROLLMENT-CONFIRMED EMAIL
+     * ------------------------------------------------------------
+     *
+     * Best effort only. The student-facing confirmation email is a
+     * nice-to-have next to the authoritative status change (the in-app
+     * notification is already covered by the case_events trigger chain),
+     * so a mail failure must never fail or roll back the enrollment.
+     */
+
+    try {
+      const { data: enrollmentData, error: enrollmentDataError } = await supabaseAdmin
+        .from("cases")
+        .select("case_reference, full_name, student_user_id, email")
+        .eq("id", case_id)
+        .maybeSingle();
+
+      if (enrollmentDataError) {
+        console.error("Failed to fetch enrollment email data:", enrollmentDataError);
+      } else {
+        let studentEmail = enrollmentData?.email ?? null;
+
+        if (!studentEmail) {
+          const { data: submissionRow } = await supabaseAdmin
+            .from("case_submissions")
+            .select("student_email")
+            .eq("case_id", case_id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          studentEmail = submissionRow?.student_email ?? null;
+        }
+
+        if (!studentEmail && enrollmentData?.student_user_id) {
+          const { data: profileRow } = await supabaseAdmin
+            .from("profiles")
+            .select("email")
+            .eq("id", enrollmentData.student_user_id)
+            .maybeSingle();
+          studentEmail = profileRow?.email ?? null;
+        }
+
+        if (studentEmail) {
+          const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              templateName: "enrollment-confirmed",
+              recipientEmail: studentEmail,
+              templateData: {
+                studentName: enrollmentData?.full_name ?? undefined,
+                caseReference: enrollmentData?.case_reference ?? undefined,
+                dashboardUrl: "https://darb.agency/student",
+              },
+            }),
+          });
+
+          if (!emailRes.ok) {
+            console.error("Enrollment-confirmed email failed:", {
+              status: emailRes.status,
+              error: await emailRes.text(),
+            });
+          }
+        } else {
+          console.warn("Enrollment-confirmed email skipped: no student email on case", {
+            case_id,
+          });
+        }
+      }
+    } catch (emailError) {
+      console.error("Enrollment-confirmed email exception:", emailError);
+    }
+
+    /*
+     * ------------------------------------------------------------
      * SUCCESS
      * ------------------------------------------------------------
      */
