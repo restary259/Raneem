@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CaseProfileForm from "./CaseProfileForm";
 import CaseProfileSummary from "./CaseProfileSummary";
-import CaseInviteStudent from "./CaseInviteStudent";
 import {
   missingProfileFields,
   PROFILE_FIELD_LABEL_KEYS,
@@ -33,11 +32,6 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
   const savedComplete = !!submission?.profile_completed_at && missing.length === 0;
   const reopened = submission?.review_status === "changes_requested";
   const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
-
-  // The student activation email is sent automatically during submit-to-admin.
-  // Only offer the manual resend/recovery surface once the student account
-  // actually exists (i.e. after the auto-invite has created/linked it).
-  const studentUserId = (caseData.student_user_id as string) ?? null;
 
   return (
     <Card>
@@ -93,18 +87,6 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
               </Button>
             )}
           </>
-        )}
-
-        {/* Manual resend/recovery — only once the student account exists. */}
-        {studentUserId && (
-          <CaseInviteStudent
-            caseId={caseData.id}
-            fullName={caseData.full_name}
-            phone={values.student_phone}
-            email={values.student_email}
-            studentUserId={studentUserId}
-            onDone={onRefresh}
-          />
         )}
 
         {status === "profile_completion" && !savedComplete && (
