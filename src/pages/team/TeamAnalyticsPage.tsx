@@ -41,7 +41,7 @@ export default function TeamAnalyticsPage() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [casesRes, closedRes, apptRes, overrideRes] = await Promise.all([
+    const [casesRes, closedRes, apptRes, overrideRes, settingsRes] = await Promise.all([
       supabase.from('cases').select('status').eq('assigned_to', user.id),
       supabase.from('cases').select('id')
         .eq('assigned_to', user.id)
@@ -56,6 +56,10 @@ export default function TeamAnalyticsPage() {
         .select('commission_amount')
         .eq('team_member_id', user.id)
         .maybeSingle(),
+      supabase.from('platform_settings')
+        .select('team_member_commission_rate')
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     const counts: Record<string, number> = {};
@@ -64,9 +68,11 @@ export default function TeamAnalyticsPage() {
     setClosedThisMonth(closedRes.data?.length ?? 0);
     setTodayAppts(apptRes.data?.length ?? 0);
 
-    if (overrideRes.data) {
-      setCommissionPerCase(overrideRes.data.commission_amount);
-    }
+    // Mirrors record_case_commission: a per-member override wins, otherwise the
+    // global default from platform_settings (COALESCE(team_member_commission_rate, 100)).
+    setCommissionPerCase(
+      overrideRes.data?.commission_amount ?? settingsRes.data?.team_member_commission_rate ?? 100,
+    );
 
 
     setLoading(false);
