@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send, Receipt } from "lucide-react";
@@ -392,14 +391,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       </CardHeader>
 
       <CardContent>
-        <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="mb-4 grid w-full grid-cols-2">
-            <TabsTrigger value="summary">{t("finance.tabs.summary", "Summary")}</TabsTrigger>
-            <TabsTrigger value="invoice">{t("finance.tabs.invoice", "Invoice")}</TabsTrigger>
-          </TabsList>
-
-          {/* ══ SUMMARY TAB — DARB services only (ILS). No Germany costs. ══ */}
-          <TabsContent value="summary" className="space-y-5">
+        <div className="space-y-5">
+          {/* ══ SUMMARY — DARB services only (ILS). No Germany costs. ══ */}
+          <h3 className="text-sm font-semibold">{t("finance.tabs.summary", "Summary")}</h3>
             <div className="space-y-3">
               <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -657,10 +651,13 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 )}
               </div>
             )}
-          </TabsContent>
+          </div>
 
-          {/* ══ INVOICE TAB — full breakdown (DARB ILS + Germany EUR) + send box. ══ */}
-          <TabsContent value="invoice" className="space-y-5">
+          <Separator />
+
+          {/* ══ INVOICE — full breakdown (DARB ILS + Germany EUR) + send box. ══ */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-semibold">{t("finance.tabs.invoice", "Invoice")}</h3>
             {/* DARB services (ILS). */}
             <div className="space-y-2 rounded-md border p-4">
               <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
@@ -890,8 +887,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 </p>
               )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
       </CardContent>
 
       {/* Reject-proof dialog (replaces the old window.prompt for reject reasons). */}

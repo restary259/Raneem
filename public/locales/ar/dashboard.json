@@ -2727,13 +2727,8 @@
     "terminal": {
       "overview": "نظرة عامة",
       "profile": "ملف الطالب",
-      "finance": "الملخص المالي",
+      "finance": "الملف المالي",
       "notProvided": "غير مسجل"
-    },
-    "switcher": {
-      "overview": "نظرة عامة",
-      "profile": "إكمال الملف",
-      "finance": "الملف المالي"
     },
     "action": {
       "completeProfile": "أكمل ملف الطالب"

@@ -2709,13 +2709,8 @@
     "terminal": {
       "overview": "Overview",
       "profile": "Student profile",
-      "finance": "Finance summary",
+      "finance": "Finance",
       "notProvided": "Not provided"
-    },
-    "switcher": {
-      "overview": "Overview",
-      "profile": "Profile completion",
-      "finance": "Finance"
     },
     "action": {
       "completeProfile": "Complete student profile"

@@ -504,9 +504,9 @@ export default function CaseDetailPage() {
               <div className="hidden sm:block">
                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>
                   <TabsList className="grid h-auto w-full grid-cols-3">
-                    <TabsTrigger value="overview">{t("case.switcher.overview")}</TabsTrigger>
-                    <TabsTrigger value="profile">{t("case.switcher.profile")}</TabsTrigger>
-                    <TabsTrigger value="finance">{t("case.switcher.finance")}</TabsTrigger>
+                    <TabsTrigger value="overview">{t("case.terminal.overview")}</TabsTrigger>
+                    <TabsTrigger value="profile">{t("case.terminal.profile")}</TabsTrigger>
+                    <TabsTrigger value="finance">{t("case.terminal.finance")}</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -516,9 +516,9 @@ export default function CaseDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="overview">{t("case.switcher.overview")}</SelectItem>
-                  <SelectItem value="profile">{t("case.switcher.profile")}</SelectItem>
-                  <SelectItem value="finance">{t("case.switcher.finance")}</SelectItem>
+                  <SelectItem value="overview">{t("case.terminal.overview")}</SelectItem>
+                  <SelectItem value="profile">{t("case.terminal.profile")}</SelectItem>
+                  <SelectItem value="finance">{t("case.terminal.finance")}</SelectItem>
                 </SelectContent>
               </Select>
 
