@@ -73,10 +73,9 @@ const ResetPasswordPage = () => {
       if (error) throw error;
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ must_change_password: false })
-          .eq('id', session.user.id);
+        // A direct profiles update is blocked by restrict_profiles_write for
+        // non-admin users; clear the flag through the security-definer RPC.
+        const { error: profileError } = await (supabase as any).rpc('clear_must_change_password');
         if (profileError) throw profileError;
       }
       const { data: currentRole } = await supabase.rpc('get_my_role');
