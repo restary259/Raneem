@@ -462,7 +462,15 @@ export default function CaseDetailPage() {
                 {caseData.status === "submitted" ? t("case.detail.waitingAdminReview") : t("case.detail.caseComplete")}
               </p>
             </div>
-            <CaseOverviewPanel caseData={caseData} />
+            <CaseOverviewPanel
+              caseData={caseData}
+              statusMeta={statusMeta}
+              assigneeName={assigneeName}
+              appointments={appointments}
+              documents={documents}
+              tasks={tasks}
+              canAddNote={canManage}
+            />
             <section className="rounded-md border bg-card">
               <CaseProgramTab submission={submission} onRefresh={fetchData} />
             </section>
@@ -593,7 +601,15 @@ export default function CaseDetailPage() {
           {/* Panels stay mounted (hidden via CSS) so in-progress state — a draft
               profile or a ticked receipt checkbox — survives tab switching. */}
           <div className={cn("space-y-3", activeView !== "overview" && "hidden")}>
-            <CaseOverviewPanel caseData={caseData} />
+            <CaseOverviewPanel
+              caseData={caseData}
+              statusMeta={statusMeta}
+              assigneeName={assigneeName}
+              appointments={appointments}
+              documents={documents}
+              tasks={tasks}
+              canAddNote={canManage}
+            />
           </div>
 
           <div className={cn("space-y-3", activeView !== "profile" && "hidden")}>
@@ -631,7 +647,15 @@ export default function CaseDetailPage() {
         </>
       ) : (
         <>
-          <CaseOverviewPanel caseData={caseData} />
+          <CaseOverviewPanel
+            caseData={caseData}
+            statusMeta={statusMeta}
+            assigneeName={assigneeName}
+            appointments={appointments}
+            documents={documents}
+            tasks={tasks}
+            canAddNote={canManage}
+          />
           <CaseStageBlock
             caseData={caseData}
             submission={submission}
