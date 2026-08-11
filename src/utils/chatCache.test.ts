@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from "vitest";
 import { webcrypto } from "node:crypto";
 import { ChatMessage, OFFLINE_FAQ, clearChatHistory, loadChatHistory, saveChatHistory } from "./chatCache";
 

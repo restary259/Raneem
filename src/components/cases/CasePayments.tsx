@@ -28,15 +28,17 @@ const STATUS_CLASS: Record<PaymentStatus, string> = {
 };
 
 type TranslateFn = (key: string, fallback?: string) => string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTranslate = TranslateFn | ((...args: any[]) => any);
 
-const paymentLabel = (type: string, t: TranslateFn): string => {
+const paymentLabel = (type: string, t: AnyTranslate): string => {
   return t(
     `finance.payments.labels.${type}`,
     type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
   );
 };
 
-const paymentDescription = (type: string, t: TranslateFn): string | null => {
+const paymentDescription = (type: string, t: AnyTranslate): string | null => {
   const description = t(`finance.payments.descriptions.${type}`, "");
   return description || null;
 };
