@@ -178,10 +178,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     };
   }, [caseId, caseStatus]);
 
-  /** Keep the send box prefilled with the latest known student email. */
-  useEffect(() => {
-    if (studentEmail) setInvoiceEmail(studentEmail);
-  }, [studentEmail]);
+
+
 
   const handleSendInvoice = async () => {
     if (!invoice || invoiceBusy) return;
