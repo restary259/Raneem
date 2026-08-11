@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,7 +110,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const [proofs, setProofs] = useState<ProofRow[]>([]);
   const [proofBusyId, setProofBusyId] = useState<string | null>(null);
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
-  const [agencyAck, setAgencyAck] = useState(false);
   const [confirmingAgency, setConfirmingAgency] = useState(false);
 
   /** Live (unsaved) service selection from CaseServices, used to show the
@@ -138,7 +136,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const serverServiceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
   const pendingReview = Number(financials?.total_pending_review ?? 0);
-  const remaining = Number(financials?.remaining ?? 0);
+  const serverRemaining = Number(financials?.remaining ?? 0);
   const schoolCosts = financials?.school_costs ?? [];
   const payments = financials?.payments ?? [];
 
@@ -148,6 +146,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
    * checklist reflect the pending selection immediately.
    */
   const serviceTotal = serverServiceTotal > 0 ? serverServiceTotal : liveTotal;
+  /** Remaining = total still owed. Uses the live total so it reflects pending
+   *  service changes before the server RPC recomputes the authoritative figure. */
+  const remaining = serverServiceTotal > 0 ? serverRemaining : Math.max(0, serviceTotal - paid - pendingReview);
 
   const schoolSubtotals = useMemo(
     () =>
@@ -307,9 +308,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
    *
    * 1. Persist the selected DARB services (server snapshots the prices and
    *    computes the authoritative total).
-   * 2. If the team has ticked the payment-confirmation checkbox and the
-   *    payment has not already been confirmed, confirm the DARB agency fee
-   *    via the server RPC.
+   * 2. Confirm the DARB agency payment via the server RPC, which also flips
+   *    the case to the payment_confirmed stage. No manual checkbox is required
+   *    — selecting services and clicking Confirm & Save is sufficient.
    *
    * No invoice is issued and no case status changes here — submitting the
    * case to Admin remains a deliberate, separately gated step (it sends the
@@ -325,8 +326,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       const saved = servicesRef.current ? await servicesRef.current.save() : true;
       if (!saved) return;
 
-      // 2. Confirm the DARB agency payment if the checkbox is set and not yet done.
-      if (!agencyConfirmed && agencyAck && canManage) {
+      // 2. Confirm the DARB agency payment (also advances the case stage).
+      if (!agencyConfirmed && canManage && serviceTotal > 0) {
         const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
           p_case_id: caseId,
         });
@@ -334,7 +335,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
         toast({
           description: `${t("finance.agency.confirmed", "DARB service payment confirmed")}: ${formatILS(serviceTotal)}`,
         });
-        setAgencyAck(false);
       } else {
         toast({ description: t("finance.confirmAndSave.saved", "Finance confirmed and saved") });
       }
@@ -354,16 +354,15 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   /**
    * Readiness for the single button.
    *
-   * The button is enabled once services are selected and (if unpaid) the
-   * payment-confirmation checkbox is ticked. When everything is already
-   * confirmed, the button shows a success state instead.
+   * The button is enabled once services are selected and the total is positive.
+   * When the payment has already been confirmed, the button shows a success state.
    */
   const servicesSelected = services.length > 0 || liveCount > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
   const financeComplete = agencyConfirmed && serviceTotal > 0;
-  // A new selection has no server total until the single Confirm & Save action
-  // persists it. The RPC then calculates and validates the amount authoritatively.
-  const canConfirmNow = canManage && servicesSelected && (!agencyConfirmed ? agencyAck : true);
-  const buttonDisabled = confirmingAgency || !canConfirmNow;
+  // The button is enabled once services are selected and the total is positive.
+  // No manual checkbox — selecting services and saving is sufficient.
+  const canConfirmNow = canManage && servicesSelected && serviceTotal > 0;
+  const buttonDisabled = confirmingAgency || !canConfirmNow || agencyConfirmed;
 
   /** Live readiness snapshot for the page's top action bar. */
   const readiness = useMemo<CaseFinanceReadiness>(
@@ -371,10 +370,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       servicesSelected,
       serviceTotal,
       agencyConfirmed,
-      agencyAck,
+      agencyAck: false,
       confirming: confirmingAgency,
     }),
-    [servicesSelected, serviceTotal, agencyConfirmed, agencyAck, confirmingAgency],
+    [servicesSelected, serviceTotal, agencyConfirmed, confirmingAgency],
   );
 
   useEffect(() => {
@@ -466,42 +465,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
               }}
             />
 
-            {/* PAYMENT — the confirmation card exists ONLY while the DARB fee is unpaid. */}
-            {!agencyConfirmed && canManage && (
-              <>
-                <Separator />
-                <div className="space-y-3 rounded-md border bg-muted/30 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold">{t("finance.agency.title", "DARB service payment")}</p>
-                    <Badge className="bg-red-100 text-red-800">{t("finance.status.unpaid", "Unpaid")}</Badge>
-                  </div>
-                  <p className="text-lg font-semibold">{formatILS(serviceTotal)}</p>
-                  <label
-                    htmlFor="darb-agency-ack"
-                    className="flex cursor-pointer items-start gap-2 rounded-md border bg-background p-3 text-sm"
-                  >
-                    <Checkbox
-                      id="darb-agency-ack"
-                      checked={agencyAck}
-                      onCheckedChange={(v) => setAgencyAck(v === true)}
-                      className="mt-0.5"
-                    />
-                    <span className="leading-tight">
-                      {t(
-                        "finance.agency.ack",
-                        "I confirm the DARB agency service fee has been received from the student.",
-                      )}
-                    </span>
-                  </label>
-                  {serviceTotal <= 0 && (
-                    <p className="text-xs text-amber-700">
-                      {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-
             <Separator />
 
             {/* ── Submission readiness checklist (informational only). ── */}
@@ -564,14 +527,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                     <Clock3 className="h-4 w-4 text-amber-600" />
                   )}
                   <span>{t("finance.summary.checklist.services", "DARB services selected")}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  {agencyConfirmed ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span>{t("finance.summary.checklist.agencyPayment", "DARB payment confirmed")}</span>
                 </li>
               </ul>
               {schoolCosts.length > 0 && (
@@ -666,9 +621,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                       {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                       {t("finance.confirmAndSave.action", "Confirm & Save")}
                     </Button>
-                    {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
+                    {serviceTotal <= 0 && (
                       <p className="text-xs text-muted-foreground">
-                        {t("finance.confirmAndSave.ackRequired", "Confirm that the DARB agency fee was received.")}
+                        {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
                       </p>
                     )}
                   </>

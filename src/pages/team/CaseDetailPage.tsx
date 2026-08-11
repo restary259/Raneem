@@ -113,7 +113,6 @@ export default function CaseDetailPage() {
         prev.servicesSelected === readiness.servicesSelected &&
         prev.serviceTotal === readiness.serviceTotal &&
         prev.agencyConfirmed === readiness.agencyConfirmed &&
-        prev.agencyAck === readiness.agencyAck &&
         prev.confirming === readiness.confirming
       ) {
         return prev;
@@ -355,12 +354,12 @@ export default function CaseDetailPage() {
   const savedComplete = !!submission?.profile_completed_at && missingFields.length === 0;
   const reopenedResend = submission?.review_status === "changes_requested" && !!submission?.payment_confirmed;
 
-  /** Finance is ready to confirm once services are chosen and (if still unpaid)
-      the receipt checkbox has been ticked in the Finance tab. */
+  /** Finance is ready to confirm once services are chosen and the total is
+      positive. No manual receipt checkbox — selecting services is sufficient. */
   const financeReadyToConfirm =
     !!financeReadiness &&
     financeReadiness.servicesSelected &&
-    (financeReadiness.agencyConfirmed || financeReadiness.agencyAck);
+    financeReadiness.serviceTotal > 0;
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
   const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : (waHref ?? "#");
@@ -589,7 +588,7 @@ export default function CaseDetailPage() {
                       })
                     : t("case.actionHint.financeNotReady", {
                         defaultValue:
-                          "Open Finance, select the DARB services and tick the receipt confirmation, then Confirm & Save.",
+                          "Open Finance, select the DARB services, then Confirm & Save.",
                       });
                 }
                 return t("case.actionHint.submitReady", {

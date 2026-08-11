@@ -1421,7 +1421,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
               <p className="text-xs text-muted-foreground text-center sm:text-start">{draftStatus}</p>
 
-              <Button onClick={handleSave} disabled={saving} className="gap-1.5 w-full sm:w-auto">
+              <Button
+                onClick={handleSave}
+                disabled={saving || missingProfileFields(values).length > 0}
+                className="gap-1.5 w-full sm:w-auto"
+              >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : errors.length === 0 && !autosaving ? (
