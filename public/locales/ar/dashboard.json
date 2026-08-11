@@ -2769,6 +2769,10 @@
       }
     },
     "profile": {
+      "educationLevel": "المستوى التعليمي",
+      "passportType": "نوع جواز السفر",
+      "programWeeks": "عدد أسابيع البرنامج",
+      "accommodationWeeks": "عدد أسابيع السكن",
       "sections": {
         "student": "معلومات الطالب",
         "contact": "بيانات التواصل",
