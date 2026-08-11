@@ -21,8 +21,8 @@ interface Props {
   onRefresh: () => void;
 }
 
-/** The student-file surface of the case pipeline. Once the profile is complete
-    the long form collapses into a read-only summary, reopened only on demand
+/** The student-file surface of the case pipeline. Once the profile is complete  
+    the long form collapses into a read-only summary, reopened only on demand  
     (extracted from CaseStageBlock so it can be embedded in the tabbed layout). */
 export default function CaseProfilePanel({ status, caseData, submission, canManage, onRefresh }: Props) {
   const { t } = useTranslation("dashboard");
@@ -34,6 +34,11 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
   const reopened = submission?.review_status === "changes_requested";
   const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
 
+  // The student activation email is sent automatically during submit-to-admin.
+  // Only offer the manual resend/recovery surface once the student account
+  // actually exists (i.e. after the auto-invite has created/linked it).
+  const studentUserId = (caseData.student_user_id as string) ?? null;
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -43,9 +48,7 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
         {status === "profile_completion" && reopened && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
             <p className="text-sm font-medium text-amber-700">{t("case.submit.changesRequested")}</p>
-            {submission?.review_note && (
-              <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>
-            )}
+            {submission?.review_note && <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>}
             <p className="mt-1 text-xs text-muted-foreground">
               {t("case.submit.fixAndResend", {
                 defaultValue: "Make the requested change below, save the file, then send it back to admin.",
@@ -92,22 +95,21 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
           </>
         )}
 
-        {status === "profile_completion" && savedComplete && (
+        {/* Manual resend/recovery — only once the student account exists. */}
+        {studentUserId && (
           <CaseInviteStudent
             caseId={caseData.id}
             fullName={caseData.full_name}
             phone={values.student_phone}
             email={values.student_email}
-            studentUserId={(caseData.student_user_id as string) ?? null}
+            studentUserId={studentUserId}
             onDone={onRefresh}
           />
         )}
 
         {status === "profile_completion" && !savedComplete && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
-            <p className="text-sm font-medium text-amber-700">
-              {t("case.detail.paymentBlocked")}
-            </p>
+            <p className="text-sm font-medium text-amber-700">{t("case.detail.paymentBlocked")}</p>
             {missing.length > 0 && (
               <p className="mt-1 text-xs text-muted-foreground">{missing.map(fieldName).join(" · ")}</p>
             )}
