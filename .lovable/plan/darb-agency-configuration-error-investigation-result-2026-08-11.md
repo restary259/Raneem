@@ -40,4 +40,4 @@ Also note the site is currently unusable (the Configuration error page), which i
 
 ## Proposed change in this plan
 
-None. This is a report-only outcome; say the word if you want the consent gate loosened or anything else adjusted.
+None. This is a report-only outcome; say the word if you want the consent gate loosened or anything else adjusted.           final cheak go to brower view and verify the website startup and render 
