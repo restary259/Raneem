@@ -305,6 +305,22 @@ serve(async (req) => {
           { user_id: caseData.student_user_id, role: "student" },
           { onConflict: "user_id,role", ignoreDuplicates: true },
         );
+      return jsonResponse(  
+        {  
+          success: true,  
+          user_id: caseData.student_user_id,  
+          email: linkedEmail,  
+          invited: resent === true,  
+          already_invited: resent === "already_sent",  
+          invitation_failed: resent === false,  
+          activation_url: capturedActivationUrl,  
+          message:  
+            resent === "already_sent"  
+              ? "An activation link was already sent recently — ask the student to check their inbox"  
+              : resent === true  
+                ? "Student account linked and activation link sent"  
+                : "Student account linked, but the activation email could not be sent. The invitation can be retried.",  
+        },
 
       if (linkedRoleError) {
         console.error("create-student-from-case: failed to restore student role", linkedRoleError);
