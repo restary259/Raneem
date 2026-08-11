@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import BottomNav from "./components/common/BottomNav";
 import { registerServiceWorker } from "./utils/pwaUtils";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import { usePageTracking } from "./hooks/usePageTracking";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -140,6 +141,7 @@ const queryClient = new QueryClient({
 
 const App = () => {
   useSessionTimeout();
+  usePageTracking();
 
   const navigate = useNavigate();
   const location = useLocation();

@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import { Cookie } from 'lucide-react';
-
-const COOKIE_STORAGE_KEY = 'darb_cookie_consent';
+import { COOKIE_CONSENT_KEY, initAnalytics, trackPageView } from '@/lib/analytics';
 
 const CookieBanner = () => {
   const [visible, setVisible] = useState(false);
@@ -14,7 +13,7 @@ const CookieBanner = () => {
 
   useEffect(() => {
     // Use localStorage for persistence (survives session, not affected by login/logout)
-    const stored = localStorage.getItem(COOKIE_STORAGE_KEY);
+    const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!stored) {
       // Small delay to avoid blocking initial render and interfering with other UI
       const timer = setTimeout(() => setVisible(true), 1500);
@@ -23,8 +22,14 @@ const CookieBanner = () => {
   }, []);
 
   const accept = (level: string) => {
-    localStorage.setItem(COOKIE_STORAGE_KEY, level);
+    localStorage.setItem(COOKIE_CONSENT_KEY, level);
     setVisible(false);
+    // Consent-gated analytics: "Accept all" starts GA4 for the current page.
+    // The route-tracking hook covers every later navigation.
+    if (level === 'all') {
+      initAnalytics();
+      trackPageView(window.location.pathname);
+    }
   };
 
   if (!visible) return null;
