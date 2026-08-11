@@ -545,11 +545,8 @@ export default function CaseDetailPage() {
                   return (
                     <Button
                       className="gap-1.5"
-                      disabled={financeReadiness?.confirming}
-                      onClick={() => {
-                        if (financeReadyToConfirm) void handleConfirmAndSave();
-                        else gotoFinance();
-                      }}
+                      disabled={!financeReadyToConfirm}
+                      onClick={() => void handleConfirmAndSave()}
                     >
                       {financeReadiness?.confirming ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
