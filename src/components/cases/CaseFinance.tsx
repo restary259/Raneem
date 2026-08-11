@@ -6,13 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
@@ -21,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCaseServices } from "@/hooks/useCaseServices";
 import { useCaseFinancials, type FinancialSchoolLine, type FinancialPayment } from "@/hooks/useCaseFinancials";
 import CaseServices, { type CaseServicesHandle } from "./CaseServices";
+import CaseInviteStudent from "./CaseInviteStudent";
 import CasePayments from "./CasePayments";
 import { formatDateTime } from "@/utils/dateUtils";
 
@@ -55,7 +50,6 @@ interface Props {
   onReadinessChange?: (readiness: CaseFinanceReadiness) => void;
 }
 
-
 /** What the top "Confirm & Save" button needs to know about the Finance tab. */
 export interface CaseFinanceReadiness {
   servicesSelected: boolean;
@@ -71,7 +65,6 @@ export interface CaseFinanceHandle {
   getReadiness: () => CaseFinanceReadiness;
 }
 
-
 interface ProofRow {
   id: string;
   case_id: string;
@@ -83,7 +76,6 @@ interface ProofRow {
   rejection_reason: string | null;
   reviewed_at: string | null;
 }
-
 
 const schoolPaymentTypes = ["school_course", "school_accommodation", "school_insurance"] as const;
 
@@ -125,7 +117,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   /** Imperative handle to CaseServices so the single button can save services. */
   const servicesRef = useRef<CaseServicesHandle>(null);
-
 
   const serviceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
@@ -224,7 +215,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       const { error } = await (supabase as any).rpc("review_case_payment_proof", {
         p_proof_id: proof.id,
         p_approved: approved,
-        p_rejection_reason: approved ? null : (rejectionReason || null),
+        p_rejection_reason: approved ? null : rejectionReason || null,
       });
       if (error) throw error;
       toast({
@@ -418,9 +409,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           <div className="space-y-3 rounded-md border bg-muted/30 p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold">{t("finance.agency.title", "DARB service payment")}</p>
-              <Badge className="bg-red-100 text-red-800">
-                {t("finance.status.unpaid", "Unpaid")}
-              </Badge>
+              <Badge className="bg-red-100 text-red-800">{t("finance.status.unpaid", "Unpaid")}</Badge>
             </div>
             <p className="text-lg font-semibold">{formatILS(serviceTotal)}</p>
             <label
@@ -434,10 +423,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 className="mt-0.5"
               />
               <span className="leading-tight">
-                {t(
-                  "finance.agency.ack",
-                  "I confirm the DARB agency service fee has been received from the student.",
-                )}
+                {t("finance.agency.ack", "I confirm the DARB agency service fee has been received from the student.")}
               </span>
             </label>
             {serviceTotal <= 0 && (
@@ -448,9 +434,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           </div>
         )}
 
-
         {showGermany && schoolCosts.length > 0 && (
-
           <>
             <Separator />
             <div className="space-y-3 rounded-md border p-4">
@@ -556,7 +540,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                                 setRejectTarget(proof);
                               }}
                             >
-                              <XCircle className="h-3.5 w-3.5" /> {t("finance.verification.rejectAction", "Reject proof")}
+                              <XCircle className="h-3.5 w-3.5" />{" "}
+                              {t("finance.verification.rejectAction", "Reject proof")}
                             </Button>
                           </>
                         )}
@@ -695,51 +680,77 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
             case, issues + emails the DARB invoice, and sends the student their
             dashboard activation invite. It is not shown before payment is
             confirmed, and it disappears once the case is already submitted. */}
-        {canManage && !delegateActionsToTopBar && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
-          <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold">
-                {t("finance.invite.title", "Create the student account & send invite")}
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "finance.invite.body",
-                "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
-              )}
-            </p>
-            <div className="rounded-md border bg-background p-3 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
-                <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
+        {canManage &&
+          !delegateActionsToTopBar &&
+          agencyConfirmed &&
+          caseStatus === "payment_confirmed" &&
+          onSubmitToAdmin && (
+            <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">
+                  {t("finance.invite.title", "Create the student account & send invite")}
+                </p>
               </div>
-              {studentEmail && (
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
-                  <span className="font-medium">{studentEmail}</span>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "finance.invite.body",
+                  "Submit this student file to Admin. The DARB invoice is issued and emailed, and the student receives a dashboard activation link.",
+                )}
+              </p>
+              <div className="rounded-md border bg-background p-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-muted-foreground">{t("finance.invite.recipient", "Recipient")}</span>
+                  <span className="font-medium">{studentFullName || studentEmail || "—"}</span>
                 </div>
-              )}
-              {studentPhone && (
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
-                  <span className="font-medium">{studentPhone}</span>
-                </div>
-              )}
-              {studentUserId && (
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
-                  <span className="font-medium text-emerald-700">
-                    {t("finance.invite.accountExists", "Already created")}
-                  </span>
-                </div>
-              )}
+                {studentEmail && (
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("finance.invite.email", "Email")}</span>
+                    <span className="font-medium">{studentEmail}</span>
+                  </div>
+                )}
+                {studentPhone && (
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("finance.invite.phone", "Phone")}</span>
+                    <span className="font-medium">{studentPhone}</span>
+                  </div>
+                )}
+                {studentUserId && (
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
+                    <span className="font-medium text-emerald-700">
+                      {t("finance.invite.accountExists", "Already created")}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                className="w-full sm:w-auto gap-1.5"
+                disabled={submitting}
+                onClick={onSubmitToAdmin}
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {t("finance.invite.action", "Submit to Admin & send invite")}
+              </Button>
             </div>
-            <Button type="button" className="w-full sm:w-auto gap-1.5" disabled={submitting} onClick={onSubmitToAdmin}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {t("finance.invite.action", "Submit to Admin & send invite")}
-            </Button>
-          </div>
+          )}
+        {/* ── Resend / recover the student activation link ────────────────  
+            The automatic invite is sent once during submit-to-admin. This  
+            manual surface appears only AFTER the case is submitted and a  
+            student account exists, so "Resend" always has a real invite to  
+            resend (it was misplaced in the profile tab before). */}
+        {canManage && caseStatus === "submitted" && studentUserId && (
+          <CaseInviteStudent
+            caseId={caseId}
+            fullName={studentFullName ?? ""}
+            phone={studentPhone ?? null}
+            email={studentEmail ?? ""}
+            studentUserId={studentUserId}
+            onDone={() => {
+              void refetchFinancials();
+            }}
+          />
         )}
 
         {/* Single confirmation action — delegated to the page's top bar in the
@@ -764,10 +775,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 </Button>
                 {!agencyConfirmed && !agencyAck && serviceTotal > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {t(
-                      "finance.confirmAndSave.ackRequired",
-                      "Confirm that the DARB agency fee was received.",
-                    )}
+                    {t("finance.confirmAndSave.ackRequired", "Confirm that the DARB agency fee was received.")}
                   </p>
                 )}
               </>
