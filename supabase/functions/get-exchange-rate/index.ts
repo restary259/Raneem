@@ -52,10 +52,22 @@ serve(async (req) => {
     }
 
     const url = `https://api.exchangerate.host/convert?from=${fromCode}&to=${toCode}&api_key=${apiKey}`;
-    const res = await fetch(url);
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+
+    if (!res.ok) {
+      console.error(`get-exchange-rate: upstream returned status ${res.status}`);
+      return json({ error: "Exchange rate service unavailable" }, 502);
+    }
+
     const data = await res.json();
 
-    return json({ result: data.result ?? null });
+    if (typeof data?.result !== "number") {
+      console.error("get-exchange-rate: upstream did not return a rate", data?.error ?? data);
+      return json({ error: "Exchange rate service unavailable" }, 502);
+    }
+
+    return json({ result: data.result });
   } catch (e) {
     console.error("get-exchange-rate error:", e);
     return json({ error: "Failed to fetch exchange rate" }, 500);

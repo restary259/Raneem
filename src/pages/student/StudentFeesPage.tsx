@@ -108,6 +108,24 @@ const StudentFeesPage = () => {
       const userId = sessionData.session?.user.id;
       if (!userId) throw new Error("You must be signed in.");
 
+      // Validate proof file: images + PDF, max 10 MB
+      const MAX_PROOF_SIZE = 10 * 1024 * 1024;
+      const ALLOWED_PROOF_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      const ALLOWED_PROOF_EXTS = ["jpg", "jpeg", "png", "webp", "pdf"];
+      if (file.size > MAX_PROOF_SIZE) {
+        window.alert("Payment proof exceeds 10 MB limit");
+        return;
+      }
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (!ext || !ALLOWED_PROOF_EXTS.includes(ext)) {
+        window.alert("Only JPG, PNG, WEBP, PDF files allowed for payment proof");
+        return;
+      }
+      if (file.type && !ALLOWED_PROOF_TYPES.includes(file.type)) {
+        window.alert("Unsupported file type for payment proof");
+        return;
+      }
+
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${userId}/${fin.case_id}_payment-proof_${paymentType}_${Date.now()}_${safeName}`;
       const { data: uploaded, error: uploadError } = await supabase.storage
