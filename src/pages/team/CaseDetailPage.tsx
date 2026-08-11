@@ -328,6 +328,13 @@ export default function CaseDetailPage() {
     }
   };
 
+  /** Profile completeness used to drive the top action button.
+      Declared before the early returns so the hook order never changes. */
+  const profileValues = useMemo(
+    () => (caseData && submission ? readStudentProfile(caseData, submission) : null),
+    [caseData, submission],
+  );
+
   // Only the first load blanks the page. Later refetches keep the tree mounted so
   // an in-progress student profile draft is never wiped by a background refresh.
   if (loading && !caseData) {
@@ -345,12 +352,8 @@ export default function CaseDetailPage() {
   const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
   const showTabbedWorkflow = caseData.status === "profile_completion" || caseData.status === "payment_confirmed";
 
-  /** Profile completeness used to drive the top action button. */
-  const profileValues = useMemo(
-    () => (submission ? readStudentProfile(caseData, submission) : null),
-    [caseData, submission],
-  );
   const missingFields = profileValues ? missingProfileFields(profileValues) : [];
+
   const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
   const savedComplete = !!submission?.profile_completed_at && missingFields.length === 0;
   const reopenedResend = submission?.review_status === "changes_requested" && !!submission?.payment_confirmed;
