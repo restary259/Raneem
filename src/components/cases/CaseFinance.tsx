@@ -117,7 +117,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   /** DARB invoice + manual-send state for the Invoice tab. */
   const [invoice, setInvoice] = useState<CaseInvoice | null>(null);
   const [invoiceBusy, setInvoiceBusy] = useState(false);
-  const [invoiceEmail, setInvoiceEmail] = useState(studentEmail ?? "");
 
   /** Proof currently being rejected via the dedicated dialog (no window.prompt). */
   const [rejectTarget, setRejectTarget] = useState<ProofRow | null>(null);
@@ -188,10 +187,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     if (!invoice || invoiceBusy) return;
     setInvoiceBusy(true);
     try {
-      const ok = await sendInvoiceEmail({
-        ...invoice,
-        student_email: invoiceEmail.trim() || invoice.student_email,
-      });
+      const ok = await sendInvoiceEmail(invoice);
       const fresh = await getCaseInvoice(caseId);
       setInvoice(fresh);
       toast({
