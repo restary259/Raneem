@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/locales/:path*", "destination": "/locales/:path*" },
+    { "source": "/((?!locales/).*)", "destination": "/" }
   ],
   "headers": [
     {

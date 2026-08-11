@@ -2,6 +2,26 @@
 
 Repository-specific context for the DARB case-management app (Vite + React + Supabase).
 
+## White-screen / build-time env var guard (deployment safety)
+
+- `.env` is git-ignored and never deployed. The published build (Vercel/Lovable)
+  MUST have `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` configured as
+  **build-time** environment variables (Vite inlines `VITE_`-prefixed vars during
+  `npm run build`). Without them, `src/integrations/supabase/client.ts` throws a
+  human-readable `[Darb] Supabase client could not be initialized...` error and
+  paints a visible "Configuration error" panel instead of a silent white screen.
+- `src/main.tsx` wraps `<App/>` in `<Suspense>` (inside the outermost
+  `<ErrorBoundary>`). `App` calls `useTranslation("dashboard")` at its top level
+  while react-i18next runs in suspense mode (`react.useSuspense: true` in
+  `src/i18n.ts`), so a failed/late `/locales/*.json` load suspends → fallback,
+  not an unhandled throw. Never remove this top-level Suspense boundary; the
+  inner Suspense boundaries in `App.tsx` sit *below* the `useTranslation` call
+  and cannot cover it.
+- `vercel.json` rewrites `/((?!locales/).*)` → `/` so the i18next HttpBackend
+  `/locales/{{lng}}/{{ns}}.json` requests are served as static JSON
+  (`application/json`), never rewritten to `index.html`. `public/locales/**`
+  is copied into `dist/locales/**` by the Vite build.
+
 ## Finance tab architecture
 
 - `src/components/cases/CaseFinance.tsx` — orchestrator of the Finance tab. Renders the
