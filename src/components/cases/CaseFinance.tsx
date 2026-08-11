@@ -141,14 +141,17 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const payments = financials?.payments ?? [];
 
   /**
-   * The authoritative total comes from the server RPC after save. Before save,
-   * fall back to the live local total so the summary, payment card, and
-   * checklist reflect the pending selection immediately.
+   * The live total from CaseServices always reflects the current checkbox
+   * states, so it takes precedence once the services component has reported
+   * a selection (liveCount > 0). Before that (initial load), fall back to
+   * the server-saved total so the KPIs aren't blank.
    */
-  const serviceTotal = serverServiceTotal > 0 ? serverServiceTotal : liveTotal;
+  const serviceTotal = liveCount > 0 ? liveTotal : serverServiceTotal;
   /** Remaining = total still owed. Uses the live total so it reflects pending
    *  service changes before the server RPC recomputes the authoritative figure. */
-  const remaining = serverServiceTotal > 0 ? serverRemaining : Math.max(0, serviceTotal - paid - pendingReview);
+  const remaining = liveCount > 0
+    ? Math.max(0, serviceTotal - paid - pendingReview)
+    : serverRemaining;
 
   const schoolSubtotals = useMemo(
     () =>
