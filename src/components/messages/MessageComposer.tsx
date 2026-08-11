@@ -349,6 +349,20 @@ export default function MessageComposer({
           },
         ]
       : []),
+    ...(allowInternal && isMobile
+      ? [
+          {
+            key: "visibility",
+            label:
+              visibility === "internal"
+                ? t("case.messages.shared")
+                : t("case.messages.internal"),
+            icon: visibility === "internal" ? Users : Lock,
+            tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200",
+            run: () => setVisibility((v) => (v === "internal" ? "shared" : "internal")),
+          },
+        ]
+      : []),
     ...(onRequestPayout
       ? [
           {
@@ -547,7 +561,7 @@ export default function MessageComposer({
           )}
 
           {allowInternal && (
-            <div className="flex items-center rounded-full border p-0.5">
+            <div className="hidden items-center rounded-full border p-0.5 sm:flex">
               <button
                 type="button"
                 onClick={() => setVisibility("shared")}
@@ -579,7 +593,7 @@ export default function MessageComposer({
         </div>
         </div>
 
-      <div className="relative rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
+        <div className="relative min-w-0 flex-1 rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
         {mentionMatches.length > 0 && (
           <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
             {mentionMatches.map((person) => (
@@ -640,6 +654,7 @@ export default function MessageComposer({
             kind === "request" ? t("chat.request.placeholder") : t("case.messages.placeholder")
           }
           rows={1}
+          dir="auto"
           maxLength={5000}
           disabled={disabled}
           ref={textRef}
@@ -674,14 +689,14 @@ export default function MessageComposer({
           onClick={handleSend}
           aria-label={t("case.messages.send")}
           disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-          className="h-8 w-8 shrink-0 rounded-full"
+          className="mb-0.5 h-9 w-9 shrink-0 rounded-full sm:h-8 sm:w-8"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>
 
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="hidden text-[11px] text-muted-foreground sm:block">
         {hint ??
           (allowInternal
             ? visibility === "internal"
