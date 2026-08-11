@@ -278,7 +278,83 @@ export default function MessageComposer({
     }
   };
 
+  /** Insert a trigger character (`@` / `#`) at the caret and open its picker. */
+  const insertToken = (token: "@" | "#") => {
+    const el = textRef.current;
+    const caret = el?.selectionStart ?? body.length;
+    setBody(`${body.slice(0, caret)}${token}${body.slice(caret)}`);
+    if (token === "@") setMentionQuery("");
+    else setCaseQuery("");
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(caret + 1, caret + 1);
+    });
+  };
+
+  /* One action list, rendered as a dropdown on desktop and as a WhatsApp-style
+     icon grid in a bottom sheet on mobile. */
+  const actions: {
+    key: string;
+    label: string;
+    icon: typeof Paperclip;
+    tone: string;
+    run: () => void;
+  }[] = [
+    {
+      key: "attach",
+      label: t("chat.attach.button"),
+      icon: Paperclip,
+      tone: "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200",
+      run: () => fileRef.current?.click(),
+    },
+    ...(mentionables.length > 0
+      ? [
+          {
+            key: "mention",
+            label: t("chat.mention.button"),
+            icon: AtSign,
+            tone: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-200",
+            run: () => insertToken("@"),
+          },
+        ]
+      : []),
+    ...(allowCaseMentions
+      ? [
+          {
+            key: "case",
+            label: t("chat.caseMention.button"),
+            icon: Hash,
+            tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+            run: () => insertToken("#"),
+          },
+        ]
+      : []),
+    ...(allowRequests
+      ? [
+          {
+            key: "request",
+            label: t("chat.request.button"),
+            icon: FileUp,
+            tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200",
+            run: () => setKind((k) => (k === "request" ? "text" : "request")),
+          },
+        ]
+      : []),
+    ...(onRequestPayout
+      ? [
+          {
+            key: "payout",
+            label: t("chat.payout.request"),
+            icon: Banknote,
+            tone: "bg-primary/15 text-primary",
+            run: () => onRequestPayout(),
+          },
+        ]
+      : []),
+  ];
+
   return (
+
     <div
       ref={rootRef}
       className={cn(
