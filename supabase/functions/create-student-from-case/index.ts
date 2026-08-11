@@ -269,6 +269,7 @@ serve(async (req) => {
           body: JSON.stringify({
             templateName: "student-invite",
             recipientEmail: email,
+            idempotencyKey: `student-invite:${email.toLowerCase()}:${case_id ?? "no-case"}`,
             templateData: {
               studentName: name,
               email,

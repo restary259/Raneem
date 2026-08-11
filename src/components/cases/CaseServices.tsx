@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatILS } from "@/lib/money";
+import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { useServiceCatalog, type CaseService, type CatalogService } from "@/hooks/useCaseServices";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 
@@ -96,13 +96,13 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
   /**
    * Services are server-locked once the case has been submitted (the
    * `set_case_services` RPC rejects writes for submitted/payment_confirmed/
-   * enrollment_paid/enrolled cases). Collapse to the read-only view and make
+   * enrollment_paid cases). Collapse to the read-only view and make
    * save() a no-op so the single "Confirm & Save" button never hits the locked
    * RPC and surfaces a "fields are controlled" error.
    */
   const servicesLocked =
     canManage &&
-    ["submitted", "payment_confirmed", "enrollment_paid", "enrolled"].includes(caseStatus ?? "");
+    ["submitted", "payment_confirmed", "enrollment_paid"].includes(caseStatus ?? "");
   const effectiveCanManage = canManage && !servicesLocked;
 
   const [busy, setBusy] = useState(false);
@@ -504,7 +504,9 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
                   </p>
                 </div>
 
-                <span className="shrink-0 text-sm font-medium">{formatILS(Number(service.unit_price || 0))}</span>
+                <span className="shrink-0 text-sm font-medium">
+                  {formatCurrencyAmount(Number(service.unit_price || 0), service.currency)}
+                </span>
               </div>
             ))}
           </div>
@@ -596,7 +598,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
                       <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                       <span className="truncate">{label(service)}</span>
                     </span>
-                    <span className="shrink-0">{formatILS(priceFor(service))}</span>
+                    <span className="shrink-0">{formatCurrencyAmount(priceFor(service), service.currency)}</span>
                   </li>
                 ))}
               </ul>
@@ -649,7 +651,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
                           disabled={busy}
                         />
                       )}
-                      <span className="text-sm">{formatILS(priceFor(service))}</span>
+                      <span className="text-sm">{formatCurrencyAmount(priceFor(service), service.currency)}</span>
                     </span>
                   </div>
                 );

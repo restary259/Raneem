@@ -45,14 +45,10 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = true
   [functions.selective-delete]
     verify_jwt = true
-  [functions.send-branded-email]
-    verify_jwt = true
   [functions.send-custom-notification]
     verify_jwt = true
   [functions.send-email]
     verify_jwt = false
-  [functions.send-event-email]
-    verify_jwt = true
   [functions.send_welcome_email]
     verify_jwt = true
   [functions.verify-admin-password]

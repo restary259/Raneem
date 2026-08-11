@@ -9,8 +9,6 @@ const ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 
 const GUARDED_FUNCTIONS = [
   'send_welcome_email',
-  'send-branded-email',
-  'send-event-email',
   'admin-weekly-digest',
 ];
 
