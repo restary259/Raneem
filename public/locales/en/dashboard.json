@@ -2668,6 +2668,10 @@
         "schedule": "Schedule",
         "recordOutcome": "Record outcome",
         "addNote": "Add a note"
+      },
+      "hint": {
+        "uploadDocument": "Switched to the student profile — upload the missing document there.",
+        "addNote": "Switched to the student profile — add a follow-up note in the details."
       }
     },
     "submit": {

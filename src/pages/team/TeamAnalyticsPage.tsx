@@ -87,7 +87,7 @@ export default function TeamAnalyticsPage() {
   /* Translate status keys for chart labels */
   const chartData = Object.entries(caseCounts).map(([status, count]) => ({
     status,
-    label: t(`lawyer.statuses.${status}`, status.replace(/_/g, ' ')),
+    label: t(`case.status.${status}`, status.replace(/_/g, ' ')),
     count,
   }));
 

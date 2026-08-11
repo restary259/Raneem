@@ -929,7 +929,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 <div className="grid grid-cols-3 gap-2 mt-0.5">
                   <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={ss("year")} />
+                      {dobYear ? <span>{dobYear}</span> : <SelectValue placeholder={ss("year")} />}
                     </SelectTrigger>
 
                     <SelectContent className="max-h-48">
@@ -943,7 +943,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
                   <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={ss("month")} />
+                      {dobMonth ? (
+                        <span>{DOB_MONTHS.find((m) => m.v === dobMonth)?.l ?? dobMonth}</span>
+                      ) : (
+                        <SelectValue placeholder={ss("month")} />
+                      )}
                     </SelectTrigger>
 
                     <SelectContent>
@@ -957,7 +961,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
                   <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={ss("day")} />
+                      {dobDay ? <span>{dobDay}</span> : <SelectValue placeholder={ss("day")} />}
                     </SelectTrigger>
 
                     <SelectContent className="max-h-48">

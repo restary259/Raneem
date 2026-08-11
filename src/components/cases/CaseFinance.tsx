@@ -114,6 +114,16 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const [agencyAck, setAgencyAck] = useState(false);
   const [confirmingAgency, setConfirmingAgency] = useState(false);
 
+  /** Live (unsaved) service selection from CaseServices, used to show the
+   *  pending total in the summary before "Confirm & Save" persists it. */
+  const [liveCount, setLiveCount] = useState(0);
+  const [liveTotal, setLiveTotal] = useState(0);
+
+  const handleSelectionChange = useCallback((count: number, total: number) => {
+    setLiveCount(count);
+    setLiveTotal(total);
+  }, []);
+
   /** DARB invoice + manual-send state for the Invoice tab. */
   const [invoice, setInvoice] = useState<CaseInvoice | null>(null);
   const [invoiceBusy, setInvoiceBusy] = useState(false);
@@ -125,12 +135,19 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   /** Imperative handle to CaseServices so the single button can save services. */
   const servicesRef = useRef<CaseServicesHandle>(null);
 
-  const serviceTotal = Number(financials?.service_total ?? 0);
+  const serverServiceTotal = Number(financials?.service_total ?? 0);
   const paid = Number(financials?.total_confirmed ?? 0);
   const pendingReview = Number(financials?.total_pending_review ?? 0);
   const remaining = Number(financials?.remaining ?? 0);
   const schoolCosts = financials?.school_costs ?? [];
   const payments = financials?.payments ?? [];
+
+  /**
+   * The authoritative total comes from the server RPC after save. Before save,
+   * fall back to the live local total so the summary, payment card, and
+   * checklist reflect the pending selection immediately.
+   */
+  const serviceTotal = serverServiceTotal > 0 ? serverServiceTotal : liveTotal;
 
   const schoolSubtotals = useMemo(
     () =>
@@ -341,7 +358,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
    * payment-confirmation checkbox is ticked. When everything is already
    * confirmed, the button shows a success state instead.
    */
-  const servicesSelected = services.length > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
+  const servicesSelected = services.length > 0 || liveCount > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
   const financeComplete = agencyConfirmed && serviceTotal > 0;
   // A new selection has no server total until the single Confirm & Save action
   // persists it. The RPC then calculates and validates the amount authoritatively.
@@ -441,6 +458,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
               services={services}
               canManage={canManage}
               caseStatus={caseStatus}
+              onSelectionChange={handleSelectionChange}
               onChanged={() => {
                 void refetchServices();
                 void refetchFinancials();
@@ -540,7 +558,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </>
                 )}
                 <li className="flex items-center gap-2">
-                  {services.length > 0 ? (
+                  {servicesSelected ? (
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   ) : (
                     <Clock3 className="h-4 w-4 text-amber-600" />

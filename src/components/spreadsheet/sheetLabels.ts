@@ -56,6 +56,14 @@ export const translateSheetValue = (
   }
 
   const normalized = raw.trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+  // For case statuses, prefer the canonical case.status.* namespace so the
+  // spreadsheet matches the case detail page and analytics exactly.
+  if (group === 'status') {
+    const caseLabel = t(`case.status.${normalized}`, '');
+    if (caseLabel && caseLabel !== `case.status.${normalized}`) return caseLabel;
+  }
+
   const translated = t(`sheets.value.${group}.${normalized}`, '');
   if (translated && translated !== `sheets.value.${group}.${normalized}`) return translated;
 

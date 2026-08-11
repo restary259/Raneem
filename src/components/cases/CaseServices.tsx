@@ -23,6 +23,11 @@ interface Props {
   canManage: boolean;
   onChanged: () => void;
   /**
+   * Fires whenever the local selection changes (including unsaved edits) so the
+   * parent can reflect the live total/count in its summary before save.
+   */
+  onSelectionChange?: (count: number, total: number) => void;
+  /**
    * Current case status. Once the case has moved past the editable finance stage
    * (submitted/payment_confirmed/enrollment_paid/enrolled), services are frozen
    * server-side; the UI reflects that by rendering read-only and making save()
@@ -40,6 +45,7 @@ export interface CaseServicesHandle {
   save: () => Promise<boolean>;
   isDirty: () => boolean;
   selectedCount: () => number;
+  liveTotal: () => number;
 }
 
 type PackageMode = "full_service" | "custom" | "";
@@ -84,7 +90,7 @@ interface CaseContext {
  * 5. New services use the current admin catalog price.
  */
 const CaseServices = forwardRef<CaseServicesHandle, Props>(
-  ({ caseId, services, canManage, onChanged, caseStatus }, ref) => {
+  ({ caseId, services, canManage, onChanged, onSelectionChange, caseStatus }, ref) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
 
@@ -361,6 +367,19 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
   const dirty = selectedKey !== existingKey;
 
   /**
+   * Notify the parent of the live (unsaved) selection so the summary and
+   * checklist can reflect pending changes before "Confirm & Save" persists.
+   */
+  useEffect(() => {
+    if (!onSelectionChange) return;
+    const total = selected.reduce((sum, item) => {
+      const service = selectableCatalog.find((s) => s.id === item.service_id);
+      return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
+    }, 0);
+    onSelectionChange(selected.length, total);
+  }, [selected, selectableCatalog, onSelectionChange]);
+
+  /**
    * The Full Service bundle = every catalog item flagged in_full_service.
    * Used by the single service-package selector to lock the list.
    */
@@ -460,10 +479,17 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
    * Let the parent's single "Confirm & Save" button drive saving and read
    * the selection state without lifting the whole catalog/selection model.
    */
+  const computeLiveTotal = () =>
+    selected.reduce((sum, item) => {
+      const service = selectableCatalog.find((s) => s.id === item.service_id);
+      return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
+    }, 0);
+
   useImperativeHandle(ref, () => ({
     save,
     isDirty: () => dirty,
     selectedCount: () => selected.length,
+    liveTotal: computeLiveTotal,
   }));
 
   const categoryLabel = (key: string) =>

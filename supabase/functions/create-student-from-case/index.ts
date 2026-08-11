@@ -427,11 +427,12 @@ serve(async (req) => {
     let intakeMonth: string | null = null;
     let universityName: string | null = null;
     let programStartDate: string | null = null;
+    let dateOfBirth: string | null = null;
 
     if (case_id) {
       const { data: submission } = await supabaseAdmin
         .from("case_submissions")
-        .select(`program_id, program_start_date, program_end_date, accommodation_id, service_fee`)
+        .select(`program_id, program_start_date, program_end_date, accommodation_id, service_fee, extra_data`)
         .eq("case_id", case_id)
         .maybeSingle();
 
@@ -441,6 +442,11 @@ serve(async (req) => {
       } else if (caseData?.intake_notes) {
         const match = caseData.intake_notes.match(/\d{4}-\d{2}/);
         if (match) intakeMonth = match[0];
+      }
+
+      const extra = submission?.extra_data as Record<string, unknown> | null;
+      if (extra && typeof extra.date_of_birth === "string" && extra.date_of_birth) {
+        dateOfBirth = extra.date_of_birth;
       }
 
       if (submission?.program_id) {
@@ -602,6 +608,7 @@ serve(async (req) => {
     if (universityName) profileUpsert.university_name = universityName;
     if (programStartDate) profileUpsert.arrival_date = programStartDate;
     if (caseData?.passport_type) profileUpsert.nationality = caseData.passport_type;
+    if (dateOfBirth) profileUpsert.date_of_birth = dateOfBirth;
 
     const noteParts: string[] = [];
     if (caseData?.education_level) noteParts.push(`Education: ${caseData.education_level}`);

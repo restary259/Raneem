@@ -123,7 +123,7 @@ const BirthdayPicker = ({ value, onChange, t }: { value: string; onChange: (iso:
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={t("lawyer.submitStudent.year")} />
+            {year ? <span>{year}</span> : <SelectValue placeholder={t("lawyer.submitStudent.year")} />}
           </SelectTrigger>
           <SelectContent className="max-h-48">
             {DOB_YEARS.map((y) => (
@@ -141,7 +141,11 @@ const BirthdayPicker = ({ value, onChange, t }: { value: string; onChange: (iso:
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={t("lawyer.submitStudent.month")} />
+            {month ? (
+              <span>{DOB_MONTHS.find((m) => m.v === month)?.l ?? month}</span>
+            ) : (
+              <SelectValue placeholder={t("lawyer.submitStudent.month")} />
+            )}
           </SelectTrigger>
           <SelectContent>
             {DOB_MONTHS.map((m) => (
@@ -159,7 +163,7 @@ const BirthdayPicker = ({ value, onChange, t }: { value: string; onChange: (iso:
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={t("lawyer.submitStudent.day")} />
+            {safeDay ? <span>{safeDay}</span> : <SelectValue placeholder={t("lawyer.submitStudent.day")} />}
           </SelectTrigger>
           <SelectContent className="max-h-48">
             {days.map((d) => (

@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarOff, ChevronLeft, ChevronRight, ClipboardList, FileX, PhoneOff } from "lucide-react";
+import { CalendarOff, ChevronLeft, ChevronRight, ClipboardList, FileX, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CaseTask } from "./caseTasks";
 
@@ -13,7 +13,7 @@ const ICONS: Record<CaseTask["action"], React.ElementType> = {
   upload_document: FileX,
   schedule_appointment: CalendarOff,
   record_outcome: ClipboardList,
-  add_note: PhoneOff,
+  add_note: StickyNote,
 };
 
 const ACTION_LABEL: Record<CaseTask["action"], string> = {

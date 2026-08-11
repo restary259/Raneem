@@ -197,6 +197,14 @@ export default function CaseDetailPage() {
       case "record_outcome":
         if (task.appointmentId) setOutcomeApptId(task.appointmentId);
         break;
+      case "upload_document":
+        setActiveView("profile");
+        toast({ description: t("case.tasks.hint.uploadDocument", "Switched to the student profile — upload the missing document there.") });
+        break;
+      case "add_note":
+        setActiveView("profile");
+        toast({ description: t("case.tasks.hint.addNote", "Switched to the student profile — add a follow-up note in the details.") });
+        break;
       default:
         break;
     }
