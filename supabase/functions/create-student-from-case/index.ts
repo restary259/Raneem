@@ -532,7 +532,27 @@ serve(async (req) => {
       .select("full_name")
       .eq("id", callerId)
       .single();
-
+const responsePayload: Record<string, unknown> = {  
+      success: true,  
+      user_id: studentId,  
+      email: student_email,  
+      invited: emailSent === true,  
+      already_invited: emailSent === "already_sent",  
+      invitation_failed: emailSent === false,  
+      activation_url: capturedActivationUrl,  
+      account_created: accountCreated,  
+      case_linked: !!case_id,  
+      message:  
+        emailSent === "already_sent"  
+          ? "An activation link was already sent recently — ask the student to check their inbox"  
+          : emailSent === true  
+            ? accountCreated  
+              ? "Student account created and activation link sent"  
+              : "Existing student account linked and activation link sent"  
+            : accountCreated  
+              ? "Student account created successfully, but the activation email could not be sent. The invitation can be retried."  
+              : "Student account linked successfully, but the activation email could not be sent. The invitation can be retried.",  
+    };
     try {
       await supabaseAdmin.rpc("log_activity", {
         p_actor_id: callerId,
