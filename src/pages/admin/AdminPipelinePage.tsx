@@ -42,6 +42,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { matchesRef } from "@/lib/reference";
+import { CaseStatus } from "@/lib/caseStatus";
+import { SLA_DAYS } from "@/lib/slaPolicy";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
@@ -490,12 +492,15 @@ const AdminPipelinePage = () => {
                     statusCases.map((c) => {
 
                       const days = daysSince(c.last_activity_at);
-                      const isRedStale = (status === "new" && days >= 3) || c.is_no_show;
+                      // SLA thresholds come from the shared policy module so the
+                      // board never drifts from Command Center / other consumers.
+                      const isRedStale =
+                        (status === "new" && days >= SLA_DAYS[CaseStatus.NEW]) || c.is_no_show;
                       const isOrangeStale =
                         !isRedStale &&
-                        ((status === "contacted" && days >= 5) ||
-                          (status === "appointment_scheduled" && days >= 14) ||
-                          (status === "profile_completion" && days >= 7));
+                        ((status === "contacted" && days >= SLA_DAYS[CaseStatus.CONTACTED]) ||
+                          (status === "appointment_scheduled" && days >= SLA_DAYS[CaseStatus.APPT_SCHEDULED]) ||
+                          (status === "profile_completion" && days >= SLA_DAYS[CaseStatus.PROFILE_COMPLETION]));
                       const borderClass = isRedStale
                         ? "border-destructive/60"
                         : isOrangeStale

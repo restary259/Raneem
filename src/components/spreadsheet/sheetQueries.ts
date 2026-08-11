@@ -124,7 +124,7 @@ export const fetchPaymentsSheet = async ({ scope, userId }: SheetScope) => {
   let query = (supabase as any)
     .from('case_submissions')
     .select(`
-      id, service_fee, program_price, accommodation_price, insurance_price,
+      id, case_id, service_fee, program_price, accommodation_price, insurance_price,
       total_paid, remaining_balance, enrollment_paid_at, enrollment_paid_by,
       payment_confirmed_at, payment_confirmed_by,
       case:cases!inner(id, case_reference, full_name, assigned_to, status)
@@ -137,12 +137,20 @@ export const fetchPaymentsSheet = async ({ scope, userId }: SheetScope) => {
   const { data, error } = await query;
   throwIf(error);
 
-  return (data || []).map((s: any) => ({
+  const rows = data || [];
+  // Service fee is authoritative from case_services (the submission column is
+  // frequently 0); reuse the same source of truth as the students sheet so the
+  // two sheets reconcile.
+  const fees = await serviceFeeByCase(
+    Array.from(new Set(rows.map((s: any) => s.case?.id).filter(Boolean))) as string[],
+  );
+
+  return rows.map((s: any) => ({
     id: s.id,
     case_reference: s.case?.case_reference ?? null,
     paid_date: s.enrollment_paid_at,
     student: s.case?.full_name ?? '—',
-    service_fee: s.service_fee ?? 0,
+    service_fee: fees[s.case?.id] ?? Number(s.service_fee ?? 0) ?? 0,
     program_price: s.program_price ?? 0,
     accommodation_price: s.accommodation_price ?? 0,
     insurance_price: s.insurance_price ?? 0,

@@ -9,6 +9,8 @@ export interface FinancialOverview {
   platformNetRevenue: number;
   enrolledCount: number;
   referralDiscounts: number;
+  /** Global default partner commission (flat ILS amount per student). */
+  partnerCommissionRate: number;
   submissions: any[];
 }
 
@@ -19,7 +21,7 @@ export const DashboardService = {
    * platform_revenue_ils plus recorded commissions.
    */
   async financialOverview(): Promise<FinancialOverview> {
-    const [subRes, allRewardsRes, casesRes] = await Promise.all([
+    const [subRes, allRewardsRes, casesRes, settingsRes] = await Promise.all([
       db
         .from('case_submissions')
         .select('service_fee, enrollment_paid_at, case_id')
@@ -29,11 +31,14 @@ export const DashboardService = {
         .from('cases')
         .select('id, discount_amount, platform_revenue_ils, status')
         .eq('status', 'enrollment_paid'),
+      // Global default commission rates (flat ILS amounts, not percentages).
+      db.from('platform_settings').select('partner_commission_rate').maybeSingle(),
     ]);
 
     const submissions: any[] = subRes.data || [];
     const allRewards: any[] = allRewardsRes.data || [];
     const cases: any[] = casesRes.data || [];
+    const partnerCommissionRate = Number(settingsRes.data?.partner_commission_rate ?? 0) || 0;
 
     const enrolledCount = cases.length;
     const referralDiscounts = cases.reduce((s, c) => s + (c.discount_amount || 0), 0);
@@ -73,6 +78,7 @@ export const DashboardService = {
       platformNetRevenue,
       enrolledCount,
       referralDiscounts,
+      partnerCommissionRate,
       submissions,
     };
   },

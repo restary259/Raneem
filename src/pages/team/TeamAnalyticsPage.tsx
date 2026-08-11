@@ -43,9 +43,13 @@ export default function TeamAnalyticsPage() {
 
     const [casesRes, closedRes, apptRes, overrideRes] = await Promise.all([
       supabase.from('cases').select('status').eq('assigned_to', user.id),
+      // "Closed" = reached the terminal successful state (enrollment_paid).
+      // `submitted` is still an active stage (awaiting admin review), so it is
+      // not counted as closed — only enrollment_paid is terminal per
+      // TERMINAL_STATUSES in lib/caseStatus.ts.
       supabase.from('cases').select('id')
         .eq('assigned_to', user.id)
-        .in('status', ['submitted', 'enrollment_paid'])
+        .eq('status', 'enrollment_paid')
         .gte('updated_at', monthStart)
         .lte('updated_at', monthEnd),
       supabase.from('appointments').select('id')
