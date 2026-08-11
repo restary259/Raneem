@@ -359,6 +359,8 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       const payload: Record<string, unknown> = {
         case_id: caseData.id,
 
+        school_id: vals.school_id || null,
+
         program_id: vals.program_id || null,
 
         accommodation_id: vals.accommodation_id || null,
@@ -380,6 +382,8 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
         accommodation_weekly_price: accCost.weeklyRate,
 
         accommodation_price: accCost.total,
+
+        insurance_price: insuranceCost.total ?? null,
 
         student_email: normalizeEmail(vals.student_email) || null,
 
@@ -404,7 +408,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
       return payload.draft_updated_at as string;
     },
-    [caseData.id, submission, selectedProgram, selectedAccom],
+    [caseData.id, submission, selectedProgram, selectedAccom, insuranceCost],
   );
 
   /*

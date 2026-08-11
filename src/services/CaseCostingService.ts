@@ -1,6 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
-import { computeWeeklyCost } from "@/lib/programPricing";
 
 /**
  * Costing for a case.
@@ -19,7 +17,6 @@ export interface ProgrammeCostLine {
 
 interface CostInput {
   submission: Record<string, any> | null;
-  dateOfBirth?: string | null;
   isArabic: boolean;
   labels: {
     program: string;
@@ -34,7 +31,6 @@ interface CostInput {
  */
 export async function loadProgrammeCosts({
   submission,
-  dateOfBirth,
   isArabic,
   labels,
 }: CostInput): Promise<ProgrammeCostLine[]> {
@@ -63,13 +59,13 @@ export async function loadProgrammeCosts({
 
   const pick = (r: any) => (isArabic ? r?.name_ar || r?.name_en : r?.name_en || r?.name_ar) ?? "";
 
-  // `*_price` on the submission is the TOTAL (weekly rate × weeks). Only when
-  // it is missing do we fall back to deriving it from the catalogue tiers.
-  const programTotal =
-    submission.program_price != null
-      ? Number(submission.program_price)
-      : computeWeeklyCost(progRes?.data, submission.program_weeks).total;
-  if (progRes?.data && programTotal) {
+  // The `*_price` on the submission is the priced snapshot frozen when the
+  // profile was saved (weekly rate × weeks). It is authoritative: we never
+  // re-derive totals from the live catalogue, which can drift from what the
+  // team actually quoted. When no snapshot exists the line is omitted rather
+  // than fabricated.
+  const programTotal = submission.program_price != null ? Number(submission.program_price) : null;
+  if (progRes?.data && programTotal != null) {
     lines.push({
       label: `${labels.program} — ${pick(progRes.data)}`,
       amount: programTotal,
@@ -78,10 +74,8 @@ export async function loadProgrammeCosts({
   }
 
   const accomTotal =
-    submission.accommodation_price != null
-      ? Number(submission.accommodation_price)
-      : computeWeeklyCost(accomRes?.data, submission.accommodation_weeks).total;
-  if (accomRes?.data && accomTotal) {
+    submission.accommodation_price != null ? Number(submission.accommodation_price) : null;
+  if (accomRes?.data && accomTotal != null) {
     lines.push({
       label: `${labels.accommodation} — ${pick(accomRes.data)}`,
       amount: accomTotal,
@@ -89,16 +83,9 @@ export async function loadProgrammeCosts({
     });
   }
 
-
   if (insRes?.data) {
-    const cost = computeInsuranceCost(
-      insRes.data,
-      ageFromDob(dateOfBirth ?? null),
-      submission.program_start_date,
-      submission.program_end_date,
-    );
-    const total = cost.total ?? (submission.insurance_price ? Number(submission.insurance_price) : null);
-    if (total) {
+    const total = submission.insurance_price != null ? Number(submission.insurance_price) : null;
+    if (total != null) {
       lines.push({
         label: `${labels.insurance} — ${insRes.data.name}`,
         amount: total,

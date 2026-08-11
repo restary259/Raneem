@@ -119,7 +119,7 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   );
   const months = cost.months;
   const insuranceMonthly = cost.monthly;
-  const insuranceTotal = cost.total ?? (submission?.insurance_price || null);
+  const insuranceTotal = submission?.insurance_price ?? cost.total;
   const insuranceCurrency = insurance?.currency ?? "EUR";
   const symbol = insuranceCurrency === "EUR" ? "€" : "₪";
   const insuranceDescription = insurance ? (isAr ? insurance.description_ar : insurance.description_en) : null;
