@@ -33,31 +33,17 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      # Production build vars live in Vercel/Lovable. Mirror them into GitHub
-      # repo secrets so CI can catch a missing one before a broken bundle ships.
-      # Enforcing on push to main; advisory on pull requests.
-      - name: Preflight - required build env vars
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-          ENFORCE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: |
-          missing=()
-          for v in VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY VITE_SUPABASE_PROJECT_ID; do
-            [ -z "${!v}" ] && missing+=("$v")
-          done
-          if [ ${#missing[@]} -eq 0 ]; then
-            echo "All required build env vars are present."
-            exit 0
-          fi
-          msg="Missing required build env var(s): ${missing[*]}. Configure them in Vercel/Lovable build environment variables and mirror them into GitHub repository secrets."
-          if [ "$ENFORCE" = "true" ]; then
-            echo "::error::$msg"
-            exit 1
-          fi
-          echo "::warning::$msg"
-
       - name: Typecheck and build
         run: npm run build
+
+      - name: Verify Lovable Cloud build binding
+        run: |
+          grep -R -q "mzbadxfvxioedzdjxamc.supabase.co" dist/assets || {
+            echo "::error::The production bundle is missing the Lovable Cloud endpoint."
+            exit 1
+          }
+          if grep -R -q "Supabase client could not be initialized" dist/assets; then
+            echo "::error::The production bundle still contains the obsolete startup blocker."
+            exit 1
+          fi
 
