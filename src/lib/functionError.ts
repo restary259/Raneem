@@ -12,7 +12,7 @@ export async function readFunctionError(error: unknown): Promise<string> {
   const body = await readErrorBody(error);
   if (body) {
     const message = body.parsed?.error ?? body.parsed?.message;
-    if (message) return message;
+    if (message) return String(message);
     // Non-JSON body: surface it verbatim (truncated) so the user sees the
     // raw upstream text rather than a meaningless function-error string.
     if (!body.parsed) return String(body.raw).slice(0, 300);
